@@ -1,6 +1,84 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;400;800&display=swap');
+
+:root {
+  --ifm-color-primary: #227c9d;
+  --ifm-color-primary-dark: #1f708d;
+  --ifm-color-primary-darker: #1d6985;
+  --ifm-color-primary-darkest: #18576e;
+  --ifm-color-primary-light: #2588ad;
+  --ifm-color-primary-lighter: #278fb5;
+  --ifm-color-primary-lightest: #2ca1cc;
+
+  --ifm-color-secondary: #15b0a0;
+  --ifm-color-secondary-dark: #139e90;
+  --ifm-color-secondary-darker: #129688;
+  --ifm-color-secondary-darkest: #0f7b70;
+  --ifm-color-secondary-light: #16b9a8;
+  --ifm-color-secondary-lighter: #17c2b0;
+  --ifm-color-secondary-lightest: #18cab8;
+
+  --ifm-color-accent: #ffb63f;
+  --ifm-color-accent-dark: #ffaa1f;
+  --ifm-color-accent-darker: #ffa40f;
+  --ifm-color-accent-darkest: #df8a00;
+  --ifm-color-accent-light: #ffc25f;
+  --ifm-color-accent-lighter: #ffc86f;
+  --ifm-color-accent-lightest: #ffda9e;
+
+  --ifm-color-danger: #fe4950;
+  --ifm-color-danger-dark: #fe2831;
+  --ifm-color-danger-darker: #fe1821;
+  --ifm-color-danger-darkest: #e4010a;
+  --ifm-color-danger-light: #fe5960;
+  --ifm-color-danger-lighter: #fe6a6f;
+  --ifm-color-danger-lightest: #fe7a7f;
+
+  --ifm-code-font-size: 95%;
+  --ifm-color-white: #FEF9EF;
+  --ifm-color-black: #354A54;
+
+  --ifm-color-gray-100: #f7fafc;
+  --ifm-color-gray-200: #edf2f7;
+  --ifm-color-gray-300: #e2e8f0;
+  --ifm-color-gray-400: #cbd5e0;
+  --ifm-color-gray-500: #a0aec0;
+  --ifm-color-gray-600: #718096;
+  --ifm-color-gray-700: #4a5568;
+  --ifm-color-gray-800: #2d3748;
+  --ifm-color-gray-900: #1a202c;
+
+  --ifm-footer-link-color: var(--ifm-color-white);
+  --ifm-font-family-base: 'JetBrains Mono', monospace;
+}
+
+[data-theme='dark'] {
+  --ifm-color-secondary: #17c3b2;
+  --ifm-color-secondary-dark: #15b0a0;
+  --ifm-color-secondary-darker: #14a697;
+  --ifm-color-secondary-darkest: #10897d;
+  --ifm-color-secondary-light: #19d6c4;
+  --ifm-color-secondary-lighter: #1ae0cd;
+  --ifm-color-secondary-lightest: #34e7d5;
+
+  --ifm-color-accent: #ffcb77;
+  --ifm-color-accent-dark: #ffbd52;
+  --ifm-color-accent-darker: #ffb63f;
+  --ifm-color-accent-darkest: #ffa007;
+  --ifm-color-accent-light: #ffd99c;
+  --ifm-color-accent-lighter: #ffe0af;
+  --ifm-color-accent-lightest: #fff6e7;
+
+  --ifm-color-danger: #fe6d73;
+  --ifm-color-danger-dark: #fe4950;
+  --ifm-color-danger-darker: #fe373f;
+  --ifm-color-danger-darkest: #fc020c;
+  --ifm-color-danger-light: #fe9196;
+  --ifm-color-danger-lighter: #fea3a7;
+  --ifm-color-danger-lightest: #ffd9db;
+}
 
 @layer base {
   html {
