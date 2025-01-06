@@ -11,15 +11,15 @@
 	let { size = "md", rating }: Props = $props();
 </script>
 
-{#if size === 'sm'}
+{#if size === "sm"}
 	<div class="inline-flex items-center space-x-1">
 		<span class="text-xs text-gray-500">
 			{rating.toFixed(1)}
 		</span>
-		<Icon icon="material-symbols:star-rounded" class="text-yellow-500 text-base" />
+		<Icon icon="material-symbols:star-rounded" class="text-base text-yellow-500" />
 	</div>
 {:else}
-	<div class="flex items-center" class:text-xl={size === 'lg'}>
+	<div class="flex items-center" class:text-xl={size === "lg"}>
 		{#each Array(5) as _, index}
 			{#if rating >= index + 1}
 				<Icon icon="material-symbols:star-rounded" class="text-yellow-500" />
@@ -29,3 +29,4 @@
 		{/each}
 	</div>
 {/if}
+
