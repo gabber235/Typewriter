@@ -1,14 +1,14 @@
 <script module>
-	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import Price from './Price.svelte';
+	import { defineMeta } from "@storybook/addon-svelte-csf";
+	import Price from "./Price.svelte";
 
 	const { Story } = defineMeta({
 		component: Price,
-		tags: ['autodocs'],
+		tags: ["autodocs"],
 		args: {
 			price: 99,
-			currency: "€"
-		},
+			currency: "EUR"
+		}
 	});
 </script>
 

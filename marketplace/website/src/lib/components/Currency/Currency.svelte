@@ -1,6 +1,17 @@
 <script lang="ts">
-	export let amount: number;
-	export let currency: string;
+	interface Props {
+		amount: number;
+		currency: string;
+	}
+
+	let { amount, currency }: Props = $props();
+	let locale = navigator.language;
+	let price = $derived.by(() =>
+		new Intl.NumberFormat(locale, {
+			style: "currency",
+			currency
+		}).format(amount)
+	);
 </script>
 
-<span class="font-semibold">{amount}{currency}</span>
+<span>{price}</span>

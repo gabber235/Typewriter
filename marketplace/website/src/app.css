@@ -84,4 +84,7 @@
   html {
     font-family: "JetBrains Mono", monospace;
   }
+  body {
+    @apply bg-gray-100 text-black dark:bg-[#141218] dark:text-white;
+  }
 }
