@@ -17,7 +17,7 @@ import kotlin.reflect.KClass
     "resource_pack_event",
     "When the player's resource pack status changes",
     Colors.YELLOW,
-    "mingcute:archive-fill"
+    "mingcute:file-cloud-fill"
 )
 class ResourcePackEventEntry(
     override val id: String = "",
