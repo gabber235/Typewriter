@@ -16,3 +16,11 @@
 	parameters={{ viewport: { defaultViewport: "iphone14promax" } }}
 />
 <Story name="Logged Out - iPad" parameters={{ viewport: { defaultViewport: "ipad" } }} />
+
+<Story
+	name="Logged In"
+	args={{
+		avatarUrl: "https://1.gravatar.com/avatar/493f5d8ecd1caf1e975850a31725a687",
+		fallbackAvatar: "GB"
+	}}
+/>
