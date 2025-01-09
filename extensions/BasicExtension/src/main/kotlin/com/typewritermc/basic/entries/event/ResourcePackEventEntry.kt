@@ -40,3 +40,5 @@ fun onResourcePackChange(event: PlayerResourcePackStatusEvent, query: Query<Reso
 
     entries.triggerAllFor(event.player, context())
 }
+
+
