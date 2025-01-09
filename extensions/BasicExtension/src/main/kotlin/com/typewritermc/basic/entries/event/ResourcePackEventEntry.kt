@@ -13,6 +13,24 @@ import org.bukkit.event.player.PlayerResourcePackStatusEvent
 import org.bukkit.event.player.PlayerResourcePackStatusEvent.Status
 import kotlin.reflect.KClass
 
+@Entry(
+    "resource_pack_event",
+    "When the player's resource pack status changes",
+    Colors.YELLOW,
+    "mingcute:file-cloud-fill"
+)
+@ContextKeys(ResourcePackContextKeys::class)
+class ResourcePackEventEntry(
+    override val id: String = "",
+    override val name: String = "",
+    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+
+    @Help("Which status triggers this event? (SUCCESSFULLY_LOADED by default).")
+    val statusFilter: ResourcePackStatusFilter = ResourcePackStatusFilter.SUCCESSFULLY_LOADED
+
+) : EventEntry
+
+
 enum class ResourcePackStatusFilter(vararg val statuses: Status) {
     ANY(
         Status.ACCEPTED,
@@ -41,23 +59,6 @@ enum class ResourcePackContextKeys(override val klass: KClass<*>) : EntryContext
     STATUS(Status::class),
 }
 
-@Entry(
-    "resource_pack_event",
-    "When the player's resource pack status changes",
-    Colors.YELLOW,
-    "mingcute:file-cloud-fill"
-)
-@ContextKeys(ResourcePackContextKeys::class)
-class ResourcePackEventEntry(
-    override val id: String = "",
-    override val name: String = "",
-    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-
-    @Help("Which status triggers this event? (SUCCESSFULLY_LOADED by default).")
-    val statusFilter: ResourcePackStatusFilter = ResourcePackStatusFilter.SUCCESSFULLY_LOADED
-
-) : EventEntry
-
 @EntryListener(ResourcePackEventEntry::class)
 fun onResourcePackChange(
     event: PlayerResourcePackStatusEvent,
@@ -74,3 +75,5 @@ fun onResourcePackChange(
 
     entries.triggerAllFor(player, context())
 }
+
+
