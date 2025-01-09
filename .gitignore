@@ -131,9 +131,6 @@ code_generator/EntityEyeHeightProperty.kt
 code_generator/EntityHeightProperty.kt
 code_generator/EntityWidthProperty.kt
 
-# For the moment
-/marketplace
-
 jars/
 
 .gitub
