@@ -13,7 +13,7 @@
 
 {#if size === "sm"}
 	<div class="inline-flex items-center space-x-1">
-		<span class="text-xs text-gray-500">
+		<span class="text-xs">
 			{rating.toFixed(1)}
 		</span>
 		<Icon icon="material-symbols:star-rounded" class="text-base text-yellow-500" />
@@ -29,4 +29,3 @@
 		{/each}
 	</div>
 {/if}
-
