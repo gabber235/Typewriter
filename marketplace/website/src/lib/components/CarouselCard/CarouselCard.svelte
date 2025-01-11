@@ -44,7 +44,7 @@
 		</div>
 		<div class="flex items-center justify-between space-x-2">
 			<p class="line-clamp-2 text-xs text-gray-200 md:text-sm">{shortDescription}</p>
-			<Button variant="secondary" size="sm" class="hidden md:flex">View</Button>
+			<Button variant="secondary" size="lg" class="hidden md:flex">View Details</Button>
 		</div>
 	</div>
 </div>
