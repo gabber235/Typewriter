@@ -10,6 +10,7 @@ import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNode
 import com.typewritermc.roadnetwork.pathfinding.PFEmptyEntity
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
 import org.bukkit.Location
 
@@ -31,7 +32,7 @@ fun roadNetworkFindPath(
     start: RoadNode,
     end: RoadNode,
     entity: IPathingEntity = PFEmptyEntity(start.location.toProperty(), searchRange = roadNetworkMaxDistance.toFloat()),
-    instance: PFInstanceSpace = PFInstanceSpace(start.location.world),
+    instance: PFInstanceSpace = start.location.world.instanceSpace,
     nodes: List<RoadNode> = emptyList(),
     negativeNodes: List<RoadNode> = emptyList(),
 ): IPath? {

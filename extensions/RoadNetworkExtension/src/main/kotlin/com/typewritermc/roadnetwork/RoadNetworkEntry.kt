@@ -35,7 +35,12 @@ import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-val roadNetworkMaxDistance by snippet("road_network.distance.max", 30.0)
+val roadNetworkMaxDistance by snippet(
+    "road_network.distance.max", 30.0, """
+    |The maximum distance that can be between two nodes. 
+    |Therefore it is also the maximum radius the player can be from a node to be inside the road network
+    """.trimMargin()
+)
 
 @Tags("road_network")
 interface RoadNetworkEntry : ArtifactEntry {

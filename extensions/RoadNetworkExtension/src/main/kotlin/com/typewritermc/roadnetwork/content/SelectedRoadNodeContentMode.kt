@@ -22,6 +22,7 @@ import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
 import net.kyori.adventure.bossbar.BossBar
@@ -292,7 +293,7 @@ private class SelectedNodePathsComponent(
         val node = nodeFetcher() ?: return emptyMap()
         val network = networkFetcher()
         val nodes = network.nodes.associateBy { it.id }
-        val instance = PFInstanceSpace(node.location.world)
+        val instance = node.location.world.instanceSpace
         return network.edges.filter { it.start == node.id }
             .mapNotNull { edge ->
                 val start = nodes[edge.start] ?: return@mapNotNull null

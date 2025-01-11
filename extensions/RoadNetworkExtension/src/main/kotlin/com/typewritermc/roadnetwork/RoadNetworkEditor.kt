@@ -7,6 +7,7 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
@@ -70,12 +71,10 @@ class RoadNetworkEditor(
                 it.copy(edges = emptyList())
             }
             recalculateEdges.set(network.nodes.size)
-            val instancesSpaces =
-                network.nodes.associate { it.location.world.uid to PFInstanceSpace(it.location.world) }
             coroutineScope {
                 network.nodes.map {
                     launch {
-                        recalculateEdgesForNode(it, instancesSpaces[it.location.world.uid]!!)
+                        recalculateEdgesForNode(it, it.location.world.instanceSpace)
                         recalculateEdges.decrementAndGet()
                     }
                 }
