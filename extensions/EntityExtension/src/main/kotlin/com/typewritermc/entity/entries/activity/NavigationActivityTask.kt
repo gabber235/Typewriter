@@ -19,6 +19,7 @@ import com.typewritermc.roadnetwork.gps.isInRangeOf
 import com.typewritermc.roadnetwork.gps.toVector
 import com.typewritermc.roadnetwork.pathfinding.PFCapabilities
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
 import kotlinx.coroutines.Job
 import org.bukkit.util.BoundingBox
@@ -155,7 +156,7 @@ private sealed interface NavigationActivityTaskState {
         private val navigator: HydrazinePathFinder
 
         init {
-            val instance = PFInstanceSpace(startLocation.toBukkitLocation().world)
+            val instance = startLocation.toBukkitLocation().world.instanceSpace
             navigator = HydrazinePathFinder(this, instance)
 
             // We want to avoid going through negative nodes

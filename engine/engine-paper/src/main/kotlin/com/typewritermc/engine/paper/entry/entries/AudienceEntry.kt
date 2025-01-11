@@ -1,5 +1,7 @@
 package com.typewritermc.engine.paper.entry.entries
 
+import com.google.common.collect.Maps
+import com.google.common.collect.Sets
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Help
@@ -68,7 +70,7 @@ enum class AudienceDisplayState(val displayName: String, val color: String) {
 abstract class AudienceDisplay : Listener {
     var isActive = false
         private set
-    private val playerIds: ConcurrentSkipListSet<UUID> = ConcurrentSkipListSet()
+    private val playerIds: MutableSet<UUID> = Sets.newConcurrentHashSet()
     open val players: List<Player> get() = server.onlinePlayers.filter { it.uniqueId in playerIds }
 
     open fun displayState(player: Player): AudienceDisplayState {

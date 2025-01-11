@@ -11,6 +11,7 @@ import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.roadnetwork.*
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import org.bukkit.Location
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -247,7 +248,7 @@ class PointToPointGPS(
         asEnd: Boolean,
     ): List<RoadEdge> =
         coroutineScope {
-            val instance = PFInstanceSpace(node.location.world)
+            val instance = node.location.world.instanceSpace
             val intersectingNodes = nodes
                 .filter {
                     it != node && it.location.world == node.location.world && (it.location.distanceSqrt(node.location)

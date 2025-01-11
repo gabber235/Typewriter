@@ -3,27 +3,34 @@ package com.typewritermc.roadnetwork.pathfinding
 import com.extollit.gaming.ai.path.model.IBlockDescription
 import com.extollit.gaming.ai.path.model.IBlockObject
 import com.extollit.linalg.immutable.AxisAlignedBBox
-import org.bukkit.Location
+import com.typewritermc.core.utils.point.Position
+import com.typewritermc.engine.paper.utils.toBukkitLocation
+import io.papermc.paper.registry.RegistryAccess
+import io.papermc.paper.registry.RegistryKey
 import org.bukkit.Material
 import org.bukkit.block.data.BlockData
 import org.bukkit.util.VoxelShape
 
+private val fenceLikeMaterials =
+    RegistryAccess.registryAccess().getRegistry(RegistryKey.BLOCK).filter {
+        it.key.key.contains("fence") || it.key.key.contains("wall")
+    }.map { it.key }.toSet()
+
 class PFBlock(
-    val location: Location,
+    val position: Position,
     val type: Material,
     val data: BlockData,
 ) : IBlockDescription, IBlockObject {
+    private val collisionShape: VoxelShape by lazy(LazyThreadSafetyMode.NONE) {
+        data.getCollisionShape(position.toBukkitLocation())
+    }
+
     override fun bounds(): AxisAlignedBBox {
-        val collisionShape = data.getCollisionShape(location)
         return collisionShape.toAABB()
     }
 
     override fun isFenceLike(): Boolean {
-        if (type.key.key.contains("fence"))
-            return true
-        if (type.key.key.endsWith("wall"))
-            return true
-        return false
+        return fenceLikeMaterials.contains(type.key)
     }
 
     override fun isClimbable(): Boolean {
@@ -44,9 +51,8 @@ class PFBlock(
     }
 
     override fun isFullyBounded(): Boolean {
-        val voxelShape = data.getCollisionShape(location)
-        if (voxelShape.boundingBoxes.size != 1) return false
-        val boundingBox = voxelShape.boundingBoxes.first()
+        if (collisionShape.boundingBoxes.size != 1) return false
+        val boundingBox = collisionShape.boundingBoxes.first()
 
         return boundingBox.minX == 0.0
                 && boundingBox.minY == 0.0

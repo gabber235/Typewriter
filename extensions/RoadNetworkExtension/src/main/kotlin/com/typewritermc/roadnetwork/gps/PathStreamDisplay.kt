@@ -21,6 +21,7 @@ import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
 import com.typewritermc.roadnetwork.pathfinding.PFEmptyEntity
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -187,7 +188,7 @@ private class PlayerPathStreamDisplay(
         }
 
         val entity = PFEmptyEntity(start.toProperty(), searchRange = roadNetworkMaxDistance.toFloat())
-        val instance = PFInstanceSpace(start.world)
+        val instance = start.world.instanceSpace
         val pathfinder = HydrazinePathFinder(entity, instance)
 
         val additionalRadius = pathfinder.subject().width().toDouble()
