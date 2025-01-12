@@ -202,7 +202,7 @@ class PageSelectorEditor extends HookConsumerWidget {
 
   void _select(PassingRef ref, PageType type) {
     ref.read(searchProvider.notifier).asBuilder()
-      ..pageType(type, canRemove: false)
+      ..pageType(type)
       ..fetchPage(onSelect: (page) => _update(ref, page))
       ..fetchAddPage(onAdded: (page) => _update(ref, page))
       ..open();

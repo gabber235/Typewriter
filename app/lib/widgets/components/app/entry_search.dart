@@ -520,7 +520,7 @@ class AddEntrySearchElement extends SearchElement {
     // This page can't have the entry, so we need to select/create a new page where we can.
 
     ref.read(searchProvider.notifier).asBuilder()
-      ..pageType(PageType.fromBlueprint(blueprint), canRemove: false)
+      ..pageType(PageType.fromBlueprint(blueprint))
       ..fetchPage(onSelect: (page) => _createAndNavigate(ref, page, blueprint))
       ..fetchAddPage(
         onAdded: (page) => _createAndNavigate(ref, page, blueprint),

@@ -187,7 +187,7 @@ class AddPageFetcher extends SearchFetcher {
 }
 
 extension SearchBuilderX on SearchBuilder {
-  void pageType(PageType type, {bool canRemove = true}) {
+  void pageType(PageType type, {bool canRemove = false}) {
     filter(PageTypeFiler(type, canRemove: canRemove));
   }
 
