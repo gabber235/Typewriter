@@ -32,7 +32,7 @@ allprojects {
 
 subprojects {
     group = "com.typewritermc"
-    version = file("../../version.txt").readText().trim().substringBefore("-beta")
+    version = file("../../version.txt").readText().trim()
 
     apply(plugin = "io.github.goooler.shadow")
     apply(plugin = "com.typewritermc.module-plugin")
@@ -78,6 +78,11 @@ subprojects {
             }
         }
 
+        tasks.register("releaseSourcesJar", Jar::class) {
+            archiveClassifier.set("sources")
+            from(sourceSets.main.get().allSource)
+        }
+
         publishing {
             repositories {
                 maven {
@@ -100,11 +105,13 @@ subprojects {
             publications {
                 create<MavenPublication>("maven") {
                     group = project.group
-                    version = project.version.toString()
+                    // Remove everything after the beta. So 1.0.0-beta-1 becomes 1.0.0
+                    version = project.version.toString().substringBefore("-beta")
                     artifactId = project.name
 
                     from(components["kotlin"])
                     artifact(tasks["shadowJar"])
+                    artifact(tasks["releaseSourcesJar"])
                 }
             }
         }

@@ -47,6 +47,10 @@ subprojects {
         testImplementation("io.kotest:kotest-property:$kotestVersion")
     }
 
+    tasks.register("releaseSourcesJar", Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
 
     publishing {
         repositories {
@@ -76,6 +80,7 @@ subprojects {
 
                 from(components["kotlin"])
                 artifact(tasks["shadowJar"])
+                artifact(tasks["releaseSourcesJar"])
             }
         }
     }
