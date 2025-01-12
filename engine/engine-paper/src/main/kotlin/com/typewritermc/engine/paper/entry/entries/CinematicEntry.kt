@@ -88,5 +88,5 @@ object EmptyCinematicAction : CinematicAction {
     override suspend fun setup() {}
     override suspend fun tick(frame: Int) {}
     override suspend fun teardown() {}
-    override fun canFinish(frame: Int): Boolean = false
+    override fun canFinish(frame: Int): Boolean = true
 }
