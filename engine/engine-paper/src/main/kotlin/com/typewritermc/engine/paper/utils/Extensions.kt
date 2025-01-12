@@ -94,9 +94,11 @@ fun Location.lerp(other: Location, amount: Double): Location {
 val Location.up: Location
     get() = clone().apply { y += 1 }
 
-val Location.firstWalkableLocationBelow: Location
+val Location.firstWalkableLocationBelow: Location?
     get() = clone().apply {
-        while (block.isPassable) y--
+        var max = 7
+        while (block.isPassable && max-- > 0) y--
+        if (max == 0) return null
         // We want to be on top of the block
         y++
     }

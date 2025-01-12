@@ -147,8 +147,8 @@ private class PlayerPathStreamDisplay(
     }
 
     private fun refreshPath() = DISPATCHERS_ASYNC.launch {
-        val start = startLocation(player).firstWalkableLocationBelow
-        val end = endLocation(player).firstWalkableLocationBelow
+        val start = startLocation(player).firstWalkableLocationBelow ?: return@launch
+        val end = endLocation(player).firstWalkableLocationBelow ?: return@launch
 
         // When the start and end location are the same, we don't need to find a path.
         if ((start.distanceSqrt(end) ?: Double.MAX_VALUE) < 1) {
