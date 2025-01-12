@@ -63,12 +63,13 @@ class TypewriterModulePlugin : Plugin<Project> {
                     it.setUrl(url)
                 }
             }
+            val engineVersion = extension.engineVersion.substringBefore("-beta")
             // Add Typewriter core dependency
-            dependencies.add("compileOnly", "com.typewritermc:engine-core:${extension.engineVersion}")
+            dependencies.add("compileOnly", "com.typewritermc:engine-core:${engineVersion}")
 
             extension.paper?.let { paper ->
                 // Add Typewriter Paper dependency
-                dependencies.add("compileOnly", "com.typewritermc:engine-paper:${extension.engineVersion}")
+                dependencies.add("compileOnly", "com.typewritermc:engine-paper:${engineVersion}")
                 // Add Paper repository
                 repositories.maven {
                     it.setUrl("https://repo.papermc.io/repository/maven-public/")

@@ -32,7 +32,7 @@ allprojects {
 
 subprojects {
     group = "com.typewritermc"
-    version = file("../../version.txt").readText().trim()
+    version = file("../../version.txt").readText().trim().substringBefore("-beta")
 
     apply(plugin = "io.github.goooler.shadow")
     apply(plugin = "com.typewritermc.module-plugin")

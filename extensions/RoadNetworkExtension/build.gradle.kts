@@ -14,7 +14,7 @@ typewriter {
             |It can be used by NPCs to navigate to certain locations, or by players to know how to get somewhere.
             """.trimMargin()
 
-        engineVersion = file("../../version.txt").readText().trim().substringBefore("-beta")
+        engineVersion = file("../../version.txt").readText().trim()
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 

@@ -16,7 +16,7 @@ typewriter {
             please follow the [Installation Guide](https://docs.typewritermc.com/docs/getting-started/installation)
             first.
         """.trimIndent()
-        engineVersion = file("../../version.txt").readText().trim().substringBefore("-beta")
+        engineVersion = file("../../version.txt").readText().trim()
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
         paper()

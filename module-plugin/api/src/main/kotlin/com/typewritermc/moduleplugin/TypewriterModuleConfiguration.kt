@@ -166,9 +166,6 @@ internal fun TypewriterExtensionConfiguration.validate() {
     if (engineVersion.isBlank()) {
         throw MissingFieldException("extension.engineVersion")
     }
-    if (!Regex("^([0-9])+\\.([0-9])+\\.([0-9])+\$").matches(engineVersion)) {
-        throw IllegalArgumentException("Version must follow the Semantic Versioning format.")
-    }
 
     dependencies?.validate()
     paper?.validate()
