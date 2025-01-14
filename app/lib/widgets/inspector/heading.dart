@@ -7,6 +7,7 @@ import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/widgets/components/general/admonition.dart";
+import "package:typewriter/widgets/components/general/identifier.dart";
 import "package:typewriter/widgets/inspector/inspector.dart";
 import "package:url_launcher/url_launcher_string.dart";
 
@@ -71,7 +72,7 @@ class Heading extends HookConsumerWidget {
           alignment: WrapAlignment.start,
           children: [
             EntryBlueprintDisplay(blueprintId: type, url: url, color: color),
-            EntryIdentifier(id: id),
+            Identifier(id: id),
           ],
         ),
         if (deprecation != null) ...[
@@ -108,23 +109,6 @@ class Title extends StatelessWidget {
         decorationColor: color,
       ),
       maxLines: 1,
-    );
-  }
-}
-
-class EntryIdentifier extends StatelessWidget {
-  const EntryIdentifier({
-    required this.id,
-    super.key,
-  });
-  final String id;
-
-  @override
-  Widget build(BuildContext context) {
-    return SelectableText(
-      id,
-      style:
-          Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
     );
   }
 }

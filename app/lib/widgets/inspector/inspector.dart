@@ -9,6 +9,7 @@ import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/components/app/cinematic_view.dart";
 import "package:typewriter/widgets/components/general/context_menu_region.dart";
+import "package:typewriter/widgets/components/general/identifier.dart";
 import "package:typewriter/widgets/inspector/editors/name.dart";
 import "package:typewriter/widgets/inspector/editors/object.dart";
 import "package:typewriter/widgets/inspector/heading.dart";
@@ -188,7 +189,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
               url: "",
               color: Colors.redAccent,
             ),
-            EntryIdentifier(id: entry.id),
+            Identifier(id: entry.id),
           ],
         ),
         const SizedBox(height: 12),

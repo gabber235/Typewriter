@@ -18,6 +18,7 @@ import "package:typewriter/widgets/components/app/staging.dart";
 import "package:typewriter/widgets/components/app/static_entries_list.dart";
 import "package:typewriter/widgets/components/app/writers.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
+import "package:typewriter/widgets/components/general/identifier.dart";
 import "package:typewriter/widgets/components/general/shortcut_label.dart";
 import "package:typewriter/widgets/inspector/inspector.dart";
 
@@ -105,7 +106,8 @@ class _AppBar extends HookConsumerWidget {
           Iconify(pageType?.icon, size: 16),
           const SizedBox(width: 8),
           Text(ref.watch(currentPageLabelProvider)),
-          const SizedBox(width: 5),
+          const SizedBox(width: 20),
+          Identifier(id: ref.watch(currentPageIdProvider) ?? ""),
           const Spacer(),
           Writers(writers: ref.watch(_writersProvider)),
           const SizedBox(width: 20),
