@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.Criteria
@@ -31,6 +32,7 @@ class WeightedRandomTriggerGateEntry(
     @SerializedName("triggers")
     val customTriggers: Map<Ref<TriggerableEntry>, Int> = emptyMap(),
     @Help("The number of triggers to fire next.")
+    @Default("1")
     private val amount: Var<Int> = ConstVar(1),
 ) : ActionEntry {
     // Disable the normal triggers. So that the action can manually trigger the next actions.

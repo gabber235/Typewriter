@@ -2,6 +2,7 @@ package com.typewritermc.basic.entries.action
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.Criteria
@@ -27,13 +28,14 @@ class RandomTriggerGateEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     @Help("The number of triggers to fire next.")
+    @Default("1")
     private val amount: Var<Int> = ConstVar(1),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         disableAutomaticTriggering()
         val selectedTriggers = mutableListOf<Ref<TriggerableEntry>>()
 
-        if (triggers.isEmpty()) {
+        if (triggers.isNotEmpty()) {
             val randomIndices = (triggers.indices).shuffled().take(amount.get(player, context))
             for (index in randomIndices) {
                 selectedTriggers.add(triggers[index])
