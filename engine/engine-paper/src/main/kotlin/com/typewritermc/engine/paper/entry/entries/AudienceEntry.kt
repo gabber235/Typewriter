@@ -71,7 +71,7 @@ abstract class AudienceDisplay : Listener {
     var isActive = false
         private set
     private val playerIds: MutableSet<UUID> = Sets.newConcurrentHashSet()
-    open val players: List<Player> get() = server.onlinePlayers.filter { it.uniqueId in playerIds }
+    open val players: List<Player> get() = playerIds.mapNotNull { server.getPlayer(it) }
 
     open fun displayState(player: Player): AudienceDisplayState {
         if (player.uniqueId in playerIds) return AudienceDisplayState.IN_AUDIENCE
@@ -119,9 +119,9 @@ class PassThroughDisplay : AudienceDisplay() {
 abstract class AudienceFilter(
     private val ref: Ref<out AudienceFilterEntry>
 ) : AudienceDisplay() {
-    private val inverted = (ref.get() as? Invertible)?.inverted ?: false
-    private val filteredPlayers: ConcurrentSkipListSet<UUID> = ConcurrentSkipListSet()
-    override val players: List<Player> get() = server.onlinePlayers.filter { it.uniqueId in filteredPlayers }
+    private val inverted = (ref.get() as? Invertible)?.inverted == true
+    private val filteredPlayers: MutableSet<UUID> = Sets.newConcurrentHashSet()
+    override val players: List<Player> get() = filteredPlayers.mapNotNull { server.getPlayer(it) }
 
     protected val consideredPlayers: List<Player> get() = super.players
 
