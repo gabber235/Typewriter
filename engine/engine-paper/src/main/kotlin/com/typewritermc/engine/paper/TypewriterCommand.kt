@@ -34,6 +34,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
 import java.time.format.DateTimeFormatter
+import kotlin.reflect.KClass
 
 fun typeWriterCommand() = commandTree("typewriter") {
     withAliases("tw")

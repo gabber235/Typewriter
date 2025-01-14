@@ -31,6 +31,7 @@ import com.typewritermc.engine.paper.ui.ClientSynchronizer
 import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.ui.Writers
+import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.createBukkitDataParser
 import com.typewritermc.engine.paper.utils.registerAll
 import com.typewritermc.engine.paper.utils.unregisterAll
@@ -63,6 +64,7 @@ import kotlin.time.Duration.Companion.seconds
 class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
     override fun onLoad() {
         super.onLoad()
+        ThreadType.initialize()
         val modules = module {
             single { this@TypewriterPaperPlugin } withOptions
                     {
@@ -231,6 +233,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         get<EntityHandler>().shutdown()
 
         unload()
+        ThreadType.shutdown()
     }
 }
 

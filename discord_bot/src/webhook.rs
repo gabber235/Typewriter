@@ -1,6 +1,6 @@
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, Responder};
 use hmac::{Hmac, Mac};
-use log::{debug, warn};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
@@ -29,6 +29,8 @@ pub async fn publish_beta_version(req: HttpRequest) -> impl Responder {
     if signature != secret {
         return HttpResponse::Unauthorized().body("invalid signature");
     }
+
+    info!("Received publish beta request");
 
     match move_done_to_beta().await {
         Ok(_) => HttpResponse::Ok().body("ok"),
