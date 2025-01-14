@@ -123,6 +123,8 @@ class TemporalInteraction(
         if (state != PLAYING) return
         this.playTime = playTime
     }
+
+    fun frame(frame: Int) = playTime(Duration.ofMillis(frame * 50L))
 }
 
 internal enum class TemporalState {
@@ -137,11 +139,6 @@ private val Player.temporalInteraction: TemporalInteraction?
 fun Player.isPlayingTemporal(pageId: String): Boolean = temporalInteraction?.pageId == pageId
 
 fun Player.isPlayingTemporal(): Boolean = temporalInteraction != null
-
-fun Player.setTemporalFrame(frame: Int) {
-    val interaction = temporalInteraction ?: return
-    interaction.playTime(Duration.ofMillis(frame * 50L))
-}
 
 data class TemporalStartTrigger(
     val pageId: String,
@@ -162,4 +159,11 @@ data class TemporalSettings(
 data object TemporalStopTrigger : EventTrigger {
     override val id: String
         get() = "system.temporal.stop"
+}
+
+data class TemporalSetFrameTrigger(
+    val frame: Int,
+) : EventTrigger {
+    override val id: String
+        get() = "system.temporal.setFrame"
 }

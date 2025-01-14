@@ -40,8 +40,7 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.koin.core.qualifier.named
 import org.koin.java.KoinJavaComponent
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
+import kotlin.math.abs
 import kotlin.reflect.KClass
 
 @Entry("entity_cinematic", "Use an animated entity in a cinematic", Colors.PINK, "material-symbols:identity-platform")
@@ -108,7 +107,8 @@ class EntityCinematicAction(
     private var collectors: List<PropertyCollector<EntityProperty>> = emptyList()
     private var recordings: Map<String, Tape<EntityFrame>> = emptyMap()
 
-    private var currentData: EntityFrame = EntityFrame()
+    private var streamer: Streamer<EntityFrame>? = null
+    private var lastRelativeFrame = 0
 
     override suspend fun setup() {
         super.setup()
@@ -124,59 +124,64 @@ class EntityCinematicAction(
     override suspend fun startSegment(segment: EntityRecordedSegment) {
         super.startSegment(segment)
         val recording = recordings[segment.artifact.id] ?: return
+        if (recording.isEmpty()) return
         val definition = entry.definition.get() ?: return
-        this.entity = definition.create(player)
+        this.streamer = Streamer(recording)
+        this.lastRelativeFrame = 0
 
         val prioritizedPropertySuppliers = definition.data.withPriority() +
-                (FakeProvider(PositionProperty::class) { currentData.location?.toProperty(player.world.toWorld()) } to Int.MAX_VALUE) +
-                (FakeProvider(PoseProperty::class) { currentData.pose?.toProperty() } to Int.MAX_VALUE) +
-                (FakeProvider(ArmSwingProperty::class) { currentData.swing?.toProperty() } to Int.MAX_VALUE) +
-                (FakeProvider(DamagedProperty::class) { DamagedProperty(currentData.damaged) } to Int.MAX_VALUE) +
+                (FakeProvider(PositionProperty::class) { streamer?.currentFrame()?.location?.toProperty(player.world.toWorld()) } to Int.MAX_VALUE) +
+                (FakeProvider(PoseProperty::class) { streamer?.currentFrame()?.pose?.toProperty() } to Int.MAX_VALUE) +
+                (FakeProvider(ArmSwingProperty::class) { streamer?.currentFrame()?.swing?.toProperty() } to Int.MAX_VALUE) +
+                (FakeProvider(DamagedProperty::class) { DamagedProperty(streamer?.currentFrame()?.damaged == true) } to Int.MAX_VALUE) +
                 (FakeProvider(EquipmentProperty::class) {
                     val equipment =
                         mutableMapOf<com.github.retrooper.packetevents.protocol.player.EquipmentSlot, com.github.retrooper.packetevents.protocol.item.ItemStack>()
-                    currentData.mainHand?.let { equipment[MAIN_HAND] = it.toPacketItem() }
-                    currentData.offHand?.let { equipment[OFF_HAND] = it.toPacketItem() }
-                    currentData.helmet?.let { equipment[HELMET] = it.toPacketItem() }
-                    currentData.chestplate?.let { equipment[CHEST_PLATE] = it.toPacketItem() }
-                    currentData.leggings?.let { equipment[LEGGINGS] = it.toPacketItem() }
-                    currentData.boots?.let { equipment[BOOTS] = it.toPacketItem() }
+                    streamer?.currentFrame()?.mainHand?.let { equipment[MAIN_HAND] = it.toPacketItem() }
+                    streamer?.currentFrame()?.offHand?.let { equipment[OFF_HAND] = it.toPacketItem() }
+                    streamer?.currentFrame()?.helmet?.let { equipment[HELMET] = it.toPacketItem() }
+                    streamer?.currentFrame()?.chestplate?.let { equipment[CHEST_PLATE] = it.toPacketItem() }
+                    streamer?.currentFrame()?.leggings?.let { equipment[LEGGINGS] = it.toPacketItem() }
+                    streamer?.currentFrame()?.boots?.let { equipment[BOOTS] = it.toPacketItem() }
 
                     EquipmentProperty(equipment)
                 } to Int.MAX_VALUE)
 
         this.collectors = prioritizedPropertySuppliers.toCollectors()
+        spawn()
+    }
 
-        val startLocation = recording.firstNotNullWhere { it.location } ?: return
-        val firstFrame = recording.firstFrame ?: return
-        currentData = EntityFrame(
-            location = startLocation,
-            pose = firstFrame.pose,
-            swing = firstFrame.swing,
-            mainHand = if (firstFrame.mainHand.isNullOrEmpty()) null else firstFrame.mainHand,
-            offHand = if (firstFrame.offHand.isNullOrEmpty()) null else firstFrame.offHand,
-            helmet = if (firstFrame.helmet.isNullOrEmpty()) null else firstFrame.helmet,
-            chestplate = if (firstFrame.chestplate.isNullOrEmpty()) null else firstFrame.chestplate,
-            leggings = if (firstFrame.leggings.isNullOrEmpty()) null else firstFrame.leggings,
-            boots = if (firstFrame.boots.isNullOrEmpty()) null else firstFrame.boots,
-        )
-
-
+    private fun spawn() {
+        val definition = entry.definition.get() ?: return
+        this.entity = definition.create(player)
+        val startLocation = streamer?.currentFrame()?.location ?: return
         val collectedProperties = collectors.mapNotNull { it.collect(player) }
 
         this.entity?.spawn(startLocation.toProperty(player.world.toWorld()))
         this.entity?.consumeProperties(collectedProperties)
     }
 
+    private fun despawn() {
+        lastSoundLocation = null
+        this.entity?.dispose()
+        this.entity = null
+    }
+
     override suspend fun tickSegment(segment: EntityRecordedSegment, frame: Int) {
         super.tickSegment(segment, frame)
         val relativeFrame = frame - segment.startFrame
-        val recording = recordings[segment.artifact.id] ?: return
-        val frameData = recording.getFrame(relativeFrame) ?: return
-        currentData = currentData.merge(frameData)
+        streamer?.frame(relativeFrame)
+
+        if (abs(relativeFrame - lastRelativeFrame) > 5) {
+            despawn()
+            spawn()
+            lastRelativeFrame = relativeFrame
+            return
+        }
 
         val collectedProperties = collectors.mapNotNull { it.collect(player) }
         this.entity?.consumeProperties(collectedProperties)
+        lastRelativeFrame = relativeFrame
 
         trackStepSound()
     }
@@ -202,13 +207,10 @@ class EntityCinematicAction(
         player.playSound(location.toBukkitLocation(), sound, SoundCategory.NEUTRAL, 0.4f, 1.0f)
     }
 
+
     override suspend fun stopSegment(segment: EntityRecordedSegment) {
         super.stopSegment(segment)
-
-        lastSoundLocation = null
-
-        this.entity?.dispose()
-        this.entity = null
+        despawn()
     }
 }
 
@@ -232,19 +234,11 @@ class EntityCinematicViewing(context: ContentContext, player: Player) : ContentM
     }
 }
 
-@OptIn(ExperimentalContracts::class)
-fun ItemStack?.isNullOrEmpty(): Boolean {
-    contract {
-        returns(false) implies (this@isNullOrEmpty != null)
-    }
-    return this == null || this.isEmpty
-}
-
 data class EntityFrame(
     val location: Coordinate? = null,
     val pose: EntityPose? = null,
     val swing: ArmSwing? = null,
-    val damaged: Boolean = false,
+    val damaged: Boolean? = null,
 
     val mainHand: ItemStack? = null,
     val offHand: ItemStack? = null,
@@ -252,8 +246,8 @@ data class EntityFrame(
     val chestplate: ItemStack? = null,
     val leggings: ItemStack? = null,
     val boots: ItemStack? = null,
-) {
-    fun merge(next: EntityFrame): EntityFrame {
+) : Frame<EntityFrame> {
+    override fun merge(next: EntityFrame): EntityFrame {
         return EntityFrame(
             location = next.location ?: location,
             pose = next.pose ?: pose,
@@ -266,6 +260,26 @@ data class EntityFrame(
             leggings = next.leggings ?: leggings,
             boots = next.boots ?: boots,
         )
+    }
+
+    override fun optimize(previous: EntityFrame): EntityFrame {
+        return EntityFrame(
+            location = if (previous.location == location) null else location,
+            pose = if (previous.pose == pose) null else pose,
+            swing = if (previous.swing == swing) null else swing,
+            damaged = if (previous.damaged == damaged) null else damaged,
+            mainHand = if (previous.mainHand == mainHand) null else mainHand,
+            offHand = if (previous.offHand == offHand) null else offHand,
+            helmet = if (previous.helmet == helmet) null else helmet,
+            chestplate = if (previous.chestplate == chestplate) null else chestplate,
+            leggings = if (previous.leggings == leggings) null else leggings,
+            boots = if (previous.boots == boots) null else boots,
+        )
+    }
+
+    override fun isEmpty(): Boolean {
+        return location == null && pose == null && swing == null && damaged == null && mainHand == null && offHand == null
+                && helmet == null && chestplate == null && leggings == null && boots == null
     }
 }
 
@@ -286,8 +300,7 @@ class EntityCinematicRecording(
     context: ContentContext,
     player: Player,
     initialFrame: Int,
-    klass: KClass<EntityFrame>,
-) : RecordingCinematicContentMode<EntityFrame>(context, player, initialFrame, klass) {
+) : RecordingCinematicContentMode<EntityFrame>(context, player, initialFrame) {
     private var swing: ArmSwing? = null
     private var damaged: Boolean = false
 
@@ -351,7 +364,7 @@ class EntityCinematicRecording(
                 }
             }
         }
-        if (value.damaged) {
+        if (value.damaged == true) {
             player.damage(0.0)
         }
 

@@ -14,6 +14,11 @@ class TemporalHandler : TriggerHandler {
             )
         }
 
+        val setFrameTriggers = event.triggers.filterIsInstance<TemporalSetFrameTrigger>().maxByOrNull { it.frame }
+        if (setFrameTriggers != null && currentInteraction is TemporalInteraction) {
+            currentInteraction.frame(setFrameTriggers.frame)
+        }
+
         return tryStartTemporalInteraction(event)
     }
 

@@ -5,13 +5,16 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientEn
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Segments
+import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
 import com.typewritermc.engine.paper.entry.entries.Segment
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
-import com.typewritermc.engine.paper.entry.temporal.setTemporalFrame
+import com.typewritermc.engine.paper.entry.temporal.TemporalSetFrameTrigger
+import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
+import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.interaction.interceptPackets
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.isFloodgate
@@ -83,7 +86,10 @@ class SkipCinematicAction(
                         val packet = WrapperPlayClientEntityAction(event)
                         if (packet.entityId != player.entityId) return@ENTITY_ACTION
                         if (packet.action != WrapperPlayClientEntityAction.Action.START_SNEAKING) return@ENTITY_ACTION
-                        player.setTemporalFrame(segment.endFrame)
+                        TemporalSetFrameTrigger(segment.endFrame).triggerFor(
+                            player,
+                            player.interactionContext ?: context()
+                        )
                     }
                 }
             }
@@ -93,7 +99,7 @@ class SkipCinematicAction(
                 this.listener = listener
                 plugin.listen<PlayerSwapHandItemsEvent>(listener) {
                     if (it.player.uniqueId != player.uniqueId) return@listen
-                    player.setTemporalFrame(segment.endFrame)
+                    TemporalSetFrameTrigger(segment.endFrame).triggerFor(player, player.interactionContext ?: context())
                     it.isCancelled = true
                 }
             }

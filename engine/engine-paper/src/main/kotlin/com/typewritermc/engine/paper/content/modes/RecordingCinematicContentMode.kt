@@ -1,8 +1,7 @@
 package com.typewritermc.engine.paper.content.modes
 
 import com.google.gson.Gson
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
+import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.content.*
@@ -14,7 +13,6 @@ import com.typewritermc.engine.paper.entry.entries.CinematicEntry
 import com.typewritermc.engine.paper.entry.entries.getAssetFromFieldValue
 import com.typewritermc.engine.paper.entry.forceTriggerFor
 import com.typewritermc.engine.paper.entry.triggerFor
-import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.interaction.startBlockingActionBar
 import com.typewritermc.engine.paper.interaction.stopBlockingActionBar
 import com.typewritermc.engine.paper.plugin
@@ -36,24 +34,21 @@ import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
 import kotlin.reflect.KClass
 
-inline fun <reified T : Any> ComponentContainer.recordingCinematic(
+inline fun <reified F : Frame<F>> ComponentContainer.recordingCinematic(
     context: ContentContext,
     slot: Int,
     noinline frameFetcher: () -> Int,
-    noinline modeCreator: (ContentContext, Player, Int, KClass<T>) -> RecordingCinematicContentMode<T>,
-) = +RecordingCinematicComponent(context, slot, frameFetcher, modeCreator, T::class)
+    noinline modeCreator: (ContentContext, Player, Int) -> RecordingCinematicContentMode<F>,
+) = +RecordingCinematicComponent(context, slot, frameFetcher, modeCreator, F::class)
 
-class RecordingCinematicComponent<T : Any>(
+class RecordingCinematicComponent<F : Frame<F>>(
     private val context: ContentContext,
     val slot: Int,
     val frameFetcher: () -> Int,
-    val modeCreator: (ContentContext, Player, Int, KClass<T>) -> RecordingCinematicContentMode<T>,
-    val klass: KClass<T>,
+    val modeCreator: (ContentContext, Player, Int) -> RecordingCinematicContentMode<F>,
+    val klass: KClass<F>,
 ) : ContentComponent, ItemsComponent {
     override suspend fun initialize(player: Player) {}
     override suspend fun tick(player: Player) {}
@@ -82,18 +77,20 @@ class RecordingCinematicComponent<T : Any>(
                 meta.loreString = "<line> <gray>Click to start recording the cinematic."
             }
         } onInteract {
-            ContentModeTrigger(context, modeCreator(context, player, frameFetcher(), klass)).triggerFor(player, context())
+            ContentModeTrigger(context, modeCreator(context, player, frameFetcher())).triggerFor(
+                player,
+                context()
+            )
         }
 
         return mapOf(slot to item)
     }
 }
 
-abstract class RecordingCinematicContentMode<T : Any>(
+abstract class RecordingCinematicContentMode<F : Frame<F>>(
     context: ContentContext,
     player: Player,
     private val initialFrame: Int = 0,
-    private val klass: KClass<T>,
 ) : ContentMode(context, player), Listener, KoinComponent {
     private val gson: Gson by inject(named("bukkitDataParser"))
     private val assetManager: AssetManager by inject()
@@ -103,7 +100,7 @@ abstract class RecordingCinematicContentMode<T : Any>(
     private var frame = initialFrame
     private lateinit var frames: IntRange
 
-    private var tape = mutableTapeOf<T>()
+    private var recorder = Recorder<F>()
 
     override suspend fun setup(): Result<Unit> {
         val startFrame = context.startFrame
@@ -182,7 +179,7 @@ abstract class RecordingCinematicContentMode<T : Any>(
             ?: throw IllegalStateException("No asset found for recording cinematic after setup, this should not happen. Asset: '${context.fieldValue}'")
         val oldTapeData = if (assetManager.containsAsset(asset)) assetManager.fetchAsset(asset) else null
         if (oldTapeData != null) {
-            tape = gson.fromJson(oldTapeData, tape.javaClass)
+            recorder = Recorder.create(gson, oldTapeData)
         }
         // If we are starting from the middle of the segment, apply the state
         if (frame > frames.first) {
@@ -240,30 +237,11 @@ abstract class RecordingCinematicContentMode<T : Any>(
         )
     }
 
-    abstract fun captureFrame(): T
-    abstract fun applyState(value: T)
+    abstract fun captureFrame(): F
+    abstract fun applyState(value: F)
 
     private suspend fun applyStartingState() {
-        // We want to get the applied values. Since the tape is optimized, we can't just get the previous value
-        // We need to look back through all the previous frames and apply the latest values for all keys
-        val json = gson.toJsonTree(tape)
-        if (!json.isJsonObject) return
-        val obj = json.asJsonObject
-        val frames = obj.keySet().mapNotNull { it.toIntOrNull() }.sorted()
-        if (frames.isEmpty()) return
-        val previousValues = JsonObject()
-        for (frame in (frames.first()..frame).reversed()) {
-            val dataElement = obj[frame.toString()] ?: continue
-            if (!dataElement.isJsonObject) continue
-            val data = dataElement.asJsonObject
-
-            data.entrySet().filter { !previousValues.has(it.key) }.associate { it.key to it.value }
-                .forEach { (key, value) ->
-                    previousValues.add(key, value)
-                }
-        }
-
-        val value = gson.fromJson(previousValues, klass.java)
+        val value = recorder[frame] ?: return
         SYNC.switchContext {
             applyState(value)
         }
@@ -272,13 +250,13 @@ abstract class RecordingCinematicContentMode<T : Any>(
     private fun recordFrame() {
         val relativeFrame = frame - frames.first
         val value = captureFrame()
-        tape[relativeFrame] = value
+        recorder.record(relativeFrame, value)
     }
 
     private suspend fun saveStore() {
         val asset = asset ?: return
+        val tape = recorder.buildAndOptimize()
         val json = gson.toJsonTree(tape)
-        optimizeTape(json)
         assetManager.storeAsset(asset, json.toString())
     }
 
@@ -292,37 +270,6 @@ abstract class RecordingCinematicContentMode<T : Any>(
                 it.teardown()
             } catch (e: Exception) {
                 e.printStackTrace()
-            }
-        }
-    }
-
-    private fun optimizeTape(json: JsonElement) {
-        if (!json.isJsonObject) return
-        val obj = json.asJsonObject
-        val frames = obj.keySet().mapNotNull { it.toIntOrNull() }.sorted()
-        var previousValues = mapOf<String, JsonElement>()
-        for (frame in frames) {
-            // If the previous value is the same as the current value, remove the current value
-            val dataElement = obj[frame.toString()]
-            if (!dataElement.isJsonObject) continue
-            val data = dataElement.asJsonObject
-
-            val newData = mutableMapOf<String, JsonElement>()
-
-            for (key in data.keySet().toList()) {
-                val value = data[key]
-                newData[key] = value
-                val previousValue = previousValues[key]
-                if (previousValue != null && previousValue == value) {
-                    data.remove(key)
-                    continue
-                }
-            }
-            previousValues = newData
-
-            // If nothing changed in the frame, remove the frame
-            if (data.size() == 0) {
-                obj.remove(frame.toString())
             }
         }
     }

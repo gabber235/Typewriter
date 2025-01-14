@@ -57,6 +57,7 @@ import org.geysermc.geyser.api.bedrock.camera.CameraPosition
 import org.geysermc.geyser.api.bedrock.camera.GuiElement
 import org.geysermc.geyser.api.connection.GeyserConnection
 import java.util.*
+import kotlin.math.abs
 
 @Entry("camera_cinematic", "Create a cinematic camera path", Colors.CYAN, "fa6-solid:video")
 /**
@@ -137,6 +138,8 @@ class CameraCinematicAction(
     private var listener: Listener? = null
     private var boundStateSubscription: InteractionBoundStateOverrideSubscription? = null
 
+    private var lastFrame: Int = 0
+
     override suspend fun setup() {
         action = if (player.isFloodgate) {
             val geyserConnection = player.geyserConnection
@@ -172,8 +175,13 @@ class CameraCinematicAction(
 
         if (segment != null) {
             val baseFrame = frame - segment.startFrame
-            action.tickSegment(baseFrame)
+            if (abs(frame -lastFrame) > 5 && baseFrame > 0) {
+                action.skipToFrame(baseFrame)
+            } else {
+                action.tickSegment(baseFrame)
+            }
         }
+        lastFrame = frame
     }
 
     private suspend fun Player.setup() {
@@ -318,6 +326,7 @@ private data class PointSegment(
 private interface CameraAction {
     suspend fun startSegment(segment: CameraSegment)
     suspend fun tickSegment(frame: Int)
+    suspend fun skipToFrame(frame: Int)
     suspend fun switchSegment(newSegment: CameraSegment)
     suspend fun stop()
 }
@@ -359,9 +368,13 @@ private class DisplayCameraAction(
 
     override suspend fun tickSegment(frame: Int) {
         val location = path.interpolate(frame)
-        entity.rotateHead(location.yaw, location.pitch)
         entity.teleport(location.toPacketLocation())
         player.teleportIfNeeded(frame, location.toBukkitLocation())
+    }
+
+    override suspend fun skipToFrame(frame: Int) {
+        val location = path.interpolate(frame)
+        switchSeamless(location)
     }
 
     override suspend fun switchSegment(newSegment: CameraSegment) {
@@ -376,15 +389,13 @@ private class DisplayCameraAction(
         }
     }
 
-    private suspend fun switchSeamless() {
+    private suspend fun switchSeamless(position: Position = path.first().position) {
         val newEntity = createEntity()
-        newEntity.spawn(path.first().position.toPacketLocation())
+        newEntity.spawn(position.toPacketLocation())
         newEntity.addViewer(player.uniqueId)
 
-        SYNC.switchContext {
-            player.teleport(path.first().position.toBukkitLocation())
-            player.spectateEntity(newEntity)
-        }
+        player.teleportAsync(path.first().position.toBukkitLocation()).await()
+        player.spectateEntity(newEntity)
 
         entity.despawn()
         entity.remove()
@@ -395,11 +406,9 @@ private class DisplayCameraAction(
         player.stopSpectatingEntity()
         entity.despawn()
         entity.addViewer(player.uniqueId)
-        SYNC.switchContext {
-            player.teleport(path.first().position.toBukkitLocation())
-            entity.spawn(path.first().position.toPacketLocation())
-            player.spectateEntity(entity)
-        }
+        player.teleportAsync(path.first().position.toBukkitLocation()).await()
+        entity.spawn(path.first().position.toPacketLocation())
+        player.spectateEntity(entity)
     }
 
     override suspend fun stop() {
@@ -425,6 +434,10 @@ private class TeleportCameraAction(
             player.allowFlight = true
             player.isFlying = true
         }
+    }
+
+    override suspend fun skipToFrame(frame: Int) {
+        tickSegment(frame)
     }
 
     override suspend fun switchSegment(newSegment: CameraSegment) {
@@ -471,16 +484,8 @@ private class BedrockCameraAction(
                 GuiElement.EFFECTS_BAR,
                 GuiElement.ITEM_TEXT_POPUP,
             )
-            this.sendCameraPosition(
-                CameraPosition.builder()
-                    .position(Vector3f.from(position.x, position.y, position.z))
-                    .renderPlayerEffects(true)
-                    .rotationX(position.pitch.toInt().coerceIn(-90..90))
-                    .rotationY(position.yaw.toInt())
-                    .playerPositionForAudio(false)
-                    .build()
-            )
         }
+        setupCamera(position)
     }
 
     override suspend fun tickSegment(frame: Int) {
@@ -500,9 +505,17 @@ private class BedrockCameraAction(
         }
     }
 
+    override suspend fun skipToFrame(frame: Int) {
+        setupCamera(path.interpolate(frame))
+    }
+
     override suspend fun switchSegment(newSegment: CameraSegment) {
         setupPath(newSegment)
         val position = path.first().position
+        setupCamera(position)
+    }
+
+    private fun setupCamera(position: Position) {
         geyserConnection.camera().apply {
             this.sendCameraPosition(
                 CameraPosition.builder()
