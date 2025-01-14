@@ -6,6 +6,8 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.MaterialProperties
+import com.typewritermc.core.extension.annotations.MaterialProperty
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
@@ -36,6 +38,7 @@ class SetBlockActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @MaterialProperties(MaterialProperty.BLOCK)
     val material: Var<Material> = ConstVar(Material.AIR),
     val location: Var<Position> = ConstVar(Position.ORIGIN),
 ) : ActionEntry {

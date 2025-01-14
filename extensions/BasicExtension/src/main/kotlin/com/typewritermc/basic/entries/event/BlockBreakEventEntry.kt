@@ -75,9 +75,9 @@ fun onBlockBreak(event: BlockBreakEvent, query: Query<BlockBreakEventEntry>) {
         entry.block.map { it == event.block.type }.orElse(true)
     }.toList()
     entries.startDialogueWithOrNextDialogue(player) {
-        BlockBreakContextKeys.TYPE to event.block.type
-        BlockBreakContextKeys.BLOCK_POSITION to position.toBlockPosition()
-        BlockBreakContextKeys.CENTER_POSITION to position.mid()
+        BlockBreakContextKeys.TYPE += event.block.type
+        BlockBreakContextKeys.BLOCK_POSITION += position.toBlockPosition()
+        BlockBreakContextKeys.CENTER_POSITION += position.mid()
     }
     if (entries.any { it.cancel.get(player) }) event.isCancelled = true
 }

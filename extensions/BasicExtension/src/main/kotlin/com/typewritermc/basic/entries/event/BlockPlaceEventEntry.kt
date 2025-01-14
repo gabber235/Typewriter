@@ -54,7 +54,7 @@ fun onPlaceBlock(event: BlockPlaceEvent, query: Query<BlockPlaceEventEntry>) {
 
         entry.block == event.block.type
     }.startDialogueWithOrNextDialogue(player) {
-        BlockPlaceContextKeys.BLOCK_POSITION to position.toBlockPosition()
-        BlockPlaceContextKeys.CENTER_POSITION to position.mid()
+        BlockPlaceContextKeys.BLOCK_POSITION += position.toBlockPosition()
+        BlockPlaceContextKeys.CENTER_POSITION += position.mid()
     }
 }

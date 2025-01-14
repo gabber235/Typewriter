@@ -52,6 +52,6 @@ fun onChat(event: AsyncChatEvent, query: Query<ChatContainsTextEventEntry>) {
         else
             KotlinRegex(it.text).containsMatchIn(message)
     }.triggerAllFor(event.player) {
-        ChatContainsTextContextKeys.MESSAGE to message
+        ChatContainsTextContextKeys.MESSAGE withValue message
     }
 }

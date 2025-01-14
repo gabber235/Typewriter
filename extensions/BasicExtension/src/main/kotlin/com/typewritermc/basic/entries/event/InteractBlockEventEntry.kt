@@ -126,7 +126,7 @@ fun onInteractBlock(event: PlayerInteractEvent, query: Query<InteractBlockEventE
     if (entries.isEmpty()) return
 
     entries.startDialogueWithOrNextDialogue(player) {
-        InteractBlockContextKeys.POSITION to location.toPosition()
+        InteractBlockContextKeys.POSITION += location.toPosition()
     }
     if (entries.any { it.cancel.get(player) }) event.isCancelled = true
 }
