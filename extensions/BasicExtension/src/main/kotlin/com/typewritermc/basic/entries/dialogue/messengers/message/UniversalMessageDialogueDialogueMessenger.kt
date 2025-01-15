@@ -41,10 +41,6 @@ class UniversalMessageDialogueDialogueMessenger(
         state = MessengerState.FINISHED
         player.sendMessageDialogue(entry.text.get(player), entry.speakerDisplayName.get(player))
     }
-
-    override fun end() {
-        // Do nothing as we don't need to resend the messages.
-    }
 }
 
 fun Player.sendMessageDialogue(text: String, speakerDisplayName: String) {
