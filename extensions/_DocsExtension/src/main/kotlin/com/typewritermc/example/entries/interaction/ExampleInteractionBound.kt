@@ -36,7 +36,7 @@ class ExampleBound(
     override val priority: Int
 ) : ListenerInteractionBound {
 
-    override fun initialize() {
+    override suspend fun initialize() {
         super.initialize()
         // Setup initial state
     }
@@ -63,7 +63,11 @@ class ExampleBound(
         return false
     }
 
-    override fun teardown() {
+    override suspend fun tick() {
+        // Do something every tick
+    }
+
+    override suspend fun teardown() {
         // Cleanup any state
         super.teardown()
     }

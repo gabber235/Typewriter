@@ -10,6 +10,7 @@ import com.typewritermc.engine.paper.utils.item.Item
 import io.papermc.paper.event.player.PlayerPickItemEvent
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.inventory.*
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerItemHeldEvent
@@ -47,34 +48,34 @@ class HoldingItemAudienceFilter(
         return item.get(player).isSameAs(player, holdingItem)
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onPlayerItemHeld(event: PlayerItemHeldEvent) {
         val player = event.player
         val newHoldingItem = player.inventory.getItem(event.newSlot)
         player.updateFilter(item.get(player).isSameAs(player, newHoldingItem))
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onInventoryClickEvent(event: InventoryClickEvent) = onInventoryEvent(event)
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onInventoryDragEvent(event: InventoryDragEvent) = onInventoryEvent(event)
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onInventoryOpenEvent(event: InventoryOpenEvent) = onInventoryEvent(event)
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onInventoryCloseEvent(event: InventoryCloseEvent) = onInventoryEvent(event)
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onInventoryEvent(event: InventoryEvent) {
         val player = event.view.player as? Player ?: return
         player.refresh()
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onPickupItem(event: PlayerPickItemEvent) = event.player.refresh()
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onDropItem(event: PlayerDropItemEvent) = event.player.refresh()
 }

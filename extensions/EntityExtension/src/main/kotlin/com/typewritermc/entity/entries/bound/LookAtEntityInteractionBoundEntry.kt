@@ -65,7 +65,7 @@ class LookAtNpcInteractionBound(
     private val startLocation = player.location
     private val key = NamespacedKey.fromString("zoom", plugin)!!
 
-    override fun initialize() {
+    override suspend fun initialize() {
         super.initialize()
         updateZoom(0.0)
     }
@@ -124,7 +124,7 @@ class LookAtNpcInteractionBound(
         state = AnimationState.Moved(Instant.now())
     }
 
-    override fun tick() {
+    override suspend fun tick() {
         super.tick()
         state = state.transition()
         if (!state.isAnimating()) return
@@ -171,7 +171,7 @@ class LookAtNpcInteractionBound(
         }
     }
 
-    override fun teardown() {
+    override suspend fun teardown() {
         player.getAttribute(Attribute.MOVEMENT_SPEED)?.removeModifier(key)
         super.teardown()
     }

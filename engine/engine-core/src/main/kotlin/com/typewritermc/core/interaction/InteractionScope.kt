@@ -9,6 +9,7 @@ class InteractionScope(
     var bound: InteractionBound = InteractionBound.Empty,
 ) {
     private val interactionBoundStateOverrides = ConcurrentHashMap<UUID, InteractionBoundStateOverride>()
+    private var previousBoundState = boundState
 
     val boundState: InteractionBoundState
         get() {
@@ -30,7 +31,15 @@ class InteractionScope(
     }
     suspend fun tick(deltaTime: Duration) {
         interaction.tick(deltaTime)
+        refreshBoundState()
         bound.tick()
+    }
+
+    private suspend fun refreshBoundState() {
+        if (boundState != previousBoundState) {
+            bound.boundStateChange(previousBoundState, boundState)
+            previousBoundState = boundState
+        }
     }
 
     suspend fun swapInteraction(interaction: Interaction) {
@@ -50,13 +59,16 @@ class InteractionScope(
         interaction.teardown(force)
     }
 
-    fun addBoundStateOverride(id: UUID = UUID.randomUUID(), state: InteractionBoundState, priority: Int = 0): UUID {
+    suspend fun addBoundStateOverride(id: UUID = UUID.randomUUID(), state: InteractionBoundState, priority: Int = 0): UUID {
         interactionBoundStateOverrides[id] = InteractionBoundStateOverride(state, priority)
+        refreshBoundState()
         return id
     }
 
-    fun removeBoundStateOverride(id: UUID): Boolean {
-        return interactionBoundStateOverrides.remove(id) != null
+    suspend fun removeBoundStateOverride(id: UUID): Boolean {
+        val removed = interactionBoundStateOverrides.remove(id) != null
+        refreshBoundState()
+        return removed
     }
 }
 

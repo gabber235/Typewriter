@@ -4,7 +4,6 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
-import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.engine.paper.entry.Criteria
@@ -24,6 +23,12 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent
     Colors.MEDIUM_PURPLE,
     "gravity-ui:square-dashed-text"
 )
+/**
+ * The `Command Interaction Bound` entry is an interaction bound that triggers when the player types a command.
+ *
+ * ## How could this be used?
+ * This could be used to allow the player to cancel the interaction if they type a command.
+ */
 class CommandInteractionBoundEntry(
     override val id: String = "",
     override val name: String = "",

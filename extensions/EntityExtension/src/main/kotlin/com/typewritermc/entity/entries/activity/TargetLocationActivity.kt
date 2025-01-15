@@ -6,6 +6,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
