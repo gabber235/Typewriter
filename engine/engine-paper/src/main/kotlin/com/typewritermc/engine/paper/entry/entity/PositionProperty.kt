@@ -3,26 +3,25 @@ package com.typewritermc.engine.paper.entry.entity
 import com.typewritermc.core.utils.point.Coordinate
 import com.typewritermc.core.utils.point.Point
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.Rotatable
 import com.typewritermc.core.utils.point.World
+import com.typewritermc.core.utils.point.WorldHolder
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.utils.toPosition
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes.world
 
-class PositionProperty(
-    world: World,
-    x: Double,
-    y: Double,
-    z: Double,
-    yaw: Float,
-    pitch: Float,
-) : EntityProperty, Position(world, x, y, z, yaw, pitch) {
+data class PositionProperty(
+    override val world: World,
+    override val x: Double,
+    override val y: Double,
+    override val z: Double,
+    override val yaw: Float,
+    override val pitch: Float,
+) : EntityProperty, Point<PositionProperty>, Rotatable<PositionProperty>, WorldHolder<PositionProperty> {
     fun distanceSqrt(other: org.bukkit.Location): Double? {
         if (world.identifier != other.world.uid.toString()) return null
         return distanceSqrt(other.toPosition())
-    }
-
-    fun distanceSqrt(other: Position): Double? {
-        if (world.identifier != other.world.identifier) return null
-        return distanceSquared(other)
     }
 
     override fun withX(x: Double) = copy(x = x)
@@ -35,61 +34,21 @@ class PositionProperty(
 
     override fun withPitch(pitch: Float) = copy(pitch = pitch)
 
+    override fun withRotation(yaw: Float, pitch: Float) = copy(yaw = yaw, pitch = pitch)
+
     override fun withWorld(world: World) = copy(world = world)
 
     override fun add(x: Double, y: Double, z: Double): PositionProperty {
         return copy(x = this.x + x, y = this.y + y, z = this.z + z)
     }
 
-    override fun add(point: Point) = add(point.x, point.y, point.z)
-
-    override fun add(value: Double) = add(value, value, value)
-
-    override fun plus(point: Point) = add(point)
-
-    override fun plus(value: Double) = add(value)
-
     override fun sub(x: Double, y: Double, z: Double) = copy(x = this.x - x, y = this.y - y, z = this.z - z)
-
-    override fun sub(point: Point) = sub(point.x, point.y, point.z)
-
-    override fun sub(value: Double) = sub(value, value, value)
-
-    override fun minus(point: Point) = sub(point)
-
-    override fun minus(value: Double) = sub(value)
 
     override fun mul(x: Double, y: Double, z: Double) = copy(x = this.x * x, y = this.y * y, z = this.z * z)
 
-    override fun mul(point: Point) = mul(point.x, point.y, point.z)
-
-    override fun mul(value: Double) = mul(value, value, value)
-
-    override fun times(point: Point) = mul(point)
-
-    override fun times(value: Double) = mul(value)
-
     override fun div(x: Double, y: Double, z: Double) = copy(x = this.x / x, y = this.y / y, z = this.z / z)
 
-    override fun div(point: Point) = div(point.x, point.y, point.z)
-
-    override fun div(value: Double) = div(value, value, value)
-
-    override fun copy(
-        world: World,
-        x: Double,
-        y: Double,
-        z: Double,
-        yaw: Float,
-        pitch: Float,
-    ): PositionProperty = PositionProperty(
-        world,
-        x,
-        y,
-        z,
-        yaw,
-        pitch
-    )
+    fun toPosition() = Position(world, x, y, z, yaw, pitch)
 
     companion object : SinglePropertyCollectorSupplier<PositionProperty>(PositionProperty::class)
 }

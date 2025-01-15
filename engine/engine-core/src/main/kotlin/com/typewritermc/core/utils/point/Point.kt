@@ -9,7 +9,7 @@ import kotlin.math.sqrt
 /**
  * Represents a 3D point.
  */
-interface Point {
+interface Point<P : Point<P>> {
     /**
      * Gets the X coordinate.
      *
@@ -62,7 +62,7 @@ interface Point {
      * @return a new point
      */
     @Contract(pure = true)
-    fun withX(operator: DoubleUnaryOperator): Point {
+    fun withX(operator: DoubleUnaryOperator): P {
         return withX(operator.applyAsDouble(x))
     }
 
@@ -73,7 +73,7 @@ interface Point {
      * @return a new point
      */
     @Contract(pure = true)
-    fun withX(x: Double): Point
+    fun withX(x: Double): P
 
     /**
      * Creates a point with a modified Y coordinate based on its value.
@@ -82,7 +82,7 @@ interface Point {
      * @return a new point
      */
     @Contract(pure = true)
-    fun withY(operator: DoubleUnaryOperator): Point {
+    fun withY(operator: DoubleUnaryOperator): P {
         return withY(operator.applyAsDouble(y))
     }
 
@@ -93,7 +93,7 @@ interface Point {
      * @return a new point
      */
     @Contract(pure = true)
-    fun withY(y: Double): Point
+    fun withY(y: Double): P
 
     /**
      * Creates a point with a modified Z coordinate based on its value.
@@ -102,7 +102,7 @@ interface Point {
      * @return a new point
      */
     @Contract(pure = true)
-    fun withZ(operator: DoubleUnaryOperator): Point {
+    fun withZ(operator: DoubleUnaryOperator): P {
         return withZ(operator.applyAsDouble(z))
     }
 
@@ -113,55 +113,55 @@ interface Point {
      * @return a new point
      */
     @Contract(pure = true)
-    fun withZ(z: Double): Point
+    fun withZ(z: Double): P
 
     @Contract(pure = true)
-    fun add(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Point
+    fun add(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): P
 
     @Contract(pure = true)
-    fun add(point: Point): Point
+    fun add(point: Point<*>) = add(point.x, point.y, point.z)
 
-    operator fun plus(point: Point): Point
-
-    @Contract(pure = true)
-    fun add(value: Double): Point
-
-    operator fun plus(value: Double): Point
+    operator fun plus(point: Point<*>) = add(point)
 
     @Contract(pure = true)
-    fun sub(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Point
+    fun add(value: Double) = add(value, value, value)
+
+    operator fun plus(value: Double) = add(value)
 
     @Contract(pure = true)
-    fun sub(point: Point): Point
-
-    operator fun minus(point: Point): Point
+    fun sub(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): P
 
     @Contract(pure = true)
-    fun sub(value: Double): Point
+    fun sub(point: Point<*>) = sub(point.x, point.y, point.z)
 
-    operator fun minus(value: Double): Point
-
-    @Contract(pure = true)
-    fun mul(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0): Point
+    operator fun minus(point: Point<*>) = sub(point)
 
     @Contract(pure = true)
-    fun mul(point: Point): Point
+    fun sub(value: Double) = sub(value, value, value)
 
-    operator fun times(point: Point): Point
-
-    @Contract(pure = true)
-    fun mul(value: Double): Point
-
-    operator fun times(value: Double): Point
+    operator fun minus(value: Double) = sub(value)
 
     @Contract(pure = true)
-    fun div(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0): Point
+    fun mul(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0): P
 
     @Contract(pure = true)
-    operator fun div(point: Point): Point
+    fun mul(point: Point<*>) = mul(point.x, point.y, point.z)
+
+    operator fun times(point: Point<*>) = mul(point)
 
     @Contract(pure = true)
-    operator fun div(value: Double): Point
+    fun mul(value: Double) = mul(value, value, value)
+
+    operator fun times(value: Double) = mul(value)
+
+    @Contract(pure = true)
+    fun div(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0): P
+
+    @Contract(pure = true)
+    operator fun div(point: Point<*>) = div(point.x, point.y, point.z)
+
+    @Contract(pure = true)
+    operator fun div(value: Double) = div(value, value, value)
 
     @Contract(pure = true)
     fun distanceSquared(x: Double, y: Double, z: Double): Double {
@@ -175,7 +175,7 @@ interface Point {
      * @return the squared distance
      */
     @Contract(pure = true)
-    fun distanceSquared(point: Point): Double {
+    fun distanceSquared(point: Point<*>): Double {
         return distanceSquared(point.x, point.y, point.z)
     }
 
@@ -195,7 +195,7 @@ interface Point {
      * @return the distance
      */
     @Contract(pure = true)
-    fun distance(point: Point): Double {
+    fun distance(point: Point<*>): Double {
         return distance(point.x, point.y, point.z)
     }
 
@@ -209,7 +209,7 @@ interface Point {
      * @param point the point to compare
      * @return true if the two positions are similar
      */
-    fun samePoint(point: Point): Boolean {
+    fun samePoint(point: Point<*>): Boolean {
         return samePoint(point.x, point.y, point.z)
     }
 
@@ -232,7 +232,7 @@ interface Point {
      * @param point the point to compare to
      * @return true if 'this' is in the same block as `point`
      */
-    fun sameBlock(point: Point): Boolean {
+    fun sameBlock(point: Point<*>): Boolean {
         return sameBlock(point.blockX, point.blockY, point.blockZ)
     }
 
@@ -243,7 +243,7 @@ interface Point {
      * @param range the range to check
      * @return true if the distance between the two points is less than or equal to the range
      */
-    fun isInRange(point: Point, range: Double): Boolean {
+    fun isInRange(point: Point<*>, range: Double): Boolean {
         return isInRange(point.x, point.y, point.z, range)
     }
 

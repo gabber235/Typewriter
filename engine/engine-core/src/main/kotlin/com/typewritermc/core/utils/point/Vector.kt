@@ -7,12 +7,13 @@ data class Vector(
     override val x: Double = 0.0,
     override val y: Double = 0.0,
     override val z: Double = 0.0,
-) : Point {
+) : Point<Vector> {
     constructor(x: Int, y: Int, z: Int) : this(x.toDouble(), y.toDouble(), z.toDouble())
 
     companion object {
         val ZERO = Vector(0.0, 0.0, 0.0)
         val UNIT = Vector(1.0, 1.0, 1.0)
+
         @Language("JSON")
         const val UNIT_JSON = "{\"x\": 1.0, \"y\": 1.0, \"z\": 1.0}"
         const val EPSILON: Double = 0.000001
@@ -43,45 +44,17 @@ data class Vector(
         return Vector(this.x + x, this.y + y, this.z + z)
     }
 
-    override fun add(point: Point) = add(point.x, point.y, point.z)
-
-    override fun add(value: Double) = add(value, value, value)
-
-    override fun plus(point: Point) = add(point)
-
-    override fun plus(value: Double) = add(value)
-
     override fun sub(x: Double, y: Double, z: Double): Vector {
         return Vector(this.x - x, this.y - y, this.z - z)
     }
-
-    override fun sub(point: Point) = sub(point.x, point.y, point.z)
-
-    override fun sub(value: Double) = sub(value, value, value)
-
-    override fun minus(point: Point) = sub(point)
-
-    override fun minus(value: Double) = sub(value)
 
     override fun mul(x: Double, y: Double, z: Double): Vector {
         return Vector(this.x * x, this.y * y, this.z * z)
     }
 
-    override fun mul(point: Point) = mul(point.x, point.y, point.z)
-
-    override fun mul(value: Double) = mul(value, value, value)
-
-    override fun times(point: Point) = mul(point)
-
-    override fun times(value: Double) = mul(value)
-
     override fun div(x: Double, y: Double, z: Double): Vector {
         return Vector(this.x / x, this.y / y, this.z / z)
     }
-
-    override fun div(point: Point) = div(point.x, point.y, point.z)
-
-    override fun div(value: Double) = div(value, value, value)
 
     fun normalize(): Vector {
         val length = length
@@ -101,7 +74,7 @@ data class Vector(
     }
 }
 
-fun Point.toVector(): Vector {
+fun Point<*>.toVector(): Vector {
     if (this is Vector) {
         return this
     }

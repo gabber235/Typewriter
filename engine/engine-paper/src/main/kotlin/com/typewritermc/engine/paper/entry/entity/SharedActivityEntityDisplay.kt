@@ -71,10 +71,10 @@ class SharedActivityEntityDisplay(
     }
 
     override fun playerSeesEntity(playerId: UUID, entityId: Int): Boolean {
-        return entities[playerId]?.contains(entityId) ?: false
+        return entities[playerId]?.contains(entityId) == true
     }
 
-    override fun position(playerId: UUID): Position? = activityManager?.position
+    override fun position(playerId: UUID): Position? = activityManager?.position?.toPosition()
     override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: EntityState()
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
 

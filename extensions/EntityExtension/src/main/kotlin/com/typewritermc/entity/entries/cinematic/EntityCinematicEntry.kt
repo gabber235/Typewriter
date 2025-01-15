@@ -11,6 +11,7 @@ import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.core.utils.point.Coordinate
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.content.ContentContext
 import com.typewritermc.engine.paper.content.ContentMode
 import com.typewritermc.engine.paper.content.components.cinematic
