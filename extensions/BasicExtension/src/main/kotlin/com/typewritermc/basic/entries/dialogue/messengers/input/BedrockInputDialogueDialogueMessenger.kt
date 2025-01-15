@@ -6,9 +6,15 @@ import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
 import com.typewritermc.engine.paper.entry.dialogue.MessengerState
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.legacy
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 import org.geysermc.cumulus.form.CustomForm
+
+private val inputTitle: String by snippet("dialogue.input.bedrock.title", "<bold><speaker></bold>")
+private val inputContent: String by snippet("dialogue.input.bedrock.content", "<message>\n\n")
+private val inputField: String by snippet("dialogue.input.bedrock.field", "Value")
 
 class BedrockInputDialogueDialogueMessenger<T : Any>(
     player: Player,
@@ -27,9 +33,13 @@ class BedrockInputDialogueDialogueMessenger<T : Any>(
         org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
             player.uniqueId,
             CustomForm.builder()
-                .title("<bold>${entry.speakerDisplayName.get(player).parsePlaceholders(player)}</bold>".legacy())
-                .label("${entry.text.get(player).parsePlaceholders(player).legacy()}\n\n")
-                .input("Value")
+                .title(inputTitle.parsePlaceholders(player).legacy(
+                    Placeholder.parsed("speaker", entry.speakerDisplayName.get(player).parsePlaceholders(player))
+                ))
+                .label(inputContent.parsePlaceholders(player).legacy(
+                    Placeholder.parsed("message", entry.text.get(player).parsePlaceholders(player))
+                ))
+                .input(inputField.parsePlaceholders(player).legacy())
                 .closedOrInvalidResultHandler { _, _ ->
                     state = MessengerState.CANCELLED
                 }
