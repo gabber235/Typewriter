@@ -9,10 +9,10 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.toBlockPosition
 import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.engine.paper.entry.entity.toProperty
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.triggerAllFor
 import com.typewritermc.engine.paper.utils.item.Item
+import com.typewritermc.engine.paper.utils.toPosition
 import org.bukkit.Material
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
@@ -53,7 +53,7 @@ fun onPlayerProjectileHitBlock(event: ProjectileHitEvent, query: Query<PlayerPro
 
         if (entry.hitBlockType.isPresent && entry.hitBlockType.get() != hitBlock.type) return@findWhere false
         if (entry.blockPosition.isPresent && entry.blockPosition.get()
-                .toBlockPosition() != hitBlock.location.toProperty().toBlockPosition()
+                .toBlockPosition() != hitBlock.location.toPosition().toBlockPosition()
         ) return@findWhere false
 
         if (entry.itemInHand.isPresent && !hasItemInHand(

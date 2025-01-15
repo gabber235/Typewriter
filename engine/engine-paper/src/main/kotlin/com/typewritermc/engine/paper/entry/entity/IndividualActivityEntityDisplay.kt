@@ -89,7 +89,7 @@ class IndividualActivityEntityDisplay(
         return entities[playerId]?.contains(entityId) == true
     }
 
-    override fun position(playerId: UUID): Position? = activityManagers[playerId]?.position
+    override fun position(playerId: UUID): Position? = activityManagers[playerId]?.position?.toPosition()
     override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: EntityState()
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
 

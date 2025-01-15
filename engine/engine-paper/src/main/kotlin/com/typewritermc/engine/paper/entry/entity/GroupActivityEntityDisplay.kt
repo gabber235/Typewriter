@@ -98,13 +98,13 @@ class GroupActivityEntityDisplay(
     }
 
     override fun playerSeesEntity(playerId: UUID, entityId: Int): Boolean {
-        return entities[playerId]?.contains(entityId) ?: false
+        return entities[playerId]?.contains(entityId) == true
     }
 
     override fun position(playerId: UUID): Position? {
         val player = server.getPlayer(playerId) ?: return null
         val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
-        return activityManagers[groupId]?.position
+        return activityManagers[groupId]?.position?.toPosition()
     }
     override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: EntityState()
 

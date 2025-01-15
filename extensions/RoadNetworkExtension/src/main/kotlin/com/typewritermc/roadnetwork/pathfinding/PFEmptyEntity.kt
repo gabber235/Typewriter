@@ -7,7 +7,7 @@ import com.extollit.linalg.immutable.Vec3d
 import com.typewritermc.core.utils.point.Point
 
 class PFEmptyEntity(
-    private val position: Point,
+    private val position: Point<*>,
     private val width: Float = 0.6f,
     private val height: Float = 1.8f,
     val searchRange: Float,

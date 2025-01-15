@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.entry.entity
 
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.PropertyCollector
 import com.typewritermc.engine.paper.entry.entries.PropertyCollectorSupplier

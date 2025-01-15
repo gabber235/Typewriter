@@ -50,7 +50,7 @@ object BlockCollision {
         var foundCollisionY = false
         var foundCollisionZ = false
 
-        val collidedPoints: Array<Point?> = arrayOfNulls(3)
+        val collidedPoints: Array<Point<*>?> = arrayOfNulls(3)
         val collisionShapes: Array<Shape?> = arrayOfNulls(3)
 
         var hasCollided = false
@@ -185,7 +185,7 @@ object BlockCollision {
             var timer = -1
 
             while (iterator.hasNext() && timer != 0) {
-                val p: Point = iterator.next()
+                val p: Point<*> = iterator.next()
 
                 // If we hit a block, there are at most 3 other blocks that could be closer
                 if (checkBoundingBox(
@@ -713,7 +713,7 @@ data class PhysicsResult(
     val collisionY: Boolean,
     val collisionZ: Boolean,
     val originalDelta: Vector,
-    val collisionPoints: Array<Point?>?,
+    val collisionPoints: Array<Point<*>?>?,
     val collisionShapes: Array<Shape?>?,
     val hasCollision: Boolean,
     val res: SweepResult
@@ -726,7 +726,7 @@ data class SweepResult(
     var normalZ: Double,
     var collidedHeightDiff: Double,
     var collidedShape: Shape?,
-    var collidedPos: Point?,
+    var collidedPos: Point<*>?,
 )
 
 interface Shape {
@@ -741,8 +741,8 @@ interface Shape {
      * @return is an intersection found
      */
     fun intersectBoxSwept(
-        rayStart: Point, rayDirection: Point,
-        shapePos: Point, moving: BoundingBox, finalResult: SweepResult
+        rayStart: Point<*>, rayDirection: Point<*>,
+        shapePos: Point<*>, moving: BoundingBox, finalResult: SweepResult
     ): Boolean
 
     /**
@@ -757,7 +757,7 @@ interface Shape {
      *
      * @return End of shape
      */
-    fun relativeEnd(): Point
+    fun relativeEnd(): Point<*>
 }
 
 class BukkitBlockShape(
@@ -766,9 +766,9 @@ class BukkitBlockShape(
     private val collidedShape by lazy(LazyThreadSafetyMode.NONE) { block.collisionShape }
 
     override fun intersectBoxSwept(
-        rayStart: Point,
-        rayDirection: Point,
-        shapePos: Point,
+        rayStart: Point<*>,
+        rayDirection: Point<*>,
+        shapePos: Point<*>,
         moving: BoundingBox,
         finalResult: SweepResult
     ): Boolean {
@@ -798,7 +798,7 @@ class BukkitBlockShape(
 
     override fun boundingBoxes(): Collection<BoundingBox> = collidedShape.boundingBoxes
 
-    override fun relativeEnd(): Point {
+    override fun relativeEnd(): Point<*> {
         var maxX = 0.0
         var maxY = 0.0
         var maxZ = 0.0
@@ -823,13 +823,13 @@ class BukkitBlockShape(
      */
     fun boundingBoxIntersectionCheck(
         moving: BoundingBox,
-        rayStart: Point,
-        rayDirection: Point,
+        rayStart: Point<*>,
+        rayDirection: Point<*>,
         collidableStatic: BoundingBox,
-        staticCollidableOffset: Point,
+        staticCollidableOffset: Point<*>,
         finalResult: SweepResult
     ): Boolean {
-        val bbCentre: Point = Vector(
+        val bbCentre: Point<*> = Vector(
             moving.minX + moving.widthX / 2,
             moving.minY + moving.height / 2,
             moving.minZ + moving.widthZ / 2
@@ -1019,7 +1019,7 @@ class BukkitBlockGetter(
  * This class performs ray tracing and iterates along blocks on a line
  */
 class BlockIterator(start: Vector, direction: Vector, yOffset: Double, maxDistance: Double, smooth: Boolean) :
-    MutableIterator<Point?> {
+    MutableIterator<Point<*>?> {
     private val signums = ShortArray(3)
     private var end: Vector? = null
     private val smooth: Boolean
@@ -1041,7 +1041,7 @@ class BlockIterator(start: Vector, direction: Vector, yOffset: Double, maxDistan
     var mapY: Int
     var mapZ: Int
 
-    private val extraPoints: ArrayDeque<Point> = ArrayDeque()
+    private val extraPoints: ArrayDeque<Point<*>> = ArrayDeque()
 
     /**
      * Constructs the BlockIterator.
@@ -1138,7 +1138,7 @@ class BlockIterator(start: Vector, direction: Vector, yOffset: Double, maxDistan
      *
      * @return the next BlockPosition in the trace
      */
-    override fun next(): Point {
+    override fun next(): Point<*> {
         if (foundEnd) throw NoSuchElementException()
         if (!extraPoints.isEmpty()) {
             val res = extraPoints.removeFirst()
