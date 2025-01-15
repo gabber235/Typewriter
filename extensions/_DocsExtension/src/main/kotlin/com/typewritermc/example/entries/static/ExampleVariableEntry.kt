@@ -5,12 +5,11 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.core.extension.annotations.VariableData
-import com.typewritermc.core.utils.point.Generic
+import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.*
-import org.bukkit.entity.Player
 
 //<code-block:variable_entry>
 @Entry("example_variable", "An example variable entry.", Colors.GREEN, "mdi:code-tags")

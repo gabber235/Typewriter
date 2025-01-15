@@ -6,7 +6,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.serialization.DataSerializer
-import com.typewritermc.core.utils.point.Generic
+import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.entries.*
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type

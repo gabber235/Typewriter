@@ -5,7 +5,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.VariableData
 import com.typewritermc.core.interaction.InteractionContextKey
-import com.typewritermc.core.utils.point.Generic
+import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData

@@ -3,7 +3,7 @@ package com.typewritermc.processors.entry.editors
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSType
-import com.typewritermc.core.utils.point.Generic
+import com.typewritermc.core.utils.Generic
 import com.typewritermc.processors.entry.CustomEditor
 import com.typewritermc.processors.entry.DataBlueprint
 import com.typewritermc.processors.entry.PrimitiveType
