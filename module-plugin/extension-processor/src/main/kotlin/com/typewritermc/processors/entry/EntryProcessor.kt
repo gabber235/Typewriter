@@ -83,7 +83,7 @@ class EntryProcessor(
             try {
                 return DataBlueprint.blueprint(this@fieldBlueprints.asStarProjectedType())
                     ?: throw CouldNotBuildBlueprintException(fullName)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 throw FailedToGenerateBlueprintException(this@fieldBlueprints, e)
             }
         }
