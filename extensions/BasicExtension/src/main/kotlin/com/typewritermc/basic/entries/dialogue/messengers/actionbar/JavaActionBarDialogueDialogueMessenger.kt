@@ -54,9 +54,6 @@ class JavaActionBarDialogueDialogueMessenger(
 
         // The player might have had something before this. So we want to clean the chat before sending our message.
         player.chatHistory.resendMessages(player)
-
-
-        player.startBlockingActionBar()
     }
 
     override fun tick(context: TickContext) {
@@ -97,8 +94,9 @@ class JavaActionBarDialogueDialogueMessenger(
 
     override fun dispose() {
         super.dispose()
-        player.stopBlockingActionBar()
-        player.sendActionBar(Component.empty())
+        val component = Component.empty()
+        player.acceptActionBarMessage(component)
+        player.sendActionBar(component)
         confirmationKeyHandler?.dispose()
         confirmationKeyHandler = null
     }

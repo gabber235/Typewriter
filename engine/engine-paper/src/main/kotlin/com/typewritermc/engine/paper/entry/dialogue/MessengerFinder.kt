@@ -45,12 +45,12 @@ open class DialogueMessenger<DE : DialogueEntry>(
     open fun end() {
         state = MessengerState.FINISHED
         player.chatHistory.resendMessages(player)
-
-        // Resend the chat history again after a delay to make sure that the dialogue chat is fully cleared
-        SYNC.launch {
-            delay(1.ticks)
-            player.chatHistory.resendMessages(player)
-        }
+//
+//        // Resend the chat history again after a delay to make sure that the dialogue chat is fully cleared
+//        SYNC.launch {
+//            delay(1.ticks)
+//            player.chatHistory.resendMessages(player)
+//        }
     }
 
     open val eventTriggers: List<EventTrigger>
