@@ -6,6 +6,7 @@ import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
 import com.typewritermc.engine.paper.entry.entries.PropertySupplier
 import com.typewritermc.engine.paper.entry.entries.TickableDisplay
+import com.typewritermc.engine.paper.entry.entries.Var
 import lirand.api.extensions.server.server
 import org.bukkit.entity.Player
 import java.util.*
@@ -16,7 +17,7 @@ class IndividualActivityEntityDisplay(
     override val creator: EntityCreator,
     private val activityCreator: ActivityCreator,
     private val suppliers: List<Pair<PropertySupplier<*>, Int>>,
-    private val spawnPosition: Position,
+    private val spawnPosition: Var<Position>,
 ) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
     private val activityManagers = ConcurrentHashMap<UUID, ActivityManager<in IndividualActivityContext>>()
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
@@ -31,7 +32,7 @@ class IndividualActivityEntityDisplay(
     override fun onPlayerAdd(player: Player) {
         activityManagers.computeIfAbsent(player.uniqueId) {
             val context = IndividualActivityContext(instanceEntryRef, player)
-            val activity = activityCreator.create(context, spawnPosition.toProperty())
+            val activity = activityCreator.create(context, spawnPosition.get(player).toProperty())
             val activityManager = ActivityManager(activity)
             activityManager.initialize(context)
             activityManager
@@ -85,7 +86,7 @@ class IndividualActivityEntityDisplay(
     }
 
     override fun playerSeesEntity(playerId: UUID, entityId: Int): Boolean {
-        return entities[playerId]?.contains(entityId) ?: false
+        return entities[playerId]?.contains(entityId) == true
     }
 
     override fun position(playerId: UUID): Position? = activityManagers[playerId]?.position

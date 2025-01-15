@@ -74,7 +74,7 @@ class IndividualAdvancedEntityInstanceEntry(
     override val id: String = "",
     override val name: String = "",
     override val definition: Ref<out EntityDefinitionEntry> = emptyRef(),
-    override val spawnLocation: Position = Position.ORIGIN,
+    override val spawnLocation: Var<Position> = ConstVar(Position.ORIGIN),
     override val children: List<Ref<out AudienceEntry>> = emptyList(),
     override val activity: Ref<out IndividualEntityActivityEntry> = emptyRef(),
 ) : IndividualAdvancedEntityInstance
