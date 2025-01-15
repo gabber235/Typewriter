@@ -9,8 +9,14 @@ import com.typewritermc.engine.paper.entry.dialogue.MessengerState
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.legacy
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
+
+private val optionTitle: String by snippet("dialogue.option.bedrock.title", "<bold><speaker></bold>")
+private val optionDescription: String by snippet("dialogue.option.bedrock.description", "<message>\n\n\n>")
+private val optionSelect: String by snippet("dialogue.option.bedrock.select", "Select Response")
 
 class BedrockOptionDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: OptionDialogueEntry) :
     DialogueMessenger<OptionDialogueEntry>(player, context, entry) {
@@ -33,10 +39,16 @@ class BedrockOptionDialogueDialogueMessenger(player: Player, context: Interactio
         org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
             player.uniqueId,
             org.geysermc.cumulus.form.CustomForm.builder()
-                .title("<bold>${entry.speakerDisplayName.get(player).parsePlaceholders(player)}</bold>".legacy())
-                .label("${entry.text.get(player).parsePlaceholders(player).legacy()}\n\n\n")
+                .title(
+                    optionTitle.parsePlaceholders(player).legacy(
+                        Placeholder.parsed("speaker", entry.speakerDisplayName.get(player).parsePlaceholders(player))
+                    )
+                )
+                .label(optionDescription.parsePlaceholders(player).legacy(
+                    Placeholder.parsed("message", entry.text.get(player).parsePlaceholders(player))
+                ))
                 .dropdown(
-                    "Select Response",
+                    optionSelect.parsePlaceholders(player).legacy(),
                     usableOptions.map { it.text.get(player).parsePlaceholders(player).legacy() })
                 .label("\n\n\n\n")
                 .closedOrInvalidResultHandler { _, _ ->

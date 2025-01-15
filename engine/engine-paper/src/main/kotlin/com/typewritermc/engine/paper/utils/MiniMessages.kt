@@ -67,6 +67,9 @@ fun String.stripped(): String =
 fun String.legacy(): String =
     this.asMini().legacy()
 
+fun String.legacy(vararg resolvers: TagResolver): String =
+    this.asMiniWithResolvers(*resolvers).legacy()
+
 
 fun String.asPartialFormattedMini(
     percentage: Double,
