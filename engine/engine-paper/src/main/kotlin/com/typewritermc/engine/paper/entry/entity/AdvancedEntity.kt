@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.priority
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
+import com.typewritermc.core.extension.annotations.WithRotation
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.descendants
 import com.typewritermc.engine.paper.entry.entries.*
@@ -14,12 +15,19 @@ import com.typewritermc.engine.paper.logger
 interface SharedAdvancedEntityInstance : EntityInstanceEntry {
     val activity: Ref<out SharedEntityActivityEntry>
 
+    @WithRotation
+    val spawnLocation: Position
+
     override fun display(): AudienceFilter {
         val activityCreator = this.activity.get() ?: IdleActivity
+        val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
 
-        return toAdvancedEntityDisplay(
+        return SharedActivityEntityDisplay(
+            ref(),
+            definition,
             activityCreator,
-            ::SharedActivityEntityDisplay,
+            suppliers,
+            spawnLocation,
         )
     }
 }
@@ -28,6 +36,9 @@ interface SharedAdvancedEntityInstance : EntityInstanceEntry {
 interface GroupAdvancedEntityInstance : EntityInstanceEntry {
     val activity: Ref<out SharedEntityActivityEntry>
 
+    @WithRotation
+    val spawnLocation: Position
+
     @Help("The group that this entity instance belongs to.")
     val group: Ref<out GroupEntry>
 
@@ -35,12 +46,9 @@ interface GroupAdvancedEntityInstance : EntityInstanceEntry {
         val activityCreator = this.activity.get() ?: IdleActivity
 
         val group = this.group.get() ?: throw IllegalStateException("No group found for the group entity instance.")
+        val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
 
-        return toAdvancedEntityDisplay(
-            activityCreator,
-        ) { ref, definition, activityCreator, suppliers, spawnLocation ->
-            GroupActivityEntityDisplay(ref, definition, activityCreator, suppliers, spawnLocation, group)
-        }
+        return GroupActivityEntityDisplay(ref(), definition, activityCreator, suppliers, spawnLocation, group)
     }
 }
 
@@ -48,24 +56,23 @@ interface GroupAdvancedEntityInstance : EntityInstanceEntry {
 interface IndividualAdvancedEntityInstance : EntityInstanceEntry {
     val activity: Ref<out IndividualEntityActivityEntry>
 
+    @WithRotation
+    val spawnLocation: Var<Position>
+
     override fun display(): AudienceFilter {
         val activityCreator = this.activity.get() ?: IdleActivity
 
-        return toAdvancedEntityDisplay(
-            activityCreator,
-            ::IndividualActivityEntityDisplay,
-        )
+        val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
+
+        return IndividualActivityEntityDisplay(ref(), definition, activityCreator, suppliers, spawnLocation)
     }
 }
 
-private fun EntityInstanceEntry.toAdvancedEntityDisplay(
-    activityCreator: ActivityCreator,
-    creator: (Ref<out EntityInstanceEntry>, EntityDefinitionEntry, ActivityCreator, List<Pair<EntityData<*>, Int>>, Position) -> AudienceFilter,
-): AudienceFilter {
+private fun EntityInstanceEntry.baseInfo(): BaseInfo? {
     val definition = definition.get()
     if (definition == null) {
         logger.warning("You must specify a definition for $name")
-        return PassThroughFilter(ref())
+        return null
     }
 
     val baseSuppliers = definition.data.withPriority()
@@ -77,11 +84,10 @@ private fun EntityInstanceEntry.toAdvancedEntityDisplay(
 
     val suppliers = (baseSuppliers + overrideSuppliers)
 
-    return creator(
-        ref(),
-        definition,
-        activityCreator,
-        suppliers,
-        spawnLocation,
-    )
+    return BaseInfo(definition, suppliers)
 }
+
+private data class BaseInfo(
+    val definition: EntityDefinitionEntry,
+    val suppliers: List<Pair<EntityData<*>, Int>>,
+)

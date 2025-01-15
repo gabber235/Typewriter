@@ -72,8 +72,6 @@ interface EntityDefinitionEntry : ManifestEntry, SpeakerEntry, EntityCreator {
 interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry {
     val definition: Ref<out EntityDefinitionEntry>
 
-    @WithRotation
-    val spawnLocation: Position
 
     override fun getEmitter(player: Player): SoundEmitter {
         val display = ref().findDisplay() as? ActivityEntityDisplay ?: return SoundEmitter(player.entityId)

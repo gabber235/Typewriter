@@ -7,6 +7,8 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.core.entries.ref
+import com.typewritermc.core.extension.annotations.WithRotation
+import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.utils.logErrorIfNull
 
 interface SimpleEntityDefinition : EntityDefinitionEntry
@@ -18,6 +20,9 @@ interface SimpleEntityInstance : EntityInstanceEntry {
     @Help("What the entity will do.")
     @OnlyTags("shared_entity_activity")
     val activity: Ref<out EntityActivityEntry>
+
+    @WithRotation
+    val spawnLocation: Position
 
     override val children: List<Ref<out AudienceEntry>>
         get() = data
