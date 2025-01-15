@@ -19,12 +19,6 @@ jobs:
     with:
       extension: CitizensExtension
 
-  build-extension-combat-log-x:
-    name: Build CombatLogX Extension
-    uses: ./.github/workflows/build-extension.yml
-    with:
-      extension: CombatLogXExtension
-
   build-extension-entity:
     name: Build EntityExtension
     uses: ./.github/workflows/build-extension.yml
