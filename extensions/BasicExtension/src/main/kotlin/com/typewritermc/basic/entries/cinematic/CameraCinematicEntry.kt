@@ -175,7 +175,7 @@ class CameraCinematicAction(
 
         if (segment != null) {
             val baseFrame = frame - segment.startFrame
-            if (abs(frame -lastFrame) > 5 && baseFrame > 0) {
+            if (abs(frame - lastFrame) > 5 && baseFrame > 0) {
                 action.skipToFrame(baseFrame)
             } else {
                 action.tickSegment(baseFrame)
@@ -272,6 +272,7 @@ class CameraCinematicAction(
             originalState?.let {
                 restore(it)
             }
+            originalState = null
             if (gameMode != GameMode.CREATIVE) {
                 restoreInventory()
             }
@@ -280,8 +281,7 @@ class CameraCinematicAction(
         // Do this after restoring the player's state.
         // To make sure the player is where they were before the bound got overridden.
         boundStateSubscription?.cancel()
-
-        originalState = null
+        boundStateSubscription = null
     }
 
     override suspend fun teardown() {
@@ -310,11 +310,8 @@ private suspend inline fun Player.teleportIfNeeded(
 ) {
     if (frame % 10 == 0 || (location.distanceSqrt(location)
             ?: Double.MAX_VALUE) > MAX_DISTANCE_SQUARED
-    ) SYNC.switchContext {
-        teleport(location)
-        allowFlight = true
-        isFlying = true
-    }
+    )
+        teleportAsync(location).await()
 }
 
 private data class PointSegment(
@@ -324,6 +321,7 @@ private data class PointSegment(
 ) : Segment
 
 private interface CameraAction {
+    val isActive: Boolean
     suspend fun startSegment(segment: CameraSegment)
     suspend fun tickSegment(frame: Int)
     suspend fun skipToFrame(frame: Int)
@@ -334,6 +332,7 @@ private interface CameraAction {
 private class DisplayCameraAction(
     val player: Player,
 ) : CameraAction {
+    override var isActive: Boolean = false
     private var entity = createEntity()
     private var path = emptyList<PointSegment>()
 
@@ -357,9 +356,13 @@ private class DisplayCameraAction(
     }
 
     override suspend fun startSegment(segment: CameraSegment) {
+        if (isActive) return
+        isActive = true
         setupPath(segment)
 
         player.teleportAsync(path.first().position.toBukkitLocation()).await()
+        player.allowFlight = true
+        player.isFlying = true
 
         entity.spawn(path.first().position.toPacketLocation())
         entity.addViewer(player.uniqueId)
@@ -405,13 +408,14 @@ private class DisplayCameraAction(
     private suspend fun switchWithStop() {
         player.stopSpectatingEntity()
         entity.despawn()
-        entity.addViewer(player.uniqueId)
         player.teleportAsync(path.first().position.toBukkitLocation()).await()
         entity.spawn(path.first().position.toPacketLocation())
         player.spectateEntity(entity)
     }
 
     override suspend fun stop() {
+        if (!isActive) return
+        isActive = false
         player.stopSpectatingEntity()
         entity.despawn()
         entity.remove()
@@ -421,9 +425,12 @@ private class DisplayCameraAction(
 private class TeleportCameraAction(
     private val player: Player,
 ) : CameraAction {
+    override var isActive = false
     private var path = emptyList<PointSegment>()
 
     override suspend fun startSegment(segment: CameraSegment) {
+        if (isActive) return
+        isActive = true
         path = segment.path.transform(player, segment.duration, Position::copy)
     }
 
@@ -445,6 +452,8 @@ private class TeleportCameraAction(
     }
 
     override suspend fun stop() {
+        if (!isActive) return
+        isActive = false
     }
 }
 
@@ -452,6 +461,7 @@ private class BedrockCameraAction(
     private val player: Player,
     private val geyserConnection: GeyserConnection,
 ) : CameraAction {
+    override var isActive = false
     private val cameraLockId = UUID.randomUUID()
     private var path = emptyList<PointSegment>()
 
@@ -464,6 +474,8 @@ private class BedrockCameraAction(
     }
 
     override suspend fun startSegment(segment: CameraSegment) {
+        if (isActive) return
+        isActive = true
         setupPath(segment)
         val position = path.first().position
         geyserConnection.camera().apply {
@@ -530,6 +542,8 @@ private class BedrockCameraAction(
     }
 
     override suspend fun stop() {
+        if (!isActive) return
+        isActive = false
         geyserConnection.camera().apply {
             this.lockCamera(false, cameraLockId)
             this.clearCameraInstructions()

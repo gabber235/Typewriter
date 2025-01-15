@@ -19,7 +19,7 @@ import java.util.*
 val Player.boundState: InteractionBoundState
     get() = interactionScope?.boundState ?: InteractionBoundState.IGNORING
 
-fun Player.overrideBoundState(
+suspend fun Player.overrideBoundState(
     state: InteractionBoundState,
     priority: Int = 0
 ): InteractionBoundStateOverrideSubscription {
@@ -27,17 +27,17 @@ fun Player.overrideBoundState(
     return InteractionBoundStateOverrideSubscription(id, uniqueId)
 }
 
-fun InteractionBoundStateOverrideSubscription.cancel() {
+suspend fun InteractionBoundStateOverrideSubscription.cancel() {
     server.getPlayer(playerUUID)?.interactionScope?.removeBoundStateOverride(id)
 }
 
 interface ListenerInteractionBound : InteractionBound, Listener {
-    override fun initialize() {
+    override suspend fun initialize() {
         super.initialize()
         server.pluginManager.registerSuspendingEvents(this, plugin)
     }
 
-    override fun teardown() {
+    override suspend fun teardown() {
         super.teardown()
         unregister()
     }

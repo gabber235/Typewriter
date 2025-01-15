@@ -3,7 +3,6 @@ package com.typewritermc.basic.entries.bound
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
-import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.engine.paper.entry.Criteria
@@ -18,6 +17,14 @@ import org.bukkit.entity.Player
     Colors.MEDIUM_PURPLE,
     "ph:layers-fill"
 )
+/**
+ * The `Multi Interaction Bound` entry is an interaction bound that allows you to combine multiple interaction bounds.
+ *
+ * This is useful if you want the player to have multiple ways of interrupting the interaction.
+ *
+ * ## How could this be used?
+ * This could be used to allow the player to cancel the interaction if they walk away or run a command.
+ */
 class MultiInteractionBoundEntry(
     override val id: String = "",
     override val name: String = "",
@@ -36,15 +43,15 @@ class MultiInteractionBound(
 ) : InteractionBound {
     private val activeBounds: List<InteractionBound> = interactionBounds.mapNotNull { it.get()?.build(player) }
 
-    override fun initialize() {
+    override suspend fun initialize() {
         activeBounds.forEach { it.initialize() }
     }
 
-    override fun tick() {
+    override suspend fun tick() {
         activeBounds.forEach { it.tick() }
     }
 
-    override fun teardown() {
+    override suspend fun teardown() {
         activeBounds.forEach { it.teardown() }
     }
 }

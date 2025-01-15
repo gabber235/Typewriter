@@ -3,15 +3,16 @@ package com.typewritermc.core.interaction
 interface InteractionBound {
     val priority: Int
 
-    fun initialize() {}
-    fun tick() {}
-    fun teardown() {}
+    suspend fun initialize() {}
+    suspend fun tick() {}
+    suspend fun boundStateChange(previousBoundState: InteractionBoundState, newBoundState: InteractionBoundState) {}
+    suspend fun teardown() {}
 
     object Empty : InteractionBound {
         override val priority: Int = -1
-        override fun initialize() {}
-        override fun tick() {}
-        override fun teardown() {}
+        override suspend fun initialize() {}
+        override suspend fun tick() {}
+        override suspend fun teardown() {}
     }
 }
 

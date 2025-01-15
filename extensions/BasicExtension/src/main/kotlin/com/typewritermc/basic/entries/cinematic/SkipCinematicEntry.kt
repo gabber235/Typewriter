@@ -2,6 +2,7 @@ package com.typewritermc.basic.entries.cinematic
 
 import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientEntityAction
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Segments
@@ -82,10 +83,9 @@ class SkipCinematicAction(
         when (entry.confirmationKey) {
             SkipConfirmationKey.SNEAK -> {
                 bundle = player.interceptPackets {
-                    Play.Client.ENTITY_ACTION { event ->
-                        val packet = WrapperPlayClientEntityAction(event)
-                        if (packet.entityId != player.entityId) return@ENTITY_ACTION
-                        if (packet.action != WrapperPlayClientEntityAction.Action.START_SNEAKING) return@ENTITY_ACTION
+                    Play.Client.PLAYER_INPUT { event ->
+                        val packet = WrapperPlayClientPlayerInput(event)
+                        if (!packet.isShift) return@PLAYER_INPUT
                         TemporalSetFrameTrigger(segment.endFrame).triggerFor(
                             player,
                             player.interactionContext ?: context()

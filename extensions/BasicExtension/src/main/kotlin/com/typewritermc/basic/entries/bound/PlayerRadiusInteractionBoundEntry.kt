@@ -28,6 +28,14 @@ import org.bukkit.event.player.PlayerTeleportEvent
     Colors.MEDIUM_PURPLE,
     "ph:user-circle-dashed-fill"
 )
+/**
+ * The `Player Radius Interaction Bound` entry is an interaction bound
+ * that will cancel the interaction if the player goes outside of a radius.
+ * If the current state is `BLOCKING`, the player won't be able to move outside of the radius.
+ *
+ * ## How could this be used?
+ * This could be useful if the player is talking to a npc and you want to cancel the interaction if they walk away.
+ */
 class PlayerRadiusInteractionBoundEntry(
     override val id: String = "",
     override val name: String = "",
@@ -51,7 +59,7 @@ class PlayerRadiusInteractionBound(
     private val startLocation = player.location
     private val key = NamespacedKey.fromString("zoom", plugin)!!
 
-    override fun initialize() {
+    override suspend fun initialize() {
         super.initialize()
         updateZoom(0.0)
     }
@@ -96,7 +104,7 @@ class PlayerRadiusInteractionBound(
         onMove(event)
     }
 
-    override fun teardown() {
+    override suspend fun teardown() {
         if (zoom) {
             player.getAttribute(Attribute.MOVEMENT_SPEED)?.removeModifier(key)
         }
