@@ -398,7 +398,7 @@ class CouldNotBuildBlueprintException(className: String) :
 
 class FailedToGenerateBlueprintException(
     klass: KSClassDeclaration,
-    cause: Exception,
+    cause: Throwable,
 ) : Exception(
     """Failed Generating Blueprint for ${klass.fullName}
     |
