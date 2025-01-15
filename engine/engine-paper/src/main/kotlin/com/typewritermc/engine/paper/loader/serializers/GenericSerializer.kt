@@ -4,7 +4,7 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonElement
 import com.google.gson.JsonSerializationContext
 import com.typewritermc.core.serialization.DataSerializer
-import com.typewritermc.core.utils.point.Generic
+import com.typewritermc.core.utils.Generic
 import java.lang.reflect.Type
 
 class GenericSerializer : DataSerializer<Generic> {

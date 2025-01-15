@@ -1,4 +1,4 @@
-package com.typewritermc.core.utils.point
+package com.typewritermc.core.utils
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -6,7 +6,6 @@ import com.google.gson.JsonObject
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import org.koin.java.KoinJavaComponent.inject
 import kotlin.reflect.KClass
 
 class Generic(
@@ -35,7 +34,8 @@ class Generic(
                 return data.asBoolean.compareTo(other.data.asBoolean)
             }
             if (data.asJsonPrimitive.isNumber && other.data.asJsonPrimitive.isNumber) {
-                return data.asJsonPrimitive.asNumber.toDouble().compareTo(other.data.asJsonPrimitive.asNumber.toDouble())
+                return data.asJsonPrimitive.asNumber.toDouble()
+                    .compareTo(other.data.asJsonPrimitive.asNumber.toDouble())
             }
             return data.asString.compareTo(other.data.asString)
         }

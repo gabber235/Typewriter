@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.InteractionContext
-import com.typewritermc.core.utils.point.Generic
+import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.StaticEntry
 import com.typewritermc.engine.paper.interaction.interactionContext
 import org.bukkit.entity.Player
