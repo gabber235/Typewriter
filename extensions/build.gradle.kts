@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 plugins {
     kotlin("jvm") version "2.0.21"
-    id("io.github.goooler.shadow") version "8.1.7"
+    id("io.github.goooler.shadow") version "8.1.7" apply false
     id("com.typewritermc.module-plugin") apply false
     `maven-publish`
 }

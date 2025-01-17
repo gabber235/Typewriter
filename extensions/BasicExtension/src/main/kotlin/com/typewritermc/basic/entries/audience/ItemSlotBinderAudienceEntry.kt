@@ -1,6 +1,5 @@
 package com.typewritermc.basic.entries.audience
 
-import com.mthaler.aparser.arithmetic.e
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
@@ -12,23 +11,17 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.item.Item
-import io.papermc.paper.datacomponent.DataComponentType
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.server
-import org.bukkit.NamespacedKey
-import org.bukkit.Registry
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlin.reflect.KClass
 
 @Entry(
@@ -167,6 +160,7 @@ class ItemSlotBinderDisplay(
                     // TODO: Make the player drop the item possible from 1.21.4 onwards
                     player.world.dropItem(player.location, currentItem)
                 }
+
                 SlotReplacementStrategy.MOVE_OR_REPLACE -> resetItem = currentItem
                 else -> throw IllegalStateException("Impossible to reach this point")
             }
@@ -216,7 +210,7 @@ class ItemSlotBinderDisplay(
     fun onItemDrop(event: PlayerDropItemEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         if (event.itemDrop.itemStack.isSimilar(item()))
-        event.isCancelled = true
+            event.isCancelled = true
     }
 
     override fun tearDown() {
