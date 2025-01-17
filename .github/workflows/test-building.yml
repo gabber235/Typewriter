@@ -1,0 +1,30 @@
+name: Test Building of TypeWriter
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java 
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Build Engine
+        uses: ./.github/actions/build-engine
+#  ----------------------------------------------------------------------------------------------------
+      - name: Build Extensions
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: buildRelease --scan
+          build-root-directory: ./extensions
+      - name: Upload Jars as Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Typewriter-Alpha-Builds
+          path: |
+            engine/engine-paper/build/libs/Typewriter.jar
+            extensions/**/build/libs/*Extension.jar
+          retention-days: 1
