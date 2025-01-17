@@ -15,14 +15,17 @@
 </script>
 
 <div
-	class="max-w-xs rounded-lg bg-card p-1 shadow-green-500 outline outline-2 outline-green-500"
-	class:shadow-glow={highlight}
+		class="w-[242px] h-[322px] max-w-xs rounded-lg bg-card p-1 shadow-green-500 outline outline-2 outline-green-500 overflow-hidden"
+		class:shadow-glow={highlight}
 >
-	<img class="max-h-48 rounded-md object-cover" src={bannerImage} alt="" />
-
-	<div class="flex flex-col justify-center p-4">
-		<span class="text-xl font-bold">{name}</span>
-		<p class="text-sm leading-tight text-gray-500 dark:text-gray-300">{shortDescription}</p>
+	<img class="h-[128px] w-full rounded-md object-cover" src={bannerImage} alt="" />
+	<div class="flex flex-col justify-between h-[calc(322px-128px)] p-4">
+		<div>
+			<span class="text-xl font-bold line-clamp-1">{name}</span>
+			<p class="text-sm leading-tight text-gray-500 dark:text-gray-300 line-clamp-5">
+				{shortDescription}
+			</p>
+		</div>
 		<div class="mt-2 flex items-center justify-between">
 			<span class="dark:text-primary-dark text-sm font-semibold text-primary">
 				<Currency amount={price} {currency} />
