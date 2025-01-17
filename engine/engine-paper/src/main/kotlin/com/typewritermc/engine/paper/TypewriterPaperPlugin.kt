@@ -37,7 +37,6 @@ import com.typewritermc.engine.paper.utils.registerAll
 import com.typewritermc.engine.paper.utils.unregisterAll
 import com.typewritermc.loader.DependencyChecker
 import dev.jorel.commandapi.CommandAPI
-import dev.jorel.commandapi.CommandAPIBukkit
 import dev.jorel.commandapi.CommandAPIBukkitConfig
 import kotlinx.coroutines.delay
 import lirand.api.architecture.KotlinPlugin
@@ -109,14 +108,14 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             singleOf(::PacketInterceptor)
             singleOf(::EntityHandler)
 
-            factory() { FactTracker(it.get()) } bind SessionTracker::class
-            single() { InteractionTriggerHandler() } bind TriggerHandler::class
-            single() { InteractionBoundHandler() } bind TriggerHandler::class
-            single() { ActionHandler() } bind TriggerHandler::class
-            single() { ContentHandler() } bind TriggerHandler::class
-            single() { DialogueHandler() } bind TriggerHandler::class
-            single() { FactHandler() } bind TriggerHandler::class
-            single() { TemporalHandler() } bind TriggerHandler::class
+            factory { FactTracker(it.get()) } bind SessionTracker::class
+            single { InteractionTriggerHandler() } bind TriggerHandler::class
+            single { InteractionBoundHandler() } bind TriggerHandler::class
+            single { ActionHandler() } bind TriggerHandler::class
+            single { ContentHandler() } bind TriggerHandler::class
+            single { DialogueHandler() } bind TriggerHandler::class
+            single { FactHandler() } bind TriggerHandler::class
+            single { TemporalHandler() } bind TriggerHandler::class
 
             factory<Gson>(named("dataSerializer")) { createDataSerializerGson(getAll()) }
             factory<Gson>(named("bukkitDataParser")) { createBukkitDataParser() }
