@@ -121,6 +121,18 @@ class FactDatabase : KoinComponent {
                         val fact = entry.readForPlayersGroup(player)
                         modifier.value.get(player) + fact.value
                     }
+                    ModifierOperator.MULTIPLY -> {
+                        val entry =
+                            modifier.fact.get().logErrorIfNull("Could not find ${modifier.fact}") ?: return@forEach
+
+                        if (entry !is ReadableFactEntry) {
+                            plugin.logger.warning("Tried to multiply a non-readable fact: ${modifier.fact}, how do you expect to multiply if you can't read?")
+                            return@forEach
+                        }
+
+                        val fact = entry.readForPlayersGroup(player)
+                        modifier.value.get(player) * fact.value
+                    }
 
                     ModifierOperator.SET -> modifier.value.get(player)
                 }

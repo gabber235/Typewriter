@@ -82,7 +82,11 @@ enum class ModifierOperator {
     SET,
 
     @SerializedName("+")
-    ADD;
+    ADD,
+
+    @SerializedName("*")
+    MULTIPLY,
+    ;
 }
 
 data class Modifier(
