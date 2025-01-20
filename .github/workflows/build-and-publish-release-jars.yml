@@ -29,14 +29,9 @@ jobs:
         with:
           name: Typewriter-Releases
           path: |
-            engine/engine-paper/build/libs/Typewriter.jar
-            extensions/**/build/libs/*Extensions.jar
+            jars/engine/*.jar
+            jars/extensions/*.jar
           retention-days: 1
-      - name: Reset Extensions Gradle Builds Build
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: clean --scan
-          build-root-directory: ./extensions
 #  ----------------------------------------------------------------------------------------------------
       - name: Publish Engine to Beta Maven Repository
         uses: gradle/gradle-build-action@v2

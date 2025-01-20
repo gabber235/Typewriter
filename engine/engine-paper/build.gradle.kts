@@ -86,12 +86,8 @@ task<ShadowJar>("buildAndMove") {
     description = "Builds the jar and moves it to the server folder"
     outputs.upToDateWhen { false }
 
-    // Move the jar from the build/libs folder to the server/plugins folder
-    doLast {
-        val jar = file("build/libs/%s-%s-all.jar".format(project.name, project.version))
-        val server = file("../../server/plugins/Typewriter.jar")
-        jar.copyTo(server, overwrite = true)
-    }
+    destinationDirectory = file("../../server/plugins")
+    archiveFileName = "Typewriter.${archiveExtension.get()}"
 }
 
 task("copyFlutterWebFiles") {
@@ -105,25 +101,20 @@ task("copyFlutterWebFiles") {
     }
 }
 
-task("buildRelease") {
-    dependsOn("copyFlutterWebFiles", "shadowJar")
+task<ShadowJar>("buildRelease") {
+    dependsOn("copyFlutterWebFiles")
     group = "build"
     description = "Builds the jar including the flutter web panel"
 
     outputs.upToDateWhen { false }
 
+    archiveFileName = "Typewriter-${project.version}.${archiveExtension.get()}"
+    destinationDirectory = file("../../jars/engine")
+
     doLast {
         // Remove the flutter web folder
         val flutterWebDest = file("src/main/resources/web")
         flutterWebDest.deleteRecursively()
-
-        // Rename the jar to remove the version and -all
-        val jar = file("build/libs/%s-%s-all.jar".format(project.name, project.version))
-        if (!jar.exists()) {
-            throw IllegalStateException("Jar does not exist: ${jar.absolutePath}")
-        }
-        jar.renameTo(file("build/libs/Typewriter.jar".format(project.name)))
-        file("build/libs/%s-%s.jar".format(project.name, project.version)).delete()
     }
 }
 

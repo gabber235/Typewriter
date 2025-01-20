@@ -48,34 +48,21 @@ subprojects {
     }
 
     if (!project.name.startsWith("_")) {
-        tasks.register("buildAndMove") {
-            dependsOn("shadowJar")
-
+        task<ShadowJar>("buildAndMove") {
             group = "build"
             description = "Builds the jar and moves it to the server folder"
             outputs.upToDateWhen { false }
 
-            // Move the jar from the build/libs folder to the server/plugins folder
-            doLast {
-                val jar = file("build/libs/%s-%s-all.jar".format(project.name, project.version))
-                val server =
-                    file("../../server/plugins/Typewriter/extensions/%s.jar".format(project.name.capitalizeAsciiOnly()))
-                jar.copyTo(server, overwrite = true)
-            }
+            archiveFileName = "${project.name}.${archiveExtension.get()}"
+            destinationDirectory = file("../../server/plugins/Typewriter/extensions")
         }
 
-        tasks.register("buildRelease") {
-            onlyIf { !project.name.startsWith("_") }
-            dependsOn("shadowJar")
+        task<ShadowJar>("buildRelease") {
             group = "build"
             description = "Builds the jar and renames it"
 
-            doLast {
-                // Rename the jar to remove the version and -all
-                val jar = file("build/libs/%s-%s-all.jar".format(project.name, project.version))
-                jar.renameTo(file("build/libs/%s.jar".format(project.name)))
-                file("build/libs/%s-%s.jar".format(project.name, project.version)).delete()
-            }
+            archiveFileName = "${project.name}.${archiveExtension.get()}"
+            destinationDirectory = file("../../jars/extensions")
         }
 
         tasks.register("releaseSourcesJar", Jar::class) {

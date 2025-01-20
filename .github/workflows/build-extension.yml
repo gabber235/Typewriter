@@ -26,5 +26,4 @@ jobs:
       - name: Upload Extension
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.extension }}.jar
-          path: extensions/${{ inputs.extension }}/build/libs/${{ inputs.extension }}.jar
+          path: jars/extensions/*.jar

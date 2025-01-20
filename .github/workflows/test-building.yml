@@ -25,6 +25,6 @@ jobs:
         with:
           name: Typewriter-Alpha-Builds
           path: |
-            engine/engine-paper/build/libs/Typewriter.jar
-            extensions/**/build/libs/*Extension.jar
+            jars/engine/*.jar
+            jars/extensions/*.jar
           retention-days: 1

@@ -30,7 +30,7 @@ jobs:
       - name: Test Extensions
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: test clean --scan
+          arguments: test --scan
           build-root-directory: ./extensions
 #  ----------------------------------------------------------------------------------------------------
       - name: Publish Engine to Beta Maven Repository
@@ -64,8 +64,8 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           modrinth-featured: false
           files: |
-            engine/engine-paper/build/libs/Typewriter.jar
-            extensions/**/build/libs/*Extension.jar
+            jars/engine/*.jar
+            jars/extensions/*.jar
           name: "Typewriter v${{ steps.vars.outputs.version }} Build"
           version: "${{ steps.vars.outputs.version }}"
           version-type: "beta"
