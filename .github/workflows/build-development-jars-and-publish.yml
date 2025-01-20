@@ -107,5 +107,6 @@ jobs:
         with:
           url: 'https://winston-discord-bot.fly.dev/publishbeta'
           method: 'GET'
+          timeout: 60000
           customHeaders: '{"X-Signature": "${{ secrets.WINSTON_SIGNATURE }}"}'
 
