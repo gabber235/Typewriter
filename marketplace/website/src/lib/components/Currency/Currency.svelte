@@ -1,11 +1,13 @@
 <script lang="ts">
+    import { browser } from "$app/environment";
+
 	interface Props {
 		amount: number;
 		currency: string;
 	}
 
 	let { amount, currency }: Props = $props();
-	let locale = navigator.language;
+	let locale = browser ? navigator.language : "en-US";
 	let price = $derived.by(() =>
 		new Intl.NumberFormat(locale, {
 			style: "currency",
