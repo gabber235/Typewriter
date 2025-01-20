@@ -1,9 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.papermc.hangarpublishplugin.model.Platforms
+import xyz.jpenilla.resourcefactory.paper.PaperPluginYaml
 import java.io.ByteArrayOutputStream
 
 plugins {
-    id("xyz.jpenilla.resource-factory-bukkit-convention") version "1.1.2"
+    id("xyz.jpenilla.resource-factory-paper-convention") version "1.2.0"
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
 }
 
@@ -21,33 +22,28 @@ repositories {
     maven("https://maven.evokegames.gg/snapshots")
 }
 
-val centralDependencies = listOf(
-    "org.jetbrains.kotlin:kotlin-stdlib:2.0.21",
-    "org.jetbrains.kotlin:kotlin-reflect:2.0.21",
-    "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0",
-    "com.corundumstudio.socketio:netty-socketio:1.7.19", // Keep this on a lower version as the newer version breaks the ping
-)
-
 dependencies {
-    for (dependency in centralDependencies) {
-        compileOnlyApi(dependency)
-    }
     compileOnlyApi("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
+    compileOnlyApi("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
+    compileOnlyApi("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
+    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
+
     api("me.tofaa.entitylib:spigot:+39cce79-SNAPSHOT")
-    api("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0")
-    api("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.20.0")
-    api("dev.jorel:commandapi-bukkit-shade:9.7.0")
-    api("dev.jorel:commandapi-bukkit-kotlin:9.7.0")
+    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0")
+    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.20.0")
+    compileOnlyApi("dev.jorel:commandapi-bukkit-shade-mojang-mapped:9.7.0")
+    compileOnlyApi("dev.jorel:commandapi-bukkit-kotlin:9.7.0")
 
     // Doesn't want to load properly using the spigot api.
-    implementation("io.ktor:ktor-server-core-jvm:2.3.12")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.12")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
-    implementation("org.bstats:bstats-bukkit:3.1.0")
+    compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.12")
+    compileOnlyApi("io.ktor:ktor-server-netty-jvm:2.3.12")
+    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+    compileOnlyApi("org.bstats:bstats-bukkit:3.1.0")
 
     val adventureVersion = "4.17.0"
     compileOnlyApi("net.kyori:adventure-api:$adventureVersion")
@@ -66,43 +62,31 @@ dependencies {
 }
 
 tasks.withType<ShadowJar> {
-    relocate("org.bstats", "com.typewritermc.engine.paper.extensions.bstats")
-    relocate("dev.jorel.commandapi", "com.typewritermc.engine.paper.extensions.commandapi") {
-        include("dev.jorel.commandapi.**")
-    }
     minimize {
-        exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib"))
-        exclude(dependency("org.jetbrains.kotlin:kotlin-reflect"))
-        exclude(dependency("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core"))
+        exclude("kotlin/**")
+        exclude("org/intellij/**")
+        exclude("org/jetbrains/**")
         exclude(dependency("com.github.Tofaa2.EntityLib:spigot"))
         exclude(dependency("web::"))
     }
 }
 
-task<ShadowJar>("buildAndMove") {
-    dependsOn("shadowJar")
-
+tasks.register<ShadowJar>("buildAndMove") {
+    from(tasks.shadowJar)
     group = "build"
     description = "Builds the jar and moves it to the server folder"
     outputs.upToDateWhen { false }
 
     destinationDirectory = file("../../server/plugins")
     archiveFileName = "Typewriter.${archiveExtension.get()}"
+    manifest.from(tasks.shadowJar.get().manifest)
 }
 
-task("copyFlutterWebFiles") {
-    group = "build"
-    description = "Copies the flutter web files to the resources folder"
-
-    doLast {
-        val flutterWeb = file("../../app/build/web")
-        val flutterWebDest = file("src/main/resources/web")
-        flutterWeb.copyRecursively(flutterWebDest, overwrite = true)
+tasks.register<ShadowJar>("buildRelease") {
+    from(tasks.shadowJar)
+    from("../../app/build/web") {
+        into("web")
     }
-}
-
-task<ShadowJar>("buildRelease") {
-    dependsOn("copyFlutterWebFiles")
     group = "build"
     description = "Builds the jar including the flutter web panel"
 
@@ -110,12 +94,7 @@ task<ShadowJar>("buildRelease") {
 
     archiveFileName = "Typewriter-${project.version}.${archiveExtension.get()}"
     destinationDirectory = file("../../jars/engine")
-
-    doLast {
-        // Remove the flutter web folder
-        val flutterWebDest = file("src/main/resources/web")
-        flutterWebDest.deleteRecursively()
-    }
+    manifest.from(tasks.shadowJar.get().manifest)
 }
 
 fun executeGitCommand(vararg command: String): String {
@@ -163,7 +142,7 @@ hangarPublish {
     }
 }
 
-bukkitPluginYaml {
+paperPluginYaml {
     name = "Typewriter"
     description = "Next Generation Story Telling Plugin"
     authors = listOf("gabber235")
@@ -172,7 +151,14 @@ bukkitPluginYaml {
 
     main = "com.typewritermc.engine.paper.TypewriterPaperPlugin"
     apiVersion = "1.21"
-    depend = listOf("packetevents")
-    softDepend = listOf("PlaceholderAPI", "floodgate")
-    libraries = centralDependencies
+
+    foliaSupported = false
+
+    dependencies {
+        server("packetevents", load = PaperPluginYaml.Load.AFTER, required = true, joinClasspath = true)
+        server("PlaceholderAPI", load = PaperPluginYaml.Load.AFTER, required = false, joinClasspath = true)
+        server("floodgate", load = PaperPluginYaml.Load.AFTER, required = false, joinClasspath = true)
+    }
+
+    loader = "com.typewritermc.engine.paper.TypewriterPaperLoader"
 }

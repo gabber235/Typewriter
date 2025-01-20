@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -40,15 +39,14 @@ subprojects {
 
     tasks.withType<ShadowJar> {
         exclude("kotlin/**")
+        exclude("org/intellij/**")
+        exclude("org/jetbrains/**")
         exclude("META-INF/maven/**")
-        // Important: Use the relocated commandapi which is shadowed by the plugin
-        relocate("dev.jorel.commandapi", "com.typewritermc.engine.paper.extensions.commandapi") {
-            include("dev.jorel.commandapi.**")
-        }
     }
 
     if (!project.name.startsWith("_")) {
         task<ShadowJar>("buildAndMove") {
+            from(tasks.named("shadowJar"))
             group = "build"
             description = "Builds the jar and moves it to the server folder"
             outputs.upToDateWhen { false }
@@ -58,6 +56,7 @@ subprojects {
         }
 
         task<ShadowJar>("buildRelease") {
+            from(tasks.named("shadowJar"))
             group = "build"
             description = "Builds the jar and renames it"
 

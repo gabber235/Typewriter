@@ -11,6 +11,7 @@ import java.io.File
 import java.net.URLClassLoader
 import java.util.logging.Logger
 import java.util.zip.ZipFile
+import kotlin.jvm.java
 import kotlin.math.abs
 import kotlin.math.log10
 
@@ -19,6 +20,7 @@ class ExtensionLoader : KoinComponent {
     private val logger: Logger by inject()
     private val dependencyChecker: DependencyChecker by inject()
     private val gson: Gson by inject(named("dataSerializer"))
+    private val globalClassloader: ClassLoader by inject(named("globalClassloader"))
     private var classLoader: URLClassLoader? = null
     var extensions: List<Extension> = emptyList()
         private set
@@ -37,7 +39,7 @@ class ExtensionLoader : KoinComponent {
         if (classLoader != null) {
             unload()
         }
-        classLoader = URLClassLoader(jars.map { it.toURI().toURL() }.toTypedArray(), this::class.java.classLoader)
+        classLoader = URLClassLoader(jars.map { it.toURI().toURL() }.toTypedArray(), globalClassloader)
 
         // In all the jars, there is a file called "extension.json"
         val extensionJsonTexts = jars.mapNotNull { jar ->

@@ -2,6 +2,7 @@ package com.typewritermc.engine.paper
 
 import com.github.retrooper.packetevents.PacketEvents
 import com.github.shynixn.mccoroutine.bukkit.launch
+import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import com.google.gson.Gson
 import com.typewritermc.core.TypewriterCore
 import com.typewritermc.core.interaction.SessionTracker
@@ -119,10 +120,11 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
 
             factory<Gson>(named("dataSerializer")) { createDataSerializerGson(getAll()) }
             factory<Gson>(named("bukkitDataParser")) { createBukkitDataParser() }
+
+            single<ClassLoader>(named("globalClassloader")) { globalClassloader() }
         }
         startKoin {
             modules(modules, TypewriterCore.module, dataSerializerModule)
-//            logger(MinecraftLogger(logger))
         }
 
         CommandAPI.onLoad(CommandAPIBukkitConfig(this).usePluginNamespace().skipReloadDatapacks(true))
@@ -130,12 +132,6 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
 
     override suspend fun onEnableAsync() {
         CommandAPI.onEnable()
-
-        if (!server.pluginManager.isPluginEnabled("packetevents")) {
-            logger.warning("PacketEvents is not enabled, Typewriter will not work without it. Shutting down...")
-            server.pluginManager.disablePlugin(this)
-            return
-        }
 
         PacketEvents.getAPI().settings.downsampleColors(false)
 
@@ -156,8 +152,8 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
 
         // We want to initialize all the extensions after all the plugins have been enabled to make sure
         // that all the plugins are loaded.
-        launch {
-            delay(1)
+        launch(minecraftDispatcher) {
+            delay(100)
             load()
             get<CommunicationHandler>().initialize()
 
@@ -178,6 +174,9 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         if (CommandAPI.isLoaded()) {
             CustomCommandEntry.registerAll()
             typeWriterCommand()
+            logger.info("Registered TypeWriter commands")
+        } else {
+            logger.warning("CommandAPI is not loaded, commands will not be registered")
         }
 
         if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
