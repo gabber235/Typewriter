@@ -33,7 +33,7 @@ class DirectEntityInstancePathStream(
     val road: Ref<RoadNetworkEntry> = emptyRef(),
     val target: Ref<EntityInstanceEntry> = emptyRef(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay {
+    override suspend fun display(): AudienceDisplay {
         val manager = KoinJavaComponent.get<AudienceManager>(AudienceManager::class.java)
         val entityDisplay = manager[target] as? ActivityEntityDisplay
         return PathStreamDisplay(road, endLocation = { entityDisplay?.position(it.uniqueId)?.toBukkitLocation() ?: it.location })

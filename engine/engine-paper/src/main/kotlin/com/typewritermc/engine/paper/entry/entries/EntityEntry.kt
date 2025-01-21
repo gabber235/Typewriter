@@ -52,7 +52,7 @@ interface PropertyCollector<P : EntityProperty> {
 @Tags("entity_data")
 interface EntityData<P : EntityProperty> : AudienceEntry, PropertySupplier<P>, PriorityEntry {
     override fun canApply(player: Player): Boolean = player.inAudience(this)
-    override fun display(): AudienceDisplay = PassThroughDisplay()
+    override suspend fun display(): AudienceDisplay = PassThroughDisplay()
 }
 
 @Tags("generic_entity_data")

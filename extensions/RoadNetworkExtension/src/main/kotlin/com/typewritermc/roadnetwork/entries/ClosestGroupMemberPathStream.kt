@@ -34,7 +34,7 @@ class ClosestGroupMemberPathStream(
     val road: Ref<RoadNetworkEntry> = emptyRef(),
     val group: Ref<out GroupEntry> = emptyRef(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = PathStreamDisplay(road) { player ->
+    override suspend fun display(): AudienceDisplay = PathStreamDisplay(road) { player ->
         group.get()?.group(player)?.players
             ?.asSequence()
             ?.filter { it != player }

@@ -26,7 +26,7 @@ annotation class ChildOnly
 
 @Tags("audience")
 interface AudienceEntry : ManifestEntry, PlaceholderEntry {
-    fun display(): AudienceDisplay
+    suspend fun display(): AudienceDisplay
 
     override fun parser() = placeholderParser {
         literal("players") {
@@ -43,7 +43,7 @@ interface AudienceEntry : ManifestEntry, PlaceholderEntry {
 @Tags("audience_filter")
 interface AudienceFilterEntry : AudienceEntry {
     val children: List<Ref<out AudienceEntry>>
-    override fun display(): AudienceFilter
+    override suspend fun display(): AudienceFilter
 }
 
 interface Invertible {

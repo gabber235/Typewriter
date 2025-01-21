@@ -22,7 +22,7 @@ class ExampleSingleFilterEntry(
 ) : AudienceFilterEntry, PriorityEntry {
     override val children: List<Ref<out AudienceEntry>> get() = emptyList()
 
-    override fun display(): AudienceFilter = ExampleSingleFilter(ref()) { player ->
+    override suspend fun display(): AudienceFilter = ExampleSingleFilter(ref()) { player ->
         PlayerExampleDisplay(player, ExampleSingleFilter::class, ref())
     }
 }

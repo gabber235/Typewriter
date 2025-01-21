@@ -259,3 +259,22 @@ class ExampleDialogueDialogueMessenger(player: Player, context: InteractionConte
     }
 }
 ```
+
+## Suspendable `AudienceEntry#display` 
+
+To allow audience entries to have some async loading behaviour, the `display` now is a suspendable function.
+
+```kotlin showLineNumbers
+	@Entry("example_audience", "An example audience entry.", Colors.GREEN, "material-symbols:chat-rounded")
+class ExampleAudienceEntry(
+    override val id: String = "",
+    override val name: String = "",
+) : AudienceEntry {
+// highlight-red
+    override fun display(): AudienceDisplay {
+// highlight-green
+    override suspend fun display(): AudienceDisplay {
+        return ExampleAudienceDisplay()
+    }
+}
+```

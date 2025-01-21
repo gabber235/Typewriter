@@ -27,7 +27,7 @@ interface SimpleEntityInstance : EntityInstanceEntry {
     override val children: List<Ref<out AudienceEntry>>
         get() = data
 
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         val definition = definition.get().logErrorIfNull("You must specify a definition for $name")
             ?: return PassThroughFilter(ref())
 

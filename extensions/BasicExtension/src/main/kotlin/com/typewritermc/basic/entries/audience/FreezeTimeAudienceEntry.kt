@@ -40,7 +40,7 @@ class FreezeTimeAudienceEntry(
     override val name: String = "",
     val time: Var<Long> = ConstVar(0),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = FreezeTimeAudienceDisplay(time)
+    override suspend fun display(): AudienceDisplay = FreezeTimeAudienceDisplay(time)
 }
 
 class FreezeTimeAudienceDisplay(

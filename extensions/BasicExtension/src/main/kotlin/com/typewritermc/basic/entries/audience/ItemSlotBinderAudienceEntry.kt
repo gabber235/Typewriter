@@ -53,7 +53,7 @@ class ItemSlotBinderAudienceEntry(
     override val children: List<Ref<out AudienceEntry>>
         get() = emptyList()
 
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         return ItemSlotBinderAudience(slot, ref()) { player ->
             ItemSlotBinderDisplay(player, slot.get(player), ItemSlotBinderAudience::class, ref())
         }

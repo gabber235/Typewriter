@@ -38,7 +38,7 @@ class InteractEntityObjectivesPathStream(
     val road: Ref<RoadNetworkEntry> = emptyRef(),
     val ignoreInstances: List<Ref<EntityInstanceEntry>> = emptyList(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = MultiPathStreamDisplay(road, endLocations = { player ->
+    override suspend fun display(): AudienceDisplay = MultiPathStreamDisplay(road, endLocations = { player ->
         val definitions =
             player.trackedShowingObjectives().filterIsInstance<InteractEntityObjective>().map { it.entity }
         val manager = KoinJavaComponent.get<AudienceManager>(AudienceManager::class.java)

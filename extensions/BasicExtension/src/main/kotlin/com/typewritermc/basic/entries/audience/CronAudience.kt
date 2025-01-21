@@ -34,7 +34,7 @@ class CronAudience(
     // The <Link to="https://www.netiq.com/documentation/cloud-manager-2-5/ncm-reference/data/bexyssf.html">Cron Expression</Link> when the fact expires.
     val cron: CronExpression = CronExpression.default(),
 ) : AudienceFilterEntry {
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         return CronAudienceDisplay(ref(), cron)
     }
 }

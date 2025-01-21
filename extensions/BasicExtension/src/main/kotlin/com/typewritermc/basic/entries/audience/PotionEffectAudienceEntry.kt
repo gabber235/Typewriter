@@ -34,7 +34,7 @@ class PotionEffectAudienceEntry(
     @Default("true")
     val icon: Boolean = true,
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay {
+    override suspend fun display(): AudienceDisplay {
         return PotionEffectAudienceDisplay(potionEffect, strength, ambient, particles, icon)
     }
 }

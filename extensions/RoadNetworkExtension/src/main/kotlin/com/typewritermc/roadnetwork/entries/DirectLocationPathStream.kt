@@ -29,5 +29,5 @@ class DirectLocationPathStream(
     val road: Ref<RoadNetworkEntry> = emptyRef(),
     val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = PathStreamDisplay(road, endLocation = { targetLocation.get(it).toBukkitLocation() })
+    override suspend fun display(): AudienceDisplay = PathStreamDisplay(road, endLocation = { targetLocation.get(it).toBukkitLocation() })
 }

@@ -42,7 +42,7 @@ class CinematicAudienceEntry(
     val pageId: String = "",
     override val inverted: Boolean = false
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = CinematicAudienceFilter(
+    override suspend fun display(): AudienceFilter = CinematicAudienceFilter(
         ref(),
         pageId,
     )

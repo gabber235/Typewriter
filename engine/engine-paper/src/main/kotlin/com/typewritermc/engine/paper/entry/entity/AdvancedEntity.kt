@@ -18,7 +18,7 @@ interface SharedAdvancedEntityInstance : EntityInstanceEntry {
     @WithRotation
     val spawnLocation: Position
 
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         val activityCreator = this.activity.get() ?: IdleActivity
         val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
 
@@ -42,7 +42,7 @@ interface GroupAdvancedEntityInstance : EntityInstanceEntry {
     @Help("The group that this entity instance belongs to.")
     val group: Ref<out GroupEntry>
 
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         val activityCreator = this.activity.get() ?: IdleActivity
 
         val group = this.group.get() ?: throw IllegalStateException("No group found for the group entity instance.")
@@ -59,7 +59,7 @@ interface IndividualAdvancedEntityInstance : EntityInstanceEntry {
     @WithRotation
     val spawnLocation: Var<Position>
 
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         val activityCreator = this.activity.get() ?: IdleActivity
 
         val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())

@@ -23,7 +23,7 @@ class WeatherAudienceEntry(
     override val name: String = "",
     val weather: Var<WeatherType> = ConstVar(WeatherType.DOWNFALL),
     ) : AudienceEntry {
-    override fun display(): AudienceDisplay = WeatherAudienceDisplay(weather)
+    override suspend fun display(): AudienceDisplay = WeatherAudienceDisplay(weather)
 }
 
 class WeatherAudienceDisplay(

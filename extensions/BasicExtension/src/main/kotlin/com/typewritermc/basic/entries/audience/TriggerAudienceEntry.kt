@@ -32,7 +32,7 @@ class TriggerAudienceEntry(
     @Help("The sequence to trigger when the player exits the audience.")
     val onExit: Ref<TriggerableEntry> = emptyRef(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = TriggerAudienceDisplay(onEnter, onExit)
+    override suspend fun display(): AudienceDisplay = TriggerAudienceDisplay(onEnter, onExit)
 }
 
 class TriggerAudienceDisplay(

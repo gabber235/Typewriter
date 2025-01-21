@@ -40,7 +40,7 @@ interface QuestEntry : AudienceFilterEntry, PlaceholderEntry {
         supplyPlayer { player -> display(player) }
     }
 
-    override fun display(): AudienceFilter = QuestAudienceFilter(
+    override suspend fun display(): AudienceFilter = QuestAudienceFilter(
         ref()
     )
 }
@@ -73,7 +73,7 @@ interface ObjectiveEntry : AudienceFilterEntry, PlaceholderEntry, PriorityEntry 
     @Placeholder
     val display: Var<String>
 
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         return ObjectiveAudienceFilter(
             ref(),
             criteria,

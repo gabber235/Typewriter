@@ -40,7 +40,7 @@ class LoopingCinematicAudience(
     @Page(PageType.CINEMATIC)
     val cinematicId: String = "",
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay {
+    override suspend fun display(): AudienceDisplay {
         val entries = Query.findWhereFromPage<CinematicEntry>(cinematicId) { true }.toList()
 
         val inValidEntries = entries.filterIsInstance<PrimaryCinematicEntry>().map { it.name }

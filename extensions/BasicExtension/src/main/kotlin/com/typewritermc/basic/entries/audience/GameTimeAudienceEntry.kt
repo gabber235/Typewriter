@@ -41,7 +41,7 @@ class GameTimeAudienceEntry(
     val activeTimes: List<GameTimeRange> = emptyList(),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = GameTimeAudienceFilter(ref(), activeTimes)
+    override suspend fun display(): AudienceFilter = GameTimeAudienceFilter(ref(), activeTimes)
 }
 
 class GameTimeAudienceFilter(

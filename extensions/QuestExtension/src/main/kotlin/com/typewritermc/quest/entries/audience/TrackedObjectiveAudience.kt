@@ -29,7 +29,7 @@ class TrackedObjectiveAudience(
     override val children: List<Ref<AudienceEntry>> = emptyList(),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = TrackedObjectiveAudienceFilter(
+    override suspend fun display(): AudienceFilter = TrackedObjectiveAudienceFilter(
         ref()
     )
 }

@@ -19,7 +19,7 @@ class ExampleAudienceEntry(
     override val id: String = "",
     override val name: String = "",
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay {
+    override suspend fun display(): AudienceDisplay {
         return ExampleAudienceDisplay()
     }
 }

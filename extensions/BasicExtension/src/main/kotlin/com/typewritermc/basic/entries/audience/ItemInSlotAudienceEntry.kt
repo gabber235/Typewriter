@@ -31,7 +31,7 @@ class ItemInSlotAudienceEntry(
     val slot: Var<Int> = ConstVar(0),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = ItemInSlotAudienceFilter(ref(), item, slot)
+    override suspend fun display(): AudienceFilter = ItemInSlotAudienceFilter(ref(), item, slot)
 }
 
 class ItemInSlotAudienceFilter(

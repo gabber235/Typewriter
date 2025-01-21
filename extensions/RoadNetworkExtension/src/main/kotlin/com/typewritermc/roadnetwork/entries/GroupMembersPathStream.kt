@@ -32,7 +32,7 @@ class GroupMembersPathStream(
     val road: Ref<RoadNetworkEntry> = emptyRef(),
     val group: Ref<out GroupEntry> = emptyRef(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = MultiPathStreamDisplay(road, endLocations = { player ->
+    override suspend fun display(): AudienceDisplay = MultiPathStreamDisplay(road, endLocations = { player ->
         group.get()?.group(player)?.players
             ?.filter { it != player }
             ?.map { it.location }

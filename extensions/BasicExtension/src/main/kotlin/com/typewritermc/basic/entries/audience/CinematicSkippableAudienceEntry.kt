@@ -38,7 +38,7 @@ class CinematicSkippableAudienceEntry(
     override val children: List<Ref<out AudienceEntry>> = emptyList(),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible, PlaceholderEntry {
-    override fun display(): AudienceFilter {
+    override suspend fun display(): AudienceFilter {
         return CinematicSkippableAudienceDisplay(ref())
     }
 

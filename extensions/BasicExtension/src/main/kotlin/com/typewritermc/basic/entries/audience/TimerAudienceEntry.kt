@@ -41,7 +41,7 @@ class TimerAudienceEntry(
     val duration: Var<Duration> = ConstVar(Duration.ofSeconds(1)),
     val onTimer: Ref<TriggerableEntry> = emptyRef(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay = TimerAudienceDisplay(duration, onTimer)
+    override suspend fun display(): AudienceDisplay = TimerAudienceDisplay(duration, onTimer)
 }
 
 class TimerAudienceDisplay(

@@ -42,7 +42,7 @@ class TabListHeaderFooterEntry(
     override val children: List<Ref<out AudienceEntry>>
         get() = header + footer
 
-    override fun display(): AudienceFilter = TabListHeaderFooterFilter(ref()) { player ->
+    override suspend fun display(): AudienceFilter = TabListHeaderFooterFilter(ref()) { player ->
         PlayerTabListHeaderFooter(player, TabListHeaderFooterFilter::class, ref())
     }
 }

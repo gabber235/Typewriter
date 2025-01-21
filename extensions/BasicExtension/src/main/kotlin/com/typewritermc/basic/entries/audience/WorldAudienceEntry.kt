@@ -24,7 +24,7 @@ class WorldAudienceEntry(
     @Regex
     val world: Var<String> = ConstVar(""),
 ) : AudienceFilterEntry {
-    override fun display(): AudienceFilter = WorldAudienceFilter(ref(), world)
+    override suspend fun display(): AudienceFilter = WorldAudienceFilter(ref(), world)
 }
 
 class WorldAudienceFilter(

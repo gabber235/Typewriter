@@ -16,7 +16,7 @@ class ExampleAudienceFilterEntry(
     override val name: String = "",
     override val children: List<Ref<out AudienceEntry>> = emptyList(),
 ) : AudienceFilterEntry {
-    override fun display(): AudienceFilter = ExampleAudienceFilter(ref())
+    override suspend fun display(): AudienceFilter = ExampleAudienceFilter(ref())
 }
 //</code-block:audience_filter_entry>
 
@@ -74,6 +74,6 @@ class InvertedExampleAudienceFilterEntry(
     override val inverted: Boolean = true,
     // highlight-next-line
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = ExampleAudienceFilter(ref())
+    override suspend fun display(): AudienceFilter = ExampleAudienceFilter(ref())
 }
 //</code-block:audience_filter_invertable>

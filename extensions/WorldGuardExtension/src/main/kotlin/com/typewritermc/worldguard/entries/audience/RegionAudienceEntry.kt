@@ -35,8 +35,7 @@ class RegionAudienceEntry(
     val region: String = "",
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter {
-
+    override suspend fun display(): AudienceFilter {
         return RegionAudienceFilter(ref(), region)
     }
 }

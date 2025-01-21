@@ -43,7 +43,7 @@ interface SidebarEntry : AudienceFilterEntry, PlaceholderEntry, PriorityEntry {
         supply { player -> display(player) }
     }
 
-    override fun display(): AudienceFilter = SidebarFilter(ref()) { player ->
+    override suspend fun display(): AudienceFilter = SidebarFilter(ref()) { player ->
         PlayerSidebarDisplay(player, SidebarFilter::class, ref())
     }
 }

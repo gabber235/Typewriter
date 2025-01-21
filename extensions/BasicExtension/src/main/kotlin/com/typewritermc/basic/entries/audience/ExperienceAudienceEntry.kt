@@ -55,7 +55,7 @@ class ExperienceAudienceEntry(
     override val priorityOverride: Optional<Int> = Optional.empty()
 ) : AudienceFilterEntry, PriorityEntry {
     override val children: List<Ref<out AudienceEntry>> get() = emptyList()
-    override fun display(): AudienceFilter = ExpAudienceFilter(ref()) { player ->
+    override suspend fun display(): AudienceFilter = ExpAudienceFilter(ref()) { player ->
         PlayerExpDisplay(player, ExpAudienceFilter::class, ref(), experience, levelRequirement)
     }
 }

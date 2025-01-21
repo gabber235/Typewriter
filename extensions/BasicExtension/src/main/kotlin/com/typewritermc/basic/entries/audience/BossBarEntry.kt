@@ -37,7 +37,7 @@ class BossBarEntry(
     @Help("Any flags to apply to the boss bar")
     val flags: List<BossBar.Flag> = emptyList(),
 ) : AudienceEntry {
-    override fun display(): AudienceDisplay {
+    override suspend fun display(): AudienceDisplay {
         return BossBarDisplay(title, progress, color, style, flags)
     }
 }

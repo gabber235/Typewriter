@@ -28,7 +28,7 @@ class CriteriaAudience(
     val criteria: List<Criteria> = emptyList(),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = CriteriaAudienceFilter(ref(), criteria)
+    override suspend fun display(): AudienceFilter = CriteriaAudienceFilter(ref(), criteria)
 }
 
 class CriteriaAudienceFilter(

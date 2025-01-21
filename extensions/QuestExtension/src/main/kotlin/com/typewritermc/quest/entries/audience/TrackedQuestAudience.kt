@@ -39,7 +39,7 @@ class TrackedQuestAudience(
     val quest: Ref<QuestEntry> = emptyRef(),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = TrackedQuestAudienceFilter(
+    override suspend fun display(): AudienceFilter = TrackedQuestAudienceFilter(
         ref(),
         quest
     )

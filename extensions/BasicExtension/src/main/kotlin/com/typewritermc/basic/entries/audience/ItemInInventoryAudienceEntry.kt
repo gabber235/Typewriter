@@ -27,7 +27,7 @@ class ItemInInventoryAudienceEntry(
     val item: Var<Item> = ConstVar(Item.Empty),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = ItemInInventoryAudienceFilter(ref(), item)
+    override suspend fun display(): AudienceFilter = ItemInInventoryAudienceFilter(ref(), item)
 }
 
 class ItemInInventoryAudienceFilter(
