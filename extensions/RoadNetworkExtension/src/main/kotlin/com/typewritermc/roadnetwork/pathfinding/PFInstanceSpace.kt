@@ -39,7 +39,9 @@ class PFInstanceSpace(val world: com.typewritermc.core.utils.point.World) : IIns
     }
 
     fun refresh(): Boolean {
-        chunkSpaces.values.retainAll { it.refresh() }
+        synchronized(chunkSpaces) {
+            chunkSpaces.values.retainAll { it.refresh() }
+        }
         return System.currentTimeMillis() - lastAccess < 1000 * 60 * 2
     }
 
