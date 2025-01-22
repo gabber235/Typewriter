@@ -26,6 +26,9 @@ const config: Config = {
                 "2xl": "1400px"
             },
             colors: {
+                twblue: "#059EFC",
+                twaccent: "#4BB962",
+                kerzinatoryellow: "#E7B21B",
                 border: "hsl(var(--border) / <alpha-value>)",
                 input: "hsl(var(--input) / <alpha-value>)",
                 ring: "hsl(var(--ring) / <alpha-value>)",

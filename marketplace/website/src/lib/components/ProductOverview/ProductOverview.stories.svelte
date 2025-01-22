@@ -106,12 +106,16 @@
             highlightColor: "brown"
         }
     ];
+    const type = "ProductOverview";
+    const color = "#FF000066";
 
     const {Story} = defineMeta({
         component: ProductOverview,
         tags: ["autodocs"],
         args: {
-            products: sampleProducts
+            products: sampleProducts,
+            type: type,
+            color: color
         },
         parameters: {
             layout: "fullscreen"

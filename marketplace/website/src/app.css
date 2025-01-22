@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    --twblue: 206.4, 95.7%, 46.7%;
+    --twaccent: 206.4, 95.7%, 46.7%;
+    --kerzinatoryellow: 34.6, 100%, 50%;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96.1%;
