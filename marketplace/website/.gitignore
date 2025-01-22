@@ -23,3 +23,4 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 *storybook.log
+/storybook-static/
