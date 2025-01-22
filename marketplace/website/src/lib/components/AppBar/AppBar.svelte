@@ -14,7 +14,7 @@
 
 <header class="w-full">
 	<div
-		class="mx-auto flex h-16 items-center justify-between px-4 md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-xl"
+		class="mx-auto flex h-16 items-center justify-between px-4 md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-xl dark:text-[#EEF9FC]"
 	>
 		<a href="/" class="flex items-center space-x-4" aria-label="Home">
 			<div class="flex items-center space-x-4">
