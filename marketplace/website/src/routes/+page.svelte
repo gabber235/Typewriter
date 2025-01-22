@@ -20,7 +20,7 @@
 		</p>
 		<section class="flex w-full flex-col items-center">
 			<div class="w-full max-w-7xl px-6">
-				<SearchBar />
+				<SearchBar active="discover" />
 				<h2 class="mb-4 text-3xl font-semibold">Featured Products</h2>
 			</div>
 			<ProductCarousel products={data.products} />
