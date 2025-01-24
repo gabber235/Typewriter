@@ -2,6 +2,7 @@ package com.typewritermc.basic.entries.static
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.engine.paper.entry.StaticEntry
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.Sound
 import org.bukkit.entity.Player
@@ -22,7 +23,7 @@ class SelfSpeaker(
     override val name: String = "",
     override val sound: Sound = Sound.EMPTY,
     val overrideName: Optional<Var<String>> = Optional.empty(),
-) : SpeakerEntry, SoundSourceEntry {
+) : SpeakerEntry, SoundSourceEntry, StaticEntry {
     override val displayName: Var<String>
         get() = overrideName.orElseGet { ConstVar("%player_name%") }
 

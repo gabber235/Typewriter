@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
+import com.typewritermc.engine.paper.entry.StaticEntry
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.Sound
 import net.citizensnpcs.api.CitizensAPI
@@ -25,7 +26,7 @@ class ReferenceNpcEntry(
     override val sound: Sound = Sound.EMPTY,
     @Help("The id of the NPC in the Citizens plugin.")
     val npcId: Int = 0,
-) : SoundSourceEntry, SpeakerEntry {
+) : SoundSourceEntry, SpeakerEntry, StaticEntry {
     override fun getEmitter(player: Player): SoundEmitter {
         val npc = CitizensAPI.getNPCRegistry().getById(npcId) ?: return SoundEmitter(player.entityId)
         return SoundEmitter(npc.entity?.entityId ?: player.entityId)

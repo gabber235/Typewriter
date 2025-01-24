@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.entry.entries
 
+import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.*
 import net.kyori.adventure.sound.Sound
@@ -15,7 +16,7 @@ interface SoundIdEntry : StaticEntry, PlaceholderEntry {
 }
 
 @Tags("sound_source")
-interface SoundSourceEntry : StaticEntry {
+interface SoundSourceEntry : Entry {
     fun getEmitter(player: Player): SoundEmitter
 }
 
