@@ -1,8 +1,12 @@
 package com.typewritermc.basic.entries.bound
 
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPosition
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPositionAndRotation
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
@@ -23,6 +27,7 @@ import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.boundState
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.interaction.interceptPackets
+import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.engine.paper.utils.toPacketLocation
@@ -105,6 +110,22 @@ class LockInteractionBound(
 
                 if (!packet.isJump && !packet.isShift) return@PLAYER_INPUT
                 DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, player.interactionContext ?: context())
+            }
+            // If the player is a bedrock player, we don't want to modify the location.
+            if (player.isFloodgate) return@interceptPackets
+            // We want to fake the player's location on the client because otherwise they will interact with
+            // themselves crash kicking themselves off the server.
+            Play.Server.PLAYER_POSITION_AND_LOOK { event ->
+                val packet = WrapperPlayServerPlayerPositionAndLook(event)
+                packet.y += 500
+            }
+            Play.Client.PLAYER_POSITION { event ->
+                val packet = WrapperPlayClientPlayerPosition(event)
+                packet.position = packet.position.withY(packet.position.y - 500)
+            }
+            Play.Client.PLAYER_POSITION_AND_ROTATION { event ->
+                val packet = WrapperPlayClientPlayerPositionAndRotation(event)
+                packet.position = packet.position.withY(packet.position.y - 500)
             }
         }
     }
