@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/hooks/select_on_focus.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/components/app/writers.dart";
@@ -27,12 +28,7 @@ class CordPropertyEditor extends HookConsumerWidget {
     final controller = useTextEditingController(text: value.toString());
     final focus = useFocusNode();
 
-    useFocusedChange(focus, ({required hasFocus}) {
-      if (!hasFocus) return;
-      // When we focus, we want to select the whole text
-      controller.selection =
-          TextSelection(baseOffset: 0, extentOffset: controller.text.length);
-    });
+    useSelectOnFocus(focus, controller);
 
     useFocusedBasedCurrentEditingField(focus, ref.passing, path);
 
