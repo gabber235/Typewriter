@@ -3,7 +3,7 @@ package com.typewritermc.engine.paper.utils.item
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
 import com.typewritermc.core.interaction.InteractionContext
-import com.typewritermc.engine.paper.utils.item.components.*
+import com.typewritermc.engine.paper.utils.item.components.ItemComponent
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -19,5 +19,7 @@ class CustomItem(
         }
         return itemStack
     }
-    override fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean = build(player, context).isSimilar(item)
+
+    override fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean =
+        build(player, context).isSimilar(item)
 }
