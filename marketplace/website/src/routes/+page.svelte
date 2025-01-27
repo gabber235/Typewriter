@@ -14,7 +14,7 @@
 		<AppBar avatarUrl={data.avatarUrl} fallbackAvatar={data.fallbackAvatar} />
 	</header>
 	<main class="text-gray-[#101013] flex flex-col items-center justify-center py-16 dark:text-white">
-		<h1 class="mb-6 text-5xl font-bold">Welcome to Typewriter</h1>
+		<h1 class="mb-6 text-5xl font-bold self-center">Welcome to Typewriter</h1>
 		<p class="mb-12 max-w-3xl text-center text-xl">
 			Explore all Typewriter products and find the perfect fit for your needs
 		</p>
