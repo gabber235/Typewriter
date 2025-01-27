@@ -27,6 +27,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
+import java.time.Duration
 import java.util.*
 import kotlin.math.pow
 
@@ -156,8 +157,8 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         ).triggerFor(player, context())
     }
 
-    override suspend fun tick() {
-        super.tick()
+    override suspend fun tick(deltaTime: Duration) {
+        super.tick(deltaTime)
         cycle++
     }
 

@@ -24,6 +24,7 @@ import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import java.time.Duration
 
 class SelectedNegativeNodeContentMode(
     context: ContentContext,
@@ -93,8 +94,8 @@ class SelectedNegativeNodeContentMode(
         return ok(Unit)
     }
 
-    override suspend fun tick() {
-        super.tick()
+    override suspend fun tick(deltaTime: Duration) {
+        super.tick(deltaTime)
         if (selectedNode == null) {
             // If the node is no longer in the network, we want to pop the content
             ContentPopTrigger.forceTriggerFor(player, context())

@@ -21,7 +21,6 @@ import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
-import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
@@ -37,6 +36,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerItemHeldEvent
 import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
+import java.time.Duration
 import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -247,7 +247,7 @@ class SelectedRoadNodeContentMode(
         }
     }
 
-    override suspend fun tick() {
+    override suspend fun tick(deltaTime: Duration) {
         cycle++
 
         if (selectedNode == null) {
@@ -255,7 +255,7 @@ class SelectedRoadNodeContentMode(
             ContentPopTrigger.forceTriggerFor(player, context())
         }
 
-        super.tick()
+        super.tick(deltaTime)
     }
 }
 

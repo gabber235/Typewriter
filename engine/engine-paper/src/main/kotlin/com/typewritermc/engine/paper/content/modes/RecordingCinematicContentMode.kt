@@ -19,6 +19,7 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.SYNC
 import com.typewritermc.engine.paper.utils.loreString
 import com.typewritermc.engine.paper.utils.name
+import com.typewritermc.engine.paper.utils.toTicks
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -34,6 +35,7 @@ import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
+import java.time.Duration
 import kotlin.reflect.KClass
 
 inline fun <reified F : Frame<F>> ComponentContainer.recordingCinematic(
@@ -97,7 +99,8 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
 
     private var asset: AssetEntry? = null
     private lateinit var actions: List<CinematicAction>
-    private var frame = initialFrame
+    private var totalTime = Duration.ZERO
+    private val frame: Int get() = initialFrame + totalTime.toTicks().toInt()
     private lateinit var frames: IntRange
 
     private var recorder = Recorder<F>()
@@ -197,8 +200,8 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
         }
     }
 
-    override suspend fun tick() {
-        frame++
+    override suspend fun tick(deltaTime: Duration) {
+        totalTime += deltaTime
         coroutineScope {
             actions.map {
                 launch {
@@ -210,7 +213,7 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
                 }
             }.joinAll()
         }
-        super.tick()
+        super.tick(deltaTime)
 
         if (frame in frames) {
             recordFrame()

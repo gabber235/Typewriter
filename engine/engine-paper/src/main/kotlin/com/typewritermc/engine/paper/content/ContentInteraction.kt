@@ -65,7 +65,7 @@ class ContentInteraction(
 
     override suspend fun tick(deltaTime: Duration) {
         applyInventory()
-        mode?.tick()
+        mode?.tick(deltaTime)
     }
 
     private suspend fun applyInventory() {

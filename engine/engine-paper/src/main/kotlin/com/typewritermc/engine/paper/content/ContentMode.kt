@@ -4,6 +4,7 @@ import com.typewritermc.engine.paper.content.components.IntractableItem
 import com.typewritermc.engine.paper.content.components.ItemsComponent
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import org.bukkit.entity.Player
+import java.time.Duration
 
 abstract class ContentMode(
     val context: ContentContext,
@@ -20,7 +21,7 @@ abstract class ContentMode(
         components.forEach { it.initialize(player) }
     }
 
-    open suspend fun tick() {
+    open suspend fun tick(deltaTime: Duration) {
         components.forEach { it.tick(player) }
     }
 

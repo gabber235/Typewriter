@@ -34,6 +34,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import java.time.Duration
 
 val roadNetworkMaxDistance by snippet(
     "road_network.distance.max", 30.0, """
@@ -216,8 +217,8 @@ class SelectRoadNodeContentMode(context: ContentContext, player: Player) : Conte
         return ok(Unit)
     }
 
-    override suspend fun tick() {
-        super.tick()
+    override suspend fun tick(deltaTime: Duration) {
+        super.tick(deltaTime)
         cycle++
     }
 
@@ -284,8 +285,8 @@ class SelectRoadNodeCollectionContentMode(context: ContentContext, player: Playe
         return ok(Unit)
     }
 
-    override suspend fun tick() {
-        super.tick()
+    override suspend fun tick(deltaTime: Duration) {
+        super.tick(deltaTime)
         cycle++
     }
 

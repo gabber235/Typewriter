@@ -5,16 +5,15 @@ import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.extension.annotations.Tags
-import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.*
-import com.typewritermc.quest.events.AsyncQuestStatusUpdate
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.asMiniWithResolvers
+import com.typewritermc.quest.events.AsyncQuestStatusUpdate
 import lirand.api.extensions.server.server
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.parsed
 import org.bukkit.entity.Player
