@@ -67,7 +67,7 @@ class DialogueHandler : TriggerHandler {
                 return TriggerContinuation.StartInteraction(DialogueInteraction(event.player, event.context, nextDialogue))
             } else if (!isActive || nextDialogue.priority >= priority) {
                 this.next(nextDialogue, event.context)
-                return TriggerContinuation.Done
+                return TriggerContinuation.KeepInteraction
             }
         } else if (this is DialogueInteraction && !isActive) {
             return TriggerContinuation.EndInteraction

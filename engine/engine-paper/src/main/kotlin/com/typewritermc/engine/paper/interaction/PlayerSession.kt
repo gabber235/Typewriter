@@ -101,7 +101,7 @@ class PlayerSession(val player: Player) : KoinComponent {
 
     /** Handles an event. */
     private suspend fun onEvent(events: List<Event>) {
-        var endInteraction = false
+        var interactionLifecycle = InteractionLifecycle.NONE
         val nextInteractions = mutableListOf<Interaction>()
         val nextBounds = mutableListOf<InteractionBound>()
         val todo = ArrayDeque(events.map(Event::filterAllowedTriggers))
@@ -122,7 +122,11 @@ class PlayerSession(val player: Player) : KoinComponent {
                         TriggerContinuation.Done -> {}
                         is TriggerContinuation.Append -> addingEvents.addAll(this.events)
                         is TriggerContinuation.StartInteraction -> nextInteractions.add(this.interaction)
-                        TriggerContinuation.EndInteraction -> endInteraction = true
+                        is TriggerContinuation.KeepInteraction -> interactionLifecycle = InteractionLifecycle.KEEP
+                        TriggerContinuation.EndInteraction -> {
+                            if (interactionLifecycle == InteractionLifecycle.KEEP) return
+                            interactionLifecycle = InteractionLifecycle.END
+                        }
                         is TriggerContinuation.StartInteractionBound -> nextBounds.add(this.bound)
                         is TriggerContinuation.Multi -> this.continuations.forEach { it.apply() }
                     }
@@ -136,7 +140,7 @@ class PlayerSession(val player: Player) : KoinComponent {
             todo.addAll(addingEvents.map(Event::filterAllowedTriggers))
         }
 
-        if (nextInteractions.isEmpty() && endInteraction) {
+        if (nextInteractions.isEmpty() && interactionLifecycle == InteractionLifecycle.END) {
             scope?.teardown()
             scope = null
             return
@@ -148,9 +152,13 @@ class PlayerSession(val player: Player) : KoinComponent {
             scope.swapBound(nextBound)
         }
 
+        if (nextInteractions.isEmpty() && interactionLifecycle == InteractionLifecycle.KEEP) {
+            return
+        }
+
         val nextInteraction = nextInteractions.maxByOrNull { it.priority } ?: return
-        // Only more or equal important interactions should be overridden.
-        if (nextInteraction.priority < (interaction?.priority ?: 0) && !endInteraction) {
+        // Only more or equal important interactions can override.
+        if (nextInteraction.priority < (interaction?.priority ?: Int.MIN_VALUE) && interactionLifecycle != InteractionLifecycle.END) {
             return
         }
 
@@ -183,3 +191,8 @@ val Player.interactionContext: InteractionContext?
     get() = with(KoinJavaComponent.get<PlayerSessionManager>(PlayerSessionManager::class.java)) {
         session?.interaction?.context
     }
+
+
+private enum class InteractionLifecycle {
+    NONE, KEEP, END
+}

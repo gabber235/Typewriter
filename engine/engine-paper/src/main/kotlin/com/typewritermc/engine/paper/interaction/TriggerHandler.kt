@@ -28,6 +28,7 @@ sealed interface TriggerContinuation {
     }
 
     data class StartInteraction(val interaction: Interaction) : TriggerContinuation
+    data object KeepInteraction : TriggerContinuation
     data object EndInteraction : TriggerContinuation
     data class StartInteractionBound(val bound: InteractionBound) : TriggerContinuation
 
