@@ -9,6 +9,7 @@ import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.AudienceFilterEntry
 import com.typewritermc.engine.paper.entry.entries.TickableDisplay
 import com.typewritermc.core.entries.ref
+import com.typewritermc.engine.paper.entry.entries.Invertible
 import com.typewritermc.engine.paper.utils.CronExpression
 import org.bukkit.entity.Player
 import java.time.LocalDateTime
@@ -33,7 +34,8 @@ class CronAudience(
     @Help("The cron expression to filter the audience by.")
     // The <Link to="https://www.netiq.com/documentation/cloud-manager-2-5/ncm-reference/data/bexyssf.html">Cron Expression</Link> when the fact expires.
     val cron: CronExpression = CronExpression.default(),
-) : AudienceFilterEntry {
+    override val inverted: Boolean = false,
+) : AudienceFilterEntry, Invertible {
     override suspend fun display(): AudienceFilter {
         return CronAudienceDisplay(ref(), cron)
     }

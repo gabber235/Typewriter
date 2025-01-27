@@ -23,7 +23,8 @@ class WorldAudienceEntry(
     override val children: List<Ref<out AudienceEntry>> = emptyList(),
     @Regex
     val world: Var<String> = ConstVar(""),
-) : AudienceFilterEntry {
+    override val inverted: Boolean = false,
+) : AudienceFilterEntry, Invertible {
     override suspend fun display(): AudienceFilter = WorldAudienceFilter(ref(), world)
 }
 
