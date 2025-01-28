@@ -23,6 +23,10 @@ data class GPSEdge(
     val start: Location,
     val end: Location,
     val weight: Double,
+    /**
+     * The number of blocks the path is long.
+     */
+    val length: Double,
 ) {
     val isFastTravel: Boolean
         get() = weight == 0.0

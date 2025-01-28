@@ -35,7 +35,6 @@ val spokenMaxLineLength: Int by snippet("dialogue.spoken.maxLineLength", 40)
 val spokenInstructionTicksHighlighted: Long by snippet("dialogue.spoken.instruction.ticks.highlighted", 10)
 val spokenInstructionTicksBase: Long by snippet("dialogue.spoken.instruction.ticks.base", 30)
 
-
 class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: SpokenDialogueEntry) :
     DialogueMessenger<SpokenDialogueEntry>(player, context, entry) {
     private var confirmationKeyHandler: ConfirmationKeyHandler? = null

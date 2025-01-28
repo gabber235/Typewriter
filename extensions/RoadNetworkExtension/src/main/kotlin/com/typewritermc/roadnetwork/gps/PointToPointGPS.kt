@@ -1,23 +1,20 @@
 package com.typewritermc.roadnetwork.gps
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.core.utils.failure
+import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.utils.ComputedMap
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.engine.paper.utils.distanceSqrt
-import com.typewritermc.core.utils.failure
-import com.typewritermc.core.utils.ok
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import org.bukkit.Location
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 import java.util.*
-import kotlin.collections.set
 
 class PointToPointGPS(
     override val roadNetwork: Ref<RoadNetworkEntry>,
@@ -72,7 +69,8 @@ class PointToPointGPS(
             GPSEdge(
                 nodes[edge.start]!!.location,
                 nodes[edge.end]!!.location,
-                edge.weight
+                edge.weight,
+                edge.length,
             )
         })
     }
@@ -268,7 +266,7 @@ class PointToPointGPS(
                                 negativeNodes = negativeNodes
                             ) ?: return@async null
 
-                        RoadEdge(start.id, end.id, path.length().toDouble())
+                        RoadEdge(start.id, end.id, weight = path.length().toDouble(), length = path.length().toDouble())
                     }
                 }.awaitAll()
                 .filterNotNull()

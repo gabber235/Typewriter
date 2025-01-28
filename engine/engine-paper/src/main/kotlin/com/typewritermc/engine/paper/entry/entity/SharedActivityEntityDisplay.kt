@@ -23,6 +23,12 @@ class SharedActivityEntityDisplay(
     private var activityManager: ActivityManager<SharedActivityContext>? = null
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
 
+    /**
+     * When nobody can see the entity, but it is still active, there is no way to get the state for the entity.
+     * So we just assume that the entity state stays the same.
+     */
+    private var lastState: EntityState = EntityState()
+
     override fun filter(player: Player): Boolean {
         val npcLocation = activityManager?.position ?: return false
         val distance = npcLocation.distanceSqrt(player.location) ?: return false
@@ -52,7 +58,7 @@ class SharedActivityEntityDisplay(
         // When the state is different between players, it might look weird.
         // But there is no real solution to this.
         // So we pick the first entity's state and use to try and keep the state consistent.
-        val entityState = entities.values.firstOrNull()?.state ?: EntityState()
+        val entityState = entities.values.firstOrNull()?.state?.also { lastState = it } ?: lastState
         activityManager?.tick(SharedActivityContext(instanceEntryRef, players, entityState))
         entities.values.forEach { it.tick() }
     }
@@ -68,6 +74,7 @@ class SharedActivityEntityDisplay(
         entities.clear()
         activityManager?.dispose(SharedActivityContext(instanceEntryRef, players))
         activityManager = null
+        lastState = EntityState()
     }
 
     override fun playerSeesEntity(playerId: UUID, entityId: Int): Boolean {

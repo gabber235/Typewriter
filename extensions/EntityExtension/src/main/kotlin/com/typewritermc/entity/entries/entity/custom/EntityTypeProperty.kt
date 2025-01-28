@@ -6,6 +6,7 @@ import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.typewritermc.engine.paper.entry.entity.EntityState
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.entity.entries.data.minecraft.PoseProperty
+import com.typewritermc.entity.entries.data.minecraft.SpeedProperty
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
 import com.typewritermc.entity.entries.data.minecraft.living.ScaleProperty
 import com.typewritermc.entity.entries.data.minecraft.living.SizeProperty
@@ -69,6 +70,7 @@ fun EntityType.state(properties: Map<KClass<*>, EntityProperty>): EntityState {
     val matcher = matcher(properties)
     return EntityState(
         eyeHeight = matcher.eyeHeight * (properties.property(ScaleProperty::class)?.scale ?: 1.0),
+        speed = properties.property(SpeedProperty::class)?.speed ?: 0.2085f,
     )
 }
 

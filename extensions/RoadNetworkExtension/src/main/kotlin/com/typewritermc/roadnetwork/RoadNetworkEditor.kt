@@ -98,14 +98,14 @@ class RoadNetworkEditor(
                         negativeNodes = network.negativeNodes
                     ) ?: return@mapNotNull null
 
-                    RoadEdge(node.id, target.id, path.length().toDouble())
+                    RoadEdge(node.id, target.id, weight = path.length().toDouble(), length = path.length().toDouble())
                 }
 
         val manualEdges = network.modifications
             .asSequence()
             .filterIsInstance<RoadModification.EdgeAddition>()
             .filter { it.start == node.id }
-            .map { RoadEdge(it.start, it.end, it.weight) }
+            .map { RoadEdge(it.start, it.end, it.weight, it.length) }
 
         val edges = (generatedEdges + manualEdges).toList()
 

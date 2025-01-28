@@ -18,7 +18,6 @@ import com.typewritermc.roadnetwork.gps.GPSEdge
 import com.typewritermc.roadnetwork.gps.isInRangeOf
 import com.typewritermc.roadnetwork.gps.toVector
 import com.typewritermc.roadnetwork.pathfinding.PFCapabilities
-import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
 import kotlinx.coroutines.Job
@@ -43,6 +42,7 @@ class NavigationActivity(
     override fun initialize(context: ActivityContext) {}
 
     override fun tick(context: ActivityContext): TickResult {
+        val speed = context.entityState.speed
         state.tick(context)
         if (state.isComplete()) {
             if (path?.isEmpty() == true) {
@@ -56,9 +56,9 @@ class NavigationActivity(
 
             state = when {
                 currentEdge.isFastTravel -> NavigationActivityTaskState.FastTravel(currentEdge)
-                context.isViewed -> NavigationActivityTaskState.Walking(gps.roadNetwork, currentEdge, currentPosition)
+                context.isViewed -> NavigationActivityTaskState.Walking(gps.roadNetwork, currentEdge, currentPosition, speed = speed)
 
-                else -> NavigationActivityTaskState.FakeNavigation(currentEdge)
+                else -> NavigationActivityTaskState.FakeNavigation(currentEdge, speed = speed)
             }
         }
 
@@ -66,12 +66,12 @@ class NavigationActivity(
         // The fake navigation is used to improve the performance, it however, goes through buildings
         // So, we switch to walking when the entity is viewed
         if (state is NavigationActivityTaskState.FakeNavigation && context.isViewed) {
-            this.state = NavigationActivityTaskState.Walking(gps.roadNetwork, state.edge, currentPosition)
+            this.state = NavigationActivityTaskState.Walking(gps.roadNetwork, state.edge, currentPosition, speed)
         }
 
         // And we switch back to fake navigation when the entity is not viewed
         if (state is NavigationActivityTaskState.Walking && !context.isViewed) {
-            this.state = NavigationActivityTaskState.FakeNavigation(state.edge, currentPosition)
+            this.state = NavigationActivityTaskState.FakeNavigation(state.edge, currentPosition, speed = speed)
         }
 
         return TickResult.CONSUMED
@@ -85,7 +85,7 @@ class NavigationActivity(
 
 private sealed interface NavigationActivityTaskState {
     fun location(): PositionProperty
-    fun isComplete(): Boolean = false
+    fun isComplete(): Boolean
     fun tick(context: ActivityContext) {}
     fun dispose() {}
 
@@ -93,7 +93,7 @@ private sealed interface NavigationActivityTaskState {
         private val gps: GPS,
         private val location: PositionProperty,
     ) : NavigationActivityTaskState {
-        internal var path: List<GPSEdge>? = null
+        var path: List<GPSEdge>? = null
         private val job: Job = ThreadType.DISPATCHERS_ASYNC.launch {
             val result = gps.findPath()
             path = if (result.isFailure) {
@@ -117,11 +117,12 @@ private sealed interface NavigationActivityTaskState {
     class FakeNavigation(
         val edge: GPSEdge,
         val location: PositionProperty = edge.start.toProperty(),
+        val speed: Float,
     ) : NavigationActivityTaskState {
         private var ticks: Int = 0
 
         // Fixme: Magic number
-        private val maxTicks = (location.distance(edge.end.toProperty()) * 20).toInt()
+        private val maxTicks = (edge.length * speed).toInt()
 
         override fun location(): PositionProperty = location
 
@@ -143,7 +144,8 @@ private sealed interface NavigationActivityTaskState {
     class Walking(
         roadNetwork: Ref<RoadNetworkEntry>,
         val edge: GPSEdge,
-        startLocation: PositionProperty
+        startLocation: PositionProperty,
+        val speed: Float,
     ) : NavigationActivityTaskState, IPathingEntity {
         private var location: PositionProperty = startLocation
         private var path: IPath?
@@ -286,7 +288,7 @@ private sealed interface NavigationActivityTaskState {
         override fun age(): Int = 0
         override fun bound(): Boolean = false
         override fun searchRange(): Float = 40f
-        override fun capabilities(): IPathingEntity.Capabilities = PFCapabilities()
+        override fun capabilities(): IPathingEntity.Capabilities = PFCapabilities(speed = speed)
 
     }
 }

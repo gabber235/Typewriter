@@ -234,7 +234,7 @@ class SelectedRoadNodeContentMode(
             node,
             { start, end -> RoadModification.EdgeAddition(start, end, 0.0) }) { start, end, network ->
             network.copy(
-                edges = network.edges + RoadEdge(start.id, end.id, 0.0)
+                edges = network.edges + RoadEdge(start.id, end.id, 0.0, 0.0)
             )
         }
     }

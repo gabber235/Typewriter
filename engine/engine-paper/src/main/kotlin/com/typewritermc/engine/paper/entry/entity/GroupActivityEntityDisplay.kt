@@ -19,6 +19,13 @@ class GroupActivityEntityDisplay(
     private val activityManagers = ConcurrentHashMap<GroupId, ActivityManager<in SharedActivityContext>>()
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
 
+    /**
+     * When nobody can see the entity, but it is still active, there is no way to get the state for the entity.
+     * So we just assume that the entity state stays the same.
+     */
+    private val lastStates = ConcurrentHashMap<GroupId, EntityState>()
+
+
     private fun groupViewers(groupId: GroupId): List<Player> {
         return players.filter { group.groupId(it) == groupId }
     }
@@ -64,7 +71,8 @@ class GroupActivityEntityDisplay(
             // But there is no real solution to this.
             // So we pick the first entity's state and use to try and keep the state consistent.
             val viewerId = viewers.firstOrNull()?.uniqueId
-            val entityState = if (viewerId != null) entities[viewerId]?.state ?: EntityState() else EntityState()
+            val entityStateFromPlayer = if (viewerId != null) entities[viewerId]?.state?.also { lastStates[groupId] = it } else null
+            val entityState = entityStateFromPlayer ?: lastStates.getOrPut(groupId) { EntityState() }
 
             val context = SharedActivityContext(instanceEntryRef, viewers, entityState)
             manager.tick(context)
@@ -84,6 +92,7 @@ class GroupActivityEntityDisplay(
         // If no players are considered for this group, we can remove the activity manager
         if (consideredPlayers.none { groupId == group.groupId(it) }) {
             activityManagers.remove(groupId)?.dispose(SharedActivityContext(instanceEntryRef, emptyList()))
+            lastStates.remove(groupId)
         }
     }
 
@@ -95,6 +104,7 @@ class GroupActivityEntityDisplay(
             manager.dispose(SharedActivityContext(instanceEntryRef, groupViewers(groupId)))
         }
         activityManagers.clear()
+        lastStates.clear()
     }
 
     override fun playerSeesEntity(playerId: UUID, entityId: Int): Boolean {

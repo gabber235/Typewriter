@@ -58,4 +58,5 @@ abstract class FakeEntity(
 
 data class EntityState(
     val eyeHeight: Double = 0.0,
+    val speed: Float = 0.2085f,
 )

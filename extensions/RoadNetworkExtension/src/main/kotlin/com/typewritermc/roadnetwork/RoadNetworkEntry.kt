@@ -98,6 +98,10 @@ data class RoadEdge(
     val start: RoadNodeId,
     val end: RoadNodeId,
     val weight: Double,
+    /**
+     * The number of blocks the path is long.
+     */
+    val length: Double,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -130,7 +134,8 @@ sealed interface RoadModification {
     data class EdgeAddition(
         override val start: RoadNodeId,
         override val end: RoadNodeId,
-        val weight: Double
+        val weight: Double,
+        val length: Double = weight,
     ) :
         EdgeModification {
         override fun equals(other: Any?): Boolean {

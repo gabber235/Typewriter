@@ -22,6 +22,12 @@ class IndividualActivityEntityDisplay(
     private val activityManagers = ConcurrentHashMap<UUID, ActivityManager<in IndividualActivityContext>>()
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
 
+    /**
+     * When nobody can see the entity, but it is still active, there is no way to get the state for the entity.
+     * So we just assume that the entity state stays the same.
+     */
+    private val lastStates = ConcurrentHashMap<UUID, EntityState>()
+
     override fun filter(player: Player): Boolean {
         val activityManager = activityManagers[player.uniqueId] ?: return false
         val npcPosition = activityManager.position
@@ -54,7 +60,7 @@ class IndividualActivityEntityDisplay(
         activityManagers.forEach { (pid, manager) ->
             val player = server.getPlayer(pid) ?: return@forEach
             val isViewing = pid in this
-            val entityState = entities[pid]?.state ?: EntityState()
+            val entityState = entities[pid]?.state?.also { lastStates[pid] = it } ?: lastStates.getOrPut(pid) { EntityState() }
             manager.tick(IndividualActivityContext(instanceEntryRef, player, isViewing, entityState))
         }
         entities.values.forEach { it.tick() }
@@ -68,6 +74,7 @@ class IndividualActivityEntityDisplay(
     override fun onPlayerRemove(player: Player) {
         super.onPlayerRemove(player)
         activityManagers.remove(player.uniqueId)?.dispose(IndividualActivityContext(instanceEntryRef, player))
+        lastStates.remove(player.uniqueId)
     }
 
     override fun dispose() {
@@ -83,6 +90,7 @@ class IndividualActivityEntityDisplay(
             )
         }
         activityManagers.clear()
+        lastStates.clear()
     }
 
     override fun playerSeesEntity(playerId: UUID, entityId: Int): Boolean {

@@ -12,7 +12,6 @@ import com.typewritermc.worldguard.events.RegionsExitEvent
 import lirand.api.extensions.server.server
 
 class WorldGuardHandler(session: Session?) : Handler(session) {
-
     object Factory : Handler.Factory<WorldGuardHandler>() {
         override fun create(session: Session?): WorldGuardHandler {
             return WorldGuardHandler(session)

@@ -62,7 +62,9 @@ class PFInstanceSpace(val world: com.typewritermc.core.utils.point.World) : IIns
         lastAccess = System.currentTimeMillis()
         val key = chunkKey(cx, cz)
 
-        chunkSpaces[key]?.let { return it }
+        synchronized(chunkSpaces) {
+            chunkSpaces[key]?.let { return it }
+        }
 
         val bukkitWorld = world.toBukkitWorld()
         val chunk = bukkitWorld.getChunkAt(cx, cz)
