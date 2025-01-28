@@ -39,7 +39,7 @@ class ExitComponent(
         // Only count shifting down
         if (!event.isSneaking) return
         if (System.currentTimeMillis() - lastShift < 500) {
-            InteractionEndTrigger.triggerFor(event.player, context())
+            ContentPopTrigger.triggerFor(event.player, context())
         }
         lastShift = System.currentTimeMillis()
     }
