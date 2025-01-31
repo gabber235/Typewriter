@@ -6,21 +6,19 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.engine.paper.command.dsl.DslCommand
 import com.typewritermc.engine.paper.entry.TriggerEntry
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.matches
-import dev.jorel.commandapi.CommandTree
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import org.bukkit.entity.Player
-import kotlin.reflect.KClass
 
 @Tags("event")
 interface EventEntry : TriggerEntry
 
 interface CustomCommandEntry : EventEntry {
-    @Help("The command to register. Do not include the leading slash.")
-    val command: String
-
-    fun CommandTree.builder()
+    @Suppress("UnstableApiUsage")
+    fun command(): DslCommand<CommandSourceStack>
 
     companion object
 }

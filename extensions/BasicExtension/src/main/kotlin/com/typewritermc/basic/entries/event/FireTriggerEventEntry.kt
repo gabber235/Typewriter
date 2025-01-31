@@ -5,17 +5,14 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.TypewriterCommand
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.command.dsl.CommandTree
+import com.typewritermc.engine.paper.command.dsl.entry
+import com.typewritermc.engine.paper.command.dsl.executePlayerOrTarget
+import com.typewritermc.engine.paper.command.dsl.withPermission
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.entry.triggerFor
-import com.typewritermc.engine.paper.entryArgument
-import com.typewritermc.engine.paper.optionalTarget
-import com.typewritermc.engine.paper.targetOrSelfPlayer
-import dev.jorel.commandapi.CommandTree
-import dev.jorel.commandapi.kotlindsl.anyExecutor
-import dev.jorel.commandapi.kotlindsl.argument
-import dev.jorel.commandapi.kotlindsl.literalArgument
 
 @Entry(
     "fire_trigger_event",
@@ -42,24 +39,16 @@ class FireTriggerEventEntry(
 ) : EventEntry
 
 @TypewriterCommand
-fun CommandTree.fireCommand() = literalArgument("fire") {
+fun CommandTree.fireCommand() = literal("fire") {
     withPermission("typewriter.fire")
-
-    argument(entryArgument<FireTriggerEventEntry>("entry")) {
-        optionalTarget {
-            anyExecutor { sender, args ->
-                val target = args.targetOrSelfPlayer(sender) ?: return@anyExecutor
-                val entry = args["entry"] as FireTriggerEventEntry
-                listOf(entry).startDialogueWithOrNextDialogue(target, context())
-            }
+    entry<FireTriggerEventEntry>("entry") { entry ->
+        executePlayerOrTarget { target ->
+            listOf(entry()).startDialogueWithOrNextDialogue(target, context())
         }
-        literalArgument("force") {
-            optionalTarget {
-                anyExecutor { sender, args ->
-                    val target = args.targetOrSelfPlayer(sender) ?: return@anyExecutor
-                    val entry = args["entry"] as FireTriggerEventEntry
-                    entry.eventTriggers.triggerFor(target, context())
-                }
+
+        literal("force") {
+            executePlayerOrTarget { target ->
+                entry().eventTriggers.triggerFor(target, context())
             }
         }
     }

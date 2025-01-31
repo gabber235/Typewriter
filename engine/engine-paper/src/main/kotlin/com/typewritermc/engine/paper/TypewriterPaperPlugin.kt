@@ -7,12 +7,12 @@ import com.google.gson.Gson
 import com.typewritermc.core.TypewriterCore
 import com.typewritermc.core.interaction.SessionTracker
 import com.typewritermc.core.serialization.createDataSerializerGson
+import com.typewritermc.engine.paper.command.TypewriterCommandManager
 import com.typewritermc.engine.paper.content.ContentHandler
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.action.ActionHandler
 import com.typewritermc.engine.paper.entry.dialogue.DialogueHandler
 import com.typewritermc.engine.paper.entry.entity.EntityHandler
-import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
 import com.typewritermc.engine.paper.entry.temporal.TemporalHandler
 import com.typewritermc.engine.paper.events.TypewriterUnloadEvent
 import com.typewritermc.engine.paper.extensions.bstats.BStatsMetrics
@@ -34,11 +34,9 @@ import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.ui.Writers
 import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.createBukkitDataParser
-import com.typewritermc.engine.paper.utils.registerAll
-import com.typewritermc.engine.paper.utils.unregisterAll
 import com.typewritermc.loader.DependencyChecker
-import dev.jorel.commandapi.CommandAPI
-import dev.jorel.commandapi.CommandAPIBukkitConfig
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import kotlinx.coroutines.delay
 import lirand.api.architecture.KotlinPlugin
 import org.bukkit.plugin.Plugin
@@ -61,6 +59,7 @@ import java.util.logging.Level.*
 import java.util.logging.Logger
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("UnstableApiUsage")
 class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
     override fun onLoad() {
         super.onLoad()
@@ -108,6 +107,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             singleOf(::ActionBarBlockerHandler)
             singleOf(::PacketInterceptor)
             singleOf(::EntityHandler)
+            singleOf(::TypewriterCommandManager)
 
             factory { FactTracker(it.get()) } bind SessionTracker::class
             single { InteractionTriggerHandler() } bind TriggerHandler::class
@@ -126,13 +126,9 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         startKoin {
             modules(modules, TypewriterCore.module, dataSerializerModule)
         }
-
-        CommandAPI.onLoad(CommandAPIBukkitConfig(this).usePluginNamespace().skipReloadDatapacks(true))
     }
 
     override suspend fun onEnableAsync() {
-        CommandAPI.onEnable()
-
         PacketEvents.getAPI().settings.downsampleColors(false)
 
         get<FactDatabase>().initialize()
@@ -149,6 +145,16 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         }
 
         BStatsMetrics.registerMetrics()
+
+        // This is a hack to get the minecraft dispatcher.
+        // As we need to dynamically add and remove commands on the fly
+        this.lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
+            val manager = get<TypewriterCommandManager>()
+            manager.registerDispatcher(it.registrar().dispatcher)
+            if (it.cause() == ReloadableRegistrarEvent.Cause.RELOAD) {
+                manager.registerCommands()
+            }
+        }
 
         // We want to initialize all the extensions after all the plugins have been enabled to make sure
         // that all the plugins are loaded.
@@ -171,13 +177,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         get<PlayerSessionManager>().load()
         get<EntryListeners>().load()
         get<AudienceManager>().load()
-        if (CommandAPI.isLoaded()) {
-            CustomCommandEntry.registerAll()
-            typeWriterCommand()
-            logger.info("Registered TypeWriter commands")
-        } else {
-            logger.warning("CommandAPI is not loaded, commands will not be registered")
-        }
+        get<TypewriterCommandManager>().registerCommands()
 
         if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
             PlaceholderExpansion.load()
@@ -187,10 +187,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
     suspend fun unload() {
         TypewriterUnloadEvent().callEvent()
 
-        if (CommandAPI.isLoaded()) {
-            CustomCommandEntry.unregisterAll()
-            CommandAPI.unregister("typewriter", true)
-        }
+        get<TypewriterCommandManager>().unregisterCommands()
 
         get<PacketInterceptor>().unload()
         get<AudienceManager>().unload()
@@ -215,10 +212,6 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
     val isFloodgateInstalled: Boolean by lazy { server.pluginManager.isPluginEnabled("Floodgate") }
 
     override suspend fun onDisableAsync() {
-        if (CommandAPI.isLoaded()) {
-            CommandAPI.onDisable()
-        }
-
         get<StagingManager>().shutdown()
         get<FactDatabase>().shutdown()
         get<ChatHistoryHandler>().shutdown()

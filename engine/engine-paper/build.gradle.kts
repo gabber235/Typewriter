@@ -36,8 +36,6 @@ dependencies {
     api("me.tofaa.entitylib:spigot:+39cce79-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.20.0")
-    compileOnlyApi("dev.jorel:commandapi-bukkit-shade-mojang-mapped:9.7.0")
-    compileOnlyApi("dev.jorel:commandapi-bukkit-kotlin:9.7.0")
 
     // Doesn't want to load properly using the spigot api.
     compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.12")

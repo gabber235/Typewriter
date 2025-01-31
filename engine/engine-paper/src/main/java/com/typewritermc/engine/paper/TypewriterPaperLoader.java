@@ -29,10 +29,6 @@ public class TypewriterPaperLoader implements PluginLoader {
             central);
         addDependency(classpathBuilder, "com.corundumstudio.socketio:netty-socketio:1.7.19",
             central);
-        addDependency(classpathBuilder, "dev.jorel:commandapi-bukkit-shade-mojang-mapped:9.7.0",
-            central);
-        addDependency(classpathBuilder, "dev.jorel:commandapi-bukkit-kotlin:9.7.0",
-            central);
 
         addDependency(classpathBuilder,
             "com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0", central);

@@ -1,19 +1,18 @@
 package com.typewritermc.basic.entries.event
 
-import dev.jorel.commandapi.CommandTree
-import dev.jorel.commandapi.kotlindsl.playerExecutor
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.command.dsl.playersResolver
+import com.typewritermc.engine.paper.command.dsl.sender
+import com.typewritermc.engine.paper.command.dsl.withPermission
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
 import com.typewritermc.engine.paper.entry.triggerAllFor
-import com.typewritermc.engine.paper.targetOrSelfPlayer
 import com.typewritermc.engine.paper.utils.msg
-import dev.jorel.commandapi.kotlindsl.anyExecutor
-import dev.jorel.commandapi.kotlindsl.argument
-import dev.jorel.commandapi.kotlindsl.playerArgument
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import org.bukkit.entity.Player
 
 @Entry("on_run_command", "When a player runs a custom command", Colors.YELLOW, "mingcute:terminal-fill")
@@ -31,23 +30,31 @@ class RunCommandEventEntry(
     override val id: String = "",
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    override val command: String = "",
+    @Help("The command to register. Do not include the leading slash.")
+    val command: String = "",
 ) : CustomCommandEntry {
-    override fun CommandTree.builder() {
-        playerExecutor { player, _ ->
+    @Suppress("UnstableApiUsage")
+    override fun command() = com.typewritermc.engine.paper.command.dsl.command<CommandSourceStack>(command) {
+        executes {
+            val player = (source.executor as? Player) ?: (sender as? Player)
+            if (player == null) {
+                sender.msg("You must be a player to run this command.")
+                return@executes
+            }
             triggerAllFor(player, context())
         }
-        playerArgument("target") {
-            this.withPermission("typewriter.${command}.other")
-            anyExecutor { sender, args ->
-                val target = args["target"] as? Player
-                if (target == null) {
-                    sender.msg("Could not find player with name <green>${args.getRaw("target")}</green>")
-                    return@anyExecutor
+        playersResolver("target") { resolver ->
+            withPermission("typewriter.${command}.other")
+            executes {
+                val players = resolver().resolve(source)
+                if (players.isEmpty()) {
+                    sender.msg("<red>No players found to run this command for.")
+                    return@executes
                 }
-
-                triggerAllFor(target, context())
-                sender.msg("Triggered $command for <green>${target.name}</green>")
+                players.forEach { player ->
+                    triggerAllFor(player, context())
+                }
+                sender.msg("Triggered $command for <green>${players.joinToString(", ") { it.name }}</green>.")
             }
         }
     }
