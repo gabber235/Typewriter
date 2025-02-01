@@ -66,10 +66,8 @@ data class EffectStateProvider(
     }
 
     override fun restore(player: Player, value: Any) {
-        if (value !is PotionEffect) {
-            player.removePotionEffect(effect)
-            return
-        }
+        player.removePotionEffect(effect)
+        if (value !is PotionEffect) return
         player.addPotionEffect(value)
     }
 }
