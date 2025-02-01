@@ -21,9 +21,10 @@ import kotlin.reflect.safeCast
 class RangedVariable(
     override val id: String = "",
     override val name: String = "",
-    ) : VariableEntry {
+) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        val data = context.getData<RangedVariableData>() ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+        val data = context.getData<RangedVariableData>()
+            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
         when (context.klass) {
             Int::class -> {
                 val start = data.range.start.get(Int::class) ?: 0
@@ -35,6 +36,7 @@ class RangedVariable(
                 val value = start + randomStep * step
                 return context.klass.safeCast(value)!!
             }
+
             Double::class -> {
                 val start = data.range.start.get(Double::class) ?: 0.0
                 val end = data.range.endInclusive.get(Double::class) ?: 0.0
@@ -45,6 +47,7 @@ class RangedVariable(
                 val value = start + randomStep * step
                 return context.klass.safeCast(value)!!
             }
+
             Duration::class -> {
                 val start = data.range.start.get(Duration::class) ?: Duration.ZERO
                 val end = data.range.endInclusive.get(Duration::class) ?: Duration.ZERO
@@ -59,6 +62,7 @@ class RangedVariable(
                 val value = startNanos + randomStep * stepNanos
                 return context.klass.safeCast(Duration.ofNanos(value))!!
             }
+
             else -> throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
         }
     }
