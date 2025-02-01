@@ -98,8 +98,9 @@ class IndividualActivityEntityDisplay(
     }
 
     override fun position(playerId: UUID): Position? = activityManagers[playerId]?.position?.toPosition()
-    override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: EntityState()
+    override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: lastStates[playerId] ?: EntityState()
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
+    override fun isSpawnedIn(playerId: UUID): Boolean = entities[playerId] != null
 
     override fun entityId(playerId: UUID): Int {
         return entities[playerId]?.entityId ?: 0

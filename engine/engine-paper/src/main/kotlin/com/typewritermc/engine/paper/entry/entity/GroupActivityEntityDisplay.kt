@@ -116,9 +116,16 @@ class GroupActivityEntityDisplay(
         val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
         return activityManagers[groupId]?.position?.toPosition()
     }
-    override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: EntityState()
+    override fun entityState(playerId: UUID): EntityState {
+        entities[playerId]?.state?.let { return it }
+        val player = server.getPlayer(playerId) ?: return EntityState()
+        val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
+        lastStates[groupId]?.let { return it }
+        return EntityState()
+    }
 
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
+    override fun isSpawnedIn(playerId: UUID): Boolean = entities[playerId] != null
 
     override fun entityId(playerId: UUID): Int {
         return entities[playerId]?.entityId ?: 0

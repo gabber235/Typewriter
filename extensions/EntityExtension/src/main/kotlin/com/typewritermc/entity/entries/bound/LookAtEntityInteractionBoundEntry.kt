@@ -137,6 +137,13 @@ class LookAtNpcInteractionBound(
 
         val display = get<AudienceManager>(AudienceManager::class.java)[ref] as? ActivityEntityDisplay ?: return
 
+        if (!display.isSpawnedIn(player.uniqueId)) {
+            state = AnimationState.Idle
+            yawVelocity.value = 0f
+            pitchVelocity.value = 0f
+            return
+        }
+
         val entityState = display.entityState(player.uniqueId)
         val position = display.position(player.uniqueId)
         val target = position?.add(0.0, entityState.eyeHeight, 0.0) ?: return

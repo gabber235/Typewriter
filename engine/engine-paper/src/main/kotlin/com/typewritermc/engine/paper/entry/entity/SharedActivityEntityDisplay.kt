@@ -82,8 +82,9 @@ class SharedActivityEntityDisplay(
     }
 
     override fun position(playerId: UUID): Position? = activityManager?.position?.toPosition()
-    override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: EntityState()
+    override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: lastState
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
+    override fun isSpawnedIn(playerId: UUID): Boolean = entities[playerId] != null
 
     override fun entityId(playerId: UUID): Int {
         return entities[playerId]?.entityId ?: 0

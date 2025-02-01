@@ -36,6 +36,13 @@ interface ActivityEntityDisplay {
     fun canView(playerId: UUID): Boolean
 
     /**
+     * Whether the player has the entity spawned in for them.
+     *
+     * @param playerId The player to check.
+     */
+    fun isSpawnedIn(playerId: UUID): Boolean
+
+    /**
      * Get the base entity id of the entity.
      * This might not be all of the entity ids that are displayed.
      * For example, the entity might be a child of another entity.
