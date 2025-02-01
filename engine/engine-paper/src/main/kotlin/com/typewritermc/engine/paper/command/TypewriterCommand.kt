@@ -141,7 +141,8 @@ private fun CommandTree.factsCommand() = literal("facts") {
                 """
                     |<gray><i>and $remaining more...
                     |
-                    |<gray>Use <white>/tw facts [fact_id/page_name] </white>to query them.
+                    |<gray>Use <white>/tw facts query [fact_id] </white>to query a specific fact.
+                    |<gray>Use <white>/tw facts inspect [page_name] </white>to inspect all facts on a page.
                     """.trimMargin()
             )
         }
