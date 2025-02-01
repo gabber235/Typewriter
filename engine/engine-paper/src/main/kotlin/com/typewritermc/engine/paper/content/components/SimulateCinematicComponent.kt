@@ -143,6 +143,7 @@ class SimulateCinematicComponent(
                     |<line> <green>Shift + Right Click: <white>Increases speed by 0.25
                     |<line> <red><b>Left Click: </b><white>Decreases speed by 1
                     |<line> <red>Shift + Left Click: <white>Decreases speed by 0.25
+                    |<line> <yellow><b><key:key.drop>: </b><white>Rewind to start
                     |<line> <blue><b><key:key.swapOffhand>: </b><white>Pause/Resume
                 """.trimMargin()
             }
@@ -152,7 +153,8 @@ class SimulateCinematicComponent(
                 SHIFT_RIGHT_CLICK -> playbackSpeed += 0.25
                 LEFT_CLICK -> playbackSpeed -= 1
                 SHIFT_LEFT_CLICK -> playbackSpeed -= 0.25
-                SWAP, DROP -> playbackSpeed = if (playbackSpeed != 0.0) 0.0 else 1.0
+                DROP -> partialFrame = 0.0
+                SWAP -> playbackSpeed = if (playbackSpeed != 0.0) 0.0 else 1.0
                 else -> {
                     return@onInteract
                 }

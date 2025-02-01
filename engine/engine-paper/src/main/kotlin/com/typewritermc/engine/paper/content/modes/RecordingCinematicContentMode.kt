@@ -36,20 +36,21 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.time.Duration
+import kotlin.math.max
 import kotlin.reflect.KClass
 
 inline fun <reified F : Frame<F>> ComponentContainer.recordingCinematic(
     context: ContentContext,
     slot: Int,
     noinline frameFetcher: () -> Int,
-    noinline modeCreator: (ContentContext, Player, Int) -> RecordingCinematicContentMode<F>,
+    noinline modeCreator: (ContentContext, Player, KClass<F>, Int) -> RecordingCinematicContentMode<F>,
 ) = +RecordingCinematicComponent(context, slot, frameFetcher, modeCreator, F::class)
 
 class RecordingCinematicComponent<F : Frame<F>>(
     private val context: ContentContext,
     val slot: Int,
     val frameFetcher: () -> Int,
-    val modeCreator: (ContentContext, Player, Int) -> RecordingCinematicContentMode<F>,
+    val modeCreator: (ContentContext, Player, KClass<F>, Int) -> RecordingCinematicContentMode<F>,
     val klass: KClass<F>,
 ) : ContentComponent, ItemsComponent {
     override suspend fun initialize(player: Player) {}
@@ -79,7 +80,7 @@ class RecordingCinematicComponent<F : Frame<F>>(
                 meta.loreString = "<line> <gray>Click to start recording the cinematic."
             }
         } onInteract {
-            ContentModeTrigger(context, modeCreator(context, player, frameFetcher())).triggerFor(
+            ContentModeTrigger(context, modeCreator(context, player, klass, frameFetcher())).triggerFor(
                 player,
                 context()
             )
@@ -92,6 +93,7 @@ class RecordingCinematicComponent<F : Frame<F>>(
 abstract class RecordingCinematicContentMode<F : Frame<F>>(
     context: ContentContext,
     player: Player,
+    private val klass: KClass<F>,
     private val initialFrame: Int = 0,
 ) : ContentMode(context, player), Listener, KoinComponent {
     private val gson: Gson by inject(named("bukkitDataParser"))
@@ -182,7 +184,9 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
             ?: throw IllegalStateException("No asset found for recording cinematic after setup, this should not happen. Asset: '${context.fieldValue}'")
         val oldTapeData = if (assetManager.containsAsset(asset)) assetManager.fetchAsset(asset) else null
         if (oldTapeData != null) {
-            recorder = Recorder.create(gson, oldTapeData)
+            recorder = Recorder.create(gson, klass, oldTapeData).apply {
+                resetFramesAfter(max(frames.first, frame))
+            }
         }
         // If we are starting from the middle of the segment, apply the state
         if (frame > frames.first) {

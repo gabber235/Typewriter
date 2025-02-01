@@ -3,7 +3,6 @@ package com.typewritermc.entity.entries.cinematic
 import com.github.retrooper.packetevents.protocol.entity.pose.EntityPose
 import com.github.retrooper.packetevents.protocol.player.EquipmentSlot.*
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
@@ -119,7 +118,7 @@ class EntityCinematicAction(
             .filterValues { it != null }
             .mapValues { assetManager.fetchAsset(it.value!!) }
             .filterValues { it != null }
-            .mapValues { gson.fromJson(it.value, object : TypeToken<Tape<EntityFrame>>() {}.type) }
+            .mapValues { parseTape(gson, EntityFrame::class, it.value!!) }
     }
 
     override suspend fun startSegment(segment: EntityRecordedSegment) {
@@ -300,8 +299,9 @@ private class FakeProvider<P : EntityProperty>(private val klass: KClass<P>, pri
 class EntityCinematicRecording(
     context: ContentContext,
     player: Player,
+    klass: KClass<EntityFrame>,
     initialFrame: Int,
-) : RecordingCinematicContentMode<EntityFrame>(context, player, initialFrame) {
+) : RecordingCinematicContentMode<EntityFrame>(context, player, klass, initialFrame) {
     private var swing: ArmSwing? = null
     private var damaged: Boolean = false
 

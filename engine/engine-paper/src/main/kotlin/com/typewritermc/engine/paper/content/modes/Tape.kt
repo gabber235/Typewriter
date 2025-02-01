@@ -1,7 +1,8 @@
 package com.typewritermc.engine.paper.content.modes
 
-import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import com.google.gson.JsonParser
+import kotlin.reflect.KClass
 
 /**
  * Tape is a map of ticks to values.
@@ -20,10 +21,20 @@ interface Frame<F : Frame<F>> {
     fun isEmpty(): Boolean
 }
 
+fun <F : Frame<F>> parseTape(gson: Gson, klass: KClass<F>, data: String): Tape<F> {
+    val reader = JsonParser.parseString(data)
+    val objectReader = reader.asJsonObject
+    val map: Tape<F> = objectReader.asMap()
+        .mapKeys { it.key.toString().toInt() }
+        .mapValues { gson.fromJson(it.value, klass.java) }
+    return map
+}
+
 class Recorder<F : Frame<F>>(private val tape: MutableMap<Int, F> = mutableMapOf()) {
     companion object {
-        fun <F : Frame<F>> create(gson: Gson, data: String): Recorder<F> {
-            val map: Tape<F> = gson.fromJson(data, object : TypeToken<Tape<F>>() {}.type)
+        fun <F : Frame<F>> create(gson: Gson, klass: KClass<F>, data: String): Recorder<F> {
+            val map = parseTape(gson, klass, data)
+
             val flatten = mutableMapOf<Int, F>()
             val frames = map.keys.sorted()
             val streamer = Streamer(map)
@@ -40,6 +51,10 @@ class Recorder<F : Frame<F>>(private val tape: MutableMap<Int, F> = mutableMapOf
 
     operator fun get(frame: Int): F? {
         return tape.filter { it.key <= frame }.maxByOrNull { it.key }?.value
+    }
+
+    fun resetFramesAfter(startFrame: Int) {
+        tape.keys.retainAll { it < startFrame }
     }
 
     fun buildAndOptimize(): Tape<F> {
