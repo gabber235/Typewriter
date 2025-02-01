@@ -4,7 +4,9 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
+import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.packetevents.metas
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.entity.entries.data.minecraft.display.DisplayEntityData
@@ -20,12 +22,12 @@ import kotlin.reflect.KClass
 class ItemData(
     override val id: String = "",
     override val name: String = "",
-    val item: Item = Item.Empty,
+    val item: Var<Item> = ConstVar(Item.Empty),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : DisplayEntityData<ItemProperty> {
     override fun type(): KClass<ItemProperty> = ItemProperty::class
 
-    override fun build(player: Player): ItemProperty = ItemProperty(item)
+    override fun build(player: Player): ItemProperty = ItemProperty(item.get(player))
 }
 
 data class ItemProperty(val item: Item) : EntityProperty {
