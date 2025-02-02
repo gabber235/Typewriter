@@ -435,7 +435,9 @@ extension DataBlueprintExtension on DataBlueprint {
     if (this is AlgebraicBlueprint && other is AlgebraicBlueprint) {
       final alg = this as AlgebraicBlueprint;
       if (alg.cases.length != other.cases.length) return false;
-      if (alg.cases.keys.toSet() != other.cases.keys.toSet()) return false;
+      if (!setEquals(alg.cases.keys.toSet(), other.cases.keys.toSet())) {
+        return false;
+      }
       for (final key in alg.cases.keys) {
         if (!other.cases.containsKey(key)) return false;
         if (!alg.cases[key]!.matches(other.cases[key]!)) return false;
