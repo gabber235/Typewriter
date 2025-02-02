@@ -76,7 +76,6 @@ class VariableHeaderAction extends HookConsumerWidget {
       "ref": entry.id,
       "data": targetBlueprint.variableDataBlueprint?.defaultValue() ?? {},
     };
-
     ref.read(inspectingEntryDefinitionProvider)?.updateField(ref, path, data);
 
     // Refresh the variable generic blueprint.
@@ -87,6 +86,7 @@ class VariableHeaderAction extends HookConsumerWidget {
             customBlueprint.shape.toJson(),
           );
     }
+
     return true;
   }
 

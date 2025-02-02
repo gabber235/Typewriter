@@ -20,6 +20,10 @@ fun CommandTree.withPermission(permission: String): CommandTree {
     return this
 }
 
+fun CommandTree.requiresPlayer() {
+    requires { it.sender is Player || it.executor is Player }
+}
+
 fun <S> DslCommandTree<S, *>.playerResolver(
     name: String,
     block: ArgumentBlock<S, PlayerSelectorArgumentResolver> = {},

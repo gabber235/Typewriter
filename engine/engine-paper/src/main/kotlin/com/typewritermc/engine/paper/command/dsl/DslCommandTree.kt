@@ -19,6 +19,10 @@ class ExecutionContext<S>(
     operator fun <T : Any> ArgumentReference<T>.invoke(): T {
         return context.getArgument<T>(name, klass.java)
     }
+
+    fun <T : Any> getArgument(name: String, klass: KClass<T>): T {
+        return context.getArgument<T>(name, klass.java)
+    }
 }
 
 typealias Executor<S> = ExecutionContext<S>.() -> Unit

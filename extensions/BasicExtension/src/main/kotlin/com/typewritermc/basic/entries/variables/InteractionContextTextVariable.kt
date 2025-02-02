@@ -52,6 +52,7 @@ data class InteractionContextTextVariableData(
 )
 
 data class KeyValue(
+    @IgnoreContextKeyBlueprint
     val key: InteractionContextKey<*> = InteractionContextKey.Empty,
     @Help("What to display if the key is not in the context.")
     val default: String = "",

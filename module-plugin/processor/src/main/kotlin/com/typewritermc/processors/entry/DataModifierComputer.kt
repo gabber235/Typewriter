@@ -80,6 +80,7 @@ private val computers: List<DataModifierComputer<*>> = listOf(
     GeneratedModifierComputer,
     HelpModifierComputer,
     IconModifierComputer,
+    IgnoreContextKeyBlueprintModifierComputer,
     MaterialPropertiesModifierComputer,
     MultiLineModifierComputer,
     NegativeModifierComputer,

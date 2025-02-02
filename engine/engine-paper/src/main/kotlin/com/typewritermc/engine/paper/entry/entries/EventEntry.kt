@@ -16,11 +16,9 @@ import org.bukkit.entity.Player
 @Tags("event")
 interface EventEntry : TriggerEntry
 
-interface CustomCommandEntry : EventEntry {
+interface CustomCommandEntry : Entry {
     @Suppress("UnstableApiUsage")
     fun command(): DslCommand<CommandSourceStack>
-
-    companion object
 }
 
 class Event(val player: Player, val context: InteractionContext, val triggers: List<EventTrigger>) {

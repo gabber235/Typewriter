@@ -31,8 +31,9 @@ class EntryInteractionContextKeyEditorFilter extends EditorFilter {
 
 bool _blueprintHasContextKey(
   EntryBlueprint blueprint,
-  DataBlueprint dataBlueprint,
+  DataBlueprint? dataBlueprint,
 ) {
+  if (dataBlueprint == null) return blueprint.contextKeys.isNotEmpty;
   return blueprint.contextKeys
       .any((key) => key.blueprint.matches(dataBlueprint));
 }
@@ -40,7 +41,7 @@ bool _blueprintHasContextKey(
 class ContextKeyFilter extends HiddenSearchFilter {
   const ContextKeyFilter(this.blueprint, {this.canRemove = true});
 
-  final DataBlueprint blueprint;
+  final DataBlueprint? blueprint;
   @override
   final bool canRemove;
 
@@ -58,7 +59,7 @@ class ContextKeyFilter extends HiddenSearchFilter {
 }
 
 extension on SearchBuilder {
-  void fetchContextKey(DataBlueprint blueprint) {
+  void fetchContextKey(DataBlueprint? blueprint) {
     filter(ContextKeyFilter(blueprint));
   }
 }
@@ -73,13 +74,18 @@ class EntryInteractionContextKeyEditor extends HookConsumerWidget {
   final String path;
   final CustomBlueprint customBlueprint;
 
-  bool _updateEntry(PassingRef ref, Entry? entry, DataBlueprint dataBlueprint) {
+  bool _updateEntry(
+    PassingRef ref,
+    Entry? entry,
+    DataBlueprint? dataBlueprint,
+  ) {
     if (entry == null) return false;
     final blueprint = ref.read(entryBlueprintProvider(entry.blueprintId));
     if (blueprint == null) return false;
 
-    final firstValidKey = blueprint.contextKeys
-        .firstWhereOrNull((key) => key.blueprint.matches(dataBlueprint));
+    final firstValidKey = blueprint.contextKeys.firstWhereOrNull(
+      (key) => dataBlueprint == null || key.blueprint.matches(dataBlueprint),
+    );
 
     if (firstValidKey == null) return false;
 
@@ -91,7 +97,7 @@ class EntryInteractionContextKeyEditor extends HookConsumerWidget {
     return true;
   }
 
-  void _select(PassingRef ref, DataBlueprint blueprint) {
+  void _select(PassingRef ref, DataBlueprint? blueprint) {
     final selectedEntryId = ref.read(inspectingEntryIdProvider);
 
     ref.read(searchProvider.notifier).asBuilder()
@@ -106,8 +112,12 @@ class EntryInteractionContextKeyEditor extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final generic = Generic.maybeOf(context);
-    if (generic == null) return const GenericNotFoundWidget();
-    final targetBlueprint = generic.dataBlueprint;
+    final ignoresBlueprint =
+        customBlueprint.hasModifier("ignore_context_key_blueprint");
+    if (generic == null && !ignoresBlueprint) {
+      return const GenericNotFoundWidget();
+    }
+    final targetBlueprint = ignoresBlueprint ? generic?.dataBlueprint : null;
 
     final entryId = ref.watch(fieldValueProvider(path.join("ref"), ""));
 
@@ -174,7 +184,7 @@ class _ContextKeyDropdown extends HookConsumerWidget {
 
   final String entryId;
   final String path;
-  final DataBlueprint targetBlueprint;
+  final DataBlueprint? targetBlueprint;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -184,7 +194,11 @@ class _ContextKeyDropdown extends HookConsumerWidget {
     if (blueprint == null) return const SizedBox.shrink();
 
     final contextKeys = blueprint.contextKeys
-        .where((key) => key.blueprint.matches(targetBlueprint))
+        .where(
+          (key) =>
+              targetBlueprint == null ||
+              key.blueprint.matches(targetBlueprint!),
+        )
         .toList();
 
     if (contextKeys.isEmpty) return const SizedBox.shrink();

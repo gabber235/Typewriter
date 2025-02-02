@@ -384,15 +384,14 @@ extension PageX on Page {
   Future<void> wireEntryToOtherEntry(
     PassingRef ref,
     Entry baseEntry,
-    Entry targetEntry,
+    String targetEntryId,
     String path,
   ) async {
     final parts = path.split(".");
     final lastPart = parts.last;
     if (int.tryParse(lastPart) == null) {
       // We are setting an exact value. Not a list. So we just overwrite it.
-      final value =
-          baseEntry.get(path) == targetEntry.id ? null : targetEntry.id;
+      final value = baseEntry.get(path) == targetEntryId ? null : targetEntryId;
       await updateEntryValue(ref, baseEntry, path, value);
       return;
     }
@@ -402,7 +401,7 @@ extension PageX on Page {
     final currentTriggers = baseEntry.get(parentPath);
     if (currentTriggers == null || currentTriggers is! List) {
       debugPrint(
-        "Invalid path for wiring entry ${baseEntry.id} to target entry ${targetEntry.id}. $path is not a list.",
+        "Invalid path for wiring entry ${baseEntry.id} to target entry $targetEntryId. $path is not a list.",
       );
       return;
     }
@@ -410,11 +409,11 @@ extension PageX on Page {
     final currentTriggersIds = currentTriggers.cast<String>();
     final List<String> newTriggers;
 
-    if (currentTriggers.contains(targetEntry.id)) {
+    if (currentTriggers.contains(targetEntryId)) {
       newTriggers =
-          currentTriggersIds.where((id) => id != targetEntry.id).toList();
+          currentTriggersIds.where((id) => id != targetEntryId).toList();
     } else {
-      newTriggers = currentTriggersIds + [targetEntry.id];
+      newTriggers = currentTriggersIds + [targetEntryId];
     }
 
     await updateEntryValue(ref, baseEntry, parentPath, newTriggers);
@@ -489,7 +488,7 @@ extension PageX on Page {
         .copyWith("name", entry.name.incrementedName);
     await createEntry(ref, newEntry);
 
-    await wireEntryToOtherEntry(ref, entry, newEntry, path);
+    await wireEntryToOtherEntry(ref, entry, newEntry.id, path);
   }
 
   void linkWith(PassingRef ref, String entryId, String path) {
@@ -525,22 +524,14 @@ extension PageX on Page {
       ..anyTag(tags, canRemove: false)
       ..nonGenericAddEntry()
       ..fetchNewEntry(
-        onAdd: (blueprint) async {
-          final newEntry = await createEntryFromBlueprint(
-            ref,
-            blueprint,
-            genericBlueprint: null,
-          );
-          await wireEntryToOtherEntry(ref, entry, newEntry, path);
-          await ref
-              .read(inspectingEntryIdProvider.notifier)
-              .navigateAndSelectEntry(ref, newEntry.id);
+        onAdded: (newEntry) async {
+          await wireEntryToOtherEntry(ref, entry, newEntry.id, path);
           return null;
         },
       )
       ..fetchEntry(
         onSelect: (selectedEntry) async {
-          await wireEntryToOtherEntry(ref, entry, selectedEntry, path);
+          await wireEntryToOtherEntry(ref, entry, selectedEntry.id, path);
           return null;
         },
       )

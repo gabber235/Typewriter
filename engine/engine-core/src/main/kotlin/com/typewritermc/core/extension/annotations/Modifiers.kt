@@ -158,3 +158,11 @@ annotation class SnakeCase
  * This allows the yaw, pitch of the location to be specified.
  */
 annotation class WithRotation
+
+@Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+/**
+ * This allows you to have a `InteractionContextKey` field which ignores the generic bound.
+ * In other words, it allows any interaction context key to be used.
+ */
+annotation class IgnoreContextKeyBlueprint

@@ -10,6 +10,7 @@ import com.typewritermc.engine.paper.command.dsl.sender
 import com.typewritermc.engine.paper.command.dsl.withPermission
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
+import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.triggerAllFor
 import com.typewritermc.engine.paper.utils.msg
 import io.papermc.paper.command.brigadier.CommandSourceStack
@@ -32,7 +33,7 @@ class RunCommandEventEntry(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Help("The command to register. Do not include the leading slash.")
     val command: String = "",
-) : CustomCommandEntry {
+) : CustomCommandEntry, EventEntry {
     @Suppress("UnstableApiUsage")
     override fun command() = com.typewritermc.engine.paper.command.dsl.command<CommandSourceStack>(command) {
         executes {

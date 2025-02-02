@@ -335,7 +335,7 @@ class _EntryNode extends HookConsumerWidget {
               await page.wireEntryToOtherEntry(
                 ref.passing,
                 currentEntry,
-                targetEntry,
+                targetEntry.id,
                 path,
               );
             },
