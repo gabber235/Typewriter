@@ -3,6 +3,7 @@ package com.typewritermc.basic.entries.bound
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPosition
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPositionAndRotation
@@ -110,6 +111,12 @@ class LockInteractionBound(
 
                 if (!packet.isJump && !packet.isShift) return@PLAYER_INPUT
                 DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, player.interactionContext ?: context())
+            }
+            Play.Client.INTERACT_ENTITY { event ->
+                val packet = WrapperPlayClientInteractEntity(event)
+                // Don't allow the player to interact with themselves.
+                if (player.entityId != packet.entityId) return@INTERACT_ENTITY
+                event.isCancelled = true
             }
             // If the player is a bedrock player, we don't want to modify the location.
             if (player.isFloodgate) return@interceptPackets
