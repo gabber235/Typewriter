@@ -47,6 +47,13 @@ data class Position(
     }
 }
 
+/**
+ * Checks if two points are in range of each other.
+ *
+ * @param point the point to compare to
+ * @param range the range to check
+ * @return true if the distance between the two points is less than or equal to the range
+ */
 fun <WP1, WP2> WP1.isInRange(point: WP2, range: Double): Boolean
         where WP1 : Point<WP1>, WP1 : WorldHolder<WP1>, WP2 : Point<WP2>, WP2 : WorldHolder<WP2> {
     if (this.world != point.world) return false

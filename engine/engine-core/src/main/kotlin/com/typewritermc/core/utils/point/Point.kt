@@ -236,16 +236,6 @@ interface Point<P : Point<P>> {
         return sameBlock(point.blockX, point.blockY, point.blockZ)
     }
 
-    /**
-     * Checks if two points are in range of each other.
-     *
-     * @param point the point to compare to
-     * @param range the range to check
-     * @return true if the distance between the two points is less than or equal to the range
-     */
-    fun isInRange(point: Point<*>, range: Double): Boolean {
-        return isInRange(point.x, point.y, point.z, range)
-    }
 
     /**
      * Checks if two points are in range of each other.

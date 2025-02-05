@@ -9,6 +9,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.isInRange
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EventEntry
