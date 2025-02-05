@@ -75,7 +75,7 @@ class QuestTracker(
         DISPATCHERS_ASYNC.launch {
             AsyncQuestStatusUpdate(player, ref, oldStatus, status).callEvent()
 
-            if (trackedQuest == ref && status == QuestStatus.COMPLETED) {
+            if (trackedQuest == ref && status != QuestStatus.ACTIVE) {
                 unTrackQuest()
             }
         }
