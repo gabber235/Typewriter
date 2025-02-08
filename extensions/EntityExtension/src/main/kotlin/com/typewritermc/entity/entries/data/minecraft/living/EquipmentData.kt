@@ -36,7 +36,10 @@ class ViewerEquipmentData(
 ) : LivingEntityData<EquipmentProperty> {
     override fun type(): KClass<EquipmentProperty> = EquipmentProperty::class
 
-    override fun build(player: Player): EquipmentProperty = player.equipment.toProperty()
+    // The kotlin compiler thinks that equipment can be null, but it is not.
+    // So we wait until they fix it.
+    // The current date is 2025-02-08
+    override fun build(player: Player): EquipmentProperty = player.equipment?.toProperty() ?: EquipmentProperty(emptyMap())
 }
 
 data class EquipmentProperty(val data: Map<EquipmentSlot, ItemStack>) : EntityProperty {
