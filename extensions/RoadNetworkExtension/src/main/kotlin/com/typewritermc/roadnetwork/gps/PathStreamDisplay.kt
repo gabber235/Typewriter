@@ -46,7 +46,7 @@ class PathStreamDisplay(
     private val startLocation: (Player) -> Location = Player::getLocation,
     private val endLocation: (Player) -> Location,
 ) : AudienceDisplay(), TickableDisplay {
-    private val displays = mutableMapOf<UUID, PlayerPathStreamDisplay>()
+    private val displays = ConcurrentHashMap<UUID, PlayerPathStreamDisplay>()
     override fun onPlayerAdd(player: Player) {
         displays[player.uniqueId] = PlayerPathStreamDisplay(ref, player, startLocation, endLocation)
     }
@@ -65,7 +65,7 @@ class MultiPathStreamDisplay(
     private val startLocation: (Player) -> Location = Player::getLocation,
     private val endLocations: (Player) -> List<Location>,
 ) : AudienceDisplay(), TickableDisplay {
-    private val displays = mutableMapOf<UUID, MutableList<StreamDisplay>>()
+    private val displays = ConcurrentHashMap<UUID, MutableList<StreamDisplay>>()
 
     override fun tick() {
         displays.forEach { (uuid, displays) ->
