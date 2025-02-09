@@ -35,6 +35,7 @@ import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.engine.paper.utils.toPacketLocation
 import kotlinx.coroutines.future.await
 import me.tofaa.entitylib.meta.display.TextDisplayMeta
+import me.tofaa.entitylib.meta.mobs.villager.VillagerMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.entity.Player
 import java.util.*
@@ -148,7 +149,19 @@ class LockInteractionBound(
         player.teleportAsync(originalPosition.toBukkitLocation()).await()
     }
 
+    private val positionYCorrection: Double by lazy {
+        if (targetPosition is ConstVar<*>) return@lazy 0.0
+        player.eyeHeight
+    }
+
     private fun createEntity(): WrapperEntity {
+        // If the position cannot change, we want to use a village instead of a text display.
+        // Because it means that the players bounding box will not change, resulting in a better experience.
+        if (targetPosition is ConstVar<*>) {
+            return WrapperEntity(EntityTypes.VILLAGER).meta<VillagerMeta> {
+                this.isInvisible = true
+            }
+        }
         return WrapperEntity(EntityTypes.TEXT_DISPLAY)
             .meta<TextDisplayMeta> {
                 positionRotationInterpolationDuration = BASE_INTERPOLATION
@@ -157,7 +170,7 @@ class LockInteractionBound(
 
     private suspend fun setupEntity(position: Position) {
         player.teleportAsync(position.toBukkitLocation()).await()
-        entity.spawn(position.withY { it + PLAYER_EYE_HEIGHT }.toPacketLocation())
+        entity.spawn(position.withY { it + positionYCorrection }.toPacketLocation())
         entity.addViewer(player.uniqueId)
         player.spectateEntity(entity)
     }
@@ -182,7 +195,7 @@ class LockInteractionBound(
             return
         }
 
-        entity.teleport(newPosition.withY { it + PLAYER_EYE_HEIGHT }.toPacketLocation())
+        entity.teleport(newPosition.withY { it + positionYCorrection }.toPacketLocation())
 
         if (player.position.distanceSquared(newPosition) > MAX_DISTANCE_SQUARED) {
             player.teleportAsync(newPosition.toBukkitLocation()).await()
@@ -216,8 +229,5 @@ class LockInteractionBound(
 
         // The max distance the entity can be from the player before it gets teleported.
         private const val MAX_DISTANCE_SQUARED = 25 * 25
-
-        // The assumed eye height of the player during configuration.
-        private const val PLAYER_EYE_HEIGHT = 1.62
     }
 }
