@@ -22,7 +22,11 @@ class FieldEditor extends HookConsumerWidget {
         .firstWhereOrNull((filter) => filter.canEdit(dataBlueprint))
         ?.build(path, dataBlueprint);
 
-    return editor ?? _NoEditorFound(path: path, dataBlueprint: dataBlueprint);
+    if (editor == null) {
+      return _NoEditorFound(path: path, dataBlueprint: dataBlueprint);
+    }
+
+    return editor;
   }
 }
 

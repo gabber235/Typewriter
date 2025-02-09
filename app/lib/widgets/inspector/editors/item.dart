@@ -11,7 +11,6 @@ import "package:typewriter/widgets/components/general/iconify.dart";
 import "package:typewriter/widgets/inspector/editors.dart";
 import "package:typewriter/widgets/inspector/editors/field.dart";
 import "package:typewriter/widgets/inspector/editors/material.dart";
-import "package:typewriter/widgets/inspector/editors/number.dart";
 import "package:typewriter/widgets/inspector/header.dart";
 import "package:typewriter/widgets/inspector/section_title.dart";
 
@@ -89,6 +88,30 @@ class SerializedItemEditorFilter extends EditorFilter {
         path: path,
         customBlueprint: dataBlueprint as CustomBlueprint,
       );
+
+  @override
+  (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
+      headerActions(
+    Ref<Object?> ref,
+    String path,
+    DataBlueprint dataBlueprint,
+    HeaderContext context,
+  ) {
+    final actions = super.headerActions(ref, path, dataBlueprint, context);
+    final shape = (dataBlueprint as CustomBlueprint).shape;
+
+    final shapeActions = headerActionsFor(
+      ref,
+      path,
+      shape,
+      context.copyWith(parentBlueprint: dataBlueprint),
+    );
+
+    return (
+      actions.$1.merge(shapeActions.$1),
+      actions.$2.followedBy(shapeActions.$2)
+    );
+  }
 }
 
 class SerializedItemEditor extends HookConsumerWidget {
@@ -101,13 +124,13 @@ class SerializedItemEditor extends HookConsumerWidget {
   final String path;
   final CustomBlueprint customBlueprint;
 
-  PrimitiveBlueprint get amountBlueprint {
+  DataBlueprint get amountBlueprint {
     final shape = customBlueprint.shape;
     if (shape is! ObjectBlueprint) {
       return const PrimitiveBlueprint(type: PrimitiveType.integer);
     }
     final field = shape.fields["amount"];
-    if (field == null || field is! PrimitiveBlueprint) {
+    if (field == null) {
       return const PrimitiveBlueprint(type: PrimitiveType.integer);
     }
     return field;
@@ -167,10 +190,9 @@ class SerializedItemEditor extends HookConsumerWidget {
               ),
             ),
           ),
-          const SectionTitle(title: "Amount"),
-          NumberEditor(
+          FieldEditor(
             path: path.join("amount"),
-            primitiveBlueprint: amountBlueprint,
+            dataBlueprint: amountBlueprint,
           ),
           const SizedBox(height: 0),
           const Text(
