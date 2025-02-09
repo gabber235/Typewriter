@@ -60,18 +60,19 @@ class _StaggeredAnimationControllersHookState extends HookState<
       return;
     }
     timer = Timer.periodic(hook.interval, (timer) {
-      controllers[index].forward();
-      index = index + 1;
       if (index >= hook.count) {
         timer.cancel();
         this.timer = null;
+        return;
       }
+      controllers[index].forward();
+      index = index + 1;
     });
   }
 
   void _updateControllers() {
     while (controllers.length > hook.count) {
-      controllers.removeLast();
+      controllers.removeLast().dispose();
     }
 
     while (controllers.length < hook.count) {
@@ -81,7 +82,6 @@ class _StaggeredAnimationControllersHookState extends HookState<
           vsync: hook.vsync,
         ),
       );
-
       if (index >= controllers.length) {
         index = controllers.length - 1;
       }
@@ -96,6 +96,30 @@ class _StaggeredAnimationControllersHookState extends HookState<
   }
 
   @override
+  void didUpdateHook(_StaggeredAnimationControllersHook oldHook) {
+    super.didUpdateHook(oldHook);
+
+    if (oldHook.vsync != hook.vsync) {
+      for (final controller in controllers) {
+        controller.resync(hook.vsync);
+      }
+    }
+    if (oldHook.count != hook.count) {
+      _updateControllers();
+    }
+    if (oldHook.duration != hook.duration) {
+      for (final controller in controllers) {
+        controller.duration = hook.duration;
+      }
+    }
+    if (oldHook.interval != hook.interval) {
+      timer?.cancel();
+      timer = null;
+      _animate();
+    }
+  }
+
+  @override
   List<AnimationController> build(BuildContext context) {
     _updateControllers();
     _animate();
@@ -105,6 +129,10 @@ class _StaggeredAnimationControllersHookState extends HookState<
   @override
   void dispose() {
     timer?.cancel();
+    for (final controller in controllers) {
+      controller.dispose();
+    }
+    controllers = [];
     super.dispose();
   }
 }

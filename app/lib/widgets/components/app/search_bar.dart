@@ -11,6 +11,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:text_scroll/text_scroll.dart";
 import "package:typewriter/hooks/staggered_animation_controllers.dart";
+import "package:typewriter/hooks/ticker.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/staging.dart";
 import "package:typewriter/utils/debouncer.dart";
@@ -1106,17 +1107,17 @@ class _SearchResults extends StatefulHookConsumerWidget {
   ConsumerState<_SearchResults> createState() => _SearchResultsState();
 }
 
-class _SearchResultsState extends ConsumerState<_SearchResults>
-    with TickerProviderStateMixin {
+class _SearchResultsState extends ConsumerState<_SearchResults> {
   @override
   Widget build(BuildContext context) {
     final animatedResults = min(8, ref.watch(searchElementsProvider).length);
     final elements = ref.watch(searchElementsProvider);
+    final ticker = useTickerProvider();
     final controllers = useStaggeredAnimationControllers(
       count: animatedResults,
       duration: 1.seconds,
       interval: 50.ms,
-      vsync: this,
+      vsync: ticker,
     );
     final focusNodes = ref.watch(searchFocusNodesProvider);
     final globalKeys = ref.watch(searchGlobalKeysProvider);
