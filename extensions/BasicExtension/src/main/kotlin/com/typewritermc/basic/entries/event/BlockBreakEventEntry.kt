@@ -8,9 +8,11 @@ import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.toBlockPosition
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import com.typewritermc.engine.paper.entry.entries.CancelableEventEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.shouldCancel
 import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.toPosition
@@ -39,15 +41,8 @@ class BlockBreakEventEntry(
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
     @Help("The hand the player must be holding the item in")
     val hand: HoldingHand = HoldingHand.BOTH,
-    @Help(
-        """
-        Cancel the event when triggered.
-        It will only cancel the event if all the criteria are met.
-        If set to false, it will not modify the event.
-        """
-    )
-    val cancel: Var<Boolean> = ConstVar(false),
-) : EventEntry
+    override val cancel: Var<Boolean> = ConstVar(false),
+) : CancelableEventEntry
 
 enum class BlockBreakContextKeys(override val klass: KClass<*>) : EntryContextKey {
     @KeyType(Material::class)
@@ -79,5 +74,5 @@ fun onBlockBreak(event: BlockBreakEvent, query: Query<BlockBreakEventEntry>) {
         BlockBreakContextKeys.BLOCK_POSITION += position.toBlockPosition()
         BlockBreakContextKeys.CENTER_POSITION += position.mid()
     }
-    if (entries.any { it.cancel.get(player) }) event.isCancelled = true
+    if (entries.shouldCancel(player)) event.isCancelled = true
 }

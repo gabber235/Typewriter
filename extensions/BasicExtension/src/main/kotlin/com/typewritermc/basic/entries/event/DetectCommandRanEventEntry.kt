@@ -1,20 +1,21 @@
 package com.typewritermc.basic.entries.event
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Regex
-import com.typewritermc.engine.paper.entry.*
-import com.typewritermc.engine.paper.entry.entries.EventEntry
-import org.bukkit.event.player.PlayerCommandPreprocessEvent
-import kotlin.text.Regex as KotlinRegex
-import com.typewritermc.core.entries.Query
-import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.entry.TriggerableEntry
+import com.typewritermc.engine.paper.entry.entries.CancelableEventEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.shouldCancel
+import com.typewritermc.engine.paper.entry.triggerAllFor
+import org.bukkit.event.player.PlayerCommandPreprocessEvent
+import kotlin.text.Regex as KotlinRegex
 
 @Entry("on_detect_command_ran", "When a player runs an existing command", Colors.YELLOW, "mdi:account-eye")
 /**
@@ -60,9 +61,8 @@ class DetectCommandRanEventEntry(
      *     To prevent the dialog from immediately being closed.
      * </Admonition>
      */
-    @Help("Cancel the event when triggered")
-    val cancel: Var<Boolean> = ConstVar(false),
-) : EventEntry
+    override val cancel: Var<Boolean> = ConstVar(false),
+) : CancelableEventEntry
 
 @EntryListener(DetectCommandRanEventEntry::class)
 fun onRunCommand(event: PlayerCommandPreprocessEvent, query: Query<DetectCommandRanEventEntry>) {
@@ -71,5 +71,5 @@ fun onRunCommand(event: PlayerCommandPreprocessEvent, query: Query<DetectCommand
     val entries = query.findWhere { KotlinRegex(it.command).matches(message) }.toList()
     if (entries.isEmpty()) return
     entries.triggerAllFor(event.player, context())
-    if (entries.any { it.cancel.get(event.player) }) event.isCancelled = true
+    if (entries.shouldCancel(event.player)) event.isCancelled = true
 }

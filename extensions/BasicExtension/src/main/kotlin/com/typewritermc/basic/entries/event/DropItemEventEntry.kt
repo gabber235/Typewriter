@@ -6,14 +6,15 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.ContextKeys
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
-import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.context
-import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.TriggerableEntry
+import com.typewritermc.engine.paper.entry.entries.CancelableEventEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.shouldCancel
+import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.item.toItem
 import org.bukkit.entity.Player
@@ -35,15 +36,8 @@ class DropItemEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val item: Optional<Var<Item>> = Optional.empty(),
-    @Help(
-        """
-        Cancel the event when triggered.
-        It will only cancel the event if all the criteria are met.
-        If set to false, it will not modify the event.
-        """
-    )
-    val cancel: Var<Boolean> = ConstVar(false),
-) : EventEntry
+    override val cancel: Var<Boolean> = ConstVar(false),
+) : CancelableEventEntry
 
 enum class DropItemContextKeys(override val klass: KClass<*>) : EntryContextKey {
     @KeyType(Item::class)
@@ -65,5 +59,5 @@ fun onDropItem(event: EntityDropItemEvent, query: Query<DropItemEventEntry>) {
     entries.startDialogueWithOrNextDialogue(player) {
         DropItemContextKeys.ITEM += event.itemDrop.itemStack.toItem()
     }
-    if (entries.any { it.cancel.get(player) }) event.isCancelled = true
+    if (entries.shouldCancel(player)) event.isCancelled = true
 }

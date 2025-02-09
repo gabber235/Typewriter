@@ -10,11 +10,28 @@ import com.typewritermc.engine.paper.command.dsl.DslCommand
 import com.typewritermc.engine.paper.entry.TriggerEntry
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.matches
+import com.typewritermc.engine.paper.interaction.interactionContext
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import org.bukkit.entity.Player
 
 @Tags("event")
 interface EventEntry : TriggerEntry
+
+@Tags("cancelable_event")
+interface CancelableEventEntry : EventEntry {
+    @Help(
+        """
+        Cancel the event when triggered.
+        If set to false, it will not modify the event.
+        """
+    )
+    val cancel: Var<Boolean>
+
+}
+fun List<CancelableEventEntry>.shouldCancel(player: Player, context: InteractionContext? = player.interactionContext): Boolean {
+    return any { it.cancel.get(player, context) }
+}
+
 
 interface CustomCommandEntry : Entry {
     @Suppress("UnstableApiUsage")
