@@ -4,15 +4,15 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.utils.Reloadable
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import lirand.api.extensions.server.server
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.interaction.AVERAGE_SCHEDULING_DELAY_MS
 import com.typewritermc.engine.paper.interaction.TICK_MS
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import lirand.api.extensions.server.server
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.HandlerList
@@ -34,21 +34,32 @@ class AudienceManager : Listener, Reloadable {
         job = DISPATCHERS_ASYNC.launch {
             while (plugin.isEnabled) {
                 val startTime = System.currentTimeMillis()
-                displays.values.asSequence()
-                    .filter { it.isActive }
-                    .filterIsInstance<TickableDisplay>()
-                    .forEach {
+                val traces = mutableMapOf<Ref<out AudienceEntry>, Long>()
+                displays.asSequence()
+                    .filter { it.value.isActive }
+                    .filter { it.value is TickableDisplay }
+                    .forEach { (ref, display) ->
+                        val start = System.currentTimeMillis()
                         try {
-                            it.tick()
+                            (display as TickableDisplay).tick()
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
+                        val end = System.currentTimeMillis()
+                        traces[ref] = end - start
                     }
                 val endTime = System.currentTimeMillis()
                 // Wait for the remainder or the tick
                 val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
                 if (wait > 0) delay(wait)
-                else if (wait < -100) logger.warning("Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms)")
+                else if (wait < -100) {
+                    val top5 = traces.entries.sortedByDescending { it.value }.take(5)
+                    logger.warning(
+                        "Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms) Top 5 longest ticks: ${
+                            top5.joinToString(", ") { "${it.key}: ${it.value}ms" }
+                        }"
+                    )
+                }
             }
         }
     }
