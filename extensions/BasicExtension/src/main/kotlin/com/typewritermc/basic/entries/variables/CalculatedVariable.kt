@@ -14,6 +14,7 @@ import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.logger
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
+import kotlin.reflect.KClass
 import kotlin.reflect.full.cast
 
 @Entry("calculated_variable", "A variable that is calculated", Colors.GREEN, "fa6-solid:calculator")
@@ -35,22 +36,26 @@ class CalculatedVariable(
             ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
         val expression = data.expression.parsePlaceholders(context.player).trim()
         if (expression.isBlank()) {
-            return context.klass.cast(0.0)
+            return value(0.0, context.klass)
         }
 
         val value = when (val result = Expression(expression).tryEval()) {
             is com.mthaler.aparser.util.Try.Success -> result.value
             is com.mthaler.aparser.util.Try.Failure -> {
                 logger.warning("Could not evaluate expression '$expression' for player ${context.player.name} for variable $id")
-                return context.klass.cast(0.0)
+                return value(0.0, context.klass)
             }
         }
-        return when (context.klass) {
-            Int::class -> context.klass.cast(value.roundToInt())
-            Double::class -> context.klass.cast(value)
-            Float::class -> context.klass.cast(value.toFloat())
-            Long::class -> context.klass.cast(value.roundToLong())
-            else -> throw IllegalStateException("Could not parse value '$value' for ${context.klass}")
+        return value(value, context.klass)
+    }
+
+    private fun <T : Any> value(value: Double, klass: KClass<T>): T {
+        return when (klass) {
+            Int::class -> klass.cast(value.roundToInt())
+            Double::class -> klass.cast(value)
+            Float::class -> klass.cast(value.toFloat())
+            Long::class -> klass.cast(value.roundToLong())
+            else -> throw IllegalStateException("Could not parse value '$value' for $klass")
         }
     }
 }
