@@ -8,7 +8,9 @@ import com.typewritermc.core.interaction.InteractionBound.Empty.priority
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
+import com.typewritermc.engine.paper.interaction.InteractionBoundEndTrigger
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
 import com.typewritermc.engine.paper.interaction.boundState
 import org.bukkit.entity.Player
@@ -26,14 +28,16 @@ class ExampleBoundEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val interruptTriggers: List<Ref<TriggerableEntry>> = emptyList(),
 ) : InteractionBoundEntry {
     override fun build(player: Player): InteractionBound =
-        ExampleBound(player, priority)
+        ExampleBound(player, priority, interruptTriggers.eventTriggers)
 }
 
 class ExampleBound(
     private val player: Player,
-    override val priority: Int
+    override val priority: Int,
+    override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
 
     override suspend fun initialize() {
@@ -52,7 +56,7 @@ class ExampleBound(
             // A manual version of the above
             when (event.player.boundState) {
                 InteractionBoundState.BLOCKING -> event.isCancelled = true
-                InteractionBoundState.INTERRUPTING -> InteractionEndTrigger.triggerFor(event.player, context())
+                InteractionBoundState.INTERRUPTING -> (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(event.player, context())
                 InteractionBoundState.IGNORING -> {}
             }
         }

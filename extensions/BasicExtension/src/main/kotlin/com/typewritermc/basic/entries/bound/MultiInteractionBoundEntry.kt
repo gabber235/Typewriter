@@ -33,6 +33,9 @@ class MultiInteractionBoundEntry(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val interactionBounds: List<Ref<InteractionBoundEntry>> = emptyList(),
 ) : InteractionBoundEntry {
+    override val interruptTriggers: List<Ref<TriggerableEntry>>
+        get() = interactionBounds.flatMap { it.get()?.interruptTriggers ?: emptyList() }
+
     override fun build(player: Player): InteractionBound = MultiInteractionBound(player, interactionBounds, priority)
 }
 

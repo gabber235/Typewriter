@@ -11,7 +11,12 @@ import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import org.bukkit.entity.Player
 
-@Entry("empty_interaction_bound", "An empty interaction bound which does nothing", Colors.MEDIUM_PURPLE, "lucide:square-dashed")
+@Entry(
+    "empty_interaction_bound",
+    "An empty interaction bound which does nothing",
+    Colors.MEDIUM_PURPLE,
+    "lucide:square-dashed"
+)
 class EmptyInteractionBoundEntry(
     override val id: String = "",
     override val name: String = "",
@@ -19,8 +24,10 @@ class EmptyInteractionBoundEntry(
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
 ) : InteractionBoundEntry {
+    override val interruptTriggers: List<Ref<TriggerableEntry>> get() = emptyList()
     override fun build(player: Player): InteractionBound = EmptyInteractionBound(priority)
 }
+
 class EmptyInteractionBound(
     override val priority: Int = 0,
 ) : InteractionBound {

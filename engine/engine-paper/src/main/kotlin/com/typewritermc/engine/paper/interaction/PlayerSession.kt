@@ -102,6 +102,7 @@ class PlayerSession(val player: Player) : KoinComponent {
     /** Handles an event. */
     private suspend fun onEvent(events: List<Event>) {
         var interactionLifecycle = InteractionLifecycle.NONE
+        var boundLifecycle = InteractionLifecycle.NONE
         val nextInteractions = mutableListOf<Interaction>()
         val nextBounds = mutableListOf<InteractionBound>()
         val todo = ArrayDeque(events.map(Event::filterAllowedTriggers))
@@ -128,6 +129,7 @@ class PlayerSession(val player: Player) : KoinComponent {
                             interactionLifecycle = InteractionLifecycle.END
                         }
                         is TriggerContinuation.StartInteractionBound -> nextBounds.add(this.bound)
+                        is TriggerContinuation.EndInteractionBound -> boundLifecycle = InteractionLifecycle.END
                         is TriggerContinuation.Multi -> this.continuations.forEach { it.apply() }
                     }
                 }
@@ -148,7 +150,7 @@ class PlayerSession(val player: Player) : KoinComponent {
 
         val nextBound = nextBounds.maxByOrNull { it.priority } ?: InteractionBound.Empty
         val scope = scope
-        if (scope != null && (scope.bound.priority) <= nextBound.priority) {
+        if (scope != null && (scope.bound.priority <= nextBound.priority || boundLifecycle == InteractionLifecycle.END)) {
             scope.swapBound(nextBound)
         }
 

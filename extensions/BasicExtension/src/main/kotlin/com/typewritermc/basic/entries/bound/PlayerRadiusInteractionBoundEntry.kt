@@ -10,6 +10,8 @@ import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.InteractionBoundEntry
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
+import com.typewritermc.engine.paper.entry.eventTriggers
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.distanceSqrt
@@ -42,12 +44,13 @@ class PlayerRadiusInteractionBoundEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val interruptTriggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Default("2.0")
     val radius: Double = 2.0,
     @Default("true")
     val zoom: Boolean = true,
 ) : InteractionBoundEntry {
-    override fun build(player: Player): InteractionBound = PlayerRadiusInteractionBound(player, radius, zoom, priority)
+    override fun build(player: Player): InteractionBound = PlayerRadiusInteractionBound(player, radius, zoom, priority, interruptTriggers.eventTriggers)
 }
 
 class PlayerRadiusInteractionBound(
@@ -55,6 +58,7 @@ class PlayerRadiusInteractionBound(
     private val radius: Double,
     private val zoom: Boolean,
     override val priority: Int,
+    override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
     private val startLocation = player.location
     private val key = NamespacedKey.fromString("zoom", plugin)!!

@@ -35,7 +35,7 @@ class ContentHandler : TriggerHandler {
             logger.warning("Failed to change content mode: ${result.exceptionOrNull()?.message}")
             TriggerContinuation.EndInteraction
         } else {
-            TriggerContinuation.Done
+            TriggerContinuation.KeepInteraction
         }
     }
 }

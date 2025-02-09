@@ -157,7 +157,7 @@ Future<String?> pathSelector(
     builder: (context) {
       return paths.map((path) {
         return ContextMenuTile.button(
-          title: path,
+          title: path.formatted,
           onTap: () {
             completer.complete(path);
           },

@@ -5,6 +5,7 @@ import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.InteractionBoundStateOverrideSubscription
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.plugin
@@ -32,6 +33,8 @@ suspend fun InteractionBoundStateOverrideSubscription.cancel() {
 }
 
 interface ListenerInteractionBound : InteractionBound, Listener {
+    val interruptionTriggers: List<EventTrigger>
+
     override suspend fun initialize() {
         super.initialize()
         server.pluginManager.registerSuspendingEvents(this, plugin)
@@ -45,7 +48,11 @@ interface ListenerInteractionBound : InteractionBound, Listener {
     fun <T> handleEvent(event: T) where T : PlayerEvent, T : Cancellable {
         when (event.player.boundState) {
             InteractionBoundState.BLOCKING -> event.isCancelled = true
-            InteractionBoundState.INTERRUPTING -> InteractionEndTrigger.triggerFor(event.player, context())
+            InteractionBoundState.INTERRUPTING -> (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(
+                event.player,
+                context()
+            )
+
             InteractionBoundState.IGNORING -> {}
         }
     }

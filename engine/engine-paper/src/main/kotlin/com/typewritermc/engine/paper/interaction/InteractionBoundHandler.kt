@@ -26,6 +26,11 @@ class InteractionBoundHandler : TriggerHandler {
 
         if (bound != null) {
             continuations.add(TriggerContinuation.StartInteractionBound(bound))
+        } else {
+            val endTriggers = event.triggers.filterIsInstance<InteractionBoundEndTrigger>()
+            if (endTriggers.isNotEmpty()) {
+                continuations.add(TriggerContinuation.EndInteractionBound)
+            }
         }
         if (nextEntries.isNotEmpty()) {
             continuations.add(TriggerContinuation.Append(Event(event.player, event.context, nextEntries)))
@@ -43,6 +48,11 @@ data class InteractionBoundTrigger(val bound: InteractionBound) : EventTrigger, 
 
     override val priority: Int
         get() = bound.priority
+}
+
+object InteractionBoundEndTrigger : EventTrigger {
+    override val id: String
+        get() = "system.interaction.bound.end"
 }
 
 private interface BoundTrigger {

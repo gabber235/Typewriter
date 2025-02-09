@@ -1,7 +1,6 @@
 package com.typewritermc.basic.entries.bound
 
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
-import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
@@ -19,11 +18,13 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.dialogue.DialogueTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
+import com.typewritermc.engine.paper.interaction.InteractionBoundEndTrigger
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.boundState
 import com.typewritermc.engine.paper.interaction.interactionContext
@@ -60,13 +61,15 @@ class LockInteractionBoundEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val interruptTriggers: List<Ref<TriggerableEntry>> = emptyList(),
     val targetPosition: Optional<Var<Position>> = Optional.empty(),
 ) : InteractionBoundEntry {
     override fun build(player: Player): InteractionBound {
         return LockInteractionBound(
             player,
             targetPosition.orElseGet { ConstVar(player.position) },
-            priority
+            priority,
+            interruptTriggers.eventTriggers,
         )
     }
 }
@@ -75,6 +78,7 @@ class LockInteractionBound(
     private val player: Player,
     private val targetPosition: Var<Position>,
     override val priority: Int,
+    val interruptionTriggers: List<EventTrigger>,
 ) : InteractionBound {
     private val originalPosition = player.position
     private var entity: WrapperEntity = createEntity()
@@ -99,7 +103,7 @@ class LockInteractionBound(
                 if (packet.isForward || packet.isBackward || packet.isLeft || packet.isRight) {
                     when (player.boundState) {
                         InteractionBoundState.BLOCKING -> event.isCancelled = true
-                        InteractionBoundState.INTERRUPTING -> InteractionEndTrigger.triggerFor(
+                        InteractionBoundState.INTERRUPTING -> (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(
                             player,
                             player.interactionContext ?: context()
                         )

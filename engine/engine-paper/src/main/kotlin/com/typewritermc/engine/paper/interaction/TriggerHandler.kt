@@ -30,7 +30,9 @@ sealed interface TriggerContinuation {
     data class StartInteraction(val interaction: Interaction) : TriggerContinuation
     data object KeepInteraction : TriggerContinuation
     data object EndInteraction : TriggerContinuation
+
     data class StartInteractionBound(val bound: InteractionBound) : TriggerContinuation
+    data object EndInteractionBound : TriggerContinuation
 
     data class Multi(val continuations: List<TriggerContinuation>) : TriggerContinuation {
         constructor(vararg continuations: TriggerContinuation) : this(continuations.toList())

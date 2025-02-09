@@ -10,6 +10,8 @@ import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.InteractionBoundEntry
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
+import com.typewritermc.engine.paper.entry.eventTriggers
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -35,13 +37,15 @@ class CommandInteractionBoundEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val interruptTriggers: List<Ref<TriggerableEntry>> = emptyList(),
 ) : InteractionBoundEntry {
-    override fun build(player: Player): InteractionBound = PlayerCommandInteractionBound(player, priority)
+    override fun build(player: Player): InteractionBound = PlayerCommandInteractionBound(player, priority, interruptTriggers.eventTriggers)
 }
 
 class PlayerCommandInteractionBound(
     private val player: Player,
     override val priority: Int,
+    override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

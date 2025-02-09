@@ -12,6 +12,7 @@ import com.typewritermc.core.utils.point.toVector
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entity.ActivityEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.plugin
@@ -48,12 +49,13 @@ class LookAtEntityInteractionBoundEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val interruptTriggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Default("2.0")
     val radius: Double = 2.0,
     @Help("If left empty, the entity where they interacted with will be used.")
     val npc: Ref<EntityInstanceEntry> = emptyRef(),
 ) : InteractionBoundEntry {
-    override fun build(player: Player): InteractionBound = LookAtNpcInteractionBound(player, radius, npc, priority)
+    override fun build(player: Player): InteractionBound = LookAtNpcInteractionBound(player, radius, npc, priority, interruptTriggers.eventTriggers)
 }
 
 class LookAtNpcInteractionBound(
@@ -61,6 +63,7 @@ class LookAtNpcInteractionBound(
     private val radius: Double,
     private val instanceEntryRef: Ref<out EntityInstanceEntry>,
     override val priority: Int,
+    override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
     private val startLocation = player.location
     private val key = NamespacedKey.fromString("zoom", plugin)!!
