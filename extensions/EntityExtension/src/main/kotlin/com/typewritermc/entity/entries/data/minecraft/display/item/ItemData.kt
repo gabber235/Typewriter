@@ -12,6 +12,7 @@ import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.entity.entries.data.minecraft.display.DisplayEntityData
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
 import me.tofaa.entitylib.meta.display.ItemDisplayMeta
+import me.tofaa.entitylib.meta.projectile.ItemEntityMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.entity.Player
 import java.util.*
@@ -37,6 +38,7 @@ data class ItemProperty(val item: Item) : EntityProperty {
 fun applyItemData(entity: WrapperEntity, property: ItemProperty, player: Player) {
     entity.metas {
         meta<ItemDisplayMeta> { item = SpigotConversionUtil.fromBukkitItemStack(property.item.build(player)) }
+        meta<ItemEntityMeta> { item = SpigotConversionUtil.fromBukkitItemStack(property.item.build(player)) }
         error("Could not apply ItemData to ${entity.entityType} entity.")
     }
 }
