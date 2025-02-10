@@ -43,15 +43,15 @@ class InteractionContextTextVariable(
     }
 }
 
-data class InteractionContextTextVariableData(
-    val keys: List<KeyValue> = emptyList(),
+private data class InteractionContextTextVariableData(
+    val keys: List<TextKeyValue> = emptyList(),
     @Colored
     @Placeholder
     @Help("Use <1> to insert the text from the first variable.")
     val text: String = "",
 )
 
-data class KeyValue(
+private data class TextKeyValue(
     @IgnoreContextKeyBlueprint
     val key: InteractionContextKey<*> = InteractionContextKey.Empty,
     @Help("What to display if the key is not in the context.")

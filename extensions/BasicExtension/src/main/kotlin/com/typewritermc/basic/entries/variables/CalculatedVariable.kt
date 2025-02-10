@@ -36,31 +36,31 @@ class CalculatedVariable(
             ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
         val expression = data.expression.parsePlaceholders(context.player).trim()
         if (expression.isBlank()) {
-            return value(0.0, context.klass)
+            return 0.0.cast<T>(context.klass)
         }
 
         val value = when (val result = Expression(expression).tryEval()) {
             is com.mthaler.aparser.util.Try.Success -> result.value
             is com.mthaler.aparser.util.Try.Failure -> {
                 logger.warning("Could not evaluate expression '$expression' for player ${context.player.name} for variable $id")
-                return value(0.0, context.klass)
+                return 0.0.cast<T>(context.klass)
             }
         }
-        return value(value, context.klass)
-    }
-
-    private fun <T : Any> value(value: Double, klass: KClass<T>): T {
-        return when (klass) {
-            Int::class -> klass.cast(value.roundToInt())
-            Double::class -> klass.cast(value)
-            Float::class -> klass.cast(value.toFloat())
-            Long::class -> klass.cast(value.roundToLong())
-            else -> throw IllegalStateException("Could not parse value '$value' for $klass")
-        }
+        return value.cast<T>(context.klass)
     }
 }
 
-data class CalculatedVariableData(
+fun <T : Any> Double.cast(klass: KClass<T>): T {
+    return when (klass) {
+        Int::class -> klass.cast(this.roundToInt())
+        Double::class -> klass.cast(this)
+        Float::class -> klass.cast(this.toFloat())
+        Long::class -> klass.cast(this.roundToLong())
+        else -> throw IllegalStateException("Could not parse value '$this' for $klass")
+    }
+}
+
+private data class CalculatedVariableData(
     @Placeholder
     val expression: String = "",
 )
