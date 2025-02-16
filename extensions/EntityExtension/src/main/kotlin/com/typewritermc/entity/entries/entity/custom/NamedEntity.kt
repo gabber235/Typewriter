@@ -14,6 +14,7 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
+import com.typewritermc.entity.entries.data.minecraft.DisplayNameProperty
 import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstraintProperty
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
 import com.typewritermc.entity.entries.data.minecraft.display.text.BackgroundColorProperty
@@ -64,7 +65,7 @@ class NamedEntityDefinition(
 
 class NamedEntity(
     player: Player,
-    private val displayName: Var<String>,
+    private var displayName: Var<String>,
     private val baseEntity: FakeEntity,
     definition: Ref<out EntityDefinitionEntry>,
 ) : FakeEntity(player) {
@@ -93,6 +94,13 @@ class NamedEntity(
     }
 
     override fun applyProperties(properties: List<EntityProperty>) {
+        properties.forEach { property ->
+            when (property) {
+                is DisplayNameProperty -> {
+                    displayName = property.displayName
+                }
+            }
+        }
         return baseEntity.consumeProperties(properties)
     }
 

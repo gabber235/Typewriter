@@ -1,11 +1,11 @@
 package com.typewritermc.entity.entries.activity
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entity.*
-import com.typewritermc.engine.paper.entry.entries.*
+import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.roadnetwork.*
@@ -58,10 +58,10 @@ class PatrolActivity(
         activity?.dispose(context)
         activity = NavigationActivity(
             PointToPointGPS(
-            roadNetwork,
-            { currentPosition.toBukkitLocation() }) {
-            targetNode.location
-        }, currentPosition
+                roadNetwork,
+                { currentPosition.toBukkitLocation() }) {
+                targetNode.location
+            }, currentPosition
         )
         activity?.initialize(context)
     }
