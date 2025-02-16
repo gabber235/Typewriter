@@ -91,6 +91,7 @@ private val computers: List<DataModifierComputer<*>> = listOf(
     SegmentModifierComputer,
     SnakeCaseModifierComputer,
     WithRotationModifierComputer,
+    WithAlphaModifierComputer,
     MinModifierComputer,
     MaxModifierComputer,
     InnerMinModifierComputer,

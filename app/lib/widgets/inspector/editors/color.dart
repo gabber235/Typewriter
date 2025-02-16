@@ -34,6 +34,8 @@ class ColorEditor extends HookConsumerWidget {
     final focus = useFocusNode();
     useSelectOnFocus(focus, hexController);
 
+    final withAlpha = customBlueprint.hasModifier("with_alpha");
+
     return FieldHeader(
       path: path,
       canExpand: true,
@@ -49,6 +51,7 @@ class ColorEditor extends HookConsumerWidget {
                   portraitOnly: true,
                   labelTypes: const [],
                   pickerAreaBorderRadius: BorderRadius.circular(4),
+                  enableAlpha: withAlpha,
                   hexInputController: hexController,
                   onColorChanged: (color) {
                     ref

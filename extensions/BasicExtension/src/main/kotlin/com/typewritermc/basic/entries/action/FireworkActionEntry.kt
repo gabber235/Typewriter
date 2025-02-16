@@ -6,6 +6,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.WithAlpha
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -85,7 +86,9 @@ class FireworkEffectConfig(
     val type: FireworkEffect.Type = FireworkEffect.Type.BALL,
     val flicker: Boolean = false,
     val trail: Boolean = false,
+    @WithAlpha
     val colors: List<Color> = emptyList(),
+    @WithAlpha
     val fadeColors: List<Color> = emptyList(),
 ) {
     fun toBukkitEffect(): FireworkEffect {

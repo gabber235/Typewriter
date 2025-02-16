@@ -2,6 +2,7 @@ package com.typewritermc.entity.entries.data.minecraft.living
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.WithAlpha
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityData
@@ -17,6 +18,7 @@ import kotlin.reflect.KClass
 class PotionEffectColorData(
     override val id: String = "",
     override val name: String = "",
+    @WithAlpha
     val color: Color = Color(0),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : GenericEntityData<PotionEffectColorProperty> {

@@ -3,6 +3,7 @@ package com.typewritermc.entity.entries.data.minecraft.display.text
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Tags
+import com.typewritermc.core.extension.annotations.WithAlpha
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.extensions.packetevents.metas
@@ -23,6 +24,7 @@ import kotlin.reflect.KClass
 class TextBackgroundColorData(
     override val id: String = "",
     override val name: String = "",
+    @WithAlpha
     val color: Color = Color.BLACK_BACKGROUND,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : TextDisplayEntityData<BackgroundColorProperty> {
