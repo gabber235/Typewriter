@@ -61,14 +61,18 @@ abstract class SingleChildActivity<Context : ActivityContext>(
         currentActivity?.initialize(context)
     }
 
+    fun refreshActivity(context: Context) {
+        val currentLocation = this.currentPosition
+        currentActivity?.dispose(context)
+        currentActivity = child.get()?.create(context, currentLocation)
+        currentActivity?.initialize(context)
+    }
+
     override fun tick(context: Context): TickResult {
         val correctChild = currentChild(context)
         if (child != correctChild) {
             child = correctChild
-            val currentLocation = this.currentPosition
-            currentActivity?.dispose(context)
-            currentActivity = child.get()?.create(context, currentLocation)
-            currentActivity?.initialize(context)
+            refreshActivity(context)
         }
         return currentActivity?.tick(context) ?: TickResult.IGNORED
     }
