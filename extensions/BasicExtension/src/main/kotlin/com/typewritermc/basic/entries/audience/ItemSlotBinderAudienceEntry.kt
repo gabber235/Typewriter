@@ -4,6 +4,10 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.InnerMax
+import com.typewritermc.core.extension.annotations.InnerMin
+import com.typewritermc.core.extension.annotations.Max
+import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.engine.paper.entry.audience.MultiKey
 import com.typewritermc.engine.paper.entry.audience.PlayerSingleKeyedDisplay
 import com.typewritermc.engine.paper.entry.audience.SingleKeyedFilter
@@ -19,10 +23,13 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
+import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.inventory.ItemStack
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
+
+private const val OFFHAND_SLOT = 40
 
 @Entry(
     "item_slot_binder_audience",
@@ -46,6 +53,8 @@ import kotlin.reflect.KClass
 class ItemSlotBinderAudienceEntry(
     override val id: String = "",
     override val name: String = "",
+    @InnerMin(Min(0))
+    @InnerMax(Max(40))
     val slot: Var<Int> = ConstVar(0),
     val item: Var<Item> = ConstVar(Item.Empty),
     val replacementStrategy: SlotReplacementStrategy = SlotReplacementStrategy.MOVE_OR_DROP,
@@ -210,6 +219,15 @@ class ItemSlotBinderDisplay(
     fun onItemDrop(event: PlayerDropItemEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         if (event.itemDrop.itemStack.isSimilar(item()))
+            event.isCancelled = true
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onItemSwap(event: PlayerSwapHandItemsEvent) {
+        if (event.player.uniqueId != player.uniqueId) return
+        if (slot == OFFHAND_SLOT)
+            event.isCancelled = true
+        if (event.player.inventory.heldItemSlot == slot)
             event.isCancelled = true
     }
 
