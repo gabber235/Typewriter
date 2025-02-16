@@ -37,7 +37,7 @@ class NavigationActivity(
     private var state: NavigationActivityTaskState = NavigationActivityTaskState.Searching(gps, startLocation)
 
     override val currentPosition: PositionProperty
-        get() = state.location()
+        get() = state.position()
 
     override fun initialize(context: ActivityContext) {}
 
@@ -56,7 +56,12 @@ class NavigationActivity(
 
             state = when {
                 currentEdge.isFastTravel -> NavigationActivityTaskState.FastTravel(currentEdge)
-                context.isViewed -> NavigationActivityTaskState.Walking(gps.roadNetwork, currentEdge, currentPosition, speed = speed)
+                context.isViewed -> NavigationActivityTaskState.Walking(
+                    gps.roadNetwork,
+                    currentEdge,
+                    currentPosition,
+                    speed = speed
+                )
 
                 else -> NavigationActivityTaskState.FakeNavigation(currentEdge, speed = speed)
             }
@@ -84,7 +89,7 @@ class NavigationActivity(
 
 
 private sealed interface NavigationActivityTaskState {
-    fun location(): PositionProperty
+    fun position(): PositionProperty
     fun isComplete(): Boolean
     fun tick(context: ActivityContext) {}
     fun dispose() {}
@@ -104,7 +109,7 @@ private sealed interface NavigationActivityTaskState {
             }
         }
 
-        override fun location(): PositionProperty = location
+        override fun position(): PositionProperty = location
 
         override fun isComplete(): Boolean = path != null
 
@@ -116,15 +121,24 @@ private sealed interface NavigationActivityTaskState {
 
     class FakeNavigation(
         val edge: GPSEdge,
-        val location: PositionProperty = edge.start.toProperty(),
+        val position: PositionProperty = edge.start.toProperty(),
         val speed: Float,
     ) : NavigationActivityTaskState {
         private var ticks: Int = 0
 
-        // Fixme: Magic number
-        private val maxTicks = (edge.length * speed).toInt()
+        private val maxTicks = (edge.length * speed * 20).toInt()
 
-        override fun location(): PositionProperty = location
+        private val standingPosition: PositionProperty by lazy(LazyThreadSafetyMode.NONE) {
+            val location = position.toBukkitLocation()
+            val addY = location.block.collisionShape.boundingBoxes.maxOfOrNull { it.maxY } ?: 0.0
+            return@lazy position.copy(
+                x = position.blockX.toDouble(),
+                y = position.blockY + addY,
+                z = position.blockZ.toDouble()
+            )
+        }
+
+        override fun position(): PositionProperty = standingPosition
 
         override fun tick(context: ActivityContext) {
             super.tick(context)
@@ -137,7 +151,7 @@ private sealed interface NavigationActivityTaskState {
     class FastTravel(
         val edge: GPSEdge,
     ) : NavigationActivityTaskState {
-        override fun location(): PositionProperty = edge.end.toProperty()
+        override fun position(): PositionProperty = edge.end.toProperty()
         override fun isComplete(): Boolean = true
     }
 
@@ -182,7 +196,7 @@ private sealed interface NavigationActivityTaskState {
             path = navigator.computePathTo(edge.end.x, edge.end.y, edge.end.z)
         }
 
-        override fun location(): PositionProperty = location
+        override fun position(): PositionProperty = location
 
         override fun tick(context: ActivityContext) {
             path = navigator.updatePathFor(this)
