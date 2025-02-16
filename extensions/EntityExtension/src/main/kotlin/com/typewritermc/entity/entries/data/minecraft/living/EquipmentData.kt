@@ -19,13 +19,13 @@ import kotlin.reflect.KClass
 class EquipmentData(
     override val id: String = "",
     override val name: String = "",
-    val equipment: Map<EquipmentSlot, Item> = emptyMap(),
+    val equipment: Map<EquipmentSlot, Var<Item>> = emptyMap(),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : LivingEntityData<EquipmentProperty> {
     override fun type(): KClass<EquipmentProperty> = EquipmentProperty::class
 
     override fun build(player: Player): EquipmentProperty =
-        EquipmentProperty(equipment.mapValues { (_, item) -> item.build(player).toPacketItem() })
+        EquipmentProperty(equipment.mapValues { (_, item) -> item.get(player).build(player).toPacketItem() })
 }
 
 @Entry("viewer_equipment_data", "The equipment of the viewer", Colors.RED, "mdi:account-multiple-outline")
