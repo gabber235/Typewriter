@@ -88,9 +88,12 @@ private class PathActivity(
 
 
     override fun tick(context: ActivityContext): TickResult {
-        if (activity == null) {
+        if (activity == null && currentLocationIndex == 0) {
             setup(context)
             return TickResult.CONSUMED
+        }
+        if (activity == null) {
+            return TickResult.IGNORED
         }
 
         val network =
