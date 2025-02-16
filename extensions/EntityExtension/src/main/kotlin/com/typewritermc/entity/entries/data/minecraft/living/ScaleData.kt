@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.protocol.attribute.Attributes
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
@@ -20,6 +21,7 @@ class ScaleData(
     override val name: String = "",
     override val priorityOverride: Optional<Int> = Optional.empty(),
     @Default("1.0")
+    @Min(0)
     val scale: Double = 1.0,
 ) : LivingEntityData<ScaleProperty> {
     override fun type(): KClass<ScaleProperty> = ScaleProperty::class

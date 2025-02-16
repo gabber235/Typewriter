@@ -40,6 +40,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.focusNode,
     this.name = "",
     this.icon = TWIcons.textFields,
+    this.keyboardType = TextInputType.text,
     this.inputFormatters = const [],
     this.keepValidVisibleWhileFocused = false,
     this.deserialize,
@@ -56,6 +57,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final FocusNode? focusNode;
   final String name;
   final String icon;
+  final TextInputType keyboardType;
   final List<TextInputFormatter> inputFormatters;
   final bool keepValidVisibleWhileFocused;
   final String Function(T)? deserialize;
@@ -108,6 +110,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           focus: focus,
           controller: controller,
           text: formattedValue,
+          keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           decoration: InputDecoration(
             prefixIcon: Padding(

@@ -15,8 +15,10 @@ class ValidatedInspectorTextField<T> extends HookConsumerWidget {
     required this.defaultValue,
     required this.deserialize,
     required this.serialize,
-    required this.formatted,
+    this.formatted,
+    this.validator,
     this.icon = TWIcons.textFields,
+    this.keyboardType = TextInputType.text,
     this.inputFormatters = const [],
     this.keepValidVisibleWhileFocused = false,
     super.key,
@@ -25,8 +27,10 @@ class ValidatedInspectorTextField<T> extends HookConsumerWidget {
   final T defaultValue;
   final String Function(T) deserialize;
   final T Function(String) serialize;
-  final String Function(T) formatted;
+  final String Function(T)? formatted;
+  final String? Function(T)? validator;
   final String icon;
+  final TextInputType keyboardType;
   final List<TextInputFormatter> inputFormatters;
   final bool keepValidVisibleWhileFocused;
 
@@ -43,9 +47,11 @@ class ValidatedInspectorTextField<T> extends HookConsumerWidget {
       deserialize: deserialize,
       serialize: serialize,
       formatted: formatted,
+      validator: validator,
       focusNode: focus,
       name: name,
       icon: icon,
+      keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       keepValidVisibleWhileFocused: keepValidVisibleWhileFocused,
       onChanged: (value) => ref
