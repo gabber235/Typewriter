@@ -94,6 +94,9 @@ sealed interface ActivityContext {
 
     val viewers: List<Player>
     val entityState: EntityState
+
+    val randomViewer: Player?
+        get() = viewers.randomOrNull()
 }
 
 class SharedActivityContext(

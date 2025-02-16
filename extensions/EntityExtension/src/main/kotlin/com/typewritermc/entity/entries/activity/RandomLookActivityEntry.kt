@@ -5,8 +5,11 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.entity.*
+import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
+import com.typewritermc.engine.paper.entry.entries.Var
 import java.time.Duration
+import java.time.Instant
 import kotlin.random.Random
 
 @Entry("random_look_activity", "A random look activity", Colors.BLUE, "fa6-solid:eye")
@@ -24,7 +27,7 @@ class RandomLookActivityEntry(
     @Default("{\"start\": -180.0, \"end\": 180.0}")
     val yawRange: ClosedRange<Float> = -180f..180f,
     @Help("The duration between each look")
-    val duration: Duration = Duration.ofSeconds(2),
+    val duration: Var<Duration> = ConstVar(Duration.ofSeconds(1)),
 ) : GenericEntityActivityEntry {
     override fun create(context: ActivityContext, currentLocation: PositionProperty): EntityActivity<ActivityContext> {
         return RandomLookActivity(pitchRange, yawRange, duration, currentLocation)
@@ -34,24 +37,25 @@ class RandomLookActivityEntry(
 class RandomLookActivity(
     private val pitchRange: ClosedRange<Float>,
     private val yawRange: ClosedRange<Float>,
-    private val duration: Duration,
+    private val duration: Var<Duration>,
     override var currentPosition: PositionProperty,
 ) : GenericEntityActivity {
     private var targetPitch: Float = pitchRange.random()
     private var targetYaw: Float = yawRange.random()
     private val pitchVelocity = Velocity(0f)
     private val yawVelocity = Velocity(0f)
-    private var lastChangeTime = System.currentTimeMillis()
+    private var nextChangeTime = Instant.now()
 
 
     override fun initialize(context: ActivityContext) {}
 
     override fun tick(context: ActivityContext): TickResult {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastChangeTime > duration.toMillis()) {
+        val currentTime = Instant.now()
+        if (currentTime > nextChangeTime) {
             targetPitch = pitchRange.random()
             targetYaw = yawRange.random()
-            lastChangeTime = currentTime
+            val duration = context.randomViewer?.let { viewer -> this.duration.get(viewer) } ?: Duration.ofSeconds(1)
+            nextChangeTime = currentTime + duration
         }
 
 
