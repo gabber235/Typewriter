@@ -56,7 +56,7 @@ class ExampleBound(
             // A manual version of the above
             when (event.player.boundState) {
                 InteractionBoundState.BLOCKING -> event.isCancelled = true
-                InteractionBoundState.INTERRUPTING -> (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(event.player, context())
+                InteractionBoundState.INTERRUPTING -> event.player.interruptInteraction()
                 InteractionBoundState.IGNORING -> {}
             }
         }

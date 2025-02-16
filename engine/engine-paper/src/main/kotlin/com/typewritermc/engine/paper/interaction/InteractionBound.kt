@@ -48,12 +48,12 @@ interface ListenerInteractionBound : InteractionBound, Listener {
     fun <T> handleEvent(event: T) where T : PlayerEvent, T : Cancellable {
         when (event.player.boundState) {
             InteractionBoundState.BLOCKING -> event.isCancelled = true
-            InteractionBoundState.INTERRUPTING -> (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(
-                event.player,
-                context()
-            )
-
+            InteractionBoundState.INTERRUPTING -> event.player.interruptInteraction()
             InteractionBoundState.IGNORING -> {}
         }
+    }
+
+    fun Player.interruptInteraction() {
+        (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(this, context())
     }
 }

@@ -19,16 +19,11 @@ import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.dialogue.DialogueTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
-import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
-import com.typewritermc.engine.paper.interaction.InteractionBoundEndTrigger
-import com.typewritermc.engine.paper.interaction.InterceptionBundle
-import com.typewritermc.engine.paper.interaction.boundState
-import com.typewritermc.engine.paper.interaction.interactionContext
-import com.typewritermc.engine.paper.interaction.interceptPackets
+import com.typewritermc.engine.paper.interaction.*
 import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.engine.paper.utils.toBukkitLocation
@@ -38,6 +33,9 @@ import me.tofaa.entitylib.meta.display.TextDisplayMeta
 import me.tofaa.entitylib.meta.mobs.villager.VillagerMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
+import org.bukkit.event.entity.EntityDamageEvent
 import java.util.*
 
 @Entry(
@@ -79,8 +77,8 @@ class LockInteractionBound(
     private val player: Player,
     private val targetPosition: Var<Position>,
     override val priority: Int,
-    val interruptionTriggers: List<EventTrigger>,
-) : InteractionBound {
+    override val interruptionTriggers: List<EventTrigger>,
+) : ListenerInteractionBound {
     private val originalPosition = player.position
     private var entity: WrapperEntity = createEntity()
     private var interceptor: InterceptionBundle? = null
@@ -104,11 +102,7 @@ class LockInteractionBound(
                 if (packet.isForward || packet.isBackward || packet.isLeft || packet.isRight) {
                     when (player.boundState) {
                         InteractionBoundState.BLOCKING -> event.isCancelled = true
-                        InteractionBoundState.INTERRUPTING -> (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(
-                            player,
-                            player.interactionContext ?: context()
-                        )
-
+                        InteractionBoundState.INTERRUPTING -> player.interruptInteraction()
                         InteractionBoundState.IGNORING -> {}
                     }
                     return@PLAYER_INPUT
@@ -140,6 +134,14 @@ class LockInteractionBound(
                 packet.position = packet.position.withY(packet.position.y - 500)
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerDamaged(event: EntityDamageEvent) {
+        if (event.entity.uniqueId != player.uniqueId) return
+        val player = event.entity as? Player ?: return
+        if (player.boundState == InteractionBoundState.IGNORING) return
+        event.isCancelled = true
     }
 
     private suspend fun dispose() {
@@ -219,7 +221,6 @@ class LockInteractionBound(
     }
 
     override suspend fun teardown() {
-        teardownEntity()
         dispose()
     }
 
