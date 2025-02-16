@@ -181,6 +181,7 @@ class EntityCinematicAction(
 
         val collectedProperties = collectors.mapNotNull { it.collect(player) }
         this.entity?.consumeProperties(collectedProperties)
+        this.entity?.tick()
         lastRelativeFrame = relativeFrame
 
         trackStepSound()
