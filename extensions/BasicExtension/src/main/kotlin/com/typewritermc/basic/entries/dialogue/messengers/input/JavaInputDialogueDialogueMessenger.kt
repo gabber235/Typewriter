@@ -15,6 +15,7 @@ import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import java.time.Duration
 
 val inputFormat: String by snippet(
@@ -73,7 +74,7 @@ class JavaInputDialogueDialogueMessenger<T : Any>(
         typingDuration = typingDurationType.totalDuration(text.stripped(), entry.duration.get(player))
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW)
     private fun onPlayerChat(event: AsyncChatEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         event.isCancelled = true
