@@ -2,6 +2,8 @@ package com.typewritermc.engine.paper.utils
 
 import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.ComponentIteratorFlag
+import net.kyori.adventure.text.ComponentIteratorType
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TextReplacementConfig
 import net.kyori.adventure.text.format.NamedTextColor
@@ -77,6 +79,7 @@ fun String.asPartialFormattedMini(
     maxLineLength: Int = 40,
     padding: String = "    ",
 ): Component {
+
     return replace("\n", "\n<reset><white>")
         .limitLineLength(maxLineLength)
         .asMini()
@@ -168,4 +171,22 @@ fun String.limitLineLength(maxLength: Int = 40): String {
 
     text = text.trim()
     return text
+}
+
+fun String.splitComponents(vararg resolvers: TagResolver): List<Component> {
+    val components = split("\n").map { it.asMiniWithResolvers(*resolvers) }.toMutableList()
+
+    for (i in 1 until components.size) {
+        val previous = components[i - 1]
+        val current = components[i]
+
+        val mergedStyle = current.style().merge(previous.style(), Style.Merge.Strategy.IF_ABSENT_ON_TARGET)
+        components[i] = current.style(mergedStyle)
+    }
+    return components
+}
+
+fun Component.lastStyle(): Style {
+    val last = iterable(ComponentIteratorType.DEPTH_FIRST).last<Component>()
+    return last.style()
 }
