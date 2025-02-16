@@ -268,6 +268,8 @@ class NewEntryFetcher extends SearchFetcher {
         "e",
         "ne",
         "ae",
+        "n",
+        "a",
         "ea",
         "entry",
         "entries",

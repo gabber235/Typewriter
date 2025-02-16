@@ -155,6 +155,8 @@ class AddPageFetcher extends SearchFetcher {
         "pages",
         "np",
         "ap",
+        "n",
+        "a",
         "pa",
         "add",
         "add_page",
