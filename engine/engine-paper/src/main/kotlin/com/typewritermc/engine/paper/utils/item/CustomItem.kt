@@ -20,6 +20,8 @@ class CustomItem(
         return itemStack
     }
 
-    override fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean =
-        build(player, context).isSimilar(item)
+    override fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean {
+        if (item == null) return components.isEmpty()
+        return components.all { it.matches(player, context, item) }
+    }
 }

@@ -20,4 +20,9 @@ class ItemMaterialComponent(
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.type = material.get(player) ?: Material.STONE
     }
+
+    override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
+        val material = material.get(player) ?: return false
+        return item.type == material
+    }
 }

@@ -10,6 +10,8 @@ import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini
+import com.typewritermc.engine.paper.utils.plainText
+import com.typewritermc.engine.paper.utils.stripped
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
@@ -24,5 +26,10 @@ class ItemNameComponent(
             val name = name.get(player) ?: return@editMeta
             meta.displayName(name.parsePlaceholders(player).asMini())
         }
+    }
+
+    override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
+        val name = name.get(player) ?: return false
+        return item.effectiveName().plainText() == name.parsePlaceholders(player).stripped()
     }
 }

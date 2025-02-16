@@ -6,4 +6,5 @@ import org.bukkit.inventory.ItemStack
 
 sealed interface ItemComponent {
     fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack)
+    fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean
 }

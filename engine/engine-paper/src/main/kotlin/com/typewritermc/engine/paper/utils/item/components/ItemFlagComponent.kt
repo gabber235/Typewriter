@@ -12,4 +12,5 @@ class ItemFlagComponent(
     val flag: ItemFlag,
 ) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) = item.addItemFlags(flag)
+    override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean = item.hasItemFlag(flag)
 }

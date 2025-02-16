@@ -18,4 +18,9 @@ class ItemAmountComponent(
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.amount = amount.get(player, interactionContext) ?: 1
     }
+
+    override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
+        val amount = amount.get(player, interactionContext) ?: 0
+        return item.amount == amount
+    }
 }
