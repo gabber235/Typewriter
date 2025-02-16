@@ -6,10 +6,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.utils.point.Vector
-import com.typewritermc.engine.paper.entry.entity.EntityState
-import com.typewritermc.engine.paper.entry.entity.FakeEntity
-import com.typewritermc.engine.paper.entry.entity.PositionProperty
-import com.typewritermc.engine.paper.entry.entity.SimpleEntityDefinition
+import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
@@ -94,6 +91,7 @@ class NamedEntity(
     }
 
     override fun applyProperties(properties: List<EntityProperty>) {
+        baseEntity.consumeProperties(properties)
         properties.forEach { property ->
             when (property) {
                 is DisplayNameProperty -> {
@@ -101,7 +99,6 @@ class NamedEntity(
                 }
             }
         }
-        return baseEntity.consumeProperties(properties)
     }
 
     override fun tick() {

@@ -61,10 +61,14 @@ abstract class WrapperFakeEntity(
     }
 
     override fun addPassenger(entity: FakeEntity) {
+        if (entity.entityId == entityId) return
+        if (this.entity.hasPassenger(entity.entityId)) return
         this.entity.addPassenger(entity.entityId)
     }
 
     override fun removePassenger(entity: FakeEntity) {
+        if (entity.entityId == entityId) return
+        if (!this.entity.hasPassenger(entity.entityId)) return
         this.entity.removePassenger(entity.entityId)
     }
 
