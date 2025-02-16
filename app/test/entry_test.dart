@@ -33,6 +33,7 @@ void main() {
         ],
       },
     },
+    "null_list": [null],
   };
 
   group("Get field from entry", () {
@@ -151,6 +152,21 @@ void main() {
       final entry = Entry(rawDynamicEntry);
       final newEntry = entry.copyWith("new_path.*.something", "new_value");
       expect(newEntry.get("new_path.*.something"), null);
+    });
+
+    test(
+        "When an entry is updated with a existing null value in the list, expect a correct string to be set",
+        () {
+      final entry = Entry(rawDynamicEntry);
+      final newEntry = entry.copyWith("null_list.0", "new_value");
+      expect(newEntry.get("null_list.0"), "new_value");
+    });
+    test(
+        "When an entry is updated with a existing null value in the list, expect a correct data value to be set",
+        () {
+      final entry = Entry(rawDynamicEntry);
+      final newEntry = entry.copyWith("null_list.0.something", "new_value");
+      expect(newEntry.get("null_list.0.something"), "new_value");
     });
   });
 

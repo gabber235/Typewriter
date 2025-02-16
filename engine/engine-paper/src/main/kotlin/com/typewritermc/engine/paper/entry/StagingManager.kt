@@ -183,6 +183,7 @@ class StagingManagerImpl : StagingManager, KoinComponent {
         val entry = entries.find { it.asJsonObject["id"].asString == entryId } ?: return failure("Entry does not exist")
 
         // Update the entry
+        entry.createPath(path)
         entry.changePathValue(path, value)
 
         autoSaver()
@@ -345,6 +346,53 @@ fun JsonElement.changePathValue(path: String, value: JsonElement) {
     }
 }
 
+private fun JsonElement.createPath(path: String) {
+    if (path.contains("*")) return
+    val parts = path.split(".")
+
+    fun putIfAbsent(current: JsonElement, path: String, value: JsonElement): JsonElement {
+        if (current.isJsonArray && path.toIntOrNull() != null) {
+            val index = path.toInt()
+            val array = current.asJsonArray
+
+            if (array.size() > index) {
+                val cur = array[index]
+                // If the current value is null, we see it as an absent value
+                if (cur.isJsonNull) {
+                    array.set(index, value)
+                    return value
+                }
+                return cur
+            } else {
+                while (current.asJsonArray.size() <= index) {
+                    current.asJsonArray.add(JsonNull.INSTANCE)
+                }
+                array.set(index, value)
+                return value
+            }
+        } else {
+            val obj = current.asJsonObject
+            if (obj.has(path) && !obj.get(path).isJsonNull) {
+                return obj.get(path)
+            } else {
+                obj.add(path, value)
+                return value
+            }
+        }
+    }
+
+    var current = this
+    for (i in 0 until parts.size - 1) {
+        val part = parts[i]
+        val next = parts[i + 1]
+
+        current = if (next.toIntOrNull() != null) {
+            putIfAbsent(current, part, JsonArray())
+        } else {
+            putIfAbsent(current, part, JsonObject())
+        }
+    }
+}
 enum class StagingState {
     PUBLISHING,
     STAGING,

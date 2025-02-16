@@ -260,7 +260,13 @@ class Entry {
       if (current is List && int.tryParse(path) != null) {
         final index = int.parse(path);
         if (current.length > index) {
-          return current[index];
+          final cur = current[index];
+          // If the current value is null, we see it as an absent value.
+          if (cur == null) {
+            current[index] = value;
+            return value;
+          }
+          return cur;
         } else {
           current.addAll(List.filled(index - current.length + 1, null));
           current[index] = value;
