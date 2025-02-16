@@ -43,7 +43,7 @@ class ActionTrigger(
 
     fun applyModifiers() {
         val factDatabase: FactDatabase = get(FactDatabase::class.java)
-        factDatabase.modify(player, entry.modifiers)
+        factDatabase.modify(player, entry.modifiers, context)
     }
 
     @JvmName("triggerForRefs")

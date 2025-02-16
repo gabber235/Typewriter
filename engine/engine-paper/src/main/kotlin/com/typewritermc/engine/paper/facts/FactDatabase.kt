@@ -3,11 +3,13 @@ package com.typewritermc.engine.paper.facts
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
+import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.ModifierOperator
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.engine.paper.utils.logErrorIfNull
@@ -105,7 +107,7 @@ class FactDatabase : KoinComponent {
         }
     }
 
-    fun modify(player: Player, modifiers: List<Modifier>) {
+    fun modify(player: Player, modifiers: List<Modifier>, context: InteractionContext? = player.interactionContext) {
         modify(player) {
             modifiers.forEach { modifier ->
                 this[modifier.fact] = when (modifier.operator) {
@@ -119,7 +121,7 @@ class FactDatabase : KoinComponent {
                         }
 
                         val fact = entry.readForPlayersGroup(player)
-                        modifier.value.get(player) + fact.value
+                        modifier.value.get(player, context) + fact.value
                     }
                     ModifierOperator.MULTIPLY -> {
                         val entry =
@@ -131,10 +133,10 @@ class FactDatabase : KoinComponent {
                         }
 
                         val fact = entry.readForPlayersGroup(player)
-                        modifier.value.get(player) * fact.value
+                        modifier.value.get(player, context) * fact.value
                     }
 
-                    ModifierOperator.SET -> modifier.value.get(player)
+                    ModifierOperator.SET -> modifier.value.get(player, context)
                 }
             }
         }
