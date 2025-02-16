@@ -11,16 +11,19 @@ import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.PrimaryCinematicEntry
 import com.typewritermc.engine.paper.entry.entries.Segment
+import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.interceptPackets
+import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.name
 import com.typewritermc.engine.paper.utils.unClickable
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import java.util.*
 
 @Entry("pumpkin_hat_cinematic", "Show a pumpkin hat during a cinematic", Colors.CYAN, "mingcute:hat-fill")
 /**
@@ -33,6 +36,7 @@ class PumpkinHatCinematicEntry(
     override val id: String = "",
     override val name: String = "",
     override val criteria: List<Criteria> = emptyList(),
+    val customItem: Optional<Var<Item>> = Optional.empty(),
     @Segments(icon = "mingcute:hat-fill")
     val segments: List<PumpkinHatSegment> = emptyList(),
 ) : PrimaryCinematicEntry {
@@ -53,7 +57,7 @@ data class PumpkinHatSegment(
 
 class PumpkinHatCinematicAction(
     private val player: Player,
-    entry: PumpkinHatCinematicEntry,
+    private val entry: PumpkinHatCinematicEntry,
 ) : SimpleCinematicAction<PumpkinHatSegment>() {
     override val segments: List<PumpkinHatSegment> = entry.segments
 
@@ -61,13 +65,21 @@ class PumpkinHatCinematicAction(
 
     override suspend fun startSegment(segment: PumpkinHatSegment) {
         super.startSegment(segment)
-        val item = ItemStack(Material.CARVED_PUMPKIN)
-            .apply {
+        val item = entry.customItem.map {
+            it.get(player).build(player).apply {
                 editMeta { meta ->
-                    meta.name = " "
                     meta.unClickable()
                 }
             }
+        }.orElseGet {
+            ItemStack(Material.CARVED_PUMPKIN)
+                .apply {
+                    editMeta { meta ->
+                        meta.name = " "
+                        meta.unClickable()
+                    }
+                }
+        }
             .toPacketItem()
         interceptor = player.interceptPackets {
             PacketType.Play.Server.SET_SLOT { event ->
