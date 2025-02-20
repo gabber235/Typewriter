@@ -44,6 +44,7 @@ const config: Config = {
   themes: [
     '@docusaurus/theme-classic',
     '@docusaurus/theme-mermaid',
+    '@docusaurus/theme-search-algolia',
   ],
 
   // Main documentation plugin
