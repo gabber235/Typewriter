@@ -26274,6 +26274,403 @@
                     "completed",
                     "placeholder"
                 ]
+            },
+            {
+                "name": "interaction_context_text_variable",
+                "description": "A way to build text with interaction variables",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "text": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "Use <1> to insert the text from the first variable."
+                                },
+                                {
+                                    "name": "colored"
+                                },
+                                {
+                                    "name": "placeholder"
+                                }
+                            ]
+                        },
+                        "keys": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {
+                                    "key": {
+                                        "kind": "custom",
+                                        "editor": "interactionContextKey",
+                                        "default": "",
+                                        "modifiers": [
+                                            {
+                                                "name": "ignoreContextKeyBlueprint"
+                                            }
+                                        ]
+                                    },
+                                    "default": {
+                                        "kind": "primitive",
+                                        "type": "string",
+                                        "modifiers": [
+                                            {
+                                                "name": "help",
+                                                "data": "What to display if the key is not in the context."
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "modifiers": []
+                        }
+                    }
+                },
+                "color": "#4CAF50",
+                "icon": "material-symbols:text-compare-rounded",
+                "tags": [
+                    "variable",
+                    "interaction"
+                ]
+            },
+            {
+                "name": "text_input_dialogue",
+                "description": "An input dialogue which excepts any text",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "criteria": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {}
+                            },
+                            "modifiers": []
+                        },
+                        "modifiers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {}
+                            },
+                            "modifiers": []
+                        },
+                        "triggers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference",
+                                "default": ""
+                            },
+                            "modifiers": []
+                        },
+                        "speaker": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": []
+                        },
+                        "text": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "multiline"
+                                },
+                                {
+                                    "name": "placeholder"
+                                },
+                                {
+                                    "name": "colored"
+                                }
+                            ]
+                        },
+                        "duration": {
+                            "kind": "primitive",
+                            "type": "duration",
+                            "modifiers": []
+                        }
+                    }
+                },
+                "color": "#00BCD4",
+                "icon": "fa6-solid:keyboard",
+                "tags": [
+                    "dialogue",
+                    "input",
+                    "text"
+                ]
+            },
+            {
+                "name": "integer_input_dialogue",
+                "description": "An input dialogue which excepts an integer",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "criteria": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {}
+                            },
+                            "modifiers": []
+                        },
+                        "modifiers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {}
+                            },
+                            "modifiers": []
+                        },
+                        "triggers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference",
+                                "default": ""
+                            },
+                            "modifiers": []
+                        },
+                        "speaker": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": []
+                        },
+                        "text": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "multiline"
+                                },
+                                {
+                                    "name": "placeholder"
+                                },
+                                {
+                                    "name": "colored"
+                                }
+                            ]
+                        },
+                        "duration": {
+                            "kind": "primitive",
+                            "type": "duration",
+                            "modifiers": []
+                        },
+                        "range": {
+                            "kind": "custom",
+                            "editor": "optional",
+                            "fieldInfo": {
+                                "kind": "object",
+                                "fields": {
+                                    "start": {
+                                        "kind": "primitive",
+                                        "type": "int",
+                                        "modifiers": []
+                                    },
+                                    "endInclusive": {
+                                        "kind": "primitive",
+                                        "type": "int",
+                                        "modifiers": []
+                                    }
+                                }
+                            },
+                            "default": {
+                                "enabled": false,
+                                "value": {
+                                    "start": 0,
+                                    "endInclusive": 0
+                                }
+                            },
+                            "modifiers": []
+                        }
+                    }
+                },
+                "color": "#00BCD4",
+                "icon": "fa6-solid:keyboard",
+                "tags": [
+                    "dialogue",
+                    "input",
+                    "integer"
+                ]
+            },
+            {
+                "name": "double_input_dialogue",
+                "description": "An input dialogue which excepts a double",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "criteria": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {}
+                            },
+                            "modifiers": []
+                        },
+                        "modifiers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {}
+                            },
+                            "modifiers": []
+                        },
+                        "triggers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference",
+                                "default": ""
+                            },
+                            "modifiers": []
+                        },
+                        "speaker": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": []
+                        },
+                        "text": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "multiline"
+                                },
+                                {
+                                    "name": "placeholder"
+                                },
+                                {
+                                    "name": "colored"
+                                }
+                            ]
+                        },
+                        "duration": {
+                            "kind": "primitive",
+                            "type": "duration",
+                            "modifiers": []
+                        },
+                        "range": {
+                            "kind": "custom",
+                            "editor": "optional",
+                            "fieldInfo": {
+                                "kind": "object",
+                                "fields": {
+                                    "start": {
+                                        "kind": "primitive",
+                                        "type": "double",
+                                        "modifiers": []
+                                    },
+                                    "endInclusive": {
+                                        "kind": "primitive",
+                                        "type": "double",
+                                        "modifiers": []
+                                    }
+                                }
+                            },
+                            "default": {
+                                "enabled": false,
+                                "value": {
+                                    "start": 0.0,
+                                    "endInclusive": 0.0
+                                }
+                            },
+                            "modifiers": []
+                        }
+                    }
+                },
+                "color": "#00BCD4",
+                "icon": "fa6-solid:keyboard",
+                "tags": [
+                    "dialogue",
+                    "input",
+                    "double"
+                ]
+            },
+            {
+                "name": "interaction_context_variable",
+                "description": "Fill in a field with some data from another entry",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "default": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                        },
+                        "key": {
+                            "kind": "custom",
+                            "editor": "interactionContextKey",
+                            "default": "",
+                            "modifiers": []
+                        }
+                    }
+                },
+                "color": "#4CAF50",
+                "icon": "uil:capture",
+                "tags": [
+                    "variable",
+                    "interaction"
+                ]
             }
         ]
     }

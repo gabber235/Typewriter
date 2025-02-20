@@ -54,7 +54,7 @@ const EntrySearch: React.FC<EntryProps> = ({ entryName }) => {
     return (
             <div className="w-full h-full flex justify-center items-center select-none pt-5 pb-10">
             <div className={`p-3 rounded-[12px] select-none shadow-md shadow-[#252525] ${colors.background}`}>
-                <div className="flex items-center mb-4 space-x-2 w-[300px] p-1">
+                <div className="flex items-center mb-4 space-x-2 w-auto max-w-[450px] p-1">
                     <Icon
                         icon="mdi:filter"
                         className={`text-3xl ${colors.icons} rounded-full p-1 ${colors.accent}`}
@@ -76,7 +76,7 @@ const EntrySearch: React.FC<EntryProps> = ({ entryName }) => {
                         </button>
                     </div>
                 </div>
-                <div className={`flex items-center rounded-lg px-3 py-2 mb-4 w-96 select-none ${colors.accent}`}>
+                <div className={`flex items-center rounded-lg px-3 py-2 mb-4 w-auto max-w-[450px] select-none ${colors.accent}`}>
                     <Icon
                         icon="ic:outline-search"
                         className={`text-2xl ${colors.icons}`}
@@ -93,7 +93,7 @@ const EntrySearch: React.FC<EntryProps> = ({ entryName }) => {
                     />
                 </div>
                 <div
-                    className={`flex items-center rounded-lg cursor-pointer text-white w-96 mt-2 text-lg ${colors.accent} ${colors.hover}`}
+                    className={`flex items-center rounded-lg cursor-pointer text-white w-auto max-w-[450px] mt-2 text-lg ${colors.accent} ${colors.hover}`}
                     onClick={handleOpenWiki}
                 >
                     <div

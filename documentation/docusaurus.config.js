@@ -2,6 +2,7 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 
 import { themes } from 'prism-react-renderer';
+
 const lightTheme = themes.vsLight;
 const darkTheme = themes.vsDark;
 
