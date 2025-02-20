@@ -110,11 +110,11 @@ They display anything to the player, Such as a boss bar. There is a special vari
 These types of filters can be chained to have extreme customizability and flexibility.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="entity-adapter">Entity Adapter<a href="https://docs.typewritermc.com/devlog/0.5.0-release#entity-adapter" class="hash-link" aria-label="Direct link to Entity Adapter" title="Direct link to Entity Adapter">​</a></h2>
 <p>Say goodbye to the old NPC adapters like Citizens, FancyNpcs, and ZNPCs. The Entity Adapter allows you to define entities directly within Typewriter, empowering you to use them in cinematics, control their visibility based on conditions (like during a quest segment), and even have them navigate and exhibit complex behaviors. With full control, the sky is the limit!</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Ny-OhrV5FQQ?si=dqzetbInKE6jxRjy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Ny-OhrV5FQQ?si=dqzetbInKE6jxRjy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="road-network">Road Network<a href="https://docs.typewritermc.com/devlog/0.5.0-release#road-network" class="hash-link" aria-label="Direct link to Road Network" title="Direct link to Road Network">​</a></h2>
 <p>You can now create <strong>Road Networks</strong> in Typewriter.
 These allow NPCs to navigate through the world and show Path Streams to guide the players.</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/uVKGS70PEq4?si=FdXpg4lVTRMtU7lu" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uVKGS70PEq4?si=FdXpg4lVTRMtU7lu" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="grouped-facts">Grouped Facts<a href="https://docs.typewritermc.com/devlog/0.5.0-release#grouped-facts" class="hash-link" aria-label="Direct link to Grouped Facts" title="Direct link to Grouped Facts">​</a></h2>
 <p>The value of a fact can now be set for a group of players.
 For example, you can now check if a party of players have killed a certain number of enemies.</p>
@@ -244,7 +244,7 @@ We've made major improvements to the documentation. All to make it easier to use
 <p>But that's not all. Cinematics in Typewriter go above and beyond. You can create dynamic camera paths to capture the perfect angles 🎥, weave in captivating dialogues for your characters 🎭, and even record your own NPC 💃 to take center stage in your cinematic masterpiece.</p>
 <p>With over <code>28,131 lines</code> changed and <code>10,988 lines</code> removed, this is the biggest update to Typewriter yet. We've fine-tuned every aspect to ensure a seamless and powerful cinematic experience that will leave your players in awe.</p>
 <p>So, gather your creative spirit, update your Typewriter plugin, and get ready to embark on a new era of storytelling in Minecraft. We can't wait to see the incredible cinematic adventures you'll create with Typewriter v0.3. Enjoy the journey 🌟🎮!</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/1pGBtJleEuQ?si=H_nY1nEikf6xu6VV" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>]]></content>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/1pGBtJleEuQ?si=H_nY1nEikf6xu6VV" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>]]></content>
         <author>
             <name>Gabber235</name>
             <uri>https://github.com/gabber235</uri>
