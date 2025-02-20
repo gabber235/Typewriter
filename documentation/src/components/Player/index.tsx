@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
 import ReactPlayer from "react-player";
 import { Icon } from "@iconify/react";
 import screenfull from "screenfull";
@@ -30,31 +30,57 @@ export default function Player({ url }: PlayerProps) {
     }
   };
 
+  // Named handler for fullscreen changes
+  const onFullscreenChange = () => {
+    setIsFullscreen(screenfull.isFullscreen);
+  };
+
   useEffect(() => {
     if (screenfull.isEnabled) {
-      screenfull.on("change", () => {
-        setIsFullscreen(screenfull.isFullscreen);
-      });
+      screenfull.on("change", onFullscreenChange);
 
       return () => {
-        screenfull.off("change", () => {
-          setIsFullscreen(screenfull.isFullscreen);
-        });
+        screenfull.off("change", onFullscreenChange);
       };
     }
   }, []);
 
+  // Keyboard controls: Space to toggle play/pause, Left/Right arrows to seek backward/forward 5%
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.code === "Space") {
+      e.preventDefault();
+      togglePlayPause();
+    }
+    if (e.code === "ArrowRight") {
+      e.preventDefault();
+      const newProgress = Math.min(progress + 5, 100);
+      setProgress(newProgress);
+      playerRef.current?.seekTo(newProgress / 100, "fraction");
+    }
+    if (e.code === "ArrowLeft") {
+      e.preventDefault();
+      const newProgress = Math.max(progress - 5, 0);
+      setProgress(newProgress);
+      playerRef.current?.seekTo(newProgress / 100, "fraction");
+    }
+  };
+
   return (
-    <div ref={playerContainerRef} className="relative w-full h-full">
-      <ProgressBar progress={progress} onSeek={handleSeek} />
+    <div className="relative w-full h-full outline-none cursor-default">
+            <ProgressBar progress={progress} onSeek={handleSeek} />
+                <div
+      ref={playerContainerRef}
+      className="relative w-full h-full outline-none cursor-default"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <ReactPlayer
         ref={playerRef}
         url={url}
         playing={playing}
         loop
         muted
-        playsInline={true}
-        playsinline={true}
+        playsInline
         controls={false}
         width="100%"
         height="100%"
@@ -62,18 +88,17 @@ export default function Player({ url }: PlayerProps) {
         onProgress={(state) => setProgress(state.played * 100)}
       />
       <div className="opacity-0 hover:opacity-100 transition-opacity duration-300 w-full h-full flex items-center justify-center">
-        <div
-          className="absolute bottom-0 left-0 right-0 flex items-center justify-center cursor-pointer h-[97%]"
-          onClick={togglePlayPause}
-        >
-          <div>
-            <Icon
-              icon={playing ? "mdi:pause-circle" : "mdi:play-circle"}
-              fontSize={50}
-              color="white"
-            />
-          </div>
-        </div>
+      <div
+        className="absolute bottom-0 left-0 right-0 flex items-center justify-center h-full p-4"
+        onClick={togglePlayPause}
+      >
+        <Icon
+        className="cursor-pointer hover:scale-110 transition duration-150"
+          icon={playing ? "mdi:pause-circle" : "mdi:play-circle"}
+          fontSize={50}
+          color="white"
+        />
+      </div>
         <div className="absolute bottom-2 right-2 p-2">
           <Icon
             onClick={handleFullscreenToggle}
@@ -84,6 +109,7 @@ export default function Player({ url }: PlayerProps) {
           />
         </div>
       </div>
+    </div>
     </div>
   );
 }
