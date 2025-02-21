@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entity.*
+import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.engine.paper.utils.toBukkitLocation
@@ -43,11 +44,12 @@ class PatrolActivityEntry(
 class PatrolActivity(
     private val roadNetwork: Ref<RoadNetworkEntry>,
     private val nodes: List<RoadNodeId>,
-    private val startLocation: PositionProperty,
+    startLocation: PositionProperty,
     private val nextNodeIndexFetcher: (List<RoadNodeId>, Int) -> Int,
 ) : EntityActivity<ActivityContext>, KoinComponent {
+    private var network: RoadNetwork? = null
     private var currentLocationIndex = 0
-    private var activity: EntityActivity<in ActivityContext>? = null
+    private var activity: EntityActivity<in ActivityContext> = IdleActivity(startLocation)
 
     fun refreshActivity(context: ActivityContext, network: RoadNetwork) {
         val targetNodeId = nodes.getOrNull(currentLocationIndex)
@@ -55,7 +57,7 @@ class PatrolActivity(
         val targetNode = network.nodes.find { it.id == targetNodeId }
             ?: return
 
-        activity?.dispose(context)
+        activity.dispose(context)
         activity = NavigationActivity(
             PointToPointGPS(
                 roadNetwork,
@@ -63,52 +65,52 @@ class PatrolActivity(
                 targetNode.location
             }, currentPosition
         )
-        activity?.initialize(context)
+        activity.initialize(context)
     }
 
     override fun initialize(context: ActivityContext) = setup(context)
 
     private fun setup(context: ActivityContext) {
-        val network =
+        network =
             KoinJavaComponent.get<RoadNetworkManager>(RoadNetworkManager::class.java).getNetworkOrNull(roadNetwork)
                 ?: return
 
         // Get the closest node to the start location
-        val closestNode = network.nodes
+        val closestNode = network!!.nodes
             .filter { it.id in nodes }
-            .minByOrNull { it.location.distanceSqrt(startLocation.toBukkitLocation()) ?: Double.MAX_VALUE }
+            .minByOrNull { it.location.distanceSqrt(currentPosition.toBukkitLocation()) ?: Double.MAX_VALUE }
             ?: return
 
         val index = nodes.indexOf(closestNode.id)
         currentLocationIndex = nextNodeIndexFetcher(nodes, index)
-        refreshActivity(context, network)
+        refreshActivity(context, network!!)
     }
 
 
     override fun tick(context: ActivityContext): TickResult {
-        if (activity == null) {
+        if (network == null) {
             setup(context)
             return TickResult.CONSUMED
         }
 
-        val network =
-            KoinJavaComponent.get<RoadNetworkManager>(RoadNetworkManager::class.java).getNetworkOrNull(roadNetwork)
-                ?: return TickResult.IGNORED
-
-        val result = activity?.tick(context)
+        val result = activity.tick(context)
         if (result == TickResult.IGNORED) {
             currentLocationIndex = nextNodeIndexFetcher(nodes, currentLocationIndex)
-            refreshActivity(context, network)
+            refreshActivity(context, network!!)
         }
 
         return TickResult.CONSUMED
     }
 
     override fun dispose(context: ActivityContext) {
-        activity?.dispose(context)
-        activity = null
+        val oldPosition = currentPosition
+        activity.dispose(context)
+        activity = IdleActivity(oldPosition)
     }
 
     override val currentPosition: PositionProperty
-        get() = activity?.currentPosition ?: startLocation
+        get() = activity.currentPosition
+
+    override val currentProperties: List<EntityProperty>
+        get() = activity.currentProperties
 }

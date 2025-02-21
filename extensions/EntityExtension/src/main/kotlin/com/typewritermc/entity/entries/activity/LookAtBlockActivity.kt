@@ -40,7 +40,7 @@ class LookAtBlockActivityEntry(
 }
 
 class LookAtBlockActivity(
-    private val startLocation: PositionProperty,
+    startLocation: PositionProperty,
     private val blockPosition: Position,
     private val childActivity: EntityActivity<ActivityContext>,
 ) : EntityActivity<ActivityContext> {

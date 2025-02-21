@@ -38,32 +38,31 @@ class TriggerActivityEntry(
 
 private class TriggerActivity(
     private val ref: Ref<out EntityActivityEntry>,
-    private val startLocation: PositionProperty,
+    startLocation: PositionProperty,
     private val onStart: Ref<TriggerableEntry>,
     private val onStop: Ref<TriggerableEntry>,
 ) : GenericEntityActivity {
-    private var activity: EntityActivity<in ActivityContext>? = null
+    private var activity: EntityActivity<in ActivityContext> = IdleActivity(startLocation)
 
     override fun initialize(context: ActivityContext) {
-        activity = ref.get()?.create(context, currentPosition)
-        activity?.initialize(context)
+        activity = ref.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
+        activity.initialize(context)
         context.viewers.forEach {
             onStart.triggerFor(it, context())
         }
     }
 
     override fun tick(context: ActivityContext): TickResult {
-        return activity?.tick(context) ?: TickResult.IGNORED
+        return activity.tick(context)
     }
 
     override fun dispose(context: ActivityContext) {
         context.viewers.forEach {
             onStop.triggerFor(it, context())
         }
-        activity?.dispose(context)
-        activity = null
+        activity.dispose(context)
     }
 
     override val currentPosition: PositionProperty
-        get() = activity?.currentPosition ?: startLocation
+        get() = activity.currentPosition
 }

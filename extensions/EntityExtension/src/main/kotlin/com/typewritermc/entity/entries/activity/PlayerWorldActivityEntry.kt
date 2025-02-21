@@ -40,37 +40,38 @@ class PlayerWorldActivityEntry(
 
 class PlayerWorldActivity(
     private val child: Ref<out EntityActivityEntry>,
-    private val startPosition: PositionProperty,
+    startPosition: PositionProperty,
 ) : IndividualEntityActivity {
-    private var childActivity: EntityActivity<in IndividualActivityContext>? = null
+    private var childActivity: EntityActivity<in IndividualActivityContext> = IdleActivity(startPosition)
     private var world: World = startPosition.world
 
     override fun initialize(context: IndividualActivityContext) {
         world = context.viewer.position.world
-        childActivity = child.get()?.create(context, currentPosition)
-        childActivity?.initialize(context)
+        childActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
+        childActivity.initialize(context)
     }
 
     override fun tick(context: IndividualActivityContext): TickResult {
         val playerWorld = context.viewer.position.world
         if (playerWorld != world) {
-            childActivity?.dispose(context)
+            childActivity.dispose(context)
             world = playerWorld
-            childActivity = child.get()?.create(context, currentPosition)
-            childActivity?.initialize(context)
+            childActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
+            childActivity.initialize(context)
         }
 
-        return childActivity?.tick(context) ?: TickResult.IGNORED
+        return childActivity.tick(context)
     }
 
     override fun dispose(context: IndividualActivityContext) {
-        childActivity?.dispose(context)
-        childActivity = null
+        val oldPosition = currentPosition
+        childActivity.dispose(context)
+        childActivity = IdleActivity(oldPosition)
     }
 
     override val currentPosition: PositionProperty
-        get() = childActivity?.currentPosition?.withWorld(world) ?: startPosition.withWorld(world)
+        get() = childActivity.currentPosition.withWorld(world)
 
     override val currentProperties: List<EntityProperty>
-        get() = childActivity?.currentProperties ?: emptyList()
+        get() = childActivity.currentProperties
 }

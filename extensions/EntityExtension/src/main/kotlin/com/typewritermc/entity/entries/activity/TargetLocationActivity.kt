@@ -9,6 +9,7 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
+import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.engine.paper.snippets.snippet
@@ -46,10 +47,10 @@ class TargetLocationActivity(
     private val network: Ref<RoadNetworkEntry>,
     private val targetPosition: Position,
     private val idleActivity: Ref<out EntityActivityEntry>,
-    private val startLocation: PositionProperty,
+    startPosition: PositionProperty,
 ) : GenericEntityActivity {
     private var state: State = IdleState()
-    private var currentActivity: EntityActivity<ActivityContext>? = null
+    private var currentActivity: EntityActivity<ActivityContext> = IdleActivity(startPosition)
 
 
     private interface State {
@@ -106,25 +107,29 @@ class TargetLocationActivity(
         }
 
         currentActivity = state.createActivity(context, currentPosition)
-        currentActivity?.initialize(context)
+        currentActivity.initialize(context)
     }
 
     override fun tick(context: ActivityContext): TickResult {
         if (!state.isValid) {
-            currentActivity?.dispose(context)
+            currentActivity.dispose(context)
             state = state.nextState()
             currentActivity = state.createActivity(context, currentPosition)
-            currentActivity?.initialize(context)
+            currentActivity.initialize(context)
         }
 
-        return currentActivity?.tick(context) ?: TickResult.IGNORED
+        return currentActivity.tick(context)
     }
 
     override fun dispose(context: ActivityContext) {
-        currentActivity?.dispose(context)
-        currentActivity = null
+        val oldPosition = currentPosition
+        currentActivity.dispose(context)
+        currentActivity = IdleActivity(oldPosition)
     }
 
     override val currentPosition: PositionProperty
-        get() = currentActivity?.currentPosition ?: startLocation
+        get() = currentActivity.currentPosition
+
+    override val currentProperties: List<EntityProperty>
+        get() = currentActivity.currentProperties
 }
