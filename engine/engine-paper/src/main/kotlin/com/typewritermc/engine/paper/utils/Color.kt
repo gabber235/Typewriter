@@ -10,6 +10,7 @@ class Color(
         }
 
         val BLACK_BACKGROUND = Color(0x40000000)
+        val WHITE = Color(0xFFFFFFFF.toInt())
     }
 
     val alpha: Int get() = (color shr 24) and 0xFF

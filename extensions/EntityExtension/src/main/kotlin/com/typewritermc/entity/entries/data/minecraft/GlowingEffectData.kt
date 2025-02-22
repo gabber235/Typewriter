@@ -1,5 +1,6 @@
 package com.typewritermc.entity.entries.data.minecraft
 
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
@@ -9,8 +10,15 @@ import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplie
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityData
 import com.typewritermc.engine.paper.extensions.packetevents.metas
+import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
+import com.typewritermc.engine.paper.utils.Color
 import me.tofaa.entitylib.meta.EntityMeta
+import me.tofaa.entitylib.meta.display.AbstractDisplayMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.reflect.KClass
@@ -23,18 +31,51 @@ class GlowingEffectData(
     @Help("Whether the entity is glowing.")
     @Default("true")
     val glowing: Boolean = true,
+    val color: Color = Color.WHITE,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : GenericEntityData<GlowingEffectProperty> {
     override fun type(): KClass<GlowingEffectProperty> = GlowingEffectProperty::class
 
-    override fun build(player: Player): GlowingEffectProperty = GlowingEffectProperty(glowing)
+    override fun build(player: Player): GlowingEffectProperty = GlowingEffectProperty(glowing, color)
 }
 
-data class GlowingEffectProperty(val glowing: Boolean = false) : EntityProperty {
-    companion object : SinglePropertyCollectorSupplier<GlowingEffectProperty>(GlowingEffectProperty::class, GlowingEffectProperty(false))
+data class GlowingEffectProperty(val glowing: Boolean = false, val color: Color) : EntityProperty {
+    companion object : SinglePropertyCollectorSupplier<GlowingEffectProperty>(GlowingEffectProperty::class, GlowingEffectProperty(false, Color.WHITE))
 }
 
 fun applyGlowingEffectData(entity: WrapperEntity, property: GlowingEffectProperty) {
+    if (property.glowing && entity.entityMeta is AbstractDisplayMeta) {
+        entity.metas {
+            meta<AbstractDisplayMeta> { glowColorOverride = property.color.color }
+            error("Could not apply GlowingEffectData to ${entity.entityType} entity.")
+        }
+    } else {
+        entity.viewers.firstOrNull()?.let { viewerUuid ->
+            Bukkit.getPlayer(viewerUuid)?.let { player ->
+                val info = WrapperPlayServerTeams.ScoreBoardTeamInfo(
+                    Component.empty(),
+                    null,
+                    null,
+                    WrapperPlayServerTeams.NameTagVisibility.NEVER,
+                    WrapperPlayServerTeams.CollisionRule.NEVER,
+                    NamedTextColor.nearestTo(TextColor.color(property.color.color)),
+                    WrapperPlayServerTeams.OptionData.NONE
+                )
+                WrapperPlayServerTeams(
+                    "typewriter-${entity.entityId}",
+                    WrapperPlayServerTeams.TeamMode.CREATE,
+                    info
+                ) sendPacketTo player
+                WrapperPlayServerTeams(
+                    "typewriter-${entity.entityId}",
+                    WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
+                    Optional.empty(),
+                    listOf(entity.uuid.toString())
+                ) sendPacketTo player
+            }
+        }
+    }
+
     entity.metas {
         meta<EntityMeta> { setHasGlowingEffect(property.glowing) }
         error("Could not apply GlowingEffectData to ${entity.entityType} entity.")
