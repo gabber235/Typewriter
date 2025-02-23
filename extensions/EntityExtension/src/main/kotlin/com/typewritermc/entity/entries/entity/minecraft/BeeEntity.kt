@@ -36,7 +36,15 @@ class BeeDefinition(
     @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "ageable_data", "bee_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
-    override fun create(player: Player): FakeEntity = BeeEntity(player)
+    /**
+ * Creates a bee entity instance associated with the specified player.
+ *
+ * This function instantiates a new bee entity, configuring it with bee-specific properties and behaviors.
+ *
+ * @param player the player with which to associate the created bee entity
+ * @return a new bee entity instance as a FakeEntity
+ */
+override fun create(player: Player): FakeEntity = BeeEntity(player)
 }
 
 @Entry("bee_instance", "An instance of a bee entity", Colors.YELLOW, "carbon:bee")
@@ -54,6 +62,14 @@ private class BeeEntity(player: Player) : WrapperFakeEntity(
     EntityTypes.BEE,
     player,
 ) {
+    /**
+     * Applies the specified entity property to the bee entity.
+     *
+     * If the property is an instance of AgeableProperty, age-related data is applied. The method then tries to apply generic
+     * entity data and, if successful, returns early. Otherwise, it attempts to apply living entity data.
+     *
+     * @param property the entity property to apply.
+     */
     override fun applyProperty(property: EntityProperty) {
         when (property) {
             is AgeableProperty -> applyAgeableData(entity, property)

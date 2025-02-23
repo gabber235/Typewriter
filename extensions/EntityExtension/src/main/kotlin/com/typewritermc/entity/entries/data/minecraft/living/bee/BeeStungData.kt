@@ -28,15 +28,39 @@ class BeeStungData(
     val stung: Boolean = false,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : EntityData<StungProperty> {
-    override fun type(): KClass<StungProperty> = StungProperty::class
+    /**
+ * Returns the Kotlin class reference for the bee stung property.
+ *
+ * This method provides the type information required for associating the proper
+ * metadata with bee entities.
+ *
+ * @return The KClass reference for StungProperty.
+ */
+override fun type(): KClass<StungProperty> = StungProperty::class
 
-    override fun build(player: Player): StungProperty = StungProperty(stung)
+    /**
+ * Builds a new [StungProperty] instance reflecting the bee's stung state.
+ *
+ * Note that the provided [Player] parameter is not used in this implementation.
+ *
+ * @return a new [StungProperty] with its stung value set according to the current data.
+ */
+override fun build(player: Player): StungProperty = StungProperty(stung)
 }
 
 data class StungProperty(val stung: Boolean) : EntityProperty {
     companion object : SinglePropertyCollectorSupplier<StungProperty>(StungProperty::class, StungProperty(false))
 }
 
+/**
+ * Applies the bee stung state to the entity's metadata.
+ *
+ * Updates the [BeeMeta] metadata of the given entity by setting its stung flag according to the provided [StungProperty].
+ * If the metadata update fails, an error is thrown that includes the entity's type.
+ *
+ * @param entity The target entity to which the stung data will be applied.
+ * @param property The stung property containing the stung state to set on the entity.
+ */
 fun applyBeeStungData(entity: WrapperEntity, property: StungProperty) {
     entity.metas {
         meta<BeeMeta> { setHasStung(property.stung) }

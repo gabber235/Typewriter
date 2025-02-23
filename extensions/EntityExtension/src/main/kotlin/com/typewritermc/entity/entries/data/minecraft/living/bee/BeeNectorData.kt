@@ -28,15 +28,40 @@ class BeeNectarData(
     val nectar: Boolean = false,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : EntityData<NectarProperty> {
-    override fun type(): KClass<NectarProperty> = NectarProperty::class
+    /**
+ * Returns the Kotlin class reference for the nectar property.
+ *
+ * This method specifies the associated property type for bees' nectar data.
+ *
+ * @return the KClass instance corresponding to NectarProperty.
+ */
+override fun type(): KClass<NectarProperty> = NectarProperty::class
 
-    override fun build(player: Player): NectarProperty = NectarProperty(nectar)
+    /**
+ * Constructs a NectarProperty for this bee.
+ *
+ * Creates a new NectarProperty initialized with the current nectar status.
+ * The player parameter is provided for interface compliance and is not utilized.
+ *
+ * @param player the player associated with the bee (unused).
+ * @return a new NectarProperty reflecting the bee's nectar state.
+ */
+override fun build(player: Player): NectarProperty = NectarProperty(nectar)
 }
 
 data class NectarProperty(val nectar: Boolean) : EntityProperty {
     companion object : SinglePropertyCollectorSupplier<NectarProperty>(NectarProperty::class, NectarProperty(false))
 }
 
+/**
+ * Applies the nectar status from the given [property] to the metadata of the [entity].
+ *
+ * This function updates the bee's metadata by setting its nectar state based on [property.nectar]. If the update
+ * fails, an error is logged with the entity's type.
+ *
+ * @param entity The bee entity whose metadata will be updated.
+ * @param property The nectar property containing the status to be applied.
+ */
 fun applyBeeAngryData(entity: WrapperEntity, property: NectarProperty) {
     entity.metas {
         meta<BeeMeta> { setHasNectar(property.nectar) }
