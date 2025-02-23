@@ -1,12 +1,94 @@
 import fs from "fs-extra";
 import path from "path";
 import { Endpoints } from "@octokit/types";
-
-import { getFileCommitHash, FileNotTrackedError } from "@docusaurus/utils/src/gitUtils";
+import { exec, execSync } from 'child_process';
 import { Globby } from "@docusaurus/utils/src/globUtils";
 
 type endpoint = Endpoints["GET /repos/{owner}/{repo}/commits/{ref}"];
+export class GitNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GitNotFoundError';
+  }
+}
 
+export class FileNotTrackedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FileNotTrackedError';
+  }
+}
+
+function hasGit(): boolean {
+  try {
+    execSync('git --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function throwGitErrors(file: string) {
+  if (!hasGit()) {
+    throw new GitNotFoundError(
+      `Failed to retrieve git history for "${file}" because git is not installed.`,
+    );
+  }
+
+  if (!(await fs.pathExists(file))) {
+    throw new FileNotTrackedError(
+      `Failed to retrieve git history for "${file}" because the file does not exist.`,
+    );
+  }
+}
+
+async function runGitCommandOnFile(file: string, args: string): Promise<{ 
+  code: number; 
+  stdout: string; 
+  stderr: string; 
+}> {
+  const command = `git -c log.showSignature=false log ${args} -- "${path.basename(file)}"`;
+  const cwd = path.dirname(file);
+
+  return new Promise((resolve, reject) => {
+    exec(
+      command,
+      { cwd },
+      (error, stdout, stderr) => {
+        resolve({
+          code: error?.code ?? 0,
+          stdout,
+          stderr,
+        });
+      },
+    );
+  });
+}
+
+export async function getFileCommitHash(file: string): Promise<{ commit: string }> {
+  await throwGitErrors(file);
+  const result = await runGitCommandOnFile(
+    file,
+    '--format=RESULT:%h --max-count=1'
+  );
+
+  if (result.code !== 0) {
+    throw new FileNotTrackedError(
+      `Failed to retrieve git history for "${file}" because the file is not tracked by git.`,
+    );
+  }
+
+  const regex = /(?:^|\n)RESULT:(?<commit>\w+)(?:$|\n)/;
+  const match = regex.exec(result.stdout.trim());
+
+  if (!match?.groups?.commit) {
+    throw new Error(
+      `Failed to parse git output for "${file}": ${result.stdout}\n${result.stderr}`,
+    );
+  }
+
+  return { commit: match.groups.commit };
+}
 const headers = {
   Accept: "application/vnd.github.v3+json",
   "User-Agent": "PaperMC-Docs",
