@@ -91,7 +91,7 @@ export async function getFileCommitHash(file: string): Promise<{ commit: string 
 }
 const headers = {
   Accept: "application/vnd.github.v3+json",
-  "User-Agent": "PaperMC-Docs",
+  "User-Agent": "TypeWriter-Docs",
 };
 
 if (process.env.GITHUB_TOKEN !== undefined) {
@@ -112,7 +112,7 @@ export const commitCache: Map<string, string> = new Map();
 
 async function cacheUsernameFromCommit(commit: string) {
   try {
-    const response = await fetch(`https://api.github.com/repos/PaperMC/docs/commits/${commit}`, {
+    const response = await fetch(`https://api.github.com/repos/gabber235/TypeWriter/commits/${commit}`, {
       headers,
     });
     if (!response.ok) {
