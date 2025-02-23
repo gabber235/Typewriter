@@ -14,6 +14,7 @@ import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/utils/popups.dart";
 import "package:typewriter/widgets/components/app/entry_search.dart";
 import "package:typewriter/widgets/components/app/search_bar.dart";
+import "package:typewriter/widgets/components/general/toasts.dart";
 import "package:typewriter/widgets/inspector/inspector.dart";
 
 part "page.freezed.dart";
@@ -389,19 +390,74 @@ extension PageX on Page {
   ) async {
     final parts = path.split(".");
     final lastPart = parts.last;
-    if (int.tryParse(lastPart) == null) {
+    if (int.tryParse(lastPart) != null) {
+      await _wireEntryToListField(ref, baseEntry, targetEntryId, path);
+      return;
+    }
+
+    final blueprint = ref.read(entryBlueprintProvider(baseEntry.blueprintId));
+    if (blueprint == null) {
+      Toasts.showError(
+        ref,
+        "Could not wire blueprint for entry ${baseEntry.blueprintId}, report this to the discord!",
+      );
+      return;
+    }
+    final dataBlueprint = blueprint.getField(path);
+    if (dataBlueprint == null) {
+      Toasts.showError(
+        ref,
+        "Could not wire blueprint for entry ${baseEntry.blueprintId}, report this to the discord!",
+        description: "No data blueprint found for path $path",
+      );
+      return;
+    }
+
+    if (dataBlueprint is ListBlueprint) {
+      await _wireEntryToListField(ref, baseEntry, targetEntryId, "$path.0");
+      return;
+    }
+    if (dataBlueprint is MapBlueprint) {
+      await _wireEntryToMapField(
+        ref,
+        baseEntry,
+        targetEntryId,
+        path,
+        dataBlueprint,
+      );
+      return;
+    }
+
+    if (dataBlueprint is CustomBlueprint && dataBlueprint.editor == "ref") {
       // We are setting an exact value. Not a list. So we just overwrite it.
       final value = baseEntry.get(path) == targetEntryId ? null : targetEntryId;
       await updateEntryValue(ref, baseEntry, path, value);
       return;
     }
 
+    Toasts.showError(
+      ref,
+      "Could not wire entry ${baseEntry.id} to target entry $targetEntryId, report this to the discord!",
+      description: "Data blueprint for path $path did not match",
+    );
+  }
+
+  Future<void> _wireEntryToListField(
+    PassingRef ref,
+    Entry baseEntry,
+    String targetEntryId,
+    String path,
+  ) async {
+    final parts = path.split(".");
+
     // If we have a list, we want to toggle the connection.
     final parentPath = parts.sublist(0, parts.length - 1).join(".");
     final currentTriggers = baseEntry.get(parentPath);
     if (currentTriggers == null || currentTriggers is! List) {
-      debugPrint(
-        "Invalid path for wiring entry ${baseEntry.id} to target entry $targetEntryId. $path is not a list.",
+      Toasts.showError(
+        ref,
+        "Could not wire entry ${baseEntry.id} to target entry $targetEntryId, report this to the discord!",
+        description: "Path $path is not a list while blueprint requires a list",
       );
       return;
     }
@@ -417,6 +473,36 @@ extension PageX on Page {
     }
 
     await updateEntryValue(ref, baseEntry, parentPath, newTriggers);
+  }
+
+  Future<void> _wireEntryToMapField(
+    PassingRef ref,
+    Entry baseEntry,
+    String targetEntryId,
+    String path,
+    MapBlueprint mapBlueprint,
+  ) async {
+    // If the map already contains the target entry, we remove it. Otherwise we add it.
+    final map = baseEntry.get(path) ?? mapBlueprint.defaultValue();
+    if (map is! Map<dynamic, dynamic>) {
+      Toasts.showError(
+        ref,
+        "Could not wire entry ${baseEntry.id} to target entry $targetEntryId, report this to the discord!",
+        description: "Path $path is not a map while blueprint requires a map",
+      );
+      return;
+    }
+    if (map.containsKey(targetEntryId)) {
+      await updateEntryValue(ref, baseEntry, path, {
+        ...map.map(MapEntry.new)
+          ..removeWhere((key, value) => key == targetEntryId),
+      });
+      return;
+    }
+    await updateEntryValue(ref, baseEntry, path, {
+      ...map.map(MapEntry.new),
+      targetEntryId: mapBlueprint.value.defaultValue(),
+    });
   }
 
   Future<void> duplicateEntry(PassingRef ref, String entryId) async {
