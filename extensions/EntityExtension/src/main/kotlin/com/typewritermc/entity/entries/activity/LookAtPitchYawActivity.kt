@@ -5,10 +5,16 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.InnerMax
+import com.typewritermc.core.extension.annotations.InnerMin
+import com.typewritermc.core.extension.annotations.Max
+import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.engine.paper.entry.entity.*
+import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
+import com.typewritermc.engine.paper.entry.entries.Var
 
 @Entry("look_at_pitch_yaw_activity", "A look at pitch and yaw activity", Colors.BLUE, "fa6-solid:compass")
 /**
@@ -20,11 +26,13 @@ import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 class LookAtPitchYawActivityEntry(
     override val id: String = "",
     override val name: String = "",
-    @Help("The pitch value to look at.")
-    val pitch: Float = 0f,
-    @Help("The yaw value to look at.")
-    val yaw: Float = 0f,
-    @Help("The activity that adjusts the pitch and yaw.")
+    @InnerMin(Min(-90))
+    @InnerMax(Max(90))
+    val pitch: Var<Float> = ConstVar(0f),
+    @InnerMin(Min(-180))
+    @InnerMax(Max(180))
+    val yaw: Var<Float> = ConstVar(0f),
+    @Help("The activity which may return xyz")
     val childActivity: Ref<out EntityActivityEntry> = emptyRef()
 ) : GenericEntityActivityEntry {
     override fun create(
@@ -38,8 +46,8 @@ class LookAtPitchYawActivityEntry(
 
 class LookAtPitchYawActivity(
     startLocation: PositionProperty,
-    private val targetYaw: Float,
-    private val targetPitch: Float,
+    private val targetYaw: Var<Float>,
+    private val targetPitch: Var<Float>,
     private val childActivity: EntityActivity<ActivityContext>,
 ) : EntityActivity<ActivityContext> {
     private val yawVelocity = Velocity(0f)
@@ -51,9 +59,10 @@ class LookAtPitchYawActivity(
     }
 
     override fun tick(context: ActivityContext): TickResult {
+        val player = context.randomViewer ?: return TickResult.IGNORED
         val (yaw, pitch) = updateLookDirection(
             currentDirection,
-            LookDirection(targetYaw, targetPitch),
+            LookDirection(targetYaw.get(player), targetPitch.get(player)),
             yawVelocity,
             pitchVelocity
         )
