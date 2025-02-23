@@ -24,9 +24,18 @@ import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
 import com.typewritermc.engine.paper.interaction.*
+import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider
+import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.ALLOW_FLIGHT
+import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.FLYING
+import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.LOCATION
+import com.typewritermc.engine.paper.utils.PlayerState
+import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.position
+import com.typewritermc.engine.paper.utils.restore
+import com.typewritermc.engine.paper.utils.state
 import com.typewritermc.engine.paper.utils.toBukkitLocation
+import com.typewritermc.engine.paper.utils.toCoordinate
 import com.typewritermc.engine.paper.utils.toPacketLocation
 import kotlinx.coroutines.future.await
 import me.tofaa.entitylib.meta.display.TextDisplayMeta
@@ -35,7 +44,10 @@ import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
+import org.bukkit.event.entity.EntityDamageByBlockEvent
+import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.PlayerDeathEvent
 import java.util.*
 
 @Entry(
@@ -79,8 +91,9 @@ class LockInteractionBound(
     override val priority: Int,
     override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
-    private val originalPosition = player.position
+    private var playerState: PlayerState? = null
     private var entity: WrapperEntity = createEntity()
+    private var previousPosition: Position = Position.ORIGIN
     private var interceptor: InterceptionBundle? = null
 
     override suspend fun initialize() {
@@ -92,7 +105,13 @@ class LockInteractionBound(
     }
 
     private suspend fun setup() {
+        assert(playerState == null)
+        playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT)
+        player.allowFlight = true
+        player.isFlying = true
+
         val startPosition = targetPosition.get(player)
+        previousPosition = startPosition
         setupEntity(startPosition)
 
         // If the player is a bedrock player, we don't want to modify the location.
@@ -136,6 +155,16 @@ class LockInteractionBound(
         }
     }
 
+    private suspend fun dispose() {
+        interceptor?.cancel()
+        interceptor = null
+        teardownEntity()
+        ThreadType.SYNC.switchContext {
+            player.restore(playerState)
+            playerState = null
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerDamaged(event: EntityDamageEvent) {
         if (event.entity.uniqueId != player.uniqueId) return
@@ -144,12 +173,20 @@ class LockInteractionBound(
         event.isCancelled = true
     }
 
-    private suspend fun dispose() {
-        interceptor?.cancel()
-        interceptor = null
-        teardownEntity()
-        player.teleportAsync(originalPosition.toBukkitLocation()).await()
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerDamaged(event: EntityDamageByEntityEvent) = onPlayerDamaged(event as EntityDamageEvent)
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerDamaged(event: EntityDamageByBlockEvent) = onPlayerDamaged(event as EntityDamageEvent)
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerDeath(event: PlayerDeathEvent) {
+        if (event.entity.uniqueId != player.uniqueId) return
+        val player = event.player
+        if (player.boundState == InteractionBoundState.IGNORING) return
+        event.isCancelled = true
     }
+
 
     private val positionYCorrection: Double by lazy {
         if (targetPosition is ConstVar<*>) return@lazy 0.0
@@ -189,9 +226,9 @@ class LockInteractionBound(
         }
 
         val newPosition = targetPosition.get(player)
-        if (newPosition == originalPosition) return
+        if (newPosition == previousPosition) return
 
-        if (newPosition.world != originalPosition.world) {
+        if (newPosition.world != previousPosition.world) {
             teardownEntity()
             setupEntity(newPosition)
             return

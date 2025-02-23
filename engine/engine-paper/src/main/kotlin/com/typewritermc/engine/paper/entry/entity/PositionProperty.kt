@@ -1,15 +1,9 @@
 package com.typewritermc.engine.paper.entry.entity
 
-import com.typewritermc.core.utils.point.Coordinate
-import com.typewritermc.core.utils.point.Point
-import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.Rotatable
-import com.typewritermc.core.utils.point.World
-import com.typewritermc.core.utils.point.WorldHolder
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.*
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.utils.toPosition
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes.world
+import java.util.*
 
 data class PositionProperty(
     override val world: World,
@@ -30,7 +24,7 @@ data class PositionProperty(
 
     override fun withZ(z: Double) = copy(z = z)
 
-    override fun withYaw(yaw: Float)= copy(yaw = yaw)
+    override fun withYaw(yaw: Float) = copy(yaw = yaw)
 
     override fun withPitch(pitch: Float) = copy(pitch = pitch)
 
@@ -49,6 +43,26 @@ data class PositionProperty(
     override fun div(x: Double, y: Double, z: Double) = copy(x = this.x / x, y = this.y / y, z = this.z / z)
 
     fun toPosition() = Position(world, x, y, z, yaw, pitch)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+
+        if (other is Point<*>) {
+            if (other.x != x) return false
+            if (other.y != y) return false
+            if (other.z != z) return false
+        }
+        if (other is Rotatable<*>) {
+            if (other.yaw != yaw) return false
+            if (other.pitch != pitch) return false
+        }
+        if (other is WorldHolder<*>) {
+            if (other.world != world) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int = Objects.hash(x, y, z, yaw, pitch, world)
 
     companion object : SinglePropertyCollectorSupplier<PositionProperty>(PositionProperty::class)
 }

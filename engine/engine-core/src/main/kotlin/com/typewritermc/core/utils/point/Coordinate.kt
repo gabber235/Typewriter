@@ -1,8 +1,7 @@
 package com.typewritermc.core.utils.point
 
+import java.util.*
 import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 data class Coordinate(
@@ -46,6 +45,23 @@ data class Coordinate(
     override fun div(x: Double, y: Double, z: Double): Coordinate {
         return copy(x = this.x / x, y = this.y / y, z = this.z / z)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+
+        if (other is Point<*>) {
+            if (other.x != x) return false
+            if (other.y != y) return false
+            if (other.z != z) return false
+        }
+        if (other is Rotatable<*>) {
+            if (other.yaw != yaw) return false
+            if (other.pitch != pitch) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int = Objects.hash(x, y, z, yaw, pitch)
 }
 
 /**

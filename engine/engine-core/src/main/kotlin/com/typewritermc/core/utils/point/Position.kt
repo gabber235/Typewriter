@@ -1,5 +1,7 @@
 package com.typewritermc.core.utils.point
 
+import java.util.Objects
+
 data class Position(
     override val world: World,
     override val x: Double = 0.0,
@@ -45,6 +47,26 @@ data class Position(
     fun mid(): Position {
         return toBlockPosition().add(0.5, 0.0, 0.5).rotate(yaw, pitch)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+
+        if (other is Point<*>) {
+            if (other.x != x) return false
+            if (other.y != y) return false
+            if (other.z != z) return false
+        }
+        if (other is Rotatable<*>) {
+            if (other.yaw != yaw) return false
+            if (other.pitch != pitch) return false
+        }
+        if (other is WorldHolder<*>) {
+            if (other.world != world) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int = Objects.hash(x, y, z, yaw, pitch, world)
 }
 
 /**

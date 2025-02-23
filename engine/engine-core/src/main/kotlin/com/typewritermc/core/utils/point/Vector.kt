@@ -1,6 +1,7 @@
 package com.typewritermc.core.utils.point
 
 import org.intellij.lang.annotations.Language
+import java.util.Objects
 import kotlin.math.sqrt
 
 data class Vector(
@@ -72,6 +73,19 @@ data class Vector(
     fun mid(): Vector {
         return Vector(x.toInt() + 0.5, y.toInt().toDouble(), z.toInt() + 0.5)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+
+        if (other is Point<*>) {
+            if (other.x != x) return false
+            if (other.y != y) return false
+            if (other.z != z) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int = Objects.hash(x, y, z)
 }
 
 fun Point<*>.toVector(): Vector {
