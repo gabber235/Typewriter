@@ -47,26 +47,35 @@ const config: Config = {
     locales: ['en'],
   },
 
-  markdown: {
-    mermaid: true,
-    mdx1Compat: {
-      comments: false,
-      admonitions: false,
-      headingIds: false,
-    },
-    format: "detect",
-    parseFrontMatter: async (params) => {
-      const result = await params.defaultParseFrontMatter(params);
-      let author: AuthorData = {
-        ...AUTHOR_FALLBACK,
-      };
+markdown: {
+  mermaid: true,
+  mdx1Compat: {
+    comments: false,
+    admonitions: false,
+    headingIds: false,
+  },
+  format: "detect",
+  parseFrontMatter: async (params) => {
+    const result = await params.defaultParseFrontMatter(params);
+    let author: AuthorData = {
+      ...AUTHOR_FALLBACK,
+    };
+
+    // Only process if this is a blog post
+    if (params.filePath.includes("/devlog/")) {
+      // Use the authors array from front matter if available
+      if (result.frontMatter.authors?.[0]) {
+        author.username = result.frontMatter.authors[0];
+      }
+
+      // Get git data in production
       if (process.env.NODE_ENV !== "development") {
         const data = await getFileCommitHashSafe(params.filePath);
         if (data) {
           const username = commitCache.get(data.commit);
           author = {
             commit: data.commit,
-            username: username ?? AUTHOR_FALLBACK.username,
+            username: username ?? author.username ?? AUTHOR_FALLBACK.username,
           };
         }
       }
@@ -75,11 +84,14 @@ const config: Config = {
         ...result,
         frontMatter: {
           ...result.frontMatter,
-          author: author,
+          authorData: author,
         },
       };
-    },
+    }
+
+    return result;
   },
+},
 
 
   themes: [
@@ -112,6 +124,14 @@ const config: Config = {
         path: './devlog',
         blogSidebarCount: 'ALL',
         blogSidebarTitle: 'All posts',
+        beforeDefaultRemarkPlugins: [],
+        authorsMapPath: 'authors.yml',
+        blogPostComponent: '@theme/BlogPostPage',
+        blogListComponent: '@theme/BlogListPage',
+        feedOptions: {
+          type: 'all',
+          copyright: `Copyright © ${new Date().getFullYear()} TypeWriter`,
+        },
       },
     ],
     [
