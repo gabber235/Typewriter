@@ -44,6 +44,6 @@ fun onDeath(event: EntityDeathEvent, query: Query<PlayerDeathEventEntry>) {
         entry.deathCause.map { it == event.entity.lastDamageCause?.cause }.orElse(true)
     }.toList()
     entries.triggerAllFor(player, context())
-   
+
     if (entries.shouldCancel(player)) event.isCancelled = true
 }
