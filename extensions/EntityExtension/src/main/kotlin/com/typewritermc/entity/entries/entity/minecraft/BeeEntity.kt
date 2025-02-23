@@ -33,7 +33,7 @@ class BeeDefinition(
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
     override val sound: Sound = Sound.EMPTY,
-    @OnlyTags("generic_entity_data", "living_entity_data", "bee_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "ageable_data", "bee_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
     override fun create(player: Player): FakeEntity = BeeEntity(player)
