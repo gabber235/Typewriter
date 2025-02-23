@@ -55,7 +55,7 @@ class BossBarDisplay(
         for ((id, bar) in bars) {
             val player = server.getPlayer(id) ?: continue
             bar.name(title.get(player).parsePlaceholders(id).asMini())
-            bar.progress(progress.get(player).toFloat())
+            bar.progress(progress.get(player).toFloat().coerceIn(0.0f, 1.0f))
             bar.color(color.get(player))
             bar.overlay(style.get(player))
         }
@@ -64,7 +64,7 @@ class BossBarDisplay(
     override fun onPlayerAdd(player: Player) {
         val bar = BossBar.bossBar(
             title.get(player).parsePlaceholders(player).asMini(),
-            progress.get(player).toFloat(),
+            progress.get(player).toFloat().coerceIn(0.0f, 1.0f),
             color.get(player),
             style.get(player),
             flags.toSet()
