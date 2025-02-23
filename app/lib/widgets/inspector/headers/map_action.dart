@@ -2,6 +2,7 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/inspector/editors.dart";
 import "package:typewriter/widgets/inspector/header.dart";
@@ -48,12 +49,9 @@ class AddMapHeaderAction extends HookConsumerWidget {
   final MapBlueprint mapBlueprint;
 
   void _addNew(PassingRef ref) {
-    final rawValue =
-        ref.read(fieldValueProvider(path, mapBlueprint.defaultValue()));
-
-    final value = <String, dynamic>{
-      ...rawValue.map((key, value) => MapEntry(key.toString(), value)),
-    };
+    final value = stringMap(
+      ref.read(fieldValueProvider(path, mapBlueprint.defaultValue())),
+    );
 
     final key = switch (mapBlueprint.key) {
       EnumBlueprint(values: final values) =>

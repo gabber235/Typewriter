@@ -82,15 +82,9 @@ class MapEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ignore: provider_parameters
-    final rawValue =
-        ref.watch(fieldValueProvider(path, mapBlueprint.defaultValue()));
-
-    // Since the map will be of the form {dynamic: dynamic}, we
-    // need to recreate the map.
-    final value = <String, dynamic>{
-      ...rawValue.map((key, value) => MapEntry(key.toString(), value)),
-    };
+    final value = stringMap(
+      ref.watch(fieldValueProvider(path, mapBlueprint.defaultValue())),
+    );
 
     // Create global keys for the different fields.
     // This is to keep the state of the fields when they are when a field is added or removed.

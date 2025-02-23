@@ -625,6 +625,77 @@ extension PageX on Page {
       ..open();
   }
 
+  Future<void> _replaceWith(
+    PassingRef ref,
+    String entryId,
+    EntryBlueprint blueprint,
+  ) async {
+    final entry = ref.read(entryProvider(id, entryId));
+    if (entry == null) return;
+
+    // Make sure that the generic blueprint is compatible with the new blueprint.
+    if (!blueprint.allowsGeneric(entry.genericBlueprint)) {
+      Toasts.showError(
+        ref,
+        "Could not replace entry ${entry.id} with ${blueprint.name}",
+        description:
+            "The generic blueprint of the entry is not compatible with the new blueprint",
+      );
+      return;
+    }
+
+    final data = entry.data;
+    print("data: $data");
+    final blueprintData = blueprint.dataBlueprint.defaultValue();
+    print("blueprintData: $blueprintData");
+    final newData = {
+      ...stringMap(maskObjects(blueprintData, data)),
+      if (data["blueprintId"] != null) "blueprintId": blueprint.id,
+
+      /// TODO: Remove the old `type` field.
+      if (data["type"] != null) "type": blueprint.id,
+    };
+
+    await updateEntireEntry(ref, Entry(newData));
+  }
+
+  Future<void> replaceWithConfirmation(
+    BuildContext context,
+    PassingRef ref,
+    String entryId,
+  ) async {
+    final entry = ref.read(entryProvider(id, entryId));
+    if (entry == null) return;
+
+    await showConfirmationDialogue(
+      context: context,
+      title: "Replace Entry",
+      content:
+          "Replacing entries is not reversible.\nIt may result in data loss or data corruption.\nAre you sure you want to replace this entry?",
+      confirmText: "Replace",
+      onConfirm: () {
+        final builder = ref.read(searchProvider.notifier).asBuilder()
+          ..tag(type.tag, canRemove: false)
+          ..excludeEntry(entryId, canRemove: false)
+          ..fetchNewEntry(
+            onAdd: (blueprint) async {
+              await _replaceWith(ref, entryId, blueprint);
+              return null;
+            },
+          );
+
+        final genericBlueprint = entry.genericBlueprint;
+        if (genericBlueprint != null) {
+          builder.genericEntry(genericBlueprint, canRemove: false);
+        } else {
+          builder.nonGenericAddEntry(canRemove: false);
+        }
+
+        builder.open();
+      },
+    );
+  }
+
   bool canHave(EntryBlueprint blueprint) => blueprint.tags.contains(type.tag);
 
   void deleteEntryWithConfirmation(

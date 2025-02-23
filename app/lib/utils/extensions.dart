@@ -164,6 +164,69 @@ extension ListExt<E> on List<E> {
   }
 }
 
+extension ListX on List<dynamic> {
+  List<dynamic> mask(List<dynamic> other) {
+    final result = <dynamic>[];
+    for (var i = 0; i < max(length, other.length); i++) {
+      if (i < length && i < other.length) {
+        result.add(maskObjects(this[i], other[i]));
+      } else if (i < length) {
+        result.add(this[i]);
+      } else {
+        result.add(other[i]);
+      }
+    }
+    return result;
+  }
+}
+
+extension MapX on Map<dynamic, dynamic> {
+  Map<dynamic, dynamic> mask(Map<dynamic, dynamic> other) {
+    final result = <dynamic, dynamic>{};
+    final keys = this.keys.toList()..addAll(other.keys.toList());
+    for (final key in keys) {
+      if (containsKey(key) && other.containsKey(key)) {
+        result[key] = maskObjects(this[key], other[key]);
+      } else if (containsKey(key)) {
+        result[key] = this[key];
+      } else {
+        result[key] = other[key];
+      }
+    }
+    return result;
+  }
+}
+
+Map<String, dynamic> stringMap(dynamic value) {
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+  if (value is Map) {
+    return value.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return {};
+}
+
+dynamic maskObjects(dynamic a, dynamic b) {
+  if (a is List && b is List) {
+    return a.mask(b);
+  }
+  if (a is Map && b is Map) {
+    return a.mask(b);
+  }
+  if (a.runtimeType == b.runtimeType) {
+    return b;
+  }
+  if (a == null && b != null) {
+    return b;
+  }
+  if (a != null && b == null) {
+    return a;
+  }
+  // If the types are not compatible, then the base is the correct type.
+  return a;
+}
+
 const _chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
 final Random _random = Random();
 

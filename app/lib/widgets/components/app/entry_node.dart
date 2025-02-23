@@ -246,6 +246,16 @@ class _EntryNode extends HookConsumerWidget {
     await page.duplicateEntry(ref, id);
   }
 
+  Future<void> _replaceWithConfirmation(
+    BuildContext context,
+    PassingRef ref,
+    String entryId,
+  ) async {
+    final page = ref.read(currentPageProvider);
+    if (page == null) return;
+    await page.replaceWithConfirmation(context, ref, entryId);
+  }
+
   void _deleteEntry(BuildContext context, PassingRef ref) {
     final page = ref.read(currentPageProvider);
     if (page == null) return;
@@ -297,6 +307,12 @@ class _EntryNode extends HookConsumerWidget {
                 icon: TWIcons.moveEntry,
                 color: Colors.blueAccent,
                 onTap: () => moveEntryToSelectingPage(ref.passing, id),
+              ),
+              ContextMenuTile.button(
+                title: "Replace with ...",
+                icon: TWIcons.replace,
+                color: Colors.orange,
+                onTap: () => _replaceWithConfirmation(context, ref.passing, id),
               ),
               ContextMenuTile.divider(),
               ContextMenuTile.button(

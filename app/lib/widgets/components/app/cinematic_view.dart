@@ -446,8 +446,7 @@ List<Segment> _segments(Ref ref, String entryId, String path) {
     final startFrame = segment["startFrame"] as int? ?? 0;
     final endFrame = segment["endFrame"] as int? ?? 0;
 
-    final data = (segment as Map<dynamic, dynamic>)
-        .map((key, value) => MapEntry(key.toString(), value));
+    final data = stringMap(segment);
 
     return Segment(
       path: path.wild(),

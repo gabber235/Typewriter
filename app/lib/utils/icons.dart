@@ -79,4 +79,5 @@ class TWIcons {
   static const String blocked = "fluent:presence-blocked-24-regular";
   static const String variable = "mingcute:braces-fill";
   static const String skin = "ant-design:skin-filled";
+  static const String replace = "streamline:arrow-reload-horizontal-2-solid";
 }

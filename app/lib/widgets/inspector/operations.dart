@@ -56,6 +56,8 @@ class Operations extends HookConsumerWidget {
         const SizedBox(height: 8),
         const _MoveEntry(),
         const SizedBox(height: 8),
+        const _ReplaceWithBlueprint(),
+        const SizedBox(height: 8),
         const DeleteEntry(),
         const SizedBox(height: 8),
       ],
@@ -152,6 +154,26 @@ class _MoveEntry extends HookConsumerWidget {
       icon: const Iconify(TWIcons.moveEntry),
       label: const Text("Move Entry"),
       color: Theme.of(context).colorScheme.primary,
+    );
+  }
+}
+
+class _ReplaceWithBlueprint extends HookConsumerWidget {
+  const _ReplaceWithBlueprint();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return OutlineButton.icon(
+      onPressed: () {
+        final page = ref.read(currentPageProvider);
+        if (page == null) return;
+        final entryId = ref.read(inspectingEntryIdProvider);
+        if (entryId.isNullOrEmpty) return;
+        page.replaceWithConfirmation(context, ref.passing, entryId!);
+      },
+      icon: const Iconify(TWIcons.replace),
+      label: const Text("Replace with ..."),
+      color: Colors.orange,
     );
   }
 }
