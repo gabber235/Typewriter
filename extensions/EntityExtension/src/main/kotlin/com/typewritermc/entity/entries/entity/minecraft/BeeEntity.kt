@@ -17,6 +17,12 @@ import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
 import com.typewritermc.entity.entries.data.minecraft.living.applyAgeableData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
+import com.typewritermc.entity.entries.data.minecraft.living.bee.AngryProperty
+import com.typewritermc.entity.entries.data.minecraft.living.bee.NectarProperty
+import com.typewritermc.entity.entries.data.minecraft.living.bee.StungProperty
+import com.typewritermc.entity.entries.data.minecraft.living.bee.applyBeeAngryData
+import com.typewritermc.entity.entries.data.minecraft.living.bee.applyBeeStungData
+import com.typewritermc.entity.entries.data.minecraft.living.bee.applyBeeNectarData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
@@ -57,6 +63,9 @@ private class BeeEntity(player: Player) : WrapperFakeEntity(
     override fun applyProperty(property: EntityProperty) {
         when (property) {
             is AgeableProperty -> applyAgeableData(entity, property)
+            is AngryProperty -> applyBeeAngryData(entity, property)
+            is StungProperty -> applyBeeStungData(entity, property)
+            is NectarProperty -> applyBeeNectarData(entity, property)
             else -> {}
         }
         if (applyGenericEntityData(entity, property)) return
