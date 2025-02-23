@@ -1,6 +1,7 @@
 package com.typewritermc.entity.entries.data.minecraft.living.bee
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
@@ -23,6 +24,7 @@ import kotlin.reflect.KClass
 class BeeStungData(
     override val id: String = "",
     override val name: String = "",
+    @Default("true")
     val stung: Boolean = false,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : EntityData<StungProperty> {
