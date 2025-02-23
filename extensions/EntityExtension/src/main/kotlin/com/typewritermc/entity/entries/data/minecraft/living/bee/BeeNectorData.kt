@@ -37,7 +37,7 @@ data class NectarProperty(val nectar: Boolean) : EntityProperty {
     companion object : SinglePropertyCollectorSupplier<NectarProperty>(NectarProperty::class, NectarProperty(false))
 }
 
-fun applyBeeAngryData(entity: WrapperEntity, property: NectarProperty) {
+fun applyBeeNectarData(entity: WrapperEntity, property: NectarProperty) {
     entity.metas {
         meta<BeeMeta> { setHasNectar(property.nectar) }
         error("Could not apply BeeAngryData to ${entity.entityType} entity.")
