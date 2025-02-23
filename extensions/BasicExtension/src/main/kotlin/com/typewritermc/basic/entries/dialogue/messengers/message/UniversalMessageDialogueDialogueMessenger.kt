@@ -29,16 +29,16 @@ class UniversalMessageDialogueDialogueMessenger(
 ) :
     DialogueMessenger<MessageDialogueEntry>(player, context, entry) {
 
-    override fun init() {
-        super.init()
-        // The player might have had something before this. So we want to clean the chat before sending our message.
-        player.chatHistory.resendMessages(player)
-    }
-
     override fun tick(context: TickContext) {
         super.tick(context)
         if (state != MessengerState.RUNNING) return
         state = MessengerState.FINISHED
+    }
+
+    override fun end() {
+        super.end()
+        // We want to send the message after the dialogue has ended.
+        // Because then it won't be caught twice by the ChatHistory.
         player.sendMessageDialogue(entry.text.get(player), entry.speakerDisplayName.get(player))
     }
 }

@@ -127,6 +127,7 @@ class ChatHistory {
     private var blockingState: BlockingStatus = BlockingStatus.FullBlocking
 
     fun startBlocking() {
+        if (blocking) return
         blockingState = BlockingStatus.PartialBlocking(0)
         blocking = true
     }
