@@ -3,12 +3,15 @@ package com.typewritermc.basic.entries.event
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.interaction.context
-import com.typewritermc.engine.paper.entry.*
-import com.typewritermc.engine.paper.entry.entries.EventEntry
+import com.typewritermc.engine.paper.entry.TriggerableEntry
+import com.typewritermc.engine.paper.entry.entries.CancelableEventEntry
+import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.shouldCancel
+import com.typewritermc.engine.paper.entry.triggerAllFor
 import org.bukkit.entity.Player
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause
 import org.bukkit.event.entity.EntityDeathEvent
@@ -26,8 +29,9 @@ class PlayerDeathEventEntry(
     override val id: String = "",
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    val deathCause: Optional<DamageCause> = Optional.empty()
-) : EventEntry
+    val deathCause: Optional<DamageCause> = Optional.empty(),
+    override val cancel: Var<Boolean> = ConstVar(false),
+) : CancelableEventEntry
 
 
 @EntryListener(PlayerDeathEventEntry::class)
@@ -36,7 +40,10 @@ fun onDeath(event: EntityDeathEvent, query: Query<PlayerDeathEventEntry>) {
 
     val player = event.entity as Player
 
-    query.findWhere { entry ->
+    val entries = query.findWhere { entry ->
         entry.deathCause.map { it == event.entity.lastDamageCause?.cause }.orElse(true)
-    }.triggerAllFor(player, context())
+    }.toList()
+    entries.triggerAllFor(player, context())
+   
+    if (entries.shouldCancel(player)) event.isCancelled = true
 }
