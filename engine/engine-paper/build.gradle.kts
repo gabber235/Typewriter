@@ -33,7 +33,7 @@ dependencies {
     compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("me.tofaa.entitylib:spigot:+39cce79-SNAPSHOT")
+    api("me.tofaa.entitylib:spigot:+debb91e-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.20.0")
 

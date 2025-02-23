@@ -34,7 +34,7 @@ class DroppedItemEntityDefinition(
     }
 }
 
-@Entry("dropped_item_entity_instance", "An instance of a dropped item entity", Colors.YELLOW, "ic:round-drop")
+@Entry("dropped_item_entity_instance", "An instance of a dropped item entity", Colors.YELLOW, "material-symbols:pin-drop")
 class DroppedItemEntityInstance(
     override val id: String = "",
     override val name: String = "",
