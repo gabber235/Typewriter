@@ -1,6 +1,7 @@
 import { themes } from 'prism-react-renderer';
 import { Config } from '@docusaurus/types';
 import { Options } from '@docusaurus/plugin-content-docs';
+import { env } from "process";
 import {
     AUTHOR_FALLBACK,
     AuthorData,
@@ -8,7 +9,7 @@ import {
     cacheAuthorData,
     getFileCommitHashSafe,
   } from "./src/utils/authorUtils";
-
+import { preview, deploymentID } from "./src/utils/pageUtils";
 cacheAuthorData(preview || env.NODE_ENV === "development");
 
 const lightTheme = themes.vsLight;
