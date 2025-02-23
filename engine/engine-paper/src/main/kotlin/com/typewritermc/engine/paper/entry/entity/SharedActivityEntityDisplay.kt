@@ -2,10 +2,7 @@ package com.typewritermc.engine.paper.entry.entity
 
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.engine.paper.entry.entries.AudienceFilter
-import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
-import com.typewritermc.engine.paper.entry.entries.PropertySupplier
-import com.typewritermc.engine.paper.entry.entries.TickableDisplay
+import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.config
 import org.bukkit.entity.Player
 import java.util.*
@@ -19,7 +16,8 @@ class SharedActivityEntityDisplay(
     private val activityCreators: ActivityCreator,
     private val suppliers: List<Pair<PropertySupplier<*>, Int>>,
     private val spawnPosition: Position,
-) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
+    private val showRange: Var<Double> = ConstVar(entityShowRange),
+    ) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
     private var activityManager: ActivityManager<SharedActivityContext>? = null
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
 
@@ -32,7 +30,8 @@ class SharedActivityEntityDisplay(
     override fun filter(player: Player): Boolean {
         val npcLocation = activityManager?.position ?: return false
         val distance = npcLocation.distanceSqrt(player.location) ?: return false
-        return distance <= entityShowRange * entityShowRange
+        val showRange = showRange.get(player)
+        return distance <= showRange * showRange
     }
 
     override fun initialize() {

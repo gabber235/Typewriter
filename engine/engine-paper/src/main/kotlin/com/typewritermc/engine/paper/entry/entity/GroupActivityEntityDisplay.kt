@@ -14,6 +14,7 @@ class GroupActivityEntityDisplay(
     private val activityCreators: ActivityCreator,
     private val suppliers: List<Pair<PropertySupplier<*>, Int>>,
     private val spawnPosition: Position,
+    private val showRange: Var<Double> = ConstVar(entityShowRange),
     private val group: GroupEntry,
 ) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
     private val activityManagers = ConcurrentHashMap<GroupId, ActivityManager<in SharedActivityContext>>()
@@ -34,7 +35,8 @@ class GroupActivityEntityDisplay(
         val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
         val npcLocation = activityManagers[groupId]?.position ?: return false
         val distance = npcLocation.distanceSqrt(player.location) ?: return false
-        return distance <= entityShowRange * entityShowRange
+        val showRange = showRange.get(player)
+        return distance <= showRange * showRange
     }
 
     override fun onPlayerAdd(player: Player) {
@@ -71,7 +73,8 @@ class GroupActivityEntityDisplay(
             // But there is no real solution to this.
             // So we pick the first entity's state and use to try and keep the state consistent.
             val viewerId = viewers.firstOrNull()?.uniqueId
-            val entityStateFromPlayer = if (viewerId != null) entities[viewerId]?.state?.also { lastStates[groupId] = it } else null
+            val entityStateFromPlayer =
+                if (viewerId != null) entities[viewerId]?.state?.also { lastStates[groupId] = it } else null
             val entityState = entityStateFromPlayer ?: lastStates.getOrPut(groupId) { EntityState() }
 
             val context = SharedActivityContext(instanceEntryRef, viewers, entityState)
@@ -116,6 +119,7 @@ class GroupActivityEntityDisplay(
         val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
         return activityManagers[groupId]?.position?.toPosition()
     }
+
     override fun entityState(playerId: UUID): EntityState {
         entities[playerId]?.state?.let { return it }
         val player = server.getPlayer(playerId) ?: return EntityState()

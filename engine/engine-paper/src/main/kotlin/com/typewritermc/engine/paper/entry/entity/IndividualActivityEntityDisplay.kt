@@ -3,6 +3,7 @@ package com.typewritermc.engine.paper.entry.entity
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
+import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
 import com.typewritermc.engine.paper.entry.entries.PropertySupplier
 import com.typewritermc.engine.paper.entry.entries.TickableDisplay
@@ -18,6 +19,7 @@ class IndividualActivityEntityDisplay(
     private val activityCreator: ActivityCreator,
     private val suppliers: List<Pair<PropertySupplier<*>, Int>>,
     private val spawnPosition: Var<Position>,
+    private val showRange: Var<Double> = ConstVar(entityShowRange),
 ) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
     private val activityManagers = ConcurrentHashMap<UUID, ActivityManager<in IndividualActivityContext>>()
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
@@ -32,7 +34,8 @@ class IndividualActivityEntityDisplay(
         val activityManager = activityManagers[player.uniqueId] ?: return false
         val npcPosition = activityManager.position
         val distance = npcPosition.distanceSqrt(player.location) ?: return false
-        return distance <= entityShowRange * entityShowRange
+        val showRange = showRange.get(player)
+        return distance <= showRange * showRange
     }
 
     override fun onPlayerAdd(player: Player) {
