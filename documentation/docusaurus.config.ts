@@ -1,6 +1,15 @@
 import { themes } from 'prism-react-renderer';
 import { Config } from '@docusaurus/types';
 import { Options } from '@docusaurus/plugin-content-docs';
+import {
+    AUTHOR_FALLBACK,
+    AuthorData,
+    commitCache,
+    cacheAuthorData,
+    getFileCommitHashSafe,
+  } from "./src/utils/authorUtils";
+
+cacheAuthorData(preview || env.NODE_ENV === "development");
 
 const lightTheme = themes.vsLight;
 const darkTheme = themes.vsDark;
@@ -39,7 +48,38 @@ const config: Config = {
 
   markdown: {
     mermaid: true,
+    mdx1Compat: {
+      comments: false,
+      admonitions: false,
+      headingIds: false,
+    },
+    format: "detect",
+    parseFrontMatter: async (params) => {
+      const result = await params.defaultParseFrontMatter(params);
+      let author: AuthorData = {
+        ...AUTHOR_FALLBACK,
+      };
+      if (process.env.NODE_ENV !== "development") {
+        const data = await getFileCommitHashSafe(params.filePath);
+        if (data) {
+          const username = commitCache.get(data.commit);
+          author = {
+            commit: data.commit,
+            username: username ?? AUTHOR_FALLBACK.username,
+          };
+        }
+      }
+
+      return {
+        ...result,
+        frontMatter: {
+          ...result.frontMatter,
+          author: author,
+        },
+      };
+    },
   },
+
 
   themes: [
     '@docusaurus/theme-classic',
