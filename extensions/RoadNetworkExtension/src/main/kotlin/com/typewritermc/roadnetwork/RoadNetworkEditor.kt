@@ -1,23 +1,18 @@
 package com.typewritermc.roadnetwork
 
 import co.touchlab.stately.concurrency.AtomicInt
-import com.github.shynixn.mccoroutine.bukkit.launch
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.concurrent.Executors
-import kotlin.math.max
 
 class RoadNetworkEditor(
     private val ref: Ref<out RoadNetworkEntry>,
@@ -65,8 +60,7 @@ class RoadNetworkEditor(
     fun recalculateEdges() {
         jobRecalculateEdges?.cancel()
 
-        val nrOfThreads = max(Runtime.getRuntime().availableProcessors() / 2, 1)
-        jobRecalculateEdges = plugin.launch(Executors.newFixedThreadPool(nrOfThreads).asCoroutineDispatcher()) {
+        jobRecalculateEdges = DISPATCHERS_ASYNC.launch {
             update {
                 it.copy(edges = emptyList())
             }
