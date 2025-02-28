@@ -7,6 +7,7 @@
     <link rel="alternate" href="https://docs.typewritermc.com/devlog"/>
     <subtitle>Typewriter Blog</subtitle>
     <icon>https://docs.typewritermc.com/img/favicon.ico</icon>
+    <rights>Copyright © 2025 TypeWriter</rights>
     <entry>
         <title type="html"><![CDATA[Dynamic Variables update]]></title>
         <id>https://docs.typewritermc.com/devlog/0.7.0-release</id>
