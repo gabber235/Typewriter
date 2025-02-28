@@ -4,7 +4,6 @@ import { Options } from '@docusaurus/plugin-content-docs';
 import { env } from "process";
 import {
     AUTHOR_FALLBACK,
-    AuthorData,
     commitCache,
     cacheAuthorData,
     getFileCommitHashSafe,
@@ -14,11 +13,9 @@ cacheAuthorData(preview || env.NODE_ENV === "development");
 
 const lightTheme = themes.vsLight;
 const darkTheme = themes.vsDark;
-// Initialize author data caching
 
 const url = 'https://docs.typewritermc.com';
 
-// Common configuration for docs
 const docsCommon: Options = {
   sidebarPath: require.resolve('./sidebars.js'),
   editUrl: 'https://github.com/gabber235/TypeWriter/tree/develop/documentation/',
@@ -34,7 +31,6 @@ const config: Config = {
   baseUrl: '/',
   trailingSlash: false,
   
-  // Basic configuration
   organizationName: 'gabber235',
   projectName: 'Typewriter',
   onBrokenLinks: 'throw',
@@ -58,31 +54,38 @@ const config: Config = {
     parseFrontMatter: async (params) => {
       const result = await params.defaultParseFrontMatter(params);
       
-      // Skip author modification for blog posts - they use a different author system
       if (params.filePath.includes("devlog") || params.filePath.includes("blog")) {
-        return result; // Return original result without modification for blog posts
+        return result;
       }
       
-      // For versioned files and adapters, add default author info
       if (params.filePath.includes("versioned_docs") || params.filePath.includes("adapters")) {
         return {
           ...result,
           frontMatter: {
             ...result.frontMatter,
-            // Add default author info to prevent "username" access errors
-            author: AUTHOR_FALLBACK.username
+            author: {
+              username: AUTHOR_FALLBACK.username,
+              commit: AUTHOR_FALLBACK.commit
+            }
           }
         };
       }
       
-      // Process other files as before
-      let authorName = AUTHOR_FALLBACK.username;
+      let authorData = {
+        username: AUTHOR_FALLBACK.username,
+        commit: AUTHOR_FALLBACK.commit
+      };
     
       if (process.env.NODE_ENV !== "development") {
         const data = await getFileCommitHashSafe(params.filePath);
         if (data) {
           const username = commitCache.get(data.commit);
-          authorName = username ?? AUTHOR_FALLBACK.username;
+          if (username) {
+            authorData = {
+              username: username,
+              commit: data.commit
+            };
+          }
         }
       }
     
@@ -90,7 +93,7 @@ const config: Config = {
         ...result,
         frontMatter: {
           ...result.frontMatter,
-          author: authorName // Use string value instead of object
+          author: authorData
         },
       };
     },
@@ -103,7 +106,6 @@ const config: Config = {
     '@docusaurus/theme-search-algolia',
   ],
 
-  // Main documentation plugin
   plugins: [
     [
       '@docusaurus/plugin-content-docs',
@@ -169,7 +171,6 @@ const config: Config = {
     ],
   ],
 
-  // Theme configuration  
   themeConfig:
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   ({
@@ -199,7 +200,6 @@ const config: Config = {
           { name: 'twitter:card', content: 'app' },
           { name: 'twitter:url', content: 'https://docs.typewritermc.com/' },
       ],
-      // Replace with your project's social card
       image: 'img/typewriter.png',
       navbar: {
           title: 'TypeWriter',

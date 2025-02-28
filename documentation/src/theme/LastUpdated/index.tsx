@@ -37,12 +37,15 @@ function LastUpdatedAtDate({ lastUpdatedAt }: { lastUpdatedAt: number }): JSX.El
 }
 
 function LastUpdatedByUser({
-  lastUpdatedBy,
   username,
 }: {
   lastUpdatedBy: string;
   username: string;
-}): JSX.Element {
+}): JSX.Element | null {
+  if (username === "ghost") {
+    return null;
+  }
+
   return (
     <Translate
       id="theme.lastUpdated.byUser"
@@ -50,11 +53,7 @@ function LastUpdatedByUser({
       values={{
         user: (
           <b>
-            {username !== "ghost" ? (
-              <Link to={"https://github.com/" + username}>{lastUpdatedBy}</Link>
-            ) : (
-              lastUpdatedBy
-            )}
+            <Link to={"https://github.com/" + username}>{username}</Link>
           </b>
         ),
       }}
@@ -64,7 +63,11 @@ function LastUpdatedByUser({
   );
 }
 
-function LastUpdatedInCommit({ lastUpdatedIn }: { lastUpdatedIn: string }): JSX.Element {
+function LastUpdatedInCommit({ lastUpdatedIn }: { lastUpdatedIn: string }): JSX.Element | null {
+  if (lastUpdatedIn === "not-found") {
+    return null;
+  }
+
   return (
     <>
       <span> in </span>
@@ -74,7 +77,6 @@ function LastUpdatedInCommit({ lastUpdatedIn }: { lastUpdatedIn: string }): JSX.
     </>
   );
 }
-
 export default function LastUpdated({ lastUpdatedAt, lastUpdatedBy }: Props): JSX.Element {
   const doc = useDoc();
 
@@ -83,6 +85,9 @@ export default function LastUpdated({ lastUpdatedAt, lastUpdatedBy }: Props): JS
     username?: string;
   };
 
+  // In case author.username is a string, use it directly without modification
+  const username = typeof author?.username === 'string' ? author.username : lastUpdatedBy;
+
   return (
     <span className={ThemeClassNames.common.lastUpdated}>
       <Translate
@@ -90,12 +95,15 @@ export default function LastUpdated({ lastUpdatedAt, lastUpdatedBy }: Props): JS
         description="The sentence used to display when a page has been last updated, and by who"
         values={{
           atDate: lastUpdatedAt ? <LastUpdatedAtDate lastUpdatedAt={lastUpdatedAt} /> : "",
-          byUser: lastUpdatedBy && author?.username ? (
-            <LastUpdatedByUser lastUpdatedBy={lastUpdatedBy} username={author.username} />
-          ) : (
-            ""
-          ),
-          inCommit: author?.commit ? <LastUpdatedInCommit lastUpdatedIn={author.commit} /> : "",
+          byUser: lastUpdatedBy ? (
+            <LastUpdatedByUser 
+              lastUpdatedBy={lastUpdatedBy} 
+              username={username} 
+            />
+          ) : "",
+          inCommit: author?.commit ? (
+            <LastUpdatedInCommit lastUpdatedIn={author.commit} />
+          ) : "",
         }}
       >
         {"Last updated{atDate}{byUser}{inCommit}"}

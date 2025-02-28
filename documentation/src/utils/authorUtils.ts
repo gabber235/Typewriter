@@ -104,7 +104,7 @@ export type AuthorData = {
 };
 
 export const AUTHOR_FALLBACK: AuthorData = {
-  commit: "1b3d5f7",
+  commit: "not-found",
   username: "ghost",
 };
 
