@@ -47,51 +47,54 @@ const config: Config = {
     locales: ['en'],
   },
 
-markdown: {
-  mermaid: true,
-  mdx1Compat: {
-    comments: false,
-    admonitions: false,
-    headingIds: false,
-  },
-  format: "detect",
-  parseFrontMatter: async (params) => {
-    const result = await params.defaultParseFrontMatter(params);
-    let author: AuthorData = {
-      ...AUTHOR_FALLBACK,
-    };
-
-    // Only process if this is a blog post
-    if (params.filePath.includes("/devlog/")) {
-      // Use the authors array from front matter if available
-      if (result.frontMatter.authors?.[0]) {
-        author.username = result.frontMatter.authors[0];
+  markdown: {
+    mermaid: true,
+    mdx1Compat: {
+      comments: false,
+      admonitions: false,
+      headingIds: false,
+    },
+    format: "detect",
+    parseFrontMatter: async (params) => {
+      const result = await params.defaultParseFrontMatter(params);
+      
+      // Skip author modification for blog posts - they use a different author system
+      if (params.filePath.includes("devlog") || params.filePath.includes("blog")) {
+        return result; // Return original result without modification for blog posts
       }
-
-      // Get git data in production
+      
+      // For versioned files and adapters, add default author info
+      if (params.filePath.includes("versioned_docs") || params.filePath.includes("adapters")) {
+        return {
+          ...result,
+          frontMatter: {
+            ...result.frontMatter,
+            // Add default author info to prevent "username" access errors
+            author: AUTHOR_FALLBACK.username
+          }
+        };
+      }
+      
+      // Process other files as before
+      let authorName = AUTHOR_FALLBACK.username;
+    
       if (process.env.NODE_ENV !== "development") {
         const data = await getFileCommitHashSafe(params.filePath);
         if (data) {
           const username = commitCache.get(data.commit);
-          author = {
-            commit: data.commit,
-            username: username ?? author.username ?? AUTHOR_FALLBACK.username,
-          };
+          authorName = username ?? AUTHOR_FALLBACK.username;
         }
       }
-
+    
       return {
         ...result,
         frontMatter: {
           ...result.frontMatter,
-          authorData: author,
+          author: authorName // Use string value instead of object
         },
       };
-    }
-
-    return result;
+    },
   },
-},
 
 
   themes: [
@@ -132,6 +135,8 @@ markdown: {
           type: 'all',
           copyright: `Copyright © ${new Date().getFullYear()} TypeWriter`,
         },
+        showReadingTime: true,
+        postsPerPage: 'ALL',
       },
     ],
     [

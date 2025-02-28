@@ -3,7 +3,6 @@ import Translate from "@docusaurus/Translate";
 import { ThemeClassNames } from "@docusaurus/theme-common";
 import { useDateTimeFormat } from "@docusaurus/theme-common/internal";
 import { useDoc } from "@docusaurus/plugin-content-docs/client";
-import type { Props } from "@theme/LastUpdated";
 import Link from "@docusaurus/Link";
 
 function LastUpdatedAtDate({ lastUpdatedAt }: { lastUpdatedAt: number }): JSX.Element {
@@ -80,8 +79,8 @@ export default function LastUpdated({ lastUpdatedAt, lastUpdatedBy }: Props): JS
   const doc = useDoc();
 
   const author = (doc.frontMatter as any).author as {
-    commit: string;
-    username: string;
+    commit?: string;
+    username?: string;
   };
 
   return (
@@ -91,12 +90,12 @@ export default function LastUpdated({ lastUpdatedAt, lastUpdatedBy }: Props): JS
         description="The sentence used to display when a page has been last updated, and by who"
         values={{
           atDate: lastUpdatedAt ? <LastUpdatedAtDate lastUpdatedAt={lastUpdatedAt} /> : "",
-          byUser: lastUpdatedBy ? (
+          byUser: lastUpdatedBy && author?.username ? (
             <LastUpdatedByUser lastUpdatedBy={lastUpdatedBy} username={author.username} />
           ) : (
             ""
           ),
-          inCommit: <LastUpdatedInCommit lastUpdatedIn={author.commit} />,
+          inCommit: author?.commit ? <LastUpdatedInCommit lastUpdatedIn={author.commit} /> : "",
         }}
       >
         {"Last updated{atDate}{byUser}{inCommit}"}
