@@ -13,6 +13,14 @@ class Color(
         val WHITE = Color(0xFFFFFFFF.toInt())
     }
 
+    constructor(
+        alpha: Int,
+        red: Int,
+        green: Int,
+        blue: Int
+    ) : this(alpha shl 24 or (red shl 16) or (green shl 8) or blue)
+
+
     val alpha: Int get() = (color shr 24) and 0xFF
     val red: Int get() = (color shr 16) and 0xFF
     val green: Int get() = (color shr 8) and 0xFF
