@@ -135,3 +135,6 @@ jars/
 
 .gitub
 .vscode
+surrealdb
+nats
+.env

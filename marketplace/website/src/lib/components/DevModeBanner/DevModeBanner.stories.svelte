@@ -5,7 +5,6 @@
 
 	const { Story } = defineMeta({
 		component: DevModeBaner,
-		tags: ["autodocs"],
 		argTypes: {}
 	});
 </script>

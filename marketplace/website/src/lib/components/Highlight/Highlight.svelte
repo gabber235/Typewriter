@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type HTMLAttributes } from "svelte/elements";
+	import type { HTMLAttributes } from "svelte/elements";
 	import type { Snippet } from "svelte";
 	import { onMount } from "svelte";
 	import { quintOut } from "svelte/easing";
