@@ -17,6 +17,8 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @Tags("fact")
 interface FactEntry : StaticEntry {
@@ -87,6 +89,17 @@ interface ReadableFactEntry : FactEntry, PlaceholderEntry {
             int("value") { value ->
                 supplyPlayer { player ->
                     (value() - readForPlayersGroup(player).value).toString()
+                }
+            }
+        }
+        literal("format") {
+            literal("duration") {
+                enum("unit", DurationUnit::class) { unit ->
+                    supplyPlayer { player ->
+                        val value = readForPlayersGroup(player).value
+                        val duration = value.toDuration(unit())
+                        duration.formatCompact()
+                    }
                 }
             }
         }

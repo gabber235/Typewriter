@@ -185,3 +185,16 @@ object IntArgument : PlaceholderArgument<Int> {
         }
     }
 }
+
+fun <E : Enum<E>> PlaceholderNodeBuilder.enum(name: String, enumKClass: KClass<E>, builder: ArgumentBuilder<E>) =
+    argument(name, enumKClass, EnumArgument(enumKClass), builder)
+
+class EnumArgument<E : Enum<E>>(private val enumKClass: KClass<E>) : PlaceholderArgument<E> {
+    override fun parse(player: Player?, argument: String): Result<E> {
+        return try {
+            ok(enumKClass.java.enumConstants.first { it.name.equals(argument, ignoreCase = true) })
+        } catch (e: NoSuchElementException) {
+            failure("Could not parse '$argument' as a valid value, possible values are ${enumKClass.java.enumConstants.joinToString { it.name.lowercase() }}")
+        }
+    }
+}

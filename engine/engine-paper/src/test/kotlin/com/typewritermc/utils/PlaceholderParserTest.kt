@@ -259,4 +259,26 @@ class PlaceholderParserTest : FunSpec({
             parser.parse(null, emptyList()) shouldBe null
         }
     }
+
+    context("Enum Argument") {
+        test("Parser with enum argument should parse when given the argument, otherwise it should fail") {
+            val parser = placeholderParser {
+                enum("enum", TestEnum::class) { enum ->
+                    supply {
+                        "Hey ${enum().name}"
+                    }
+                }
+            }
+
+            parser.parse(null, listOf("TEST")) shouldBe "Hey TEST"
+            parser.parse(null, listOf("test")) shouldBe "Hey TEST"
+            parser.parse(null, listOf("Test")) shouldBe "Hey TEST"
+            parser.parse(null, listOf("test1")) shouldBe null
+            parser.parse(null, emptyList()) shouldBe null
+        }
+    }
 })
+
+enum class TestEnum {
+    TEST,
+}
