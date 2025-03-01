@@ -10,11 +10,12 @@
 	}
 
 	const { avatarUrl, fallbackAvatar }: Props = $props();
+	let logoutForm: HTMLFormElement | null = $state(null);
 </script>
 
-<header class="w-full">
+<header class="w-full py-4">
 	<div
-		class="mx-auto flex h-16 items-center justify-between px-4 md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-xl dark:text-[#EEF9FC]"
+		class="mx-auto flex h-16 items-center justify-between px-4 dark:text-[#EEF9FC] md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-xl"
 	>
 		<a href="/" class="flex items-center space-x-4" aria-label="Home">
 			<div class="flex items-center space-x-4">
@@ -58,19 +59,24 @@
 					</DropdownMenu.Group>
 					<DropdownMenu.Separator />
 					<DropdownMenu.Group>
-						<DropdownMenu.Item
-							class="text-red-500 data-[highlighted]:bg-red-100 data-[highlighted]:text-red-500 dark:data-[highlighted]:bg-red-500 dark:data-[highlighted]:text-white"
-						>
-							<Icon icon="material-symbols:logout-rounded" class="mr-2 h-4 w-4" />
-							<span>Logout</span>
-						</DropdownMenu.Item>
-					</DropdownMenu.Group>
+						<form method="post" action="/api/auth?/signOut" bind:this={logoutForm}>
+							<DropdownMenu.Item
+								class="text-red-500 data-[highlighted]:bg-red-100 data-[highlighted]:text-red-500 dark:data-[highlighted]:bg-red-500 dark:data-[highlighted]:text-white"
+								onclick={() => logoutForm?.requestSubmit()}
+							>
+								<Icon icon="material-symbols:logout-rounded" class="mr-2 h-4 w-4" />
+								<span>Logout</span>
+							</DropdownMenu.Item>
+						</form></DropdownMenu.Group
+					>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
 		{:else}
 			<div class="flex items-center space-x-4">
-				<a href="/login" class="text-sm hover:underline">Login</a>
-				<Button>Sign up</Button>
+				<form method="post" action="/api/auth?/signIn">
+					<Button type="submit" variant="ghost">Login</Button>
+					<Button type="submit">Sign up</Button>
+				</form>
 			</div>
 		{/if}
 	</div>

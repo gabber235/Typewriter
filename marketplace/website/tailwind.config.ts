@@ -107,11 +107,7 @@ const config: Config = {
         },
     },
     plugins: [typography, forms, containerQueries, tailwindcssAnimate],
-    darkMode: ['variant', [
-        '&:is(.dark *)',
-        '&:is([data-theme="dark"] *)',
-        '@media (prefers-color-scheme: dark) { &:not(.light *):not(.dark *):not([data-theme]) }',
-    ]],
+    darkMode: "class",
 };
 
 export default config;
