@@ -146,4 +146,6 @@ bin/
 /.history/
 /documentation/.history/
 
+surrealdb
+nats
 .env
