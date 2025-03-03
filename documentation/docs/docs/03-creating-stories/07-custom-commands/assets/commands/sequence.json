@@ -1,0 +1,49 @@
+{
+    "name": "sequence",
+    "type": "sequence",
+    "entries": [
+        {
+            "id": "5uPWjOkNcnLgTw5",
+            "name": "simple_message",
+            "criteria": [],
+            "modifiers": [],
+            "triggers": [],
+            "message": {
+                "_kind": "backed",
+                "ref": "onqAqFnqZfe9LNe",
+                "data": {
+                    "keys": [
+                        {
+                            "key": {
+                                "case": "entry",
+                                "value": {
+                                    "ref": "RfXZLSfGQQBsSkw",
+                                    "key": "VALUE",
+                                    "keyClass": "com.typewritermc.basic.entries.command.arguments.WordArgumentContextKeys"
+                                }
+                            },
+                            "default": "No name ?"
+                        },
+                        {
+                            "key": {
+                                "case": "entry",
+                                "value": {
+                                    "ref": "NItbKApgcRsFKMf",
+                                    "key": "VALUE",
+                                    "keyClass": "com.typewritermc.basic.entries.command.arguments.NumberArgumentContextKeys"
+                                }
+                            },
+                            "default": "No age ?"
+                        }
+                    ],
+                    "text": "Hi <1>, you are <2> years old."
+                }
+            },
+            "type": "simple_message",
+            "_genericBlueprint": null
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.8.0-beta-151"
+}
