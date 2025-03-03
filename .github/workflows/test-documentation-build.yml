@@ -1,0 +1,27 @@
+name: Test Documentation Build
+
+on:
+  pull_request:
+    paths:
+      - "documentation/**"
+
+jobs:
+  test:
+    name: Test Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt update && sudo apt install libvips-dev -y
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: ./documentation/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./documentation
+      - name: Build website
+        run: npm run build
+        working-directory: ./documentation
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
