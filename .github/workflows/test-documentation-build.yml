@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "documentation/**"
+  workflow_dispatch:
 
 jobs:
   test:
