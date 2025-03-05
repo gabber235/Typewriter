@@ -26671,7 +26671,542 @@
                     "variable",
                     "interaction"
                 ]
-            }
+            },
+            {
+                "name": "custom_command",
+                "description": "Create custom commands with parameters",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "command": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The command to register. Do not include the leading slash."
+                                }
+                            ]
+                        },
+                        "aliases": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "primitive",
+                                "type": "string",
+                                "modifiers": []
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "Alternative command names that can be used."
+                                }
+                            ]
+                        },
+                        "arguments": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference",
+                                "default": "",
+                                "modifiers": [
+                                    {
+                                        "name": "entry",
+                                        "data": "command_argument"
+                                    }
+                                ]
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The arguments that this command accepts."
+                                }
+                            ]
+                        },
+                        "triggers": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference", 
+                                "default": "",
+                                "modifiers": [
+                                    {
+                                        "name": "entry",
+                                        "data": "triggerable"
+                                    }
+                                ]
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The entries that will be triggered when this command is executed."
+                                }
+                            ]
+                        }
+                    },
+                    "modifiers": []
+                },
+                "color": "#F2C94C",
+                "icon": "heroicons:command-line-16-solid",
+                "tags": [
+                    "command",
+                    "trigger",
+                    "manifest"
+                ]
+            },
+            {
+                "name": "word_argument",
+                "description": "A single word argument",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "children": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "command_argument"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The child arguments that come after this one."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered when this argument is used."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#F44336",
+                "icon": "fa6-solid:font",
+                "tags": [
+                  "command_argument",
+                  "triggerable",
+                  "trigger",
+                  "manifest"
+                ]
+              },
+              {
+                "name": "string_argument",
+                "description": "A string argument",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "children": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "command_argument"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The child arguments that come after this one."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered when this argument is used."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#F44336",
+                "icon": "bxs:quote-right",
+                "tags": [
+                  "command_argument",
+                  "triggerable",
+                  "trigger",
+                  "manifest"
+                ]
+              },
+              {
+                "name": "greedy_string_argument",
+                "description": "A greedy string argument",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "children": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "command_argument"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The child arguments that come after this one."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered when this argument is used."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#F44336",
+                "icon": "fa6-solid:text-width",
+                "tags": [
+                  "command_argument",
+                  "triggerable",
+                  "trigger",
+                  "manifest"
+                ]
+              },
+              {
+                "name": "number_argument",
+                "description": "An number argument",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "children": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "command_argument"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The child arguments that come after this one."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered when this argument is used."
+                        }
+                      ]
+                    },
+                    "min": {
+                      "kind": "primitive",
+                      "type": "integer",
+                      "default": -2147483648,
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The minimum value that can be entered (default: smallest possible integer)."
+                        }
+                      ]
+                    },
+                    "max": {
+                      "kind": "primitive",
+                      "type": "integer",
+                      "default": 2147483647,
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The maximum value that can be entered (default: largest possible integer)."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#F44336",
+                "icon": "fa6-solid:hashtag",
+                "tags": [
+                  "command_argument",
+                  "triggerable",
+                  "trigger",
+                  "manifest"
+                ]
+              },
+              {
+                "name": "simple_message",
+                "description": "Send a message to a player",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "criteria": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "object",
+                        "fields": {
+                          "fact": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                              {
+                                "name": "entry",
+                                "data": "readable-fact"
+                              }
+                            ]
+                          },
+                          "comparison": {
+                            "kind": "enum",
+                            "values": [
+                              "EQUAL_TO",
+                              "NOT_EQUAL_TO",
+                              "GREATER_THAN",
+                              "GREATER_THAN_OR_EQUAL_TO",
+                              "LESS_THAN",
+                              "LESS_THAN_OR_EQUAL_TO"
+                            ],
+                            "default": "EQUAL_TO",
+                            "modifiers": []
+                          },
+                          "value": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                          }
+                        },
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Criteria that must be met for this action to execute."
+                        }
+                      ]
+                    },
+                    "modifiers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "object",
+                        "fields": {
+                          "variable": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                              {
+                                "name": "entry",
+                                "data": "variable"
+                              }
+                            ]
+                          },
+                          "value": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                          }
+                        },
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Variables that can be used to modify the action."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered after this action is executed."
+                        }
+                      ]
+                    },
+                    "message": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": [
+                        {
+                          "name": "multiline"
+                        },
+                        {
+                          "name": "colored"
+                        },
+                        {
+                          "name": "placeholder"
+                        },
+                        {
+                          "name": "help",
+                          "data": "The message to send to the player."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#F44336",
+                "icon": "flowbite:message-dots-solid",
+                "tags": [
+                  "action",
+                  "message",
+                  "triggerable",
+                  "trigger"
+                ]
+              }
         ]
     }
 ]

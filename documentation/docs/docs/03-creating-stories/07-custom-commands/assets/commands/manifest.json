@@ -1,0 +1,43 @@
+{
+    "name": "manifest",
+    "type": "manifest",
+    "entries": [
+        {
+            "id": "XGLnGJxdxY1YknS",
+            "name": "custom_command",
+            "command": "command",
+            "aliases": [],
+            "arguments": [
+                "RfXZLSfGQQBsSkw"
+            ],
+            "triggers": [],
+            "type": "custom_command",
+            "_genericBlueprint": null
+        },
+        {
+            "id": "RfXZLSfGQQBsSkw",
+            "name": "pseudo",
+            "children": [
+                "NItbKApgcRsFKMf"
+            ],
+            "triggers": [],
+            "type": "word_argument",
+            "_genericBlueprint": null
+        },
+        {
+            "id": "NItbKApgcRsFKMf",
+            "name": "age",
+            "children": [],
+            "triggers": [
+                "5uPWjOkNcnLgTw5"
+            ],
+            "min": 0,
+            "max": 100,
+            "type": "number_argument",
+            "_genericBlueprint": null
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.8.0-beta-151"
+}

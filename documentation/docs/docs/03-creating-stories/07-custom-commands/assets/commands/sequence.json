@@ -1,0 +1,19 @@
+{
+    "name": "sequence",
+    "type": "sequence",
+    "entries": [
+      {
+        "id": "5uPWjOkNcnLgTw5",
+        "name": "simple_message",
+        "criteria": [],
+        "modifiers": [],
+        "triggers": [],
+        "message": "Hi <1>, you are <2> years old.",
+        "type": "simple_message",
+        "_genericBlueprint": null
+      }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.8.0-beta-151"
+  }
