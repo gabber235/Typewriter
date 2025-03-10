@@ -27,14 +27,14 @@
         "@docusaurus/theme-common": "3.7.0",
         "@docusaurus/theme-mermaid": "3.7.0",
         "@docusaurus/theme-search-algolia": "3.7.0",
-        "@floating-ui/react": "^0.26.16",
+        "@floating-ui/react": "^0.27.5",
         "@fontsource/jetbrains-mono": "5.1.2",
         "@iconify/react": "5.0.1",
         "@mdx-js/react": "3.0.1",
-        "@rive-app/react-canvas": "^4.18.2",
+        "@rive-app/react-canvas": "^4.18.3",
         "clsx": "2.1.0",
         "documentation": "file:",
-        "docusaurus-plugin-sass": "^0.2.5",
+        "docusaurus-plugin-sass": "^0.2.6",
         "js-yaml": "4.1.0",
         "posthog-docusaurus": "^2.0.2",
         "prism-react-renderer": "^2.4.1",
@@ -55,12 +55,12 @@
         "@docusaurus/types": "^3.7.0",
         "@iconify/react": "^5.2.0",
         "@types/react": "^19.0.10",
-        "autoprefixer": "^10.4.20",
+        "autoprefixer": "^10.4.21",
         "postcss": "^8.5.3",
         "responsive-loader": "^3.1.2",
         "sharp": "^0.33.5",
         "tailwindcss": "^3.4.16",
-        "typescript": "^5.7.3"
+        "typescript": "^5.8.2"
     },
     "browserslist": {
         "production": [
