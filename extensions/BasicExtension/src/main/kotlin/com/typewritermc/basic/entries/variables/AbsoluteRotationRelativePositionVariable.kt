@@ -14,40 +14,42 @@ import com.typewritermc.engine.paper.utils.position
 import kotlin.reflect.safeCast
 
 @Entry(
-    "relative_position_variable",
+    "absolute_rotation_relative_position_variable",
     "A variable that returns the position relative to the player",
     Colors.GREEN,
     "streamline:target-solid"
 )
 @GenericConstraint(Position::class)
-@VariableData(RelativePositionVariableData::class)
+@VariableData(AbsoluteRotationRelativePositionVariableData::class)
 /**
- * The `RelativePositionVariable` is a variable that returns the position relative to the player.
- * The position is calculated by adding the coordinate to the player's position.
+ * The `AbsoluteRotationRelativePositionVariable` is a variable that returns the position relative to the player,
+ * with an absolute yaw and pitch
+ * The position is calculated by adding the coordinate to the player's position, except for the yaw and pitch which are
+ * the ones defined in the entry
  *
  * ## How could this be used?
- * This could be used to make a death cinematic that shows at player's position after they die.
+ * This could be used to make a death cinematic that shows at player's position after they die, from a top view perspective
  */
-class RelativePositionVariable(
+class AbsoluteRotationRelativePositionVariable(
     override val id: String = "",
     override val name: String = "",
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
         val player = context.player
-        val data = context.getData<RelativePositionVariableData>()
+        val data = context.getData<AbsoluteRotationRelativePositionVariableData>()
             ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data}")
 
         val basePosition = player.position + data.coordinate
         val finalPosition = basePosition.withRotation(
-            player.position.yaw + data.coordinate.yaw,
-            player.position.pitch + data.coordinate.pitch
+            data.coordinate.yaw,
+            data.coordinate.pitch
         )
         return context.klass.safeCast(finalPosition)
-            ?: throw IllegalStateException("Could not cast position to ${context.klass}, PlayerWorldPositionVariable is only compatible with Position fields")
+            ?: throw IllegalStateException("Could not cast position to ${context.klass}, AbsoluteRotationRelativePositionVariableData is only compatible with Position fields")
     }
 }
 
-data class RelativePositionVariableData(
+data class AbsoluteRotationRelativePositionVariableData(
     @WithRotation
     val coordinate: Coordinate = Coordinate.ORIGIN,
 )
