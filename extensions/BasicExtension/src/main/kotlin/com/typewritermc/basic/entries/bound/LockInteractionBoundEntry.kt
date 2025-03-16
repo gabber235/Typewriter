@@ -24,6 +24,7 @@ import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
 import com.typewritermc.engine.paper.interaction.*
+import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.ALLOW_FLIGHT
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.FLYING
@@ -41,6 +42,9 @@ import kotlinx.coroutines.future.await
 import me.tofaa.entitylib.meta.display.TextDisplayMeta
 import me.tofaa.entitylib.meta.mobs.villager.VillagerMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
+import org.bukkit.NamespacedKey
+import org.bukkit.attribute.Attribute
+import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -92,6 +96,7 @@ class LockInteractionBound(
     override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
     private var playerState: PlayerState? = null
+    private var attributeModifier: AttributeModifier? = null
     private var entity: WrapperEntity = createEntity()
     private var previousPosition: Position = Position.ORIGIN
     private var interceptor: InterceptionBundle? = null
@@ -109,6 +114,15 @@ class LockInteractionBound(
         playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT)
         player.allowFlight = true
         player.isFlying = true
+
+        attributeModifier = AttributeModifier(
+            NamespacedKey(plugin, "hand_hiding"),
+            -100.0,
+            AttributeModifier.Operation.ADD_NUMBER
+        ).also {
+            player.getAttribute(Attribute.ATTACK_SPEED)?.addModifier(it)
+        }
+
 
         val startPosition = targetPosition.get(player)
         previousPosition = startPosition
@@ -162,6 +176,11 @@ class LockInteractionBound(
         ThreadType.SYNC.switchContext {
             player.restore(playerState)
             playerState = null
+
+            attributeModifier?.let {
+                player.getAttribute(Attribute.ATTACK_SPEED)?.removeModifier(it)
+            }
+            attributeModifier = null
         }
     }
 

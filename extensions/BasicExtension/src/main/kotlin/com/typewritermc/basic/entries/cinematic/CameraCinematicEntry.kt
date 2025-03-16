@@ -39,6 +39,9 @@ import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
+import org.bukkit.attribute.Attribute
+import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -134,6 +137,7 @@ class CameraCinematicAction(
     private lateinit var action: CameraAction
 
     private var originalState: PlayerState? = null
+    private var attributeModifier: AttributeModifier? = null
     private var interceptor: InterceptionBundle? = null
     private var listener: Listener? = null
     private var boundStateSubscription: InteractionBoundStateOverrideSubscription? = null
@@ -198,6 +202,14 @@ class CameraCinematicAction(
             allowFlight = true
             isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
+            attributeModifier = AttributeModifier(
+                NamespacedKey(plugin, "hand_hiding"),
+                -100.0,
+                AttributeModifier.Operation.ADD_NUMBER
+            ).also {
+                getAttribute(Attribute.ATTACK_SPEED)?.addModifier(it)
+            }
+
             lirand.api.extensions.server.server.onlinePlayers.forEach {
                 it.hidePlayer(plugin, this)
                 this.hidePlayer(plugin, it)
@@ -273,6 +285,12 @@ class CameraCinematicAction(
                 restore(it)
             }
             originalState = null
+
+            attributeModifier?.let {
+                getAttribute(Attribute.ATTACK_SPEED)?.removeModifier(it)
+            }
+            attributeModifier = null
+
             if (gameMode != GameMode.CREATIVE) {
                 restoreInventory()
             }
