@@ -14,10 +14,12 @@ import com.typewritermc.engine.paper.entry.action.ActionHandler
 import com.typewritermc.engine.paper.entry.dialogue.DialogueHandler
 import com.typewritermc.engine.paper.entry.entity.EntityHandler
 import com.typewritermc.engine.paper.entry.temporal.TemporalHandler
+import com.typewritermc.engine.paper.entry.temporal.TemporalPlaceholders
 import com.typewritermc.engine.paper.events.TypewriterUnloadEvent
 import com.typewritermc.engine.paper.extensions.bstats.BStatsMetrics
 import com.typewritermc.engine.paper.extensions.modrinth.Modrinth
 import com.typewritermc.engine.paper.extensions.placeholderapi.PlaceholderExpansion
+import com.typewritermc.engine.paper.extensions.placeholderapi.PlaceholderHandler
 import com.typewritermc.engine.paper.facts.FactDatabase
 import com.typewritermc.engine.paper.facts.FactHandler
 import com.typewritermc.engine.paper.facts.FactStorage
@@ -117,6 +119,8 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             single { DialogueHandler() } bind TriggerHandler::class
             single { FactHandler() } bind TriggerHandler::class
             single { TemporalHandler() } bind TriggerHandler::class
+
+            single { TemporalPlaceholders() } bind PlaceholderHandler::class
 
             factory<Gson>(named("dataSerializer")) { createDataSerializerGson(getAll()) }
             factory<Gson>(named("bukkitDataParser")) { createBukkitDataParser() }
