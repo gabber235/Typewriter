@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Singleton
 import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.core.utils.failure
@@ -74,6 +75,7 @@ data object ExampleStopTrigger : EventTrigger {
 //</code-block:interaction_triggers>
 
 //<code-block:interaction_trigger_handler>
+@Singleton // This registers the handler to Typewriter
 class ExampleTriggerHandler : TriggerHandler {
     override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {
         // Handle stopping the interaction
