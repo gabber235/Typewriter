@@ -105,7 +105,7 @@ class PlayerSessionManager : Listener, KoinComponent {
     }
 
     // When a player leaves the server, we need to end the session.
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerQuit(event: PlayerQuitEvent) {
         runBlocking {
             sessions.remove(event.player.uniqueId)?.teardown()
