@@ -243,7 +243,7 @@ class VariableData {
   factory VariableData.fromJson(Map<String, dynamic> json) => VariableData(
         json["_kind"] as String,
         json["ref"] as String?,
-        json["data"] as Map<String, dynamic>,
+        stringMap(json["data"]),
       );
 
   final String _kind;
