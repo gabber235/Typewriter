@@ -43,7 +43,7 @@ class NumberEditor extends HookConsumerWidget {
       shift: (_) => const Offset(15, 0),
       child: ValidatedInspectorTextField(
         path: path,
-        defaultValue: 0,
+        defaultValue: primitiveBlueprint.defaultValue(),
         serialize: (value) => primitiveBlueprint.type == PrimitiveType.integer
             ? int.tryParse(value) ?? 0
             : double.tryParse(value) ?? 0,
