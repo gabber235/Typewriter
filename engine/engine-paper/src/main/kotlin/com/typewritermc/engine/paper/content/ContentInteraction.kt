@@ -120,8 +120,9 @@ class ContentInteraction(
     }
 
     suspend fun popMode(): Boolean {
+        if (stack.isEmpty()) return false
         player.playSound("ui.cartography_table.take_result")
-        stack.pop()?.dispose()
+        stack.pop().dispose()
         mode?.initialize()
         return mode != null
     }
