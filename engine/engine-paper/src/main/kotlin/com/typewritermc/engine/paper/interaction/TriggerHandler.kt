@@ -14,12 +14,14 @@ class InteractionTriggerHandler : TriggerHandler {
         if (InteractionEndTrigger in event) {
             return TriggerContinuation.EndInteraction
         }
-        return TriggerContinuation.Done
+        return TriggerContinuation.Nothing
     }
 }
 
 sealed interface TriggerContinuation {
     // Signals that the trigger is completed.
+    data object Nothing : TriggerContinuation
+    @Deprecated("Use Nothing instead", ReplaceWith("Nothing"), level = DeprecationLevel.ERROR)
     data object Done : TriggerContinuation
 
     // Processes the event in the current tick.

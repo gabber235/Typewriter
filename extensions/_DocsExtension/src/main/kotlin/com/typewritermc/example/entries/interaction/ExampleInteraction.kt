@@ -97,7 +97,7 @@ class ExampleTriggerHandler : TriggerHandler {
         val triggers = event.triggers
             .filterIsInstance<ExampleStartTrigger>()
 
-        if (triggers.isEmpty()) return TriggerContinuation.Done
+        if (triggers.isEmpty()) return TriggerContinuation.Nothing
 
         // Use the highest priority trigger
         val trigger = triggers.maxBy { it.priority }

@@ -2,16 +2,16 @@ package com.typewritermc.engine.paper.entry.dialogue
 
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.priority
+import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.entry.entries.Event
-import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.engine.paper.interaction.TriggerContinuation
 import com.typewritermc.engine.paper.interaction.TriggerHandler
 
 class DialogueHandler : TriggerHandler {
     override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {
         if (DialogueTrigger.NEXT_OR_COMPLETE in event) {
-            if (currentInteraction.completeDialogue()) return TriggerContinuation.Done
+            if (currentInteraction.completeDialogue()) return TriggerContinuation.Nothing
             return currentInteraction.triggerNextDialogue(event)
         }
         if (DialogueTrigger.FORCE_NEXT in event) {
@@ -39,7 +39,7 @@ class DialogueHandler : TriggerHandler {
      * will be ended.
      */
     private fun Interaction?.triggerNextDialogue(event: Event): TriggerContinuation {
-        if (this !is DialogueInteraction) return TriggerContinuation.Done
+        if (this !is DialogueInteraction) return TriggerContinuation.Nothing
         isActive = false
 
         val triggers = this.eventTriggers
@@ -72,6 +72,6 @@ class DialogueHandler : TriggerHandler {
         } else if (this is DialogueInteraction && !isActive) {
             return TriggerContinuation.EndInteraction
         }
-        return TriggerContinuation.Done
+        return TriggerContinuation.Nothing
     }
 }

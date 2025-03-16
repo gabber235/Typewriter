@@ -47,7 +47,7 @@ class Event(val player: Player, val context: InteractionContext, val triggers: L
 
     operator fun contains(trigger: EventTrigger) = triggers.contains(trigger)
 
-    operator fun contains(entry: Entry) = triggers.any { it.id == entry.id }
+    operator fun contains(entry: Entry) = triggers.any { it == entry }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

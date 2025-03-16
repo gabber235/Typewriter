@@ -1,7 +1,7 @@
 package com.typewritermc.engine.paper.content
 
-import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.core.interaction.Interaction
+import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.engine.paper.interaction.TriggerContinuation
 import com.typewritermc.engine.paper.interaction.TriggerHandler
 import com.typewritermc.engine.paper.logger
@@ -13,7 +13,7 @@ class ContentHandler : TriggerHandler {
         }
 
         val trigger =
-            event.triggers.filterIsInstance<ContentModeTrigger>().firstOrNull() ?: return TriggerContinuation.Done
+            event.triggers.filterIsInstance<ContentModeTrigger>().firstOrNull() ?: return TriggerContinuation.Nothing
 
         if (currentInteraction !is ContentInteraction) {
             return TriggerContinuation.StartInteraction(

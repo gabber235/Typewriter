@@ -120,7 +120,7 @@ class PlayerSession(val player: Player) : KoinComponent {
             triggerHandlers.forEach { handler ->
                 fun TriggerContinuation.apply() {
                     when (this) {
-                        TriggerContinuation.Done -> {}
+                        TriggerContinuation.Nothing -> {}
                         is TriggerContinuation.Append -> addingEvents.addAll(this.events)
                         is TriggerContinuation.StartInteraction -> nextInteractions.add(this.interaction)
                         is TriggerContinuation.KeepInteraction -> interactionLifecycle = InteractionLifecycle.KEEP
