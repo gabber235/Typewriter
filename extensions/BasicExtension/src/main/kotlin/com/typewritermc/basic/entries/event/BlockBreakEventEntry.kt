@@ -55,7 +55,7 @@ enum class BlockBreakContextKeys(override val klass: KClass<*>) : EntryContextKe
     CENTER_POSITION(Position::class)
 }
 
-@EntryListener(BlockBreakEventEntry::class)
+@EntryListener(BlockBreakEventEntry::class, ignoreCancelled = true)
 fun onBlockBreak(event: BlockBreakEvent, query: Query<BlockBreakEventEntry>) {
     val player = event.player
     val position = event.block.location.toPosition()
