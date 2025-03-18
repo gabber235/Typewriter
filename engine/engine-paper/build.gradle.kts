@@ -28,9 +28,6 @@ dependencies {
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
-    compileOnlyApi("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
-    compileOnlyApi("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
-    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
     api("me.tofaa.entitylib:spigot:+debb91e-SNAPSHOT")
