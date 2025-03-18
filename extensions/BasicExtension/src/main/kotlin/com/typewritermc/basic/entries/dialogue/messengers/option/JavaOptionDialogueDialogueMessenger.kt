@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.dialogue.messengers.option
 
 import com.typewritermc.basic.entries.dialogue.Option
+import com.typewritermc.basic.entries.dialogue.OptionContextKeys
 import com.typewritermc.basic.entries.dialogue.OptionDialogueEntry
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.core.utils.around
@@ -63,6 +64,12 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
     private val typeDuration = entry.duration.get(player)
 
     private var selectedIndex = 0
+        set(value) {
+            field = value
+
+            // 1-based index
+            this.context[entry, OptionContextKeys.SELECTED_OPTION] = value + 1
+        }
     private val selected get() = usableOptions.getOrNull(selectedIndex)
 
     private var usableOptions: List<Option> = emptyList()
@@ -89,10 +96,6 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
     override fun init() {
         usableOptions =
             entry.options.filter { it.criteria.matches(player, context) }
-
-        if (usableOptions.isEmpty()) {
-            return
-        }
 
         speakerDisplayName = entry.speakerDisplayName.get(player).parsePlaceholders(player)
         parsedText = entry.text.get(player).parsePlaceholders(player)
@@ -128,6 +131,17 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
         playTime += context.deltaTime
         if (state != MessengerState.RUNNING) return
 
+        var forceSend = false
+
+        val newOptions =
+            entry.options.filter { it.criteria.matches(player, this.context) }
+
+        if (newOptions != usableOptions) {
+            usableOptions = newOptions
+            selectedIndex = 0
+            forceSend = true
+        }
+
         // When there are no options, just go to the next dialogue
         if (usableOptions.isEmpty()) {
             isCompleted = true
@@ -135,7 +149,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
             return
         }
 
-        if (playTime.toTicks() % 100 > 0 && completedAnimation && !isFirst) {
+        if (playTime.toTicks() % 100 > 0 && completedAnimation && !isFirst && !forceSend) {
             // Only update periodically to avoid spamming the player
             return
         }

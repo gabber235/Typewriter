@@ -25,7 +25,7 @@ import java.time.Duration
 
 class DialogueInteraction(
     private val player: Player,
-    override var context: InteractionContext,
+    initialInteractionContext: InteractionContext,
     initialEntry: DialogueEntry,
 ) : Interaction, KoinComponent {
     private val _speakers: MutableSet<Ref<SpeakerEntry>> = mutableSetOf()
@@ -34,9 +34,12 @@ class DialogueInteraction(
     private val factDatabase: FactDatabase by inject()
 
     internal var currentEntry: DialogueEntry = initialEntry
-    private var currentMessenger = initialEntry.messenger(player, context) ?: EmptyDialogueMessenger(player, context, initialEntry)
+    private var currentMessenger = initialEntry.messenger(player, initialInteractionContext) ?: EmptyDialogueMessenger(player, initialInteractionContext, initialEntry)
     private var playTime = Duration.ZERO
     var isActive = false
+
+    override val context: InteractionContext
+        get() = currentMessenger.context
 
     val eventTriggers: List<EventTrigger>
         get() = currentMessenger.eventTriggers
@@ -87,8 +90,8 @@ class DialogueInteraction(
     fun next(nextEntry: DialogueEntry, context: InteractionContext) {
         cleanupEntry(false)
         currentEntry = nextEntry
-        this.context = currentMessenger.context.combine(context)
-        currentMessenger = nextEntry.messenger(player, this.context) ?: EmptyDialogueMessenger(player, this.context, nextEntry)
+        val nextContext = currentMessenger.context.combine(context)
+        currentMessenger = nextEntry.messenger(player, nextContext) ?: EmptyDialogueMessenger(player, nextContext, nextEntry)
         setup()
         DISPATCHERS_ASYNC.launch {
             AsyncDialogueSwitchEvent(player).callEvent()

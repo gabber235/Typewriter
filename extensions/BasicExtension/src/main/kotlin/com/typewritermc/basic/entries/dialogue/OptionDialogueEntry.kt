@@ -4,10 +4,8 @@ import com.typewritermc.basic.entries.dialogue.messengers.option.BedrockOptionDi
 import com.typewritermc.basic.entries.dialogue.messengers.option.JavaOptionDialogueDialogueMessenger
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
-import com.typewritermc.core.extension.annotations.Colored
-import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.extension.annotations.Placeholder
+import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -17,8 +15,10 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.isFloodgate
 import org.bukkit.entity.Player
 import java.time.Duration
+import kotlin.reflect.KClass
 
 @Entry("option", "Display a list of options to the player", "#4CAF50", "fa6-solid:list")
+@ContextKeys(OptionContextKeys::class)
 /**
  * The `Option Dialogue` action displays a list of options to the player to choose from. This action provides you with the ability to give players choices that affect the outcome of the game.
  *
@@ -45,6 +45,12 @@ class OptionDialogueEntry(
         else JavaOptionDialogueDialogueMessenger(player, context, this)
     }
 }
+
+enum class OptionContextKeys(override val klass: KClass<*>) : EntryContextKey {
+    @KeyType(Int::class)
+    SELECTED_OPTION(Int::class),
+}
+
 
 data class Option(
     @Help("Text for this option.")
