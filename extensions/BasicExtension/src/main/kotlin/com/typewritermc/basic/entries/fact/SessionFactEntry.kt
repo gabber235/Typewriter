@@ -1,13 +1,14 @@
 package com.typewritermc.basic.entries.fact
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.CachableFactEntry
 import com.typewritermc.engine.paper.entry.entries.GroupEntry
 
 @Entry("session_fact", "Saved until a player logouts of the server", Colors.PURPLE, "fa6-solid:user-clock")
+@Deprecated("Doesn't work, use permanent fact with a quit trigger to reset it instead")
 /**
  * This [fact](/docs/creating-stories/facts) is stored until the player logs out.
  *
