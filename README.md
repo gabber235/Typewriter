@@ -1,4 +1,4 @@
-# Typewriter Plugin
+![TypeWriter Logo](https://github.com/gabber235/TypeWriter/blob/develop/design/Banner/TW_Banner_Transparant.png?raw=true)
 
 ##### The Next Generation of Questing in Minecraft
 
