@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack
 sealed interface Item {
     fun build(player: Player?, context: InteractionContext? = player?.interactionContext): ItemStack
     fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext? = player?.interactionContext): Boolean
+    fun exactMatch(player: Player?, item: ItemStack?, context: InteractionContext? = player?.interactionContext): Boolean
 
     companion object {
         val Empty = CustomItem()

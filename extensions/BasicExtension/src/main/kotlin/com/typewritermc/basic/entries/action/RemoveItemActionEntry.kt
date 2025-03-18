@@ -11,8 +11,10 @@ import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.utils.ThreadType
+import com.typewritermc.engine.paper.utils.item.CustomItem
 import com.typewritermc.engine.paper.utils.item.Item
-import org.bukkit.entity.Player
+import com.typewritermc.engine.paper.utils.item.SerializedItem
+import com.typewritermc.engine.paper.utils.item.components.ItemAmountComponent
 
 @Entry("remove_item", "Remove an item from the players inventory", Colors.RED, "icomoon-free:user-minus")
 /**
@@ -39,7 +41,43 @@ class RemoveItemActionEntry(
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         ThreadType.SYNC.launch {
-            player.inventory.removeItemAnySlot(item.get(player, context).build(player, context).clone())
+            val item = item.get(player, context)
+            when (item) {
+                is SerializedItem ->
+                    player.inventory.removeItemAnySlot(item.build(player, context).clone())
+
+                is CustomItem -> {
+                    val amountComponents = item.components<ItemAmountComponent>()
+                    var amountLeft = if (amountComponents.isNotEmpty()) amountComponents.sumOf {
+                        it.amount.get(
+                            player,
+                            context
+                        )
+                    } else Int.MAX_VALUE
+                    val content = player.inventory.contents
+                    val maxSlot = content.size
+
+                    for (i in 0 until maxSlot) {
+                        val slotItem = content[i] ?: continue
+                        if (!item.isSameAs(player, slotItem, context)) {
+                            continue
+                        }
+                        val slotAmount = slotItem.amount
+                        if (slotAmount <= amountLeft) {
+                            player.inventory.clear(i)
+                            amountLeft -= slotAmount
+                        } else {
+                            slotItem.amount = slotAmount - amountLeft
+                            player.inventory.setItem(i, slotItem)
+                            amountLeft = 0
+                        }
+
+                        if (amountLeft == 0) {
+                            break
+                        }
+                    }
+                }
+            }
         }
     }
 }

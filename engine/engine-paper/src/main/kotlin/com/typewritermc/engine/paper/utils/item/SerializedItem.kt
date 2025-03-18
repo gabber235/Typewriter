@@ -42,7 +42,12 @@ class SerializedItem(
     override fun build(player: Player?, context: InteractionContext?): ItemStack = itemStack.clone().apply {
         amount = this@SerializedItem.amount.get(player, context) ?: 1
     }
-    override fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean = this.itemStack.isSimilar(item)
+
+    override fun isSameAs(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean =
+        this.itemStack.isSimilar(item)
+
+    override fun exactMatch(player: Player?, item: ItemStack?, context: InteractionContext?): Boolean =
+        this.itemStack.isSimilar(item) && this.itemStack.amount == item?.amount
 }
 
 fun ItemStack.toItem(): SerializedItem = SerializedItem(this)
