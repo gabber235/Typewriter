@@ -11,6 +11,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.WithRotation
 import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.context
@@ -25,19 +26,8 @@ import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
 import com.typewritermc.engine.paper.interaction.*
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider
-import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.ALLOW_FLIGHT
-import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.FLYING
-import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.LOCATION
-import com.typewritermc.engine.paper.utils.PlayerState
-import com.typewritermc.engine.paper.utils.ThreadType
-import com.typewritermc.engine.paper.utils.isFloodgate
-import com.typewritermc.engine.paper.utils.position
-import com.typewritermc.engine.paper.utils.restore
-import com.typewritermc.engine.paper.utils.state
-import com.typewritermc.engine.paper.utils.toBukkitLocation
-import com.typewritermc.engine.paper.utils.toCoordinate
-import com.typewritermc.engine.paper.utils.toPacketLocation
+import com.typewritermc.engine.paper.utils.*
+import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.*
 import kotlinx.coroutines.future.await
 import me.tofaa.entitylib.meta.display.TextDisplayMeta
 import me.tofaa.entitylib.meta.mobs.villager.VillagerMeta
@@ -77,6 +67,7 @@ class LockInteractionBoundEntry(
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     override val interruptTriggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @WithRotation
     val targetPosition: Optional<Var<Position>> = Optional.empty(),
 ) : InteractionBoundEntry {
     override fun build(player: Player): InteractionBound {
@@ -245,13 +236,14 @@ class LockInteractionBound(
         }
 
         val newPosition = targetPosition.get(player)
-        if (newPosition == previousPosition) return
 
         if (newPosition.world != previousPosition.world) {
             teardownEntity()
             setupEntity(newPosition)
             return
         }
+
+        previousPosition = newPosition
 
         entity.teleport(newPosition.withY { it + positionYCorrection }.toPacketLocation())
 
