@@ -2,25 +2,21 @@ package com.typewritermc.engine.paper.entry.entity
 
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.engine.paper.entry.entries.AudienceFilter
-import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
-import com.typewritermc.engine.paper.entry.entries.PropertySupplier
-import com.typewritermc.engine.paper.entry.entries.TickableDisplay
-import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.*
 import lirand.api.extensions.server.server
 import org.bukkit.entity.Player
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
-class IndividualActivityEntityDisplay(
+class IndividualAudienceEntityDisplay(
     override val instanceEntryRef: Ref<out EntityInstanceEntry>,
     override val creator: EntityCreator,
     private val activityCreator: ActivityCreator,
     private val suppliers: List<Pair<PropertySupplier<*>, Int>>,
     private val spawnPosition: Var<Position>,
     private val showRange: Var<Double> = ConstVar(entityShowRange),
-) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
+) : AudienceFilter(instanceEntryRef), TickableDisplay, AudienceEntityDisplay {
     private val activityManagers = ConcurrentHashMap<UUID, ActivityManager<in IndividualActivityContext>>()
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
 
@@ -102,6 +98,7 @@ class IndividualActivityEntityDisplay(
 
     override fun position(playerId: UUID): Position? = activityManagers[playerId]?.position?.toPosition()
     override fun entityState(playerId: UUID): EntityState = entities[playerId]?.state ?: lastStates[playerId] ?: EntityState()
+    override fun <P : EntityProperty> property(playerId: UUID, type: KClass<P>): P? = entities[playerId]?.property(type)
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
     override fun isSpawnedIn(playerId: UUID): Boolean = entities[playerId] != null
 

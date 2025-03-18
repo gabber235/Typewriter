@@ -11,7 +11,6 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
-import com.typewritermc.entity.entries.data.minecraft.DisplayNameProperty
 import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstraintProperty
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
 import com.typewritermc.entity.entries.data.minecraft.display.text.BackgroundColorProperty

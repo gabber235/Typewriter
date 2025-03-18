@@ -3,8 +3,10 @@ package com.typewritermc.engine.paper.entry.entries
 import com.typewritermc.core.entries.PriorityEntry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
-import com.typewritermc.core.extension.annotations.*
-import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.extension.annotations.Colored
+import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.Placeholder
+import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.utils.Sound
@@ -69,14 +71,31 @@ interface EntityDefinitionEntry : ManifestEntry, SpeakerEntry, EntityCreator {
 }
 
 @Tags("entity_instance")
-interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry {
+interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry, SpeakerEntry {
     val definition: Ref<out EntityDefinitionEntry>
 
+    override val displayName: Var<String>
+        get() = ComputeVar { player, context ->
+            (ref().findDisplay<AudienceDisplay>() as? AudienceEntityDisplay)
+                ?.property<DisplayNameProperty>(player.uniqueId)
+                ?.displayName
+                ?.get(player, context)
+                ?: ref().get()?.displayName?.get(player, context)
+                ?: ""
+        }
+
+    override val sound: Sound
+        get() = definition.get()?.sound ?: Sound.EMPTY
 
     override fun getEmitter(player: Player): SoundEmitter {
-        val display = ref().findDisplay() as? ActivityEntityDisplay ?: return SoundEmitter(player.entityId)
+        val display = ref().findDisplay() as? AudienceEntityDisplay ?: return SoundEmitter(player.entityId)
         val entityId = display.entityId(player.uniqueId)
         return SoundEmitter(entityId)
+    }
+
+    override fun parser(): PlaceholderParser = placeholderParser {
+        include(super<AudienceFilterEntry>.parser())
+        include(super<SpeakerEntry>.parser())
     }
 }
 

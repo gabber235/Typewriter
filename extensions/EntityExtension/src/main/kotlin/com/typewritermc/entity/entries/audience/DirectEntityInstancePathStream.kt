@@ -4,14 +4,14 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.engine.paper.entry.*
-import com.typewritermc.engine.paper.entry.entity.ActivityEntityDisplay
+import com.typewritermc.engine.paper.entry.AudienceManager
+import com.typewritermc.engine.paper.entry.entity.AudienceEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
+import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.gps.PathStreamDisplay
-import com.typewritermc.engine.paper.utils.toBukkitLocation
 import org.koin.java.KoinJavaComponent
 
 @Entry(
@@ -35,7 +35,7 @@ class DirectEntityInstancePathStream(
 ) : AudienceEntry {
     override suspend fun display(): AudienceDisplay {
         val manager = KoinJavaComponent.get<AudienceManager>(AudienceManager::class.java)
-        val entityDisplay = manager[target] as? ActivityEntityDisplay
+        val entityDisplay = manager[target] as? AudienceEntityDisplay
         return PathStreamDisplay(road, endLocation = { entityDisplay?.position(it.uniqueId)?.toBukkitLocation() ?: it.location })
     }
 }

@@ -22,6 +22,7 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.koin.java.KoinJavaComponent.get
 import kotlin.reflect.KClass
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.safeCast
 
 class AudienceManager : Listener, Reloadable {
     private var displays = emptyMap<Ref<out AudienceEntry>, AudienceDisplay>()
@@ -174,10 +175,16 @@ val Ref<out AudienceEntry>.isActive: Boolean
         return manager[this]?.isActive ?: false
     }
 
-fun Ref<out AudienceEntry>.findDisplay(): AudienceDisplay? {
+fun <D: AudienceDisplay> Ref<out AudienceEntry>.findDisplay(klass: KClass<D>): D? {
     val manager = get<AudienceManager>(AudienceManager::class.java)
-    return manager[this]
+    return klass.safeCast(manager[this])
 }
+
+inline fun <reified D: AudienceDisplay> Ref<out AudienceEntry>.findDisplay(): D? {
+    return findDisplay(D::class)
+}
+
+
 
 fun <E : AudienceEntry> List<Ref<out AudienceEntry>>.descendants(klass: KClass<E>): List<Ref<E>> {
     return flatMap {

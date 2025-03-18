@@ -1,6 +1,5 @@
-package com.typewritermc.entity.entries.data.minecraft
+package com.typewritermc.engine.paper.entry.entity
 
-import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.Var

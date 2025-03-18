@@ -8,6 +8,7 @@ import com.typewritermc.engine.paper.entry.entries.PropertySupplier
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import org.bukkit.SoundCategory
 import org.bukkit.entity.Player
+import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
 internal class DisplayEntity(
@@ -55,6 +56,8 @@ internal class DisplayEntity(
     }
 
     operator fun contains(entityId: Int): Boolean = entity.contains(entityId)
+
+    fun <P : EntityProperty> property(type: KClass<P>) = entity.property(type)
 
     fun dispose() {
         entity.dispose()

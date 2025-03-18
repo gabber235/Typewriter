@@ -4,10 +4,11 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entries.EntityDefinitionEntry
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
-import org.bukkit.Location
-import java.util.UUID
+import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import java.util.*
+import kotlin.reflect.KClass
 
-interface ActivityEntityDisplay {
+interface AudienceEntityDisplay {
     val creator: EntityCreator
     val definition: EntityDefinitionEntry?
         get() = creator as? EntityDefinitionEntry
@@ -25,6 +26,11 @@ interface ActivityEntityDisplay {
      * The entity state for the player.
      */
     fun entityState(playerId: UUID): EntityState
+
+    /**
+     * Get a specific property applied to the entity for a specific player.
+     */
+    fun <P : EntityProperty> property(playerId: UUID, type: KClass<P>): P?
 
     /**
      * Whether the player can view the entity.
@@ -50,4 +56,11 @@ interface ActivityEntityDisplay {
      * If you need to check if the entity is visible to the player, use [playerSeesEntity].
      */
     fun entityId(playerId: UUID): Int
+}
+
+/**
+ * Get a specific property applied to the entity for a specific player.
+ */
+inline fun <reified P : EntityProperty> AudienceEntityDisplay.property(playerId: UUID): P? {
+    return property(playerId, P::class)
 }

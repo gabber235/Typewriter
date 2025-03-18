@@ -24,8 +24,13 @@ class VarSerializer : DataSerializer<Var<*>> {
                 obj.add("data", context.serialize(src.data))
                 return obj
             }
+
             is MappedVar<*> -> {
                 throw IllegalStateException("Could not serialize mapped var")
+            }
+
+            is ComputeVar<*> -> {
+                throw IllegalStateException("Could not serialize compute var")
             }
         }
     }

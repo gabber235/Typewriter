@@ -10,7 +10,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.core.utils.point.toVector
 import com.typewritermc.engine.paper.entry.*
-import com.typewritermc.engine.paper.entry.entity.ActivityEntityDisplay
+import com.typewritermc.engine.paper.entry.entity.AudienceEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
@@ -138,7 +138,7 @@ class LookAtNpcInteractionBound(
             else context[InteractingEntityInstance] as? Ref<out EntityInstanceEntry>
                 ?: return
 
-        val display = get<AudienceManager>(AudienceManager::class.java)[ref] as? ActivityEntityDisplay ?: return
+        val display = get<AudienceManager>(AudienceManager::class.java)[ref] as? AudienceEntityDisplay ?: return
 
         if (!display.isSpawnedIn(player.uniqueId)) {
             state = AnimationState.Idle

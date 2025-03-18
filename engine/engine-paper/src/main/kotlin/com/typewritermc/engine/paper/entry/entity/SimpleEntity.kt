@@ -1,14 +1,14 @@
 package com.typewritermc.engine.paper.entry.entity
 
-import com.typewritermc.core.extension.annotations.Tags
-import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.extension.annotations.OnlyTags
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
-import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.core.entries.ref
+import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.OnlyTags
+import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.extension.annotations.WithRotation
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.logErrorIfNull
 
 interface SimpleEntityDefinition : EntityDefinitionEntry
@@ -42,7 +42,7 @@ interface SimpleEntityInstance : EntityInstanceEntry {
             data to (data.priority + maxDefinitionData + 1)
         }
 
-        return SharedActivityEntityDisplay(
+        return SharedAudienceEntityDisplay(
             ref(),
             definition,
             activity,

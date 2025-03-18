@@ -7,8 +7,9 @@ import lirand.api.extensions.server.server
 import org.bukkit.entity.Player
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
-class GroupActivityEntityDisplay(
+class GroupAudienceEntityDisplay(
     override val instanceEntryRef: Ref<out EntityInstanceEntry>,
     override val creator: EntityCreator,
     private val activityCreators: ActivityCreator,
@@ -16,7 +17,7 @@ class GroupActivityEntityDisplay(
     private val spawnPosition: Position,
     private val showRange: Var<Double> = ConstVar(entityShowRange),
     private val group: GroupEntry,
-) : AudienceFilter(instanceEntryRef), TickableDisplay, ActivityEntityDisplay {
+) : AudienceFilter(instanceEntryRef), TickableDisplay, AudienceEntityDisplay {
     private val activityManagers = ConcurrentHashMap<GroupId, ActivityManager<in SharedActivityContext>>()
     private val entities = ConcurrentHashMap<UUID, DisplayEntity>()
 
@@ -127,6 +128,8 @@ class GroupActivityEntityDisplay(
         lastStates[groupId]?.let { return it }
         return EntityState()
     }
+
+    override fun <P : EntityProperty> property(playerId: UUID, type: KClass<P>): P? = entities[playerId]?.property(type)
 
     override fun canView(playerId: UUID): Boolean = canConsider(playerId)
     override fun isSpawnedIn(playerId: UUID): Boolean = entities[playerId] != null

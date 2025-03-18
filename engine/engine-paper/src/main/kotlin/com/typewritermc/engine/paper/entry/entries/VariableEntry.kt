@@ -88,3 +88,14 @@ class MappedVar<T : Any>(
 }
 
 fun <T : Any> Var<T>.map(mapper: (Player, T) -> T): Var<T> = MappedVar(this, mapper)
+
+class ComputeVar<T : Any>(
+    private val compute: (Player, InteractionContext?) -> T,
+) : Var<T> {
+    override fun get(player: Player, interactionContext: InteractionContext?): T {
+        return compute(player, interactionContext)
+    }
+    override fun toString(): String {
+        return "ComputeVar(compute=$compute)"
+    }
+}

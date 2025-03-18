@@ -7,7 +7,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.AudienceManager
-import com.typewritermc.engine.paper.entry.entity.ActivityEntityDisplay
+import com.typewritermc.engine.paper.entry.entity.AudienceEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
@@ -44,7 +44,7 @@ class InteractEntityObjectivesPathStream(
         val manager = KoinJavaComponent.get<AudienceManager>(AudienceManager::class.java)
         Query.findWhere<EntityInstanceEntry> { it.ref() !in ignoreInstances && it.definition in definitions }
             .mapNotNull { manager[it.ref()] }
-            .filterIsInstance<ActivityEntityDisplay>()
+            .filterIsInstance<AudienceEntityDisplay>()
             .filter { it.canView(player.uniqueId) }
             .mapNotNull { it.position(player.uniqueId)?.toBukkitLocation() }
             .toList()

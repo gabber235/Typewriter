@@ -10,7 +10,7 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.descendants
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.logger
-import java.util.Optional
+import java.util.*
 
 @Tags("shared_entity_instance")
 interface SharedAdvancedEntityInstance : EntityInstanceEntry {
@@ -25,7 +25,7 @@ interface SharedAdvancedEntityInstance : EntityInstanceEntry {
         val activityCreator = this.activity.get() ?: IdleActivity
         val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
 
-        return SharedActivityEntityDisplay(
+        return SharedAudienceEntityDisplay(
             ref(),
             definition,
             activityCreator,
@@ -54,7 +54,7 @@ interface GroupAdvancedEntityInstance : EntityInstanceEntry {
         val group = this.group.get() ?: throw IllegalStateException("No group found for the group entity instance.")
         val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
 
-        return GroupActivityEntityDisplay(
+        return GroupAudienceEntityDisplay(
             ref(),
             definition,
             activityCreator,
@@ -80,7 +80,7 @@ interface IndividualAdvancedEntityInstance : EntityInstanceEntry {
 
         val (definition, suppliers) = baseInfo() ?: return PassThroughFilter(ref())
 
-        return IndividualActivityEntityDisplay(ref(), definition, activityCreator, suppliers, spawnLocation, showRange.orElse(ConstVar(entityShowRange)))
+        return IndividualAudienceEntityDisplay(ref(), definition, activityCreator, suppliers, spawnLocation, showRange.orElse(ConstVar(entityShowRange)))
     }
 }
 
