@@ -645,9 +645,7 @@ extension PageX on Page {
     }
 
     final data = entry.data;
-    print("data: $data");
     final blueprintData = blueprint.dataBlueprint.defaultValue();
-    print("blueprintData: $blueprintData");
     final newData = {
       ...stringMap(maskObjects(blueprintData, data)),
       if (data["blueprintId"] != null) "blueprintId": blueprint.id,
