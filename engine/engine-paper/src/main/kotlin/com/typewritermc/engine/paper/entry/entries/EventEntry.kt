@@ -47,8 +47,6 @@ class Event(val player: Player, val context: InteractionContext, val triggers: L
 
     operator fun contains(trigger: EventTrigger) = triggers.contains(trigger)
 
-    operator fun contains(entry: Entry) = triggers.any { it == entry }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Event) return false
@@ -84,6 +82,8 @@ data class EntryTrigger(val ref: Ref<out TriggerableEntry>) : EventTrigger {
     override fun canTriggerFor(player: Player, interactionContext: InteractionContext): Boolean =
         ref.get()?.criteria?.matches(player, interactionContext) ?: false
 }
+
+inline fun <reified E : TriggerableEntry> Event.entries(): List<E> = triggers.filterIsInstance<EntryTrigger>().mapNotNull { it.ref.get() as? E }
 
 data object InteractionEndTrigger : EventTrigger {
     override val id: String

@@ -19,6 +19,9 @@ class Library : KoinComponent, Reloadable {
     internal var entries: List<Entry> = emptyList()
         private set
 
+    internal var entriesById: Map<String, Entry> = emptyMap()
+        private set
+
     internal var entryPriority = emptyMap<Ref<out Entry>, Int>()
         private set
 
@@ -40,6 +43,7 @@ class Library : KoinComponent, Reloadable {
             .map { parsePage(it) }
 
         entries = pages.flatMap { it.entries }
+        entriesById = entries.associateBy { it.id }
         entryPriority = pages.flatMap { page ->
             page.entries.map { entry ->
                 if (entry !is PriorityEntry) return@map entry.ref() to page.priority

@@ -1,10 +1,10 @@
 package com.typewritermc.engine.paper.entry.dialogue
 
-import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.priority
 import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.entry.entries.Event
+import com.typewritermc.engine.paper.entry.entries.entries
 import com.typewritermc.engine.paper.interaction.TriggerContinuation
 import com.typewritermc.engine.paper.interaction.TriggerHandler
 
@@ -54,7 +54,7 @@ class DialogueHandler : TriggerHandler {
      * interaction.
      */
     private fun Interaction?.tryTriggerNextDialogue(event: Event): TriggerContinuation {
-        val nextDialogue = Query.findWhere<DialogueEntry> { it in event }
+        val nextDialogue = event.entries<DialogueEntry>()
             .sortedWith { a, b ->
                 val priorityDiff = b.priority - a.priority
                 if (priorityDiff != 0) return@sortedWith priorityDiff

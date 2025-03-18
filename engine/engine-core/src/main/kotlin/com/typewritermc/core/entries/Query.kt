@@ -3,6 +3,7 @@ package com.typewritermc.core.entries
 import com.typewritermc.core.books.pages.PageType
 import org.koin.java.KoinJavaComponent.get
 import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 /**
  * A query can be used to search for entries.
@@ -190,10 +191,7 @@ class Query<E : Entry>(private val klass: KClass<E>) {
          * @see findByName
          */
         fun <E : Entry> findById(klass: KClass<E>, id: String): E? =
-            get<Library>(Library::class.java).entries
-                .asSequence()
-                .filterIsInstance(klass.java)
-                .firstOrNull { it.id == id }
+            klass.safeCast(get<Library>(Library::class.java).entriesById[id])
 
         /**
          * Find entry all entries that are on the given page [pageId] with the given [filter].

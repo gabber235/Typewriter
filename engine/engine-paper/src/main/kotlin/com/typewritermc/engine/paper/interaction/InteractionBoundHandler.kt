@@ -1,18 +1,18 @@
 package com.typewritermc.engine.paper.interaction
 
-import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.priority
 import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.engine.paper.entry.InteractionBoundEntry
 import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
+import com.typewritermc.engine.paper.entry.entries.entries
 import org.bukkit.entity.Player
 
 class InteractionBoundHandler : TriggerHandler {
     override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {
         val directTriggers = event.triggers.filterIsInstance<InteractionBoundTrigger>()
-        val entries = Query.findWhere<InteractionBoundEntry> { it in event }.toList()
+        val entries = event.entries<InteractionBoundEntry>()
 
         val triggers = directTriggers + entries.map(BoundTrigger::EntryBoundTrigger)
         val bound = triggers.maxByOrNull { it.priority }?.build(event.player)

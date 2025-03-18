@@ -63,7 +63,7 @@ class PlayerSession(val player: Player) : KoinComponent {
                 // Wait for the remainder or the tick
                 val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
                 if (wait > 0) delay(wait)
-                else if (wait < -100) logger.warning("The session ticker for ${player.name} is running behind! Took ${endTime - startTime}ms")
+                else if (wait < -100) logger.warning("The session ticker for ${player.name} is running behind! Took ${endTime - startTime}ms (if this happens only occasionally, it's fine)")
             }
         }
     }
@@ -128,6 +128,7 @@ class PlayerSession(val player: Player) : KoinComponent {
                             if (interactionLifecycle == InteractionLifecycle.KEEP) return
                             interactionLifecycle = InteractionLifecycle.END
                         }
+
                         is TriggerContinuation.StartInteractionBound -> nextBounds.add(this.bound)
                         is TriggerContinuation.EndInteractionBound -> boundLifecycle = InteractionLifecycle.END
                         is TriggerContinuation.Multi -> this.continuations.forEach { it.apply() }
@@ -160,7 +161,9 @@ class PlayerSession(val player: Player) : KoinComponent {
 
         val nextInteraction = nextInteractions.maxByOrNull { it.priority } ?: return
         // Only more or equal important interactions can override.
-        if (nextInteraction.priority < (interaction?.priority ?: Int.MIN_VALUE) && interactionLifecycle != InteractionLifecycle.END) {
+        if (nextInteraction.priority < (interaction?.priority
+                ?: Int.MIN_VALUE) && interactionLifecycle != InteractionLifecycle.END
+        ) {
             return
         }
 

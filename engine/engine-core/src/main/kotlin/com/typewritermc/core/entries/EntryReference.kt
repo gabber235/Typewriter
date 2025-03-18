@@ -28,9 +28,10 @@ class Ref<E : Entry>(
 
 
     override fun toString(): String {
-        if (!isSet) return "Ref<${klass.simpleName}>(NOT SET)"
-        return "Ref<${klass.simpleName}>($id)"
+        val entry = entry ?: return "Ref<${klass.simpleName}>(NOT SET)"
+        return "Ref<${entry::class.simpleName}>($id)"
     }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

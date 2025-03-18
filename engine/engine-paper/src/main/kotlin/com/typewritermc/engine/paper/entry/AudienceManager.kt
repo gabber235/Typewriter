@@ -57,7 +57,7 @@ class AudienceManager : Listener, Reloadable {
                     logger.warning(
                         "Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms) Top 5 longest ticks: ${
                             top5.joinToString(", ") { "${it.key}: ${it.value}ms" }
-                        }"
+                        } (if this happens only occasionally, it's fine)"
                     )
                 }
             }
