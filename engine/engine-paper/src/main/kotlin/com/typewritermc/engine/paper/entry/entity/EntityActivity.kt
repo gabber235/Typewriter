@@ -33,7 +33,10 @@ enum class TickResult {
     IGNORED,
 }
 
-interface SharedEntityActivity : EntityActivity<SharedActivityContext>
+interface SharedEntityActivity : EntityActivity<SharedActivityContext> {
+    fun addedViewer(context: SharedActivityContext, viewer: Player) {}
+    fun removedViewer(context: SharedActivityContext, viewer: Player) {}
+}
 interface IndividualEntityActivity : EntityActivity<IndividualActivityContext>
 interface GenericEntityActivity : EntityActivity<ActivityContext>
 
@@ -95,7 +98,7 @@ abstract class SingleChildActivity<Context : ActivityContext>(
     abstract fun currentChild(context: Context): Ref<out EntityActivityEntry>
 }
 
-sealed interface ActivityContext {
+interface ActivityContext {
     val instanceRef: Ref<out EntityInstanceEntry>
     val isViewed: Boolean
 

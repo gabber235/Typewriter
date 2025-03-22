@@ -56,7 +56,30 @@ abstract class FakeEntity(
     }
 }
 
-data class EntityState(
+open class EntityState(
     val eyeHeight: Double = 0.0,
     val speed: Float = 0.2085f,
-)
+) {
+    operator fun component1(): Double = eyeHeight
+    operator fun component2(): Float = speed
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is EntityState) return false
+
+        if (eyeHeight != other.eyeHeight) return false
+        if (speed != other.speed) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = eyeHeight.hashCode()
+        result = 31 * result + speed.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "EntityState(eyeHeight=$eyeHeight, speed=$speed)"
+    }
+}

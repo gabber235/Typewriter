@@ -61,6 +61,7 @@ class GroupAudienceEntityDisplay(
         entities.computeIfAbsent(player.uniqueId) {
             DisplayEntity(player, creator, activityManager, suppliers.toCollectors())
         }
+        activityManager.addedViewer(SharedActivityContext(instanceEntryRef, groupViewers(groupId)), player)
     }
 
     override fun tick() {
@@ -86,6 +87,9 @@ class GroupAudienceEntityDisplay(
     }
 
     override fun onPlayerFilterRemoved(player: Player) {
+        val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
+        activityManagers[groupId]?.removedViewer(SharedActivityContext(instanceEntryRef, groupViewers(groupId)), player)
+       
         super.onPlayerFilterRemoved(player)
         entities.remove(player.uniqueId)?.dispose()
     }

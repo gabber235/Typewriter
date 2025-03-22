@@ -1,6 +1,7 @@
 package com.typewritermc.engine.paper.entry.entity
 
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import org.bukkit.entity.Player
 
 class ActivityManager<Context : ActivityContext>(
     private val activity: EntityActivity<in Context>,
@@ -17,6 +18,18 @@ class ActivityManager<Context : ActivityContext>(
 
     fun tick(context: Context) {
         activity.tick(context)
+    }
+
+    fun addedViewer(context: SharedActivityContext, viewer: Player) {
+        when (activity) {
+            is SharedEntityActivity -> activity.addedViewer(context, viewer)
+        }
+    }
+
+    fun removedViewer(context: SharedActivityContext, viewer: Player) {
+        when (activity) {
+            is SharedEntityActivity -> activity.removedViewer(context, viewer)
+        }
     }
 
     fun dispose(context: Context) {

@@ -49,6 +49,7 @@ class SharedAudienceEntityDisplay(
         entities.computeIfAbsent(player.uniqueId) {
             DisplayEntity(player, creator, activityManager, suppliers.toCollectors())
         }
+        activityManager.addedViewer(SharedActivityContext(instanceEntryRef, players), player)
     }
 
     override fun tick() {
@@ -64,6 +65,7 @@ class SharedAudienceEntityDisplay(
     }
 
     override fun onPlayerFilterRemoved(player: Player) {
+        activityManager?.removedViewer(SharedActivityContext(instanceEntryRef, players), player)
         super.onPlayerFilterRemoved(player)
         entities.remove(player.uniqueId)?.dispose()
     }
