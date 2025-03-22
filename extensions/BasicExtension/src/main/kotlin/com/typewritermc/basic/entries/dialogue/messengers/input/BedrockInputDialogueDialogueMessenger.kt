@@ -5,6 +5,7 @@ import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
 import com.typewritermc.engine.paper.entry.dialogue.MessengerState
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.legacy
@@ -22,12 +23,19 @@ class BedrockInputDialogueDialogueMessenger<T : Any>(
     entry: InputDialogueEntry,
     private val key: EntryContextKey,
     private val parser: (String) -> Result<T>,
+    private val triggers: (T?) -> List<EventTrigger>,
 ) : DialogueMessenger<InputDialogueEntry>(player, context, entry) {
 
     override fun init() {
         super.init()
         sendForm()
     }
+
+    override val eventTriggers: List<EventTrigger>
+        get() {
+            val value = context.get<T>(entry, key)
+            return triggers(value)
+        }
 
     private fun sendForm() {
         org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(

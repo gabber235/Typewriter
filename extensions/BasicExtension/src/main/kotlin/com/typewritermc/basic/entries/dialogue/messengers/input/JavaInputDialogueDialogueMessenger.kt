@@ -7,6 +7,7 @@ import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
 import com.typewritermc.engine.paper.entry.dialogue.MessengerState
 import com.typewritermc.engine.paper.entry.dialogue.TickContext
 import com.typewritermc.engine.paper.entry.dialogue.typingDurationType
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.snippets.snippet
@@ -43,6 +44,7 @@ class JavaInputDialogueDialogueMessenger<T : Any>(
     entry: InputDialogueEntry,
     private val key: EntryContextKey,
     private val parser: (String) -> Result<T>,
+    private val triggers: (T?) -> List<EventTrigger>,
 ) :
     DialogueMessenger<InputDialogueEntry>(player, context, entry) {
 
@@ -51,6 +53,12 @@ class JavaInputDialogueDialogueMessenger<T : Any>(
     private var infoText = ""
     private var typingDuration = Duration.ZERO
     private var playedTime = Duration.ZERO
+
+    override val eventTriggers: List<EventTrigger>
+        get() {
+            val value = context.get<T>(entry, key)
+            return triggers(value)
+        }
 
     override var isCompleted: Boolean
         // We don't want to be able to complete the dialogue if the player clicks on a npc.

@@ -31,6 +31,12 @@ class InteractionContext(
         return key.klass.safeCast(data[key])
     }
 
+    operator fun <T : Any> get(ref: Ref<out Entry>, key: EntryContextKey): T? {
+        return get(EntryInteractionContextKey(ref, key))
+    }
+
+    operator fun <T : Any> get(entry: Entry, key: EntryContextKey): T? = get(entry.ref(), key)
+
     fun combine(context: InteractionContext): InteractionContext {
         return InteractionContext(data + context.data)
     }
