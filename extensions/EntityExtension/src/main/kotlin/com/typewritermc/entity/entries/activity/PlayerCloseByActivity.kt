@@ -13,6 +13,7 @@ import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.utils.isLookable
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 @Entry(
@@ -57,14 +58,14 @@ class PlayerCloseByActivityEntry(
         context: ActivityContext,
         currentLocation: PositionProperty
     ): EntityActivity<in ActivityContext> {
-        val effectiveActivationRange = activationRange
-            .filter { it < range }
-            .orElseGet {
-                if (activationRange.isPresent) {
-                    logger.warning("Activation range (${activationRange.get()}) must be smaller than the main range ($range)")
-                }
+        val effectiveActivationRange = activationRange.map {
+            if (it >= range) {
+                logger.warning("The activation range must be smaller than the main range.")
                 range
+            } else {
+                it
             }
+        }.orElse(range)
 
         return PlayerCloseByActivity(
             range,
@@ -78,7 +79,7 @@ class PlayerCloseByActivityEntry(
 }
 
 class PlayerCloseByActivity(
-    private val range: Double,
+    private val deactivationRange: Double,
     private val activationRange: Double,
     private val maxIdleDuration: Duration,
     private val closeByActivity: Ref<out EntityActivityEntry>,
@@ -86,12 +87,14 @@ class PlayerCloseByActivity(
     startLocation: PositionProperty,
 ) : SingleChildActivity<ActivityContext>(startLocation) {
     private var trackers = mutableMapOf<UUID, PlayerLocationTracker>()
-    private var isActive = false
 
     override fun currentChild(context: ActivityContext): Ref<out EntityActivityEntry> {
         val closeByPlayers = context.viewers
             .filter { it.isLookable }
-            .filter { (it.location.toProperty().distanceSqrt(currentPosition) ?: Double.MAX_VALUE) < range * range }
+            .filter {
+                (it.location.toProperty().distanceSqrt(currentPosition)
+                    ?: Double.MAX_VALUE) < deactivationRange * deactivationRange
+            }
 
         trackers.keys.removeAll { uuid -> closeByPlayers.none { it.uniqueId == uuid } }
 
@@ -102,17 +105,10 @@ class PlayerCloseByActivity(
                 )
             }
                 .update(player.location.toProperty())
+                .updateActivated(currentPosition, activationRange)
         }
 
-        val trackerActive = trackers.any { (_, tracker) -> tracker.isActive(maxIdleDuration) }
-
-        isActive = when {
-            isActive -> trackerActive
-            trackerActive -> trackers.any { (_, tracker) ->
-                tracker.isInActivationRange(currentPosition, activationRange, maxIdleDuration)
-            }
-            else -> false
-        }
+        val isActive = trackers.any { it.value.isActive(maxIdleDuration) }
 
         return if (isActive) {
             closeByActivity
@@ -123,28 +119,37 @@ class PlayerCloseByActivity(
 
     private class PlayerLocationTracker(
         var location: PositionProperty,
-        var lastSeen: Long = System.currentTimeMillis()
+        var lastSeen: Instant = Instant.now(),
+        var activated: Boolean = false,
     ) {
-        fun update(location: PositionProperty) {
-            if ((this.location.distanceSqrt(location) ?: Double.MAX_VALUE) < 0.1) return
+        fun update(location: PositionProperty): PlayerLocationTracker {
+            if ((this.location.distanceSqrt(location) ?: Double.MAX_VALUE) < 0.1) return this
             this.location = location
-            lastSeen = System.currentTimeMillis()
+            lastSeen = Instant.now()
+            return this
         }
 
-        fun isActive(maxIdleDuration: Duration): Boolean {
-            if (maxIdleDuration.isZero) return true
-            return System.currentTimeMillis() - lastSeen < maxIdleDuration.toMillis()
-        }
-
-        fun isInActivationRange(
+        fun updateActivated(
             entityPosition: PositionProperty,
             activationRange: Double,
+        ): PlayerLocationTracker {
+            val distanceSq = location.distanceSqrt(entityPosition) ?: Double.MAX_VALUE
+            if (!activated && distanceSq < activationRange * activationRange) {
+                activated = true
+            }
+            return this
+        }
+
+        private fun isTimedOut(maxIdleDuration: Duration): Boolean {
+            if (maxIdleDuration.isZero) return false
+            return Duration.between(lastSeen, Instant.now()) > maxIdleDuration
+        }
+
+        fun isActive(
             maxIdleDuration: Duration
         ): Boolean {
-            if (!isActive(maxIdleDuration)) return false
-
-            val distanceSq = location.distanceSqrt(entityPosition) ?: Double.MAX_VALUE
-            return distanceSq < activationRange * activationRange
+            if (isTimedOut(maxIdleDuration)) return false
+            return activated
         }
     }
 }
