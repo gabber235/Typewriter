@@ -1,10 +1,19 @@
 package com.typewritermc.engine.paper.utils
 
+import com.github.retrooper.packetevents.protocol.component.ComponentTypes
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemModel
+import com.github.retrooper.packetevents.protocol.item.type.ItemTypes
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.resources.ResourceLocation
+import com.github.retrooper.packetevents.util.Dummy
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate
-import io.github.retrooper.packetevents.util.SpigotReflectionUtil
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
+import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.plugin
+import io.github.retrooper.packetevents.util.SpigotReflectionUtil
+import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.entity.Player
@@ -118,10 +127,25 @@ fun Player.restore(state: PlayerState?) {
     state?.state?.forEach { (key, value) -> key.restore(this, value) }
 }
 
+val fakeAir: com.github.retrooper.packetevents.protocol.item.ItemStack =
+    com.github.retrooper.packetevents.protocol.item.ItemStack.builder()
+        .type(ItemTypes.PAPER)
+        .component(ComponentTypes.ITEM_MODEL, ItemModel(ResourceLocation("minecraft", "air")))
+        .component(ComponentTypes.ITEM_NAME, Component.text(" "))
+        .component(ComponentTypes.HIDE_TOOLTIP, Dummy.dummy())
+        .component(ComponentTypes.HIDE_ADDITIONAL_TOOLTIP, Dummy.dummy())
+        .build()
+
 fun Player.fakeClearInventory() {
-    for (i in 0..46) {
+    for (i in 0..8) {
+        // Setting an item with model air, will hide the hand in the cinematic
+        val packet = WrapperPlayServerSetSlot(-2, 0, i, fakeAir)
+        packet.sendPacketTo(this)
+    }
+
+    for (i in 9..46) {
         val item = inventory.getItem(i) ?: continue
-        if (item.type.isAir) continue
+        if (item.isEmpty) continue
 
         val packet = WrapperPlayServerSetSlot(-2, 0, i, com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY)
         packet.sendPacketTo(this)
@@ -131,9 +155,34 @@ fun Player.fakeClearInventory() {
 fun Player.restoreInventory() {
     for (i in 0..46) {
         val item = inventory.getItem(i) ?: continue
-        if (item.type.isAir) continue
 
         val packet = WrapperPlayServerSetSlot(-2, 0, i, SpigotReflectionUtil.decodeBukkitItemStack(item))
         packet.sendPacketTo(this)
+    }
+}
+
+fun InterceptionBundle.keepFakeInventory() {
+    PacketType.Play.Client.CLICK_WINDOW { event ->
+        event.isCancelled = true
+        event.getPlayer<Player>().fakeClearInventory()
+    }
+    PacketType.Play.Client.CLICK_WINDOW_BUTTON { event ->
+        event.isCancelled = true
+        event.getPlayer<Player>().fakeClearInventory()
+    }
+    !PacketType.Play.Client.USE_ITEM
+    !PacketType.Play.Client.INTERACT_ENTITY
+    !PacketType.Play.Client.PLAYER_DIGGING
+    PacketType.Play.Server.WINDOW_ITEMS { event ->
+        val packet = WrapperPlayServerWindowItems(event)
+        packet.items = List(packet.items.size) { index ->
+            if (index in 0..8) fakeAir
+            else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+        }
+    }
+    PacketType.Play.Server.SET_SLOT { event ->
+        val packet = WrapperPlayServerSetSlot(event)
+        packet.item = if (packet.slot in 0..8) fakeAir
+        else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
     }
 }

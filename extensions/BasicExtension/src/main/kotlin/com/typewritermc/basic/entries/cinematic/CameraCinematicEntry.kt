@@ -5,8 +5,6 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPosition
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPositionAndRotation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
 import com.typewritermc.basic.entries.cinematic.DisplayCameraAction.Companion.BASE_INTERPOLATION
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
@@ -39,9 +37,6 @@ import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.attribute.Attribute
-import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -137,7 +132,6 @@ class CameraCinematicAction(
     private lateinit var action: CameraAction
 
     private var originalState: PlayerState? = null
-    private var attributeModifier: AttributeModifier? = null
     private var interceptor: InterceptionBundle? = null
     private var listener: Listener? = null
     private var boundStateSubscription: InteractionBoundStateOverrideSubscription? = null
@@ -202,13 +196,6 @@ class CameraCinematicAction(
             allowFlight = true
             isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
-            attributeModifier = AttributeModifier(
-                NamespacedKey(plugin, "hand_hiding"),
-                -100.0,
-                AttributeModifier.Operation.ADD_NUMBER
-            ).also {
-                getAttribute(Attribute.ATTACK_SPEED)?.addModifier(it)
-            }
 
             lirand.api.extensions.server.server.onlinePlayers.forEach {
                 it.hidePlayer(plugin, this)
@@ -241,19 +228,7 @@ class CameraCinematicAction(
             it.isCancelled = true
         }
         interceptor = this.interceptPackets {
-            !PacketType.Play.Client.CLICK_WINDOW
-            !PacketType.Play.Client.CLICK_WINDOW_BUTTON
-            !PacketType.Play.Client.USE_ITEM
-            !PacketType.Play.Client.INTERACT_ENTITY
-            !PacketType.Play.Client.PLAYER_DIGGING
-            PacketType.Play.Server.WINDOW_ITEMS { event ->
-                val packet = WrapperPlayServerWindowItems(event)
-                packet.items = packet.items.map { com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY }
-            }
-            PacketType.Play.Server.SET_SLOT { event ->
-                val packet = WrapperPlayServerSetSlot(event)
-                packet.item = com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
-            }
+            keepFakeInventory()
             // If the player is a bedrock player, we don't want to modify the location.
             if (isFloodgate) return@interceptPackets
             PacketType.Play.Server.PLAYER_POSITION_AND_LOOK { event ->
@@ -285,11 +260,6 @@ class CameraCinematicAction(
                 restore(it)
             }
             originalState = null
-
-            attributeModifier?.let {
-                getAttribute(Attribute.ATTACK_SPEED)?.removeModifier(it)
-            }
-            attributeModifier = null
 
             if (gameMode != GameMode.CREATIVE) {
                 restoreInventory()
