@@ -16,6 +16,7 @@ import com.typewritermc.engine.paper.utils.plainText
 import lirand.api.extensions.server.server
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
@@ -57,7 +58,9 @@ class ChatHistoryHandler :
                 history.allowedMessageThrough()
                 return
             }
-            history.addMessage(component)
+            if (component.shouldSaveMessage()) {
+                history.addMessage(component)
+            }
 
             if (history.isBlocking()) {
                 event.isCancelled = true
@@ -89,6 +92,13 @@ class ChatHistoryHandler :
 
             else -> null
         }
+    }
+
+    fun Component.shouldSaveMessage(): Boolean {
+        if (this is TranslatableComponent && key() == "multiplayer.message_not_delivered") {
+            return false
+        }
+        return true
     }
 
     fun getHistory(pid: UUID): ChatHistory {
