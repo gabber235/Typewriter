@@ -197,7 +197,7 @@ class CameraCinematicAction(
             isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
 
-            lirand.api.extensions.server.server.onlinePlayers.forEach {
+            lirand.api.extensions.server.server.onlinePlayers.filter { it.uniqueId != uniqueId }.forEach {
                 it.hidePlayer(plugin, this)
                 this.hidePlayer(plugin, it)
             }

@@ -25,9 +25,11 @@ import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
 import com.typewritermc.engine.paper.interaction.*
+import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.*
 import kotlinx.coroutines.future.await
+import lirand.api.extensions.server.server
 import me.tofaa.entitylib.meta.display.TextDisplayMeta
 import me.tofaa.entitylib.meta.mobs.villager.VillagerMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -97,10 +99,15 @@ class LockInteractionBound(
 
     private suspend fun setup() {
         assert(playerState == null)
-        playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT)
+        playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT, VISIBLE_PLAYERS, SHOWING_PLAYER)
         player.allowFlight = true
         player.isFlying = true
         player.fakeClearInventory()
+
+        server.onlinePlayers.filter { it.uniqueId != player.uniqueId }.forEach {
+            it.hidePlayer(plugin, player)
+            player.hidePlayer(plugin, it)
+        }
 
         val startPosition = targetPosition.get(player)
         previousPosition = startPosition
