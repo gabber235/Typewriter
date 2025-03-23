@@ -3,12 +3,12 @@ package com.typewritermc.basic.entries.event
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.interaction.context
-import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
+import com.typewritermc.engine.paper.entry.triggerAllFor
 import org.bukkit.entity.EntityType
 import org.bukkit.event.entity.EntityDeathEvent
 import java.util.*

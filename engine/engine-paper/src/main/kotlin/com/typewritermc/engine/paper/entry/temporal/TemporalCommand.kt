@@ -10,6 +10,7 @@ import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
 
 fun CommandTree.temporalCommand() = literal("cinematic") {
+    withPermission("typewriter.cinematic")
     literal("start") {
         withPermission("typewriter.cinematic.start")
         page("cinematic", PageType.CINEMATIC) { page ->

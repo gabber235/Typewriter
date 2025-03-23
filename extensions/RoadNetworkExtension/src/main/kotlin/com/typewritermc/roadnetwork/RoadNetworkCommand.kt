@@ -16,6 +16,7 @@ import org.koin.java.KoinJavaComponent
 
 @TypewriterCommand
 fun CommandTree.roadNetworkCommand() = literal("roadNetwork") {
+    withPermission("typewriter.roadNetwork")
     literal("edit") {
         withPermission("typewriter.roadNetwork.edit")
         entry<RoadNetworkEntry>("network") { network ->
@@ -38,7 +39,8 @@ fun CommandTree.roadNetworkCommand() = literal("roadNetwork") {
                 target.sendActionBar("Loading network...".asMini())
                 ThreadType.DISPATCHERS_ASYNC.launch {
                     val network = networkManager.getNetwork(entry().ref())
-                    target.sendMessage("""
+                    target.sendMessage(
+                        """
                         |<gray><st>${" ".repeat(60)}</st>
                         |
                         |<red><b>Road Network Info</b>: <white>${entry().name}
@@ -49,7 +51,8 @@ fun CommandTree.roadNetworkCommand() = literal("roadNetwork") {
                         |  <gray> - <gold>Modifications: <white>${network.modifications.size}
                         |  
                         |<gray><st>${" ".repeat(60)}</st>
-                    """.trimMargin().asMini())
+                    """.trimMargin().asMini()
+                    )
                 }
             }
         }

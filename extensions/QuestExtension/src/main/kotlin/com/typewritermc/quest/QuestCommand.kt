@@ -7,6 +7,7 @@ import com.typewritermc.engine.paper.utils.msg
 
 @TypewriterCommand
 fun CommandTree.questCommand() = literal("quest") {
+    withPermission("typewriter.quest")
     literal("track") {
         withPermission("typewriter.quest.track")
         entry<QuestEntry>("quest") { quest ->

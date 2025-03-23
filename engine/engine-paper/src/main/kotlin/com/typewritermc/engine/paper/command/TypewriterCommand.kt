@@ -221,6 +221,7 @@ private fun CommandTree.triggerCommand() = literal("trigger") {
 }
 
 private fun CommandTree.manifestCommand() = literal("manifest") {
+    withPermission("typewriter.manifest")
     literal("inspect") {
         withPermission("typewriter.manifest.inspect")
         executePlayerOrTarget { target ->
@@ -244,6 +245,7 @@ private fun CommandTree.manifestCommand() = literal("manifest") {
     }
 
     literal("page") {
+        withPermission("typewriter.manifest.page")
         page("page", PageType.MANIFEST) { page ->
             executePlayerOrTarget { target ->
                 val audienceEntries = page().entries
