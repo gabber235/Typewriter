@@ -1,0 +1,55 @@
+name: typewriter_panel
+description: "The panel to configure all of Typewriter"
+publish_to: 'none'
+version: 1000.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  hooks_riverpod: ^2.6.1
+  flutter_hooks: ^0.21.2
+  riverpod_annotation: ^2.6.1
+  auto_route: ^10.0.1
+  logto_dart_sdk: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  riverpod_generator: ^2.6.5
+  build_runner: ^2.4.15
+  custom_lint: ^0.7.5
+  riverpod_lint: ^2.6.5
+  flutter_lints: ^5.0.0
+  auto_route_generator: ^10.0.1
+  icons_launcher: ^3.0.1
+
+icons_launcher:
+  image_path: "assets/typewriter_app_icon.png"
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true
+    macos:
+      enable: true
+    windows:
+      enable: true
+    linux:
+      enable: true
+
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+  fonts:
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf
+        - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf
+          style: italic
+
