@@ -154,7 +154,7 @@ fun Player.fakeClearInventory() {
 
 fun Player.restoreInventory() {
     for (i in 0..46) {
-        val item = inventory.getItem(i) ?: continue
+        val item = inventory.getItem(i) ?: ItemStack.empty()
 
         val packet = WrapperPlayServerSetSlot(-2, 0, i, SpigotReflectionUtil.decodeBukkitItemStack(item))
         packet.sendPacketTo(this)

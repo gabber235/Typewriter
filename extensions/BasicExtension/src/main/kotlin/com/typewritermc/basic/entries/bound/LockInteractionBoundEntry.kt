@@ -104,7 +104,7 @@ class LockInteractionBound(
         player.isFlying = true
         player.fakeClearInventory()
 
-        server.onlinePlayers.filter { it.uniqueId != player.uniqueId }.forEach {
+        server.onlinePlayers.forEach {
             it.hidePlayer(plugin, player)
             player.hidePlayer(plugin, it)
         }
@@ -160,10 +160,10 @@ class LockInteractionBound(
         interceptor?.cancel()
         interceptor = null
         teardownEntity()
+        player.restoreInventory()
         ThreadType.SYNC.switchContext {
             player.restore(playerState)
             playerState = null
-            player.restoreInventory()
         }
     }
 
