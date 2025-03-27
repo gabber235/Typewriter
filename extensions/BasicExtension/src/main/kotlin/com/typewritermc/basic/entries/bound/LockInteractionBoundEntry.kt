@@ -104,9 +104,11 @@ class LockInteractionBound(
         player.isFlying = true
         player.fakeClearInventory()
 
-        server.onlinePlayers.forEach {
-            it.hidePlayer(plugin, player)
-            player.hidePlayer(plugin, it)
+        ThreadType.SYNC.switchContext {
+            server.onlinePlayers.forEach {
+                it.hidePlayer(plugin, player)
+                player.hidePlayer(plugin, it)
+            }
         }
 
         val startPosition = targetPosition.get(player)
