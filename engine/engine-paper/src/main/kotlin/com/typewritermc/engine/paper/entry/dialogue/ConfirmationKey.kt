@@ -17,7 +17,7 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
 
 private val confirmationKeyString by config(
-    "confirmationKey", ConfirmationKey.SWAP_HANDS.name, comment = """
+    "confirmationKey", ConfirmationKey.JUMP.name, comment = """
     |The key that should be pressed to confirm a dialogue option.
     |Possible values: ${ConfirmationKey.entries.joinToString(", ") { it.name }}
 """.trimMargin()
@@ -26,16 +26,16 @@ private val confirmationKeyString by config(
 val confirmationKey: ConfirmationKey by reloadable {
     val key = ConfirmationKey.fromString(confirmationKeyString)
     if (key == null) {
-        plugin.logger.warning("Invalid confirmation key '$confirmationKeyString'. Using default key '${ConfirmationKey.SWAP_HANDS.name}' instead.")
-        return@reloadable ConfirmationKey.SWAP_HANDS
+        plugin.logger.warning("Invalid confirmation key '$confirmationKeyString'. Using default key '${ConfirmationKey.JUMP.name}' instead.")
+        return@reloadable ConfirmationKey.JUMP
     }
     key
 }
 
 
 enum class ConfirmationKey(val keybind: String) {
-    SWAP_HANDS("<key:key.swapOffhand>"),
     JUMP("<key:key.jump>"),
+    SWAP_HANDS("<key:key.swapOffhand>"),
     SNEAK("<key:key.sneak>"),
     ;
 
