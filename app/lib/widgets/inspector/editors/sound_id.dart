@@ -413,7 +413,7 @@ class _Selector extends HookConsumerWidget {
             ),
           if (unselect != null)
             ContextMenuTile.button(
-              title: "Removm Sound",
+              title: "Remove Sound",
               icon: TWIcons.squareMinus,
               onTap: unselect,
               color: Colors.redAccent,
