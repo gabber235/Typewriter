@@ -80,7 +80,7 @@ interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry, SpeakerEn
                 ?.property<DisplayNameProperty>(player.uniqueId)
                 ?.displayName
                 ?.get(player, context)
-                ?: ref().get()?.displayName?.get(player, context)
+                ?: definition.get()?.displayName?.get(player, context)
                 ?: ""
         }
 
