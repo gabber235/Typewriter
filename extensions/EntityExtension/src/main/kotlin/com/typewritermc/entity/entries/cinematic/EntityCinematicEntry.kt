@@ -341,12 +341,12 @@ class EntityCinematicRecording(
             pose = pose.toEntityPose(),
             swing = swing,
             damaged = damaged,
-            mainHand = inv.itemInMainHand,
-            offHand = inv.itemInOffHand,
-            helmet = inv.helmet,
-            chestplate = inv.chestplate,
-            leggings = inv.leggings,
-            boots = inv.boots,
+            mainHand = inv.itemInMainHand.clone(),
+            offHand = inv.itemInOffHand.clone(),
+            helmet = inv.helmet?.clone(),
+            chestplate = inv.chestplate?.clone(),
+            leggings = inv.leggings?.clone(),
+            boots = inv.boots?.clone(),
         )
         this.swing = null
         this.damaged = false
