@@ -135,6 +135,6 @@ jars/
 
 .gitub
 .vscode
-surrealdb
-nats
+docker/surrealdb
+docker/nats
 .env

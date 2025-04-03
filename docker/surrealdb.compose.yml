@@ -1,0 +1,8 @@
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./surrealdb:/surrealdb
+    command: ["start", "--log", "info", "--user", "root", "--pass", "root", "--bind", "0.0.0.0:9000", "rocksdb:/surrealdb/database.db"]

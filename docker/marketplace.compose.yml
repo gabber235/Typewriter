@@ -1,0 +1,54 @@
+services:
+  marketplace-frontend:
+    depends_on:
+      - "nats"
+      - "wasmcloud"
+      - "surrealdb"
+    build:
+      context: ../marketplace/website 
+      dockerfile: Dockerfile
+    env_file:
+      - ../.env 
+    ports:
+      - "5173:5173"
+      - "6006:6006"
+    develop:
+      watch:
+        - path: ../marketplace/website/Dockerfile
+          action: rebuild
+        - path: ../marketplace/website/docker-entrypoint.sh
+          action: rebuild
+        - path: ../marketplace/website/package.json
+          action: rebuild
+        - path: ../marketplace/website/package-lock.json 
+          action: rebuild
+        - path: ../marketplace/website/components.json
+          target: /app/components.json
+          action: sync+restart
+        - path: ../marketplace/website/eslint.config.js
+          target: /app/eslint.config.js
+          action: sync+restart
+        - path: ../marketplace/website/vite.config.js
+          target: /app/vite.config.js
+          action: sync+restart
+        - path: ../marketplace/website/tsconfig.json
+          target: /app/tsconfig.json
+          action: sync+restart
+        - path: ../marketplace/website/svelte.config.js
+          target: /app/svelte.config.js
+          action: sync+restart
+        - path: ../marketplace/website/postcss.config.js
+          target: /app/postcss.config.js
+          action: sync+restart
+        - path: ../marketplace/website/tailwind.config.ts
+          target: /app/tailwind.config.ts
+          action: sync
+        - path: ../marketplace/website/src/
+          target: /app/src
+          action: sync
+        - path: ../marketplace/website/static/
+          target: /app/static
+          action: sync
+        - path: ../marketplace/website/.storybook/
+          target: /app/.storybook
+          action: sync
