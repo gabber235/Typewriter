@@ -56,7 +56,7 @@ final authUserInfoProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthUserInfoRef = AutoDisposeFutureProviderRef<LogtoUserInfoResponse>;
-String _$authHash() => r'7f9a515216a882d8e27a12a0a45d45d00b9967d3';
+String _$authHash() => r'89b247a087d89bf9fb02947ea8ac1c28470a27f3';
 
 /// See also [Auth].
 @ProviderFor(Auth)

@@ -15,6 +15,9 @@ dependencies:
   riverpod_annotation: ^2.6.1
   auto_route: ^10.0.1
   logto_dart_sdk: ^3.0.0
+  localstorage: ^6.0.0
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +29,8 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   auto_route_generator: ^10.0.1
   icons_launcher: ^3.0.1
+  freezed: ^3.0.4
+  json_serializable: ^6.9.4
 
 icons_launcher:
   image_path: "assets/typewriter_app_icon.png"
