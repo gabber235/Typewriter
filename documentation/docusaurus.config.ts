@@ -58,7 +58,7 @@ const config: Config = {
         return result;
       }
       
-      if (params.filePath.includes("versioned_docs") || params.filePath.includes("adapters")) {
+      if (params.filePath.includes("adapters")) {
         return {
           ...result,
           frontMatter: {
