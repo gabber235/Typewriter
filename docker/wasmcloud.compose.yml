@@ -1,0 +1,72 @@
+services:
+  registry:
+    image: registry:2.8
+    environment:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5001
+    ports:
+      - "5001:5001"
+
+  nats:
+    image: nats:2.11-alpine
+    ports:
+      - "4222:4222"
+      - "4223:4223"
+      - "6222:6222"
+      - "8222:8222"
+    volumes:
+      - ./nats:/data
+      - ./nats-server.conf:/etc/nats/nats-server.conf:ro
+    command: ["-config", "/etc/nats/nats-server.conf"]
+
+  wasmcloud:
+    depends_on:
+      - "nats"
+      - "registry"
+    image: wasmcloud/wasmcloud:latest
+    environment:
+      RUST_LOG: debug,hyper=info,async_nats=info,oci_client=info,cranelift_codegen=warn
+      WASMCLOUD_LOG_LEVEL: debug
+      WASMCLOUD_RPC_HOST: nats 
+      WASMCLOUD_CTL_HOST: nats
+      WASMCLOUD_ALLOW_FILE_LOAD: "true"
+      WASMCLOUD_OCI_ALLOWED_INSECURE: registry:5001
+      # WASMCLOUD_OBSERVABILITY_ENABLED: "true"
+    ports:
+      - "9090:9090"
+
+  wadm:
+    depends_on:
+      - "nats"
+    image: ghcr.io/wasmcloud/wadm:latest
+    environment:
+      - WADM_NATS_SERVER=nats
+
+  developer-watcher:
+    build:
+      context: ./developer-watcher
+      dockerfile: Dockerfile
+    depends_on:
+      - "nats"
+      - "wadm"
+      - "wasmcloud"
+    volumes:
+      - ../backend:/app/backend
+    environment:
+      - WDEV_PROJECTS_BASE_DIR=/app/backend
+      - WASH_NATS_HOST=nats
+      - WASH_NATS_PORT=4222
+      - WASH_REGISTRY=registry:5001
+      - WASH_REGISTRY_INSECURE=true
+      - WASMCLOUD_CTL_HOST=nats
+      - WASMCLOUD_CTL_PORT=4222
+      - WDEV_DEBOUNCE_MS=1000
+      - RUST_LOG=debug
+    develop:
+      watch:
+        - path: ./developer-watcher/Dockerfile
+          action: rebuild
+        - path: ./developer-watcher/Cargo.toml
+          action: rebuild
+        - path: ./developer-watcher/src/
+          action: rebuild
+    restart: unless-stopped

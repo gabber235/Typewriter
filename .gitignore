@@ -148,4 +148,6 @@ bin/
 
 surrealdb
 nats
+docker/surrealdb
+docker/nats
 .env
