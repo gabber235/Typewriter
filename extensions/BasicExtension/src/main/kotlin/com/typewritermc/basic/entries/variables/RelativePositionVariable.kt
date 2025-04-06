@@ -1,5 +1,6 @@
 package com.typewritermc.basic.entries.variables
 
+import com.typewritermc.basic.entries.variables.CoordinatePart.*
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.point.Coordinate
@@ -37,28 +38,31 @@ class RelativePositionVariable(
         val data = context.getData<RelativePositionVariableData>()
             ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data}")
 
-        val basePosition = player.position + data.coordinate
+        val basePosition = player.position
 
-        // Determine the adjusted yaw and pitch based on the absolute flags
-        val adjustedYaw = if (data.absoluteYaw) data.coordinate.yaw else player.position.yaw + data.coordinate.yaw
-        val adjustedPitch = if (data.absolutePitch) data.coordinate.pitch else player.position.pitch + data.coordinate.pitch
+        val position =
+            Position(
+                basePosition.world,
+                if (X in data.fixed) basePosition.x else data.coordinate.x,
+                if (Y in data.fixed) basePosition.y else data.coordinate.y,
+                if (Z in data.fixed) basePosition.z else data.coordinate.z,
+                if (YAW in data.fixed) basePosition.yaw else data.coordinate.pitch,
+                if (PITCH in data.fixed) basePosition.pitch else data.coordinate.yaw,
+            )
 
-        val finalPosition = basePosition.withRotation(adjustedYaw, adjustedPitch)
-
-        return context.klass.safeCast(finalPosition)
+        return context.klass.safeCast(position)
             ?: throw IllegalStateException("Could not cast position to ${context.klass}, RelativePositionVariable is only compatible with Position fields")
     }
+}
+
+enum class CoordinatePart {
+    X, Y, Z, YAW, PITCH
 }
 
 data class RelativePositionVariableData(
     @WithRotation
     val coordinate: Coordinate = Coordinate.ORIGIN,
 
-    @Help("When enabled, yaw will be absolute rather than relative to the player's rotation")
-    @Default("false")
-    val absoluteYaw: Boolean = false,
-
-    @Help("When enabled, pitch will be absolute rather than relative to the player's rotation")
-    @Default("false")
-    val absolutePitch: Boolean = false,
+    @Help("Select which parts of the position will use absolute values")
+    val fixed: List<CoordinatePart> = emptyList(),
 )
