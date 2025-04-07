@@ -81,7 +81,7 @@ panel:
 3. Restart your server to complete the installation.
 4. To connect to the web panel. Run `/typewriter connect` in game. This will give you a link to the web panel.
 
-:::info Note
+:::info[Note]
 If the web panel is not working, make sure that the ports are open and that the `hostname` is set to your servers IP.
 Check the [Troubleshooting Guide](troubleshooting) for more information.
 If it still doesn't work, ask for help in the [Discord](https://discord.gg/HtbKyuDDBw).
