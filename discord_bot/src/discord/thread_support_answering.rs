@@ -68,12 +68,14 @@ impl EventHandler for SupportAnsweringHandler {
 
         let embed = CreateEmbed::default()
                    .title("Support & Suggestions 🎫")
+                   .url("https://docs.typewritermc.com/")
                    .description(format!("Hello {}! Whether you're seeking help or suggesting improvements, we're here to listen.", owner_id.mention()))
                    .field(
                        "For Support Tickets:",
                        "• The more details you provide, the faster we can help\n\
                         • Upload your `logs/latest.log` to [McLogs](https://mclo.gs/) - even with no errors, this helps with context\n\
-                        • Detail the steps to reproduce the issue",
+                        • Detail the steps to reproduce the issue\n\
+                        • Try to figure it out yourself first - Read the [documentation](https://docs.typewritermc.com/)",
                        false
                    )
                    .field(
