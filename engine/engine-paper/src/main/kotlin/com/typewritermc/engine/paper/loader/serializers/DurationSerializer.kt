@@ -20,7 +20,7 @@ class DurationSerializer : DataSerializer<Duration> {
         typeOfT: Type?,
         context: JsonDeserializationContext?
     ): Duration {
-        if (json == null || !json.isJsonPrimitive || json.asJsonPrimitive.isNumber) {
+        if (json == null || !json.isJsonPrimitive || !json.asJsonPrimitive.isNumber) {
             return Duration.ZERO
         }
         return Duration.ofMillis(json.asLong)
