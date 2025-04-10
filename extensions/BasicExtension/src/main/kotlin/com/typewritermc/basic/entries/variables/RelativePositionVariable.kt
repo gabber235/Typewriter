@@ -23,11 +23,11 @@ import kotlin.reflect.safeCast
  * The `RelativePositionVariable` is a variable that returns the position relative to the player.
  * The position is calculated by adding the coordinate to the player's position.
  *
- * You can optionally set the yaw and/or pitch to be absolute values instead of relative.
+ * You can optionally set any coordinate part (X, Y, Z, YAW, PITCH) to use absolute values instead of relative.
  *
  * ## How could this be used?
  * This could be used to make a death cinematic that shows at player's position after they die.
- * Using absolute rotation settings allows for precise camera angles regardless of player orientation.
+ * Absolute position settings allow for exact world coordinates when needed.
  */
 class RelativePositionVariable(
     override val id: String = "",
@@ -43,11 +43,11 @@ class RelativePositionVariable(
         val position =
             Position(
                 basePosition.world,
-                if (X in data.fixed) basePosition.x else data.coordinate.x,
-                if (Y in data.fixed) basePosition.y else data.coordinate.y,
-                if (Z in data.fixed) basePosition.z else data.coordinate.z,
-                if (YAW in data.fixed) basePosition.yaw else data.coordinate.pitch,
-                if (PITCH in data.fixed) basePosition.pitch else data.coordinate.yaw,
+                if (X in data.absolute) data.coordinate.x else basePosition.x + data.coordinate.x,
+                if (Y in data.absolute) data.coordinate.y else basePosition.y + data.coordinate.y,
+                if (Z in data.absolute) data.coordinate.z else basePosition.z + data.coordinate.z,
+                if (YAW in data.absolute) data.coordinate.yaw else basePosition.yaw + data.coordinate.yaw,
+                if (PITCH in data.absolute) data.coordinate.pitch else basePosition.pitch + data.coordinate.pitch
             )
 
         return context.klass.safeCast(position)
@@ -64,5 +64,5 @@ data class RelativePositionVariableData(
     val coordinate: Coordinate = Coordinate.ORIGIN,
 
     @Help("Select which parts of the position will use absolute values")
-    val fixed: List<CoordinatePart> = emptyList(),
+    val absolute: List<CoordinatePart> = emptyList(),
 )
