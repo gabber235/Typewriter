@@ -2,17 +2,16 @@ package com.typewritermc.quest
 
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.core.entries.priority
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Factory
 import com.typewritermc.core.extension.annotations.Parameter
-import com.typewritermc.quest.events.AsyncQuestStatusUpdate
-import com.typewritermc.quest.events.AsyncTrackedQuestUpdate
+import com.typewritermc.core.interaction.SessionTracker
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.interaction.PlayerSessionManager
-import com.typewritermc.core.interaction.SessionTracker
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
+import com.typewritermc.quest.events.AsyncQuestStatusUpdate
+import com.typewritermc.quest.events.AsyncTrackedQuestUpdate
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
 import java.util.concurrent.ConcurrentHashMap
@@ -62,7 +61,6 @@ class QuestTracker(
 
         val oldStatus = quests[ref]
         quests[ref] = status
-        if (oldStatus == null) return
         if (oldStatus == status) return
 
         if (oldStatus != QuestStatus.ACTIVE && status == QuestStatus.ACTIVE) {
@@ -72,6 +70,7 @@ class QuestTracker(
             trackQuest(ref)
         }
 
+        if (oldStatus == null) return
         DISPATCHERS_ASYNC.launch {
             AsyncQuestStatusUpdate(player, ref, oldStatus, status).callEvent()
 
