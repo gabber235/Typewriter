@@ -43,11 +43,11 @@ class RelativePositionVariable(
         val position =
             Position(
                 basePosition.world,
-                if (X in data.fixed) basePosition.x else data.coordinate.x,
-                if (Y in data.fixed) basePosition.y else data.coordinate.y,
-                if (Z in data.fixed) basePosition.z else data.coordinate.z,
-                if (YAW in data.fixed) basePosition.yaw else data.coordinate.pitch,
-                if (PITCH in data.fixed) basePosition.pitch else data.coordinate.yaw,
+                if (X in data.fixed) data.coordinate.x else basePosition.x + data.coordinate.x,
+                if (Y in data.fixed) data.coordinate.y else basePosition.y + data.coordinate.y,
+                if (Z in data.fixed) data.coordinate.z else basePosition.z + data.coordinate.z,
+                if (YAW in data.fixed) data.coordinate.yaw else basePosition.yaw + data.coordinate.yaw,
+                if (PITCH in data.fixed) data.coordinate.pitch else basePosition.pitch + data.coordinate.pitch
             )
 
         return context.klass.safeCast(position)
