@@ -23,7 +23,7 @@ import kotlin.reflect.safeCast
  * The `RelativePositionVariable` is a variable that returns the position relative to the player.
  * The position is calculated by adding the coordinate to the player's position.
  *
- * You can optionally set the yaw and/or pitch to be absolute values instead of relative.
+ * You can optionally set any coordinate part (X, Y, Z, YAW, PITCH) to use absolute values instead of relative.
  *
  * ## How could this be used?
  * This could be used to make a death cinematic that shows at player's position after they die.
