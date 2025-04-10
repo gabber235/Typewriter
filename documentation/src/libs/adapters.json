@@ -27206,6 +27206,174 @@
                   "triggerable",
                   "trigger"
                 ]
+              },
+              {
+                "name": "player_radius_interaction_bound",
+                "description": "An interaction bound around a player",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "criteria": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "object",
+                        "fields": {
+                          "fact": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                              {
+                                "name": "entry",
+                                "data": "readable-fact"
+                              }
+                            ]
+                          },
+                          "comparison": {
+                            "kind": "enum",
+                            "values": [
+                              "EQUAL_TO",
+                              "NOT_EQUAL_TO",
+                              "GREATER_THAN",
+                              "GREATER_THAN_OR_EQUAL_TO",
+                              "LESS_THAN",
+                              "LESS_THAN_OR_EQUAL_TO"
+                            ],
+                            "default": "EQUAL_TO",
+                            "modifiers": []
+                          },
+                          "value": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                          }
+                        },
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Criteria that must be met for this interaction bound to activate."
+                        }
+                      ]
+                    },
+                    "modifiers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "object",
+                        "fields": {
+                          "variable": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                              {
+                                "name": "entry",
+                                "data": "variable"
+                              }
+                            ]
+                          },
+                          "value": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                          }
+                        },
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Variables that can be used to modify the interaction bound."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered after this interaction bound is activated."
+                        }
+                      ]
+                    },
+                    "interruptTriggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered if the player moves outside the radius and interrupts the interaction."
+                        }
+                      ]
+                    },
+                    "radius": {
+                      "kind": "primitive",
+                      "type": "double",
+                      "default": 2.0,
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The radius around the player's start position in which they can move freely."
+                        }
+                      ]
+                    },
+                    "zoom": {
+                      "kind": "primitive",
+                      "type": "boolean",
+                      "default": true,
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Whether to apply a movement speed modifier that makes it harder to move as the player approaches the radius boundary."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#9370DB",
+                "icon": "ph:user-circle-dashed-fill",
+                "tags": [
+                  "interaction_bound",
+                  "radius",
+                  "player",
+                  "cancellable"
+                ]
               }
         ]
     }
