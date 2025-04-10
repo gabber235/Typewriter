@@ -27,7 +27,7 @@ import kotlin.reflect.safeCast
  *
  * ## How could this be used?
  * This could be used to make a death cinematic that shows at player's position after they die.
- * Using absolute position settings allows for precise camera angles regardless of player orientation.
+ * Absolute position settings allow for exact world coordinates when needed.
  */
 class RelativePositionVariable(
     override val id: String = "",
