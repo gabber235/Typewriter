@@ -64,6 +64,7 @@ static DISCORD_CLIENT: Lazy<arc_swap::ArcSwap<Option<serenity::Context>>> =
 async fn main() {
     dotenv::dotenv().ok();
     env_logger::init();
+    info!("Starting bot...");
 
     let token = CancellationToken::new();
     let webhook_token = token.clone();
@@ -102,9 +103,11 @@ async fn main() {
         }
     }
 
+    info!("Started up");
     tokio::join!(webhook_task, discord_task, schedule_task)
         .0
         .unwrap();
+    info!("Done with bot, shutting down");
 }
 
 async fn startup_webhook() {

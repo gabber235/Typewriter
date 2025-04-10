@@ -19,4 +19,4 @@ RUN apt-get update && \
 RUN /usr/sbin/update-ca-certificates
 COPY --from=builder /usr/local/cargo/bin/discord_bot /usr/local/bin/discord_bot
 ENV RUST_LOG="discord_bot=debug"
-CMD ["discord_bot"]
+CMD ["/usr/local/bin/discord_bot"]
