@@ -43,11 +43,11 @@ class RelativePositionVariable(
         val position =
             Position(
                 basePosition.world,
-                if (X in data.fixed) data.coordinate.x else basePosition.x + data.coordinate.x,
-                if (Y in data.fixed) data.coordinate.y else basePosition.y + data.coordinate.y,
-                if (Z in data.fixed) data.coordinate.z else basePosition.z + data.coordinate.z,
-                if (YAW in data.fixed) data.coordinate.yaw else basePosition.yaw + data.coordinate.yaw,
-                if (PITCH in data.fixed) data.coordinate.pitch else basePosition.pitch + data.coordinate.pitch
+                if (X in data.absolute) data.coordinate.x else basePosition.x + data.coordinate.x,
+                if (Y in data.absolute) data.coordinate.y else basePosition.y + data.coordinate.y,
+                if (Z in data.absolute) data.coordinate.z else basePosition.z + data.coordinate.z,
+                if (YAW in data.absolute) data.coordinate.yaw else basePosition.yaw + data.coordinate.yaw,
+                if (PITCH in data.absolute) data.coordinate.pitch else basePosition.pitch + data.coordinate.pitch
             )
 
         return context.klass.safeCast(position)
@@ -64,5 +64,5 @@ data class RelativePositionVariableData(
     val coordinate: Coordinate = Coordinate.ORIGIN,
 
     @Help("Select which parts of the position will use absolute values")
-    val fixed: List<CoordinatePart> = emptyList(),
+    val absolute: List<CoordinatePart> = emptyList(),
 )
