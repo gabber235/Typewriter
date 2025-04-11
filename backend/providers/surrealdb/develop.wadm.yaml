@@ -1,0 +1,39 @@
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: surrealdb-provider
+  annotations:
+    version: v0.0.1
+    description: 'A way to interact with a Surreal database'
+spec:
+  components:
+    - name: surrealdb-test-component
+      type: component
+      properties:
+        image: registry:5001/surrealdb_test_component:0.1.0
+      traits:
+        - type: spreadscaler
+          properties:
+            instances: 1
+        - type: link
+          properties:
+            target:
+              name: surrealdb-provider
+            namespace: seamlezz
+            package: surrealdb
+            interfaces: [call]
+
+    - name: surrealdb-provider
+      type: capability
+      properties:
+        image: registry:5001/surrealdb_provider:0.1.0 
+        id: surrealdb-provider
+        config:
+          - name: provider-config
+            properties:
+              namespace: test
+              database: test
+              auth: root
+              username: root
+              password: root
+              url: ws://surrealdb:9000

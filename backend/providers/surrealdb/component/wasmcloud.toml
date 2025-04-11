@@ -1,0 +1,11 @@
+name = "surrealdb-test-component"
+language = "rust"
+type = "component"
+
+[component]
+wasm_target = "wasm32-wasip2"
+
+[registry.pull]
+sources = [
+    { target = "seamlezz:surrealdb", source = "file://../wit/world.wit" },
+]

@@ -1,0 +1,6 @@
+name = "surrealdb-provider"
+language = "rust"
+type = "provider"
+
+[provider]
+vendor = "Seamlezz"
