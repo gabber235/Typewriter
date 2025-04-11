@@ -1,0 +1,14 @@
+package seamlezz:surrealdb-test;
+
+interface test {
+    /// Invoke a component
+    call: func() -> string;
+}
+
+world component {
+  // Import logging for processing data
+  import wasi:logging/logging@0.1.0-draft;
+
+  import seamlezz:surrealdb/call;
+  export test;
+}

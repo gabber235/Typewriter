@@ -1,0 +1,11 @@
+package seamlezz:surrealdb;
+
+interface call {
+    // Both params and results are encoded in cbor. 
+    // Because wit doesn't support self referential types, we need to encode the params as a list of tuples.
+    query: func(query: string, params: list<tuple<string, list<u8>>>) -> list<result<list<u8>, string>>;
+}
+
+world provider {
+    export call;
+}

@@ -1,0 +1,42 @@
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: organizations
+  annotations:
+    version: v0.0.1
+    description: 'A way to request all the companies a user has access to'
+spec:
+  components:
+    - name: organizations-component
+      type: component
+      properties:
+        image: registry:5001/organizations_component:0.1.0
+      traits:
+        # Govern the spread/scheduling of the component
+        - type: spreadscaler
+          properties:
+            instances: 1
+
+    # Add a capability provider that enables HTTP access
+    - name: httpserver
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+        config:
+          - name: http-config
+            properties:
+              routing_mode: path
+              default_address: 0.0.0.0:9090
+      traits:
+        - type: link
+          properties:
+            target:
+              name: organizations-component
+            namespace: wasi
+            package: http
+            interfaces: [incoming-handler]
+            source:
+              config:
+                - name: link-config
+                  properties:
+                    path: /organizations
