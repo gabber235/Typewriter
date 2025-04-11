@@ -18,3 +18,4 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 uuid = { version = "1.16.0", features = ["v4"] }
 walkdir = "2.5.0"
 heck = "0.4.1"
+itertools = "0.14.0"

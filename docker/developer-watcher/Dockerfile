@@ -1,11 +1,21 @@
 FROM rust:slim
 
+ARG CLANG_VERSION=20
+
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     libssl-dev \
     gnupg \
-    --no-install-recommends && \
+    lsb-release \
+    wget \
+    --no-install-recommends
+
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+    echo "deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${CLANG_VERSION} main" >> /etc/apt/sources.list.d/llvm.list && \
+    apt-get update && apt-get install -y clang-${CLANG_VERSION} && \
+    ln -s /usr/bin/clang-${CLANG_VERSION} /usr/bin/clang && \
+    ln -s /usr/bin/clang++-${CLANG_VERSION} /usr/bin/clang++ && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -s https://packagecloud.io/install/repositories/wasmcloud/core/script.deb.sh | bash && \
@@ -35,3 +45,4 @@ RUN rustup target add wasm32-wasip2 && \
 RUN cargo build --release --locked
 
 ENTRYPOINT ["/app/target/release/developer-watcher"]
+
