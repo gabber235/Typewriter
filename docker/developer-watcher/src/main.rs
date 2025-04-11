@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Parser;
 use heck::ToSnakeCase;
+use itertools::Itertools;
 use notify::{EventKind, RecursiveMode, event::ModifyKind, event::RenameMode};
 use notify_debouncer_full::{Debouncer, new_debouncer};
 use std::{
@@ -24,7 +25,14 @@ const PROVIDER_SUFFIX: &str = ".par.gz";
 const DEVELOP_WADM_YAML: &str = "develop.wadm.yaml";
 
 const WATCHED_EXTENSIONS: &[&str] = &["rs", "toml", "yaml", "yml", "json"];
-const IGNORED_PATTERNS: &[&str] = &["target", "build", ".git", ".idea", ".vscode", "node_modules"];
+const IGNORED_PATTERNS: &[&str] = &[
+    "target",
+    "build",
+    ".git",
+    ".idea",
+    ".vscode",
+    "node_modules",
+];
 
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
@@ -363,25 +371,40 @@ async fn push_project(project: &Project, config: &Config) -> Result<()> {
     Ok(())
 }
 
-async fn deploy_project(project: &Project, config: &Config) -> Result<()> {
-    let manifest_path = project.directory().join(DEVELOP_WADM_YAML);
-    if !manifest_path.exists() {
-        info!(
-            "No {} found for {}, skipping deployment",
-            DEVELOP_WADM_YAML, project
-        );
-        return Ok(());
+fn find_deployment_manifest(project_dir: &Path) -> Option<PathBuf> {
+    let manifest_path = project_dir.join(DEVELOP_WADM_YAML);
+    if manifest_path.exists() {
+        return Some(manifest_path);
     }
 
-    info!("Found {} for {}, deploying...", DEVELOP_WADM_YAML, project);
-    let manifest_path_str = manifest_path.to_string_lossy();
-    run_wash_command(
-        &["app", "deploy", "--replace", &manifest_path_str],
-        None,
-        config,
-    )
-    .await
-    .context("Wash app deploy command failed")
+    if let Some(parent) = project_dir.parent() {
+        find_deployment_manifest(parent)
+    } else {
+        None
+    }
+}
+
+async fn deploy_project(project: &Project, config: &Config) -> Result<()> {
+    match find_deployment_manifest(project.directory()) {
+        Some(manifest_path) => {
+            info!("Found {} for {}, deploying...", DEVELOP_WADM_YAML, project);
+            let manifest_path_str = manifest_path.to_string_lossy();
+            run_wash_command(
+                &["app", "deploy", "--replace", &manifest_path_str],
+                None,
+                config,
+            )
+            .await
+            .context("Wash app deploy command failed")
+        }
+        None => {
+            info!(
+                "No {} found in project or parent directories for {}, skipping deployment",
+                DEVELOP_WADM_YAML, project
+            );
+            Ok(())
+        }
+    }
 }
 
 async fn rebuild_and_redeploy_project(project: &Project, config: &Config) -> Result<()> {
@@ -411,21 +434,35 @@ async fn watch_projects(projects: Vec<Project>, config: &Config) -> Result<()> {
     while let Ok(result) = rx.recv() {
         match result {
             Ok(events) => {
-                for event in events {
-                    if !is_relevant_change(&event) {
-                        continue;
-                    }
-                    info!("Detected changes in files: {:?}", event.paths);
-                    if let Some(project) = projects.iter().find(|p| {
-                        event
-                            .paths
-                            .iter()
-                            .any(|path| path.starts_with(p.directory()))
-                    }) {
-                        info!("Change detected in {}", project);
-                        if let Err(e) = rebuild_and_redeploy_project(project, config).await {
-                            error!("Failed to rebuild and redeploy {}: {:?}", project, e);
-                        }
+                let changed_projects = events
+                    .iter()
+                    .filter(|event| is_relevant_change(&event))
+                    .filter_map(|event| {
+                        projects.iter().find(|p| {
+                            event
+                                .paths
+                                .iter()
+                                .any(|path| path.starts_with(p.directory()))
+                        })
+                    })
+                    .dedup()
+                    .collect::<Vec<_>>();
+
+                if changed_projects.is_empty() {
+                    continue;
+                }
+
+                info!(
+                    "Detected changes in files: {:?}",
+                    events
+                        .iter()
+                        .flat_map(|e| e.paths.iter())
+                        .collect::<Vec<_>>()
+                );
+                for project in changed_projects {
+                    info!("Change detected in {}", project);
+                    if let Err(e) = rebuild_and_redeploy_project(project, config).await {
+                        error!("Failed to rebuild and redeploy {}: {:?}", project, e);
                     }
                 }
             }
