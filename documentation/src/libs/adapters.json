@@ -27374,6 +27374,235 @@
                   "player",
                   "cancellable"
                 ]
+              },
+              {
+                "name": "case_variable",
+                "description": "A variable that returns a value based on a selection",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "cases": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "generic",
+                        "default": "",
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "List of values that can be selected based on the selection index."
+                        }
+                      ]
+                    },
+                    "default": {
+                      "kind": "custom",
+                      "editor": "generic",
+                      "default": "",
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Default value to return if the selection is out of bounds."
+                        }
+                      ]
+                    },
+                    "selection": {
+                      "kind": "custom",
+                      "editor": "entryReference",
+                      "default": "",
+                      "modifiers": [
+                        {
+                          "name": "entry",
+                          "data": "variable"
+                        },
+                        {
+                          "name": "help",
+                          "data": "Selection index (1-based) that determines which case to return."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#4CAF50",
+                "icon": "mdi:list-status",
+                "tags": ["variable", "selection"]
+              },
+              {
+                "name": "lock_interaction_bound",
+                "description": "An interaction bound that locks the camera for the player",
+                "adapter": "Basic",
+                "fields": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "name": {
+                      "kind": "primitive",
+                      "type": "string",
+                      "modifiers": []
+                    },
+                    "criteria": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "object",
+                        "fields": {
+                          "fact": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                              {
+                                "name": "entry",
+                                "data": "readable-fact"
+                              }
+                            ]
+                          },
+                          "comparison": {
+                            "kind": "enum",
+                            "values": [
+                              "EQUAL_TO",
+                              "NOT_EQUAL_TO",
+                              "GREATER_THAN",
+                              "GREATER_THAN_OR_EQUAL_TO",
+                              "LESS_THAN",
+                              "LESS_THAN_OR_EQUAL_TO"
+                            ],
+                            "default": "EQUAL_TO",
+                            "modifiers": []
+                          },
+                          "value": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                          }
+                        },
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Criteria that must be met for this interaction bound to activate."
+                        }
+                      ]
+                    },
+                    "modifiers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "object",
+                        "fields": {
+                          "variable": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                              {
+                                "name": "entry",
+                                "data": "variable"
+                              }
+                            ]
+                          },
+                          "value": {
+                            "kind": "custom",
+                            "editor": "generic",
+                            "default": "",
+                            "modifiers": []
+                          }
+                        },
+                        "modifiers": []
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "Variables that can be used to modify the interaction bound."
+                        }
+                      ]
+                    },
+                    "triggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered after this interaction bound is activated."
+                        }
+                      ]
+                    },
+                    "interruptTriggers": {
+                      "kind": "list",
+                      "type": {
+                        "kind": "custom",
+                        "editor": "entryReference",
+                        "default": "",
+                        "modifiers": [
+                          {
+                            "name": "entry",
+                            "data": "triggerable"
+                          }
+                        ]
+                      },
+                      "modifiers": [
+                        {
+                          "name": "help",
+                          "data": "The entries that will be triggered if the player exits or interrupts the interaction."
+                        }
+                      ]
+                    },
+                    "targetPosition": {
+                      "kind": "custom",
+                      "editor": "entryReference",
+                      "default": "",
+                      "modifiers": [
+                        {
+                          "name": "entry",
+                          "data": "variable"
+                        },
+                        {
+                          "name": "rotation"
+                        },
+                        {
+                          "name": "help",
+                          "data": "The position where the player's camera will be locked. If not specified, uses the player's current position."
+                        }
+                      ]
+                    }
+                  },
+                  "modifiers": []
+                },
+                "color": "#9370DB",
+                "icon": "ic:round-video-camera-front",
+                "tags": [
+                  "interaction_bound",
+                  "camera",
+                  "player",
+                  "cancellable"
+                ]
               }
         ]
     }

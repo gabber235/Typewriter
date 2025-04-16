@@ -4,18 +4,16 @@ difficulty: Hard
 
 import Player from "@site/src/components/Player";
 import Image from "@site/src/components/Image";
-import EntryDisplay from "@site/src/components/EntryDisplay";
 import EntrySearch from "@site/src/components/EntrySearch";
-import EntryNodeInspector from "@site/src/components/EntryInspector";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
 # Interaction Bounds
 :::info[Before starting]
-This guide assumes that you have already installed the [Basic Extension](../../02-getting-started/01-installation.mdx#basic-extension).
+This guide assumes that you have already installed the [Basic Extension](../../../02-getting-started/01-installation.mdx#basic-extension).
 :::
 :::danger[Before Starting]
-This guide is made for advanced users. It is recommended to have a good understanding of how [Interactions](../01-interactions/index.mdx) work and function!
+This guide is made for advanced users. It is recommended to have a good understanding of how [Interactions](../../01-interactions/index.mdx) work and function!
 :::
 
 Before starting this guide there is some theory you need to know about interaction bounds before you should use them in your stories.
@@ -62,7 +60,7 @@ For this guide, we created 3 different examples to show you how to use interacti
     In this guide, we will show an example of how to make an interrupting interaction bound when the player walks away from a flower.
     :::
     :::warning[Initial Setup]
-    This guide will build upon the [Interactions Guide](../01-interactions/index.mdx) and requires you to have at least an
+    This guide will build upon the [Interactions Guide](../../01-interactions/index.mdx) and requires you to have at least an
     `On Interact With Block` entry in your editor.
     :::
 
@@ -79,18 +77,18 @@ For this guide, we created 3 different examples to show you how to use interacti
     - **zoom**: If the player's camera should zoom in when the player is nearby and zoom out when the player is walking away.
 
     Now, your sequence should look a bit like this:
-    <Image img={require("../../assets/interactions/interaction-bound-player-radius-interupting.png")} />
+    <Image img={require("../../../assets/interactions/interaction-bound-player-radius-interupting.png")} />
 
     #### Result
     Now, your interaction should look like this:
-    <Player url={require("../../assets/interactions/interaction-bound-interupting-result.webm").default} />
+    <Player url={require("../../../assets/interactions/interaction-bound-interupting-result.webm").default} />
     </TabItem>
     <TabItem value="blocking" label="Blocking Mode">
     :::info[Guide]
     In this guide, we will show an example of how to make a blocking interaction bound when the player walks away from a flower.
     :::
     :::warning[Initial Setup]
-    This guide will build upon the [Interactions Guide](../01-interactions/index.mdx) and requires you to have at least an
+    This guide will build upon the [Interactions Guide](../../01-interactions/index.mdx) and requires you to have at least an
     `On Interact With Block` entry in your editor.
     :::
 
@@ -108,18 +106,18 @@ For this guide, we created 3 different examples to show you how to use interacti
     5. **Select `Change Priority` and set it to a higher number than the `Player Radius Interaction Bound` entry.** \
     For example, if the `Blocking Bounds` page has a priority of 0, set the page containing the `Spoken` entry to 1.
     6. Now, your sequence should look like this:
-    <Image img={require("../../assets/interactions/interaction-bound-player-radius-blocking.png")} />
+    <Image img={require("../../../assets/interactions/interaction-bound-player-radius-blocking.png")} />
 
     #### Result
     Now, your interaction should look like this:
-    <Player url={require("../../assets/interactions/interaction-bound-blocking-result.webm").default} />
+    <Player url={require("../../../assets/interactions/interaction-bound-blocking-result.webm").default} />
     </TabItem>
     <TabItem value="interuption-player" label="Interruption Mode (Entity Extension)">
     :::info[Guide]
     In this guide, we will show an example of how to make an interrupting interaction bound when the player walks away from a NPC.
     :::
     :::warning[Entity Extension]
-    This guide requires you to already have created a NPC using the [Entity Extension](../04-entity-extension/index.mdx)
+    This guide requires you to already have created a NPC using the [Entity Extension](../../04-entity-extension/index.mdx)
     :::
 
     :::danger[SOON]
