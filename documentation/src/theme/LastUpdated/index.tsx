@@ -72,7 +72,7 @@ function AuthorComponent({ author }: { author: string }): ReactElement {
       rel="noopener noreferrer"
     >
       <AuthorAvatar author={author} />
-      <span className="text-xs text-gray-600 dark:text-gray-400 p-1.5 font-medium group-hover:text-primary group-hover:dark:text-primary-lighter whitespace-nowrap">
+      <span className="text-xs text-gray-600 dark:text-gray-400 p-1.5 font-medium group-hover:text-primary group-hover:dark:text-primary-lighter whitespace-nowrap max-w-[120px] xs:max-w-full">
         {author}
       </span>
     </Link>
@@ -92,7 +92,7 @@ function UpdateMessage({ message }: { message: string }): ReactElement | null {
 
   return (
     <span
-      className="ml-1 text-xs text-gray-500 dark:text-gray-400 truncate italic hidden md:inline"
+      className="ml-1 text-xs text-gray-500 dark:text-gray-400 truncate italic xs:inline"
       title={message}
     >
       &mdash; {message}
@@ -139,19 +139,19 @@ export default function LastUpdated(props: Props): ReactElement | null {
     <div
       className={clsx(
         ThemeClassNames.common.lastUpdated,
-        "flex items-center gap-x-2 rounded-md py-0.5 px-1",
+        "flex flex-col xs:flex-row items-start xs:items-center gap-y-1 xs:gap-x-2 rounded-md py-0.5 px-1",
         "text-gray-500 dark:text-gray-400",
-        "w-full sm:w-auto"
+        "w-full"
       )}
     >
-      <div className="flex items-center gap-x-1 overflow-hidden">
+      <div className="flex items-center gap-x-1 overflow-hidden max-w-full">
         <UpdatedTimestamp date={lastUpdatedAt} />
         <UpdateMessage message={commitMessage} />
+        <AuthorComponent author={lastUpdatedBy} />
       </div>
-      <AuthorComponent author={lastUpdatedBy} />
       {process.env.NODE_ENV === "development" && (
         <span className="text-gray-400 italic text-xs hidden lg:inline">
-          (Dev)
+          For perf no actual data. (Dev Mode)
         </span>
       )}
     </div>
