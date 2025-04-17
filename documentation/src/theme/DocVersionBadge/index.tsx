@@ -30,13 +30,13 @@ export default function DocVersionBadge(): JSX.Element | null {
   const getBadgeClasses = (difficulty: DifficultyLevel): string => {
     switch (difficulty?.toLowerCase()) {
       case "easy":
-        return "bg-green-200 dark:bg-[#003100] text-green-800 dark:text-green-300 border-green-200 dark:border-green-800/50";
+        return "bg-green-50 dark:bg-lime-950 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800/50";
       case "normal":
-        return "bg-yellow-100 dark:bg-[#4d3800] text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/50";
+        return "bg-amber-50 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/50";
       case "hard":
-        return "bg-red-100 dark:bg-[#4b1113] text-red-800 dark:text-red-300 border-red-200 dark:border-red-800/50";
+        return "bg-rose-50 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800/50";
       default:
-        return "bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700/50";
+        return "bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700/50";
     }
   };
 
@@ -49,7 +49,7 @@ export default function DocVersionBadge(): JSX.Element | null {
       <div className="inline-flex p-[5px] pr-0 pb-0 pt-0">
         <span
           className={`${ThemeClassNames.docs.docVersionBadge} group inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border 
-          bg-blue-100 dark:bg-[#193c47] text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/50
+          bg-sky-50 dark:bg-cyan-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/50
           transition-colors duration-200`}
         >
           <Icon
