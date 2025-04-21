@@ -1,0 +1,4 @@
+package seamlezz:surrealdb-component;
+world component {
+  import seamlezz:surrealdb/call;
+}

@@ -14,7 +14,7 @@ spec:
       traits:
         - type: spreadscaler
           properties:
-            instances: 1
+            instances: 100
         - type: link
           properties:
             target:
@@ -37,3 +37,21 @@ spec:
               username: root
               password: root
               url: ws://surrealdb:9000
+
+    - name: httpserver
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target:
+              name: surrealdb-test-component
+            namespace: wasi
+            package: http
+            interfaces: [incoming-handler]
+            source:
+              config:
+                - name: link-config
+                  properties:
+                    address: 0.0.0.0:10001
