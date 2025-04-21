@@ -7,7 +7,7 @@
     <link rel="alternate" href="https://docs.typewritermc.com/devlog"/>
     <subtitle>Typewriter Blog</subtitle>
     <icon>https://docs.typewritermc.com/img/favicon.ico</icon>
-    <rights>Copyright © 2025 TypeWriter</rights>
+    <rights>Copyright © 2025 Typewriter</rights>
     <entry>
         <title type="html"><![CDATA[Dynamic Variables update]]></title>
         <id>https://docs.typewritermc.com/devlog/0.7.0-release</id>
@@ -182,7 +182,7 @@ We've made major improvements to the documentation. All to make it easier to use
         <updated>2024-02-19T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Hey reader, Marten here. Noticed how Gabber235 spends a ton of time on documentation? Well, I thought, why not help out with that so he can focus more on building cool stuff for the plugin?]]></summary>
         <content type="html"><![CDATA[<p>Hey reader, Marten here. Noticed how Gabber235 spends a ton of time on documentation? Well, I thought, why not help out with that so he can focus more on building cool stuff for the plugin?</p>
-<p>If you've been checking out the TypeWriter GitHub page's develop branch lately, you might've seen a bunch of new documentation. The cool part? We set it up to automatically generate whenever I push an update to the development branch. So, guess what? We've got a new documentation with the latest features for you!</p>
+<p>If you've been checking out the Typewriter GitHub page's develop branch lately, you might've seen a bunch of new documentation. The cool part? We set it up to automatically generate whenever I push an update to the development branch. So, guess what? We've got a new documentation with the latest features for you!</p>
 <!-- -->
 <p>Let's break down the update:</p>
 <ul>
@@ -193,13 +193,13 @@ We've made major improvements to the documentation. All to make it easier to use
 <p><strong>Fresh Look</strong>: The documentation got a big update on the layout, matching the vibe of the latest beta version.</p>
 </li>
 <li>
-<p><strong>More Content, More Fun</strong>: I've thrown in a bunch of new pages for you to read and improve your experience with TypeWriter.</p>
+<p><strong>More Content, More Fun</strong>: I've thrown in a bunch of new pages for you to read and improve your experience with Typewriter.</p>
 </li>
 <li>
 <p><strong>Installation Guide Makeover</strong>: We've revamped the whole installation guide to make your life simpler. Installing the plugin should be a breeze with this new guide by your side.</p>
 </li>
 </ul>
-<p>The TypeWriter documentation is now much more informative. Check it out, and improve your experience with TypeWriter!</p>]]></content>
+<p>The Typewriter documentation is now much more informative. Check it out, and improve your experience with Typewriter!</p>]]></content>
         <author>
             <name>MartenMrfc</name>
             <uri>https://github.com/marten-mrfc</uri>
