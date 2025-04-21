@@ -129,14 +129,14 @@ class ContentInteraction(
 
     override suspend fun teardown(force: Boolean) {
         unregister()
-        cachedOriginalItems.forEach { (slot, item) ->
-            player.inventory.setItem(slot, item)
-        }
-        cachedOriginalItems.clear()
-        val cache = stack.toList()
-        stack.clear()
-        cache.forEach { it.dispose() }
         SYNC.switchContext {
+            cachedOriginalItems.forEach { (slot, item) ->
+                player.inventory.setItem(slot, item)
+            }
+            cachedOriginalItems.clear()
+            val cache = stack.toList()
+            stack.clear()
+            cache.forEach { it.dispose() }
             player.playSound("block.beacon.deactivate")
             ContentEditorEndEvent(player).callEvent()
         }
