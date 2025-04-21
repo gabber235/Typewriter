@@ -1,4 +1,4 @@
-// filepath: d:\projects\typewriter\TypeWriter\documentation\src\theme\DocVersionRoot\index.tsx
+// filepath: d:\projects\typewriter\Typewriter\documentation\src\theme\DocVersionRoot\index.tsx
 import React from "react";
 import { HtmlClassNameProvider, PageMetadata } from "@docusaurus/theme-common";
 import {

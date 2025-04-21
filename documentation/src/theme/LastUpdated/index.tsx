@@ -126,7 +126,7 @@ export default function LastUpdated(props: Props): ReactElement | null {
   const lastUpdatedBy =
     props.lastUpdatedBy ||
     (doc?.metadata as any)?.lastUpdatedBy ||
-    "TypeWriter Team";
+    "Typewriter Team";
 
   // If no update timestamp is available, don't render
   if (!lastUpdatedAt) {

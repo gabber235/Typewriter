@@ -13,7 +13,7 @@ any bugs, please report them [here](https://discord.gg/HtbKyuDDBw)
 
 To install the Typewriter plugin on your paper spigot Minecraft server, follow these steps:
 
-1. Download the plugin from [here](https://github.com/gabber235/TypeWriter/releases).
+1. Download the plugin from [here](https://github.com/gabber235/Typewriter/releases).
 2. Place the downloaded .jar file in your server's `plugins` folder.
 3. Download and install all the required plugins from the **[dependencies](dependencies)**. Also check if you have installed any incompatible plugins.
 4. Restart your server to complete the installation.
@@ -24,7 +24,7 @@ The basic adapter contains the base entries for any server.
 
 To install the basic adapter (or any for that matter), follow these steps:
 
-1. Download the `BasicAdapter.jar` file from [here](https://github.com/gabber235/TypeWriter/releases).
+1. Download the `BasicAdapter.jar` file from [here](https://github.com/gabber235/Typewriter/releases).
 2. Place it in the `server/plugins/Typewriter/adapters` folder.
 3. Restart your server to complete the installation.
 
@@ -38,6 +38,7 @@ When updating the plugin, it's crucial to **always** install the corresponding a
 :::
 
 ## Configuring the Web Panel
+
 :::caution
 Typewriter's web panel does **not** support external server providers such as Minehut, Aternos, or Apex. You can still use everthing else in Typewriter. It is possible to use the panel still by setting up a local server with Typewriter installed. For more information, please visit the [Discord](https://discord.gg/HtbKyuDDBw).
 :::
@@ -66,16 +67,16 @@ enabled: true
 hostname: "127.0.0.1"
 # The panel uses web sockets to sync changes to the server and it allows you to work with multiple people at the same time.
 websocket:
-    # The port of the websocket server. Make sure this port is open.
-    port: 9092
-    # The authentication that is used. Leave unchanged if you don't know what you are doing.
-    auth: "session"
+  # The port of the websocket server. Make sure this port is open.
+  port: 9092
+  # The authentication that is used. Leave unchanged if you don't know what you are doing.
+  auth: "session"
 panel:
-    # The panel can be disabled while the sockets are still open. Only disable this if you know what you are doing.
-    # If the web sockets are disabled then the panel wil always be disabled.
-    enabled: true
-    # The port of the web panel. Make sure this port is open.
-    port: 8080
+  # The panel can be disabled while the sockets are still open. Only disable this if you know what you are doing.
+  # If the web sockets are disabled then the panel wil always be disabled.
+  enabled: true
+  # The port of the web panel. Make sure this port is open.
+  port: 8080
 ```
 
 3. Restart your server to complete the installation.

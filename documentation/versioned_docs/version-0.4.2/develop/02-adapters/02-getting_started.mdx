@@ -4,7 +4,7 @@ title: Getting Started
 
 # Creating an Adapter
 ## Introduction
-TypeWriter is a dynamic platform that supports the development of adapters, which are modular components enhancing the overall functionality. Adapters are self-contained, easily shareable, and integrate smoothly into the TypeWriter system. This guide is tailored to guide you through the process of creating an adapter, suitable for both beginners and experienced developers.
+Typewriter is a dynamic platform that supports the development of adapters, which are modular components enhancing the overall functionality. Adapters are self-contained, easily shareable, and integrate smoothly into the Typewriter system. This guide is tailored to guide you through the process of creating an adapter, suitable for both beginners and experienced developers.
 
 ## Prerequisites
  - Java Development Kit (JDK) 17 or higher.
@@ -12,7 +12,7 @@ TypeWriter is a dynamic platform that supports the development of adapters, whic
  - A basic understanding of Gradle and the Spigot API.
 
 ## Step 1: Setting Up a Gradle Project
-Begin by establishing a Gradle project for your TypeWriter adapter. Below is a comprehensive setup for your `build.gradle.kts`:
+Begin by establishing a Gradle project for your Typewriter adapter. Below is a comprehensive setup for your `build.gradle.kts`:
 
 ```kotlin title="build.gradle.kts"
 plugins {
@@ -42,7 +42,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("com.github.gabber235:typewriter:main-SNAPSHOT") // Latest release version
 
-    // Already included in the TypeWriter plugin but still needed for compilation
+    // Already included in the Typewriter plugin but still needed for compilation
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-RC")
     compileOnly("com.github.dyam0:LirandAPI:96cc59d4fb")
     compileOnly("net.kyori:adventure-api:4.13.1")
@@ -59,8 +59,8 @@ java {
 
 Ensure to replace placeholders like `me.yourusername` with your project details.
 
-### Choosing the TypeWriter Version
-Select the appropriate TypeWriter dependency version:
+### Choosing the Typewriter Version
+Select the appropriate Typewriter dependency version:
 For stable and tested features, use the latest release version:
 ```kotlin
 compileOnly("com.github.gabber235:typewriter:main-SNAPSHOT")
@@ -94,8 +94,8 @@ object ExampleAdapter : TypewriteAdapter() {
 ## Step 3: Building the Adapter
 After creating the adapter class, build the adapter. This can be done by running the `shadowJar` Gradle task.
 This will generate a JAR file in the `build/libs` directory. 
-This JAR file can be used as an adapter in TypeWriter.
-Place the JAR file in the `plugins/TypeWriter/adapters` directory and restart the server.
+This JAR file can be used as an adapter in Typewriter.
+Place the JAR file in the `plugins/Typewriter/adapters` directory and restart the server.
 Typewriter will automatically load the adapter and run it.
 
 If any problems occur, check the console for errors and ensure that the adapter is properly configured.

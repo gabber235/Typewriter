@@ -9,7 +9,7 @@ const url = "https://docs.typewritermc.com";
 const docsCommon: Options = {
   sidebarPath: require.resolve("./sidebars.js"),
   editUrl:
-    "https://github.com/gabber235/TypeWriter/tree/develop/documentation/",
+    "https://github.com/gabber235/Typewriter/tree/develop/documentation/",
   showLastUpdateAuthor: true,
   showLastUpdateTime: true,
 };
@@ -77,7 +77,7 @@ const config: Config = {
         blogListComponent: "@theme/BlogListPage",
         feedOptions: {
           type: "all",
-          copyright: `Copyright © ${new Date().getFullYear()} TypeWriter`,
+          copyright: `Copyright © ${new Date().getFullYear()} Typewriter`,
         },
         showReadingTime: true,
         postsPerPage: "ALL",
@@ -121,7 +121,7 @@ const config: Config = {
       },
       announcementBar: {
         id: "support_us",
-        content: "TypeWriter 0.7.0 is out!",
+        content: "Typewriter 0.7.0 is out!",
         isCloseable: true,
       },
       mermaid: {
@@ -140,7 +140,7 @@ const config: Config = {
         {
           name: "description",
           content:
-            "TypeWriter is a plugin for Minecraft servers that allows you to create complex interactions between players and the server. It allows you to create sequences, cinematics, quests, NPCs, manifests, road-networks, and more!",
+            "Typewriter is a plugin for Minecraft servers that allows you to create complex interactions between players and the server. It allows you to create sequences, cinematics, quests, NPCs, manifests, road-networks, and more!",
         },
         { name: "Content-Type", content: "text/html; charset=utf-8" },
         { name: "language", content: "English" },
@@ -151,9 +151,9 @@ const config: Config = {
       ],
       image: "img/typewriter.png",
       navbar: {
-        title: "TypeWriter",
+        title: "Typewriter",
         logo: {
-          alt: "TypeWriter Logo",
+          alt: "Typewriter Logo",
           src: "img/typewriter.png",
         },
         items: [
@@ -181,7 +181,7 @@ const config: Config = {
             position: "right",
           },
           {
-            href: "https://github.com/gabber235/TypeWriter",
+            href: "https://github.com/gabber235/Typewriter",
             label: "GitHub",
             position: "right",
           },
@@ -225,7 +225,7 @@ const config: Config = {
               },
               {
                 label: "Github",
-                href: "https://github.com/gabber235/TypeWriter",
+                href: "https://github.com/gabber235/Typewriter",
               },
             ],
           },

@@ -1,4 +1,4 @@
-// filepath: d:\projects\typewriter\TypeWriter\documentation\src\theme\DocVersionBanner\index.tsx
+// filepath: d:\projects\typewriter\Typewriter\documentation\src\theme\DocVersionBanner\index.tsx
 import React from "react";
 import clsx from "clsx";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";

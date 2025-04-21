@@ -1,4 +1,4 @@
-// filepath: d:\projects\typewriter\TypeWriter\documentation\src\hooks\useDifficulty.ts
+// filepath: d:\projects\typewriter\Typewriter\documentation\src\hooks\useDifficulty.ts
 import { useDoc } from "@docusaurus/plugin-content-docs/client";
 
 /**
