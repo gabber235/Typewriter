@@ -1,0 +1,15 @@
+[package]
+name = "surrealdb-component"
+version = "0.1.0"
+edition = "2024"
+description = "SurrealDB wasi logic wrapper"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+anyhow = "1.0.97"
+serde = { version = "1.0.219", features = ["derive"] }
+serde-content = "0.1.2"
+serde_cbor = "0.11.2"
+wit-bindgen = "0.41"

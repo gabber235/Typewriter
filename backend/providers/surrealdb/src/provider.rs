@@ -1,12 +1,14 @@
 use std::collections::HashMap;
+use std::future::IntoFuture;
 use std::sync::Arc;
 
 use anyhow::Context as _;
+use serde::{Deserialize, Serialize};
 use surrealdb::engine::any::Any;
 use surrealdb::opt::auth::{Database, Namespace, Root};
-use surrealdb::{Surreal, Value};
+use surrealdb::Surreal;
 use tokio::sync::RwLock;
-use tracing::{debug, info};
+use tracing::{debug, debug_span, info, info_span, instrument, Instrument};
 use wasmcloud_provider_sdk::initialize_observability;
 use wasmcloud_provider_sdk::{
     run_provider, serve_provider_exports, Context, LinkConfig, LinkDeleteInfo, Provider,
@@ -14,6 +16,7 @@ use wasmcloud_provider_sdk::{
 };
 
 use crate::config::{Auth, ProviderConfig};
+use crate::conversion::into_content;
 
 pub(crate) mod bindings {
     wit_bindgen_wrpc::generate!();
@@ -21,7 +24,7 @@ pub(crate) mod bindings {
 
 use bindings::exports::seamlezz::surrealdb::call;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// Your provider struct is where you can store any state or configuration that your provider needs to keep track of.
 pub struct SurrealDBProvider {
     config: Arc<RwLock<ProviderConfig>>,
@@ -88,33 +91,81 @@ impl SurrealDBProvider {
 }
 
 impl call::Handler<Option<Context>> for SurrealDBProvider {
+    #[instrument(skip(self, _ctx, _params), fields(query = %query))]
     async fn query(
         &self,
         _ctx: Option<Context>,
         query: String,
         _params: Vec<(String, wit_bindgen_wrpc::bytes::Bytes)>,
     ) -> anyhow::Result<Vec<Result<wit_bindgen_wrpc::bytes::Bytes, String>>> {
-        let db = self.db.read().await;
-        let mut query = db.query(query);
-        for (key, value) in _params {
-            let value: serde_cbor::Value = serde_cbor::from_slice(&value)?;
-            query = query.bind((key, value));
+        let db = self
+            .db
+            .read()
+            .instrument(info_span!("acquire_db_read_lock"))
+            .await;
+
+        let mut query_builder = db.query(query);
+
+        {
+            let bind_span = info_span!("bind_parameters", count = _params.len());
+            let _enter = bind_span.enter();
+
+            for (key, value) in _params {
+                let param_span = debug_span!("bind_one_parameter", key = %key);
+                let _enter_param = param_span.enter();
+
+                let value: serde_cbor::Value = serde_cbor::from_slice(&value)?;
+                query_builder = query_builder.bind((key, value));
+            }
         }
-        let mut result = query.await?;
+
+        let mut result = query_builder
+            .into_future()
+            .instrument(info_span!("execute_query"))
+            .await?;
+
         let mut res = Vec::new();
-        for i in 0..result.num_statements() {
+        let num_statements = result.num_statements();
+
+        let process_span = info_span!("process_results", num_statements);
+        let _enter_process = process_span.enter();
+
+        for i in 0..num_statements {
+            let statement_span = info_span!("process_statement", index = i);
+            let _enter_statement = statement_span.enter();
+
             match result.take::<surrealdb::Value>(i) {
                 Ok(response) => {
                     info!("Response: {:?}", response);
-                    let bytes = serde_cbor::to_vec(&response)?;
-                    res.push(Ok(bytes.into()));
+                    let serialization_result: anyhow::Result<wit_bindgen_wrpc::bytes::Bytes> = {
+                        let serialization_span = info_span!("serialize_response");
+                        let _enter_serialization = serialization_span.enter();
+                        (|| {
+                            let serializer = serde_content::Serializer::new();
+                            let serialized = response.serialize(serializer)?;
+                            let deserializer = serde_content::Deserializer::new(serialized);
+                            let core_value = surrealdb_core::sql::Value::deserialize(deserializer)?;
+                            let value = into_content(core_value)?;
+                            let bytes = serde_cbor::to_vec(&value)?;
+                            Ok(bytes.into())
+                        })()
+                    };
+
+                    match serialization_result {
+                        Ok(bytes) => res.push(Ok(bytes)),
+                        Err(e) => {
+                            tracing::error!("Serialization failed: {:?}", e);
+                            res.push(Err(e.to_string()));
+                        }
+                    }
                 }
                 Err(e) => {
-                    info!("Error: {:?}", e);
+                    info!("Error taking result: {:?}", e);
                     res.push(Err(e.to_string()));
                 }
             };
         }
+
         Ok(res)
     }
 
