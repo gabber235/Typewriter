@@ -1,5 +1,4 @@
 import "package:audioplayers/audioplayers.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -7,10 +6,10 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/hooks/audio_player.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/sound.dart";
 import "package:typewriter/models/sounds.dart";
-import "package:typewriter/utils/audio_player.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/utils/passing_reference.dart";
@@ -178,9 +177,7 @@ class _FocusedAudioPlayer extends HookConsumerWidget {
 
   final MinecraftSound sound;
 
-  void _playSound(PassingRef ref) {
-    if (!kIsWeb) return;
-    final audioPlayer = ref.read(audioPlayerProvider);
+  void _playSound(AudioPlayer audioPlayer) {
     final url = sound.value.pickRandomSoundUrl();
     if (url == null) return;
     final source = UrlSource(url);
@@ -192,14 +189,14 @@ class _FocusedAudioPlayer extends HookConsumerWidget {
     final controller = useAnimationController(duration: 1.seconds);
     final hovering = useState(false);
     final hasFocus = FocusedNotifier.isFocused(context);
-    final audioPlayer = ref.watch(audioPlayerProvider);
+    final audioPlayer = useAudioPlayer(volume: 0.5);
 
     final showPlaying = hasFocus || hovering.value;
 
     useEffect(
       () {
         if (showPlaying) {
-          _playSound(ref.passing);
+          _playSound(audioPlayer);
           controller.forward(from: 0);
         } else if (!showPlaying) {
           audioPlayer.stop();
@@ -588,9 +585,7 @@ class _ChosenSound extends HookConsumerWidget {
 
   final MinecraftSound sound;
 
-  void _playSound(PassingRef ref) {
-    if (!kIsWeb) return;
-    final audioPlayer = ref.read(audioPlayerProvider);
+  void _playSound(AudioPlayer audioPlayer) {
     final url = sound.value.pickRandomSoundUrl();
     if (url == null) return;
     final source = UrlSource(url);
@@ -601,17 +596,17 @@ class _ChosenSound extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = useAnimationController(duration: 1.seconds);
     final hovering = useState(false);
-    final audioPlayer = ref.watch(audioPlayerProvider);
+    final audioPlayer = useAudioPlayer(volume: 0.5);
 
     final showPlaying = hovering.value;
 
     useEffect(
       () {
         if (showPlaying) {
-          _playSound(ref.passing);
+          _playSound(audioPlayer);
           controller.forward(from: 0);
         } else {
-          audioPlayer.stop();
+          audioPlayer.release();
           controller.reset();
         }
         return null;

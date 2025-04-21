@@ -36,7 +36,7 @@ dependencies:
   text_scroll: ^0.2.0
   url_launcher: 
   http:
-  audioplayers: ^6.0.0
+  audioplayers: ^6.4.0
   collection_ext: ^1.0.0
   tinycolor2: ^3.0.1
   uuid: 

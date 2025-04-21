@@ -1,7 +1,6 @@
 package com.typewritermc.engine.paper.utils
 
 import com.github.retrooper.packetevents.protocol.sound.SoundCategory
-import com.github.retrooper.packetevents.protocol.sound.Sounds
 import com.github.retrooper.packetevents.protocol.sound.StaticSound
 import com.github.retrooper.packetevents.resources.ResourceLocation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntitySoundEffect
@@ -19,7 +18,6 @@ import net.kyori.adventure.sound.SoundStop
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import net.kyori.adventure.sound.Sound as AdventureSound
-
 
 data class Sound(
     val soundId: SoundId = SoundId.EMPTY,
@@ -58,7 +56,13 @@ data class Sound(
                     val emitter = entry.getEmitter(viewer)
                     val packetSound = StaticSound(ResourceLocation(key.namespace, key.key), 16f)
                     val category = SoundCategory.fromId(track.ordinal)
-                    WrapperPlayServerEntitySoundEffect(packetSound, category, emitter.entityId, volume, pitch) sendPacketTo viewer
+                    WrapperPlayServerEntitySoundEffect(
+                        packetSound,
+                        category,
+                        emitter.entityId,
+                        volume,
+                        pitch
+                    ) sendPacketTo viewer
                 }
             }
 
