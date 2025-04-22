@@ -74,7 +74,39 @@ export function FeatureHighlights({
               )}
             >
               {item.icon && <span className="mr-1">{item.icon}</span>}
-              {item.title}
+              {typeof item.title === "string"
+                ? item.title
+                    .split(/(`[^`]+`|\*\*[^*]+\*\*)/)
+                    .map((part, index) => {
+                      if (part.startsWith("**`") && part.endsWith("`**")) {
+                        return (
+                          <strong key={index} className="font-semibold">
+                            <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs font-mono">
+                              {part.slice(3, -3)}
+                            </code>
+                          </strong>
+                        );
+                      }
+                      if (part.startsWith("`") && part.endsWith("`")) {
+                        return (
+                          <code
+                            key={index}
+                            className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs font-mono"
+                          >
+                            {part.slice(1, -1)}
+                          </code>
+                        );
+                      }
+                      if (part.startsWith("**") && part.endsWith("**")) {
+                        return (
+                          <strong key={index} className="font-semibold">
+                            {part.slice(2, -2)}
+                          </strong>
+                        );
+                      }
+                      return part;
+                    })
+                : item.title}
             </span>
           );
         } else if (layout === "vertical") {
@@ -91,14 +123,19 @@ export function FeatureHighlights({
             >
               <strong>
                 {item.icon && <span className="mr-1">{item.icon}</span>}
-                {item.title}
-              </strong>
-              {item.description && (
-                <p className="text-sm m-0">
-                  {typeof item.description === "string"
-                    ? // Process string descriptions for code segments wrapped in backticks
-                      item.description.split(/(`[^`]+`)/).map((part, index) => {
-                        // If part starts and ends with backticks, render as code
+                {typeof item.title === "string"
+                  ? item.title
+                      .split(/(`[^`]+`|\*\*[^*]+\*\*)/)
+                      .map((part, index) => {
+                        if (part.startsWith("**`") && part.endsWith("`**")) {
+                          return (
+                            <strong key={index} className="font-semibold">
+                              <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs font-mono">
+                                {part.slice(3, -3)}
+                              </code>
+                            </strong>
+                          );
+                        }
                         if (part.startsWith("`") && part.endsWith("`")) {
                           return (
                             <code
@@ -109,8 +146,54 @@ export function FeatureHighlights({
                             </code>
                           );
                         }
+                        if (part.startsWith("**") && part.endsWith("**")) {
+                          return (
+                            <strong key={index} className="font-semibold">
+                              {part.slice(2, -2)}
+                            </strong>
+                          );
+                        }
                         return part;
                       })
+                  : item.title}
+              </strong>
+              {item.description && (
+                <p className="text-sm m-0">
+                  {typeof item.description === "string" // Process string descriptions for code segments wrapped in backticks and bold text
+                    ? item.description
+                        .split(/(`[^`]+`|\*\*[^*]+\*\*)/)
+                        .map((part, index) => {
+                          // Handle bold code (text wrapped in both ** and `)
+                          if (part.startsWith("**`") && part.endsWith("`**")) {
+                            return (
+                              <strong key={index} className="font-semibold">
+                                <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs font-mono">
+                                  {part.slice(3, -3)}
+                                </code>
+                              </strong>
+                            );
+                          }
+                          // If part starts and ends with backticks, render as code
+                          if (part.startsWith("`") && part.endsWith("`")) {
+                            return (
+                              <code
+                                key={index}
+                                className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs font-mono"
+                              >
+                                {part.slice(1, -1)}
+                              </code>
+                            );
+                          }
+                          // If part starts and ends with **, render as bold
+                          if (part.startsWith("**") && part.endsWith("**")) {
+                            return (
+                              <strong key={index} className="font-semibold">
+                                {part.slice(2, -2)}
+                              </strong>
+                            );
+                          }
+                          return part;
+                        })
                     : item.description}
                 </p>
               )}
@@ -134,11 +217,25 @@ export function FeatureHighlights({
                 </strong>
                 {item.description && (
                   <p className="text-sm m-0 mt-auto mb-auto">
+                    {" "}
                     {typeof item.description === "string"
-                      ? // Process string descriptions for code segments wrapped in backticks
+                      ? // Process string descriptions for code segments wrapped in backticks and bold text
                         item.description
-                          .split(/(`[^`]+`)/)
+                          .split(/(`[^`]+`|\*\*[^*]+\*\*)/)
                           .map((part, index) => {
+                            // Handle bold code (text wrapped in both ** and `)
+                            if (
+                              part.startsWith("**`") &&
+                              part.endsWith("`**")
+                            ) {
+                              return (
+                                <strong key={index} className="font-semibold">
+                                  <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs font-mono">
+                                    {part.slice(3, -3)}
+                                  </code>
+                                </strong>
+                              );
+                            }
                             // If part starts and ends with backticks, render as code
                             if (part.startsWith("`") && part.endsWith("`")) {
                               return (
@@ -148,6 +245,14 @@ export function FeatureHighlights({
                                 >
                                   {part.slice(1, -1)}
                                 </code>
+                              );
+                            }
+                            // If part starts and ends with **, render as bold
+                            if (part.startsWith("**") && part.endsWith("**")) {
+                              return (
+                                <strong key={index} className="font-semibold">
+                                  {part.slice(2, -2)}
+                                </strong>
                               );
                             }
                             return part;
