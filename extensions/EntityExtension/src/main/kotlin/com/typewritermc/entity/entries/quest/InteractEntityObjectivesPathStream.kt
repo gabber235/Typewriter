@@ -38,15 +38,27 @@ class InteractEntityObjectivesPathStream(
     val road: Ref<RoadNetworkEntry> = emptyRef(),
     val ignoreInstances: List<Ref<EntityInstanceEntry>> = emptyList(),
 ) : AudienceEntry {
-    override suspend fun display(): AudienceDisplay = MultiPathStreamDisplay(road, endLocations = { player ->
-        val definitions =
-            player.trackedShowingObjectives().filterIsInstance<InteractEntityObjective>().map { it.entity }
+    private val displays by lazy(LazyThreadSafetyMode.NONE) {
         val manager = KoinJavaComponent.get<AudienceManager>(AudienceManager::class.java)
-        Query.findWhere<EntityInstanceEntry> { it.ref() !in ignoreInstances && it.definition in definitions }
-            .mapNotNull { manager[it.ref()] }
-            .filterIsInstance<AudienceEntityDisplay>()
-            .filter { it.canView(player.uniqueId) }
-            .mapNotNull { it.position(player.uniqueId)?.toBukkitLocation() }
-            .toList()
-    })
+        // As displays and references can't change (except between reloads) we can just cache all relevant ones here for quick access.
+        Query.findWhere<EntityInstanceEntry> { it.ref() !in ignoreInstances }
+            .groupBy { it.definition }
+            .mapValues { (_, value) ->
+                value
+                    .mapNotNull { manager[it.ref()] }
+                    .filterIsInstance<AudienceEntityDisplay>()
+            }
+    }
+
+    override suspend fun display(): AudienceDisplay {
+        return MultiPathStreamDisplay(road, endLocations = { player ->
+            player.trackedShowingObjectives()
+                .filterIsInstance<InteractEntityObjective>()
+                .map { it.entity }
+                .flatMap { displays[it]?.asSequence() ?: emptySequence() }
+                .filter { it.canView(player.uniqueId) }
+                .mapNotNull { it.position(player.uniqueId)?.toBukkitLocation() }
+                .toList()
+        })
+    }
 }
