@@ -1,4 +1,4 @@
-// filepath: d:\projects\typewriter\TypeWriter\documentation\src\theme\DocVersionBadge\index.tsx
+// filepath: d:\projects\typewriter\Typewriter\documentation\src\theme\DocVersionBadge\index.tsx
 import React from "react";
 import { Icon } from "@iconify/react";
 import Translate from "@docusaurus/Translate";

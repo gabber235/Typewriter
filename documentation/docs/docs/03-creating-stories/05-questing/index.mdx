@@ -1,114 +1,205 @@
 ---
-difficulty: Hard
+difficulty: Easy
 ---
 
-import Player from "@site/src/components/Player";
-import EntryDisplay from "@site/src/components/EntryDisplay";
-import EntryNodeInspector from "@site/src/components/EntryInspector";
-export const questPages = [
-    require("./assets/index/quest_manifest.json"),
-    require("./assets/index/quest_sequence.json"),
-    require("./assets/index/quest_static.json"),
-];
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import StateFlow from '@site/src/components/StateFlow';
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+import { FeatureHighlights } from '@site/src/components/FeatureHighlights';
 
 # Questing
+
 :::danger[Quest Extension]
-You must have installed the Quest Extension before starting this tutorial.
+You must have installed the Quest Extension before proceeding with any quest-related features.
+:::
+:::danger[Writers Note]
+The questing section on our docs is currently being rewritten. If you want the old documentation that is complete read: [**Old Quest Documentation**](../../../../versioned_docs/version-0.7.0/docs/03-creating-stories/05-questing/index.mdx)
+:::
+## Typewriter's Unique Approach to Quests
+
+:::tip[The Big Idea]
+In Typewriter, quests are **visual reflections** of your game state, not the drivers of it. Use permanent facts to track real progress, and let quests simply display that progress to players.
 :::
 
-Any interactive storytelling game is going to have quests. 
-Quests are designed to guide players through the story and provide a sense of progression.
+<SplitLayout>
+<Section>
+### 🔑 Key Concept
 
-In Typewriter, quests are purely a visual addition.
-While not required to create interactive stories, they can effectively guide players through the narrative.
+Unlike traditional quest plugins where completing quests directly triggers progression, Typewriter separates:
 
-## Setting up the Story
+- **Game State** - Facts that drive true progression
+- **Quest Display** - What players see in the UI
+</Section>
 
-To add quests to your story, we first need a story to work with. 
-For this guide, we'll create the following quest:
+<Section divider="left">
+### ⚙️ How Quests Work
 
-1. The player encounters a chasm where the wind is too strong to walk across the bridge.
-2. The player needs to find a way to cross the chasm.
-3. The player discovers magnet boots nearby.
-4. When wearing the magnet boots, the player can walk across the chasm.
+<FeatureHighlights 
+  layout="horizontal"
+  items={[
+    {
+      id: "inactive",
+      title: "Inactive",
+      color: "gray"
+    },
+    {
+      id: "active",
+      title: "Active",
+      color: "sky"
+    },
+    {
+      id: "completed",
+      title: "Completed",
+      color: "default"
+    }
+  ]}
+/>
 
-Here's the setup for the quest:
+**Quest state is determined by:**
 
-<EntryDisplay pages={[
-    require("./assets/index/setup_manifest.json"),
-    require("./assets/index/setup_sequence.json"),
-]} />
+1. If **Completed Criteria** are met → Completed
+2. If **Active Criteria** are met → Active
+3. Otherwise → Inactive
+</Section>
+</SplitLayout>
+### 💪 Why This Is Powerful
 
-Here is a demo of the setup described above:
-<Player url={require("./assets/index/setup_demo.webm").default} />
+<FeatureHighlights layout="grid" 
+items={[
+    {
+      id: "dynamic",
+      title: "🔄 Dynamic Evolution",
+      description: "When a player lingers without finding clues, change objective from `Search for clues` to `Examine the bookshelf`",
+      color: "grayish"
+    },
+    {
+      id: "interactive",
+      title: "🔍 Interactive Storytelling",
+      description: "Display `Search for clues` only when players enter the crime scene area",
+      color: "grayish"
+    },
+    {
+      id: "branching",
+      title: "🌿 Branching Narratives",
+      description: "Based on evidence found, objectives change to `Confront the butler` or `Investigate the garden shed`",
+      color: "grayish"
+    },
+    {
+      id: "contextual",
+      title: "👤 Player History",
+      description: "For corrupt players, display `Destroy evidence` instead of `Collect evidence`",
+      color: "grayish"
+  }]}
+/>
 
-## Creating the Quest
+## Visual Guide: How Facts Drive Quests
 
-As you can see in the setup, Typewriter doesn't require questing components to create interactive stories. Unlike most quest plugins where quests are the main feature, in Typewriter, they serve as a visual addition – a way to guide players through the story and provide a sense of progression.
+<StateFlow
+  title="Quest Progression Flow"
+  description="How facts drive quest states in Typewriter"
+  nodes={[
+    {
+      id: 'not-started',
+      title: 'Not Started',
+      facts: ['Quest Fact = 0'],
+      className: 'bg-gray-100 dark:bg-zinc-600 ring-1 ring-[#1f2937] dark:ring-white',
+      description: 'Player hasn\'t started the quest yet',
+      icon: 'tabler:circle-dot',
+      transitions: [
+        { 
+          targetId: 'searching', 
+          label: 'Talk to NPC', 
+          icon: 'tabler:message-circle' 
+        }
+      ]
+    },
+    {
+      id: 'searching',
+      title: 'Searching',
+      facts: ['Quest Fact = 1', 'Item Fact = 0'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-cyan-500 border-cyan-100 dark:border-cyan-800',
+      description: 'Player is looking for the required item',
+      icon: 'tabler:search',
+      transitions: [
+        { 
+          targetId: 'item-found', 
+          label: 'Find Item', 
+          icon: 'tabler:package' 
+        }
+      ]
+    },
+    {
+      id: 'item-found',
+      title: 'Item Found',
+      facts: ['Quest Fact = 1', 'Item Fact >= 1'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-[#4cb3d4] border-cyan-100 dark:border-cyan-800',
+      description: 'Player has found the required item',
+      icon: 'tabler:package',
+      transitions: [
+        { 
+          targetId: 'completed', 
+          label: 'Return to NPC', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      facts: ['Quest Fact = 2'],
+      className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
+      description: 'Quest has been completed',
+      icon: 'tabler:check-circle'
+    }
+  ]}
+/>
 
-To create a quest, we first need to create a manifest page.
-This page will contain all the entries that make up the quest.
+## Creating a Quest
+In Typewriter, quests are created using the **Quest** entry.
+:::info[Quest Entry]
+The Quest Entry is only a visual representation of the quest state. It does not affect the quest state itself.
+:::
+:::warning[Before Starting]
+You must have a decent understanding of Typewriter's [**Facts**](../03-facts/index.mdx) and [**Interactions**](../01-interactions/index.mdx) before starting with creating quests.
+:::
+### Adding the Quest Entry
+In the top right corner of the Typewriter editor, click on the **+** button and search for `Quest`. Click on the **+** button to add it to your page.
 
-### How Quests Work
+<EntrySearch entryName="quest" />
 
-In Typewriter, two types of entries are used to create quests: `Quest` Entry and `Objective` Entry.
+### Configuring the Quest Entry
 
-The `Quest` Entry defines the name of the quest.
-The `Objective` Entry defines the objectives of the quest.
+<SplitLayout columns={3}>
+<Section divider='right'>
+<FeatureHighlights layout="horizontal" 
+items={[{id: "display-name", title: "Display Name", color: "gray"}]}
+/>
+The name shown in player's quest log (e.g., `QuestGuide`)
+</Section>
+<Section divider="middle">
+<FeatureHighlights layout="horizontal"
+items={[{id: "active-criteria", title: "Active Criteria", color: "sky"}]}
+/>
+Condition for quest visibility (e.g., `Permanent Fact >= 1`)
+</Section>
+<Section divider="left">
+<FeatureHighlights layout="horizontal"
+items={[{id: "completed-criteria", title: "Completed Criteria", color: "default"}]}
+/>
+Condition for quest completion (e.g., `Permanent Fact == 5`)
+</Section>
+</SplitLayout>
 
-### Quest Entry
-
-The `Quest` Entry is used to define the quest.
-A quest can be in one of three states:
-- Inactive: The quest is neither active nor completed.
-- Active: The quest is active and not yet completed by the player.
-- Completed: The quest has been completed.
-
-There are three important fields for the `Quest` Entry:
-- `Display Name`: The name of the quest.
-- `Active Criteria`: The criteria that must be met for the quest to become active.
-- `Completed Criteria`: The criteria that must be met for the quest to be considered completed.
-
-The state of the quest is determined as follows:
-1. If all the `Completed Criteria` are met: The quest is completed.
-2. If all the `Active Criteria` are met: The quest is active.
-3. Otherwise, the quest is inactive.
+<Image img={require("../../assets/questing/quest/quest-configuration.png")} alt="Quest Configuration" width={400}/>
 
 
-For our quest, we'll use a `Permanent Fact` to hold the state of the quest for the player.
-We create the following `Quest` Entry:
+## Adding objectives
+You now have created a quest entry, but it doesn't have any objectives yet. For this documentation we have created multiple guides on how to do different objectives.
+- **Talk to NPC**: Being written
+- **Kill 10 Zombies**: Soon
+- **Gather 10 Emeralds**: Soon
+- **Give to Npc (Mail delivery)**: Soon
 
-<EntryNodeInspector entryId="Pd5ZLgeKRhbylic" pages={questPages} />
-
-### Objective Entry
-
-The `Objective` Entry defines a task that needs to be completed as part of the quest.
-There are various types of objectives, allowing Typewriter to display them in different ways.
-
-While Quests have three different states, Objectives only have two:
-- Hidden: The objective is not visible to the player.
-- Visible: The objective is visible to the player.
-
-These states are influenced by both the `Criteria` field and their `Audience` parent entries.
-
-For now, we'll only use the `Criteria` field to determine if the objective is visible or not.
-
-Let's set up the objective for our quest like this:
-
-<EntryNodeInspector entryId="jE0Rv5oUP8kXNGV" pages={questPages} />
-
-## Finishing the Quest
-For the final step, we need to change the `Permanent Fact` entry to `1` when the player first falls down the chasm and to `2` when they reach the other side.
-
-<EntryDisplay pages={questPages} />
-
-Here's a demo of the finished quest:
-<Player url={require("./assets/index/quest_demo.webm").default} />
-
-## Quest Tracking
-
-We've seen that `Quests` can be in one of 3 states.
-Additionally, we can **Track** one quest at a time. 
-Tracking a quest is used for displaying the quest progress to the player.
-
-To learn more about quest display, check out the [Displaying Quests Guide](05-displaying_quests.mdx).
+## Displaying the Quest
+It is also possible to display the quest to players via placeholders. Read: **SOON** to learn more about this. a
