@@ -126,6 +126,11 @@ items={[
           targetId: 'item-found', 
           label: 'Find Item', 
           icon: 'tabler:package' 
+        },
+        { 
+          targetId: 'not-started', 
+          label: 'Abandon Quest', 
+          icon: 'tabler:arrow-back' 
         }
       ]
     },
@@ -141,6 +146,11 @@ items={[
           targetId: 'completed', 
           label: 'Return to NPC', 
           icon: 'tabler:arrow-back-up' 
+        },
+        { 
+          targetId: 'searching', 
+          label: 'Lose Item', 
+          icon: 'tabler:package-off' 
         }
       ]
     },
@@ -150,7 +160,14 @@ items={[
       facts: ['Quest Fact = 2'],
       className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
       description: 'Quest has been completed',
-      icon: 'tabler:check-circle'
+      icon: 'tabler:check-circle',
+      transitions: [
+        {
+          targetId: 'not-started',
+          label: 'Reset Quest',
+          icon: 'tabler:refresh'
+        }
+      ]
     }
   ]}
 />
