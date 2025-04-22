@@ -18,7 +18,7 @@ For detailed setup instructions, visit the [Installation Guide](https://docs.typ
 
 ### Sponsors
 
-<!-- sponsors --><a href="https://github.com/myiume"><img src="https:&#x2F;&#x2F;github.com&#x2F;myiume.png" width="60px" alt="User avatar: Myiume" /></a><a href="https://github.com/iamyellowhead"><img src="https:&#x2F;&#x2F;github.com&#x2F;iamyellowhead.png" width="60px" alt="User avatar: " /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/myiume"><img src="https:&#x2F;&#x2F;github.com&#x2F;myiume.png" width="60px" alt="User avatar: Myiume" /></a><a href="https://github.com/iamyellowhead"><img src="https:&#x2F;&#x2F;github.com&#x2F;iamyellowhead.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/Keksnet"><img src="https:&#x2F;&#x2F;github.com&#x2F;Keksnet.png" width="60px" alt="User avatar: Marlon Pohl" /></a><!-- sponsors -->
 
 Thanks to the following sponsors for supporting this project. Without their support, this project would not be possible. If you are using Typewriter for your server, and are making money from it, please consider [sponsoring](https://github.com/sponsors/gabber235) the project.
 
