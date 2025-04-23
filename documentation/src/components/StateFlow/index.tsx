@@ -64,7 +64,7 @@ function StateNode({
   // Use fixed height for unexpanded nodes to keep consistent sizing
   const nodeHeight = !isExpanded ? "min-h-[120px]" : "";
 
-  const expandedClasses = isExpanded ? "w-[300px] z-10" : nodeWidth;
+  const expandedClasses = isExpanded ? "w-[350px] z-10" : nodeWidth;
 
   const nodeIcon = node.icon || "ph:cube-duotone";
 
@@ -78,7 +78,7 @@ function StateNode({
     if (isActive) {
       timer = setTimeout(() => {
         setDescriptionVisible(true);
-      }, 100);
+      }, 200);
     } else {
       // Delay hiding the description to allow for animation
       timer = setTimeout(() => {
@@ -155,23 +155,16 @@ function StateNode({
             style={{
               transform: isActive ? "translateY(0)" : "translateY(100%)",
               transition: isActive
-                ? "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
+                ? "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)"
                 : "none", // No transition when hiding
               opacity: isActive ? 1 : 0,
             }}
             className={clsx(
-              "text-xs py-1 px-2 mb-3 rounded-md",
+              "text-xs flex items-center rounded-md p-2 mb-2",
               "bg-slate-400 bg-opacity-10 dark:bg-black dark:bg-opacity-50"
             )}
           >
             <div className="flex items-start">
-              <Icon
-                icon="heroicons:information-circle"
-                className="mr-1 mt-0.5 flex-shrink-0"
-                width={12}
-                height={12}
-                aria-hidden="true"
-              />
               <span>{node.description}</span>
             </div>
           </div>
@@ -440,7 +433,7 @@ export default function StateFlow({
           setAnimatingLabel(null);
         }, animationSpeed);
       }, 50);
-    }, 2000); // Faster interval between transitions
+    }, 8000); // Faster interval between transitions
 
     return () => {
       clearInterval(interval);
@@ -468,8 +461,8 @@ export default function StateFlow({
     const isMultiStep = stepDifference > 1;
     const isForward = targetIndex > currentIndex;
 
-    const singleStepDuration = 1000; // Slower for single step
-    const multiStepDurationPerStep = 400; // Faster per step for multi-step
+    const singleStepDuration = 2000; // Slower for single step
+    const multiStepDurationPerStep = 800; // Faster per step for multi-step
 
     if (!isMultiStep) {
       // Single Step Animation
@@ -547,7 +540,7 @@ export default function StateFlow({
     const direction: "up" | "down" = targetIndex > currentIndex ? "down" : "up";
     const arrowIndex = direction === "down" ? currentIndex : targetIndex;
     const transition = findTransition(activeNodeId, targetId);
-    const transitionDuration = 1000; // Slower for deliberate transition clicks
+    const transitionDuration = 2000; // Slower for deliberate transition clicks
 
     setAnimatingNodeId(targetId);
     setAnimatingArrowIndex(arrowIndex);

@@ -1,0 +1,97 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import Player from "@site/src/components/Player";
+import StateFlow from '@site/src/components/StateFlow';
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+import { FeatureHighlights } from '@site/src/components/FeatureHighlights';
+
+# Talk To NPC Objective
+
+:::info[Before starting]
+It's best to first read [Questing](./index.mdx) before starting this tutorial.
+:::
+:::warning[NPC]
+This tutorial requires you to already have created an NPC using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+:::
+
+In this tutorial, you will learn how to create a quest where:
+- The player interacts with an NPC
+- The NPC gives the player a quest
+- The player completes the quest by talking to a different NPC.
+
+<SplitLayout>
+<Section divider='left'>
+## Quest Flow
+<StateFlow
+  nodes={[
+    {
+      id: 'not-started',
+      title: 'Not Started',
+      facts: ['Talk Quest Fact = 0'],
+      className: 'bg-gray-100 dark:bg-zinc-600 ring-1 ring-[#1f2937] dark:ring-white',
+      description: 'Player hasn\'t started the quest yet',
+      icon: 'tabler:circle-dot',
+      transitions: [
+        { 
+          targetId: 'quest-received', 
+          label: 'Talk to First NPC', 
+          icon: 'tabler:message-circle' 
+        }
+      ]
+    },
+    {
+      id: 'quest-received',
+      title: 'Quest Received',
+      facts: ['Talk Quest Fact = 1'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-cyan-500 border-cyan-100 dark:border-cyan-800',
+      description: 'Player has received the quest from the first NPC',
+      icon: 'tabler:message-circle',
+      transitions: [
+        { 
+          targetId: 'completed', 
+          label: 'Talk to Second NPC', 
+          icon: 'tabler:message-circle-2' 
+        }
+      ]
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      facts: ['Talk Quest Fact = 2'],
+      className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
+      description: 'Player has completed the quest by talking to the second NPC',
+      icon: 'tabler:check-circle',
+      transitions: [
+        { 
+          targetId: 'not-started', 
+          label: 'Reset Quest', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    }
+  ]}
+/>
+</Section>
+<Section divider='right'>
+## Quest Setup Steps
+This guide is split up into 2 sections. 
+- [**Manifest Section**](#manifest-section): Covers how to set the quest up and add the objective.
+- [**Sequence Section**](#sequence-section): Explains how to make the npc give the quest and the other npc react to the quest.
+
+</Section>
+</SplitLayout>
+
+### Manifest Section
+:::warning[Before Starting]
+You must already have created 2 NPCs using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+:::
+> In this section, we will be creating the quest and adding the objective to it.
+
+### Sequence Section
+:::info[Before Starting]
+It is recommended to have a good understanding of [Interactions](../01-interactions/index.mdx) and [Facts](../03-facts/index.mdx) before starting this section.
+:::

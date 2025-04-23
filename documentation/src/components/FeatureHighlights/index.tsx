@@ -87,6 +87,13 @@ export function FeatureHighlights({
                           </strong>
                         );
                       }
+                      if (part.startsWith("*") && part.endsWith("*")) {
+                        return (
+                          <i key={index} className="font-semibold">
+                            {part.slice(1, -1)}
+                          </i>
+                        );
+                      }
                       if (part.startsWith("`") && part.endsWith("`")) {
                         return (
                           <code

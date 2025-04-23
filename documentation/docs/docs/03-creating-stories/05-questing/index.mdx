@@ -7,6 +7,7 @@ import Image from "@site/src/components/Image";
 import StateFlow from '@site/src/components/StateFlow';
 import { SplitLayout, Section } from '@site/src/components/SplitLayout';
 import { FeatureHighlights } from '@site/src/components/FeatureHighlights';
+import StatusEditor from '@site/src/components/StatusEditor';
 
 # Questing
 
@@ -67,30 +68,43 @@ Unlike traditional quest plugins where completing quests directly triggers progr
 
 <FeatureHighlights layout="grid" 
 items={[
-    {
-      id: "dynamic",
-      title: "🔄 Dynamic Evolution",
-      description: "When a player lingers without finding clues, change objective from **`Search for clues`** to **`Examine the bookshelf`**",
-      color: "grayish"
-    },
-    {
-      id: "interactive",
-      title: "🔍 Interactive Storytelling",
-      description: "Display **`Search for clues`** only when players enter the crime scene area",
-      color: "grayish"
-    },
-    {
-      id: "branching",
-      title: "🌿 Branching Narratives",
-      description: "Based on evidence found, objectives change to **`Confront the butler`** or **`Investigate the garden shed`**",
-      color: "grayish"
-    },
-    {
-      id: "contextual",
-      title: "👤 Player History",
-      description: "For corrupt players, display **`Destroy evidence`** instead of **`Collect evidence`**",
-      color: "grayish"
-  }]}
+      {
+        id: "open-ended",
+        title: "🤔 Open-ended Objectives",
+        description: "Guide players with goals, not just clicks. Use immersive objectives like **`Find a way into the locked study`** instead of the rigid **`Use the Silver Key on the Study Door`**.",
+        color: "grayish"
+      },
+      {
+        id: "multiple-entry-points",
+        title: "🕵️‍♀️ Multiple Entry Points",
+        description: "Provide various ways to begin the same quest. The investigation can begin by **`Being briefed by the chief detective`** OR by independently finding the **`Discarded Ransom Note`**.",
+        color: "grayish"
+      },
+      {
+        id: "evolving-objectives",
+        title: "⏳ Evolving Objectives",
+        description: "Objectives can update based on time or lack of progress. If **`Search the market district for clues`** yields no results after a while, it might refine to **`Focus your search near the merchant stalls`**.",
+        color: "grayish"
+      },
+      {
+        id: "contextual-objectives",
+        title: "🗺️ Contextual Objectives",
+        description: "Display the most relevant task based on context. At the plaza, show **`Ask locals about the suspect`**, but enter the nearby alley, and it updates to **`Check the alley for escape routes`**.",
+        color: "grayish"
+      },
+      {
+        id: "branching",
+        title: "🌿 Branching Narratives",
+        description: "Player actions determine the narrative direction. Unearthing a **`Secret Correspondence`** might trigger **`Identify the unknown contact`**, but finding a **`Hidden Escape Route`** prompts **`Search for the fugitive`**.",
+        color: "grayish"
+      },
+      {
+        id: "lasting-consequences",
+        title: "⚖️ Lasting Consequences",
+        description: "Prior decisions influence current tasks. A corrupt detective might get **`Plant misleading evidence`** instead of **`Collect all available evidence`**.",
+        color: "grayish"
+      }
+  ]}
 />
 
 ## Visual Guide: How Facts Drive Quests
@@ -190,7 +204,7 @@ In the top right corner of the Typewriter editor, click on the **+** button and 
 <SplitLayout columns={3}>
 <Section divider='right'>
 <FeatureHighlights layout="horizontal" 
-items={[{id: "display-name", title: "Display Name", color: "gray"}]}
+items={[{id: "display-name", title: "Display Name", color: "orange"}]}
 />
 The name shown in player's quest log (e.g., **`QuestGuide`**)
 </Section>
@@ -207,10 +221,18 @@ items={[{id: "completed-criteria", title: "Completed Criteria", color: "default"
 Condition for quest completion (e.g., **`Permanent Fact == 5`**)
 </Section>
 </SplitLayout>
+<SplitLayout>
+<Section divider="right">
+### Visualizing the Quest Entry
+In this editor you can increase and decrease the permanent fact used in the image on the right.
 
+ Try setting it from 0 to 6!
+<StatusEditor />
+</Section>
+<Section divider="left">
 <Image img={require("../../assets/questing/quest/quest-configuration.png")} alt="Quest Configuration" width={400}/>
-
-
+</Section>
+</SplitLayout>
 ## Adding objectives
 You now have created a quest entry, but it doesn't have any objectives yet. For this documentation we have created multiple guides on how to do different objectives.
 - **Talk to NPC**: Being written
