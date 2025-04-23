@@ -1,0 +1,1 @@
+{"id":"V1l70v98RyRUpbg","name":"Static","type":"static","entries":[{"id":"OQePwJGjQljZFQV","name":"player_group","type":"player_group","_genericBlueprint":null},{"id":"VJgCFuPzfjPnT0p","name":"talk_quest_fact","comment":"","group":"OQePwJGjQljZFQV","type":"permanent_fact","_genericBlueprint":null}],"chapter":"tutorial","priority":0,"version":"0.7.0-beta-138"}
