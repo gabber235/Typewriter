@@ -2,7 +2,6 @@ package com.typewritermc.engine.paper.utils
 
 import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.ComponentIteratorFlag
 import net.kyori.adventure.text.ComponentIteratorType
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TextReplacementConfig
@@ -173,17 +172,64 @@ fun String.limitLineLength(maxLength: Int = 40): String {
     return text
 }
 
+/**
+ * Split a string with \n into multiple components at the \n
+ * Even if a \n is in the middle of a colored text, the styling will be kept before and after.
+ *
+ * For example if you have <blue>Hey\nThere</blue> then it will split into 2 components both colored blue.
+ */
 fun String.splitComponents(vararg resolvers: TagResolver): List<Component> {
-    val components = split("\n").map { it.asMiniWithResolvers(*resolvers) }.toMutableList()
+    return this.asMiniWithResolvers(*resolvers)
+        .splitLines()
+        .toList()
+}
 
-    for (i in 1 until components.size) {
-        val previous = components[i - 1]
-        val current = components[i]
+private fun Component.splitLines(): Sequence<Component> = sequence {
+    val children = mutableListOf<Component>()
 
-        val mergedStyle = current.style().merge(previous.style(), Style.Merge.Strategy.IF_ABSENT_ON_TARGET)
-        components[i] = current.style(mergedStyle)
+    var remaining = if (this@splitLines is TextComponent) {
+        val content = this@splitLines.content()
+        val split = content.lines()
+        for (i in 0 until split.size - 1) {
+            yield(this@splitLines.content(split[i]).noChildren())
+        }
+        this@splitLines.content(split.last()).noChildren()
+    } else null
+
+    for (child in children()) {
+        val splits = child.splitLines().toMutableList()
+        if (splits.isEmpty()) continue
+        if (splits.size == 1) {
+            children += splits[0]
+            continue
+        }
+
+        // If we have more than 2 components, it means we split
+        children.add(splits.removeFirst())
+
+        val root = remaining ?: Component.empty().style(this@splitLines.style())
+        yield(root.children(children))
+        children.clear()
+        remaining = null
+
+        while (splits.size > 1) {
+            val split = splits.removeFirst()
+            val mergedStyle = split.style().merge(this@splitLines.style(), Style.Merge.Strategy.IF_ABSENT_ON_TARGET)
+            val splitWithStyling = split.style(mergedStyle)
+            yield(splitWithStyling)
+        }
+        val split = splits.removeFirst()
+        val mergedStyle = split.style().merge(this@splitLines.style(), Style.Merge.Strategy.IF_ABSENT_ON_TARGET)
+        val splitWithStyling = split.style(mergedStyle)
+        children.add(splitWithStyling)
+        assert(splits.isEmpty())
     }
-    return components
+
+    if (remaining == null && children.isEmpty()) return@sequence
+
+    val root = remaining ?: Component.empty().style(this@splitLines.style())
+    val component = root.children(children)
+    yield(component)
 }
 
 fun Component.lastStyle(): Style {
