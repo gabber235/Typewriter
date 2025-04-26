@@ -19,6 +19,7 @@ import com.typewritermc.engine.paper.entry.audience.SingleFilter
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini
+import com.typewritermc.engine.paper.utils.splitComponents
 import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 import java.util.*
@@ -67,7 +68,7 @@ private class PlayerSidebarDisplay(
 ) : PlayerSingleDisplay<SidebarEntry>(player, displayKClass, current) {
     private var lines = emptyList<Ref<LinesEntry>>()
     private var lastTitle = ""
-    private var lastLines = emptyList<String>()
+    private var lastLines = emptyList<Component>()
 
     override fun initialize() {
         super.initialize()
@@ -92,7 +93,9 @@ private class PlayerSidebarDisplay(
             .filter { player.inAudience(it) }
             .sortedByDescending { it.priority }
             .mapNotNull { it.get()?.lines(player) }
-            .flatMap { it.parsePlaceholders(player).lines() }
+            .joinToString("\n")
+            .parsePlaceholders(player)
+            .splitComponents()
 
         if (lines != lastLines || title != lastTitle) {
             refreshSidebar(title, lines)
@@ -131,7 +134,7 @@ private class PlayerSidebarDisplay(
         ).sendPacketTo(player)
     }
 
-    private fun refreshSidebar(title: String, lines: List<String>) {
+    private fun refreshSidebar(title: String, lines: List<Component>) {
         val packet = WrapperPlayServerScoreboardObjective(
             SCOREBOARD_OBJECTIVE,
             WrapperPlayServerScoreboardObjective.ObjectiveMode.UPDATE,
@@ -154,7 +157,7 @@ private class PlayerSidebarDisplay(
                 WrapperPlayServerUpdateScore.Action.CREATE_OR_UPDATE_ITEM,
                 SCOREBOARD_OBJECTIVE,
                 MAX_LINES - index,
-                line.asMini(),
+                line,
                 ScoreFormat.blankScore(),
             ).sendPacketTo(player)
         }
