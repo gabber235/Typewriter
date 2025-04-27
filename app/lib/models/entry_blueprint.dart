@@ -209,7 +209,7 @@ class EntryModifier with _$EntryModifier {
 
 const wikiBaseUrl = kDebugMode
     ? "http://localhost:3000/TypeWriter"
-    : "https://gabber235.github.io/TypeWriter";
+    : "https://docs.typewritermc.com";
 
 extension EntryBlueprintExt on EntryBlueprint {
   bool get isGeneric => genericConstraints != null;
