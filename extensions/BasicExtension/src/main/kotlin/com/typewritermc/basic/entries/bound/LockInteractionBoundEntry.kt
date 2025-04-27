@@ -40,7 +40,11 @@ import org.bukkit.event.entity.EntityDamageByBlockEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.geysermc.geyser.api.connection.GeyserConnection
 import java.util.*
+
+// The max distance the entity can be from the player before it gets teleported.
+private const val MAX_DISTANCE_SQUARED = 25 * 25
 
 @Entry(
     "lock_interaction_bound",
@@ -84,8 +88,8 @@ class LockInteractionBound(
     override val priority: Int,
     override val interruptionTriggers: List<EventTrigger>,
 ) : ListenerInteractionBound {
+    private var handler: LockInteractionBoundHandler? = null
     private var playerState: PlayerState? = null
-    private var entity: WrapperEntity = createEntity()
     private var previousPosition: Position = Position.ORIGIN
     private var interceptor: InterceptionBundle? = null
 
@@ -102,7 +106,10 @@ class LockInteractionBound(
         playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT, VISIBLE_PLAYERS, SHOWING_PLAYER)
         player.allowFlight = true
         player.isFlying = true
-        player.fakeClearInventory()
+        // For bedrock players we don't need to fake the inventory as we already hide the hotbar and item.
+        if (!player.isFloodgate) {
+            player.fakeClearInventory()
+        }
 
         ThreadType.SYNC.switchContext {
             server.onlinePlayers.forEach {
@@ -111,14 +118,7 @@ class LockInteractionBound(
             }
         }
 
-        val startPosition = targetPosition.get(player)
-        previousPosition = startPosition
-        setupEntity(startPosition)
-
-        // If the player is a bedrock player, we don't want to modify the location.
         interceptor = player.interceptPackets {
-            keepFakeInventory()
-
             Play.Client.PLAYER_INPUT { event ->
                 val packet = WrapperPlayClientPlayerInput(event)
                 if (packet.isForward || packet.isBackward || packet.isLeft || packet.isRight) {
@@ -133,16 +133,16 @@ class LockInteractionBound(
                 if (!packet.isJump && !packet.isShift) return@PLAYER_INPUT
                 DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, player.interactionContext ?: context())
             }
+            // We want to fake the player's location on the client because otherwise they will interact with
+            // themselves crash kicking themselves off the server.
             Play.Client.INTERACT_ENTITY { event ->
                 val packet = WrapperPlayClientInteractEntity(event)
                 // Don't allow the player to interact with themselves.
                 if (player.entityId != packet.entityId) return@INTERACT_ENTITY
                 event.isCancelled = true
             }
-            // If the player is a bedrock player, we don't want to modify the location.
-            if (player.isFloodgate) return@interceptPackets
-            // We want to fake the player's location on the client because otherwise they will interact with
-            // themselves crash kicking themselves off the server.
+
+            // We want to fake the position on the client otherwise we might see the player itself.
             Play.Server.PLAYER_POSITION_AND_LOOK { event ->
                 val packet = WrapperPlayServerPlayerPositionAndLook(event)
                 packet.y += 500
@@ -155,14 +155,29 @@ class LockInteractionBound(
                 val packet = WrapperPlayClientPlayerPositionAndRotation(event)
                 packet.position = packet.position.withY(packet.position.y - 500)
             }
+
+            // If the player is a bedrock player, we don't need to fake the inventory, as we can just hide it.
+            if (player.isFloodgate) return@interceptPackets
+            keepFakeInventory()
         }
+
+        val startPosition = targetPosition.get(player)
+        previousPosition = startPosition
+        handler =
+            player.geyserConnection?.let {
+                BedrockLockInteractionBoundHandler(player, it, startPosition)
+            } ?: JavaLockInteractionBoundHandler(player, targetPosition is ConstVar<*>, startPosition)
+        handler?.initialize()
     }
 
     private suspend fun dispose() {
         interceptor?.cancel()
         interceptor = null
-        teardownEntity()
-        player.restoreInventory()
+        handler?.dispose()
+        handler = null
+        if (!player.isFloodgate) {
+            player.restoreInventory()
+        }
         ThreadType.SYNC.switchContext {
             player.restore(playerState)
             playerState = null
@@ -192,60 +207,16 @@ class LockInteractionBound(
     }
 
 
-    private val positionYCorrection: Double by lazy {
-        if (targetPosition is ConstVar<*>) return@lazy 0.0
-        player.eyeHeight
-    }
-
-    private fun createEntity(): WrapperEntity {
-        // If the position cannot change, we want to use a village instead of a text display.
-        // Because it means that the players bounding box will not change, resulting in a better experience.
-        if (targetPosition is ConstVar<*>) {
-            return WrapperEntity(EntityTypes.VILLAGER).meta<VillagerMeta> {
-                this.isInvisible = true
-            }
-        }
-        return WrapperEntity(EntityTypes.TEXT_DISPLAY)
-            .meta<TextDisplayMeta> {
-                positionRotationInterpolationDuration = BASE_INTERPOLATION
-            }
-    }
-
-    private suspend fun setupEntity(position: Position) {
-        player.teleportAsync(position.toBukkitLocation()).await()
-        entity.spawn(position.withY { it + positionYCorrection }.toPacketLocation())
-        entity.addViewer(player.uniqueId)
-        player.spectateEntity(entity)
-    }
-
-    private fun teardownEntity() {
-        player.stopSpectatingEntity()
-        entity.removeViewer(player.uniqueId)
-        entity.remove()
-    }
-
     override suspend fun tick() {
+        super.tick()
         if (player.boundState == InteractionBoundState.IGNORING) {
             return
         }
 
+        if (targetPosition is ConstVar<*> || handler == null) return
         val newPosition = targetPosition.get(player)
-
-        if (newPosition.world != previousPosition.world) {
-            teardownEntity()
-            setupEntity(newPosition)
-            return
-        }
-
+        handler?.move(previousPosition, newPosition)
         previousPosition = newPosition
-
-        entity.teleport(newPosition.withY { it + positionYCorrection }.toPacketLocation())
-
-        if (player.position.distanceSquared(newPosition) > MAX_DISTANCE_SQUARED) {
-            player.teleportAsync(newPosition.toBukkitLocation()).await()
-        }
-
-        super.tick()
     }
 
     override suspend fun boundStateChange(
@@ -265,12 +236,116 @@ class LockInteractionBound(
     override suspend fun teardown() {
         dispose()
     }
+}
+
+private sealed interface LockInteractionBoundHandler {
+    suspend fun initialize()
+    suspend fun move(from: Position, to: Position)
+    suspend fun dispose()
+}
+
+private class JavaLockInteractionBoundHandler(
+    private val player: Player,
+    private val canMove: Boolean,
+    private val startPosition: Position,
+) : LockInteractionBoundHandler {
+    private var entity: WrapperEntity = createEntity()
+
+    private val positionYCorrection: Double by lazy {
+        if (!canMove) return@lazy 0.0
+        player.eyeHeight
+    }
+
+    override suspend fun initialize() {
+        setupEntity(startPosition)
+    }
+
+    override suspend fun move(from: Position, to: Position) {
+        if (from.world != to.world) {
+            teardownEntity()
+            setupEntity(to)
+            return
+        }
+
+        entity.teleport(to.withY { it + positionYCorrection }.toPacketLocation())
+
+        if (player.position.distanceSquared(to) > MAX_DISTANCE_SQUARED) {
+            player.teleportAsync(to.toBukkitLocation()).await()
+        }
+    }
+
+    override suspend fun dispose() {
+        teardownEntity()
+    }
+
+
+    private fun createEntity(): WrapperEntity {
+        // If the position cannot change, we want to use a village instead of a text display.
+        // Because it means that the players bounding box will not change, resulting in a better experience.
+        if (!canMove) {
+            return WrapperEntity(EntityTypes.VILLAGER).meta<VillagerMeta> {
+                this.isInvisible = true
+            }
+        }
+        return WrapperEntity(EntityTypes.TEXT_DISPLAY)
+            .meta<TextDisplayMeta> {
+                positionRotationInterpolationDuration = BASE_INTERPOLATION
+            }
+    }
+
+    private suspend fun setupEntity(position: Position) {
+        player.teleportAsync(position.toBukkitLocation()).await()
+        entity.spawn(position.withY { it + positionYCorrection }.toPacketLocation())
+        entity.addViewer(player.uniqueId)
+        player.spectateEntity(entity)
+    }
+
+
+    private fun teardownEntity() {
+        player.stopSpectatingEntity()
+        entity.removeViewer(player.uniqueId)
+        entity.remove()
+    }
 
     companion object {
         // The default interpolation duration in frames.
         const val BASE_INTERPOLATION = 10
+    }
+}
 
-        // The max distance the entity can be from the player before it gets teleported.
-        private const val MAX_DISTANCE_SQUARED = 25 * 25
+private class BedrockLockInteractionBoundHandler(
+    private val player: Player,
+    private val geyserConnection: GeyserConnection,
+    private val startPosition: Position,
+) : LockInteractionBoundHandler {
+    private val cameraLockId = UUID.randomUUID()
+
+
+    private val positionYCorrection: Double by lazy {
+        player.eyeHeight
+    }
+
+    override suspend fun initialize() {
+        val position = startPosition.withY { it + positionYCorrection }
+        player.teleportAsync(position.toBukkitLocation()).await()
+        geyserConnection.setupCamera(cameraLockId)
+        geyserConnection.forceCameraPosition(position)
+    }
+
+    override suspend fun move(from: Position, to: Position) {
+        val position = to.withY { it + positionYCorrection }
+        if (from.world != to.world) {
+            player.teleportAsync(to.toBukkitLocation()).await()
+            geyserConnection.forceCameraPosition(position)
+            return
+        }
+        geyserConnection.interpolateCameraPosition(position)
+        if (player.position.distanceSquared(to) > MAX_DISTANCE_SQUARED) {
+            player.teleportAsync(to.toBukkitLocation()).await()
+        }
+    }
+
+    override suspend fun dispose() {
+        geyserConnection.resetCamera(cameraLockId)
     }
 }
