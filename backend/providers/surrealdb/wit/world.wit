@@ -1,4 +1,4 @@
-package seamlezz:surrealdb;
+package seamlezz:surrealdb@0.1.0;
 
 // interface types {
 //     variant surrealdb-value {

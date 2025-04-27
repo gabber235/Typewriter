@@ -3,6 +3,15 @@
 version = 1
 
 [[packages]]
+name = "seamlezz:surrealdb"
+registry = "git.seamlezz.com"
+
+[[packages.versions]]
+requirement = "=0.1.0"
+version = "0.1.0"
+digest = "sha256:fe3f275b7717b40b63d02f54a5b2a8e7d9eb3fa7c54c0e996835a1f1f88aa058"
+
+[[packages]]
 name = "wasi:http"
 registry = "wasi.dev"
 

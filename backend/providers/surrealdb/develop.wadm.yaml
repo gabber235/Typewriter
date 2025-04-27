@@ -27,7 +27,6 @@ spec:
       type: capability
       properties:
         image: registry:5001/surrealdb_provider:0.1.0 
-        id: surrealdb-provider
         config:
           - name: provider-config
             properties:

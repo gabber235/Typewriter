@@ -4,3 +4,6 @@ type = "provider"
 
 [provider]
 vendor = "Seamlezz"
+
+[registry.push]
+url = "git.seamlezz.com"

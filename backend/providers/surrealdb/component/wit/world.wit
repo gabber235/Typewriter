@@ -9,7 +9,7 @@ world component {
   // Import logging for processing data
   import wasi:logging/logging@0.1.0-draft;
 
-  import seamlezz:surrealdb/call;
+  import seamlezz:surrealdb/call@0.1.0;
   // export test;
   export wasi:http/incoming-handler@0.2.2;
 }
