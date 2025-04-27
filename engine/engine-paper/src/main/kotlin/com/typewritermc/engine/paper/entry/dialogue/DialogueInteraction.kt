@@ -7,7 +7,6 @@ import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
-import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.entries.SpeakerEntry
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.events.AsyncDialogueEndEvent
@@ -34,7 +33,11 @@ class DialogueInteraction(
     private val factDatabase: FactDatabase by inject()
 
     internal var currentEntry: DialogueEntry = initialEntry
-    private var currentMessenger = initialEntry.messenger(player, initialInteractionContext) ?: EmptyDialogueMessenger(player, initialInteractionContext, initialEntry)
+    private var currentMessenger = initialEntry.messenger(player, initialInteractionContext) ?: EmptyDialogueMessenger(
+        player,
+        initialInteractionContext,
+        initialEntry
+    )
     private var playTime = Duration.ZERO
     var isActive = false
 
@@ -81,7 +84,8 @@ class DialogueInteraction(
             DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, currentMessenger.context)
         } else if (currentMessenger.state == MessengerState.CANCELLED) {
             isActive = false
-            InteractionEndTrigger.triggerFor(player, currentMessenger.context)
+
+            player.interruptInteraction(currentMessenger.context)
         }
 
         currentMessenger.tick(TickContext(playTime, deltaTime))
@@ -91,7 +95,8 @@ class DialogueInteraction(
         cleanupEntry(false)
         currentEntry = nextEntry
         val nextContext = currentMessenger.context.combine(context)
-        currentMessenger = nextEntry.messenger(player, nextContext) ?: EmptyDialogueMessenger(player, nextContext, nextEntry)
+        currentMessenger =
+            nextEntry.messenger(player, nextContext) ?: EmptyDialogueMessenger(player, nextContext, nextEntry)
         setup()
         DISPATCHERS_ASYNC.launch {
             AsyncDialogueSwitchEvent(player).callEvent()

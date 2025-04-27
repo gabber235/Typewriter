@@ -6,13 +6,11 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.core.interaction.InteractionBound.Empty.priority
 import com.typewritermc.core.interaction.InteractionBoundState
-import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
-import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
-import com.typewritermc.engine.paper.interaction.InteractionBoundEndTrigger
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
 import com.typewritermc.engine.paper.interaction.boundState
+import com.typewritermc.engine.paper.interaction.interruptInteraction
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.EventHandler
