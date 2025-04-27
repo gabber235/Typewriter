@@ -1,10 +1,7 @@
 package com.typewritermc.engine.paper.interaction
 
 import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
-import com.typewritermc.core.interaction.InteractionBound
-import com.typewritermc.core.interaction.InteractionBoundState
-import com.typewritermc.core.interaction.InteractionBoundStateOverrideSubscription
-import com.typewritermc.core.interaction.context
+import com.typewritermc.core.interaction.*
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
@@ -32,6 +29,12 @@ suspend fun InteractionBoundStateOverrideSubscription.cancel() {
     server.getPlayer(playerUUID)?.interactionScope?.removeBoundStateOverride(id)
 }
 
+fun Player.interruptInteraction(context: InteractionContext? = interactionContext) {
+    val interruptionTriggers =
+        (interactionScope?.bound as? ListenerInteractionBound)?.interruptionTriggers ?: emptyList()
+    (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(this, context ?: context())
+}
+
 interface ListenerInteractionBound : InteractionBound, Listener {
     val interruptionTriggers: List<EventTrigger>
 
@@ -51,9 +54,5 @@ interface ListenerInteractionBound : InteractionBound, Listener {
             InteractionBoundState.INTERRUPTING -> event.player.interruptInteraction()
             InteractionBoundState.IGNORING -> {}
         }
-    }
-
-    fun Player.interruptInteraction() {
-        (interruptionTriggers + InteractionEndTrigger + InteractionBoundEndTrigger).triggerFor(this, context())
     }
 }
