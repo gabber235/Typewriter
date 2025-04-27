@@ -23,6 +23,7 @@ import com.typewritermc.entity.entries.data.minecraft.PoseProperty
 import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
 import com.typewritermc.entity.entries.entity.custom.state
+import com.typewritermc.entity.entries.entity.move
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.meta.types.PlayerMeta
 import me.tofaa.entitylib.spigot.SpigotEntityLibAPI
@@ -87,7 +88,8 @@ class PlayerEntity(
             entityId = EntityLib.getPlatform().entityIdProvider.provide(uuid, EntityTypes.PLAYER)
         } while (EntityLib.getApi<SpigotEntityLibAPI>().getEntity(entityId) != null)
 
-        entity = WrapperPlayer(UserProfile(uuid, "\u2063${displayName.get(player).stripped().replace(" ", "_")}"), entityId)
+        entity =
+            WrapperPlayer(UserProfile(uuid, "\u2063${displayName.get(player).stripped().replace(" ", "_")}"), entityId)
 
         entity.isInTablist = false
         entity.meta<PlayerMeta> {
@@ -106,12 +108,9 @@ class PlayerEntity(
             when (property) {
                 is PositionProperty -> {
                     if (sitEntity?.isSpawned == true) {
-                        sitEntity?.teleport(property.toPacketLocation())
+                        sitEntity?.move(property)
                     }
-                    if (entity.isSpawned) {
-                        entity.teleport(property.toPacketLocation())
-                        entity.rotateHead(property.yaw, property.pitch)
-                    }
+                    entity.move(property)
                 }
 
                 is SkinProperty -> entity.textureProperties =
