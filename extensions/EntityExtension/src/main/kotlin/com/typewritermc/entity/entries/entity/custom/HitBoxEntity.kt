@@ -11,8 +11,8 @@ import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.utils.Sound
-import com.typewritermc.engine.paper.utils.toPacketLocation
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
+import com.typewritermc.entity.entries.entity.move
 import me.tofaa.entitylib.meta.other.InteractionMeta
 import org.bukkit.entity.Player
 
@@ -75,7 +75,7 @@ class HitBoxEntity(
     override fun applyProperty(property: EntityProperty) {
         when (property) {
             is PositionProperty -> {
-                entity.teleport(property.add(offset).toPacketLocation())
+                entity.move(property.add(offset))
             }
         }
     }

@@ -1,11 +1,15 @@
 package com.typewritermc.entity.entries.entity
 
+import com.github.retrooper.packetevents.protocol.entity.EntityPositionData
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityPositionSync
 import com.typewritermc.engine.paper.entry.entity.EntityState
 import com.typewritermc.engine.paper.entry.entity.FakeEntity
 import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import com.typewritermc.engine.paper.utils.toCoordinate
 import com.typewritermc.engine.paper.utils.toPacketLocation
+import com.typewritermc.engine.paper.utils.toPacketVector3d
 import com.typewritermc.entity.entries.entity.custom.state
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.meta.EntityMeta
@@ -42,8 +46,7 @@ abstract class WrapperFakeEntity(
         properties.forEach {
             when (it) {
                 is PositionProperty -> {
-                    entity.teleport(it.toPacketLocation())
-                    entity.rotateHead(it.yaw, it.pitch)
+                    entity.move(it)
                 }
 
                 else -> applyProperty(it)
@@ -79,4 +82,22 @@ abstract class WrapperFakeEntity(
         entity.despawn()
         entity.remove()
     }
+}
+
+fun WrapperEntity.move(property: PositionProperty) {
+    if (!isSpawned) return
+
+    val delta = property - location.toCoordinate()
+    location = property.toPacketLocation()
+    sendPacketToViewers(
+        WrapperPlayServerEntityPositionSync(
+            entityId, EntityPositionData(
+                property.toPacketVector3d(),
+                delta.toPacketVector3d(),
+                property.yaw,
+                property.pitch
+            ), false
+        )
+    )
+    rotateHead(property.yaw, property.pitch)
 }
