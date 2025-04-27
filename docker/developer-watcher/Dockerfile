@@ -27,6 +27,11 @@ RUN groupadd --gid 1001 appuser && \
     mkdir -p /home/appuser/.cargo && \
     chown -R appuser:appuser /home/appuser
 
+# Add cargo registry configuration
+RUN mkdir -p /home/appuser/.cargo && \
+    echo '[registries.seamlezz]\nindex = "sparse+https://git.seamlezz.com/api/packages/Seamlezz/cargo/"' > /home/appuser/.cargo/config.toml && \
+    chown -R appuser:appuser /home/appuser/.cargo
+
 ENV CARGO_HOME=/home/appuser/.cargo
 ENV PATH="/home/appuser/.cargo/bin:${PATH}"
 

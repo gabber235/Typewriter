@@ -1,5 +1,6 @@
-package wasmcloud:hello;
+package typewriter:organizations;
 
 world organizations {
+   import seamlezz:surrealdb/call@0.1.0;
    export wasi:http/incoming-handler@0.2.2;
 }

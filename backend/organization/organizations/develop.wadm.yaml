@@ -16,17 +16,36 @@ spec:
         - type: spreadscaler
           properties:
             instances: 1
+        - type: link
+          properties:
+            target:
+              name: surrealdb-provider
+            namespace: seamlezz
+            package: surrealdb
+            interfaces: [call]
+
+
+    - name: surrealdb-provider
+      type: capability
+      properties:
+        image: registry:5001/surrealdb_provider:0.1.0 
+        # id: surrealdb-provider
+        config:
+          - name: provider-config
+            properties:
+              namespace: typewriter
+              database: develop
+              auth: root
+              username: root
+              password: root
+              url: ws://surrealdb:9000
+
 
     # Add a capability provider that enables HTTP access
     - name: httpserver
       type: capability
       properties:
         image: ghcr.io/wasmcloud/http-server:0.27.0
-        config:
-          - name: http-config
-            properties:
-              routing_mode: path
-              default_address: 0.0.0.0:9090
       traits:
         - type: link
           properties:
@@ -39,4 +58,5 @@ spec:
               config:
                 - name: link-config
                   properties:
-                    path: /organizations
+                    address: 0.0.0.0:10000
+

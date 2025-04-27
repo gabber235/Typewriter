@@ -6,3 +6,7 @@ type = "component"
 [component]
 wit_world = "organizations"
 wasm_target = "wasm32-wasip2"
+
+[[registry.pull.sources]]
+target = "seamlezz:surrealdb"
+source = "oci://git.seamlezz.com"
