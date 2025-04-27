@@ -48,11 +48,6 @@ import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffect.INFINITE_DURATION
 import org.bukkit.potion.PotionEffectType.INVISIBILITY
-import org.cloudburstmc.math.vector.Vector3f
-import org.geysermc.geyser.api.bedrock.camera.CameraEaseType
-import org.geysermc.geyser.api.bedrock.camera.CameraPerspective
-import org.geysermc.geyser.api.bedrock.camera.CameraPosition
-import org.geysermc.geyser.api.bedrock.camera.GuiElement
 import org.geysermc.geyser.api.connection.GeyserConnection
 import java.util.*
 import kotlin.math.abs
@@ -457,89 +452,32 @@ private class BedrockCameraAction(
     override suspend fun startSegment(segment: CameraSegment) {
         setupPath(segment)
         val position = path.first().position
-        geyserConnection.camera().apply {
-            this.lockCamera(true, cameraLockId)
-            this.forceCameraPerspective(CameraPerspective.FIRST_PERSON)
-            this.hideElement(
-                GuiElement.PAPER_DOLL,
-                GuiElement.ARMOR,
-                GuiElement.TOOL_TIPS,
-                GuiElement.TOUCH_CONTROLS,
-                GuiElement.CROSSHAIR,
-                GuiElement.HOTBAR,
-                GuiElement.HEALTH,
-                GuiElement.PROGRESS_BAR,
-                GuiElement.FOOD_BAR,
-                GuiElement.AIR_BUBBLES_BAR,
-                GuiElement.VEHICLE_HEALTH,
-                GuiElement.EFFECTS_BAR,
-                GuiElement.ITEM_TEXT_POPUP,
-            )
-        }
-        setupCamera(position)
+        player.teleportAsync(position.toBukkitLocation()).await()
+        geyserConnection.setupCamera(cameraLockId)
+        geyserConnection.forceCameraPosition(position)
     }
 
     override suspend fun tickSegment(frame: Int) {
         val position = path.interpolate(frame)
-        geyserConnection.camera().apply {
-            this.sendCameraPosition(
-                CameraPosition.builder()
-                    .position(Vector3f.from(position.x, position.y, position.z))
-                    .easeSeconds(0.5f)
-                    .easeType(CameraEaseType.LINEAR)
-                    .renderPlayerEffects(true)
-                    .rotationX(position.pitch.toInt().coerceIn(-90..90))
-                    .rotationY(position.yaw.toInt())
-                    .playerPositionForAudio(false)
-                    .build()
-            )
-        }
+        geyserConnection.interpolateCameraPosition(position)
     }
 
     override suspend fun skipToFrame(frame: Int) {
-        setupCamera(path.interpolate(frame))
+        geyserConnection.forceCameraPosition(path.interpolate(frame))
     }
 
     override suspend fun switchSegment(newSegment: CameraSegment) {
+        val oldPosition = path.last().position
         setupPath(newSegment)
         val position = path.first().position
-        setupCamera(position)
-    }
-
-    private fun setupCamera(position: Position) {
-        geyserConnection.camera().apply {
-            this.sendCameraPosition(
-                CameraPosition.builder()
-                    .position(Vector3f.from(position.x, position.y, position.z))
-                    .renderPlayerEffects(true)
-                    .rotationX(position.pitch.toInt().coerceIn(-90..90))
-                    .rotationY(position.yaw.toInt())
-                    .playerPositionForAudio(false)
-                    .build()
-            )
+        if (oldPosition.world != position.world) {
+            player.teleportAsync(position.toBukkitLocation()).await()
         }
+        geyserConnection.forceCameraPosition(position)
     }
 
     override suspend fun stop() {
-        geyserConnection.camera().apply {
-            this.lockCamera(false, cameraLockId)
-            this.clearCameraInstructions()
-            this.resetElement(
-                GuiElement.PAPER_DOLL,
-                GuiElement.ARMOR,
-                GuiElement.TOOL_TIPS,
-                GuiElement.TOUCH_CONTROLS,
-                GuiElement.CROSSHAIR,
-                GuiElement.HOTBAR,
-                GuiElement.HEALTH,
-                GuiElement.PROGRESS_BAR,
-                GuiElement.FOOD_BAR,
-                GuiElement.AIR_BUBBLES_BAR,
-                GuiElement.VEHICLE_HEALTH,
-                GuiElement.EFFECTS_BAR,
-                GuiElement.ITEM_TEXT_POPUP,
-            )
-        }
+        geyserConnection.resetCamera(cameraLockId)
     }
 }
 

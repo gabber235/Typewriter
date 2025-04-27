@@ -1,12 +1,11 @@
 package com.typewritermc.basic.entries.cinematic
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Segments
 import com.typewritermc.engine.paper.entry.Criteria
-import com.typewritermc.core.entries.Ref
-import com.typewritermc.core.entries.emptyRef
-import com.typewritermc.core.extension.annotations.Icon
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
 import com.typewritermc.engine.paper.entry.entries.PrimaryCinematicEntry
@@ -69,7 +68,11 @@ class RandomActionBarDialogueCinematicEntry(
             speaker.get(),
             segments.toDisplaySegments(),
             actionBarPercentage,
-            reset = { sendActionBar(Component.empty()) },
+            reset = {
+                val message = Component.empty()
+                acceptActionBarMessage(message)
+                sendActionBar(message)
+            },
             display = ::displayActionBar,
         )
     }
