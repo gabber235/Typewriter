@@ -205,7 +205,7 @@ class CameraCinematicAction(
             // In creative mode, when the player opens the inventory while their inventory is fake cleared,
             // The actual inventory will be cleared.
             // To prevent this, we only fake clear the inventory when the player is not in creative mode.
-            if (gameMode != GameMode.CREATIVE) {
+            if (gameMode != GameMode.CREATIVE && !isFloodgate) {
                 fakeClearInventory()
             }
         }
@@ -228,9 +228,9 @@ class CameraCinematicAction(
             it.isCancelled = true
         }
         interceptor = this.interceptPackets {
-            keepFakeInventory()
             // If the player is a bedrock player, we don't want to modify the location.
             if (isFloodgate) return@interceptPackets
+            keepFakeInventory()
             PacketType.Play.Server.PLAYER_POSITION_AND_LOOK { event ->
                 val packet = WrapperPlayServerPlayerPositionAndLook(event)
                 packet.y += 500
@@ -261,7 +261,7 @@ class CameraCinematicAction(
             }
             originalState = null
 
-            if (gameMode != GameMode.CREATIVE) {
+            if (gameMode != GameMode.CREATIVE && !isFloodgate) {
                 restoreInventory()
             }
         }
@@ -309,7 +309,6 @@ private data class PointSegment(
 ) : Segment
 
 private interface CameraAction {
-    val isActive: Boolean
     suspend fun startSegment(segment: CameraSegment)
     suspend fun tickSegment(frame: Int)
     suspend fun skipToFrame(frame: Int)
@@ -320,7 +319,7 @@ private interface CameraAction {
 private class DisplayCameraAction(
     val player: Player,
 ) : CameraAction {
-    override var isActive: Boolean = false
+    private var isActive: Boolean = false
     private var entity = createEntity()
     private var path = emptyList<PointSegment>()
 
@@ -413,12 +412,9 @@ private class DisplayCameraAction(
 private class TeleportCameraAction(
     private val player: Player,
 ) : CameraAction {
-    override var isActive = false
     private var path = emptyList<PointSegment>()
 
     override suspend fun startSegment(segment: CameraSegment) {
-        if (isActive) return
-        isActive = true
         path = segment.path.transform(player, segment.duration, Position::copy)
     }
 
@@ -440,8 +436,6 @@ private class TeleportCameraAction(
     }
 
     override suspend fun stop() {
-        if (!isActive) return
-        isActive = false
     }
 }
 
@@ -449,7 +443,6 @@ private class BedrockCameraAction(
     private val player: Player,
     private val geyserConnection: GeyserConnection,
 ) : CameraAction {
-    override var isActive = false
     private val cameraLockId = UUID.randomUUID()
     private var path = emptyList<PointSegment>()
 
@@ -462,8 +455,6 @@ private class BedrockCameraAction(
     }
 
     override suspend fun startSegment(segment: CameraSegment) {
-        if (isActive) return
-        isActive = true
         setupPath(segment)
         val position = path.first().position
         geyserConnection.camera().apply {
@@ -530,11 +521,24 @@ private class BedrockCameraAction(
     }
 
     override suspend fun stop() {
-        if (!isActive) return
-        isActive = false
         geyserConnection.camera().apply {
             this.lockCamera(false, cameraLockId)
             this.clearCameraInstructions()
+            this.resetElement(
+                GuiElement.PAPER_DOLL,
+                GuiElement.ARMOR,
+                GuiElement.TOOL_TIPS,
+                GuiElement.TOUCH_CONTROLS,
+                GuiElement.CROSSHAIR,
+                GuiElement.HOTBAR,
+                GuiElement.HEALTH,
+                GuiElement.PROGRESS_BAR,
+                GuiElement.FOOD_BAR,
+                GuiElement.AIR_BUBBLES_BAR,
+                GuiElement.VEHICLE_HEALTH,
+                GuiElement.EFFECTS_BAR,
+                GuiElement.ITEM_TEXT_POPUP,
+            )
         }
     }
 }
