@@ -45,8 +45,9 @@ subprojects {
         compileOnlyApi("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
         compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
-        val kotestVersion = "5.7.2"
+        val kotestVersion = "5.9.1"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+        testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
         testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
         testImplementation("io.kotest:kotest-property:$kotestVersion")
         testImplementation("io.mockk:mockk:1.13.16")

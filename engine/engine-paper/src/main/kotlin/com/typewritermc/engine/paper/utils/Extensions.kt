@@ -185,3 +185,72 @@ private fun getProfile(url: String): PlayerProfile {
 fun SkullMeta.applySkinUrl(url: String) {
     playerProfile = getProfile(url)
 }
+
+/**
+ * Extension function for String to parse it flexibly as a Double.
+ *
+ * Handles:
+ * - US-style: #,###.##
+ * - DE-style: #.###,##
+ * - Standard decimal: ###.##
+ * - Scientific notation: ###.##e## or ###.##E##
+ * - Integers: ######
+ * - Leading/trailing whitespace.
+ * - Optional leading +/- sign.
+ *
+ * It works by normalizing the input string to a standard format
+ * (using '.' as decimal separator, no thousands separators)
+ * and then using Kotlin's built-in `toDoubleOrNull()`.
+ *
+ * @return The parsed Double, or null if parsing fails or the format is
+ *   unresolvable.
+ */
+fun String.parseDoubleFlexible(): Double? {
+    val cleaned = this.trim()
+    if (cleaned.isEmpty()) {
+        return null
+    }
+
+    // Shortcut: If it already parses directly, return immediately.
+    cleaned.toDoubleOrNull()?.let { return it }
+
+    // If direct parsing failed, proceed with normalization.
+    val hasDot = cleaned.contains('.')
+    val hasComma = cleaned.contains(',')
+
+    if (!hasComma && cleaned.count { it == '.' } <= 1) {
+        // If no commas and at most one dot, direct parse should have worked, meaning it is invalid.
+        return null
+    }
+
+    val normalized: String = when {
+        hasDot && hasComma -> {
+            val lastDotIndex = cleaned.lastIndexOf('.')
+            val lastCommaIndex = cleaned.lastIndexOf(',')
+            if (lastDotIndex > lastCommaIndex) { // US style: 1,234.56
+                cleaned.replace(",", "")
+            } else { // DE style: 1.234,56
+                cleaned.replace(".", "").replace(',', '.')
+            }
+        }
+
+        hasComma -> {
+            if (cleaned.count { it == ',' } > 1) { // Thousands: 1,234,567
+                cleaned.replace(",", "")
+            } else { // Decimal: 123,45
+                cleaned.replace(',', '.')
+            }
+        }
+
+        hasDot -> { // Only dots (and direct parse failed -> multiple dots)
+            // Thousands: 1.234.567
+            cleaned.replace(".", "")
+        }
+
+        else -> {
+            return null // Should have been caught earlier
+        }
+    }
+
+    return normalized.toDoubleOrNull()
+}

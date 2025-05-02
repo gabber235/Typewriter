@@ -13,6 +13,7 @@ import com.typewritermc.engine.paper.entry.entries.ReadableFactEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactData
 import com.typewritermc.engine.paper.logger
+import com.typewritermc.engine.paper.utils.parseDoubleFlexible
 import org.bukkit.entity.Player
 import kotlin.math.roundToInt
 
@@ -30,19 +31,30 @@ class CalculatedFact(
     override val name: String = "",
     override val comment: String = "",
     override val group: Ref<GroupEntry> = emptyRef(),
-    @Placeholder
-    val expression: String = "",
+    @Placeholder val expression: String = "",
 ) : ReadableFactEntry {
+    private val placeholderRegex by lazy(LazyThreadSafetyMode.NONE) { Regex("[%]([^%]+)[%]") }
+
     override fun readSinglePlayer(player: Player): FactData {
-        val expression = expression.parsePlaceholders(player).trim()
-        if (expression.isBlank()) {
+        val processedExpression = placeholderRegex.replace(this.expression) { matchResult ->
+            val placeholder = matchResult.value
+            val resolvedValue = placeholder.parsePlaceholders(player).trim()
+            val number = resolvedValue.parseDoubleFlexible()
+            number?.toString() ?: resolvedValue
+        }.trim()
+
+        if (processedExpression.isBlank()) {
             return FactData(0)
         }
-        val result = Expression(expression).tryEval()
+
+        val result = Expression(processedExpression).tryEval()
+
         return when (result) {
             is Try.Success -> FactData(result.value.roundToInt())
             is Try.Failure -> {
-                logger.warning("Could not evaluate expression '$expression' for player ${player.name} for fact $id")
+                logger.warning(
+                    "Could not evaluate processed expression '$processedExpression' (original: '${this.expression}') for player ${player.name} for fact $id"
+                )
                 FactData(0)
             }
         }
