@@ -138,3 +138,7 @@ jars/
 
 .gitub
 .vscode
+
+/documentation/plugins/code-snippets/
+/.history/
+/documentation/.history/
