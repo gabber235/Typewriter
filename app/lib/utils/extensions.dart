@@ -183,7 +183,7 @@ extension ListX on List<dynamic> {
 extension MapX on Map<dynamic, dynamic> {
   Map<dynamic, dynamic> mask(Map<dynamic, dynamic> other) {
     final result = <dynamic, dynamic>{};
-    final keys = this.keys.toList()..addAll(other.keys.toList());
+    final keys = [...this.keys, ...other.keys];
     for (final key in keys) {
       if (containsKey(key) && other.containsKey(key)) {
         result[key] = maskObjects(this[key], other[key]);
