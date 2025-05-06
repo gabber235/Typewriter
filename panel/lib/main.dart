@@ -5,6 +5,9 @@ import "package:localstorage/localstorage.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
+import "package:typewriter_panel/widgets/generic/error_screen.dart";
+import "package:typewriter_panel/widgets/generic/loading_screen.dart";
+import "package:typewriter_panel/widgets/generic/nats_connection.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +28,8 @@ class TypewriterPanel extends HookConsumerWidget {
         darkTheme: _buildTheme(Brightness.dark),
         routerConfig: router.config(),
         shortcuts: WidgetsApp.defaultShortcuts,
+        builder: (context, child) =>
+            RequiredNatsConnection(child: child ?? const SizedBox.shrink()),
       ),
     );
   }
@@ -79,14 +84,33 @@ class _EagerInitialization extends ConsumerWidget {
   const _EagerInitialization({required this.child});
   final Widget child;
 
+  (T?, Widget?) require<T>(AsyncValue<T> value) {
+    if (value.hasError) {
+      return (null, _Error(value.error!));
+    }
+    if (value.isLoading) {
+      return (null, const _Loading());
+    }
+    return (value.value, null);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(isAuthenticatedProvider);
+    final (_, widget) = require(ref.watch(isAuthenticatedProvider));
+    if (widget != null) {
+      return widget;
+    }
 
-    if (result.isLoading) {
-      return _Loading();
-    } else if (result.hasError) {
-      return _Error(result.error!);
+    final (token, widget2) = require(ref.watch(idTokenProvider));
+    if (widget2 != null) {
+      return widget2;
+    }
+
+    if (token != null) {
+      final (_, widget3) = require(ref.watch(authUserInfoProvider));
+      if (widget3 != null) {
+        return widget3;
+      }
     }
 
     return child;
@@ -102,28 +126,30 @@ class _Loading extends HookWidget {
       title: "TypeWriter",
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
-      home: Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      home: const LoadingScreen(title: "Authenticating User"),
     );
   }
 }
 
-class _Error extends HookWidget {
+class _Error extends HookConsumerWidget {
   const _Error(this.error);
   final Object error;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: "TypeWriter",
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
-      home: Scaffold(
-        body: Center(
-          child: Text("Error: $error"),
+      home: ErrorScreen(
+        title: "Error",
+        message:
+            "Something went wrong, please report this to the Typewriter discord. $error",
+        child: ElevatedButton(
+          onPressed: () {
+            ref.read(authProvider.notifier).signOut();
+          },
+          child: const Text("Sign out"),
         ),
       ),
     );

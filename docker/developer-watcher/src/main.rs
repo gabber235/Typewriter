@@ -17,6 +17,8 @@ use tracing_subscriber::{filter::EnvFilter, fmt, layer::SubscriberExt, util::Sub
 use walkdir::WalkDir;
 
 const WASH_CMD: &str = "wash";
+const WASH_CREDS_FILE: &str = "/app/wasmcloud.creds";
+const WASMCLOUD_JS_DOMAIN: &str = "core";
 const PROJECT_MARKER: &str = "wasmcloud.toml";
 const PROJECT_CARGO: &str = "Cargo.toml";
 const BUILD_DIR: &str = "build";
@@ -268,7 +270,16 @@ async fn run_wash_command(cmd_args: &[&str], cwd: Option<&Path>, config: &Config
         .env("WASH_NATS_HOST", &config.nats_host)
         .env("WASH_NATS_PORT", config.nats_port.to_string())
         .env("WASMCLOUD_CTL_HOST", &config.ctl_host)
-        .env("WASMCLOUD_CTL_PORT", config.ctl_port.to_string());
+        .env("WASMCLOUD_CTL_PORT", config.ctl_port.to_string())
+        .env("WASH_CTL_CREDS", WASH_CREDS_FILE)
+        .env("WASMCLOUD_JS_DOMAIN", WASMCLOUD_JS_DOMAIN);
+
+    // Debug that the creds file exists
+    let creds_path = Path::new(WASH_CREDS_FILE);
+    if !creds_path.exists() {
+        error!("WASH_CTL_CREDS file not found at {}", creds_path.display());
+        return Err(anyhow!("WASH_CTL_CREDS file not found"));
+    }
 
     let child = command
         .spawn()

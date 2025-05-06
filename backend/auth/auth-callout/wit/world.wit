@@ -1,0 +1,15 @@
+package seamlezz:auth-callout@0.1.0;
+
+world hello {
+  import wasi:logging/logging@0.1.0-draft;
+  import wasmcloud:messaging/consumer@0.2.0;
+
+  import wasi:http/outgoing-handler@0.2.2;
+  import wasi:config/runtime@0.2.0-draft;
+
+  import wasmcloud:secrets/store@0.1.0-draft;
+  import wasmcloud:secrets/reveal@0.1.0-draft;
+
+
+  export wasmcloud:messaging/handler@0.2.0;
+}

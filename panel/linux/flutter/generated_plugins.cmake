@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_webview_window
   flutter_secure_storage_linux
+  rive_common
   url_launcher_linux
   window_to_front
 )
