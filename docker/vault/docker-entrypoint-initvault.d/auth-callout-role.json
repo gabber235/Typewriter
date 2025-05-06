@@ -1,0 +1,13 @@
+{
+    "role_type": "jwt",
+    "policies": [
+        "auth-callout-role-policy"
+    ],
+    "bound_audiences": "Vault",
+    "bound_claims": {
+        "application": [
+            "auth-callout"
+        ]
+    },
+    "user_claim": "sub"
+}

@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/hooks/delayed_execution.dart";
 import "package:typewriter_panel/logic/auth.dart";
+import "package:typewriter_panel/widgets/generic/loading_screen.dart";
 
 @RoutePage()
 class AuthPage extends HookConsumerWidget {
@@ -19,6 +20,6 @@ class AuthPage extends HookConsumerWidget {
       final isAuthenticated = await ref.read(isAuthenticatedProvider.future);
       onResult(isAuthenticated);
     });
-    return Center(child: CircularProgressIndicator());
+    return LoadingScreen();
   }
 }

@@ -1,0 +1,21 @@
+[package]
+name = "auth-callout-component"
+edition = "2021"
+version = "0.1.0"
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.41"
+wasmcloud-component = "0.2.0"
+nats-jwt-rs = "0.1.1"
+anyhow = "1.0"
+nkeys = "0.4"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+url = "2"
+base64 = "0.22"
+jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
