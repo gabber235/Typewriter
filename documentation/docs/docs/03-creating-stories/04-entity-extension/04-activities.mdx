@@ -9,40 +9,49 @@ import EntryDisplay from "@site/src/components/EntryDisplay";
 import EntrySearch from "@site/src/components/EntrySearch";
 import EntryNodeInspector from "@site/src/components/EntryInspector";
 
-# Entities Activities
-:::info[Before starting]
-First read [Entities & NPC's](./index.mdx) before starting this tutorial.
+# Entity Activities
+:::info[Before you begin]
+Make sure to read [Entities & NPCs](./index.mdx) before starting this tutorial.
 :::
-Dans ce tutoriel, vous apprendrez à ajouter des activités à vos entités.
+
+In this tutorial, you'll learn how to assign activities to your entities.
 
 ## What are activities?
-En temps normal, les entités sont statiques. Heureusement, grâce aux activités, elles peuvent devenir dynamiques. Par exemple, vous pouvez créer une activité qui se déclenche lorsque le joueur s’approche de l’entité, ou encore à des moments précis, comme lorsqu’il lui parle. Vous pouvez même utiliser les Road Networks pour faire voyager les entités à travers différents nœuds !
 
-## Adding an activity to an entity
-Dans ce tutoriel, nous allons modifier Oliver afin qu’il se déplace automatiquement sur un Rode Network. Lorsqu’un joueur lui parlera, il s’arrêtera et se tournera vers lui.
+By default, entities are static. Fortunately, activities can make them dynamic. For example, you can set up an activity that triggers when a player approaches the entity, or at specific moments—such as when the player talks to it. You can even use Road Networks to make entities travel between different nodes!
 
-Pour cela, nous allons utiliser une ``In Dialogue Activity`` qui nous permettra de définir une activité quand le joueur lui parle ainsi qu'une autre activité pour le reste du temps.
-Nous allons donc modifier l'instance pour ajouter une ``In Dialogue Activity``.
+## Assigning an activity to an entity
+
+In this tutorial, we’ll configure **Oliver** to automatically move along a Road Network. When a player interacts with him, he’ll stop and turn to face them.
+
+To do this, we'll use an **In Dialogue Activity**, which lets you define two separate behaviors: one when the player is talking to the entity, and one for when they're not.
+
+Let’s update Oliver’s instance by adding an `In Dialogue Activity`.
 <EntrySearch entryName="in_dialogue_activity"/>
 
 ## Configuring the activity
-La ``In Dialogue Activity`` est une activité que active deux child activies en fonction de si le joueur lui parle ou noon.
-<Image img={require("./assets/activities/in_dialogue_activity.png")} alt="In Dialogue Activty panel image" />
 
-Pour le ``Talking Activity``, nous allons utiliser une ``Look Close Activity``. Cela signifie qu’Olivier va regarder le joueur quand il lui parlera.
+The `In Dialogue Activity` controls two child activities, depending on whether or not the player is currently speaking to the entity.
 
-Pour le ``Idle Activity``, nous allons utiliser une ``Patrol Activity``. Olivier va donc navoguer entre les Nodes d'un Road Network. Si vous voulez apprendre à en créer un, cela se passe sur cette page : [Road Network](../road-network). Il faudra ajouter les nodes que vous souhaitez utiliser en cliquant sur le <ActionButton button='capture'/>.
-<Image img={require("./assets/activities/patrol_activity.png")} alt="Patrol Activty panel image" />
+<Image img={require("./assets/activities/in_dialogue_activity.png")} alt="In Dialogue Activity panel image" />
 
-## Result
-Lorsque l'on interagira avec Olivier, celui-ci nous regardera et arrètera de se déplacer. Quand on ne lui parle pas, il continuera de se déplacer entre les nodes du Road Network.
+- For the **Talking Activity**, we’ll use a `Look Close Activity`, so Oliver will look directly at the player during the conversation.
+- For the **Idle Activity**, we’ll use a `Patrol Activity`, allowing Oliver to walk between the nodes of a Road Network.
 
-### Pages result
+If you haven’t created a Road Network yet, you can follow this tutorial: [Road Network](../road-network). You'll need to add the nodes you want by clicking on the <ActionButton button='capture'/> button.
+
+<Image img={require("./assets/activities/patrol_activity.png")} alt="Patrol Activity panel image" />
+
+## Final result
+
+When a player interacts with Oliver, he will stop patrolling and turn to face them. Once the interaction ends, he will resume his patrol between the Road Network nodes.
+
+### Page Preview
 <EntryDisplay pages={[
     require("./assets/activities/pages/manifest.json"),
     require("./assets/activities/pages/static.json"),
     require("./assets/activities/pages/sequence.json"),
 ]} />
 
-### In game result
+### In-Game Preview
 <Player url={require("./assets/activities/result.webm").default} />
