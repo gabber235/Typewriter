@@ -1,6 +1,7 @@
 package com.typewritermc.quest.entries.audience
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.priority
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.engine.paper.entry.entries.LinesEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
@@ -33,7 +34,7 @@ class ObjectiveLinesEntry(
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : LinesEntry {
     override fun lines(player: Player): String {
-        return player.trackedShowingObjectives().joinToString("\n") {
+        return player.trackedShowingObjectives().sortedByDescending { it.priority }.joinToString("\n") {
             format.parsePlaceholders(player).asMiniWithResolvers(
                 net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.parsed(
                     "objective",
