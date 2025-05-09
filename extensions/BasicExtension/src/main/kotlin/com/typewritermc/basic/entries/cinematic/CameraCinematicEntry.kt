@@ -2,6 +2,7 @@ package com.typewritermc.basic.entries.cinematic
 
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPosition
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPositionAndRotation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook
@@ -238,6 +239,15 @@ class CameraCinematicAction(
                 val packet = WrapperPlayClientPlayerPositionAndRotation(event)
                 packet.position = packet.position.withY(packet.position.y - 500)
             }
+            // We want to fake the player's location on the client because otherwise they will interact with
+            // themselves crash kicking themselves off the server.
+            PacketType.Play.Client.INTERACT_ENTITY { event ->
+                val packet = WrapperPlayClientInteractEntity(event)
+                // Don't allow the player to interact with themselves.
+                if (this@setup.entityId != packet.entityId) return@INTERACT_ENTITY
+                event.isCancelled = true
+            }
+
         }
         // Because we are teleporting the player away,
         // we don't want to quit the temporal interaction because we went out of bounds.
