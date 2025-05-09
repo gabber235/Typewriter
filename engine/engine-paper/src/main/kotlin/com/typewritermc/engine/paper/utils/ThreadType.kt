@@ -3,16 +3,9 @@ package com.typewritermc.engine.paper.utils
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import lirand.api.extensions.server.server
 import com.typewritermc.engine.paper.plugin
-import kotlinx.coroutines.CloseableCoroutineDispatcher
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.*
+import lirand.api.extensions.server.server
 
 enum class ThreadType {
     SYNC,
@@ -54,7 +47,7 @@ enum class ThreadType {
         return plugin.launch(
             when (this) {
                 SYNC -> plugin.minecraftDispatcher
-                ASYNC -> plugin.minecraftDispatcher
+                ASYNC -> plugin.asyncDispatcher
                 DISPATCHERS_ASYNC -> pool ?: Dispatchers.IO
                 REMAIN -> if (server.isPrimaryThread) plugin.minecraftDispatcher else plugin.asyncDispatcher
             }
