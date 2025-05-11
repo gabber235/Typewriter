@@ -4,7 +4,7 @@ difficulty: normal
 
 import Player from "@site/src/components/Player";
 import Image from "@site/src/components/Image";
-import ActionButton from '@site/src/components/ActionButtons'; 
+import ActionButton from '@site/src/components/ActionButtons';  
 import EntryDisplay from "@site/src/components/EntryDisplay";
 import EntrySearch from "@site/src/components/EntrySearch";
 import EntryNodeInspector from "@site/src/components/EntryInspector";
@@ -24,14 +24,14 @@ By default, entities are static. Fortunately, activities can make them dynamic. 
 
 In this tutorial, we’ll configure **Oliver** to automatically move along a Road Network. When a player interacts with him, he’ll stop and turn to face them.
 
-To do this, we'll use an **In Dialogue Activity**, which lets you define two separate behaviors: one when the player is talking to the entity, and one for when they're not.
+To do this, we'll use an **In Dialogue Activity**, which lets you define two separate behaviours: one when the player is talking to the entity, and one for when they're not.
 
 Let’s update Oliver’s instance by adding an `In Dialogue Activity`.
 <EntrySearch entryName="in_dialogue_activity"/>
 
 ## Configuring the activity
 
-The `In Dialogue Activity` controls two child activities, depending on whether or not the player is currently speaking to the entity.
+The `In Dialogue Activity` controls two child activities, depending on whether the player is currently speaking to the entity.
 
 <Image img={require("./assets/activities/in_dialogue_activity.png")} alt="In Dialogue Activity panel image" />
 
