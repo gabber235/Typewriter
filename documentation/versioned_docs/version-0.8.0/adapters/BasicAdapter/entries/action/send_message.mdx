@@ -1,0 +1,31 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Message Action 
+
+The `Send Message Action` is an action that sends a message to a player.
+You can specify the speaker, and the message to send.
+
+This should not be confused with the (Message Dialogue)[../dialogue/message].
+(Message Dialogue)[../dialogue/message] will replace the current dialogue with the message, while this action will not.
+
+## How could this be used?
+
+This action can be useful in a variety of situations.
+You can use it to create text effects in response to specific events, such as completing actions or anything else.
+The possibilities are endless!
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Speaker' required>
+     The speaker of the message
+</fields.EntryField>
+<fields.EntryField name='Message' required placeholders multiline>
+     The message to send
+</fields.EntryField>

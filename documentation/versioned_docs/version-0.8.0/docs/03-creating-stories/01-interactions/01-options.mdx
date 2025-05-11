@@ -1,0 +1,49 @@
+---
+difficulty: Easy
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Adding Options
+
+:::info[Before starting]
+It's best to first read [First Interaction](./index.mdx) before starting this tutorial.
+:::
+
+In this tutorial, you will learn how to create and use options in your interactions.
+
+## Creating an Option
+
+To create an option, follow these steps:
+
+1. Right-click on your entry and select `+ Link with ...`.
+2. Search for `Add Option` and click on the + icon to add it to your sequence.
+
+<EntrySearch entryName='option' />
+
+## Configuring a Option
+
+Let's configure the option by doing the following steps:
+
+1. Enter the field `Text` your question that you want to ask the player, like `Am i a beautiful flower?`.
+2. Select the correct [speaker](./index.mdx#configuring-the-speaker) for the option.
+
+<Image img={require("../../assets/interactions/configure-option.png")} alt="Configuring an option entry" />
+
+### Adding options
+
+1. Click on the + icon by the field `Options` and expand `Options #1`.
+2. Enter the question answer of option 1 in the Field `Text` like `Yes you are!`.
+3. Press the + icon in the field triggers inside `Options #1` and expand `Triggers #1`.
+4. Click on `Select a triggerable` and in the search menu, create the entry that you want to trigger after the player selected that Option. Like a spoken with `Yay thank you!`
+5. Repeat these steps to create more options like `No you are not.`.
+
+<Image img={require("../../assets/interactions/adding-options.png")} alt="Adding options to an option entry" />
+
+## Result
+
+After you have created the options, you can test your interaction by clicking the publish button and it should look like this:
+
+<Player url={require("../../assets/interactions/final-result-option.webm").default}/>

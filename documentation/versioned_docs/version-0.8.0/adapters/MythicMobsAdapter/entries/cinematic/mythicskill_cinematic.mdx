@@ -1,0 +1,27 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Mythic Skill Cinematic 
+
+The `Mythic Skill Cinematic` cinematic entry triggers a skill during a cinematic.
+
+:::caution
+A skill itself needs to define the group to be self using `group=self`
+
+### Example:
+```
+- effect:particlesphere{particle=flame;amount=200;radius=2;group=self} @self
+```
+:::
+
+## How could this be used?
+
+This can be used to animate fancy particle effects during a cinematic.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Segments' required multiple segment>
+</fields.EntryField>

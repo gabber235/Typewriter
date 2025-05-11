@@ -1,0 +1,32 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# In Dialogue Activity 
+
+The `InDialogueActivityEntry` is an activity that activates child activities when a player is in a dialogue with the NPC.
+
+The activity will only activate when the player is in a dialogue with the NPC.
+
+## How could this be used?
+This can be used to stop a npc from moving when a player is in a dialogue with it.
+
+
+## Fields
+
+<fields.EntryField name='Dialogue Idle Duration' required duration>
+     The duration a player can be idle in the same dialogue before the activity deactivates.
+
+When set to 0, it won't use the timer.
+
+<Admonition type="info">
+When the dialogue priority is higher than this activity's priority, this timer will be ignored.
+And will only exit when the dialogue is finished.
+</Admonition>
+</fields.EntryField>
+<fields.EntryField name='Talking Activity' required>
+     The activity that will be used when the npc is in a dialogue
+</fields.EntryField>
+<fields.EntryField name='Idle Activity' required>
+     The activity that will be used when the npc is not in a dialogue
+</fields.EntryField>

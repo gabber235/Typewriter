@@ -1,0 +1,88 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# Interaction System
+
+The Interaction system provides a framework for managing stateful player interactions that need to run over time.
+Examples include cinematics, conversations, or custom game modes.
+The system consists of two main components: Trigger Handlers, and Interactions.
+
+:::info
+At any given moment, a player can only be in one interaction at a time.
+Regardless of Interaction type. If you need multiple interactions, you can use the [AudienceEntry](entries/manifest/audience) to manage them.
+:::
+
+## Core Concepts
+
+An Interaction follows a specific lifecycle:
+1. An Entry raises an event with a start trigger
+2. A TriggerHandler processes this event and creates the Interaction
+3. The Interaction is initialized and begins ticking
+4. When the Interaction should end, it raises a stop trigger
+5. The TriggerHandler processes the stop trigger and ends the Interaction
+
+## Basic Implementation
+
+Here's a basic example of implementing an interaction:
+
+<CodeSnippet tag="basic_interaction" json={require("../../snippets.json")} />
+
+The Interaction class handles the actual state and behavior. Key points:
+- `initialize()` sets up the initial state
+- `tick()` updates the state over time
+- `teardown()` cleans up when the interaction ends
+- Priority comes from the entry that started the interaction
+
+## Trigger System
+
+The trigger system manages starting and stopping interactions.
+
+Interaction should be started by raising its specific start trigger.
+And they can be gracefully stopped by raising its specific stop trigger.
+
+<CodeSnippet tag="interaction_triggers" json={require("../../snippets.json")} />
+
+### Trigger Handlers
+
+The handler is responsible for:
+1. Creating new interactions from start triggers
+2. Ending interactions when stop triggers are received
+
+Though it could also change things on the current interaction. 
+For example, it could swap out the dialogue.
+
+<CodeSnippet tag="interaction_trigger_handler" json={require("../../snippets.json")} />
+
+## Activating the interaction
+
+Something needs to start the interaction.
+This could be any entry.
+For this example, we have an action entry which when triggered starts the interaction.
+
+<CodeSnippet tag="interaction_entry" json={require("../../snippets.json")} />
+
+## Flow Example
+
+Here's how everything works together:
+
+```
+1. Player triggers ExampleInteractionActionEntry
+2. Entry creates ExampleStartTrigger
+3. ExampleTriggerHandler receives the trigger
+4. Handler creates ExampleInteraction
+5. Interaction get initialized (automatically)
+6. Interaction runs until end condition met
+7. Interaction raises ExampleStopTrigger
+8. Handler processes stop trigger
+9. Interaction teardown is called (automatically)
+```
+
+## Priority System
+
+Some interactions are more important than others. 
+Since only 1 interaction can be active at a time, the priority system ensures that the most important interactions will be active.
+To make sure that some random idle dialogue doesn't interrupt a story critical cinematic.
+
+An interaction can only be started if the priority of the running interaction is lower or equal to the new interaction.
+
+For example, if the player is in a cinematic with priority 1, and some idle dialogue with priority 0 is triggered, the idle dialogue will not interrupt the cinematic.
+

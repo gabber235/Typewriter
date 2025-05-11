@@ -1,0 +1,19 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# AssetEntry
+The AssetEntry is a specialized interface that extends the `StaticEntry`.
+It is primarily used for handling static assets within the game. 
+Assets can include various types of files such as images, sounds, or other external resources that are crucial to enhancing the game environment and player experience.
+The key attribute of AssetEntry is the path, which specifies the location of the asset.
+
+## Usage
+Here's a generic example of creating and using an `AssetEntry`:
+
+### Defining an AssetEntry
+<CodeSnippet tag="asset_entry" json={require("../../../snippets.json")} />
+
+### Accessing the Artifact's Content
+
+To get the asset from the entry, you can use the following code:
+
+<CodeSnippet tag="asset_access" json={require("../../../snippets.json")} />

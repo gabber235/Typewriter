@@ -1,0 +1,72 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# CinematicEntry
+
+The `CinematicEntry` does not have any decentends, but is very customizable. When a entry is needed in a cinematic page, it needs to inherit this.
+
+`CinematicEntry` works by having at least 1 list of `Segment`'s. Segments are the parts of the cinematic and may have sub-properties defined. A segment needs to have at least a `startFrame` and `endFrame` which are the integers of the frames.
+
+Frames are the ticks in a second. So there are 20 frames in a second. A cinematic takes as long as the latest `endFrame` of a segment from all it's entries.
+
+Segments are defined in the entry using the `@Segments` annotation. And it needs to be a list of `Segment`'s.
+
+
+:::info
+A `CinematicEntry` can have multiple different segment tracks. 
+For example, a cinematic entry may have a `TextSegment` and a `SoundSegment`. 
+
+Though this is supported in the plugin, it is not yet implemented in the cinematic editor.
+If you need this, reach out to me on [Discord](https://discord.gg/HtbKyuDDBw).
+:::
+
+As entries are not allowed to have any state, we create a `CinematicAction` everytime a entry is used in a cinematic for a player.
+
+## Usage
+<CodeSnippet tag="cinematic_entry" json={require("../../../snippets.json")} />
+
+Segments sometimes need a minimum or maximum duration. This can be done using the `@InnerMin` and `@InnerMax` annotations. 
+
+<CodeSnippet tag="cinematic_segment_with_min_max" json={require("../../../snippets.json")} />
+
+This will make sure that the segment will be at least 10 frames long and at most 20 frames long.
+
+### ExampleSegment 
+<CodeSnippet tag="cinematic_segment" json={require("../../../snippets.json")} />
+
+### ExampleCinematicAction
+
+The `CinematicAction` is the action that is created when a cinematic is started. It is used to keep track of the current frame and to execute the segments.
+There are a few different lifecycle methods that can be used.
+
+- `setup()` is called when the cinematic is created. This is the place to initialize any variables, spawn entities, etc.
+- `tick(frame: Int)` is called every frame. This is the place to execute the segments. It is even executed when no segments are active.
+- `teardown()` is called when the cinematic is finished. This is the place to remove any entities, etc.
+- `canFinish(frame: Int)` the only method that needs to be implemented. It is used by the `CinematicSequence` to determine if the cinematic is finished.
+
+If you need all the customization, you can can implement the `CinematicAction` directly:
+
+<CodeSnippet tag="cinematic_action" json={require("../../../snippets.json")} />
+
+### SimpleCinematicAction
+Sometimes you don't need all the customization and flexiblity. If you only care about 1 segment track, and only need to do something when a segment starts or ends, you can use the `SimpleCinematicAction`.
+
+<CodeSnippet tag="cinematic_simple_action" json={require("../../../snippets.json")} />
+
+## Ticking 
+
+One important detail is that the `tick` methods are not necessarily called in order.
+It is important that the tick method should show the state of the action at the given frame.
+
+One place where this is definitely the case is when the player is viewing the cinematic in content mode.
+As the player is able to scroll through the cinematic, it might be the case that multiple frames are skipped, or rewinded.
+
+## Simulation & Recording
+
+Sometimes the cinematic should be different when it is being recorded or simulated.
+Like the blinding cinematic, where you don't want to be blinded during simulation/recording.
+Or you want to show a different thing during simulation/recording.
+Like the camera which displays the camera in the world, instead of setting the player's camera.
+
+To do this, there are 2 additional methods that can be implemented on the `CinematicEntry` that can return a different `CinematicAction` for recording and simulation.
+
+<CodeSnippet tag="cinematic_create_actions" json={require("../../../snippets.json")} />

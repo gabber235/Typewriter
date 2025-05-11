@@ -1,0 +1,40 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Spawn Particle Action 
+
+The `Spawn Particle Action` is an action that spawns a specific particle at a given location. This action provides you with the ability to spawn particles with a specified type, count, and location.
+
+## How could this be used?
+
+This action can be useful in a variety of situations. You can use it to create visual effects in response to specific events, such as explosions or magical spells. The possibilities are endless!
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Location' optional>
+     The location to spawn the particles at. (Defaults to player's location
+</fields.EntryField>
+<fields.EntryField name='Particle' required>
+     The particle to spawn.
+</fields.EntryField>
+<fields.EntryField name='Count' required>
+     The amount of particles to spawn.
+</fields.EntryField>
+<fields.EntryField name='Offset X' required>
+     The offset from the location on the X axis.
+</fields.EntryField>
+<fields.EntryField name='Offset Y' required>
+     The offset from the location on the Y axis.
+</fields.EntryField>
+<fields.EntryField name='Offset Z' required>
+     The offset from the location on the Z axis.
+</fields.EntryField>
+<fields.EntryField name='Speed' required>
+     The speed of the particles. For some particles, this is the \"extra\" data value to control particle behavior.
+</fields.EntryField>

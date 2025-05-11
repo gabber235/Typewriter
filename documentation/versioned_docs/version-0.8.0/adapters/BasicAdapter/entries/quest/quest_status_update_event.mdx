@@ -1,0 +1,27 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Quest Status Update Event 
+
+The `Quest Status Update Event` entry is triggered when a quest status is updated for a player.
+
+When no quest is referenced, it will trigger for all quests.
+
+## How could this be used?
+This could be used to show a title or notification to a player when a quest status is updated.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Quest' required>
+     When not set it will trigger for all quests.
+</fields.EntryField>
+<fields.EntryField name='From' optional>
+     When not set it will trigger for all statuses.
+</fields.EntryField>
+<fields.EntryField name='To' required>
+     The status the quest is updated to.
+</fields.EntryField>

@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Quest Complete Event 
+
+The `Quest Complete Event` entry is triggered when a quest is completed for a player.
+
+When no quest is referenced, it will trigger for all quests.
+
+## How could this be used?
+This could be used to show a title or notification to a player when a quest is completed.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Quest' required>
+     When not set it will trigger for all quests.
+</fields.EntryField>

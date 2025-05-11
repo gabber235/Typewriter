@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Fish Event 
+
+The `Player Fish Event` is triggered when a player catches a fish or an item.
+
+## How could this be used?
+You can create custom fishing mechanics, such as catching a specific item when fishing in a specific location.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Item In Hand' required>
+     The item the player must be holding when the fish or item is caught.
+</fields.EntryField>
+<fields.EntryField name='Caught' required>
+     The item that the player caught.
+</fields.EntryField>

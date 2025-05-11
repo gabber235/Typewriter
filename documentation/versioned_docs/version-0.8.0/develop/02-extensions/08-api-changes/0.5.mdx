@@ -1,0 +1,108 @@
+---
+title: 0.5.X API Changes
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# All API changes to 0.5.X
+
+This document lists all the API changes introduced in version `0.5` of the Typewriter plugin. If you are upgrading from an older version, please read this document before upgrading.
+
+## New type: Ref
+
+To streamline the api more, I created a new type called Ref. 
+It provides a much nicer api for referencing entries.
+
+<Tabs>
+  <TabItem value="old" label="Old">
+    ```kotlin showLineNumbers
+    class ExampleEntry(
+        // ...
+        override val triggers: List<String> = emptyList(),
+        @EntryIdentifier(OtherEntry::class)
+        val identifier: String = "",
+        // ...
+    ) : TriggerableEntry
+    ```
+    Getting entry:
+    ```kotlin showLineNumbers
+    val otherEntry = Query.findById<OtherEntry>(entry.identifier)
+    ```
+  </TabItem>
+  <TabItem value="new" label="New" default>
+    ```kotlin showLineNumbers
+    class ExampleEntry(
+        // ...
+        override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+        val identifier: Ref<OtherEntry> = emptyRef(),
+        // ...
+    ) : TriggerableEntry
+    ```
+    Getting entry:
+    ```kotlin showLineNumbers
+    val otherEntry = entry.identifier.get()
+    ```
+  </TabItem>
+</Tabs>
+
+## Change to facts interface
+
+Since `Facts` can now be applied to groups of players, the `read` function no longer works.
+A simple migration is to use the `readSinglePlayer` function instead.
+
+<Tabs>
+  <TabItem value="old" label="Old">
+    ```kotlin showLineNumbers
+    class InventoryItemCountFact(
+        override val id: String = "",
+        override val name: String = "",
+        override val comment: String = "",
+        @Help("The item to check for.")
+        val item: Item = Item.Empty,
+    ) : ReadableFactEntry {
+        override fun read(playerId: UUID): Fact {
+            val player = server.getPlayer(playerId) ?: return Fact(id, 0)
+            val amount = player.inventory.contents.filterNotNull().filter { item.isSameAs(player, it) }.sumOf { it.amount }
+            return Fact(id, amount)
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem value="new" label="New" default>
+    ```kotlin showLineNumbers
+    class InventoryItemCountFact(
+        override val id: String = "",
+        override val name: String = "",
+        override val comment: String = "",
+        override val group: Ref<GroupEntry> = emptyRef(),
+        @Help("The item to check for.")
+        val item: Item = Item.Empty,
+    ) : ReadableFactEntry {
+        override fun readSinglePlayer(player: Player): FactData {
+            val amount = player.inventory.contents.filterNotNull().filter { item.isSameAs(player, it) }.sumOf { it.amount }
+            return FactData(amount)
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Entry Icon Changes
+
+The icon set has changed from only allowing Font Awesome icons, to allowing any icon from [Iconify](https://iconify.design/).
+This means that entries can use any icon from [Iconify](https://iconify.design/).
+Since the icon set is so big, there no longer is a nice `Icon` class. Instead, you just pass the icon name to the icon parameter.
+
+<Tabs>
+    <TabItem value="old" label="Old">
+        ```kotlin showLineNumbers
+        @Entry("add_potion_effect", "Add a potion effect to the player", Colors.RED, Icons.FLASK_VIAL)
+        ```
+    </TabItem>
+    <TabItem value="new" label="New" default>
+        ```kotlin showLineNumbers
+        @Entry("add_potion_effect", "Add a potion effect to the player", Colors.RED, "fa6-solid:flask-vial")
+        ```
+    </TabItem>
+</Tabs>

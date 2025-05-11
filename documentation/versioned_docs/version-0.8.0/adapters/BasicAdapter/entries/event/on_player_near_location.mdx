@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Player Near Location Event 
+
+The `PlayerNearLocationEventEntry` class represents an event that is triggered when a player is within a certain range of a location.
+
+## How could this be used?
+
+This could be used to create immersive gameplay experiences such as triggering a special event or dialogue when a player approaches a specific location.
+For example, when a player gets close to a hidden treasure, a hint could be revealed or a guardian could spawn.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Location' required>
+     The location the player should be near.
+</fields.EntryField>
+<fields.EntryField name='Range' required>
+     The range within which the event should trigger.
+</fields.EntryField>

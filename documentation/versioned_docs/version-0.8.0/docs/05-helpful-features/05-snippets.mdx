@@ -1,0 +1,41 @@
+---
+title: Snippets
+difficulty: Normal
+---
+# What are Snippets?
+
+Snippets are small pieces of information that the extensions can use. Mostly related with how things are displayed to the users.
+Snippets allow you to customize all sorts of parts of different adpaters. For example, you can customize the way messages are displayed in the `Basic Extension`.
+
+# How do I customize Snippets?
+Snippets can be customized by editing the `plugin/Typewriter/snippets.yml` file.
+
+:::info[important]
+Note that Snippets are only written the first time they are used. So if you want to customize a snippet, you will need to trigger the entry that uses the snippet first.
+:::
+
+So for the `Basic Extension`, after the first person reiceves a `MessageDialogueEntry`, the `snippets.yml` file will look like this:
+
+```yaml title="plugin/Typewriter/snippets.yml"
+dialogue:
+  message:
+    format: |2
+
+      <gray> | <bold><speaker></bold><reset><gray> |
+      <reset><white> <message>
+```
+
+You can then edit this file to customize the snippet. For example, if you wanted to change the default color of the speaker's name, you could change the `<bold><speaker></bold>` to `<bold><red><speaker></red></bold>`.
+
+Yaml uses the `|` to indicate that the text is a multi-line string.
+
+```yaml title="plugin/Typewriter/snippets.yml"
+dialogue:
+  message:
+    // highlight-next-line
+    format: |2
+
+      <gray> | <bold><speaker></bold><reset><gray> |
+      <reset><white> <message>
+```
+The `|2` indicates that the text is a multi-line string, and has `2` new-lines at the end of the string. If you don't want the new-lines, you can remove the `2` to make it `|`.

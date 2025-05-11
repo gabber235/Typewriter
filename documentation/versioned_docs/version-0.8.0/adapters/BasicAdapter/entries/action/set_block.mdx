@@ -1,0 +1,30 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Set Block Action 
+
+The `SetBlockActionEntry` is an action that sets a block at a specific location.
+
+:::caution
+This will set the block for all the players on the server, not just the player who triggered the action.
+It will modify the world, so be careful when using this action.
+:::
+
+## How could this be used?
+
+This action can be useful in a variety of situations. You can use it to create structures, set traps, or any other custom block placements you want to make. The possibilities are endless!
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Material' required>
+     The material of the block to set.
+</fields.EntryField>
+<fields.EntryField name='Location' required>
+     The location to set the block at.
+</fields.EntryField>

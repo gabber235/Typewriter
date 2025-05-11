@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Player Hit Entity Event 
+
+The `Player Hit Entity Event` event is fired when a player hits an entity. If you want to detect when a player kills an entity, use the [`Player Kill Entity Event`](on_player_kill_entity) event.
+
+## How could this be used?
+
+This event could be used to create a custom game mode where players have to hit a certain number of entities to win. It could also be used to detect when you hit a certain entity, and make it be aggresive towards you.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Entity Type' optional>
+     If specified, the entity type must match the entity type that was hit in order for the event to trigger.
+</fields.EntryField>

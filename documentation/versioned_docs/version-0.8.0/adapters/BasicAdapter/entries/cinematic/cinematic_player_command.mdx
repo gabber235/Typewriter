@@ -1,0 +1,19 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Cinematic Player Command 
+
+The `Cinematic Player Command` entry runs a command as the player at a specific frame.
+
+## How could this be used?
+
+You can use a different plugin to animate blocks, hide a scoreboard, or trigger something in another plugin.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Segments' required multiple segment>
+     Run commands on different segments
+</fields.EntryField>

@@ -1,0 +1,201 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import Player from "@site/src/components/Player";
+import StateFlow from '@site/src/components/StateFlow';
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+import { FeatureHighlights } from '@site/src/components/FeatureHighlights';
+import EntryDisplay from "@site/src/components/EntryDisplay";
+import EntryNodeInspector from "@site/src/components/EntryInspector";
+
+# Talk To NPC Objective
+
+:::info[Before starting]
+It's best to first read [Questing](./index.mdx) before starting this tutorial.
+:::
+:::warning[NPC]
+This tutorial requires you to already have created an NPC using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+:::
+
+In this tutorial, you will learn how to create a quest where:
+- The player interacts with an NPC
+- The NPC gives the player a quest
+- The player completes the quest by talking to a different NPC.
+
+<SplitLayout>
+<Section divider='left'>
+## Quest Flow
+<StateFlow
+  nodes={[
+    {
+      id: 'not-started',
+      title: 'Not Started',
+      facts: ['Talk Quest Fact = 0'],
+      className: 'bg-gray-100 dark:bg-zinc-600 ring-1 ring-[#1f2937] dark:ring-white',
+      description: 'Player hasn\'t started the quest yet',
+      icon: 'tabler:circle-dot',
+      transitions: [
+        { 
+          targetId: 'quest-received', 
+          label: 'Talk to First NPC', 
+          icon: 'tabler:message-circle' 
+        }
+      ]
+    },
+    {
+      id: 'quest-received',
+      title: 'Quest Received',
+      facts: ['Talk Quest Fact = 1'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-cyan-500 border-cyan-100 dark:border-cyan-800',
+      description: 'Player has received the quest from the first NPC',
+      icon: 'tabler:message-circle',
+      transitions: [
+        { 
+          targetId: 'completed', 
+          label: 'Talk to Second NPC', 
+          icon: 'tabler:message-circle-2' 
+        }
+      ]
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      facts: ['Talk Quest Fact = 2'],
+      className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
+      description: 'Player has completed the quest by talking to the second NPC',
+      icon: 'tabler:check-circle',
+      transitions: [
+        { 
+          targetId: 'not-started', 
+          label: 'Reset Quest', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    }
+  ]}
+/>
+</Section>
+<Section divider='right'>
+## Quest Setup
+This guide is split up into 2 sections. 
+- [**Manifest Section**](#manifest-section): Covers how to set the quest up and add the objective.
+- [**Sequence Section**](#sequence-section): Explains how to make the npc give the quest and the other npc react to the quest.
+
+</Section>
+</SplitLayout>
+
+## Manifest Section
+:::warning[Before Starting]
+You must already have created 2 NPCs using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+> For this guide, we will be using a young npc `James` and an old man npc `Old Man`.
+
+<Image img={require("../../assets/questing/talk-objective/npc-example.png")} height="250" />
+:::
+> In this section, we will be creating the quest and adding the objective to it.
+
+### Creating the Quest
+Now inside the manifest page, click on the **+** button in the top right corner and search for `Quest`. Click on the **+** button to add it to your page.
+
+<EntrySearch entryName="quest" />
+
+#### Configuring the Quest Entry
+Now inside the quest entry set the following fields:
+* **Display Name**: `TalkQuest`
+* **Active Criteria**: `Talk Quest Fact >= 1`
+* **Completed Criteria**: `Talk Quest Fact = 2`\
+*For this guide I used a permanent fact*
+
+### Adding the Objective
+You now successfully created a quest entry. Now we need to add the objective to the quest.
+Click on the **+** button in the top right corner and search for `Add Interact Entity Objective`. Click on the **+** button to add it to your page.
+
+<EntrySearch entryName="interact_entity_objective" />
+
+###  Configuring the Objective Entry
+Inside the objective entry set the following fields:
+* **Quest**: `TalkQuest`
+* **Criteria**: `Talk Quest Fact = 1`
+* **Entity**: `Old Man` (or what you named your second npc)
+* **Override Display**: `Talk to the Old Man`
+
+### Manifest Result
+<EntryDisplay pages={[
+    require("../../assets/questing/talk-objective/manifest.json"),
+    require("../../assets/questing/talk-objective/static.json")
+]} />
+
+
+## Sequence Section
+:::info[Before Starting]
+It is recommended to have a good understanding of [Interactions](../01-interactions/index.mdx) and [Facts](../03-facts/index.mdx) before starting this section.
+:::
+> In this section, we will be creating the sequence that gives the player the quest and the other npc reacts to the quest.
+
+### Interaction with the First NPC
+Now we need to create the interaction with the first npc. This is where the player will receive the quest.
+Click on the **+** button in the top right corner and search for `Add Entity Interact Event`. Click on the **+** button to add it to your page.
+
+<EntrySearch entryName="entity_interact_event" />
+
+Inside the entry set the Definition field to the first npc you created. In this case, we will be using `James`.
+
+### Adding dialogue to the First NPC
+Now when you click on the first npc nothing happens. Let's add some dialogue to the npc.
+> The following steps are optional, but recommended to make the quest more immersive.
+1. Add a `New Option` to your sequence and set the following fields:
+   * **Text**: `Could you help me with something?`
+   * **Option 1**: `Yeah sure, whats up?`
+   * **Option 2**: `No sorry.`
+2. Now in the option 1 add a trigger for a spoken with fields:
+   * **Text**: `Go talk to that old man on the other side.`
+   * **Duration**: `2s 500ms`
+#### Triggering the quest
+Right click on the `New Spoken` (or what you used) and select `Link with ...` select the `Triggers | 1` and search for `Add Track Quest`.
+
+<EntrySearch entryName="track_quest" />
+
+Inside the entry set the quest field to `TalkQuest` and add a modifier: `Talk Quest Fact = 1`.
+
+### Interaction with the Second NPC
+Now you have created the first npc interaction. Now we need to create the second npc interaction. This is where the player will complete the quest.
+Add a new `Add Entity Interact Event` entry and set the Definition field to the second npc you created. In this case, we will be using `Old Man`.
+<EntrySearch entryName="entity_interact_event" />
+
+### Configuring the Second NPC Interaction
+Now we will make the interaction trigger a spoken. To do this right click on the `Entity Interact Event` and select `Link with ...` select the `Triggers | 1` and search for `Add Spoken`.
+<EntrySearch entryName="spoken" />
+
+#### Configuring the spoken
+Inside the spoken entry set the following fields:
+* **Criteria**: `Talk Quest Fact = 1`
+* **Modifier**: `Talk Quest Fact = 2`
+* **Text**: `Thanks for going to me!`
+
+### Sequence Result
+
+<EntryDisplay pages={[
+    require("../../assets/questing/talk-objective/sequence.json"),
+    require("../../assets/questing/talk-objective/manifest.json"),
+    require("../../assets/questing/talk-objective/static.json")
+]} />
+
+## Result
+Now you have successfully created a quest where the player interacts with an npc and completes the quest by talking to a different npc.
+
+<Player url={require("../../assets/questing/talk-objective/talk-objective-result.webm").default} />
+
+:::info[Quest Status Changes]
+In this video you can see that when the quest starts and ends it shows a title and some extra effects. To also add this read: **SOON**
+:::
+:::info[Visualizing the Path]
+You can also visualize the path of the quest by using the `Interact Entity Objectives Path Stream` entry.
+
+<EntrySearch entryName="interact_entity_objectives_path_stream" />
+
+Inside the entry set the `Road` field to a Road Network you created and it will visualize the path to the npc for you!
+
+Read more about road networks in the [Road Network Documentation](../06-road-network/index.mdx).
+:::

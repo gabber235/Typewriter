@@ -1,0 +1,280 @@
+---
+title: 0.8.X API Changes
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# All API changes to 0.8.X
+
+There are quite a few changes to the API.
+Make sure to read these changes before updating your extension.
+
+## `build.gradle.kts` Changes
+
+Now the engine version is not specified in a seperate `engine` block, but in the `extension` block.
+
+<Tabs>
+    <TabItem value="release" label="Release" default>
+        ```kotlin title="build.gradle.kts" showLineNumbers
+        import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+        plugins {
+            kotlin("jvm") version "2.0.21"
+            // highlight-red
+            id("com.typewritermc.module-plugin") version "1.0.1"
+            // highlight-green
+            id("com.typewritermc.module-plugin") version "1.1.2"
+        }
+        // Replace with your own information
+        group = "me.yourusername"
+        version = "0.0.1"
+        typewriter {
+        // highlight-red-start
+            engine {
+                version = "<latest typewriter version>"
+            }
+        // highlight-red-end
+
+            namespace = "<a name for the company which all your extensions are published under>"
+
+            extension {
+                name = "<Name of the extension>"
+                shortDescription = "<Short description of the extension>"
+                description = "<Long description of the extension>"
+                // highlight-green
+                engineVersion = "<latest typewriter version>"
+
+                paper {
+                    // Optional - If you want to make sure a plugin is required to be installed to use this extension
+                    dependency("<plugin name>")
+                }
+            }
+        }
+        kotlin {
+            jvmToolchain(21)
+        }
+        ```
+    </TabItem>
+    <TabItem value="beta" label="Beta">
+        ```kotlin title="build.gradle.kts" showLineNumbers
+        import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+        plugins {
+            kotlin("jvm") version "2.0.21"
+            // highlight-red
+            id("com.typewritermc.module-plugin") version "1.0.1"
+            // highlight-green
+            id("com.typewritermc.module-plugin") version "1.1.2"
+        }
+        // Replace with your own information
+        group = "me.yourusername"
+        version = "0.0.1"
+        typewriter {
+        // highlight-red-start
+            engine {
+                version = "<latest typewriter version>"
+                channel = com.typewritermc.moduleplugin.ReleaseChannel.BETA
+            }
+        // highlight-red-end
+
+            namespace = "<a name for the company which all your extensions are published under>"
+
+            extension {
+                name = "<Name of the extension>"
+                shortDescription = "<Short description of the extension>"
+                description = "<Long description of the extension>"
+                // highlight-green-start
+                engineVersion = "<latest typewriter version>"
+                channel = com.typewritermc.moduleplugin.ReleaseChannel.BETA
+                // highlight-green-end
+                 
+                paper {
+                    // Optional - If you want to make sure a plugin is required to be installed to use this extension
+                    dependency("<plugin name>")
+                }
+            }
+        }
+        kotlin {
+            jvmToolchain(21)
+        }
+        ```
+    </TabItem>
+</Tabs>
+
+## `Initializable` Changes
+
+The way to register a `Initializable` has changed.
+
+```kotlin showLineNumbers
+// highlight-red
+@Initializer
+// highlight-green
+@Singleton
+object ExampleInitializer : Initializable {
+    override suspend fun initialize() {
+        // Do something when the extension is initialized
+    }
+
+    override suspend fun shutdown() {
+        // Do something when the extension is shutdown
+    }
+}
+
+```
+
+## Triggering Entries Changes
+
+Since Typewriter now has `InteractionContext`, this needs to be passed around when triggering entries.
+As a lot changed, have a look at the [Triggering Entries](../triggering) page for more information.
+
+```kotlin showLineNumbers
+val entries: List<TriggerableEntry> = ...
+
+// highlight-red
+entries triggerAllFor player
+// highlight-green
+entries.triggerAllFor(player, context())
+```
+
+## ActionEntry Changes
+
+As the `ActionEntry` now needs a `InteractionContext`, the `execute` function signature has changed.
+
+```kotlin showLineNumbers
+@Entry("example_action", "An example action entry.", Colors.RED, "material-symbols:touch-app-rounded")
+class ExampleActionEntry(
+    override val id: String = "",
+    override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
+    override val modifiers: List<Modifier> = emptyList(),
+    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+) : ActionEntry {
+    // highlight-red-start
+    override fun execute(player: Player) {
+        super.execute(player) // This will apply all the modifiers.
+    // highlight-red-end
+    // highlight-green-start
+    override fun ActionTrigger.execute() {
+        // Will now automatically apply all the modifiers.
+    // highlight-green-end
+        // Do something with the player
+    }
+}
+```
+
+## Removal of `CustomTriggeringActionEntry`
+
+As the action entry now can specify itself how Typewriter should handle the triggering:
+
+```kotlin showLineNumbers
+@Entry("example_action", "An example action entry.", Colors.RED, "material-symbols:touch-app-rounded")
+class ExampleCustomTriggeringActionEntry(
+    override val id: String = "",
+    override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
+    override val modifiers: List<Modifier> = emptyList(),
+// highlight-red-start
+    @SerializedName("triggers")
+    override val customTriggers: List<Ref<TriggerableEntry>> = emptyList(),
+) : CustomTriggeringActionEntry {
+    override fun execute(player: Player) {
+        super.execute(player) // This will apply the modifiers.
+        // Do something with the player
+        player.triggerCustomTriggers() // Can be called later to trigger the next entries.
+    // highlight-red-end
+// highlight-green-start
+    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+) : ActionEntry {
+ override fun ActionTrigger.execute() {
+        // This disables Typewriter's automatic triggering of the next entries,
+        // and disables the automatic apply of the modifiers.
+        disableAutomaticTriggering()
+
+        // Now you can manually trigger the next entries.
+        triggerManually()
+
+        // Or if you want to specify which triggers to trigger, you can do so.
+        triggers.filterIndexed { index, _ -> index % 2 == 0 }.triggerFor(player)
+
+        // You can also manually apply the modifiers.
+        applyModifiers()
+        // highlight-green-end
+    }
+}
+```
+
+## Dialogue Messenger Changes
+
+As it was the only place in Typewriter where you had to register something with an annotation, we changed it to allow the DialogueEntry to specify the messengers that it uses.
+Additionally, we now need to forward the `context` parameter to the messengers.
+
+```kotlin showLineNumbers
+@Entry("example_dialogue", "An example dialogue entry.", Colors.BLUE, "material-symbols:chat-rounded")
+class ExampleDialogueEntry(
+    override val id: String = "",
+    override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
+    override val modifiers: List<Modifier> = emptyList(),
+    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val speaker: Ref<SpeakerEntry> = emptyRef(),
+    @MultiLine
+    @Placeholder
+    @Colored
+    @Help("The text to display to the player.")
+    val text: String = "",
+) : DialogueEntry {
+    // highlight-green-start
+    // May return null to skip the dialogue
+    override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<*>? {
+        // You can use if statements to return a different messenger depending on different conditions
+        return ExampleDialogueDialogueMessenger(player, context, this)
+    }
+    // highlight-green-end
+}
+
+// highlight-red-start
+@Messenger(ExampleDialogueEntry::class)
+class ExampleDialogueDialogueMessenger(player: Player, entry: ExampleDialogueEntry) :
+    DialogueMessenger<ExampleDialogueEntry>(player, entry) {
+
+    companion object : MessengerFilter {
+        override fun filter(player: Player, entry: DialogueEntry): Boolean = true
+    }
+    // highlight-red-end
+// highlight-green-start
+class ExampleDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: ExampleDialogueEntry) :
+    DialogueMessenger<ExampleDialogueEntry>(player, context, entry) {
+// highlight-green-end
+
+
+    // Called every game tick (20 times per second).
+    // The cycle is a parameter that is incremented every tick, starting at 0.
+    override fun tick(context: TickContext) {
+        super.tick(context)
+        if (state != MessengerState.RUNNING) return
+
+        player.sendMessage("${entry.speakerDisplayName}: ${entry.text}".parsePlaceholders(player).asMini())
+
+        // When we want the dialogue to end, we can set the state to FINISHED.
+        state = MessengerState.FINISHED
+    }
+}
+```
+
+## Suspendable `AudienceEntry#display` 
+
+To allow audience entries to have some async loading behaviour, the `display` now is a suspendable function.
+
+```kotlin showLineNumbers
+	@Entry("example_audience", "An example audience entry.", Colors.GREEN, "material-symbols:chat-rounded")
+class ExampleAudienceEntry(
+    override val id: String = "",
+    override val name: String = "",
+) : AudienceEntry {
+// highlight-red
+    override fun display(): AudienceDisplay {
+// highlight-green
+    override suspend fun display(): AudienceDisplay {
+        return ExampleAudienceDisplay()
+    }
+}
+```

@@ -1,0 +1,50 @@
+---
+difficulty: Normal
+---
+
+import Image from "@site/src/components/Image";
+import Player from "@site/src/components/Player";
+
+# Conditional dialogue
+:::info[Before starting]
+It's best to first read [First Interaction](./index.mdx) [Facts](../03-facts/index.mdx) before starting this tutorial.
+Also, make sure you have created a **sequence** page.
+:::
+
+In this tutorial, you will learn how to create conditional dialogue. This means that if the player has a certain fact set to a specific value, it will then display the correct dialogue.
+
+## Adding a spoken
+First we need to add a spoken. This can be learned by following the [First Interaction](./index.mdx) tutorial.
+
+## Configuring the spoken
+In the spoken we will set the field text to `Hey you clicked me for the first time.`
+
+### Setting the Criteria
+Now we need to configure the criteria for the spoken. This can be done by clicking on the + icon in the inspector next to the criteria field. Then, you can select the fact you want to use. For this tutorial, we will use a permanent fact called `Flower Clicked` with the group set to a player group.
+
+<Image img={require("../../assets/interactions/flower-clicked-fact.png")} alt="Flower Clicked Fact" width={400}/>
+
+Inside the criteria, set the operator to `==` and the value to `0`.
+
+### Configuring the Modifier
+You have configured the criteria, but now we need to modify the fact so that when you click the flower again, a different spoken is displayed. This can be done by clicking on the + icon in the inspector next to the modifier field. Then, you can select the fact you want to modify. For this tutorial, we will use the same fact as the criteria. Inside the modifier, set the operator to `=` and the value to `1`.
+
+<Image img={require("../../assets/interactions/add-spoken-fields.png")} alt="Add Spoken Fields" width={400}/>
+
+## Adding the second spoken
+Now we need to add the second spoken. This can be done by right-clicking on the `On Interact Block Event` entry and selecting `+ Link with ...`. Then, search for `Add Spoken` and click on the + icon to add it to your sequence.\
+In the text field we will set `Wow you clicked me again!`
+Your sequence page should look like this:
+
+<Image img={require("../../assets/interactions/conditional-dialogue-sequence.png")} alt="Conditional dialogue sequence" width={400}/>
+
+### Configuring the second spoken Criteria
+Now we need to configure the criteria for the second spoken. This can be done by clicking on the + icon in the inspector next to the criteria field. Then, select the `Flower Clicked` fact again. Inside the criteria, set the operator to `==` and the value to `1`.
+
+### Additional dialogue
+To add more dialogues or interactions when you click the flower, set another modifier with the operator to `=` and the value to `2` (or any other value), then repeat the previous steps.
+
+## Result
+Now, when you click the flower for the first time, the first spoken will be displayed. When you click the flower again, the second spoken will be displayed.
+
+<Player url={require("../../assets/interactions/final-result-conditional-dialogue.webm").default}/>

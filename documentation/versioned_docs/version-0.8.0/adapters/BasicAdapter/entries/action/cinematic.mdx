@@ -1,0 +1,26 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Cinematic 
+
+The `Cinematic` action is used to start a new cinematic.
+
+A cinematic can only be overridden
+if another cinematic is triggered with a higher page priority than the current one.
+
+## How could this be used?
+
+This action can be useful in situations where you want to start a cinematic.
+See the [Cinematic](/docs/creating-stories/cinematics) tutorial for more information.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Page' required>
+     The cinematic page to start.
+</fields.EntryField>

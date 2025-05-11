@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Item In Slot Audience 
+
+The `Item In Slot Audience` entry filters an audience based on if they have a specific item in a specific slot.
+
+## How could this be used?
+It can be used to have magnet boots which allow players to move in certain areas.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Item' required>
+     The item to check for.
+</fields.EntryField>
+<fields.EntryField name='Slot' required>
+     The slot to check.
+</fields.EntryField>
+<fields.EntryField name='Inverted' required>
+</fields.EntryField>

@@ -1,0 +1,18 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Balance Group 
+
+The `Balance Audience` is an group for which a player's balance meets a certain condition.
+To determine if a player is part of this group, the balance of the player is checked for each condition.
+The first condition that is met determines the group the player is part of.
+
+## How could this be used?
+This could be used to have facts that are specific to a player's balance, like a VIPs where all share some balance threshold.
+
+
+## Fields
+
+<fields.EntryField name='Group' required multiple>
+</fields.EntryField>

@@ -1,0 +1,244 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import StateFlow from '@site/src/components/StateFlow';
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+import { FeatureHighlights } from '@site/src/components/FeatureHighlights';
+import StatusEditor from '@site/src/components/StatusEditor';
+
+# Questing
+
+:::danger[Quest Extension]
+You must have installed the Quest Extension before proceeding with any quest-related features.
+:::
+:::danger[Writers Note]
+The questing section on our docs is currently being rewritten. If you want the old documentation that is complete read: [**Old Quest Documentation**](../../../../version-0.7.0/docs/03-creating-stories/05-questing/index.mdx)
+:::
+## Typewriter's Unique Approach to Quests
+
+:::tip[The Big Idea]
+In Typewriter, quests are **visual reflections** of your game state, not the drivers of it. Use permanent facts to track real progress, and let quests simply display that progress to players.
+:::
+
+<SplitLayout>
+<Section>
+### 🔑 Key Concept
+
+Unlike traditional quest plugins where completing quests directly triggers progression, Typewriter separates:
+
+- **Game State** - Facts that drive true progression
+- **Quest Display** - What players see in the UI
+</Section>
+
+<Section divider="left">
+### ⚙️ How Quests Work
+
+<FeatureHighlights 
+  layout="horizontal"
+  items={[
+    {
+      id: "inactive",
+      title: "Inactive",
+      color: "gray"
+    },
+    {
+      id: "active",
+      title: "Active",
+      color: "sky"
+    },
+    {
+      id: "completed",
+      title: "Completed",
+      color: "default"
+    }
+  ]}
+/>
+
+**Quest state is determined by:**
+
+1. If **Completed Criteria** are met → Completed
+2. If **Active Criteria** are met → Active
+3. Otherwise → Inactive
+</Section>
+</SplitLayout>
+### 💪 Why This Is Powerful
+
+<FeatureHighlights layout="grid" 
+items={[
+      {
+        id: "open-ended",
+        title: "🤔 Open-ended Objectives",
+        description: "Guide players with goals, not just clicks. Use immersive objectives like **`Find a way into the locked study`** instead of the rigid **`Use the Silver Key on the Study Door`**.",
+        color: "grayish"
+      },
+      {
+        id: "multiple-entry-points",
+        title: "🕵️‍♀️ Multiple Entry Points",
+        description: "Provide various ways to begin the same quest. The investigation can begin by **`Being briefed by the chief detective`** OR by independently finding the **`Discarded Ransom Note`**.",
+        color: "grayish"
+      },
+      {
+        id: "evolving-objectives",
+        title: "⏳ Evolving Objectives",
+        description: "Objectives can update based on time or lack of progress. If **`Search the market district for clues`** yields no results after a while, it might refine to **`Focus your search near the merchant stalls`**.",
+        color: "grayish"
+      },
+      {
+        id: "contextual-objectives",
+        title: "🗺️ Contextual Objectives",
+        description: "Display the most relevant task based on context. At the plaza, show **`Ask locals about the suspect`**, but enter the nearby alley, and it updates to **`Check the alley for escape routes`**.",
+        color: "grayish"
+      },
+      {
+        id: "branching",
+        title: "🌿 Branching Narratives",
+        description: "Adapt the quest depending on the players' actions. Based on evidence found, objectives can change to **`Investigate the garden shed`** or **`Confront the butler`**.",
+        color: "grayish"
+      },
+      {
+        id: "lasting-consequences",
+        title: "⚖️ Lasting Consequences",
+        description: "Prior decisions influence current tasks. A corrupt detective might get **`Plant misleading evidence`** instead of **`Collect all available evidence`**.",
+        color: "grayish"
+      }
+  ]}
+/>
+
+## Visual Guide: How Facts Drive Quests
+
+<StateFlow
+  title="Quest Progression Flow"
+  description="How facts drive quest states in Typewriter"
+  nodes={[
+    {
+      id: 'not-started',
+      title: 'Not Started',
+      facts: ['Quest Fact = 0'],
+      className: 'bg-gray-100 dark:bg-zinc-600 ring-1 ring-[#1f2937] dark:ring-white',
+      description: 'Player hasn\'t started the quest yet',
+      icon: 'tabler:circle-dot',
+      transitions: [
+        { 
+          targetId: 'searching', 
+          label: 'Talk to NPC', 
+          icon: 'tabler:message-circle' 
+        }
+      ]
+    },
+    {
+      id: 'searching',
+      title: 'Searching',
+      facts: ['Quest Fact = 1', 'Item Fact = 0'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-cyan-500 border-cyan-100 dark:border-cyan-800',
+      description: 'Player is looking for the required item',
+      icon: 'tabler:search',
+      transitions: [
+        { 
+          targetId: 'item-found', 
+          label: 'Find Item', 
+          icon: 'tabler:package' 
+        },
+        { 
+          targetId: 'not-started', 
+          label: 'Abandon Quest', 
+          icon: 'tabler:arrow-back' 
+        }
+      ]
+    },
+    {
+      id: 'item-found',
+      title: 'Item Found',
+      facts: ['Quest Fact = 1', 'Item Fact >= 1'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-[#4cb3d4] border-cyan-100 dark:border-cyan-800',
+      description: 'Player has found the required item',
+      icon: 'tabler:package',
+      transitions: [
+        { 
+          targetId: 'completed', 
+          label: 'Return to NPC', 
+          icon: 'tabler:arrow-back-up' 
+        },
+        { 
+          targetId: 'searching', 
+          label: 'Lose Item', 
+          icon: 'tabler:package-off' 
+        }
+      ]
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      facts: ['Quest Fact = 2'],
+      className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
+      description: 'Quest has been completed',
+      icon: 'tabler:check-circle',
+      transitions: [
+        {
+          targetId: 'not-started',
+          label: 'Reset Quest',
+          icon: 'tabler:refresh'
+        }
+      ]
+    }
+  ]}
+/>
+
+## Creating a Quest
+In Typewriter, quests are created using the **Quest** entry.
+:::info[Quest Entry]
+The Quest Entry is only a visual representation of the quest state. It does not affect the quest state itself.
+:::
+:::warning[Before Starting]
+You must have a decent understanding of Typewriter's [**Facts**](../03-facts/index.mdx) and [**Interactions**](../01-interactions/index.mdx) before starting with creating quests.
+:::
+### Adding the Quest Entry
+In the top right corner of the Typewriter editor, click on the **+** button and search for `Quest`. Click on the **+** button to add it to your page.
+
+<EntrySearch entryName="quest" />
+
+### Configuring the Quest Entry
+
+<SplitLayout columns={3}>
+<Section divider='right'>
+<FeatureHighlights layout="horizontal" 
+items={[{id: "display-name", title: "Display Name", color: "orange"}]}
+/>
+The name shown in player's quest log (e.g., **`QuestGuide`**)
+</Section>
+<Section divider="middle">
+<FeatureHighlights layout="horizontal"
+items={[{id: "active-criteria", title: "Active Criteria", color: "sky"}]}
+/>
+Condition for quest visibility (e.g., **`Permanent Fact >= 1`**)
+</Section>
+<Section divider="left">
+<FeatureHighlights layout="horizontal"
+items={[{id: "completed-criteria", title: "Completed Criteria", color: "default"}]}
+/>
+Condition for quest completion (e.g., **`Permanent Fact == 5`**)
+</Section>
+</SplitLayout>
+<SplitLayout>
+<Section divider="right">
+### Visualizing the Quest Entry
+In this editor you can increase and decrease the permanent fact used in the image on the right.
+
+ Try setting it from 0 to 5!
+<StatusEditor />
+</Section>
+<Section divider="left">
+<Image img={require("../../assets/questing/quest/quest-configuration.png")} alt="Quest Configuration" width={400}/>
+</Section>
+</SplitLayout>
+## Adding objectives
+You now have created a quest entry, but it doesn't have any objectives yet. For this documentation we have created multiple guides on how to do different objectives.
+- **Talk to NPC**: [**Talk Objective**](./01-talk-objective.mdx)
+- **Kill 10 Zombies**: [**Kill Objective**](./02-kill-zombie-objective.mdx)
+- **Gather 10 Emeralds**: Soon
+- **Give to Npc (Mail delivery)**: Soon
+
+## Displaying the Quest
+It is also possible to display the quest to players via placeholders. Read: **BEING WRITTEN** to learn more about this.

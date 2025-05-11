@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Tab List Header Footer 
+
+The `TabListHeaderFooterEntry` is an entry that sets the header and footer of the tab list.
+It takes in lines for the header and footer.
+And shows them to the players in the tab list.
+
+
+## Fields
+
+<fields.EntryField name='Header' required multiple>
+     The lines to display in the header of the tab list
+</fields.EntryField>
+<fields.EntryField name='Footer' required multiple>
+     The lines to display in the footer of the tab list
+</fields.EntryField>
+<fields.EntryField name='Priority Override' optional>
+</fields.EntryField>

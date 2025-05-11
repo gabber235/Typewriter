@@ -1,0 +1,26 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Reference Npc 
+import DeprecationWarning from '@site/src/components/DeprecationWarning';
+
+<DeprecationWarning message='Use the EntityAdapter instead' />
+
+
+An identifier that references an NPC in the ZNPCsPlus plugin. But does not manage the NPC.
+
+## How could this be used?
+
+This can be used to reference an NPC which is already in the world. This could be used to create a quest that requires the player to talk to an NPC.
+
+
+## Fields
+
+<fields.EntryField name='Display Name' required>
+</fields.EntryField>
+<fields.EntryField name='Sound' required>
+</fields.EntryField>
+<fields.EntryField name='Npc Id' required>
+     The id of the NPC in the ZNPCsPlus plugin.
+</fields.EntryField>

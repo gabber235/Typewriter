@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Island Bank Withdraw Action 
+
+The `Island Bank Withdraw` action allows you to withdraw money from the player's Island bank.
+
+## How could this be used?
+
+This could be used to allow players to buy items from a shop.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Amount' required>
+     The amount to withdraw from the player's Island bank
+</fields.EntryField>

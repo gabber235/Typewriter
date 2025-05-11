@@ -1,0 +1,25 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Interact Entity Objective
+
+The `InteractEntityObjective` class is an entry that represents an objective to interact with an entity.
+When such an objective is active, it will show an icon above any NPC.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Quest' required>
+</fields.EntryField>
+<fields.CriteriaField />
+<fields.EntryField name='Entity' required>
+     The entity that the player needs to interact with.
+</fields.EntryField>
+<fields.EntryField name='Override Display' optional>
+     The objective display that will be shown to the player. Use &lt;entity&gt; to replace the entity name.
+</fields.EntryField>
+<fields.EntryField name='Priority Override' optional>
+</fields.EntryField>

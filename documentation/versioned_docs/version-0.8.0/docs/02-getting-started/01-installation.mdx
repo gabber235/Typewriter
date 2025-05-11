@@ -1,0 +1,114 @@
+---
+difficulty: Easy
+---
+
+import DownloadVersion from "@site/src/components/DownloadVersion";
+import Image from "@site/src/components/Image";
+
+# Installation Guide
+
+:::danger[Platform Compatibility]
+Typewriter only works on **paper** servers. It will not work on Spigot or Bukkit servers.
+:::
+
+## Installing the Typewriter Plugin
+
+Ensure a smooth installation process for the Typewriter plugin on your Paper Minecraft server by following these steps:
+
+### Plugin Installation
+
+1. Start by downloading <DownloadVersion />.
+2. Place the downloaded plugin into your server's `plugins` folder.
+
+### Handling Dependencies
+
+Typewriter relies on additional plugins that need to be installed for proper functioning.
+
+3. Download and add Typewriter's dependency, [PacketEvents](https://modrinth.com/plugin/packetevents/versions?l=paper), to your `plugins` directory.
+
+4. Verify that you **don't** have the [InteractiveChat](https://www.spigotmc.org/resources/interactivechat-show-items-inventory-in-chat-custom-chat-keywords-bungee-velocity-support.75870/) or [CustomNamePlates](https://polymart.org/resource/customnameplates.2543)(Version 3.0.15 or lower) plugin installed, as it may cause conflicts with Typewriter.
+
+### Basic Extension
+
+The Typewriter offers various extensions for customization, but it's crucial to have the `BasicExtension` installed.
+
+5. Download the latest `BasicExtension` from <DownloadVersion /> and add it to the `plugins/Typewriter/extensions` folder.
+
+For a comprehensive list of available extensions, refer to the [extensions section](../../adapters).
+
+6. With all components in place, restart your Minecraft server to complete the Typewriter installation.
+
+:::danger[Out of Sync]
+When updating the plugin, it's crucial to **always** install the corresponding extensions for that update. Failure to match the versions of the extension and plugin can result in the plugin not functioning correctly!
+:::
+
+## Configuring the Web Panel
+
+:::caution[External Server Providers]
+Typewriter's web panel is **not compatible** with some external server providers, including **Minehut**, **Aternos**, and **Apex**. These providers typically don’t support multiple ports, though their support team may be able to open additional ports upon request.  
+
+If this isn't possible, you can still use all other features in Typewriter or consider setting up a local server with Typewriter installed.  
+
+For further assistance, feel free to reach out with questions on our [Discord](https://discord.gg/HtbKyuDDBw).
+:::
+
+:::info[Resource consumption]
+Please note that the web panel and web socket use precious resources on your server, and it is best to host the panel on your development server instead of on a production server.
+:::
+
+Now that we have installed the plugin, we need to configure the web panel.
+
+The web panel needs two ports to be open. These can be changed, but it does need at least two new ports to be open. The
+The default ports are `8080` and `9092`.
+
+To enable the web panel, please follow these steps:
+
+### Enabling the Web Panel
+
+1. Open the `plugins/Typewriter/config.yml` file.
+2. Change the settings to the following:
+
+```yaml title="plugins/Typewriter/config.yml"
+# Whether the web panel and web sockets are enabled.
+enabled: true
+# The hostname of the server. CHANGE THIS to your server's IP.
+hostname: "127.0.0.1"
+# The panel uses web sockets to sync changes to the server and allows you to work with multiple people at the same time.
+websocket:
+  # The port of the websocket server. Make sure this port is open.
+  port: 9092
+  # The authentication that is used. Leave unchanged if you don't know what you are doing.
+  auth: "session"
+panel:
+  # The panel can be disabled while the sockets are still open. Only disable this if you know what you are doing.
+  # If the web sockets are disabled, then the panel will always be disabled.
+  enabled: true
+  # The port of the web panel. Make sure this port is open.
+  port: 8080
+```
+
+3. Please use [portchecker](https://portchecker.co/) to check if your ports are open. If not, please open the ports yourself or contact your hosting company.
+4. Restart your server to complete the installation.
+
+## Connecting to the Web Panel
+
+To connect to the web panel, follow these steps:
+
+1. Run the command `/typewriter connect` in-game. This will provide you with a link to access the web panel.
+
+![Connect-command](../assets/installation/connect-command.gif)
+
+2. Open the link in your preferred web browser.
+
+<Image img={require("../assets/installation/connect-book.png")} width={400} alt="Connect to the web panel in the book" />
+
+Once you've successfully connected, you can use the web panel to create and configure quests, NPC dialogues, and more. The panel also allows you to view and edit your server's existing player interactions.
+
+## Troubleshooting
+
+Encountering problems? Check out the [troubleshooting](../06-troubleshooting/index.mdx) page for solutions to common issues.
+If you still have issues, feel free to ask for help in the [Discord](https://discord.gg/HtbKyuDDBw).
+
+## What's Next?
+
+Try creating your first interaction by following the [Interactions](../03-creating-stories/01-interactions/index.mdx) guide. If you have any questions, feel free to ask them in the [Discord](https://discord.gg/HtbKyuDDBw).

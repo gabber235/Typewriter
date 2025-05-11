@@ -1,0 +1,69 @@
+---
+difficulty: Normal
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import ActionButton from "@site/src/components/ActionButtons";
+
+
+# Giving items
+
+:::info[Before starting]
+It's best to first read [First Interaction](./index.mdx) before starting this tutorial.
+:::
+
+In this tutorial, you will learn how to give items in your interactions.
+
+## Adding the give item
+
+To add a give item entry, follow these steps:
+
+1. Right-click on your entry and select `+ Link with ...`.
+2. Search for `Add give item` and click on the + icon to add it to your sequence.
+
+<EntrySearch entryName='give_item' />
+
+## Configuring the give item
+
+The giving item entry has two types of giving an item: A custom item and a Serialized item.
+
+### Differences
+<Tabs groupId="Differences" queryString>
+  <TabItem value="custom-item" label="Custom Item" default>
+    The custom item allows you to customize almost all the aspects of the item.
+    :::warning[NBT]
+    A custom item can't contain NBT data.
+    :::
+    </TabItem>
+    <TabItem value="serialized-item" label="Serialized Item" default>
+    The serialized item gives you the ability to use the Item Capturer and capture the item from in-game.
+    :::warning[Not Editable]
+    You can't edit a serialized item. Only the name can be changed.
+    :::
+    </TabItem>
+</Tabs>
+
+### Using the Item Capturer(Serialized Item)
+
+The easy way is to use the item capture because it just copies the item that you are currently holding in-game to the panel. To do this, just click on <ActionButton button='capture'/> icon next to the `item` field.
+
+<Player url={require("../../assets/interactions/item-capturer.webm").default} />
+
+### Configuring it yourself(Custom Item)
+
+You can also configure the item yourself. Inside the item field select `Custom Item`. Press the + icon right next to the `Components(0)` text to add one of the following components:
+1. **Amount**: The amount of items given to the player.
+2. **Flag**: Specific options for the item.
+3. **Lore**: The lore of the item.
+4. **Material**: This is the item that the player will get.
+5. **Item Name**: This is the name of the item.
+
+## Result
+
+After you configured your item, you can test your interaction by clicking the publish button, and then it should look something like this:
+
+<Player url={require("../../assets/interactions/final-result-give-item.webm").default}/>

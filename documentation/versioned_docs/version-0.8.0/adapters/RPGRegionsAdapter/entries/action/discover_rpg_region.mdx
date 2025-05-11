@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Discover Region Action 
+
+The `Discover Region Action` is used to add a discovery into a user's account.
+
+## How could this be used?
+
+This action could be used to reward the player for completing a task/quest. For example, there could exist a quest where an NPC asks for help from the player in exchange for their knowledge of the whereabouts of some important location. This action could be used as the reward when the quest is completed.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Region' required>
+     The region to discover. Make sure that this is the region ID, not the region's display name.
+</fields.EntryField>

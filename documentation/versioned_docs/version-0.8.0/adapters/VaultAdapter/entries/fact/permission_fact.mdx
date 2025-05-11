@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Permission Fact 
+
+A [fact](/docs/creating-stories/facts) that checks if the player has a certain permission.
+
+## How could this be used?
+
+This fact could be used to check if the player has a certain permission, for example to check if the player is an admin.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Permission' required>
+     The permission to check for
+</fields.EntryField>

@@ -1,0 +1,30 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# DialogueEntry
+
+The `DialogueEntry` is used to define a type of dialogue. When a `DialogueEntry` is triggered it's associated `DialogueMessenger` will be used to display the dialogue to the player.
+Multiple `DialogueMessenger`'s can be associated with a single `DialogueEntry` and the `DialogueMessenger` that is used is determined by the `DialogueMessenger`'s `MessengerFilter`.
+
+:::info
+There can always be at most one `DialogueEntry` active for a player. 
+This is automatically handled by Typewriter.
+:::
+
+## Usage
+<CodeSnippet tag="dialogue_entry" json={require("../../../snippets.json")} />
+
+To define the messenger that will be used to display the dialogue to the player, you must create a class that implements the `DialogueMessenger` interface.
+<CodeSnippet tag="dialogue_messenger" json={require("../../../snippets.json")} />
+
+### Lifecycle
+The `state` of the messenger determines what happens to the messenger. 
+- `MessengerState.FINISHED` - The dialogue is finished and the next dialogue in the chain will be triggered.
+- `MessengerState.CANCELLED` - The dialogue is cancelled and dialogue chain is stopped, even if there are more dialogues in the chain.
+- `MessengerState.RUNNING` - The dialogue is still running and will continue to run until the state is changed.
+
+The state object can be changed inside the `tick` method or from outside. It can even be changed from the plugin itself. For example when the user runs a command the dialogue will be cancelled.
+
+There are some additional lifecycle methods that can be overridden.
+- `init` - Called when the messenger is initialized. Will be called before the first `tick` call.
+- `dispose` - Called when the messenger is disposed. By default this will unregister any listeners that were registered by the messenger.
+- `end` - Normally this does not need to be overwritten. Only if you do not want to resend the chat history for some reason.

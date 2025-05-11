@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Stop Sound Action 
+
+The `Stop Sound` action is used to stop a or all sounds for a player.
+
+## How could this be used?
+
+This action can be useful in situations where you want to stop a sound for a player.
+For example, when leaving a certain area, you might want to stop the music that was playing.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Sound' optional>
+     The sound to stop. If this field is left blank, all sounds will be stopped.
+</fields.EntryField>

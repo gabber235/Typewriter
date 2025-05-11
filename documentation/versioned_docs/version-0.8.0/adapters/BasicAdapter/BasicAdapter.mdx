@@ -1,0 +1,171 @@
+# Basic Adapter
+
+The Basic Adapter contains all the essential entries for Typewriter.
+In most cases, it should be installed with Typewriter.
+If you haven't installed Typewriter or the adapter yet,
+please follow the [Installation Guide](../../docs/02-getting-started/01-installation.mdx)
+first.
+
+## Entries
+
+### Actions
+
+| Name | Description |
+| ---- | ----------- |
+| [Add Potion Effect Action](./entries/action/add_potion_effect.mdx) | Add a potion effect to the player |
+| [Apply Velocity Action](./entries/action/apply_velocity.mdx) | Apply a velocity to the player |
+| [Cinematic](./entries/action/cinematic.mdx) | Start a new cinematic |
+| [Console Command Action](./entries/action/console_run_command.mdx) | Run command from console |
+| [Delayed Action](./entries/action/delayed_action.mdx) | Delay an action for a certain amount of time |
+| [Drop Item Action](./entries/action/drop_item.mdx) | Drop an item at location, or on player |
+| [Firework Action](./entries/action/firework.mdx) | Spawns a firework |
+| [Give Item Action](./entries/action/give_item.mdx) | Give an item to the player |
+| [Group Trigger Action](./entries/action/group_trigger_action.mdx) | Trigger the next entries for everyone in the same group as the player |
+| [Message Action](./entries/action/send_message.mdx) | Send a message to a player |
+| [Play Sound Action](./entries/action/play_sound.mdx) | Play sound at player, or location |
+| [Player Command Action](./entries/action/player_run_command.mdx) | Make player run command |
+| [Random Trigger Gate](./entries/action/random_trigger.mdx) | Randomly selects its connected triggers |
+| [Remove Item Action](./entries/action/remove_item.mdx) | Remove an item from the players inventory |
+| [Set Block Action](./entries/action/set_block.mdx) | Set a block at a location |
+| [Set Item Action](./entries/action/set_item.mdx) | Set an item in a specific slot |
+| [Show Title Action](./entries/action/show_title.mdx) | Show a title to a player |
+| [Simple Action](./entries/action/simple_action.mdx) | Simple action to modify facts |
+| [Spawn Particle Action](./entries/action/spawn_particles.mdx) | Spawn particles at location |
+| [Stop Sound Action](./entries/action/stop_sound.mdx) | Stop a or all sounds for a player |
+| [Switch Server Action](./entries/action/switch_server_action.mdx) | Switches the player to another server |
+| [Teleport Action](./entries/action/teleport.mdx) | Teleport a player |
+| [Track Quest Action](./entries/action/track_quest.mdx) | Start tracking a quest for a player |
+
+### Audiences
+
+| Name | Description |
+| ---- | ----------- |
+| [Boss Bar](./entries/audience/boss_bar.mdx) | Boss Bar |
+| [Cinematic Audience](./entries/audience/cinematic_audience.mdx) | Filters an audience based on if they are in a cinematic |
+| [Closest Group Member Path Stream](./entries/audience/closest_group_member_path_stream.mdx) | A Path Stream to the Closest Group Member |
+| [Criteria Audience](./entries/audience/criteria_audience.mdx) | An audience filter based on criteria |
+| [Cron Audience](./entries/audience/cron_audience.mdx) | Filters an audience based if the time matches a cron expression |
+| [Direct Location Path Stream](./entries/audience/direct_location_path_stream.mdx) | A Path Stream to a Direct Location |
+| [Game Time Audience](./entries/audience/game_time_audience.mdx) | Filters an audience based on the game time |
+| [Group Members Path Stream](./entries/audience/group_members_path_stream.mdx) | A Path Stream to Group Members |
+| [Holding Item Audience](./entries/audience/holding_item_audience.mdx) | Filters an audience based on if they are holding a specific item |
+| [Item In Inventory Audience](./entries/audience/item_in_inventory_audience.mdx) | Filters an audience based on if they have a specific item in their inventory |
+| [Item In Slot Audience](./entries/audience/item_in_slot_audience.mdx) | Filters an audience based on if they have a specific item in a specific slot |
+| [Location Objectives Path Stream](./entries/audience/location_objectives_path_stream.mdx) | A Path Stream to tracked Location Objectives |
+| [Looping Cinematic Audience](./entries/audience/looping_cinematic_audience.mdx) | Show the audience members a cinematic that loops |
+| [Simple Lines](./entries/audience/simple_lines.mdx) | Statically determined lines of text |
+| [Simple Sidebar](./entries/audience/sidebar.mdx) | Display a sidebar for players |
+| [Tab List Header Footer](./entries/audience/tab_list_header_footer.mdx) | Set the header and footer of the tab list |
+| [Timer Audience](./entries/audience/timer_audience.mdx) | Triggers an action every specified duration when the player is in the audience |
+| [Trigger Audience](./entries/audience/trigger_audience.mdx) | Triggers a sequence when the player enters or exits the audience |
+
+### Cinematics
+
+| Name | Description |
+| ---- | ----------- |
+| [Action Bar Dialogue Cinematic](./entries/cinematic/actionbar_dialogue_cinematic.mdx) | Show an action bar typed dialogue |
+| [Blinding Cinematic](./entries/cinematic/blinding_cinematic.mdx) | Blind the player so the screen looks black |
+| [Camera Cinematic](./entries/cinematic/camera_cinematic.mdx) | Create a cinematic camera path |
+| [Cinematic Console Command](./entries/cinematic/cinematic_console_command.mdx) | Runs command as the console at a specific frame. |
+| [Cinematic Player Command](./entries/cinematic/cinematic_player_command.mdx) | Runs command as the player at a specific frame. |
+| [Particle Cinematic](./entries/cinematic/particle_cinematic.mdx) | Spawn particles for a cinematic |
+| [Potion Effect Cinematic](./entries/cinematic/potion_effect_cinematic.mdx) | Apply different potion effects to the player during a cinematic |
+| [Pumpkin Hat Cinematic](./entries/cinematic/pumpkin_hat_cinematic.mdx) | Show a pumpkin hat during a cinematic |
+| [Random Action Bar Dialogue Cinematic](./entries/cinematic/random_actionbar_dialogue_cinematic.mdx) | Show a random action bar typed dialogue |
+| [Random Spoken Dialogue Cinematic](./entries/cinematic/random_spoken_dialogue_cinematic.mdx) | Play a random spoken dialogue cinematic |
+| [Random Subtitle Dialogue Cinematic](./entries/cinematic/random_subtitle_dialogue_cinematic.mdx) | Show a random action bar message |
+| [Screen Shake Cinematic](./entries/cinematic/screen_shake_cinematic.mdx) | Shake the screen |
+| [Set Fake Block Cinematic](./entries/cinematic/set_fake_block_cinematic.mdx) | Set a fake block |
+| [Sound Cinematic](./entries/cinematic/sound_cinematic.mdx) | Play a sound during a cinematic |
+| [Spoken Dialogue Cinematic](./entries/cinematic/spoken_dialogue_cinematic.mdx) | Play a spoken dialogue cinematic |
+| [Subtitle Dialogue Cinematic](./entries/cinematic/subtitle_dialogue_cinematic.mdx) | Show an subtitle message |
+| [Title Cinematic](./entries/cinematic/title_cinematic.mdx) | Show a title during a cinematic |
+| [Trigger Sequence Cinematic](./entries/cinematic/trigger_sequence_cinematic.mdx) | A sequence of triggers to run |
+
+### Dialogues
+
+| Name | Description |
+| ---- | ----------- |
+| [Message Dialogue](./entries/dialogue/message.mdx) | Display a single message to the player |
+| [Option Dialogue](./entries/dialogue/option.mdx) | Display a list of options to the player |
+| [Random Message Dialogue](./entries/dialogue/random_message.mdx) | Display a random message from a list to a player |
+| [Random Spoken Dialogue](./entries/dialogue/random_spoken.mdx) | Display a random selected animated message to the player |
+| [Spoken Dialogue](./entries/dialogue/spoken.mdx) | Display a animated message to the player |
+
+### Events
+
+| Name | Description |
+| ---- | ----------- |
+| [Block Break Event](./entries/event/on_block_break.mdx) | When the player breaks a block |
+| [Block Place Event](./entries/event/on_place_block.mdx) | When the player places a block |
+| [Chat Contains Text Event](./entries/event/on_message_contains_text.mdx) | When the player sends a chat message containing certain text |
+| [Craft Item Event](./entries/event/craft_item_event.mdx) | Called when a player crafts an item |
+| [Detect Command Ran Event](./entries/event/on_detect_command_ran.mdx) | When a player runs an existing command |
+| [Fire Trigger Event](./entries/event/fire_trigger_event.mdx) | Trigger the event when a player runs `/tw fire <entry id/name> [player]` |
+| [Fish Event](./entries/event/on_fish.mdx) | When the a player caught a fish or an item |
+| [Interact Block Event](./entries/event/on_interact_with_block.mdx) | When the player interacts with a block |
+| [Pickup Item Event](./entries/event/on_item_pickup.mdx) | When the player picks up an item |
+| [Player Death Event](./entries/event/on_player_death.mdx) | When a player dies |
+| [Player Hit Entity Event](./entries/event/on_player_hit_entity.mdx) | When a player hits an entity |
+| [Player Join Event](./entries/event/on_player_join.mdx) | When the player joins the server |
+| [Player Kill Entity Event](./entries/event/on_player_kill_entity.mdx) | When a player kills an entity |
+| [Player Kill Player Event](./entries/event/on_player_kill_player.mdx) | When a player kills a player |
+| [Player Near Location Event](./entries/event/on_player_near_location.mdx) | When the player is near a certain location |
+| [Player Quit Event](./entries/event/on_player_quit.mdx) | When the player quits the server |
+| [Run Command Event](./entries/event/on_run_command.mdx) | When a player runs a custom command |
+
+### Facts
+
+| Name | Description |
+| ---- | ----------- |
+| [Countdown Fact](./entries/fact/countdown_fact.mdx) | A fact that counts down from the set value |
+| [Cron Fact](./entries/fact/cron_fact.mdx) | Saved until a specified date, like (0 0 * * 1 |
+| [In Audience Fact](./entries/fact/in_audience_fact.mdx) | The fact that the player is in the audience |
+| [In Cinematic Fact](./entries/fact/in_cinematic_fact.mdx) | If the player is in a cinematic |
+| [Inventory Item Count Fact](./entries/fact/inventory_item_count_fact.mdx) | The amount of a specific item in the player's inventory |
+| [Item Holding Fact](./entries/fact/item_holding_fact.mdx) | The amount of a specific item the player is currently holding |
+| [Item In Slot Fact](./entries/fact/item_in_slot_fact.mdx) | Check if a specific item is in a specific slot for the player |
+| [Number Placeholder Fact](./entries/fact/number_placeholder.mdx) | Computed Fact for a placeholder number |
+| [Permanent Fact](./entries/fact/permanent_fact.mdx) | Saved permanently, it never gets removed |
+| [Quest Status Fact](./entries/fact/quest_status_fact.mdx) | The status of a specific quest |
+| [Session Fact](./entries/fact/session_fact.mdx) | Saved until a player logouts of the server |
+| [Timed Fact](./entries/fact/timed_fact.mdx) | Saved for a specified duration, like 20 minutes |
+| [Value Placeholder Fact](./entries/fact/value_placeholder.mdx) | Fact for a placeholder value |
+
+### Groups
+
+| Name | Description |
+| ---- | ----------- |
+| [Global Group](./entries/group/global_group.mdx) | One group with all the online players |
+| [Player Group](./entries/group/player_group.mdx) | Group for every individual player |
+| [World Group](./entries/group/world_group.mdx) | Group for the whole world |
+
+### Quests
+
+| Name | Description |
+| ---- | ----------- |
+| [Completable Objective](./entries/quest/completable_objective.mdx) | An objective that can show a completed stage |
+| [Location Objective](./entries/quest/location_objective.mdx) | A location objective definition |
+| [Objective Lines](./entries/quest/objective_lines.mdx) | Display all the current objectives |
+| [Quest Complete Event](./entries/quest/quest_complete_event.mdx) | Triggered when a quest is completed for a player |
+| [Quest Start Event](./entries/quest/quest_start_event.mdx) | Triggered when a quest is started for a player |
+| [Quest Status Update Event](./entries/quest/quest_status_update_event.mdx) | Triggered when a quest status is updated for a player |
+| [Simple Objective](./entries/quest/objective.mdx) | An objective definition |
+| [Simple Quest](./entries/quest/quest.mdx) | A quest definition |
+| [Tracked Objective Audience](./entries/quest/tracked_objective_audience.mdx) | Filters an audience based on if they have a tracked objective |
+| [Tracked Quest Audience](./entries/quest/tracked_quest_audience.mdx) | Filters an audience based on if they have a quest tracked |
+
+### Sounds
+
+| Name | Description |
+| ---- | ----------- |
+| [Custom Sound](./entries/sound/custom_sound.mdx) | A custom sound |
+
+### Statics
+
+| Name | Description |
+| ---- | ----------- |
+| [Base Road Network](./entries/static/base_road_network.mdx) | A definition of the words road network |
+| [Self Speaker](./entries/static/self_speaker.mdx) | The player themself |
+| [Simple Speaker](./entries/static/simple_speaker.mdx) | The most basic speaker |
+

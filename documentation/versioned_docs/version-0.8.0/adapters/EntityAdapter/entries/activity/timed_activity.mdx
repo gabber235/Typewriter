@@ -1,0 +1,29 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Timed Activity 
+
+The `TimedActivityEntry` is an activity that allows child activities for a limited amount of time.
+
+When the duration is up, the activity will deactivate.
+Then the activity will be on cooldown for a set amount of time before it can be activated again.
+
+## How could this be used?
+This could be used to make an entity do something for a limited amount of time.
+
+
+## Fields
+
+<fields.EntryField name='Duration' required duration>
+     The duration child activities will be active for.
+</fields.EntryField>
+<fields.EntryField name='Cooldown' required duration>
+     The cooldown time before the activity can be activated again.
+</fields.EntryField>
+<fields.EntryField name='Active Activity' required>
+     The activity that will be used when the duration is active.
+</fields.EntryField>
+<fields.EntryField name='Cooldown Activity' required>
+     The activity that will be used when it is on cooldown.
+</fields.EntryField>

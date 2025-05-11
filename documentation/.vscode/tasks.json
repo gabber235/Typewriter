@@ -15,14 +15,6 @@
             "group": "build",
             "problemMatcher": [],
             "dependsOn": "npm update"
-        },
-        {
-            "label": "npm run build",
-            "type": "shell",
-            "command": "npm run build",
-            "group": "build",
-            "problemMatcher": [],
-            "dependsOn": "npm ci"
         }
     ]
 }

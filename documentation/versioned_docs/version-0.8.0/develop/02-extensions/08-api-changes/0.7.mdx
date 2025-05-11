@@ -1,0 +1,41 @@
+---
+title: 0.7.X API Changes
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# All API changes to 0.7.X
+
+The v0.7.X release contains the new Dynamic variable. 
+To learn how to use them, see [Dynamic Variables](../04-entries/static/variable.mdx).
+
+## PlaceholderEntry Changes 
+
+<Tabs>
+    <TabItem value="old" label="Old">
+        ```kotlin showLineNumbers
+        override fun display(player: Player?): String? {
+            return "Hello, ${player?.name ?: "World"}!"
+        }
+        ```
+    </TabItem>
+    <TabItem value="new" label="New" default>
+        ```kotlin showLineNumbers
+        override fun parser(): PlaceholderParser = placeholderParser {
+            supply { player ->
+                "Hello, ${player?.name ?: "World"}!"
+            }
+        }
+        ```
+    </TabItem>
+</Tabs>
+
+The placeholder now returns a parser instead of directly parsing. 
+This allows for more complex placeholders to be created. 
+With sub placeholders, for example.
+
+For example the `TimedFact` returns the fact value by default for fact `%typewriter_<entry id>%`.
+But if you want the time when the fact will expire you can use `%typewriter_<entry id>:time:expires:relative%`
+Where the `:time:expires:relative` is a sub placeholder.
+

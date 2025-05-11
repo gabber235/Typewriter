@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Balance Fact 
+
+A [fact](/docs/creating-stories/facts) that represents a player's balance.
+
+<fields.ReadonlyFactInfo />
+
+## How could this be used?
+
+This fact could be used to track a player's balance in a game. For example, if the player is rich, allow them to access to a VIP area. If the player is poor, they can't afford to enter.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>

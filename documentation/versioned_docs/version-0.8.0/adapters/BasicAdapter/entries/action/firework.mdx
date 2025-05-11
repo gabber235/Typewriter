@@ -1,0 +1,27 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Firework Action 
+
+The `Firework Action Entry` is an action that spawns a firework.
+
+## How could this be used?
+This could be used to create a firework that displays a specific effect.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Location' required>
+     The location to spawn the firework.
+</fields.EntryField>
+<fields.EntryField name='Effects' required multiple>
+     The effects to display on the firework.
+</fields.EntryField>
+<fields.EntryField name='Power' required>
+     The power of the firework.
+</fields.EntryField>

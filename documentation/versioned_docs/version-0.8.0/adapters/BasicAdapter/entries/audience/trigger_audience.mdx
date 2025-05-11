@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Trigger Audience 
+
+The `Trigger Audience` entry is an audience filter that triggers a sequence when the player enters or exits the audience.
+
+## How could this be used?
+This can be used to bridge the gap between audiences and sequence pages.
+
+
+## Fields
+
+<fields.EntryField name='On Enter' required>
+     The sequence to trigger when the player enters the audience.
+</fields.EntryField>
+<fields.EntryField name='On Exit' required>
+     The sequence to trigger when the player exits the audience.
+</fields.EntryField>

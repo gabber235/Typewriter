@@ -1,0 +1,67 @@
+{
+  "id": "3PX6SGKqUA4lnpM",
+  "name": "tutorial",
+  "type": "manifest",
+  "entries": [
+    {
+      "id": "vBFNO6V0jDXe56q",
+      "name": "oliver_instance",
+      "definition": "YhwjL5ccreKuc5O",
+      "spawnLocation": {
+        "world": "world",
+        "x": 40.7,
+        "y": 63.0,
+        "z": -76.3,
+        "yaw": 107.81,
+        "pitch": -4.65
+      },
+      "data": [],
+      "activity": null,
+      "type": "npc_instance",
+      "_genericBlueprint": null
+    },
+    {
+      "id": "YhwjL5ccreKuc5O",
+      "name": "oliver_definition",
+      "displayName": "Oliver",
+      "sound": {
+        "soundId": { "type": "default", "value": "" },
+        "soundSource": {
+          "type": "self",
+          "entryId": "",
+          "location": {
+            "world": "",
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "yaw": 0,
+            "pitch": 0
+          }
+        },
+        "track": "MASTER",
+        "volume": 1,
+        "pitch": 1
+      },
+      "skin": {
+        "texture": "eyJ0aW1lc3RhbXAiOjE1NjY1OTUzODM4ODEsInByb2ZpbGVJZCI6IjVkMjRiYTBiMjg4YzQyOTM4YmExMGVjOTkwNjRkMjU5IiwicHJvZmlsZU5hbWUiOiIxbnYzbnQxdjN0NGwzbnQiLCJzaWduYXR1cmVSZXF1aXJlZCI6dHJ1ZSwidGV4dHVyZXMiOnsiU0tJTiI6eyJ1cmwiOiJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzkxN2I5ZGZmZjJhNDgzOTg2MTcyYjdhNDk4OWFhNjhiOTdhZjExYTBjMjE4N2FhMzJkYzgyNzMyZWQxN2RjMzMifX19",
+        "signature": "JFcAwjucvNIUb/YVz6uiNYsbQQZWC9wWdYDx7OQNO9d0+vtMJMuC9n8/jytITEQOwIE6HECJDz4+juQym/wL0vvjrcq/gxTOhEk0sVFnLZ/zssCTbmIaNDTSriTW3lbLIQkLiwU18PS9LDxlt/6IPQWRyhDerXwiafO2Co0Qmtum9yrtpVMOOuau3z++5x7SiBLX1pzVcYRbbTk3Ybl74QkgsaxOSYtu4urgYECv9Q9X2K787fxmMBCjelpiOhi2AecRS43z3kGFuqGc+IOHwXptnzV8fqHWLq+jgcO/Wiy9i25oO6eq2oPAP6p64Y0idxG0SO0BS5V6tFchfwF9WWBMGU+XX2RTj5vnwrUvDU0UVI+yxzrMOAcX1R4hk4iB7BLalMkO+tvT4HW1C0/s6GclYzH+MNHk4s/KzajOLHPshtydJndoh79LMknp5TVvIw9MpUd2q8rOJIVvN5T2zTkayDaaK1nWBjdSxvbF/tB/dDDYnc27eUChfOtS4FDFZ5pLxm/xf9tDhrICdRDLHe5DeiH5ysd+q9A4ifEwws8HAqoLOcz9jvIGrNsbg2at6Zk/+tL0i1xMsfqsySJoRJv3IaIdjUoBYIgavKoseK4rDua5G0jSltcgngaiw7kfZZSG/2XEF5CO2200mrtqrt0JKSYQx57eSqXAAAHVz0s="
+      },
+      "data": [],
+      "type": "npc_definition",
+      "_genericBlueprint": null
+    },
+    {
+      "id": "qQtguc4BeveVCp9",
+      "name": "is_showed",
+      "children": ["vBFNO6V0jDXe56q"],
+      "world": "World",
+      "activeTimes": [{ "start": 0, "end": 999 }],
+      "inverted": false,
+      "type": "game_time_audience",
+      "_genericBlueprint": null
+    }
+  ],
+  "chapter": "tutorial",
+  "priority": 0,
+  "version": "0.7.0-beta-138"
+}

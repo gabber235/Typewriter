@@ -1,0 +1,47 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# Interaction Bound
+
+The InteractionBounds allows you to constrain the lifetime of an interactions to specific conditions, such as player location or actions. 
+For example, a player staying within range of an NPC during a conversation or while they are sitting on a bench.
+
+## States and Behavior
+
+InteractionBounds operate in three states:
+
+1. **INTERRUPTING**: When the bound condition is broken (e.g., player moves too far), the interaction ends
+2. **BLOCKING**: Prevents the bound from being broken (e.g., cancels movement beyond the allowed range)
+3. **IGNORING**: Bound conditions are not enforced (e.g., player can move freely)
+
+:::warning
+The bound itself doesn't determine the state - it only responds to the current state provided by the system.
+:::
+
+## Implementation
+
+Here's how to create a interaction bound:
+
+<CodeSnippet tag="interaction_bound" json={require("../../snippets.json")} />
+
+## Implementation Tips
+
+1. Always use `handleEvent()` for consistent state handling
+2. Check player UUID to ensure you're handling the right player
+3. Clean up resources in `teardown()`
+4. Consider performance for frequently triggered events
+
+## Example Flow
+
+Here's how a typical radius bound might work:
+
+```
+1. Player starts interaction
+2. Bound initializes with start location
+3. Player moves:
+   - Within range: No action
+   - Beyond range:
+     - If BLOCKING: Cancel movement
+     - If INTERRUPTING: End interaction
+     - If IGNORING: Allow movement
+4. Interaction ends, bound tears down
+```

@@ -1,0 +1,25 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Stacked Entity Definition
+
+The `StackedEntityDefinition` class is an entry that represents a stacking of entities.
+
+:::caution
+All properties will be shared between all entities.
+Even if it is defined on only one entity.
+:::
+
+Only the bottom entity will have the location of the `StackedEntity` instance.
+
+## How could this be used?
+This could be used to stack entities on top of each other.
+Like having a hologram above a mob.
+
+
+## Fields
+
+<fields.EntryField name='Definitions' required multiple>
+     The entities that will be stacked on top of each other. First entity will be the bottom entity.
+</fields.EntryField>

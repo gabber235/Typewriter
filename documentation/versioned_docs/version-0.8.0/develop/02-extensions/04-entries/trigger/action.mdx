@@ -1,0 +1,20 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# ActionEntry
+
+The `ActionEntry` defines an action to take. When it is triggered, it will run it's `execute` method.
+After which it will trigger all the next entries in the chain.
+
+:::danger[Immutable Entry]
+It is important to stress that the entry must be immutable.
+**It cannot have any mutable state.**
+:::
+
+## Usage
+<CodeSnippet tag="action_entry" json={require("../../../snippets.json")} />
+
+Typewriter will automatically trigger the next entries in the chain after the `execute` method is called, and apply all the modifiers.
+
+Sometimes you want to have a little more control over when the next triggers are triggered, or what triggers are triggered.
+
+<CodeSnippet tag="action_entry_manual" json={require("../../../snippets.json")} />

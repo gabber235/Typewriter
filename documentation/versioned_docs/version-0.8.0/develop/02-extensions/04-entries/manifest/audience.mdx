@@ -1,0 +1,86 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# AudienceEntry
+
+`AudienceEntry` is a crucial component in Typewriter that allows extension developers to display content to a group of players.
+Typewriter manages the players in the audience, providing hooks that developers can use to show information or interact with the players in the audience.
+
+The `AudienceEntry` is the most used `ManifestEntry` in Typewriter.
+
+
+## Key Concepts
+
+1. **Stateful Displays**: In Typewriter, entries are not allowed to have any state. `AudienceEntry` bridges this gap by providing a way to have stateful displays.
+
+2. **Audience Management**: Typewriter takes care of managing the players in the audience. Developers can focus on defining how to display content and interact with the audience.
+
+3. **Display Lifecycle**: The `AudienceDisplay` class manages the lifecycle of the audience, including initialization, player addition/removal, and disposal.
+
+## Implementation
+
+### Basic AudienceEntry
+
+Here's an example of a basic `AudienceEntry` implementation:
+
+<CodeSnippet tag="audience_entry" json={require("../../../snippets.json")} />
+
+In this example, we define an `ExampleAudienceEntry` class that implements the `AudienceEntry` interface. 
+The `display()` function returns an `AudienceDisplay` object, which defines how the content is presented to the audience.
+
+### AudienceDisplay
+
+The `AudienceDisplay` class is responsible for displaying content to the audience.
+It has lifecycle hooks to accomplish this.
+Here's an example implementation:
+
+<CodeSnippet tag="audience_display" json={require("../../../snippets.json")} />
+
+Key methods in `AudienceDisplay`:
+
+1. `initialize()`: Called when the first player is added to the audience. Use this method for any setup tasks.
+2. `onPlayerAdd(player: Player)`: Invoked when a player joins the audience. Use this to set up player-specific content or effects.
+3. `onPlayerRemove(player: Player)`: Called when a player leaves the audience. Use this for cleanup of player-specific resources.
+4. `dispose()`: Invoked when the audience is being disposed of. Use this for general cleanup tasks. Note that `onPlayerRemove` will be called for all players, so player-specific cleanup is not needed here.
+
+### Tickable Audience Display
+
+For audiences that need to update regularly, you can implement the `TickableDisplay` interface:
+
+<CodeSnippet tag="tickable_audience_display" json={require("../../../snippets.json")} />
+
+The `tick()` method will be called every Minecraft tick (20 times per second, or every 50ms) on an asynchronous thread. 
+This allows you to update the display or perform regular actions for all players in the audience.
+
+### Event Handling
+
+Every `AudienceDisplay` is also a Bukkit listener. 
+Event listeners will only be active when at least one player is in the audience. 
+Here's an example of how to handle events:
+
+<CodeSnippet tag="audience_display_with_events" json={require("../../../snippets.json")} />
+
+:::caution[Events for All Players]
+Events will trigger for _**all**_ players, not just those in the audience. 
+
+**Always check if the player is in the audience before performing audience-specific actions.**
+:::
+
+### Check if a player is in the audience of an entry
+
+Suppose you have a `Ref<out AudienceEntry>`.
+To check if a player is in the audience of an entry,
+you can use the `player.inAudience` method that returns `true` if the player is in the audience of the entry.
+This is incredibly convenient, especially because it automatically handles all parents of the entry for you as well.
+Here's an example:
+
+<CodeSnippet tag="check_player_in_audience" json={require("../../../snippets.json")} />
+
+## Best Practices
+
+1. **State Management**: While state is allowed within the `AudienceDisplay`, ensure that all used state is contained within the display and does not leak outside.
+
+2. **Resource Management**: Ensure proper resource management to avoid memory leaks, especially when players leave the audience.
+
+3. **Event Handling**: When handling Bukkit events, always check if the player is in the audience before performing audience-specific actions.
+
+4. **Asynchronous Operations**: Be mindful that the `tick()` method runs on an asynchronous thread. Ensure thread safety when interacting with Bukkit API or shared resources.

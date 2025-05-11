@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# In Region Fact
+
+A [fact](/docs/creating-stories/facts) that checks if the player is in a specific region. The value will be `0` if the player is not in the region, and `1` if the player is in the region.
+
+<fields.ReadonlyFactInfo />
+
+## How could this be used?
+
+This fact could be used to make a quest only available in a specific region, or could even be used as a condition for player abilities that only work in specific areas!
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Region' required>
+     The name of the region which the player must be in. Make sure that this is the region ID, not the region's display name.
+</fields.EntryField>

@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Craft Item Event 
+
+The `Craft Item Event` is triggered when a player crafts an item.
+This can be from a crafting table, a furnace, smiting table, campfire, or any other crafting method.
+
+## How could this be used?
+This could be used to complete a quest where the player has to craft a certain item, or to give the player a reward when they craft a certain item.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Crafted Item' required>
+     The item that was crafted.
+</fields.EntryField>

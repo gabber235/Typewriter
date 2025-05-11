@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Player Enter Combat Event 
+
+The `Player Enter Combat Event` is triggered when a player enters combat with another player.
+
+## How could this be used?
+
+This could be used to play a sound effect when a player enters combat with another player.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Aggressor Triggers' required multiple>
+     Triggers to fire for the aggressor who made the attack.
+</fields.EntryField>

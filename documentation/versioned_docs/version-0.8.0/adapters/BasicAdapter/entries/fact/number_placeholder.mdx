@@ -1,0 +1,32 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Number Placeholder Fact 
+
+A [fact](/docs/creating-stories/facts) that is computed from a placeholder.
+This placeholder is evaluated when the fact is read and must return a number or boolean.
+
+<fields.ReadonlyFactInfo />
+
+## How could this be used?
+
+Make sure the player has a high enough level.
+Then allow them to start a quest or enter a dungeon.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Placeholder' required placeholders>
+     The placeholder to parse.
+For example %player_level%.
+
+<Admonition type="caution">
+Only placeholders that return a number or boolean are supported!
+If you want to use a placeholder that returns a string,
+use the <Link to='value_placeholder'>ValuePlaceholderFactEntry</Link> instead.
+</Admonition>
+</fields.EntryField>

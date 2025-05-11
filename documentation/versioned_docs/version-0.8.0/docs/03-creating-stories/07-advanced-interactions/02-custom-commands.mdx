@@ -1,0 +1,53 @@
+---
+difficulty: Normal
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntryDisplay from "@site/src/components/EntryDisplay";
+import EntrySearch from "@site/src/components/EntrySearch";
+import EntryNodeInspector from "@site/src/components/EntryInspector";
+
+# Custom Commands
+:::info[Before starting]
+This guide assumes that you have already installed the [Basic Extension](../../02-getting-started/01-installation.mdx#basic-extension).
+:::
+
+In this tutorial, you will learn about custom commands and how to create one. We will create a command where you can define a pseudo and an age to display a message to the player.
+
+## Creating a Custom Command
+In this tutorial, we will create a command where you can define a pseudo and an age to display a message to the player. We will use a Custom Command Entry to start defining our command.
+To add a custom command entry, go to the top right corner of the panel and click on the + icon. Search for `Add Custom Command`, add it to your manifest and name it.
+<EntrySearch entryName="custom_command" />
+
+## Creating the arguments
+Now, we will need two types of arguments; a `Word Argument` to get a word, in this case, the pseudo, and a `Number Argument` to get a number, in this case, the age.
+To add an argument, click on the `Custom Command` entry, then on `Arguments`, and select `Add Word Argument`. Next, click on the last argument and add a child: `Add Number Argument`.
+<Image img={require("../../assets/interactions/custom-command-arguments.png")} alt="Custom Command Arguments" width={400}/>
+<Image img={require("../../assets/interactions/arguments-children.png")} alt="Arguments Children" width={400}/>
+
+:::tip[Number Argument]
+Rename your arguments to make it easier for players to understand it when they will execute the command.
+:::
+
+## Do something with your command
+Then, if you want your command to perform an action, add a Trigger to the last argument. So, in the `Number Argument`, click on `Trigger` and choose your action entry. In this case, we will use a `Send Message` entry.
+To retrieve what the player has entered in the arguments, we will use a `Interaction Context Text Variable` and add keys to it. Finally, we need to construct a message using the values retrieved from the arguments.
+<Image img={require("../../assets/interactions/context-text-variable.png")} alt="Interaction Context Text Variable" width={400}/>
+
+
+## Result
+
+### Sequence result
+Now your pages should look something like this:
+<EntryDisplay pages={[
+    require("./assets/commands/sequence.json"),
+    require("./assets/commands/manifest.json"),
+]} />
+:::warning[Variables]
+Our documentation renderer doesn't currently support displaying dynamic variables, so you'll only see a simplified static message instead of the actual variable.
+:::
+
+### In Game result
+In game, the command should look like this:
+<Player url={require("../../assets/custom-commands/result.webm").default} />

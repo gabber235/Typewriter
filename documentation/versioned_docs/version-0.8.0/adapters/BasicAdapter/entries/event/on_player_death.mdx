@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Player Death Event 
+
+The `Player Death Event` is fired when any player dies. This event allows you to select the cause of death if you wish. If you want to detect when another player kills a player, use the [`Player Kill Player Event`](on_player_kill_player).
+
+## How could this be used?
+
+You can create custom death messages for certain types of deaths, such as falling, drowning, or being killed by another player.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Death Cause' optional>
+     If specified, the death cause must match the cause of death in order for the event to trigger.
+</fields.EntryField>

@@ -1,0 +1,30 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Random Spoken Dialogue 
+
+The `Random Spoken Dialogue` action displays a randomly selected animated message to the player.
+
+## How could this be used?
+
+Let's say you have an NPC in your game who tells jokes to the player.
+You could use the Random Spoken Dialogue action
+to randomly select a joke from a list of possible jokes and have the NPC "tell"
+it to the player using an animated message.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Speaker' required>
+</fields.EntryField>
+<fields.EntryField name='Messages' required multiple placeholders colored>
+     A list of messages to display to the player. Every time the dialogue is triggered, one of these messages will be picked at random.
+</fields.EntryField>
+<fields.EntryField name='Duration' required duration>
+     The duration it takes to type out the message.
+</fields.EntryField>

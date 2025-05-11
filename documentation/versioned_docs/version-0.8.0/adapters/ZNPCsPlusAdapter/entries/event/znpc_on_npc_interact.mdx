@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Npc Interact Event 
+import DeprecationWarning from '@site/src/components/DeprecationWarning';
+
+<DeprecationWarning message='Use the EntityAdapter instead' />
+
+
+The `NPC Interact Event` is fired when a player interacts with an NPC.
+
+## How could this be used?
+
+This can be used to create a variety of interactions that can occur between an NPC and a player. For example, you could create an NPC that gives the player an item when they interact with it.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Identifier' required>
+     The NPC that needs to be interacted with.
+</fields.EntryField>

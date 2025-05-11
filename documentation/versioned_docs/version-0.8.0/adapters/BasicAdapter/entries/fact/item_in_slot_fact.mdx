@@ -1,0 +1,25 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Item In Slot Fact
+
+The `Item In Slot Fact` is a fact that returns the amount of a specific item the player has in a specific slot.
+
+<fields.ReadonlyFactInfo />
+
+## How could this be used?
+Check if the player is wearing a specific armor piece.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Item' required>
+     The item to check for.
+</fields.EntryField>
+<fields.EntryField name='Slot' required>
+     The slot to check.
+</fields.EntryField>

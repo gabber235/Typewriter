@@ -1,0 +1,25 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Island Fact 
+
+A [fact](/docs/creating-stories/facts) that can retrieve various information about an island.
+
+<fields.ReadonlyFactInfo />
+
+Be aware that this fact will return -1 if the player is not in an island.
+
+## How could this be used?
+
+This fact could be used to get the island's level and only allow some actions if the island is a certain level.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Fact' required>
+     The specific piece of information to retrieve about the island.
+</fields.EntryField>

@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Apply Velocity Action 
+
+The `ApplyVelocityActionEntry` is an action that applies a velocity to the player.
+
+## How could this be used?
+
+This action can be useful in a variety of situations. You can use it to simulate wind, explosions, or any other force that would move the player.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Force' required>
+     The force to apply to the player.
+</fields.EntryField>

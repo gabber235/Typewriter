@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Mob Count Fact
+
+A [fact](/docs/creating-stories/facts) that represents how many specific MythicMobs mob are in the world.
+
+<fields.ReadonlyFactInfo />
+
+## How could this be used?
+
+This fact could be used to change dialogue sent by an NPC or mob when a boss exists. It could also be used in conjunction with the Spawn Mob action to spawn specific mobs if one or more mobs exist/doesn't exist.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Mob Name' required>
+     The id of the mob to count
+</fields.EntryField>

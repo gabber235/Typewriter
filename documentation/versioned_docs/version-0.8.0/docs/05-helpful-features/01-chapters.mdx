@@ -1,0 +1,25 @@
+---
+difficulty: Easy
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+
+# Chapters
+
+Chapters add a touch of convenience to your typewriter workflow, resembling the familiar structure of chapters in a book. Similar to files forming folders on a PC, Typewriter's chapter system organizes pages within chapters.
+
+### Setting Chapters
+Easily create a chapter by right-clicking on a page and selecting `Change Chapter`. Enter the desired chapter name and click `Change`.
+<Player url={require("../assets/chapters/chapters.webm").default} />
+
+### Setting Sub-Chapters
+Creating subchapters is super simple. Simply use the main chapter name and add a `.` for example, `hello.test` will generate a sub-chapter. As shown below:
+
+<Image img={require("../assets/chapters/sub-chapters.png")} alt="Subchapters" width={400} />
+
+
+Feel free to extend the story with as many subchapters as needed. For instance, `hello.test.morning` would work to. Typewriter automatically collects pages with the same chapter name and groups them together.
+
+
+

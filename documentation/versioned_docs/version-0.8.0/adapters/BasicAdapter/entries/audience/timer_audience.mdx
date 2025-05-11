@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Timer Audience 
+
+The `Timer Audience` entry is an audience filter that triggers an action every specified duration when the player is in the audience.
+
+:::caution
+Very short durations can cause performance issues, and may be inaccurate.
+:::
+
+## How could this be used?
+This can be used to trigger a sequence every few seconds.
+
+
+## Fields
+
+<fields.EntryField name='Duration' required duration>
+</fields.EntryField>
+<fields.EntryField name='On Timer' required>
+</fields.EntryField>

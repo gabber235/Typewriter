@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Timed Fact 
+
+This fact is stored for a certain amount of time.
+After that time, it is reset.
+
+## How could this be used?
+
+This fact could serve as a timer, and when the fact runs out, it could be used to trigger an action.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Duration' required duration>
+     The duration after which the fact expires.
+</fields.EntryField>

@@ -1,0 +1,35 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Game Time Audience 
+
+The `GameTimeAudienceEntry` filters an audience based on the game time.
+
+The total time of a Minecraft day is `24000` ticks.
+Some examples of times are:
+------------------------------
+| Time of day | Ticks        |
+|-------------|--------------|
+| Dawn        | 0            |
+| Noon        | 6000         |
+| Dusk        | 12000        |
+| Midnight    | 18000        |
+------------------------------
+
+## How could this be used?
+This can be used to only allow passage to a certain area at night.
+For example, a vampire castle that only opens its doors at night.
+Or a market that only opens during the day.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='World' required>
+</fields.EntryField>
+<fields.EntryField name='Active Times' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Inverted' required>
+</fields.EntryField>

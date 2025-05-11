@@ -1,0 +1,49 @@
+---
+difficulty: Normal
+---
+
+import Image from "@site/src/components/Image";
+
+# Troubleshooting Guide
+
+Welcome to the Typewriter Plugin Troubleshooting Guide. This document aims to assist users in resolving common issues encountered while using the Typewriter plugin for Paper Spigot. Before reaching out for assistance on Discord or GitHub, we encourage you to review this comprehensive list of frequently encountered issues and their solutions. This proactive approach can help you solve your problem more quickly and efficiently.
+
+## Panel Not Loading
+
+If you encounter issues with the panel not loading, please follow these steps:
+
+1. Confirm that your server is running and accessible.
+2. Check if there are any network connectivity issues.
+3. Ensure your firewall settings are not blocking access.
+
+For more detailed troubleshooting steps, refer to: [Panel not loading](troubleshooting/ports).
+
+## No Entries Showing
+
+<Image img={require("../assets/troubleshooting/no-entries.png")} alt="No Entries" />
+
+This issue typically occurs when no extensions are installed. To resolve this, ensure that extensions are correctly installed by following the steps outlined in the **[Basic Extension Installation Tutorial](../02-getting-started/01-installation.mdx#basic-extension)**.
+
+## Error: "plugin.yml not found" When Installing an Extension
+
+If you encounter an error message similar to the following when installing an extension:
+
+```log
+[08:49:35 ERROR]: [DirectoryProviderSource] Error loading plugin: Directory 'plugins/BasicExtension.jar' failed to load!
+java.lang.RuntimeException: Directory 'plugins/BasicExtension.jar' failed to load!
+        ...
+Caused by: java.lang.IllegalArgumentException: Directory 'plugins/BasicExtension.jar' does not contain a paper-plugin.yml or plugin.yml! Could not determine plugin type, cannot load a plugin from it!
+```
+
+This typically indicates that the extension is not placed in the correct folder. For instructions on proper placement, see [Correct Extension Placement](./extensions.mdx#correct-extension-placement).
+
+## Placeholders Not Parsing Correctly
+
+If placeholders from PlaceholderAPI, such as `%player_name%`, aren't being parsed correctly in Typewriter, follow these troubleshooting steps:
+
+1. Identify the required PlaceholderAPI placeholder extension. A list of extensions can be found [here](https://github.com/PlaceholderAPI/PlaceholderAPI/wiki/Placeholders).
+2. Install the necessary extension using `/papi ecloud download [extension_name]`. For `%player_name%`, use `/papi ecloud download player`.
+3. Check if the placeholder is parsed correctly in normal usage by running `/papi parse me <placeholder>`. For `%player_name%`, use `/papi parse me %player_name%`.
+4. If the placeholder works in normal usage but still not in Typewriter, try restarting your server.
+
+If these steps do not resolve the issue, please contact us for further support by creating a ticket on our [Discord](https://discord.gg/HtbKyuDDBw).

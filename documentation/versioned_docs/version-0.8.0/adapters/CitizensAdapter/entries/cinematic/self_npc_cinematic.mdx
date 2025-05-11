@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Self Npc Cinematic 
+import DeprecationWarning from '@site/src/components/DeprecationWarning';
+
+<DeprecationWarning message='Use the EntityAdapter instead' />
+
+
+The `Self NPC Cinematic` entry that plays a recorded animation back on the player with an NPC with the player's skin.
+If the NPC recording does not have any armor, the player's armor when starting the cinematic will be used.
+
+## How could this be used?
+
+This could be used to create a cinematic where the player is talking to an NPC.
+Like going in to a store and talking to the shopkeeper.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Recorded Segments' required multiple>
+</fields.EntryField>

@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Player Kill Entity Event 
+
+The `Player Kill Entity Event` is fired when a player kills an entity. If you want to detect when a player kills another player, use the [`Player Kill Player Event`](on_player_kill_player) instead.
+
+## How could this be used?
+
+This event could be used to detect when a player kills a boss, and give them some rewards. It could also be used to create a custom mob that drops items when killed by a player.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Entity Type' optional>
+     If specified, the entity type must match the entity type that was killed in order for the event to trigger.
+</fields.EntryField>

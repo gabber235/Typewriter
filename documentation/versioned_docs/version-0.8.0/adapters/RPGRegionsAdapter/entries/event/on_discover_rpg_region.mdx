@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Discover Region Event 
+
+The `Discover Region Event` is triggered when a player discovers a region.
+
+## How could this be used?
+
+This event could be used to trigger a message to the player when they discover a region, like a welcome.
+Or when they discover a region, it could trigger a quest to start and start a dialogue or cinematic.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Region' required>
+     The region to check for. Make sure that this is the region ID, not the region's display name.
+</fields.EntryField>

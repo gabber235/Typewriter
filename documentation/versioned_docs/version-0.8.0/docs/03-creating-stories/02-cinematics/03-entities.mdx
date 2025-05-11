@@ -1,0 +1,54 @@
+---
+difficulty: Normal
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+import ActionButton from "@site/src/components/ActionButtons";
+
+# Adding entities
+
+:::info[Before starting]
+It's best to first read [Cinematics](./index.mdx) before starting this tutorial.
+:::
+:::danger[Entity Extension]
+You must have installed the Entity Extension before starting this tutorial.
+:::
+In this tutorial, you will learn how to add entities to your interactions.
+
+## Adding an entity
+Firstly click on the + icon in the top right corner of the panel and search for `Add Entity Cinematic`. Add it to your page by clicking on the + icon.
+
+<EntrySearch entryName='entity_cinematic'/>
+### Selecting the definition
+Now in the inspector, click on `Select a entity_definition` and select the type of entity you want to have as an NPC, but for this tutorial, we will use the `Add Npc Definition`. Now you will need to select a manifest page or create one by clicking on `Add manifest`.
+
+<Player url={require("../../assets/cinematics/select-entity-definition.webm").default} />
+
+Then inside that NPC Definition you can follow the [entity-extension](../04-entity-extension/index.mdx) Tutorial to create a Beautiful NPC.
+
+### Adding segments
+Now we need to add a segment to our track. You can do this by clicking in the inspector at Operations on `Add Segment`. This will add a segment to your track.
+
+### Configuring the segment
+In the segment, we now need to add an artifact. You can do this by clicking on `Select a entity_cinematic_artifact` and selecting your artifact, or create one by clicking on `Add Entity Cinematic Artifact`. Then select or create your static page.
+
+### Requesting the content mode.
+Now, back on the cinematic page, click on the <ActionButton button='capture'/> icon in the inspector just above the artifact. This will open the content mode in Minecraft. If you like, you can read what the items do in your inventory just by hovering over them with your mouse, but we will just use the book for now.
+By clicking on the book, Typewriter will start recording your movements and items that you were holding before you requested the content mode.
+
+#### Recording the NPC
+:::warning[Items in inventory]
+The items you were holding before you requested the content mode will be the items that the NPC will be holding.
+:::
+<Player url={require("../../assets/cinematics/recording.webm").default}/>
+
+#### Using the playback items
+
+<Player url={require("../../assets/cinematics/playback.webm").default}/>
+
+## result
+Now that you have successfully added the entity, you can view it in your cinematic.
+
+<Player url={require("../../assets/cinematics/cinematic-npc-result.webm").default}/>

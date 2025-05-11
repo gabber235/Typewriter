@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Enter Region Event 
+
+The `Enter Region Event` is triggered when a player enters a region.
+
+## How could this be used?
+
+This event could be used to trigger a message to the player when they enter a region, like a welcome.
+Or when they enter a region, it could trigger a quest to start and start a dialogue or cinematic.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Region' required>
+     The region that the player must enter to trigger the event.
+</fields.EntryField>

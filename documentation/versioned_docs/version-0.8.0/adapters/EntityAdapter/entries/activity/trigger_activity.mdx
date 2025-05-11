@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Trigger Activity 
+
+The `Trigger Activity` entry is an activity that triggers a sequence when the activity starts or stops.
+
+## How could this be used?
+This could be used to trigger dialogue when the entity arrives at a certain location.
+Like a tour guide that triggers dialogue when the entity arrives at a point of interest.
+
+
+## Fields
+
+<fields.EntryField name='Activity' required>
+     The activity to use when this is active.
+</fields.EntryField>
+<fields.EntryField name='On Start' required>
+     The sequence to trigger when the activity starts.
+</fields.EntryField>
+<fields.EntryField name='On Stop' required>
+     The sequence to trigger when the activity stops.
+</fields.EntryField>

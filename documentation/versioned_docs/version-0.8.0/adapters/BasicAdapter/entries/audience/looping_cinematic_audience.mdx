@@ -1,0 +1,25 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Looping Cinematic Audience
+
+The `Looping Cinematic Audience` entry is used to show the audience members a cinematic that loops.
+
+**It is recommended that this entry is bounded by location or region,
+to prevent players from receiving packets for cinematics they cannot see.**
+
+:::caution
+The Cinematic can only have entries that are compatible with looping (non-primary entries).
+Anything that cannot have two or more instances active at once will not work.
+:::
+
+## How could this be used?
+To display particles on a loop, such as a fountain.
+Or sparks that come from a broken wire.
+
+
+## Fields
+
+<fields.EntryField name='Cinematic Id' required>
+</fields.EntryField>

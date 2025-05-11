@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Spoken Dialogue Cinematic 
+
+The `Spoken Dialogue Cinematic` is a cinematic that displays an animated message in chat.
+
+## How could this be used?
+
+When a NPC is talking to the player, this can be used to display the NPC's dialogue.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Speaker' required>
+     The speaker of the dialogue
+</fields.EntryField>
+<fields.EntryField name='Segments' required multiple segment>
+</fields.EntryField>

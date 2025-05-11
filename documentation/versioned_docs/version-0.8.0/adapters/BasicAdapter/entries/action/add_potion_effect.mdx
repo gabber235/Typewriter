@@ -1,0 +1,37 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Add Potion Effect Action 
+
+The `Add Potion Effect Action` is an action that adds a potion effect to the player.
+
+## How could this be used?
+
+This action can be useful in a variety of situations. You can use it to provide players with buffs or debuffs, such as speed or slowness, or to create custom effects.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Potion Effect' required>
+     The potion effect to add.
+</fields.EntryField>
+<fields.EntryField name='Duration' required duration>
+     The duration of the potion effect.
+</fields.EntryField>
+<fields.EntryField name='Amplifier' required>
+     The amplifier of the potion effect.
+</fields.EntryField>
+<fields.EntryField name='Ambient' required>
+     Whether or not the effect is ambient
+</fields.EntryField>
+<fields.EntryField name='Particles' required>
+     Whether or not to show the potion effect particles.
+</fields.EntryField>
+<fields.EntryField name='Icon' required>
+     Whether or not to show the potion effect icon in the player's inventory.
+</fields.EntryField>

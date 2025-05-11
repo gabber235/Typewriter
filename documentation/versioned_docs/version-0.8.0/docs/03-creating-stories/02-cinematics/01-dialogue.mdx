@@ -1,0 +1,35 @@
+---
+difficulty: Easy
+---
+
+import Player from "@site/src/components/Player"; 
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Adding dialogues
+
+:::info[Before starting]
+It's best to first read [Cinematics](./index.mdx) before starting this tutorial.
+:::
+In this tutorial, you will learn how to add dialogues to your interactions.
+
+## Adding a dialogue
+In cinematic their are a variety of dialogues available like: `spoken`, `actionbar`, `title`, `subtitle`. For this tutorial we will use actionbar but all others have similar features.
+
+First click on the + icon in the top right corner of the panel and search for `Add Actionbar Dialogue Cinematic`. Add it to your page by clicking on the + icon.
+<EntrySearch entryName='actionbar_dialogue_cinematic'/>
+
+### Configuring the dialogue
+Now we need to configure the dialogue. 
+
+First we need to add a [speaker](../01-interactions/index.mdx#configuring-the-speaker) to the dialogue. After that we need to add a segment this can be done by going to the operations and clicking on `Add Segment`.
+
+### Configuring the dialogue segment
+Now inside the segment you can go to the Text field and adding a text like `<white>This is a cool actionbar text!</white>`.
+
+<Image img={require("../../assets/cinematics/adding-dialogue-segment.png")} alt="Adding a dialogue segment" width={400} />
+
+## Result
+Now you have successfully added the dialogue you can view it in your cinematic.
+
+<Player url={require("../../assets/cinematics/adding-dialogue-cinematic.webm").default} />

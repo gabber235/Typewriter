@@ -1,0 +1,44 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# Placeholder
+Entries can expose a placeholder. 
+The placeholders can be used by users or other plugins with the PlaceholderAPI.
+
+:::danger
+Placeholder is an additional interface for an existing entry. It cannot be used on its own. 
+:::
+
+## Basic Usage
+To just expose a single placeholder, extend your entry with `PlaceholderEntry`:
+
+<CodeSnippet tag="simple_placeholder_entry" json={require("../../snippets.json")} />
+
+This placeholder can be used with `%typewriter_<entry id>%` and will return `Hello <player name>!`
+
+## Sub Placeholders
+Besides just having a primary placeholder, entries can also have sub placeholders.
+These can be literal strings which needs to be matched:
+
+<CodeSnippet tag="literal_placeholder_entry" json={require("../../snippets.json")} />
+
+Where the placeholder can be used in the following ways:
+
+| Placeholder | Result |
+|------------|---------|
+| `%typewriter_<entry id>%` | `Standard text` |
+| `%typewriter_<entry id>:greet%` | `Hello, <player name>!` |
+| `%typewriter_<entry id>:greet:enthusiastic%` | `HEY HOW IS YOUR DAY, <player name>!` |
+
+But is can also have variables:
+
+<CodeSnippet tag="string_placeholder_entry" json={require("../../snippets.json")} />
+
+Where the placeholder can be used in the following ways:
+
+| Placeholder | Result |
+|------------|---------|
+| `%typewriter_<entry id>%` | `%typewriter_<entry id>%` |
+| `%typewriter_<entry id>:bob%` | `Hello, bob!` |
+| `%typewriter_<entry id>:alice%` | `Hello, alice!` |
+
+Notice how the default placeholder no longer works, because we don't have a supplier for it anymore.

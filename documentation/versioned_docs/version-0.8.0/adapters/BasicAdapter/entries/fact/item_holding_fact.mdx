@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Item Holding Fact
+
+The `Item Holding Fact` is a fact that returns the amount of a specific item the player is currently holding.
+When no properties for the item are set, the fact will return the amount of the item the player is holding.
+
+<fields.ReadonlyFactInfo />
+
+## How could this be used?
+Show PathStreams when the player is holding a specific item.
+Like showing a path to a location when the player is holding a map.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Item' required>
+     The item to check for.
+</fields.EntryField>

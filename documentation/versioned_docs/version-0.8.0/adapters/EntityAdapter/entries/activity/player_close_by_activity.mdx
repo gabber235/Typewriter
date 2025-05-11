@@ -1,0 +1,33 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Player Close By Activity 
+
+The `PlayerCloseByActivityEntry` is an activity that activates child activities when a viewer is close by.
+
+The activity will only activate when the viewer is within the defined range.
+
+When the maximum idle duration is reached, the activity will deactivate.
+If the maximum idle duration is set to 0, then it won't use the timer.
+
+## How could this be used?
+When the player has to follow the NPC and walks away, let the NPC wander around (or stand still) around the point the player walked away. When the player returns, resume its path.
+
+When the npc is walking, and a player comes in range Stand still.
+
+
+## Fields
+
+<fields.EntryField name='Range' required>
+     The range in which the player has to be close by to activate the activity.
+</fields.EntryField>
+<fields.EntryField name='Max Idle Duration' required duration>
+     The maximum duration a player can be idle in the same range before the activity deactivates.
+</fields.EntryField>
+<fields.EntryField name='Close By Activity' required>
+     The activity that will be used when there is a player close by.
+</fields.EntryField>
+<fields.EntryField name='Idle Activity' required>
+     The activity that will be used when there is no player close by.
+</fields.EntryField>

@@ -1,0 +1,55 @@
+---
+difficulty: Normal
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# First Join Cinematic
+
+:::info[Before Starting]
+Before starting, it's recommended to read the following sections: [Interactions](../01-interactions/index.mdx), [Cinematics](./index.mdx), and [Facts](../03-facts/index.mdx). Ensure you have a sequence and a cinematic page created.
+:::
+
+In this tutorial, you'll learn how to create a cinematic that plays when a player joins the server for the first time.
+
+## Adding the Join Entry
+First, we need to add the `Add On Player Join` entry to our sequence. This can be done by clicking on the + icon in the top right corner of the panel and searching for `Add On Player Join`. Add it to your page by clicking on the + icon.
+
+<EntrySearch entryName='on_player_join'/>
+
+## Waiting for Interaction
+:::danger[Early Start Cinematic]
+Before a player fully loads the server, it is possible for Typewriter to start the cinematic prematurely. This can occur if the player has a slow internet connection or a low-performance computer. In such cases, the player may join the server in the middle of the cinematic instead of at the beginning. To address this, it is recommended to add an option or a delay where the player needs to perform an action before the cinematic starts.
+:::
+To add an option to your sequence, it's best to read the [Options](../01-interactions/01-options.mdx) page. For this tutorial, we will have a `New Option` with a `Start Cinematic` option.
+
+### Configuring the Criteria
+:::warning[Option]
+If you are using the option from the [waiting for interaction](#waiting-for-interaction), you need to configure the following steps in the option and **NOT** inside the start cinematic.  
+:::
+Now we need to configure the criteria for the cinematic. This can be done by clicking on the `+` icon in the inspector next to the criteria field. Then, you can select the fact you want to use. For this tutorial, we will use a permanent fact called `First Join` with the group set to a player group.
+
+<Image img={require("../../assets/cinematics/first-join-fact.png")} alt="first-join-fact" width={400} />
+
+Inside the criteria, set the operator to `==` and the value to `0`.
+
+### Configuring the Modifier
+You have configured the criteria, but now we need to modify the fact so that when you join again, the cinematic is not played. This can be done by clicking on the `+` icon in the inspector next to the modifier field. Then, you can select the fact you want to modify. For this tutorial, we will use the same fact as the criteria. Inside the modifier, set the operator to `=` and the value to `1`.
+
+Now your inspector should look like this:
+
+<Image img={require("../../assets/cinematics/add-cinematic-fields.png")} alt="add-cinematic-fields" width={400} />
+
+## Adding the `Add Cinematic` Entry
+Now we need to add the `Add Cinematic` entry to our sequence. This can be done by right-clicking on the `New On Player Join` entry and selecting `+ Link with ...`. Then, search for `Add Cinematic` and click on the + icon to add it to your sequence. Now your sequence page should look like this:
+
+<Image img={require("../../assets/cinematics/add-cinematic.png")} alt="Add-Cinematic" width={400} />
+
+Inside the `New Cinematic`, select the cinematic you want to trigger via the inspector at the page field. For this tutorial, we will use the `Tutorial_Cin` cinematic.
+
+## Result
+Now, when a player joins the server for the first time, the cinematic will play. When the player joins again, the cinematic will not play.
+
+<Player url={require("../../assets/cinematics/first-join-result.webm").default}/>

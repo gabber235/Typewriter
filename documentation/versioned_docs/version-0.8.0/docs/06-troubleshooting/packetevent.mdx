@@ -1,0 +1,35 @@
+---
+difficulty: Normal
+---
+
+# PacketEvents Troubleshooting
+
+If you encounter errors when enabling the Typewriter plugin, such as `java.lang.NoClassDefFoundError` related to `io.github.retrooper.packetevents`, this could be due to an incompatible version of the PacketEvents plugin.
+
+## Error Message
+
+An example of the error message you might see:
+
+```bash
+[12:41:54 ERROR]: Error occurred while enabling Typewriter v0.5.1 (Is it up to date?)
+java.lang.NoClassDefFoundError: io/github/retrooper/packetevents/bstats/Metrics$CustomChart
+        at me.gabber235.typewriter.entry.entity.EntityHandler.initialize(EntityHandler.kt:23) ~[typewriter (5).jar:?]
+        at me.gabber235.typewriter.Typewriter.onEnableAsync(Typewriter.kt:121) ~[typewriter (5).jar:?]
+```
+## Cause of the Issue
+
+This error occurs because the installed version of PacketEvents is not compatible with the version of Typewriter you are using. **Typewriter v0.5.1 requires PacketEvents version 2.5.x.** Using a newer version of PacketEvents can cause compatibility issues due to changes in the API.
+
+### Steps to Fix
+
+1. **Remove** the current PacketEvents plugin from your server's `plugins` folder.
+
+2. **Download** PacketEvents version **2.5.0** [via this url](https://modrinth.com/plugin/packetevents/version/QLgJReg5).
+
+3. **Place** the downloaded PacketEvents jar into your server's `plugins` folder.
+
+4. **Restart** your server to apply the changes.
+
+## Verifying the Fix
+
+After following the steps above, the Typewriter plugin should load without errors. Check your server logs to ensure there are no longer any `NoClassDefFoundError` errors related to PacketEvents.

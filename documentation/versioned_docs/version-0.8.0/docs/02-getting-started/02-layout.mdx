@@ -1,0 +1,53 @@
+---
+difficulty: Easy
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+
+# Layout
+
+On this page, you will learn how to use the Typewriter Web panel and create certain things.
+
+## Creating a page
+
+To create a page, simply click the button `Add Page` then enter the name of the page. It can't be a duplicate name of an already existing page. Select one of the four types: 
+* **Sequence**: Create interactions that can be played after each other.
+* **Static** : Referencing to data that doesn't change over the lifetime of the program.
+* **Cinematic**: Timed sequences of actions.
+* **Manifest**:  In the runtime calculated state of the interaction.
+
+<Player url={require("../assets/layout/add-page.webm").default} />
+
+Now that we have created a sequence page, I will explain how the different layouts works.
+
+## Base Layout
+
+<Image img={require("../assets/layout/layout.png")} alt="Sequence Page Layout" />
+
+1. **Page list**: This is where you can see all the pages that you have created. You can also create new pages here.
+2. **Action bar**: There are multiple actions that you can perform by clicking on the buttons from left to right:
+   - **Staging Indicator**: orange indicates that changes are not active on the server, and green means they are. Just hover over it to reveal the "Publish" button, and click it if you want to publish your staged pages to the server.
+   - **Search bar**: Use this to search for entries or create new ones.
+   - **+ button**: Click here to create new entries.
+
+**Inspector**: This is where you can edit the properties of the selected entry.
+
+3. **Entry Information**: Here you can view all the information about an entry, such as the ID and name.
+4. **Fields**: Use this section to edit the properties of the entries.
+5. **Operations**: This section contains various actions that you can perform with the entry.
+
+## Sequence, static and manifest layout
+
+- In the center, all your entries are shown.
+- Use your mouse's scroll wheel to zoom in or out.
+- Click on an entry to open it in the inspector.
+- When holding an entry for a few seconds, it makes it drag and drop so you can connect it with other entries.
+
+## Cinematic layout
+
+<Image img={require("../assets/layout/layout-cinematic.png")} alt="Cinematic Page Layout" />
+
+1. **Segments**: Inside a cinematic entry, you can create segments, which are displayed on your track. Segments can't overlap each other.
+2. **Track**: This is where you can see all the segments that you have created and edit their show duration.
+3. **Track Duration**: Here, you can edit the duration of the track. The track duration is in Minecraft ticks, so 20 ticks equals 1 second.

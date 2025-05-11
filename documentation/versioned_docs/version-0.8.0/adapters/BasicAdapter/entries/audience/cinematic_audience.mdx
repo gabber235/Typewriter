@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Cinematic Audience 
+
+The `Cinematic Audience` entry filters an audience based on if they are in a cinematic.
+
+If no cinematic is referenced, it will filter based on if any cinematic is active.
+
+## How could this be used?
+This could be used to hide the sidebar or boss bar when a cinematic is playing.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Cinematic' required>
+     When not set it will filter based on if any cinematic is active.
+</fields.EntryField>
+<fields.EntryField name='Inverted' required>
+</fields.EntryField>

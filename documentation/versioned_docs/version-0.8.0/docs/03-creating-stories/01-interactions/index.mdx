@@ -1,0 +1,63 @@
+---
+difficulty: Easy
+---
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# First Interaction
+
+:::info[Before starting]
+This guide assumes that you have already installed the [Basic Extension](../../02-getting-started/01-installation.mdx#basic-extension).
+
+Also, make sure you have read the [layout](../../02-getting-started/02-layout.mdx) documentation and created a **sequence** page.
+:::
+
+Let's create our first interaction. Our example interaction will have the following steps:
+
+1. The player clicks on a flower.
+2. A chat dialogue opens.
+
+If you need any assistance during the process, feel free to ask for help on our [Discord](https://discord.gg/HtbKyuDDBw).
+
+## What are interactions?
+
+An interaction occurs when the player interacts with something and triggers an event. In this tutorial, the player clicking on the flower is the interaction, and the chat dialogue is the event that gets triggered.
+
+## Creating an interaction
+
+Let's get started by creating an entry. Click on the + icon in the top right corner of the panel and search for `on interact with block`. Add it to your page by clicking on the + icon.
+
+<EntrySearch entryName='on_interact_with_block'/>
+
+### Configuring the interaction
+
+In the inspector, set the block to `Red Tulip` (1) and the name to `on flower click` (2)
+
+<Image img={require("../../assets/interactions/on_flower_click.png")} alt="Configuring an interact with flow entry" width={400} />
+
+## Creating an event
+
+Now we need to create an event that gets triggered when the player clicks on the flower. Right-click on the `On Flower Click` entry and click on `+ link with ...` to open the search menu. Search for `Add Spoken` and add it to the page.
+
+<Player url={require("../../assets/interactions/add-spoken.webm").default} />
+
+### Configuring the event
+
+In the inspector, set the text to `Hello! I am a flower.` and set the duration to `1s`. 
+
+### Configuring the speaker
+
+Follow these steps to configure the speaker:
+1. Click on the text `Select a speaker` and in the search menu, click on `Add Simple Speaker`. 
+2. Select `Add static` and give that static page a name.
+3. Click on the simple speaker.
+4. Inside the inspector, set the Display Name to `A beautiful flower`.
+
+<Player url={require("../../assets/interactions/simple-speaker.webm").default} />
+
+## Result
+
+You can now publish your pages, and in-game, it should look like this when clicking on the flower:
+
+<Player url={require("../../assets/interactions/final-result-default.webm").default} />

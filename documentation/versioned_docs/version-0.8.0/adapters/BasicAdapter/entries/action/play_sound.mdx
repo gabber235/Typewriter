@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Play Sound Action 
+
+The `Play Sound Action` is an action that plays a sound for the player. This action provides you with the ability to play any sound that is available in Minecraft, at a specified location.
+
+## How could this be used?
+
+This action can be useful in a variety of situations. You can use it to provide audio feedback to players, such as when they successfully complete a challenge, or to create ambiance in your Minecraft world, such as by playing background music or sound effects. The possibilities are endless!
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Sound' required>
+     The sound to play.
+</fields.EntryField>

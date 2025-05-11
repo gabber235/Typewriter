@@ -1,0 +1,25 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Hit Box Definition
+
+The `HitBoxDefinition` class is an entry that represents a hit box for an entity to allow interaction with a different entity.
+
+## How could this be used?
+This could be when using a display entity since they don't have a hit box to allow interaction with.
+
+
+## Fields
+
+<fields.EntryField name='Base Entity' required>
+</fields.EntryField>
+<fields.EntryField name='Offset' required>
+     The offset of the hit box relative to the base entity.
+</fields.EntryField>
+<fields.EntryField name='Width' required>
+     The width of the hit box.
+</fields.EntryField>
+<fields.EntryField name='Height' required>
+     The height of the hit box.
+</fields.EntryField>

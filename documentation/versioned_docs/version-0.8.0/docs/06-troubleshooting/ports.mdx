@@ -1,0 +1,44 @@
+---
+difficulty: Easy
+---
+
+# Panel Loading Issues Troubleshooting Guide
+
+Are you encountering difficulties with the Typewriter plugin's panel not loading? This guide will help you troubleshoot and ensure the correct setup for optimal functionality.
+
+## Assigning Ports Correctly
+
+If the panel isn't loading, a common issue could be the lack of assigned ports. The Typewriter plugin requires two open ports:
+
+1. One port for the panel to load.
+2. Another port for the websocket to communicate with the server.
+
+:::warning
+Hosting platforms like Aternos, which only offer a single port, are not compatible with the Typewriter plugin due to this requirement.
+:::
+
+## Using the Correct URL
+
+Ensure that you are using the correct URL to access the panel. The format should be either `ip:port` or, if you're using a subdomain, `url:port`. Using the correct URL is crucial for accessing the panel successfully.
+
+## Avoiding Duplicate Ports in Config
+
+A common mistake is including the port in the `hostname` field of the `config.yml` file. 
+The hostname should only be the IP address or the domain name. It should not contain the port.
+Here's an example:
+
+```yaml title="config.yml"
+# ...
+// highlight-red
+hostname: "127.0.0.1:25565" // Incorrect line
+// highlight-green
+hostname: "127.0.0.1"       // Correct line
+# ...
+```
+
+Removing the port from the hostname field can resolve issues related to the panel not loading.
+
+---
+
+For further assistance, please reach out to our community on [Discord](https://discord.gg/HtbKyuDDBw). We're here to help make your experience with the Typewriter plugin as smooth as possible!
+

@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Withdraw Balance Action 
+
+The `Withdraw Balance Action` is used to withdraw money from a user's balance.
+
+## How could this be used?
+
+This action could be used to withdraw money from a user's balance if they lose a bet, or get killed.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Amount' required>
+     The amount of money to withdraw.
+</fields.EntryField>

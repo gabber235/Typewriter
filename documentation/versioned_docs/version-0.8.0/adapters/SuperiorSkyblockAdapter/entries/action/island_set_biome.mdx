@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Island Set Biome Action 
+
+The `Island Set Biome` action is used to set a player's island's biome.
+
+## How could this be used?
+
+This could be used to simulate the seasons of the year, or to change the biome of the island to match the theme of the island.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Biome' required>
+     The biome to set the island to
+</fields.EntryField>

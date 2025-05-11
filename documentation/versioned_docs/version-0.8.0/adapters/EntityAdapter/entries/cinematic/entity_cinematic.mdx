@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Entity Cinematic 
+
+The `Entity Cinematic` entry that plays a recorded animation on an Entity back on the player.
+
+## How could this be used?
+
+This could be used to create a cinematic entities that are animated.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Definition' required>
+     The entity that will be used in the cinematic
+</fields.EntryField>
+<fields.EntryField name='Segments' required multiple segment>
+</fields.EntryField>

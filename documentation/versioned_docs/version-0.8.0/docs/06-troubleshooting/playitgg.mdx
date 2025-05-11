@@ -1,0 +1,33 @@
+---
+difficulty: easy
+---
+import Image from "@site/src/components/Image";
+
+# Playit.gg
+:::warning[Not tested]
+These docs haven't been 100% tested yet. It may be that this won't work. If so please make a question in our [discord](https://discord.gg/gs5QYhfv9x).
+:::
+
+In this tutorial you will learn how to make typewriter work with playit.gg
+
+## What is Playit.gg
+Playit.gg is a service that allows you to make your localhost minecraft server be public for anyone to connect. This is useful for testing your server with friends or for making a public server for a short period of time.
+
+## How to make typewriter work with playit.gg
+First go to [playit.gg](https://playit.gg/) and have a agent created and your minecraft server connected. There are plenty of tutorials out on the internet on how to do this.
+
+### Creating a new tunnel
+Inside the tunnels tab you can click on `+ Add tunnel`.
+
+<Image img={require("../assets/troubleshooting/tunnels.png")} alt="Tunnels" />
+
+Than inside the popup select your region and use the Tunnel Type `TCP (protocol)` than set the local port to `8080`(or the port you configured in the config.yml) and click on `Add tunnel`.
+
+<Image img={require("../assets/troubleshooting/create-tunnel.png")} alt="Create tunnel" />
+
+Now your tunnel should be pending and after a few seconds it should be working. 
+
+### Connecting to the tw panel
+Now you can connect to the panel by using the url that is shown in the tunnels tab.
+
+<Image img={require("../assets/troubleshooting/ip.png")} alt="Tunnel url" />

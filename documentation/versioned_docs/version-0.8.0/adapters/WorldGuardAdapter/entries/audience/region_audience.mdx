@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Region Audience 
+
+The `Region Audience` is used to filter players based on if they are in a specific WorldGuard region.
+
+## How could this be used?
+To show players information when they enter a specific region.
+For example, when a player enters a town, you could show them information about the town.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Region' required>
+     The region to filter players based on
+</fields.EntryField>
+<fields.EntryField name='Inverted' required>
+</fields.EntryField>

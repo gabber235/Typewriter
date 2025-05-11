@@ -1,0 +1,36 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import Player from "@site/src/components/Player";
+
+# Interacting with an entity
+:::info[Before starting]
+It's best to first read [Entities & NPC's](./index.mdx) before starting this tutorial.
+:::
+
+In this tutorial, you will learn how to interact with an entity.
+
+## Adding the entity interact event
+First, we need to add the `Add On Entity Interact Event` entry to our sequence. This can be done by clicking on the + icon in the top right corner of the panel and searching for `Add On Entity Interact Event`. Add it to your page by clicking on the + icon.
+
+<EntrySearch entryName="entity_interact_event"/>
+
+### Selecting the definition
+Now inside the inspector of the `New Entity Interact Event` at the definition field, select the definition of the entity you want to interact with. (For this tutorial that will be Oliver)
+
+<Image img={require("../../assets/entity-extension/entity-interact-event-fields.png")} alt="Entity Interact Event Fields" width={400} />
+
+## Adding the event.
+Now we need to add an event that gets triggered when the player interacts with the entity (For this tutorial we will use a spoken). Right-click on the `New Entity Interact Event` entry and click on `+ link with ...` to open the search menu. Search for `Add Spoken` and add it to the page.
+
+<EntrySearch entryName="spoken"/>
+
+Set the speaker to the oliver definition and text field to `Hello I am Oliver.`.
+
+## Result
+You can now publish your pages, and in-game, it should look like this when interacting with Oliver:
+
+<Player url={require("../../assets/entity-extension/interact-entity-result.webm").default} />

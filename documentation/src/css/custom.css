@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;400;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;400;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -12,117 +12,155 @@
 
 /* You can override the default Infima variables here. */
 :root {
-    --ifm-color-primary: #227c9d;
-    --ifm-color-primary-dark: #1f708d;
-    --ifm-color-primary-darker: #1d6985;
-    --ifm-color-primary-darkest: #18576e;
-    --ifm-color-primary-light: #2588ad;
-    --ifm-color-primary-lighter: #278fb5;
-    --ifm-color-primary-lightest: #2ca1cc;
+  --ifm-color-primary: #227c9d;
+  --ifm-color-primary-dark: #1f708d;
+  --ifm-color-primary-darker: #1d6985;
+  --ifm-color-primary-darkest: #18576e;
+  --ifm-color-primary-light: #2588ad;
+  --ifm-color-primary-lighter: #278fb5;
+  --ifm-color-primary-lightest: #2ca1cc;
 
-    --ifm-color-secondary: #15b0a0;
-    --ifm-color-secondary-dark: #139e90;
-    --ifm-color-secondary-darker: #129688;
-    --ifm-color-secondary-darkest: #0f7b70;
-    --ifm-color-secondary-light: #16b9a8;
-    --ifm-color-secondary-lighter: #17c2b0;
-    --ifm-color-secondary-lightest: #18cab8;
+  --ifm-color-secondary: #15b0a0;
+  --ifm-color-secondary-dark: #139e90;
+  --ifm-color-secondary-darker: #129688;
+  --ifm-color-secondary-darkest: #0f7b70;
+  --ifm-color-secondary-light: #16b9a8;
+  --ifm-color-secondary-lighter: #17c2b0;
+  --ifm-color-secondary-lightest: #18cab8;
 
-    --ifm-color-acccent: #ffb63f;
-    --ifm-color-acccent-dark: #ffaa1f;
-    --ifm-color-acccent-darker: #ffa40f;
-    --ifm-color-acccent-darkest: #df8a00;
-    --ifm-color-acccent-light: #ffc25f;
-    --ifm-color-acccent-lighter: #ffc86f;
-    --ifm-color-acccent-lightest: #ffda9e;
+  --ifm-color-acccent: #ffb63f;
+  --ifm-color-acccent-dark: #ffaa1f;
+  --ifm-color-acccent-darker: #ffa40f;
+  --ifm-color-acccent-darkest: #df8a00;
+  --ifm-color-acccent-light: #ffc25f;
+  --ifm-color-acccent-lighter: #ffc86f;
+  --ifm-color-acccent-lightest: #ffda9e;
 
-    --ifm-color-danger: #fe4950;
-    --ifm-color-danger-dark: #fe2831;
-    --ifm-color-danger-darker: #fe1821;
-    --ifm-color-danger-darkest: #e4010a;
-    --ifm-color-danger-light: #fe5960;
-    --ifm-color-danger-lighter: #fe6a6f;
-    --ifm-color-danger-lightest: #fe7a7f;
+  --ifm-color-danger: #fe4950;
+  --ifm-color-danger-dark: #fe2831;
+  --ifm-color-danger-darker: #fe1821;
+  --ifm-color-danger-darkest: #e4010a;
+  --ifm-color-danger-light: #fe5960;
+  --ifm-color-danger-lighter: #fe6a6f;
+  --ifm-color-danger-lightest: #fe7a7f;
 
-    --ifm-code-font-size: 95%;
-    --ifm-color-white: #FEF9EF;
-    --ifm-color-black: #354A54;
+  --ifm-code-font-size: 95%;
+  --ifm-color-white: #fef9ef;
+  --ifm-color-black: #354a54;
 
-    --ifm-color-gray-100: #f7fafc;
-    --ifm-color-gray-200: #edf2f7;
-    --ifm-color-gray-300: #e2e8f0;
-    --ifm-color-gray-400: #cbd5e0;
-    --ifm-color-gray-500: #a0aec0;
-    --ifm-color-gray-600: #718096;
-    --ifm-color-gray-700: #4a5568;
-    --ifm-color-gray-800: #2d3748;
-    --ifm-color-gray-900: #1a202c;
+  --ifm-color-gray-100: #f7fafc;
+  --ifm-color-gray-200: #edf2f7;
+  --ifm-color-gray-300: #e2e8f0;
+  --ifm-color-gray-400: #cbd5e0;
+  --ifm-color-gray-500: #a0aec0;
+  --ifm-color-gray-600: #718096;
+  --ifm-color-gray-700: #4a5568;
+  --ifm-color-gray-800: #2d3748;
+  --ifm-color-gray-900: #1a202c;
 
-    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
-    --ifm-footer-link-color: var(--ifm-color-white);
-    --ifm-font-family-base: 'JetBrains Mono', monospace;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-footer-link-color: var(--ifm-color-white);
+  --ifm-font-family-base: "JetBrains Mono", monospace;
+}
+
+/* Dropdown styles for version selector */
+.dropdown-separator {
+  border: 0;
+  border-top: 1px solid var(--ifm-dropdown-border-color);
+  margin: 0.4rem 0;
+}
+
+.dropdown-archived-versions {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-700);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-    --ifm-color-secondary: #17c3b2;
-    --ifm-color-secondary-dark: #15b0a0;
-    --ifm-color-secondary-darker: #14a697;
-    --ifm-color-secondary-darkest: #10897d;
-    --ifm-color-secondary-light: #19d6c4;
-    --ifm-color-secondary-lighter: #1ae0cd;
-    --ifm-color-secondary-lightest: #34e7d5;
+[data-theme="dark"] {
+  --ifm-color-secondary: #17c3b2;
+  --ifm-color-secondary-dark: #15b0a0;
+  --ifm-color-secondary-darker: #14a697;
+  --ifm-color-secondary-darkest: #10897d;
+  --ifm-color-secondary-light: #19d6c4;
+  --ifm-color-secondary-lighter: #1ae0cd;
+  --ifm-color-secondary-lightest: #34e7d5;
 
-    --ifm-color-acccent: #ffcb77;
-    --ifm-color-acccent-dark: #ffbd52;
-    --ifm-color-acccent-darker: #ffb63f;
-    --ifm-color-acccent-darkest: #ffa007;
-    --ifm-color-acccent-light: #ffd99c;
-    --ifm-color-acccent-lighter: #ffe0af;
-    --ifm-color-acccent-lightest: #fff6e7;
+  --ifm-color-acccent: #ffcb77;
+  --ifm-color-acccent-dark: #ffbd52;
+  --ifm-color-acccent-darker: #ffb63f;
+  --ifm-color-acccent-darkest: #ffa007;
+  --ifm-color-acccent-light: #ffd99c;
+  --ifm-color-acccent-lighter: #ffe0af;
+  --ifm-color-acccent-lightest: #fff6e7;
 
-    --ifm-color-danger: #fe6d73;
-    --ifm-color-danger-dark: #fe4950;
-    --ifm-color-danger-darker: #fe373f;
-    --ifm-color-danger-darkest: #fc020c;
-    --ifm-color-danger-light: #fe9196;
-    --ifm-color-danger-lighter: #fea3a7;
-    --ifm-color-danger-lightest: #ffd9db;
+  --ifm-color-danger: #fe6d73;
+  --ifm-color-danger-dark: #fe4950;
+  --ifm-color-danger-darker: #fe373f;
+  --ifm-color-danger-darkest: #fc020c;
+  --ifm-color-danger-light: #fe9196;
+  --ifm-color-danger-lighter: #fea3a7;
+  --ifm-color-danger-lightest: #ffd9db;
 
-    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Dropdown styles for version selector */
+.dropdown-separator {
+  border: 0;
+  border-top: 1px solid var(--ifm-dropdown-border-color);
+  margin: 0.4rem 0;
+}
+
+.dropdown-archived-versions {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-700);
+  font-weight: bold;
+}
+
+/* Style for the archived version items */
+.dropdown__menu .dropdown__link[href^="/0."] {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+}
+
+.dropdown__menu .dropdown__link[href^="/0."]:hover {
+  background-color: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-900);
 }
 
 .footer__link-item {
-    --ifm-footer-link-color: var(--ifm-color-white);
+  --ifm-footer-link-color: var(--ifm-color-white);
 }
 
 .footer__copyright {
-    color: var(--ifm-color-white);
+  color: var(--ifm-color-white);
 }
 
 .button.button--secondary {
-    color: var(--ifm-color-white);
+  color: var(--ifm-color-white);
 }
 
 .navbar__logo > img {
-    border-radius: 0.5rem;
+  border-radius: 0.5rem;
 }
 
 code {
-    border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 code span {
-    margin: 0;
+  margin: 0;
 }
 
 /* Line Numbers */
 .token-line > span:first-child:not(.token) {
-    background-color: transparent;
+  background-color: transparent;
 }
 
 .token-line > span:nth-child(2):not(.token) {
-    display: table-cell;
+  display: table-cell;
 }
 
 .highlight-red {
@@ -133,9 +171,9 @@ code span {
   border-left: 3px solid #ff000080;
 }
 
-[data-theme='dark'] .highlight-red {
-    background-color: #e52e4d20;
-    border-left: 3px solid #e52e4d80;
+[data-theme="dark"] .highlight-red {
+  background-color: #e52e4d20;
+  border-left: 3px solid #e52e4d80;
 }
 
 .highlight-green {
@@ -146,9 +184,9 @@ code span {
   border-left: 3px solid #00ff0080;
 }
 
-[data-theme='dark'] .highlight-green {
-    background-color: #00ff000d;
-    border-left: 3px solid #00ff0070;
+[data-theme="dark"] .highlight-green {
+  background-color: #00ff000d;
+  border-left: 3px solid #00ff0070;
 }
 
 .highlight-blue {
@@ -159,9 +197,9 @@ code span {
   border-left: 3px solid #0000ff80;
 }
 
-[data-theme='dark'] .highlight-blue {
-    background-color: #396ce320;
-    border-left: 3px solid #396ce380;
+[data-theme="dark"] .highlight-blue {
+  background-color: #396ce320;
+  border-left: 3px solid #396ce380;
 }
 
 .highlight-line {
@@ -172,7 +210,7 @@ code span {
   border-left: 2px solid #00000080;
 }
 
-[data-theme='dark'] .highlight-line {
-    background-color: #ffffff0d;
-    border-left: 2px solid #ffffff80;
+[data-theme="dark"] .highlight-line {
+  background-color: #ffffff0d;
+  border-left: 2px solid #ffffff80;
 }

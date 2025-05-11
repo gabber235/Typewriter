@@ -1,0 +1,29 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Group Trigger Action 
+
+The `Group Trigger Action` is an action that triggers the next entries for everyone in the same group as the player.
+
+:::caution
+The modifiers will only be applied to the player that triggered the action.
+If you want to modify the other players, you will need to do it in the next entries.
+:::
+
+## How could this be used?
+This could be used to trigger the next entries for everyone in the same group as the player,
+when a player joins a faction, all the other players in the same faction could be notified.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Force Group' optional>
+     The group to trigger the next entries for. If not set, the action will trigger for the group of the player that triggered the action.
+</fields.EntryField>

@@ -1,0 +1,31 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Simple Quest 
+
+The `Quest` entry is a collection of tasks that the player can complete.
+It is mainly for displaying the progress to a player.
+
+It is **not** necessary to use this entry for quests.
+It is just a visual novelty.
+
+The entry filters the audience based on if the quest is active.
+
+## How could this be used?
+This could be used to show the progress of a quest to a player.
+Connect objectives to the quest to show a player what they need to do.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Display Name' required>
+</fields.EntryField>
+<fields.EntryField name='Active Criteria' required multiple>
+     When the criteria is met, it considers the quest to be active.
+</fields.EntryField>
+<fields.EntryField name='Completed Criteria' required multiple>
+     When the criteria is met, it considers the quest to be completed.
+</fields.EntryField>

@@ -1,0 +1,41 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Particle Cinematic 
+
+The `Particle Cinematic` entry is used to spawn particles for a cinematic.
+
+## How could this be used?
+
+This can be used to add dramatic effects to a cinematic.
+Like, blowing up a building and spawning a bunch of particles.
+Or, adding focus to a certain area by spawning particles around it.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Location' required>
+     The location to spawn the particles at.
+</fields.EntryField>
+<fields.EntryField name='Particle' required>
+     The particle to spawn.
+</fields.EntryField>
+<fields.EntryField name='Count' required>
+     The amount of particles to spawn.
+</fields.EntryField>
+<fields.EntryField name='Offset X' required>
+     The offset from the location on the X axis.
+</fields.EntryField>
+<fields.EntryField name='Offset Y' required>
+     The offset from the location on the Y axis.
+</fields.EntryField>
+<fields.EntryField name='Offset Z' required>
+     The offset from the location on the Z axis.
+</fields.EntryField>
+<fields.EntryField name='Speed' required>
+     The speed of the particles. For some particles, this is the "extra" data value to control particle behavior.
+</fields.EntryField>
+<fields.EntryField name='Segments' required multiple segment>
+</fields.EntryField>

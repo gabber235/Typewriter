@@ -1,0 +1,24 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Set Prefix Action 
+
+The `Set Prefix Action` action sets the prefix of a player's message
+
+## How could this be used?
+
+This could be used for a badge system.
+When a player completes a certain task, like killing a boss,
+they could be given a prefix that shows up in chat, like `[Deamon Slayer]`
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Prefix' required>
+     The prefix to set.
+</fields.EntryField>

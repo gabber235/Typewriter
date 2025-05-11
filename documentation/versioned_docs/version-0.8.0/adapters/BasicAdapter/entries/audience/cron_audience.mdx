@@ -1,0 +1,20 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Cron Audience
+
+The `Cron Audience` entry filters an audience based on if the real-world time matches a cron expression.
+This will use the server's time, not the player's time.
+
+## How could this be used?
+This could be used for limited time events, like a holiday.
+
+
+## Fields
+
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Cron' required>
+     The <Link to="https://www.netiq.com/documentation/cloud-manager-2-5/ncm-reference/data/bexyssf.html">Cron Expression</Link> when the fact expires.
+</fields.EntryField>

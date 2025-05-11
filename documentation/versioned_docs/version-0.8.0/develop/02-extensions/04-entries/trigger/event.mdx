@@ -1,0 +1,20 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# EventEntry
+
+The `EventEntry` is used as a starting point for any sequence. It can have external event listeners listening to events and trigger based on that.
+
+## Usage
+<CodeSnippet tag="event_entry" json={require("../../../snippets.json")} />
+
+To listen to an event, you must create a function that is annotated with `@EntryListener`. 
+The great thing about kotlin, is that this can be done in the same file as the entry.
+<CodeSnippet tag="event_entry_listener" json={require("../../../snippets.json")} />
+
+The function will automatically be registered as a listener for the event by Typewriter and be called when the Bukkit event is trigger.
+An optional `Query` parameter can be added to easily fetch all the different event entries.
+
+## Entry Context Variables
+Sometimes you want to pass some information to the context so that subsequent entries can use it.
+
+<CodeSnippet tag="event_entry_with_context_keys" json={require("../../../snippets.json")} />

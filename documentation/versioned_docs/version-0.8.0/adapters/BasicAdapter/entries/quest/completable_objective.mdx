@@ -1,0 +1,32 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Completable Objective
+
+The `Completable Objective` entry is an objective that can show a completed stage.
+It is shown to the player when the show criteria are met, regardless of if the completed criteria are met.
+
+## How could this be used?
+This is useful when the quest has multiple objectives that can be completed in different orders.
+For example, the player needs to collect wheat, eggs, and milk to make a cake.
+The order in which the player collects the items does not matter.
+But you want to show the player which items they have collected.
+
+
+## Fields
+
+<fields.EntryField name='Quest' required>
+</fields.EntryField>
+<fields.EntryField name='Children' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Show Criteria' required multiple>
+     The criteria need to be met for the objective to be able to be shown.
+</fields.EntryField>
+<fields.EntryField name='Completed Criteria' required multiple>
+     The criteria to display the objective as completed.
+</fields.EntryField>
+<fields.EntryField name='Display' required>
+</fields.EntryField>
+<fields.EntryField name='Priority Override' optional>
+</fields.EntryField>

@@ -1,0 +1,85 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+import Figure from "@site/src/components/Figure";
+
+# VariableEntry
+
+The `VariableEntry` is designed to make your entries more dynamic by allowing fields to be computed at runtime. Instead of hardcoding values in your entries, you can use variables that adapt based on the current game state, player context, or other conditions.
+
+## Understanding Variables
+
+When creating entries in Typewriter, you often need fields that shouldn't be static. For example, you might want a text that changes based on a player's progress, or a location that depends on where certain events happened in the game. This is where `VariableEntry` comes in - it acts as a dynamic value provider that can return different values based on the current context.
+
+### Basic Implementation
+
+Let's start with a simple variable entry:
+
+<CodeSnippet tag="variable_entry" json={require("../../../snippets.json")} />
+
+Every variable entry receives a `VarContext` when it needs to provide its value. This context contains:
+- The current player (`context.player`)
+- The expected return type (`context.klass`)
+- Any associated data for this specific usage (`context.data`)
+
+### Adding Variable Data
+
+Variables become more powerful when they can be configured differently at each usage site. This is achieved through variable data:
+
+<CodeSnippet tag="variable_entry_with_data" json={require("../../../snippets.json")} />
+
+The relationship between entry fields and variable data is important to understand:
+
+1. Entry Fields (like `someString`):
+   - Defined when creating the variable entry
+   - Remain the same for all uses of this variable entry instance
+   - Used for configuration that should be consistent
+
+2. Variable Data Fields (like `otherInfo`):
+   - Can be different every time the variable is used
+   - Provide context-specific configuration
+   - Allow the same variable entry to behave differently in different situations
+
+<div className="flex flex-col items-center justify-center space-y-4 md:space-y-0 md:flex-row md:space-x-2">
+    <Figure title="Variable Entry" img={require("./assets/variable/example_variable_with_data.png")} alt="Variable Entry with Data" width={400} />
+    <Figure title="Variable Usage" img={require("./assets/variable/example_var_with_data_used.png")} alt="Variable Usage with Data" width={400} />
+</div>
+
+### Working with Generic Types
+
+Sometimes you need variables that can work with different types of values. The generic system in `VariableEntry` makes this possible:
+
+<CodeSnippet tag="generic_variable_entry" json={require("../../../snippets.json")} />
+
+When working with generics, remember:
+- A single instance of a variable entry will always return the same type
+- Different instances of the same variable entry can work with different types
+- When your variable data uses a generic type, the variable entry must have at least one field using that same generic type
+- This ensures that the generic type information flows correctly from the usage site through the data to the entry
+
+<div className="flex flex-col items-center justify-center space-y-4 md:space-y-0 md:flex-row md:space-x-1">
+    <Figure title="String Generic Variable" img={require("./assets/variable/generic_string.png")} alt="String Generic Variable" width={500} />
+    <Figure title="Duration Generic Variable" img={require("./assets/variable/generic_duration.png")} alt="Duration Generic Variable" width={500} />
+    <Figure title="Generic Variable Usage" img={require("./assets/variable/generic_used.png")} alt="Generic Variable Usage" width={500} />
+</div>
+
+### Type Constraints
+
+You can restrict which entry fields your variable can be used with:
+
+<CodeSnippet tag="constraint_variable_entry" json={require("../../../snippets.json")} />
+
+The `@GenericConstraint` annotation specifies which types of fields this variable can replace. In the example above, this variable can only be used for `String` or `Int` fields in other entries. This ensures that variables are only used in appropriate contexts within your content.
+
+
+## Variable Entry Usage
+
+Now that you understand the basics of `VariableEntry`, let's see how we can mark fields to allow for dynamic values.
+
+<CodeSnippet tag="variable_usage" json={require("../../../snippets.json")} />
+
+In this example, we have a variable entry that has two fields: `someString` and `someInt`.
+The `Var` type is used to represent a variable that can be used in different contexts.
+
+:::caution
+**Not all fields should be marked as variables.** Only fields where it would make sense to have a dynamic value should be marked as a variable.
+:::
+

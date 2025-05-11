@@ -1,0 +1,34 @@
+---
+title: 0.6.X API Changes
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# All API changes to 0.6.X
+
+As Typewriter changed from `Adapters` to `Extensions`, the API has changed significantly.
+It is recommended to reread the [Getting Started](../02-getting_started.mdx) guide to get a better understanding of how to create extensions.
+
+## Messager Tick Parameter
+
+<Tabs>
+    <TabItem value="old" label="Old">
+        ```kotlin showLineNumbers
+        override fun tick(playTime: Duration) {
+            super.tick(playTime)
+            // Do something to show the message
+        }
+        ```
+    </TabItem>
+    <TabItem value="new" label="New" default>
+        ```kotlin showLineNumbers
+        override fun tick(context: TickContext) {
+            super.tick(context)
+            // Do something to show the message
+        }
+        ```
+    </TabItem>
+</Tabs>
+
+The `tick` parameter has been changed to `context` to allow for more context to be passed to the `tick` method.

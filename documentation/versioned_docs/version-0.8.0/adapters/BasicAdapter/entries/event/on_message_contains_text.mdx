@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Chat Contains Text Event 
+
+The `Chat Contains Text Event` is called when a player sends a chat message containing certain text.
+
+## How could this be used?
+
+When a player mentions something, you could display dialogue to them.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Text' required regex>
+     The text to look for in the message.
+</fields.EntryField>
+<fields.EntryField name='Exact Same' required>
+     If the text should be matched exactly or not.
+</fields.EntryField>

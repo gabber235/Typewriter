@@ -1,0 +1,46 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# Triggering Entries
+
+There are easy ways to trigger all the next entries in a `TriggerEntry`.
+The most important is that you have a `player` to trigger the entries on.
+
+:::info
+Typewriter takes care of only triggering the entries that should be triggered.
+If criteria are not met, the entries are not triggered.
+:::
+
+If you have a single `TriggerEntry`:
+<CodeSnippet tag="trigger_without_context" json={require("../snippets.json")} />
+
+Sometimes you don't want to trigger the entries when the player is in a dialogue.
+For example, when the player is in a dialogue with a NPC, you don't want to trigger the first entry of the NPC again.
+You expect when the player clicks on the NPC again, the next dialogue is triggered.
+To facilitate this, you can use the `startDialogueWithOrNextDialogue` function.
+
+<CodeSnippet tag="start_dialogue_with_or_trigger" json={require("../snippets.json")} />
+
+Previously, we triggered entries with a new fresh `context`, but sometimes we already have a context.
+Then you need to make sure that you pass on the context to the trigger.
+
+<CodeSnippet tag="trigger_with_context" json={require("../snippets.json")} />
+
+## Custom triggers
+Typewriter triggers based on the `EventTrigger` interface.
+So all the entries that are triggered are wrapped in a `EntryTrigger`.
+
+### System Triggers
+
+For some interactions there are custom triggers that are defined in Typewriter.
+These triggers allow you to do special things with the interaction.
+
+<CodeSnippet tag="interaction_triggers" json={require("../snippets.json")} />
+
+#### Dialogue Interaction
+
+
+<CodeSnippet tag="dialogue_triggers" json={require("../snippets.json")} />
+
+#### Temporal Interaction
+
+<CodeSnippet tag="temporal_triggers" json={require("../snippets.json")} />

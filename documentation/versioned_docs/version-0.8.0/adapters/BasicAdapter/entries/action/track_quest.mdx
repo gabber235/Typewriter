@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Track Quest Action 
+
+The `Track Quest Action` is an action that tracks a quest when triggered.
+
+Though quests are tracked automatically, this action can force a quest to be tracked.
+
+## How could this be used?
+
+Start tacking a quest, so it displays in the player's quest tracker.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Quest' required>
+</fields.EntryField>

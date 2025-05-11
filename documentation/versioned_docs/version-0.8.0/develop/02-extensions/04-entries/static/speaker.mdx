@@ -1,0 +1,13 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# SpeakerEntry
+
+The `SpeakerEntry` is a specialized interface extending the `EntityEntry`.
+It is designed to enhance dialogues in the game by associating non-player characters (NPCs) with specific names and sounds.
+This feature is pivotal for creating more immersive and interactive storytelling experiences in Minecraft.
+
+## Usage
+<CodeSnippet tag="speaker_entry" json={require("../../../snippets.json")} />
+
+This speaker can be used by users in various dialogues and interactions within the game.
+You almost never need to access the `SpeakerEntry` directly, as it is automatically handled by the `DialogueSequence`.

@@ -1,0 +1,33 @@
+{
+    "name": "static",
+    "type": "static",
+    "entries": [
+        {
+            "id": "onqAqFnqZfe9LNe",
+            "name": "interaction_context_text_variable",
+            "type": "interaction_context_text_variable",
+            "_genericBlueprint": {
+                "type": "string",
+                "default": null,
+                "modifiers": [
+                    {
+                        "name": "colored",
+                        "data": null
+                    },
+                    {
+                        "name": "multiline",
+                        "data": null
+                    },
+                    {
+                        "name": "placeholder",
+                        "data": null
+                    }
+                ],
+                "kind": "primitive"
+            }
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.8.0-beta-151"
+}

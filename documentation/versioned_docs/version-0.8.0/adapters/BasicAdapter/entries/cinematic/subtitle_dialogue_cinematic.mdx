@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Subtitle Dialogue Cinematic 
+
+The `Subtitle Dialogue Cinematic Entry` is a cinematic entry that displays an animated subtitle message.
+The speaker is displayed in the action bar, and the dialogue is displayed in the subtitle.
+
+## How could this be used?
+
+This could be used to display a dialogue between two characters, where the speaker is displayed in the action bar, and the dialogue is displayed in the subtitle.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.EntryField name='Speaker' required>
+     The speaker of the dialogue
+</fields.EntryField>
+<fields.EntryField name='Segments' required multiple segment>
+</fields.EntryField>

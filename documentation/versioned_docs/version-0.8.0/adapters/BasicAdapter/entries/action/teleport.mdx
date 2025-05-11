@@ -1,0 +1,22 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Teleport Action 
+
+The `Teleport Action` entry is used to teleport a player to a location.
+
+## How could this be used?
+This could be used to teleport a player to a location when they click a button.
+Or it could be used for a fast travel system where players talk to an NPC and are teleported to a location.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Location' required rotation>
+     The location to teleport the player to.
+</fields.EntryField>

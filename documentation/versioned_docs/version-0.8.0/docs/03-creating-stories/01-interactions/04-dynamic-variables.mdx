@@ -1,0 +1,37 @@
+---
+difficulty: Normal
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import ActionButton from "@site/src/components/ActionButtons";
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Random Dialogue
+:::info[Before starting]
+This tutorial builds upon the [first interaction](./index.mdx) tutorial. It is also best to first read the [Facts](../03-facts/index.mdx) documentation.
+:::
+
+In this tutorial, you will learn how to use dynamic variables and create a random spoken using them.
+
+## Creating random dialogue
+First, you need to open the inspector of the spoken you created from the [first interaction](./index.mdx) tutorial. Then click on the <ActionButton button='dynamic-variable'/> just above the Text field and click on `Add random Variable`. 
+
+<EntrySearch entryName='random_variable' />
+
+This will create a random variable inside a static page.
+
+## Configuring the random variable
+After creating the random variable, open the inspector of the random variable. Here, you can add multiple values to the random variable. Now, every time a spoken is triggered, a different message will be displayed from that random variable.\
+For this tutorial, we chose to add the following lines, but this can be anything you want:\
+`Hello! I am a flower.`, `Wow, you found me.`, `Hey you!`\
+Your dynamic variable should now look like:
+<Image img={require("../../assets/interactions/random-variable.png")} alt="Random Variable Example" width={400}/>
+
+## Removing the random variable
+To remove a dynamic variable, just click on the <ActionButton button='remove'/> icon next to the dynamic variable.
+
+## Result
+Now, every time the spoken is triggered, a random message will be displayed from the random variable.
+
+<Player url={require("../../assets/interactions/random-dialogue-result.webm").default}/>

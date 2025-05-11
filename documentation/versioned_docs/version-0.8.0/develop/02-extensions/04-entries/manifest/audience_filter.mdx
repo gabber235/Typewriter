@@ -1,0 +1,32 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# AudienceFilter
+
+The `AudienceFilterEntry` is a specialized version of `AudienceEntry` designed to filter audience members based on specific criteria.
+It accepts a list of children that can include both `AudienceEntry` and `AudienceFilterEntry` components.
+
+## Basic Usage
+
+### Static Filtering
+Here's an example of a filter that only allows players whose names start with 'g':
+
+<CodeSnippet tag="audience_filter" json={require("../../../snippets.json")} />
+
+This filter is static because player names cannot be changed while on the server.
+Players are either filtered at the start or not at all.
+
+### Dynamic Filtering
+For more dynamic filtering, you can filter based on changing player attributes, such as health:
+
+<CodeSnippet tag="audience_filter_dynamic" json={require("../../../snippets.json")} />
+
+This example filters players based on their health value, which is provided as a parameter from the entry.
+Like `AudienceDisplay`, we can use both Bukkit events and `TickableDisplay` to update which players pass through the filter.
+
+### Invertible Filters
+Sometimes you may want to invert a filter's behavior.
+This is particularly useful when the opposite condition would be complex to define explicitly, such as filtering all players that are not in a specific world:
+
+<CodeSnippet tag="audience_filter_invertable" json={require("../../../snippets.json")} />
+
+Simply implementing the `Invertible` interface enables this functionality in Typewriter.

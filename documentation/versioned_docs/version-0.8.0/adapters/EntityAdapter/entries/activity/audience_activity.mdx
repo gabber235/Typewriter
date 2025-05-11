@@ -1,0 +1,23 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Audience Activity 
+
+The `Audience Activity` is an activity that filters an audience based on the audience a player is in.
+The activity will go through the audiences in order and the first one
+where the player is part of the audience will have the activity selected.
+
+This can only be used on an individual entity instance.
+
+## How could this be used?
+This could be used to make a bodyguard distracted by something and walk away just for the player.
+
+
+## Fields
+
+<fields.EntryField name='Activities' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Default Activity' required>
+     The activity that will be used when the player is not in any audience.
+</fields.EntryField>

@@ -1,0 +1,26 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Block Break Event 
+
+The `Block Break Event` is triggered when a player breaks a block.
+
+## How could this be used?
+
+This could allow you to make custom ores with custom drops, give the player a reward after breaking a certain amount of blocks.
+
+
+## Fields
+
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Block' optional>
+     The block that was broken.
+</fields.EntryField>
+<fields.EntryField name='Location' optional>
+     The location of the block that was broken.
+</fields.EntryField>
+<fields.EntryField name='Item In Hand' required>
+     The item the player must be holding when the block is broken.
+</fields.EntryField>

@@ -54,7 +54,7 @@ const config: Config = {
       {
         ...docsCommon,
         routeBasePath: "/",
-        lastVersion: "0.7.0",
+        lastVersion: "0.8.0",
         versions: {
           current: {
             label: "Beta ⚠️",
@@ -121,7 +121,7 @@ const config: Config = {
       },
       announcementBar: {
         id: "support_us",
-        content: "Typewriter 0.7.0 is out!",
+        content: "Typewriter 0.8.0 is out!",
         isCloseable: true,
       },
       mermaid: {

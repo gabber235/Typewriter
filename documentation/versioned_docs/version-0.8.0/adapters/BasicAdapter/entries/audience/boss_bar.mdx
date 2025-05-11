@@ -1,0 +1,29 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Boss Bar 
+
+The `BossBarEntry` is a display that shows a bar at the top of the screen.
+
+## How could this be used?
+This could be used to show objectives in a quest, or to show the progress of a task.
+
+
+## Fields
+
+<fields.EntryField name='Title' required colored placeholders>
+     The title of the boss bar
+</fields.EntryField>
+<fields.EntryField name='Progress' required>
+     How filled up the bar is. 0.0 is empty, 1.0 is full.
+</fields.EntryField>
+<fields.EntryField name='Color' required>
+     The color of the boss bar
+</fields.EntryField>
+<fields.EntryField name='Style' required>
+     If the bossbar has notches
+</fields.EntryField>
+<fields.EntryField name='Flags' required multiple>
+     Any flags to apply to the boss bar
+</fields.EntryField>

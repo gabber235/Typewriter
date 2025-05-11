@@ -1,0 +1,41 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Value Placeholder Fact 
+
+A [fact](/docs/creating-stories/facts) that is computed from a placeholder.
+This placeholder is evaluated when the fact is read and can return anything.
+The value will be computed based on the `values` specified.
+<fields.ReadonlyFactInfo/>
+
+## How could this be used?
+
+If you only want to run certain actions if the player is in creative mode.
+Or depending on the weather, change the dialogue of the NPC.
+
+
+## Fields
+
+<fields.CommentField />
+<fields.EntryField name='Group' required>
+</fields.EntryField>
+<fields.EntryField name='Placeholder' required placeholders>
+     Placeholder to parse (e.g. %player_gamemode%
+</fields.EntryField>
+<fields.EntryField name='Values' required map regex>
+     The values to match the placeholder with and their corresponding fact value.
+
+An example would be:
+```yaml
+values:
+SURVIVAL: 0
+CREATIVE: 1
+ADVENTURE: 2
+SPECTATOR: 3
+```
+If the placeholder returns `CREATIVE`, the fact value will be `1`.
+If no value matches, the fact value will be `0`.
+
+Values can have placeholders inside them.
+</fields.EntryField>

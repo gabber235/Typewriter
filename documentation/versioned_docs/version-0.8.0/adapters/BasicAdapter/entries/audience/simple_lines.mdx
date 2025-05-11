@@ -1,0 +1,21 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Simple Lines 
+
+The `SimpleSidebarLinesEntry` is a display that shows lines.
+
+Separating lines with a newline character will display them on separate lines.
+
+## How could this be used?
+This could be used to show a list of objectives, or the region a player is in.
+
+
+## Fields
+
+<fields.EntryField name='Lines' required colored placeholders multiline>
+     The lines to display on the sidebar. Separate lines with a newline character.
+</fields.EntryField>
+<fields.EntryField name='Priority Override' optional>
+</fields.EntryField>

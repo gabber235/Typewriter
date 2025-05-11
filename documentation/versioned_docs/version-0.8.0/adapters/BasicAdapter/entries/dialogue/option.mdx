@@ -1,0 +1,30 @@
+import * as fields from '@site/src/components/EntryField';
+import Admonition from '@theme/Admonition';
+import Link from '@docusaurus/Link';
+
+# Option Dialogue 
+
+The `Option Dialogue` action displays a list of options to the player to choose from. This action provides you with the ability to give players choices that affect the outcome of the game.
+
+## How could this be used?
+
+This action can be useful in a variety of situations, such as presenting the player with dialogue choices that determine the course of a story or offering the player a choice of rewards for completing a quest.
+
+
+## Fields
+
+<fields.CriteriaField />
+<fields.ModifiersField />
+<fields.EntryField name='Triggers' required multiple>
+</fields.EntryField>
+<fields.EntryField name='Speaker' required>
+</fields.EntryField>
+<fields.EntryField name='Text' required placeholders colored>
+     The text to display to the player.
+</fields.EntryField>
+<fields.EntryField name='Options' required multiple>
+     The options for the player to choose from.
+</fields.EntryField>
+<fields.EntryField name='Duration' required duration>
+     The duration it takes to type out the message. If the duration is zero, the message will be displayed instantly.
+</fields.EntryField>

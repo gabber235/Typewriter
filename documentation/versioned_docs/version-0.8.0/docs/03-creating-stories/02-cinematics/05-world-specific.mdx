@@ -1,0 +1,39 @@
+---
+dificulty: Normal
+---
+
+import Player from "@site/src/components/Player";
+import Image from "@site/src/components/Image";
+import EntrySearch from "@site/src/components/EntrySearch";
+import ActionButton from "@site/src/components/ActionButtons";
+
+# World Specific Cinematics
+:::info[Before starting]
+It's best to first read [Cinematics](./index.mdx) before starting this tutorial.
+:::
+
+In this tutorial, you will learn how to create world-specific cinematics. This feature allows you to create 1 cinematic that can be used in multiple worlds.
+
+## Creating the dynamic variable
+First, we need to create a dynamic variable. This variable will be used to determine which world the player is in. To do this please follow the these steps:
+1. Go to your camera cinematic and click on a segment
+2. Inside the segment at 1 of your paths click on the <ActionButton button='dynamic-variable'/> icon.
+3. Search for `Player World Position Variable` and click on it to add it to your segment.
+
+<EntrySearch entryName='player_world_position_variable'/>
+
+### Configuring the dynamic variable
+:::warning[repeat]
+Repeat this step for all paths inside the camera cinematic segment.
+:::
+Now inside the inspector of the **camera cinematic segment** you can set the coordinates of your cinematic.
+<Image img={require("../../assets/cinematics/world-specific-player-variable.png")} alt="Configuring the dynamic variable" width={400} />
+#### Where is the world value?
+Good question, the world value is gone because we are using the `Player World Position Variable` to determine the world.\
+The world the player is in will be the world used.
+
+## Result
+:::info[Entity]
+For this guide we used an entity cinematic from the [entities](./03-entities.mdx) tutorial and an [actionbar dialogue](./01-dialogue.mdx). This is to demonstration the use of the dynamic variable.
+:::
+<Player url={require("../../assets/cinematics/world-specific.webm").default} />

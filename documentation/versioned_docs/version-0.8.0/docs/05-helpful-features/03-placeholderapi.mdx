@@ -1,0 +1,67 @@
+---
+difficulty: Easy
+---
+
+import Image from "@site/src/components/Image";
+
+# PlaceHolderAPI
+
+:::warning[plugin needed]
+To follow this tutorial, you must have the [PlaceHolderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) installed.
+:::
+
+## Use PlaceHolderAPI's Placeholders
+
+If you want to expand your story with PlaceHolderAPI's placeholders, you can do that by checking if the PlaceHolderAPI icon is placed above the text box (see image):
+
+<Image img={require("../assets/placeholderapi/papi-icon.png")} alt="PlaceholderAPI Icon" width={400} />
+
+By just using the PlaceHolderAPI's format, you can make them work. For example, `%player_name%` would give the name of a player.
+
+:::danger[Not working]
+If placeholders are not working, make sure you have the placeholder installed. For instance, with `%player_name%`, you must have installed `player` via the PlaceHolderAPI ecloud. To do this, just run: `/papi ecloud download player`.
+:::
+
+## Use Typewriter's Placeholders
+
+Typewriter provides two placeholders for use with the PlaceHolderAPI:
+
+- `%typewriter_entryid%`
+- `%typewriter_entryname%`
+
+Both placeholders provide the same information, but you may choose to access them in different ways. It's generally recommended to use the entry ID for more reliable results, but the entry name is also an option.
+
+To find the entry ID, refer to the following image:
+
+<Image img={require("../assets/placeholderapi/papi-factid.png")} alt="PlaceholderAPI Icon" width={500} />
+
+Your placeholder for Typewriter would be something like `%typewriter_W2X2ZbG0pzXGsS6%`.\
+Then, when calling the placeholder, it checks the ID and:
+
+- If their entry is a speaker, it gives the displayName back.
+- If their entry is a fact, it gives the fact value back.
+- If the entry is a sound, it gives the ID of the resource pack sound.
+- If the entry is a entity, it gives the displayName of the entity
+- If the entry is a lines entry, it gives the content of the lines entry.
+- If the entry is a quest, it gives the displayName of the quest.
+- If the entry is a objective, it gives the formatted displayName of the objective.
+- If the entry is a sidebar, it gives the title of the sidebar.
+
+### Placeholder Parameters
+Sometimes, you might want to get different information from the entry. This can be done using the placeholder parameters. Here you can find a non-exhaustive list of placeholder parameters:
+
+#### Fact Entries
+- `%typewriter_<entry id>:remaining:<number>%`: Returns `<number> - fact value` (useful when the player needs to gather a certain amount of something and you want to show how many they still need to collect).
+- `%typewriter_<entry id>:time:lastUpdated%`: Shows the time at which the fact was updated.
+- `%typewriter_<entry id>:time:lastUpdated:relative%`: Shows the time since the fact was updated, for example, `3m 20s`.
+
+#### Expirable Facts
+
+- `%typewriter_<entry id>:time:expires%`: The time at which the fact expires.
+- `%typewriter_<entry id>:time:expires:relative%`: Shows the time until the fact expires, for example, `3m 20s`.
+
+## Custom placeholders
+Typewriter also has 2 custom placeholders, these are:
+
+- `%typewriter_tracked_quest%`: Shows the displayName of the currently tracked quest.
+- `%typewriter_tracked_objectives%`: Shows the objectives displayNames for the active objectives of the tracked quest.
