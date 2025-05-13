@@ -5,13 +5,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import com.typewritermc.core.entries.Query
+import com.typewritermc.core.utils.server
 import com.typewritermc.engine.paper.command.dsl.DslCommand
-import com.typewritermc.engine.paper.command.dsl.LiteralCommandTree
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
 import com.typewritermc.engine.paper.plugin
 import io.papermc.paper.command.brigadier.CommandSourceStack
-import io.papermc.paper.command.brigadier.Commands
-import lirand.api.extensions.server.server
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 

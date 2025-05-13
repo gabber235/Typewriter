@@ -9,7 +9,7 @@ import com.typewritermc.engine.paper.entry.AudienceManager
 import com.typewritermc.engine.paper.events.AsyncEntityDefinitionInteract
 import com.typewritermc.engine.paper.events.AsyncFakeEntityInteract
 import com.typewritermc.engine.paper.plugin
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import me.tofaa.entitylib.APIConfig
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform
@@ -45,7 +45,15 @@ class EntityHandler : PacketListenerAbstract(), KoinComponent {
 
         val definition = display.definition ?: return
         val instance = display.instanceEntryRef.get() ?: return
-        AsyncEntityDefinitionInteract(player, entityId, definition, instance, packet.hand, packet.action, packet.isSneaking.orElse(false)).callEvent()
+        AsyncEntityDefinitionInteract(
+            player,
+            entityId,
+            definition,
+            instance,
+            packet.hand,
+            packet.action,
+            packet.isSneaking.orElse(false)
+        ).callEvent()
     }
 
     fun shutdown() {

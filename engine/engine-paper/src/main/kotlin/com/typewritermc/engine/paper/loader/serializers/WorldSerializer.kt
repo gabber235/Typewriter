@@ -7,7 +7,7 @@ import com.google.gson.JsonSerializationContext
 import com.typewritermc.core.utils.point.World
 import com.typewritermc.core.serialization.DataSerializer
 import com.typewritermc.engine.paper.utils.logErrorIfNull
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import java.lang.reflect.Type
 
 class WorldSerializer : DataSerializer<World> {

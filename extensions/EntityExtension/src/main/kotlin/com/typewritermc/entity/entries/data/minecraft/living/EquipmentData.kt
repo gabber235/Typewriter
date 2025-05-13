@@ -10,7 +10,6 @@ import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
 import com.typewritermc.engine.paper.utils.item.Item
 import me.tofaa.entitylib.wrapper.WrapperLivingEntity
 import org.bukkit.entity.Player
-import org.bukkit.inventory.EntityEquipment
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -39,7 +38,8 @@ class ViewerEquipmentData(
     // The kotlin compiler thinks that equipment can be null, but it is not.
     // So we wait until they fix it.
     // The current date is 2025-02-08
-    override fun build(player: Player): EquipmentProperty = player.equipment?.toProperty() ?: EquipmentProperty(emptyMap())
+    override fun build(player: Player): EquipmentProperty =
+        player.equipmentProperty()
 }
 
 data class EquipmentProperty(val data: Map<EquipmentSlot, ItemStack>) : EntityProperty {
@@ -54,12 +54,13 @@ data class EquipmentProperty(val data: Map<EquipmentSlot, ItemStack>) : EntityPr
     }
 }
 
-fun EntityEquipment.toProperty(): EquipmentProperty {
-    return EquipmentProperty(org.bukkit.inventory.EquipmentSlot.entries.mapNotNull {
-        if (it == org.bukkit.inventory.EquipmentSlot.BODY) return@mapNotNull null
-        val item = getItem(it)
+fun Player.equipmentProperty(): EquipmentProperty {
+    val equipment = equipment ?: return EquipmentProperty(emptyMap())
+    return EquipmentProperty(org.bukkit.inventory.EquipmentSlot.entries.mapNotNull { slot ->
+        if (!canUseEquipmentSlot(slot)) return@mapNotNull null
+        val item = equipment.getItem(slot)
         if (item.isEmpty) return@mapNotNull null
-        it.toPacketEquipmentSlot() to getItem(it).toPacketItem()
+        slot.toPacketEquipmentSlot() to item.toPacketItem()
     }.toMap())
 }
 
@@ -79,16 +80,20 @@ private class EquipmentCollector(
     override val type: KClass<EquipmentProperty> = EquipmentProperty::class
 
     override fun collect(player: Player): EquipmentProperty {
-        val properties = suppliers.filter { it.canApply(player) }
-            .map { it.build(player) }
+        val properties = suppliers.associateWith {
+            it.build(player)
+        }
+        val applicableProperties = properties.filter { (s, _) -> s.canApply(player) }.map { it.value }
         val data = mutableMapOf<EquipmentSlot, ItemStack>()
-        properties.asSequence()
+        applicableProperties.asSequence()
             .flatMap { it.data.asSequence() }
             .filter { (slot, _) -> !data.containsKey(slot) }
             .forEach { (slot, item) -> data[slot] = item }
 
         // Reset empty slots
-        EquipmentSlot.entries.filter { !data.containsKey(it) && EquipmentSlot.BODY != it }.forEach { data[it] = ItemStack.EMPTY }
+        val slots = properties.values.flatMap { it.data.keys }.toSet()
+        slots.filter { !data.containsKey(it) }
+            .forEach { data[it] = ItemStack.EMPTY }
 
         return EquipmentProperty(data)
     }

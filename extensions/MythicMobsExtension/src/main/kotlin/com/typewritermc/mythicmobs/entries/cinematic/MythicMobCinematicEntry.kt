@@ -18,7 +18,7 @@ import io.lumine.mythic.bukkit.MythicBukkit
 import io.lumine.mythic.core.mobs.ActiveMob
 import io.lumine.mythic.core.skills.SkillMetadataImpl
 import io.lumine.mythic.core.skills.SkillTriggers
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 
 @Entry("mythicmob_cinematic", "Spawn a MythicMob during a cinematic", Colors.PURPLE, "fa6-solid:dragon")

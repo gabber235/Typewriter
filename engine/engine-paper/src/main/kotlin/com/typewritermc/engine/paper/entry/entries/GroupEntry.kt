@@ -2,7 +2,7 @@ package com.typewritermc.engine.paper.entry.entries
 
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.StaticEntry
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import java.util.*
 

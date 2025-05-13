@@ -5,7 +5,7 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import com.typewritermc.engine.paper.plugin
 import kotlinx.coroutines.*
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 
 enum class ThreadType {
     SYNC,

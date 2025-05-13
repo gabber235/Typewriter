@@ -1,7 +1,9 @@
 package com.typewritermc.engine.paper.utils
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemModel
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemTooltipDisplay
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.resources.ResourceLocation
@@ -9,6 +11,7 @@ import com.github.retrooper.packetevents.util.Dummy
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
+import com.typewritermc.core.utils.serverVersion
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.plugin
@@ -127,32 +130,39 @@ fun Player.restore(state: PlayerState?) {
     state?.state?.forEach { (key, value) -> key.restore(this, value) }
 }
 
-val fakeAir: com.github.retrooper.packetevents.protocol.item.ItemStack =
-    com.github.retrooper.packetevents.protocol.item.ItemStack.builder()
-        .type(ItemTypes.PAPER)
-        .component(ComponentTypes.ITEM_MODEL, ItemModel(ResourceLocation("minecraft", "air")))
-        .component(ComponentTypes.ITEM_NAME, Component.text(" "))
-        .component(ComponentTypes.HIDE_TOOLTIP, Dummy.dummy())
-        .component(ComponentTypes.HIDE_ADDITIONAL_TOOLTIP, Dummy.dummy())
-        .build()
+val fakeAir: com.github.retrooper.packetevents.protocol.item.ItemStack by lazy {
+    var builder =
+        com.github.retrooper.packetevents.protocol.item.ItemStack.builder()
+            .type(ItemTypes.PAPER)
+            .component(ComponentTypes.ITEM_MODEL, ItemModel(ResourceLocation("minecraft", "air")))
+            .component(ComponentTypes.ITEM_NAME, Component.text(" "))
+
+    builder = if (serverVersion.isOlderThanOrEquals(ServerVersion.V_1_21_4)) {
+        builder
+            .component(ComponentTypes.HIDE_TOOLTIP, Dummy.dummy())
+            .component(ComponentTypes.HIDE_ADDITIONAL_TOOLTIP, Dummy.dummy())
+    } else { // 1.21.5+
+        builder.component(ComponentTypes.TOOLTIP_DISPLAY, ItemTooltipDisplay(true, emptySet()))
+    }
+
+    return@lazy builder.build()
+}
+
 
 fun Player.fakeClearInventory() {
-    for (i in 0..8) {
-        // Setting an item with model air, will hide the hand in the cinematic
-        val packet = WrapperPlayServerSetSlot(-2, 0, i, fakeAir)
-        packet.sendPacketTo(this)
-    }
-
-    for (i in 9..46) {
-        val item = inventory.getItem(i) ?: continue
-        if (item.isEmpty) continue
-
-        val packet = WrapperPlayServerSetSlot(-2, 0, i, com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY)
-        packet.sendPacketTo(this)
-    }
+    WrapperPlayServerWindowItems(
+        0,
+        0,
+        (0..45).map { slot ->
+            if (slot >= 36) fakeAir else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+        },
+        null,
+    ) sendPacketTo this
 }
 
 fun Player.restoreInventory() {
+    // I can't be bother to transform the ids from the normal version to the weird version need for the WrapperPlayServerWindowItems
+    // So we just send many packets instead
     for (i in 0..46) {
         val item = inventory.getItem(i) ?: ItemStack.empty()
 
@@ -176,7 +186,7 @@ fun InterceptionBundle.keepFakeInventory() {
     PacketType.Play.Server.WINDOW_ITEMS { event ->
         val packet = WrapperPlayServerWindowItems(event)
         packet.items = List(packet.items.size) { index ->
-            if (index in 0..8) fakeAir
+            if (index >= 36) fakeAir
             else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
         }
     }

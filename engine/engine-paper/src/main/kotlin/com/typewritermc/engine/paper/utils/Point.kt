@@ -7,7 +7,7 @@ import com.github.retrooper.packetevents.util.Vector3i
 import com.typewritermc.core.utils.point.*
 import com.typewritermc.core.utils.point.Vector
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import java.util.*
 

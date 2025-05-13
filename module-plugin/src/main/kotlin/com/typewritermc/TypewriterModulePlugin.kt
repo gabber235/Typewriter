@@ -3,7 +3,6 @@ package com.typewritermc
 import com.google.devtools.ksp.gradle.KspExtension
 import com.typewritermc.moduleplugin.TypewriterModuleConfiguration
 import com.typewritermc.moduleplugin.validate
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -49,6 +48,7 @@ class TypewriterModulePlugin : Plugin<Project> {
         // Add PacketEvents repository
         repositories.maven {
             it.setUrl("https://repo.codemc.io/repository/maven-releases/")
+            it.setUrl("https://repo.codemc.io/repository/maven-snapshots/")
         }
         // Add EntityLib repository
         repositories.maven {

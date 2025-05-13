@@ -15,7 +15,7 @@ import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.ThreadType.SYNC
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 

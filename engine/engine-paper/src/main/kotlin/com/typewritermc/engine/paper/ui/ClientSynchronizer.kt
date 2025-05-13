@@ -16,7 +16,7 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.utils.ThreadType.SYNC
 import com.typewritermc.loader.ExtensionLoader
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

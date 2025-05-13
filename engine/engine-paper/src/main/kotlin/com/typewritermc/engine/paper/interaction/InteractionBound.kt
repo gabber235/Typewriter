@@ -7,7 +7,7 @@ import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.plugin
 import lirand.api.extensions.events.unregister
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.Listener

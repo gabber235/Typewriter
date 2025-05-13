@@ -4,6 +4,7 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.utils.Reloadable
+import com.typewritermc.core.utils.server
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.interaction.AVERAGE_SCHEDULING_DELAY_MS
 import com.typewritermc.engine.paper.interaction.TICK_MS
@@ -12,7 +13,6 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import lirand.api.extensions.server.server
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.HandlerList
@@ -175,15 +175,14 @@ val Ref<out AudienceEntry>.isActive: Boolean
         return manager[this]?.isActive ?: false
     }
 
-fun <D: AudienceDisplay> Ref<out AudienceEntry>.findDisplay(klass: KClass<D>): D? {
+fun <D : AudienceDisplay> Ref<out AudienceEntry>.findDisplay(klass: KClass<D>): D? {
     val manager = get<AudienceManager>(AudienceManager::class.java)
     return klass.safeCast(manager[this])
 }
 
-inline fun <reified D: AudienceDisplay> Ref<out AudienceEntry>.findDisplay(): D? {
+inline fun <reified D : AudienceDisplay> Ref<out AudienceEntry>.findDisplay(): D? {
     return findDisplay(D::class)
 }
-
 
 
 fun <E : AudienceEntry> List<Ref<out AudienceEntry>>.descendants(klass: KClass<E>): List<Ref<E>> {

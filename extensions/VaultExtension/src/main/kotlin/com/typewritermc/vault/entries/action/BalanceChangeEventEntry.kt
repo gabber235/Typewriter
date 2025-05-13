@@ -19,7 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

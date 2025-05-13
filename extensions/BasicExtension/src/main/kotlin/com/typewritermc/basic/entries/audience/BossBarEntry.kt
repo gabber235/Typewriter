@@ -8,7 +8,7 @@ import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import net.kyori.adventure.bossbar.BossBar
 import org.bukkit.entity.Player
 import java.util.*

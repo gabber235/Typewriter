@@ -1,11 +1,11 @@
 package com.typewritermc.engine.paper.entry.dialogue
 
 import com.destroystokyo.paper.event.player.PlayerJumpEvent
+import com.typewritermc.core.utils.server
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.reloadable
 import lirand.api.extensions.events.unregister
-import lirand.api.extensions.server.server
 import org.bukkit.NamespacedKey
 import org.bukkit.attribute.Attribute
 import org.bukkit.attribute.AttributeModifier

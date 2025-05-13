@@ -12,7 +12,7 @@ import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.logger
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import java.util.*
 import kotlin.reflect.safeCast
 
@@ -37,7 +37,8 @@ class SkinVariable(
     override val name: String = "",
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        val data = context.getData<SkinVariableData>() ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+        val data = context.getData<SkinVariableData>()
+            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
         val possibleUUID = data.uuid.parsePlaceholders(context.player)
         val uuid = try {
             UUID.fromString(possibleUUID)
@@ -46,7 +47,8 @@ class SkinVariable(
             context.player.uniqueId
         }
         val skin = server.getOfflinePlayer(uuid).skin
-        return context.klass.safeCast(skin) ?: throw IllegalStateException("Could not cast skin to ${context.klass}, SkinProperty is only compatible with SkinProperty fields")
+        return context.klass.safeCast(skin)
+            ?: throw IllegalStateException("Could not cast skin to ${context.klass}, SkinProperty is only compatible with SkinProperty fields")
     }
 }
 

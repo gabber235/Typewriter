@@ -5,7 +5,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin
 import com.typewritermc.core.extension.Initializable
 import com.typewritermc.core.extension.annotations.Singleton
 import com.typewritermc.engine.paper.logger
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 
 @Singleton
 class WorldGuardInitializer : Initializable {

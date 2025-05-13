@@ -5,15 +5,16 @@ import java.io.ByteArrayOutputStream
 
 plugins {
     id("xyz.jpenilla.resource-factory-paper-convention") version "1.2.0"
-    id("io.papermc.hangar-publish-plugin") version "0.1.2"
+    id("io.papermc.hangar-publish-plugin") version "0.1.3"
 }
 
 repositories {
     mavenCentral()
     // Floodgate & Geyser
     maven("https://repo.opencollab.dev/main/")
-    // PacketEvents, CommandAPI
+    // PacketEvents
     maven("https://repo.codemc.io/repository/maven-releases/")
+    maven("https://repo.codemc.io/repository/maven-snapshots/")
     // PlaceholderAPI
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     // PaperMC
@@ -50,8 +51,8 @@ dependencies {
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.7.0")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.7.0")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.8.0-SNAPSHOT")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.8.0-SNAPSHOT")
 
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnlyApi("org.geysermc.geyser:api:2.7.0-SNAPSHOT")
@@ -131,8 +132,14 @@ hangarPublish {
                 platformVersions.set(versions)
 
                 dependencies {
-                    url("PacketEvents", "https://modrinth.com/plugin/packetevents/versions?l=paper&l=purpur") {
+                    url("PacketEvents", "https://modrinth.com/plugin/packetevents/versions?l=paper") {
                         required.set(true)
+                    }
+                    hangar("PlaceholderAPI") {
+                        required.set(false)
+                    }
+                    hangar("Floodgate") {
+                        required.set(false)
                     }
                 }
             }
@@ -148,7 +155,7 @@ paperPluginYaml {
     version = project.version.toString()
 
     main = "com.typewritermc.engine.paper.TypewriterPaperPlugin"
-    apiVersion = "1.21"
+    apiVersion = "1.21.3"
 
     foliaSupported = false
 

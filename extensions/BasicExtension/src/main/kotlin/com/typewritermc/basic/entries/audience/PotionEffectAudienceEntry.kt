@@ -5,7 +5,7 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.ThreadType
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -51,7 +51,16 @@ class PotionEffectAudienceDisplay(
         val strength = strength.get(player).coerceAtLeast(1) - 1
         ThreadType.SYNC.launch {
             player.removePotionEffect(potionEffect)
-            player.addPotionEffect(PotionEffect(potionEffect, PotionEffect.INFINITE_DURATION, strength, ambient, particles, icon))
+            player.addPotionEffect(
+                PotionEffect(
+                    potionEffect,
+                    PotionEffect.INFINITE_DURATION,
+                    strength,
+                    ambient,
+                    particles,
+                    icon
+                )
+            )
         }
         strengths[player.uniqueId] = strength
     }

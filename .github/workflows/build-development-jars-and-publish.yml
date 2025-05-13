@@ -72,9 +72,9 @@ jobs:
           loaders: |
             paper
           game-versions: |
-            [1.21.3, 1.21.4]
+            [1.21.3, 1.21.5]
           dependencies: |
-            packetevents
+            packetevents(required)
 
       - name: Publish Hangar
         uses: gradle/gradle-build-action@v2

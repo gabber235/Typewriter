@@ -9,7 +9,7 @@ import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.facts.FactData
 import com.typewritermc.engine.paper.facts.FactDatabase
 import com.typewritermc.engine.paper.facts.FactId
-import lirand.api.extensions.server.server
+import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
 import java.time.LocalDateTime
