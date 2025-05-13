@@ -12,7 +12,6 @@ import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import net.islandearth.rpgregions.api.RPGRegionsAPI
 import net.islandearth.rpgregions.managers.data.region.WorldDiscovery
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Entry("discover_rpg_region", "Create a discover for an RPGRegions region", Colors.RED, "fa6-solid:address-book")
 /**
@@ -37,13 +36,7 @@ class DiscoverRegionActionEntry(
 
         val user = RPGRegionsAPI.getAPI().managers.storageManager.getAccount(player.uniqueId)
         val date: LocalDateTime = LocalDateTime.now()
-        val format: DateTimeFormatter =
-            DateTimeFormatter.ofPattern(
-                RPGRegionsAPI.getAPI().config.getString("settings.server.discoveries.date.format") ?: ""
-            )
-
-        val formattedDate = date.format(format)
-        val worldDiscovery = WorldDiscovery(formattedDate, region.get().id)
+        val worldDiscovery = WorldDiscovery(date, region.get().id)
         user.get().addDiscovery(worldDiscovery)
 
         RPGRegionsAPI.getAPI().managers.storageManager.removeCachedAccount(player.uniqueId)

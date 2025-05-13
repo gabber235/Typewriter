@@ -1,6 +1,5 @@
 package com.typewritermc.roadnetwork
 
-import co.touchlab.stately.concurrency.AtomicInt
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
@@ -13,6 +12,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.util.concurrent.atomic.AtomicInteger
 
 class RoadNetworkEditor(
     private val ref: Ref<out RoadNetworkEntry>,
@@ -25,7 +25,7 @@ class RoadNetworkEditor(
     private var lastChange: Long = -1
     private var job: Job? = null
     private var jobRecalculateEdges: Job? = null
-    private var recalculateEdges = AtomicInt(0)
+    private var recalculateEdges = AtomicInteger(0)
     private var mutex = Mutex()
 
     val state: RoadNetworkEditorState

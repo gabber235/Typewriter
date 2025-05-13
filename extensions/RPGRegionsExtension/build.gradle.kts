@@ -5,7 +5,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("net.islandearth.rpgregions:api:1.4.4") // 1.4.4
+    compileOnly("net.islandearth.rpgregions:api:1.4.7")
 }
 
 typewriter {

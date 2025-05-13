@@ -38,5 +38,5 @@ class DiscoverRegionEventEntry(
 @EntryListener(DiscoverRegionEventEntry::class)
 fun onDiscoverRegions(event: RegionDiscoverEvent, query: Query<DiscoverRegionEventEntry>) {
     val player = server.getPlayer(event.player.uniqueId) ?: return
-    query.findWhere { it.region == event.region }.triggerAllFor(player, context())
+    query.findWhere { it.region == event.region.id }.triggerAllFor(player, context())
 }

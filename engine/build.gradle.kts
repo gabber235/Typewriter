@@ -38,12 +38,12 @@ subprojects {
     version = rootProject.version
 
     dependencies {
-        api("io.insert-koin:koin-core:3.5.6")
-        compileOnly("com.google.code.gson:gson:2.11.0")
+        api("io.insert-koin:koin-core:4.0.4")
+        compileOnly("com.google.code.gson:gson:2.13.1")
 
-        compileOnlyApi("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
-        compileOnlyApi("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
-        compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+        compileOnlyApi(kotlin("stdlib"))
+        compileOnlyApi(kotlin("reflect"))
+        compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
         val kotestVersion = "5.9.1"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")

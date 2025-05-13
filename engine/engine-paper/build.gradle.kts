@@ -17,13 +17,16 @@ repositories {
     // PlaceholderAPI
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     // PaperMC
-    maven("https://repo.papermc.io/repository/maven-public/")
+    maven {
+        name = "papermc"
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
     // EntityLib
     maven("https://maven.evokegames.gg/snapshots")
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnlyApi("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
@@ -31,16 +34,16 @@ dependencies {
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
     api("me.tofaa.entitylib:spigot:+630837f-SNAPSHOT")
-    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0")
-    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.20.0")
+    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
+    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 
     // Doesn't want to load properly using the spigot api.
-    compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.12")
-    compileOnlyApi("io.ktor:ktor-server-netty-jvm:2.3.12")
-    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+    compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.13")
+    compileOnlyApi("io.ktor:ktor-server-netty-jvm:2.3.13")
+    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
     compileOnlyApi("org.bstats:bstats-bukkit:3.1.0")
 
-    val adventureVersion = "4.17.0"
+    val adventureVersion = "4.20.0"
     compileOnlyApi("net.kyori:adventure-api:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-minimessage:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-plain:$adventureVersion")
@@ -49,11 +52,12 @@ dependencies {
 
     compileOnlyApi("com.github.retrooper:packetevents-api:2.7.0")
     compileOnlyApi("com.github.retrooper:packetevents-spigot:2.7.0")
-    compileOnly("me.clip:placeholderapi:2.11.6")
-    compileOnlyApi("org.geysermc.geyser:api:2.4.2-SNAPSHOT")
-    compileOnlyApi("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
 
-    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.18.0")
+    compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnlyApi("org.geysermc.geyser:api:2.7.0-SNAPSHOT")
+    compileOnlyApi("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
+
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.46.3")
 }
 
 tasks.withType<ShadowJar> {

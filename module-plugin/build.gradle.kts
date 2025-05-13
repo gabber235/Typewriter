@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.0.21"
     `java-gradle-plugin`
     id("com.gradle.plugin-publish") version "1.2.1"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.26"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     kotlin("plugin.serialization") version "2.0.20" apply false
     `maven-publish`
 }
@@ -29,9 +29,9 @@ allprojects {
 
     dependencies {
         implementation(kotlin("stdlib"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-        implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.0.21-1.0.26")
-        implementation("com.google.devtools.ksp:symbol-processing-api:2.0.21-1.0.26")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+        implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.0.21-1.0.28")
+        implementation("com.google.devtools.ksp:symbol-processing-api:2.0.21-1.0.28")
 
         implementation("com.typewritermc:engine-core:$engineVersion")
 

@@ -25,19 +25,19 @@ public class TypewriterPaperLoader implements PluginLoader {
 
         addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-stdlib:2.0.21", central);
         addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-reflect:2.0.21", central);
-        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0",
+        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2",
             central);
         addDependency(classpathBuilder, "com.corundumstudio.socketio:netty-socketio:1.7.19",
             central);
 
         addDependency(classpathBuilder,
-            "com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.20.0", central);
+            "com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0", central);
         addDependency(classpathBuilder,
-            "com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.20.0", central);
+            "com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0", central);
 
         addDependency(classpathBuilder, "io.ktor:ktor-server-core-jvm:2.3.12", central);
         addDependency(classpathBuilder, "io.ktor:ktor-server-netty-jvm:2.3.12", central);
-        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3",
+        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1",
             central);
         addDependency(classpathBuilder, "org.bstats:bstats-bukkit:3.1.0", central);
     }
