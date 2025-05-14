@@ -1,0 +1,47 @@
+package seamlezz:surrealdb@0.1.0;
+
+/// interface types {
+  ///     variant surrealdb-value {
+    ///         none,
+    ///         null,
+    ///         %bool(bool),
+    ///         int(s64),
+    ///         float(f64),
+    ///         %string(string),
+    ///         bytes(list<u8>),
+    ///         array(list<surrealdb-value>),
+    ///         object(list<tuple<string, surrealdb-value>>),
+    ///     }
+  ///
+  ///     record thing {
+    ///         table: string,
+    ///         id: id,
+    ///     }
+  ///     variant id {
+    ///         number(s64),
+    ///         %string(string),
+    ///         uuid(list<u8>),
+    ///         array(list<surrealdb-value>),
+    ///         object(list<tuple<string, surrealdb-value>>),
+    ///         generate(gen),
+    ///         range(id-range),
+    ///     }
+  ///     enum gen {
+    ///         rand,
+    ///         ulid,
+    ///         uuid,
+    ///     }
+  ///     record id-range {
+    ///         beg: id,
+    ///         end: id,
+    ///     }
+  /// }
+interface call {
+  /// Both params and results are encoded in cbor.
+  /// Because wit doesn't support self referential types, we need to encode the params as a list of tuples.
+  query: func(query: string, params: list<tuple<string, list<u8>>>) -> list<result<list<u8>, string>>;
+}
+
+world provider {
+  export call;
+}

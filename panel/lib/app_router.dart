@@ -1,4 +1,5 @@
 import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.gr.dart";
@@ -41,6 +42,7 @@ class AuthGuard extends AutoRouteGuard {
   @override
   void onNavigation(NavigationResolver resolver, StackRouter router) {
     final isAuthenticated = ref.read(isAuthenticatedProvider).requireValue;
+    debugPrint("AuthGuard: isAuthenticated: $isAuthenticated");
 
     if (isAuthenticated) {
       resolver.next();

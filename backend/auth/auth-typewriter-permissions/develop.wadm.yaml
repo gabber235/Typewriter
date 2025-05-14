@@ -1,10 +1,10 @@
 apiVersion: core.oam.dev/v1beta1
 kind: Application
 metadata:
-  name: auth-callout
+  name: auth-typewriter-permissions
   annotations:
     version: v0.0.1
-    description: 'Authorization callout for NATS'
+    description: 'Generate NATS permissions for a given Claim of a user'
 spec:
   policies:
     - name: vault
@@ -14,30 +14,21 @@ spec:
         role_name: 'auth-callout-role'
         mount_path: 'jwt'
   components:
-    - name: auth-callout-component
+    - name: auth-typewriter-permissions
       type: component
       properties:
-        image: registry:5001/auth_callout_component:0.1.0
-        config:
-          - name: auth-config
-            properties:
-              issuers: '[{"id":"typewriter","issuer_url":"https://auth.typewritermc.com/oidc","jwks_url":"https://auth.typewritermc.com/oidc/jwks", "nats_account_key": "AAOGRKTAIDHPREVFTNK7AB6RZPWEAQ7CLWPZWGTHOBZCNULC4H2KMJ5J"}]'
-        secrets:
-          - name: nats-issuer-seed
-            properties:
-              policy: vault
-              key: nats/auth-callout/issuer
-              field: seed
-              version: '1'
-          - name: nats-signing-keys
-            properties:
-              policy: vault
-              key: nats/auth-callout/signing-keys
-              version: '1'
+        image: registry:5001/auth_typewriter_permissions:0.1.0
       traits:
         - type: spreadscaler
           properties:
             instances: 100
+        - type: link
+          properties:
+            target:
+              name: surrealdb-provider
+            namespace: seamlezz
+            package: surrealdb
+            interfaces: [call]
         - type: link
           properties:
             target:
@@ -56,19 +47,12 @@ spec:
                     field: seed
                     version: '1'
               config:
-                - name: provider-tgt
+                - name: auth-typewriter-permissions-consumer
                   properties:
                     cluster_uris: 'nats://nats:4222'
             namespace: wasmcloud
             package: messaging
             interfaces: [consumer]
-        - type: link
-          properties:
-            target:
-              name: httpclient
-            namespace: wasi
-            package: http
-            interfaces: [outgoing-handler]
 
     - name: nats
       type: capability
@@ -78,7 +62,7 @@ spec:
         - type: link
           properties:
             target:
-              name: auth-callout-component
+              name: auth-typewriter-permissions
             namespace: wasmcloud
             package: messaging
             interfaces: [handler]
@@ -97,11 +81,21 @@ spec:
                     field: seed
                     version: '1'
               config:
-                - name: auth-callout-subscription
+                - name: auth-typewriter-permissions-subscription
                   properties:
-                    subscriptions: '$SYS.REQ.USER.AUTH'
+                    subscriptions: 'auth.permissions.typewriter'
                     cluster_uris: 'nats://nats:4222'
-    - name: httpclient
+    - name: surrealdb-provider
       type: capability
       properties:
-        image: ghcr.io/wasmcloud/http-client:0.13.1
+        image: registry:5001/surrealdb_provider:0.1.0 
+        config:
+          - name: auth-typewriter-permissions-surrealdb
+            properties:
+              namespace: typewriter
+              database: develop
+              auth: root
+              username: root
+              password: root
+              url: ws://surrealdb:9000
+

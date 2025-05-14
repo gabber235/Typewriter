@@ -4,6 +4,7 @@ import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
+import "package:typewriter_panel/logic/organization.dart";
 
 part "nats.g.dart";
 
@@ -20,7 +21,7 @@ const _natsSentinelSeed =
 class Nats extends _$Nats {
   @override
   Client build() {
-    final token = ref.watch(idTokenProvider).requireValue;
+    final token = ref.watch(accessTokenProvider).valueOrNull?.token;
     if (token == null) {
       throw Exception("User must be authenticated before connecting to NATS");
     }
@@ -38,7 +39,9 @@ class Nats extends _$Nats {
 
     debugPrint("nats: connecting to $url");
 
-    client.seed = _natsSentinelSeed;
+    client
+      ..seed = _natsSentinelSeed
+      ..inboxPrefix = "_INBOX.${user.sub}";
 
     unawaited(
       client.connect(
@@ -49,6 +52,7 @@ class Nats extends _$Nats {
           jwt: _natsSentinelJwt,
           user: user.username ?? user.name ?? user.sub,
           pass: token,
+          nkey: ref.watch(organizationProvider).valueOrNull?.id,
         ),
       ),
     );

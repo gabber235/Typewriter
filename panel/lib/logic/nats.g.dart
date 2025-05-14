@@ -6,7 +6,7 @@ part of 'nats.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$natsHash() => r'717e5da9e0b3f7d3be111951008a9be4d0bfc5f8';
+String _$natsHash() => r'd79dc3b9da5b2b2f3ccce90a70675211504599bd';
 
 /// See also [Nats].
 @ProviderFor(Nats)

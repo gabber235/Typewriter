@@ -23,22 +23,22 @@ final isAuthenticatedProvider = AutoDisposeFutureProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef IsAuthenticatedRef = AutoDisposeFutureProviderRef<bool>;
-String _$idTokenHash() => r'46c4980942716d29fc4dc28438a5c6562ddbe813';
+String _$accessTokenHash() => r'14e4250c93ed90ca350b33d884082d6122ede48d';
 
-/// See also [idToken].
-@ProviderFor(idToken)
-final idTokenProvider = AutoDisposeFutureProvider<String?>.internal(
-  idToken,
-  name: r'idTokenProvider',
+/// See also [accessToken].
+@ProviderFor(accessToken)
+final accessTokenProvider = AutoDisposeFutureProvider<AccessToken?>.internal(
+  accessToken,
+  name: r'accessTokenProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$idTokenHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$accessTokenHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef IdTokenRef = AutoDisposeFutureProviderRef<String?>;
+typedef AccessTokenRef = AutoDisposeFutureProviderRef<AccessToken?>;
 String _$authUserInfoHash() => r'12b0d58d9ea77ff317b173a38fdf7263a845401e';
 
 /// See also [authUserInfo].

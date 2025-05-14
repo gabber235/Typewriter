@@ -1,0 +1,11 @@
+name = "auth-typewriter-permissions"
+language = "rust"
+type = "component"
+
+[component]
+wit_world = "auth-typewriter-permissions"
+wasm_target = "wasm32-wasip2"
+
+[[registry.pull.sources]]
+target = "seamlezz:surrealdb"
+source = "oci://git.seamlezz.com"

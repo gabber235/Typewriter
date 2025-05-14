@@ -5,4 +5,8 @@ services:
       - "9000:9000"
     volumes:
       - ./surrealdb:/surrealdb
-    command: ["start", "--log", "info", "--user", "root", "--pass", "root", "--bind", "0.0.0.0:9000", "rocksdb:/surrealdb/database.db"]
+    command: ["start", "--log", "info", "--user", "root", "--pass", "root", "--bind", "0.0.0.0:9000", "--import-file", "/surrealdb/database.surql", "rocksdb:/surrealdb/database.db"]
+    develop:
+      watch:
+        - path: ./surrealdb/database.surql
+          action: restart

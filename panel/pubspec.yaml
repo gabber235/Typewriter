@@ -21,6 +21,7 @@ dependencies:
   dart_nats: ^0.6.5
   rive: ^0.13.20
   collection: ^1.19.1
+  iconify_flutter: ^0.0.7
 
 dev_dependencies:
   flutter_test:

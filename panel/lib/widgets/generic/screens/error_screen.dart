@@ -2,8 +2,12 @@ import "package:flutter/material.dart";
 import "package:rive/rive.dart";
 
 class ErrorScreen extends StatelessWidget {
-  const ErrorScreen(
-      {required this.title, required this.message, this.child, super.key});
+  const ErrorScreen({
+    required this.title,
+    required this.message,
+    this.child,
+    super.key,
+  });
 
   final String title;
   final String message;

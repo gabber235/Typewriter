@@ -35,7 +35,6 @@ services:
       ENCRYPTION_XKEY_SEED: SXAOMQ7V3E4D2JTHGJ7DNUUATHQ6TRYTTW7JC4XR6P55VFJMNPPA6CYZSQ
       TRANSIT_XKEY_SEED: SXAJRAJFLHXFTGMSQDVNNAA7DFAQ65TZJLL5ZYIQKNPM5AD3PV5QMG54GU
     volumes:
-      - ./nats:/data
       - ./nats-server.conf:/etc/nats/nats-server.conf:ro
       - ./resolver.conf:/etc/nats/resolver.conf:ro
     command: ["-config", "/etc/nats/nats-server.conf"]
