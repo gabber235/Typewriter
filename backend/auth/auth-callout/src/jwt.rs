@@ -7,7 +7,7 @@ use jose::{
     jws::Unverified,
     jwt::Claims,
     policy::{Checkable, StandardPolicy},
-    Jwt,
+    Jwt, UntypedAdditionalProperties,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -20,16 +20,6 @@ use wasmcloud_component::wasi::http::{
     types::{Fields, Method, Scheme},
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LogtoClaims {
-    pub name: Option<String>,
-    pub picture: Option<String>,
-    pub updated_at: Option<i64>,
-    pub username: Option<String>,
-    pub created_at: Option<i64>,
-    pub at_hash: Option<String>,
-}
-
 /// TODO: remove when https://github.com/minkan-chat/jose/pull/144 is merged
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Jwks {
@@ -39,7 +29,7 @@ pub struct Jwks {
 pub fn validate_jwt<'t, 'c>(
     token: &'t str,
     configs: &'c Vec<IssuerConfig>,
-) -> Result<(Claims<LogtoClaims>, &'c IssuerConfig)> {
+) -> Result<(Claims<UntypedAdditionalProperties>, &'c IssuerConfig)> {
     let unverified = decode_jwt(token)?;
 
     let key_id = extract_key_id(&unverified)?;
@@ -56,11 +46,11 @@ pub fn validate_jwt<'t, 'c>(
     Ok((verified_jwt.payload().clone(), issuer_config))
 }
 
-fn decode_jwt(token: &str) -> Result<Unverified<Jwt<LogtoClaims>>> {
+fn decode_jwt(token: &str) -> Result<Unverified<Jwt<UntypedAdditionalProperties>>> {
     Ok(Jwt::decode(Compact::from_str(token)?)?)
 }
 
-fn extract_key_id(unverified: &Unverified<Jwt<LogtoClaims>>) -> Result<&str> {
+fn extract_key_id(unverified: &Unverified<Jwt<UntypedAdditionalProperties>>) -> Result<&str> {
     let key_identifier = unverified
         .expose_unverified_header()
         .key_identifier()
@@ -72,7 +62,7 @@ fn extract_key_id(unverified: &Unverified<Jwt<LogtoClaims>>) -> Result<&str> {
     }
 }
 
-fn extract_issuer(unverified: &Unverified<Jwt<LogtoClaims>>) -> Result<String> {
+fn extract_issuer(unverified: &Unverified<Jwt<UntypedAdditionalProperties>>) -> Result<String> {
     unverified
         .expose_unverified_payload()
         .issuer
@@ -180,9 +170,9 @@ fn find_matching_jwk(jwks: Jwks, key_id: &str) -> Result<jose::Jwk> {
 }
 
 fn verify_jwt_signature(
-    unverified: Unverified<Jwt<LogtoClaims>>,
+    unverified: Unverified<Jwt<UntypedAdditionalProperties>>,
     jwk: jose::Jwk,
-) -> Result<jose::jws::Verified<Jwt<LogtoClaims>>> {
+) -> Result<jose::jws::Verified<Jwt<UntypedAdditionalProperties>>> {
     let policy = StandardPolicy::new();
     let mut verifier: JwkVerifier = jwk
         .check(policy)
@@ -192,7 +182,7 @@ fn verify_jwt_signature(
     Ok(unverified.verify(&mut verifier)?)
 }
 
-fn validate_jwt_claims(claims: &Claims<LogtoClaims>) -> Result<()> {
+fn validate_jwt_claims(claims: &Claims<UntypedAdditionalProperties>) -> Result<()> {
     let current_time = SystemTime::now();
 
     if let Some(issued_at) = claims.issued_at {

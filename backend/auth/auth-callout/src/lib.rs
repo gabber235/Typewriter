@@ -5,19 +5,21 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use config::IssuerConfig;
 use exports::wasmcloud::messaging::handler::Guest;
+use jose::UntypedAdditionalProperties;
 use nats_jwt_rs::{
     authorization::{AuthRequest, AuthResponse},
+    types::Permissions,
     user::User,
     Claims,
 };
 use nkeys::KeyPair;
+use serde::{Deserialize, Serialize};
 use wasi::config::runtime;
 use wasmcloud::messaging::*;
 use wasmcloud::secrets::*;
 use wasmcloud_component::{debug, info, warn};
 
 pub mod config;
-pub mod issuers;
 pub mod jwt;
 
 struct AuthCallout;
@@ -110,7 +112,12 @@ fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, any
 
     let keypair = get_signing_keypair(&issuer.id)?;
 
-    let claims = create_user_claims(&jwt, &request.payload().user_nkey, &issuer)?;
+    let claims = create_user_claims(
+        &jwt,
+        &request.payload().user_nkey,
+        &issuer,
+        &request.payload().connect_opts.nkey,
+    )?;
 
     Ok(Some(claims.encode(&keypair)?))
 }
@@ -127,7 +134,10 @@ fn validate_user_jwt<'a>(
     raw_jwt: &str,
     configs: &'a Vec<IssuerConfig>,
     request: &Claims<AuthRequest>,
-) -> Result<(jose::jwt::Claims<jwt::LogtoClaims>, &'a IssuerConfig)> {
+) -> Result<(
+    jose::jwt::Claims<UntypedAdditionalProperties>,
+    &'a IssuerConfig,
+)> {
     match jwt::validate_jwt(raw_jwt, configs) {
         Ok(result) => Ok(result),
         Err(e) => {
@@ -158,29 +168,59 @@ fn get_signing_keypair(issuer_id: &str) -> Result<KeyPair> {
 }
 
 fn create_user_claims(
-    jwt: &jose::jwt::Claims<jwt::LogtoClaims>,
+    jwt: &jose::jwt::Claims<UntypedAdditionalProperties>,
     user_nkey: &str,
     issuer: &IssuerConfig,
+    organization_id: &Option<String>,
 ) -> Result<Claims<User>> {
     let name = jwt
         .additional
-        .username
+        .get("name")
         .clone()
-        .or(jwt.additional.name.clone())
-        .or(jwt.subject.clone())
+        .map(|s| s.to_string())
         .unwrap_or("Unkown".to_string());
 
     let mut claims = User::new_claims(name, user_nkey.to_string());
     claims.payload_mut().issuer_account = Some(issuer.nats_account_key.clone());
 
-    match issuer.id.as_str() {
-        "typewriter" => issuers::typewriter::issue(&mut claims, &jwt),
-        _ => {
-            return Err(anyhow!("Unsupported issuer: {}", issuer.id));
-        }
+    let response = request_permissions(&jwt, issuer.id.as_str(), organization_id)?;
+
+    claims.payload_mut().permissions.permissions = response.permissions;
+    if !response.tags.is_empty() {
+        claims.payload_mut().generic_fields.tags = Some(response.tags);
     }
 
     Ok(claims)
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PermissionRequest {
+    organization_id: Option<String>,
+    jwt: jose::jwt::Claims<UntypedAdditionalProperties>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PermissionResponse {
+    permissions: Permissions,
+    tags: Vec<String>,
+}
+
+fn request_permissions(
+    jwt: &jose::jwt::Claims<UntypedAdditionalProperties>,
+    issuer_id: &str,
+    organization_id: &Option<String>,
+) -> Result<PermissionResponse> {
+    let subject = format!("auth.permissions.{}", issuer_id);
+
+    let body = serde_cbor::to_vec(&PermissionRequest {
+        organization_id: organization_id.clone(),
+        jwt: jwt.clone(),
+    })?;
+
+    let response = consumer::request(subject.as_str(), &body, 1000).map_err(|e| anyhow!(e))?;
+    let response = serde_cbor::from_slice::<PermissionResponse>(&response.body)?;
+
+    Ok(response)
 }
 
 fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>> {

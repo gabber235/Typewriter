@@ -28,7 +28,7 @@ spec:
       properties:
         image: registry:5001/surrealdb_provider:0.1.0 
         config:
-          - name: provider-config
+          - name: surrealdb-config
             properties:
               namespace: test
               database: test
@@ -51,6 +51,6 @@ spec:
             interfaces: [incoming-handler]
             source:
               config:
-                - name: link-config
+                - name: surrealdb-config-http
                   properties:
                     address: 0.0.0.0:10001

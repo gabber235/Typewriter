@@ -1,5 +1,5 @@
 [package]
-name = "auth-callout-component"
+name = "auth-typewriter-permissions"
 edition = "2021"
 version = "0.1.0"
 
@@ -10,13 +10,11 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wit-bindgen = "0.41"
-wasmcloud-component = "0.2.0"
-nats-jwt-rs = "0.1.1"
-anyhow = "1.0"
-nkeys = "0.4"
-serde_json = "1"
+wasmcloud-component = "0.2"
+anyhow = "1"
 serde_cbor = "0.11"
 serde = { version = "1", features = ["derive"] }
-url = "2"
-base64 = "0.22"
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
+nats-jwt-rs = "0.1"
+base64 = "0.22"
+surrealdb-component = { version = "0", registry = "seamlezz" }

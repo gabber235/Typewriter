@@ -5,9 +5,10 @@ import "package:localstorage/localstorage.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
-import "package:typewriter_panel/widgets/generic/error_screen.dart";
-import "package:typewriter_panel/widgets/generic/loading_screen.dart";
-import "package:typewriter_panel/widgets/generic/nats_connection.dart";
+import "package:typewriter_panel/widgets/generic/components/nats_connection.dart";
+import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
+import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
+import "package:typewriter_panel/widgets/generic/screens/loading_screen.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,7 @@ class TypewriterPanel extends HookConsumerWidget {
     final router = ref.watch(appRouterProvider);
     return _EagerInitialization(
       child: MaterialApp.router(
-        title: "TypeWriter",
+        title: "Typewriter",
         theme: _buildTheme(Brightness.light),
         darkTheme: _buildTheme(Brightness.dark),
         routerConfig: router.config(),
@@ -96,21 +97,26 @@ class _EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (_, widget) = require(ref.watch(isAuthenticatedProvider));
+    final (isAuthenticated, widget) =
+        require(ref.watch(isAuthenticatedProvider));
     if (widget != null) {
       return widget;
     }
+    if (isAuthenticated != true) {
+      return child;
+    }
 
-    final (token, widget2) = require(ref.watch(idTokenProvider));
+    final (token, widget2) = require(ref.watch(accessTokenProvider));
     if (widget2 != null) {
       return widget2;
     }
+    if (token == null) {
+      return child;
+    }
 
-    if (token != null) {
-      final (_, widget3) = require(ref.watch(authUserInfoProvider));
-      if (widget3 != null) {
-        return widget3;
-      }
+    final (_, widget3) = require(ref.watch(authUserInfoProvider));
+    if (widget3 != null) {
+      return widget3;
     }
 
     return child;
@@ -145,12 +151,7 @@ class _Error extends HookConsumerWidget {
         title: "Error",
         message:
             "Something went wrong, please report this to the Typewriter discord. $error",
-        child: ElevatedButton(
-          onPressed: () {
-            ref.read(authProvider.notifier).signOut();
-          },
-          child: const Text("Sign out"),
-        ),
+        child: SignOutButton(),
       ),
     );
   }

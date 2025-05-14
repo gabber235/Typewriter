@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:rive/rive.dart";
-import "package:typewriter_panel/widgets/generic/text_scroller.dart";
+import "package:typewriter_panel/widgets/generic/components/text_scroller.dart";
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({

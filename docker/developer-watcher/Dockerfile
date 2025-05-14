@@ -22,27 +22,12 @@ RUN curl -s https://packagecloud.io/install/repositories/wasmcloud/core/script.d
     apt-get install -y wash && \
     rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --gid 1001 appuser && \
-    useradd --uid 1001 --gid 1001 --shell /bin/bash --create-home appuser && \
-    mkdir -p /home/appuser/.cargo && \
-    chown -R appuser:appuser /home/appuser
-
-# Add cargo registry configuration
-RUN mkdir -p /home/appuser/.cargo && \
-    echo '[registries.seamlezz]\nindex = "sparse+https://git.seamlezz.com/api/packages/Seamlezz/cargo/"' > /home/appuser/.cargo/config.toml && \
-    chown -R appuser:appuser /home/appuser/.cargo
-
-ENV CARGO_HOME=/home/appuser/.cargo
-ENV PATH="/home/appuser/.cargo/bin:${PATH}"
+ENV CARGO_REGISTRIES_SEAMLEZZ_INDEX=sparse+https://git.seamlezz.com/api/packages/Seamlezz/cargo/
 
 WORKDIR /app
 
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
-
-RUN chown -R appuser:appuser /app
-
-USER appuser
 
 RUN rustup target add wasm32-wasip2 && \
     rustup target add wasm32-unknown-unknown

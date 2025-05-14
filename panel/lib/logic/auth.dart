@@ -46,8 +46,10 @@ Future<bool> isAuthenticated(Ref ref) {
 }
 
 @riverpod
-Future<String?> idToken(Ref ref) {
-  return ref.watch(authProvider).idToken;
+Future<AccessToken?> accessToken(Ref ref) {
+  return ref
+      .watch(authProvider)
+      .getAccessToken(resource: "https://panel.typewritermc.com");
 }
 
 @riverpod
