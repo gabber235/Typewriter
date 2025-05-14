@@ -39,14 +39,14 @@ class InventorySpaceFact(
 ) : ReadableFactEntry {
     override fun readSinglePlayer(player: Player): FactData {
         if (item.isEmpty) {
-            return FactData(player.inventory.contents.count { it == null || it.isEmpty } * 64)
+            return FactData(player.inventory.storageContents.count { it == null || it.isEmpty } * 64)
         }
         val targetItem = item.get().get(player)
         val prototype = targetItem.build(player)
         val maxStack = prototype.maxStackSize
 
         return FactData(
-            player.inventory.contents.sumOf { slot ->
+            player.inventory.storageContents.sumOf { slot ->
                 when {
                     slot == null -> maxStack
                     slot.isEmpty -> maxStack
