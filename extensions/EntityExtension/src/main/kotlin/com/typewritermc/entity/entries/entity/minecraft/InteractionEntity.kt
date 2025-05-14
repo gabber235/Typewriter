@@ -10,13 +10,11 @@ import com.typewritermc.core.extension.annotations.OnlyTags
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entity.FakeEntity
-import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import com.typewritermc.engine.paper.entry.entity.SimpleEntityDefinition
 import com.typewritermc.engine.paper.entry.entity.SimpleEntityInstance
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.utils.Sound
-import com.typewritermc.engine.paper.utils.toPacketLocation
 import com.typewritermc.entity.entries.data.minecraft.BoxSizeProperty
 import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
@@ -26,7 +24,7 @@ import org.bukkit.entity.Player
 @Entry(
     "interaction_entity_definition",
     "An entity that allows quest, responding to player input",
-    Colors.BLUE,
+    Colors.ORANGE,
     "ic:round-touch-app"
 )
 @Tags("interaction_entity_definition")
