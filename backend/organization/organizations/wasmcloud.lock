@@ -12,10 +12,19 @@ version = "0.1.0"
 digest = "sha256:fe3f275b7717b40b63d02f54a5b2a8e7d9eb3fa7c54c0e996835a1f1f88aa058"
 
 [[packages]]
-name = "wasi:http"
+name = "wasi:logging"
 registry = "wasi.dev"
 
 [[packages.versions]]
-requirement = "=0.2.2"
-version = "0.2.2"
-digest = "sha256:a1f129cdf1fde55ec2d4ae8d998c39a7e5cf7544a8bd84a831054ac0d2ac64dd"
+requirement = "=0.1.0-draft"
+version = "0.1.0-draft"
+digest = "sha256:09621a45b12b0a9cddc798517f778aac0e5ae4bd234077b3d70758d6cf625580"
+
+[[packages]]
+name = "wasmcloud:messaging"
+registry = "wasmcloud.com"
+
+[[packages.versions]]
+requirement = "=0.2.0"
+version = "0.2.0"
+digest = "sha256:bd2182f0a304b9a54a6b363f2f655422c8c0f00a03073c0195f1614a92dfdc7b"

@@ -1,6 +1,9 @@
 package typewriter:organizations;
 
 world organizations {
-   import seamlezz:surrealdb/call@0.1.0;
-   export wasi:http/incoming-handler@0.2.2;
+  import wasi:logging/logging@0.1.0-draft;
+  import wasmcloud:messaging/consumer@0.2.0;
+
+  import seamlezz:surrealdb/call@0.1.0;
+  export wasmcloud:messaging/handler@0.2.0;
 }

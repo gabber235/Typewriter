@@ -1,0 +1,112 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    always_declare_return_types: true
+    always_put_required_named_parameters_first: true
+    annotate_overrides: true
+    annotate_redeclares: true
+    avoid_bool_literals_in_conditional_expressions: true
+    avoid_catches_without_on_clauses: true
+    avoid_classes_with_only_static_members: true
+    avoid_field_initializers_in_const_classes: true
+    avoid_final_parameters: true
+    avoid_multiple_declarations_per_line: true
+    avoid_positional_boolean_parameters: true
+    avoid_private_typedef_functions: true
+    avoid_redundant_argument_values: false
+    avoid_setters_without_getters: true
+    avoid_types_on_closure_parameters: true
+    avoid_void_async: true
+    cascade_invocations: true
+    cast_nullable_to_non_nullable: true
+    combinators_ordering: true
+    deprecated_consistency: true
+    directives_ordering: true
+    do_not_use_environment: true
+    empty_catches: true
+    eol_at_end_of_file: false
+    implicit_call_tearoffs: true
+    join_return_with_assignment: true
+    leading_newlines_in_multiline_strings: true
+    missing_whitespace_between_adjacent_strings: true
+    no_literal_bool_comparisons: true
+    noop_primitive_operations: true
+    omit_local_variable_types: true
+    one_member_abstracts: true
+    only_throw_errors: true
+    parameter_assignments: true
+    prefer_asserts_in_initializer_lists: true
+    prefer_asserts_with_message: true
+    prefer_constructors_over_static_methods: true
+    prefer_double_quotes: true
+    prefer_final_in_for_each: true
+    prefer_final_locals: true
+    prefer_function_declarations_over_variables: true
+    prefer_if_elements_to_conditional_expressions: true
+    prefer_mixin: true
+    prefer_null_aware_method_calls: true
+    require_trailing_commas: true
+    sized_box_shrink_expand: true
+    sort_constructors_first: true
+    sort_unnamed_constructors_first: true
+    tighten_type_of_initializing_formals: true
+    type_annotate_public_apis: true
+    unawaited_futures: true
+    unnecessary_await_in_return: true
+    unnecessary_brace_in_string_interps: true
+    unnecessary_breaks: true
+    unnecessary_const: true
+    unnecessary_constructor_name: true
+    unnecessary_lambdas: true
+    unnecessary_null_aware_operator_on_extension_on_nullable: true
+    unnecessary_null_checks: true
+    unnecessary_parenthesis: true
+    unnecessary_raw_strings: true
+    use_colored_box: true
+    use_decorated_box: true
+    use_enums: true
+    use_if_null_to_convert_nulls_to_bools: true
+    use_is_even_rather_than_modulo: true
+    use_late_for_private_fields_and_variables: true
+    use_named_constants: true
+    use_raw_strings: true
+    use_rethrow_when_possible: true
+    use_setters_to_change_properties: true
+    use_string_buffers: true
+    use_test_throws_matchers: true
+    use_to_and_as_if_applicable: true
+
+
+analyzer:
+  plugins:
+    - custom_lint
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  errors:
+    invalid_annotation_target: ignore
+    always_use_package_imports: error
+    avoid_dynamic_calls: warning
+    avoid_returning_null_for_future: warning
+    cancel_subscriptions: error
+    close_sinks: error
+    comment_references: warning
+    diagnostic_describe_all_properties: warning
+    literal_only_boolean_expressions: warning
+    no_adjacent_strings_in_list: error
+    test_types_in_equals: error
+    throw_in_finally: error
+    unnecessary_statements: warning
+    sort_pub_dependencies: warning
+
+custom_lint:
+  rules:
+    - missing_provider_scope: true
+    - scoped_providers_should_specify_dependencies: true
+    - provider_parameters: true
+    - unsupported_provider_value: true
+    - generator_class_extends: true
+    - avoid_manual_providers_as_generated_provider_dependency: false
+    - scoped_providers_should_specify_dependencies: false
+    - missing_provider_scope: false

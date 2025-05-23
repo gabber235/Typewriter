@@ -9,6 +9,9 @@ version = "0.1.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-serde = { version = "1.0.219", features = ["derive"] }
+wit-bindgen = "0.41"
+serde_cbor = "0.11"
+serde = { version = "1", features = ["derive"] }
 surrealdb-component = { version = "0", registry = "seamlezz" }
-wasmcloud-component = "0.2.0"
+wasmcloud-component = "0.2"
+wasmcloud-utils = { version = "1", registry = "seamlezz" }

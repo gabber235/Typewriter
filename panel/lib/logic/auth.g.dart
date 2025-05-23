@@ -6,69 +6,193 @@ part of 'auth.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$isAuthenticatedHash() => r'01cfa8d489aff8e3db8617554e57eec265333884';
-
-/// See also [isAuthenticated].
-@ProviderFor(isAuthenticated)
-final isAuthenticatedProvider = AutoDisposeFutureProvider<bool>.internal(
-  isAuthenticated,
-  name: r'isAuthenticatedProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$isAuthenticatedHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef IsAuthenticatedRef = AutoDisposeFutureProviderRef<bool>;
-String _$accessTokenHash() => r'14e4250c93ed90ca350b33d884082d6122ede48d';
-
-/// See also [accessToken].
-@ProviderFor(accessToken)
-final accessTokenProvider = AutoDisposeFutureProvider<AccessToken?>.internal(
-  accessToken,
-  name: r'accessTokenProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$accessTokenHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AccessTokenRef = AutoDisposeFutureProviderRef<AccessToken?>;
-String _$authUserInfoHash() => r'12b0d58d9ea77ff317b173a38fdf7263a845401e';
-
-/// See also [authUserInfo].
-@ProviderFor(authUserInfo)
-final authUserInfoProvider =
-    AutoDisposeFutureProvider<LogtoUserInfoResponse>.internal(
-  authUserInfo,
-  name: r'authUserInfoProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$authUserInfoHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AuthUserInfoRef = AutoDisposeFutureProviderRef<LogtoUserInfoResponse>;
-String _$authHash() => r'89b247a087d89bf9fb02947ea8ac1c28470a27f3';
-
-/// See also [Auth].
 @ProviderFor(Auth)
-final authProvider = AutoDisposeNotifierProvider<Auth, LogtoClient>.internal(
-  Auth.new,
-  name: r'authProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$authHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const authProvider = AuthProvider._();
 
-typedef _$Auth = AutoDisposeNotifier<LogtoClient>;
+final class AuthProvider extends $NotifierProvider<Auth, LogtoClient> {
+  const AuthProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'authProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$authHash();
+
+  @$internal
+  @override
+  Auth create() => Auth();
+
+  @$internal
+  @override
+  $NotifierProviderElement<Auth, LogtoClient> $createElement(
+          $ProviderPointer pointer) =>
+      $NotifierProviderElement(pointer);
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LogtoClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $ValueProvider<LogtoClient>(value),
+    );
+  }
+}
+
+String _$authHash() => r'7f02474a574ae333e6ce19dbf1c0d2abb102829d';
+
+abstract class _$Auth extends $Notifier<LogtoClient> {
+  LogtoClient build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<LogtoClient>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<LogtoClient>, LogtoClient, Object?, Object?>;
+    element.handleValue(ref, created);
+  }
+}
+
+@ProviderFor(isAuthenticated)
+const isAuthenticatedProvider = IsAuthenticatedProvider._();
+
+final class IsAuthenticatedProvider
+    extends $FunctionalProvider<AsyncValue<bool>, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  const IsAuthenticatedProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'isAuthenticatedProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$isAuthenticatedHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return isAuthenticated(ref);
+  }
+}
+
+String _$isAuthenticatedHash() => r'a122de67d3dbd6bae712235e8a57c8ff7399edf8';
+
+@ProviderFor(userId)
+const userIdProvider = UserIdProvider._();
+
+final class UserIdProvider
+    extends $FunctionalProvider<AsyncValue<String?>, FutureOr<String?>>
+    with $FutureModifier<String?>, $FutureProvider<String?> {
+  const UserIdProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'userIdProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$userIdHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String?> create(Ref ref) {
+    return userId(ref);
+  }
+}
+
+String _$userIdHash() => r'6655b62760fa3487a0f1aa8c80604428f5d78ce6';
+
+@ProviderFor(accessToken)
+const accessTokenProvider = AccessTokenProvider._();
+
+final class AccessTokenProvider extends $FunctionalProvider<
+        AsyncValue<AccessToken?>, FutureOr<AccessToken?>>
+    with $FutureModifier<AccessToken?>, $FutureProvider<AccessToken?> {
+  const AccessTokenProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'accessTokenProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$accessTokenHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<AccessToken?> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<AccessToken?> create(Ref ref) {
+    return accessToken(ref);
+  }
+}
+
+String _$accessTokenHash() => r'9c7cde866e768bda04a70eafbbe8ab76408843ac';
+
+@ProviderFor(authUserInfo)
+const authUserInfoProvider = AuthUserInfoProvider._();
+
+final class AuthUserInfoProvider extends $FunctionalProvider<
+        AsyncValue<LogtoUserInfoResponse>, FutureOr<LogtoUserInfoResponse>>
+    with
+        $FutureModifier<LogtoUserInfoResponse>,
+        $FutureProvider<LogtoUserInfoResponse> {
+  const AuthUserInfoProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'authUserInfoProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$authUserInfoHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<LogtoUserInfoResponse> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<LogtoUserInfoResponse> create(Ref ref) {
+    return authUserInfo(ref);
+  }
+}
+
+String _$authUserInfoHash() => r'6ecf0b44884d7ef0a2a26b013e8c964714e9f24d';
+
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

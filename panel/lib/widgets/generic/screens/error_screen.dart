@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:rive/rive.dart";
+import "package:typewriter_panel/main.dart";
 
 class ErrorScreen extends StatelessWidget {
   const ErrorScreen({
@@ -31,18 +32,35 @@ class ErrorScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 24),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              spacing: 8,
+              children: [
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize:
+                        context.responsive(mobile: 24, tablet: 32, desktop: 40),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: context.responsive(
+                      mobile: 14,
+                      tablet: 16,
+                      desktop: 20,
+                    ),
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, color: Colors.grey),
           ),
           SizedBox(height: 24),
           if (child != null) child!,

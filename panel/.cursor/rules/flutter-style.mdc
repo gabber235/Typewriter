@@ -1,0 +1,9 @@
+---
+description: 
+globs: *.dart
+alwaysApply: false
+---
+# Flutter Style Guide
+
+- Prefer double quotes (`"`) instead of single quotes (`'`) for all strings in Dart/Flutter code.
+- Do not use the `labelText` property on text fields. Use only `hintText` for placeholder text.

@@ -1,10 +1,15 @@
-wit_bindgen::generate!({ generate_all });
+wit_bindgen::generate!({
+    with: {
+        "wasmcloud:messaging/consumer@0.2.0": wasmcloud_utils::wasmcloud::messaging::consumer,
+        "wasmcloud:messaging/handler@0.2.0": wasmcloud_utils::wasmcloud::messaging::handler,
+    },
+    generate_all,
+});
 
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 use config::IssuerConfig;
-use exports::wasmcloud::messaging::handler::Guest;
 use jose::UntypedAdditionalProperties;
 use nats_jwt_rs::{
     authorization::{AuthRequest, AuthResponse},
@@ -15,14 +20,15 @@ use nats_jwt_rs::{
 use nkeys::KeyPair;
 use serde::{Deserialize, Serialize};
 use wasi::config::runtime;
-use wasmcloud::messaging::*;
 use wasmcloud::secrets::*;
-use wasmcloud_component::{debug, info, warn};
+use wasmcloud_component::{debug, info};
+use wasmcloud_utils::wasmcloud::messaging::{consumer, handler::Guest, reply, types};
 
 pub mod config;
 pub mod jwt;
 
 struct AuthCallout;
+wasmcloud_utils::export!(AuthCallout);
 
 const EXPECTED_AUDIENCE: &str = "nats-authorization-request";
 
@@ -82,19 +88,6 @@ fn create_auth_response(user_nkey: String, server_id: String) -> Claims<AuthResp
     let mut response = AuthResponse::generic_claim(user_nkey);
     response.aud = Some(server_id);
     response
-}
-
-fn reply(reply_to: types::BrokerMessage, data: impl Into<Vec<u8>>) -> Result<(), String> {
-    if let Some(reply_to) = reply_to.reply_to {
-        consumer::publish(&types::BrokerMessage {
-            subject: reply_to,
-            reply_to: None,
-            body: data.into(),
-        })
-    } else {
-        warn!("No reply_to field in message, ignoring message");
-        Ok(())
-    }
 }
 
 fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, anyhow::Error> {
@@ -268,5 +261,3 @@ fn validate_auth_request_claims(claims: &Claims<AuthRequest>) -> Result<()> {
 
     Ok(())
 }
-
-export!(AuthCallout);

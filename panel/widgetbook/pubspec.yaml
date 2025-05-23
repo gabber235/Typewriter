@@ -1,0 +1,40 @@
+name: widgetbook_workspace
+description: "Widgetbook workspace"
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  widgetbook: ^3.14.0
+  widgetbook_annotation: ^3.5.0
+  typewriter_panel:
+    path: ../
+  flutter_riverpod: ^3.0.0-dev.15
+  riverpod_annotation: ^3.0.0-dev.15
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  widgetbook_generator: ^3.13.0
+  build_runner: ^2.4.15
+  riverpod_generator: ^3.0.0-dev.15
+  custom_lint: ^0.7.5
+  riverpod_lint: ^3.0.0-dev.15
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+  fonts:
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf
+        - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf
+          style: italic
+
+

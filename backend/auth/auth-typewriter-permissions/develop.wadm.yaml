@@ -11,7 +11,7 @@ spec:
       type: policy.secret.wasmcloud.dev/v1alpha1
       properties:
         backend: 'vault'
-        role_name: 'auth-callout-role'
+        role_name: 'wasmcloud-role'
         mount_path: 'jwt'
   components:
     - name: auth-typewriter-permissions

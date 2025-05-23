@@ -1,0 +1,13 @@
+[package]
+name = "wasmcloud-utils"
+version = "1.0.12"
+edition = "2024"
+description = "Utilities for wasmcloud components"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+wit-bindgen = "0.41"
+wasmcloud-component = "0.2"
+anyhow = "1"

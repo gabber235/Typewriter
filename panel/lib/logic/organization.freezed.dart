@@ -17,6 +17,7 @@ T _$identity<T>(T value) => value;
 mixin _$OrganizationData {
   String get name;
   String get id;
+  String? get iconUrl;
 
   /// Create a copy of OrganizationData
   /// with the given fields replaced by the non-null parameter values.
@@ -35,16 +36,17 @@ mixin _$OrganizationData {
         (other.runtimeType == runtimeType &&
             other is OrganizationData &&
             (identical(other.name, name) || other.name == name) &&
-            (identical(other.id, id) || other.id == id));
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.iconUrl, iconUrl) || other.iconUrl == iconUrl));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, name, id);
+  int get hashCode => Object.hash(runtimeType, name, id, iconUrl);
 
   @override
   String toString() {
-    return 'OrganizationData(name: $name, id: $id)';
+    return 'OrganizationData(name: $name, id: $id, iconUrl: $iconUrl)';
   }
 }
 
@@ -54,7 +56,7 @@ abstract mixin class $OrganizationDataCopyWith<$Res> {
           OrganizationData value, $Res Function(OrganizationData) _then) =
       _$OrganizationDataCopyWithImpl;
   @useResult
-  $Res call({String name, String id});
+  $Res call({String name, String id, String? iconUrl});
 }
 
 /// @nodoc
@@ -72,6 +74,7 @@ class _$OrganizationDataCopyWithImpl<$Res>
   $Res call({
     Object? name = null,
     Object? id = null,
+    Object? iconUrl = freezed,
   }) {
     return _then(_self.copyWith(
       name: null == name
@@ -82,6 +85,10 @@ class _$OrganizationDataCopyWithImpl<$Res>
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      iconUrl: freezed == iconUrl
+          ? _self.iconUrl
+          : iconUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -89,7 +96,7 @@ class _$OrganizationDataCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _OrganizationData implements OrganizationData {
-  const _OrganizationData({required this.name, required this.id});
+  const _OrganizationData({required this.name, required this.id, this.iconUrl});
   factory _OrganizationData.fromJson(Map<String, dynamic> json) =>
       _$OrganizationDataFromJson(json);
 
@@ -97,6 +104,8 @@ class _OrganizationData implements OrganizationData {
   final String name;
   @override
   final String id;
+  @override
+  final String? iconUrl;
 
   /// Create a copy of OrganizationData
   /// with the given fields replaced by the non-null parameter values.
@@ -119,16 +128,17 @@ class _OrganizationData implements OrganizationData {
         (other.runtimeType == runtimeType &&
             other is _OrganizationData &&
             (identical(other.name, name) || other.name == name) &&
-            (identical(other.id, id) || other.id == id));
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.iconUrl, iconUrl) || other.iconUrl == iconUrl));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, name, id);
+  int get hashCode => Object.hash(runtimeType, name, id, iconUrl);
 
   @override
   String toString() {
-    return 'OrganizationData(name: $name, id: $id)';
+    return 'OrganizationData(name: $name, id: $id, iconUrl: $iconUrl)';
   }
 }
 
@@ -140,7 +150,7 @@ abstract mixin class _$OrganizationDataCopyWith<$Res>
       __$OrganizationDataCopyWithImpl;
   @override
   @useResult
-  $Res call({String name, String id});
+  $Res call({String name, String id, String? iconUrl});
 }
 
 /// @nodoc
@@ -158,6 +168,7 @@ class __$OrganizationDataCopyWithImpl<$Res>
   $Res call({
     Object? name = null,
     Object? id = null,
+    Object? iconUrl = freezed,
   }) {
     return _then(_OrganizationData(
       name: null == name
@@ -168,6 +179,10 @@ class __$OrganizationDataCopyWithImpl<$Res>
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      iconUrl: freezed == iconUrl
+          ? _self.iconUrl
+          : iconUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }

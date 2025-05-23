@@ -75,6 +75,7 @@ dependencies = [
  "serde_cbor",
  "surrealdb-component",
  "wasmcloud-component",
+ "wasmcloud-utils",
  "wit-bindgen 0.41.0",
 ]
 
@@ -119,9 +120,9 @@ checksum = "89e25b6adfb930f02d1981565a6e5d9c547ac15a96606256d3b59040e5cd4ca3"
 
 [[package]]
 name = "bitflags"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
+checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
 
 [[package]]
 name = "block-buffer"
@@ -1718,6 +1719,17 @@ dependencies = [
  "uuid",
  "wasi 0.13.3+wasi-0.2.2",
  "wit-bindgen 0.32.0",
+]
+
+[[package]]
+name = "wasmcloud-utils"
+version = "1.0.12"
+source = "sparse+https://git.seamlezz.com/api/packages/Seamlezz/cargo/"
+checksum = "96c9f1f9cb53c3d14b51ce09282ef337adffa2fa3322d832fb36d9491ab1aa3c"
+dependencies = [
+ "anyhow",
+ "wasmcloud-component",
+ "wit-bindgen 0.41.0",
 ]
 
 [[package]]

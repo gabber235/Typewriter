@@ -6,13 +6,19 @@ metadata:
     version: v0.0.1
     description: 'A way to request all the companies a user has access to'
 spec:
+  policies:
+    - name: vault
+      type: policy.secret.wasmcloud.dev/v1alpha1
+      properties:
+        backend: 'vault'
+        role_name: 'wasmcloud-role'
+        mount_path: 'jwt'
   components:
     - name: organizations-component
       type: component
       properties:
         image: registry:5001/organizations_component:0.1.0
       traits:
-        # Govern the spread/scheduling of the component
         - type: spreadscaler
           properties:
             instances: 1
@@ -23,15 +29,68 @@ spec:
             namespace: seamlezz
             package: surrealdb
             interfaces: [call]
+        - type: link
+          properties:
+            target:
+              name: nats
+              secrets:
+                - name: client_jwt
+                  properties:
+                    policy: vault
+                    key: nats/auth/typewriter
+                    field: jwt
+                    version: '1'
+                - name: client_seed
+                  properties:
+                    policy: vault
+                    key: nats/auth/typewriter
+                    field: seed
+                    version: '1'
+              config:
+                - name: organizations-consumer
+                  properties:
+                    cluster_uris: 'nats://nats:4222'
+            namespace: wasmcloud
+            package: messaging
+            interfaces: [consumer]
 
-
+    - name: nats
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/messaging-nats:0.27.0
+      traits:
+        - type: link
+          properties:
+            target:
+              name: organizations-component
+            namespace: wasmcloud
+            package: messaging
+            interfaces: [handler]
+            source:
+              secrets:
+                - name: client_jwt
+                  properties:
+                    policy: vault
+                    key: nats/auth/typewriter
+                    field: jwt
+                    version: '1'
+                - name: client_seed
+                  properties:
+                    policy: vault
+                    key: nats/auth/typewriter
+                    field: seed
+                    version: '1'
+              config:
+                - name: subscription
+                  properties:
+                    subscriptions: 'user.*.organization.list'
+                    cluster_uris: 'nats://nats:4222'
     - name: surrealdb-provider
       type: capability
       properties:
         image: registry:5001/surrealdb_provider:0.1.0 
-        # id: surrealdb-provider
         config:
-          - name: provider-config
+          - name: auth-typewriter-permissions-surrealdb
             properties:
               namespace: typewriter
               database: develop
@@ -40,23 +99,4 @@ spec:
               password: root
               url: ws://surrealdb:9000
 
-
-    # Add a capability provider that enables HTTP access
-    - name: httpserver
-      type: capability
-      properties:
-        image: ghcr.io/wasmcloud/http-server:0.27.0
-      traits:
-        - type: link
-          properties:
-            target:
-              name: organizations-component
-            namespace: wasi
-            package: http
-            interfaces: [incoming-handler]
-            source:
-              config:
-                - name: link-config
-                  properties:
-                    address: 0.0.0.0:10000
 
