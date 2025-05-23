@@ -87,6 +87,10 @@ services:
       VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: "root"
     entrypoint: ["/docker-entrypoint.sh"]
+    develop:
+      watch:
+        - path: ./vault/
+          action: restart
 
 
   wasmcloud:

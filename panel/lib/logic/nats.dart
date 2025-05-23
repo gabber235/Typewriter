@@ -21,7 +21,7 @@ const _natsSentinelSeed =
 class Nats extends _$Nats {
   @override
   Client build() {
-    final token = ref.watch(accessTokenProvider).valueOrNull?.token;
+    final token = ref.watch(accessTokenProvider).value?.token;
     if (token == null) {
       throw Exception("User must be authenticated before connecting to NATS");
     }
@@ -52,7 +52,7 @@ class Nats extends _$Nats {
           jwt: _natsSentinelJwt,
           user: user.username ?? user.name ?? user.sub,
           pass: token,
-          nkey: ref.watch(organizationProvider).valueOrNull?.id,
+          nkey: ref.watch(organizationProvider).value?.id,
         ),
       ),
     );

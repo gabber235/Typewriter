@@ -1,14 +1,21 @@
-wit_bindgen::generate!({ generate_all });
+wit_bindgen::generate!({
+    with: {
+        "wasmcloud:messaging/consumer@0.2.0": wasmcloud_utils::wasmcloud::messaging::consumer,
+        "wasmcloud:messaging/handler@0.2.0": wasmcloud_utils::wasmcloud::messaging::handler,
+    },
+    generate_all,
+});
 
 use std::time::Duration;
 
 use anyhow::Result;
-use exports::wasmcloud::messaging::handler::Guest;
 use nats_jwt_rs::types::{Permission, Permissions, ResponsePermission};
 use serde::{Deserialize, Serialize};
-use wasmcloud::messaging::*;
+use wasmcloud_component::debug;
+use wasmcloud_utils::wasmcloud::messaging::{handler::Guest, reply, types};
 
 struct TypewriterPermissions;
+wasmcloud_utils::export!(TypewriterPermissions);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "kind")]
@@ -55,6 +62,14 @@ impl Guest for TypewriterPermissions {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct User {
+    name: String,
+    email: Option<String>,
+    phone: Option<String>,
+    avatar: Option<String>,
+}
+
 fn handle_user(
     claims: jose::jwt::Claims<LogtoClaims>,
     organization_id: Option<String>,
@@ -70,6 +85,8 @@ fn handle_user(
         avatar,
     } = claims.additional;
 
+    debug!("handling user request for user {}", name);
+
     let results = surrealdb_component::query(
         "
         UPSERT type::thing('user',$uid) SET
@@ -80,17 +97,24 @@ fn handle_user(
             last_login = time::now();
         ",
     )
-    .bind("uid", user_id.clone())
-    .bind("name", name)
-    .bind("email", email)
-    .bind("phone", phone)
-    .bind("avatar", avatar)
+    .bind("uid", &user_id)
+    .bind("name", &name)
+    .bind("email", &email)
+    .bind("phone", &phone)
+    .bind("avatar", &avatar)
     .execute()
     .map_err(|e| anyhow::anyhow!(e))?;
 
-    results
-        .take::<Option<()>>(0)
-        .map_err(|e| anyhow::anyhow!(e))?;
+    debug!("finished handling user request for user {}", name);
+
+    let r = results.take::<Option<User>>(0);
+    if let Err(e) = r {
+        debug!("error inserting user: {}", e);
+        return Err(anyhow::anyhow!(e));
+    }
+    // .map_err(|e| anyhow::anyhow!(e))?;
+
+    debug!("made sure no errors occurred");
 
     let mut allow_publish = vec![];
     let mut allow_subscribe = vec![];
@@ -123,19 +147,7 @@ fn handle_user(
         tags.push(format!("org:{}", organization_id));
     }
 
+    debug!("finished handling permissions request for user {}", name);
+
     Ok((permissions, tags))
 }
-
-fn reply(reply_to: types::BrokerMessage, data: impl Into<Vec<u8>>) -> Result<(), String> {
-    if let Some(reply_to) = reply_to.reply_to {
-        consumer::publish(&types::BrokerMessage {
-            subject: reply_to,
-            reply_to: None,
-            body: data.into(),
-        })
-    } else {
-        Err("No reply_to field in message, ignoring message".to_string())
-    }
-}
-
-export!(TypewriterPermissions);

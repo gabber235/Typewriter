@@ -8,19 +8,15 @@
 // ignore_for_file: type=lint
 // coverage:ignore-file
 
-// ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i3;
-import 'package:flutter/material.dart' as _i4;
-import 'package:typewriter_panel/routes/auth/route.dart' as _i1;
-import 'package:typewriter_panel/routes/route.dart' as _i2;
+part of 'app_router.dart';
 
 /// generated route for
-/// [_i1.AuthPage]
-class AuthRoute extends _i3.PageRouteInfo<AuthRouteArgs> {
+/// [AuthPage]
+class AuthRoute extends PageRouteInfo<AuthRouteArgs> {
   AuthRoute({
     required void Function(bool) onResult,
-    _i4.Key? key,
-    List<_i3.PageRouteInfo>? children,
+    Key? key,
+    List<PageRouteInfo>? children,
   }) : super(
          AuthRoute.name,
          args: AuthRouteArgs(onResult: onResult, key: key),
@@ -29,11 +25,11 @@ class AuthRoute extends _i3.PageRouteInfo<AuthRouteArgs> {
 
   static const String name = 'AuthRoute';
 
-  static _i3.PageInfo page = _i3.PageInfo(
+  static PageInfo page = PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<AuthRouteArgs>();
-      return _i1.AuthPage(onResult: args.onResult, key: args.key);
+      return AuthPage(onResult: args.onResult, key: args.key);
     },
   );
 }
@@ -43,7 +39,7 @@ class AuthRouteArgs {
 
   final void Function(bool) onResult;
 
-  final _i4.Key? key;
+  final Key? key;
 
   @override
   String toString() {
@@ -52,17 +48,63 @@ class AuthRouteArgs {
 }
 
 /// generated route for
-/// [_i2.HomePage]
-class HomeRoute extends _i3.PageRouteInfo<void> {
-  const HomeRoute({List<_i3.PageRouteInfo>? children})
-    : super(HomeRoute.name, initialChildren: children);
+/// [IndexPage]
+class IndexRoute extends PageRouteInfo<void> {
+  const IndexRoute({List<PageRouteInfo>? children})
+    : super(IndexRoute.name, initialChildren: children);
 
-  static const String name = 'HomeRoute';
+  static const String name = 'IndexRoute';
 
-  static _i3.PageInfo page = _i3.PageInfo(
+  static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const _i2.HomePage();
+      return const IndexPage();
     },
   );
+}
+
+/// generated route for
+/// [OrganizationPage]
+class OrganizationRoute extends PageRouteInfo<OrganizationRouteArgs> {
+  OrganizationRoute({
+    required String organizationId,
+    Key? key,
+    List<PageRouteInfo>? children,
+  }) : super(
+         OrganizationRoute.name,
+         args: OrganizationRouteArgs(organizationId: organizationId, key: key),
+         rawPathParams: {'organizationId': organizationId},
+         initialChildren: children,
+       );
+
+  static const String name = 'OrganizationRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<OrganizationRouteArgs>(
+        orElse: () => OrganizationRouteArgs(
+          organizationId: pathParams.getString('organizationId'),
+        ),
+      );
+      return OrganizationPage(
+        organizationId: args.organizationId,
+        key: args.key,
+      );
+    },
+  );
+}
+
+class OrganizationRouteArgs {
+  const OrganizationRouteArgs({required this.organizationId, this.key});
+
+  final String organizationId;
+
+  final Key? key;
+
+  @override
+  String toString() {
+    return 'OrganizationRouteArgs{organizationId: $organizationId, key: $key}';
+  }
 }

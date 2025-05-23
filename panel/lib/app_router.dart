@@ -1,13 +1,15 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app_router.gr.dart";
 import "package:typewriter_panel/logic/auth.dart";
+import "package:typewriter_panel/routes/auth/route.dart";
+import "package:typewriter_panel/routes/organization/route.dart";
+import "package:typewriter_panel/routes/route.dart";
 
 part "app_router.g.dart";
+part "app_router.gr.dart";
 
-@riverpod
+@Riverpod(keepAlive: true)
 Raw<AppRouter> appRouter(Ref ref) => AppRouter(ref);
 
 @AutoRouterConfig(replaceInRouteName: "Page,Route")
@@ -25,12 +27,18 @@ class AppRouter extends RootStackRouter {
           maintainState: false,
         ),
         AutoRoute(
-          page: HomeRoute.page,
+          page: IndexRoute.page,
           path: "/",
           initial: true,
           guards: [AuthGuard(ref)],
           keepHistory: false,
           maintainState: false,
+          children: [
+            AutoRoute(
+              page: OrganizationRoute.page,
+              path: "organization/:organizationId",
+            ),
+          ],
         ),
       ];
 }
@@ -57,4 +65,37 @@ class AuthGuard extends AutoRouteGuard {
       ),
     );
   }
+}
+
+class InvalidatorNavigatorObserver extends NavigatorObserver {
+  InvalidatorNavigatorObserver(this.invalidator);
+  final void Function() invalidator;
+
+  @override
+  void didPop(Route route, Route? previousRoute) => invalidator();
+
+  @override
+  void didPush(Route route, Route? previousRoute) => invalidator();
+
+  @override
+  void didRemove(Route route, Route? previousRoute) => invalidator();
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) => invalidator();
+}
+
+/// Provides the current route data for the given [name].
+@Riverpod(keepAlive: true)
+RouteData? currentRouteData(Ref ref, String path) {
+  final router = ref.watch(appRouterProvider);
+  return _fetchCurrentRouteData(path, router);
+}
+
+/// Fetch a nested route from the current route.
+RouteData? _fetchCurrentRouteData(String name, RoutingController controller) {
+  if (controller.current.name == name) {
+    return controller.current;
+  }
+  final child = controller.innerRouterOf(controller.current.name);
+  return child != null ? _fetchCurrentRouteData(name, child) : null;
 }

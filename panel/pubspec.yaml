@@ -10,9 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  hooks_riverpod: ^2.6.1
+  hooks_riverpod: ^3.0.0-dev.15
   flutter_hooks: ^0.21.2
-  riverpod_annotation: ^2.6.1
+  riverpod_annotation: ^3.0.0-dev.15
   auto_route: ^10.0.1
   logto_dart_sdk: ^3.0.0
   localstorage: ^6.0.0
@@ -22,14 +22,15 @@ dependencies:
   rive: ^0.13.20
   collection: ^1.19.1
   iconify_flutter: ^0.0.7
+  responsive_framework: ^1.5.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  riverpod_generator: ^2.6.5
+  riverpod_generator: ^3.0.0-dev.15
   build_runner: ^2.4.15
   custom_lint: ^0.7.5
-  riverpod_lint: ^2.6.5
+  riverpod_lint: ^3.0.0-dev.15
   flutter_lints: ^5.0.0
   auto_route_generator: ^10.0.1
   icons_launcher: ^3.0.1

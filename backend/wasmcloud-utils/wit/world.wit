@@ -1,0 +1,7 @@
+package typewriter:wasmcloud-utils;
+
+world interfaces {
+  import wasi:logging/logging@0.1.0-draft;
+  import wasmcloud:messaging/consumer@0.2.0;
+  export wasmcloud:messaging/handler@0.2.0;
+}

@@ -1,0 +1,15 @@
+{
+    "role_type": "jwt",
+    "policies": [
+        "wasmcloud-role-policy"
+    ],
+    "bound_audiences": "Vault",
+    "bound_claims": {
+        "application": [
+            "auth-callout",
+            "auth-typewriter-permissions",
+            "organizations"
+        ]
+    },
+    "user_claim": "sub"
+}

@@ -1,11 +1,10 @@
 import "package:flutter/foundation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:logto_dart_sdk/logto_client.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "auth.g.dart";
 
-@riverpod
+@Riverpod(keepAlive: true)
 class Auth extends _$Auth {
   @override
   LogtoClient build() {
@@ -40,19 +39,29 @@ class Auth extends _$Auth {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<bool> isAuthenticated(Ref ref) {
   return ref.watch(authProvider).isAuthenticated;
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
+Future<String?> userId(Ref ref) async {
+  final isAuthenticated = await ref.watch(isAuthenticatedProvider.future);
+  if (!isAuthenticated) {
+    return null;
+  }
+  final info = await ref.watch(authUserInfoProvider.future);
+  return info.sub;
+}
+
+@Riverpod(keepAlive: true)
 Future<AccessToken?> accessToken(Ref ref) {
   return ref
       .watch(authProvider)
       .getAccessToken(resource: "https://panel.typewritermc.com");
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<LogtoUserInfoResponse> authUserInfo(Ref ref) {
   return ref.watch(authProvider).getUserInfo();
 }

@@ -14,7 +14,7 @@ class RequiredNatsConnection extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final token = ref.watch(accessTokenProvider).valueOrNull;
+    final token = ref.watch(accessTokenProvider).value;
     // If the user is not authenticated, we want to allow the user to sign in.
     if (token == null) {
       return child;
