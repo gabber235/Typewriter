@@ -20,7 +20,7 @@ dependencies:
   json_annotation: ^4.9.0
   dart_nats: ^0.6.5
   rive: ^0.13.20
-  collection: ^1.19.1
+  collection: 
   iconify_flutter: ^0.0.7
   responsive_framework: ^1.5.1
   flutter_animate: ^4.5.2
