@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:widgetbook/widgetbook.dart';
-import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
-import 'package:typewriter_panel/widgets/generic/components/text_scroller.dart';
+import "package:flutter/material.dart";
+import "package:typewriter_panel/widgets/generic/components/text_scroller.dart";
+import "package:widgetbook/widgetbook.dart";
+import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: 'Default', type: TextScroller)
+@widgetbook.UseCase(name: "Default", type: TextScroller)
 Widget textScrollerUseCase(BuildContext context) {
   return TextScroller(
     texts: [
@@ -49,11 +49,11 @@ Widget textScrollerUseCase(BuildContext context) {
     ],
     style: Theme.of(context).textTheme.titleLarge,
     duration: context.knobs.duration(
-      label: 'duration',
+      label: "duration",
       initialValue: Duration(seconds: 2),
     ),
     transitionDuration: context.knobs.duration(
-      label: 'transitionDuration',
+      label: "transitionDuration",
       initialValue: Duration(milliseconds: 300),
     ),
   );
