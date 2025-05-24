@@ -51,8 +51,8 @@ dependencies {
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.8.0-SNAPSHOT")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.8.0-SNAPSHOT")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.8.0")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.8.0")
 
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnlyApi("org.geysermc.geyser:api:2.7.0-SNAPSHOT")

@@ -48,6 +48,8 @@ class TypewriterModulePlugin : Plugin<Project> {
         // Add PacketEvents repository
         repositories.maven {
             it.setUrl("https://repo.codemc.io/repository/maven-releases/")
+        }
+        repositories.maven {
             it.setUrl("https://repo.codemc.io/repository/maven-snapshots/")
         }
         // Add EntityLib repository
