@@ -98,7 +98,7 @@ class Entry {
         data = {
           ...blueprint.dataBlueprint.defaultValue(),
           "id": id,
-          "name": "new_${blueprint.name}",
+          "name": blueprint.name,
           "type": blueprint.id,
           "_genericBlueprint": genericBlueprint?.toJson(),
         };
