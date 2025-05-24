@@ -18,7 +18,7 @@ import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityDa
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
-@Entry("breeze_definition", "A breeze entity", Colors.BLUE, "solar:wind-bold")
+@Entry("breeze_definition", "A breeze entity", Colors.ORANGE, "solar:wind-bold")
 @Tags("breeze_definition")
 /**
  * The `BreezeDefinition` class is an entry that shows up as a breeze in-game.
@@ -37,7 +37,7 @@ class BreezeDefinition(
     override fun create(player: Player): FakeEntity = BreezeEntity(player)
 }
 
-@Entry("breeze_instance", "An instance of a breeze entity", Colors.CYAN, "solar:wind-bold")
+@Entry("breeze_instance", "An instance of a breeze entity", Colors.YELLOW, "solar:wind-bold")
 class BreezeInstance(
     override val id: String = "",
     override val name: String = "",
