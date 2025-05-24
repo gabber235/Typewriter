@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/main.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -6,6 +7,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "main.directories.g.dart";
 
 void main() {
+  Animate.restartOnHotReload = true;
   runApp(const WidgetbookApp());
 }
 
@@ -23,9 +25,14 @@ class WidgetbookApp extends StatelessWidget {
           IosViewports.iPad,
           AndroidViewports.samsungGalaxyNote20,
           AndroidViewports.largeTablet,
-          MacosViewports.macbookPro,
-          WindowsViewports.desktop,
           LinuxViewports.desktop,
+          ViewportData(
+            name: "Ulta Wide Desktop",
+            width: 3440,
+            height: 1440,
+            pixelRatio: 2,
+            platform: TargetPlatform.windows,
+          ),
         ]),
         InspectorAddon(),
         MaterialThemeAddon(
@@ -39,6 +46,7 @@ class WidgetbookApp extends StatelessWidget {
           builder: (context, child) => Responsive(child: child),
         ),
         AlignmentAddon(),
+        TimeDilationAddon(),
       ],
       directories: directories,
     );

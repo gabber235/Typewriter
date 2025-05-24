@@ -85,6 +85,9 @@ ThemeData buildTheme(Brightness brightness) {
           ? const Color(0xFFF3EDF7)
           : const Color(0xFF1f1d23),
     ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      strokeCap: StrokeCap.round,
+    ),
   );
 }
 

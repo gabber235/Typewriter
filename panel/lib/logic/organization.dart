@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/auth.dart";
@@ -40,7 +41,7 @@ class Organizations extends _$Organizations {
   /// [iconUrl] The URL of the organization's icon
   ///
   /// Returns the ID of the created organization
-  Future<String> createOrganization({
+  Future<String?> createOrganization({
     required String name,
     required String iconUrl,
   }) async {
@@ -55,9 +56,20 @@ class Organizations extends _$Organizations {
         return data;
       },
     );
-    return response.data;
+    final organisationId = response.data;
+    if (organisationId.isEmpty) {
+      return null;
+    }
+    return organisationId;
   }
 }
+
+class OrganizationsMock extends _$Organizations
+    with
+        // ignore: prefer_mixin
+        Mock
+    implements
+        Organizations {}
 
 @Riverpod(keepAlive: true)
 class Organization extends _$Organization {
