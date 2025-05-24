@@ -9,6 +9,7 @@ import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData
+import com.typewritermc.engine.paper.entry.entries.safeCast
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -38,7 +39,7 @@ class InteractionContextVariable(
                 ?: throw DefaultValueNotValidException(context.klass, default.data)
 
         val key = data.key
-        return context.klass.safeCast(interactionContext[key])
+        return context.safeCast(interactionContext[key])
             ?: default.get(context.klass)
             ?: throw DefaultValueNotValidException(context.klass, default.data)
     }

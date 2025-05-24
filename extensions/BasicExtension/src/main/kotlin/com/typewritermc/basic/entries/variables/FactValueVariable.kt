@@ -6,11 +6,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.core.extension.annotations.VariableData
-import com.typewritermc.engine.paper.entry.entries.ReadableFactEntry
-import com.typewritermc.engine.paper.entry.entries.VarContext
-import com.typewritermc.engine.paper.entry.entries.VariableEntry
-import com.typewritermc.engine.paper.entry.entries.getData
-import kotlin.reflect.cast
+import com.typewritermc.engine.paper.entry.entries.*
 
 @Entry("fact_value_variable", "A variable that returns the value of a fact", Colors.GREEN, "solar:hashtag-square-bold")
 @GenericConstraint(Int::class)
@@ -26,10 +22,10 @@ class FactValueVariable(
     override val name: String = "",
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        val data = context.getData<FactValueVariableData>() ?: return context.klass.cast(0)
-        val fact = data.fact.get() ?: return context.klass.cast(0)
+        val data = context.getData<FactValueVariableData>() ?: return context.cast(0)
+        val fact = data.fact.get() ?: return context.cast(0)
         val value = fact.readForPlayersGroup(context.player).value
-        return context.klass.cast(value)
+        return context.cast(value)
     }
 }
 

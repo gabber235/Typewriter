@@ -3,10 +3,12 @@ package com.typewritermc.basic.entries.variables
 import com.mthaler.aparser.arithmetic.Expression
 import com.mthaler.aparser.arithmetic.tryEval
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.interaction.InteractionContextKey
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
+import com.typewritermc.engine.paper.entry.entries.cast
 import com.typewritermc.engine.paper.entry.entries.getData
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.logger
@@ -20,13 +22,14 @@ import com.typewritermc.engine.paper.logger
 @GenericConstraint(Int::class)
 @GenericConstraint(Double::class)
 @VariableData(InteractionContextCalculatedVariableData::class)
+@Deprecated("Use CalculatedVariable instead")
 class InteractionContextCalculatedVariable(
     override val id: String = "",
     override val name: String = "",
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
         val data = context.getData<InteractionContextCalculatedVariableData>()
-            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+            ?: throw ContextDataNotFoundException(context.klass, context.data, id)
 
         // First replace interaction context values
         var expression = data.expression.parsePlaceholders(context.player)
@@ -46,7 +49,7 @@ class InteractionContextCalculatedVariable(
         }
 
         if (expression.isBlank()) {
-            return 0.0.cast<T>(context.klass)
+            return context.cast(0.0)
         }
 
         // Evaluate the expression
@@ -54,10 +57,10 @@ class InteractionContextCalculatedVariable(
             is com.mthaler.aparser.util.Try.Success -> result.value
             is com.mthaler.aparser.util.Try.Failure -> {
                 logger.warning("Could not evaluate expression '$expression' for player ${context.player.name} for variable $id")
-                return 0.0.cast<T>(context.klass)
+                return context.cast(0.0)
             }
         }
-        return value.cast<T>(context.klass)
+        return context.cast(value)
     }
 }
 

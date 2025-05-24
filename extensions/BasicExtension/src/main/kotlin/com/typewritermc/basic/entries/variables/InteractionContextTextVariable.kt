@@ -1,10 +1,12 @@
 package com.typewritermc.basic.entries.variables
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.interaction.InteractionContextKey
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
+import com.typewritermc.engine.paper.entry.entries.cast
 import com.typewritermc.engine.paper.entry.entries.getData
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import kotlin.reflect.cast
@@ -17,12 +19,14 @@ import kotlin.reflect.cast
 )
 @GenericConstraint(String::class)
 @VariableData(InteractionContextTextVariableData::class)
+@Deprecated("Use StringBuilderVariable instead")
 class InteractionContextTextVariable(
     override val id: String = "",
     override val name: String = "",
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        val data = context.getData<InteractionContextTextVariableData>() ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+        val data = context.getData<InteractionContextTextVariableData>()
+            ?: throw ContextDataNotFoundException(context.klass, context.data, id)
 
         val text = data.text.parsePlaceholders(context.player)
         val keys = data.keys
@@ -32,14 +36,14 @@ class InteractionContextTextVariable(
             val defaultText = keys.foldIndexed(text) { index, acc, keyValue ->
                 acc.replace("<${index + 1}>", keyValue.default)
             }
-            return context.klass.cast(defaultText)
+            return context.cast(defaultText)
         }
 
         val replacedText = keys.foldIndexed(text) { index, acc, keyValue ->
             val value = interactionContext[keyValue.key]?.toString() ?: keyValue.default
             acc.replace("<${index + 1}>", value)
         }
-        return context.klass.cast(replacedText)
+        return context.cast(replacedText)
     }
 }
 

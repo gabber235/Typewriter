@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.variables
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.core.extension.annotations.VariableData
@@ -11,6 +12,7 @@ import com.typewritermc.core.utils.point.toPosition
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData
+import com.typewritermc.engine.paper.entry.entries.safeCast
 import com.typewritermc.engine.paper.utils.position
 import kotlin.reflect.safeCast
 
@@ -36,10 +38,10 @@ class PlayerWorldPositionVariable(
     override fun <T : Any> get(context: VarContext<T>): T {
         val player = context.player
         val data = context.getData<PlayerWorldPositionVariableData>()
-            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data}")
+            ?: throw ContextDataNotFoundException(context.klass, context.data)
         val position = data.coordinate.toPosition(player.position.world)
 
-        return context.klass.safeCast(position)
+        return context.safeCast(position)
             ?: throw IllegalStateException("Could not cast position to ${context.klass}, PlayerWorldPositionVariable is only compatible with Position fields")
     }
 }

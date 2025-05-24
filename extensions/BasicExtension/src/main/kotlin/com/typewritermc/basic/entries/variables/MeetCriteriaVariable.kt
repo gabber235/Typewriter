@@ -8,6 +8,7 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
+import com.typewritermc.engine.paper.entry.entries.cast
 import com.typewritermc.engine.paper.entry.entries.getData
 import com.typewritermc.engine.paper.entry.matches
 import kotlin.reflect.full.cast
@@ -35,10 +36,10 @@ class MeetCriteriaVariable(
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
         val data = context.getData<MeetCriteriaVariableData>()
-            ?: return context.klass.cast(false)
+            ?: return context.cast(false)
 
         val criteria = this.criteria + data.criteria
-        return context.klass.cast(criteria.matches(context.player, context.interactionContext ?: context()))
+        return context.cast(criteria.matches(context.player, context.interactionContext ?: context()))
     }
 }
 

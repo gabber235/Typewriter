@@ -1,17 +1,18 @@
 package com.typewritermc.basic.entries.variables
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.core.extension.annotations.VariableData
 import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
+import com.typewritermc.engine.paper.entry.entries.cast
 import com.typewritermc.engine.paper.entry.entries.getData
 import java.time.Duration
 import kotlin.math.roundToInt
 import kotlin.random.Random
-import kotlin.reflect.safeCast
 
 @Entry("ranged_variable", "A variable which returns a random value in a range", Colors.GREEN, "mdi:code-tags")
 @GenericConstraint(Int::class)
@@ -24,7 +25,7 @@ class RangedVariable(
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
         val data = context.getData<RangedVariableData>()
-            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+            ?: throw ContextDataNotFoundException(context.klass, context.data, id)
         when (context.klass) {
             Int::class -> {
                 val start = data.range.start.get(Int::class) ?: 0
@@ -34,7 +35,7 @@ class RangedVariable(
                 val numberOfSteps = (end - start) / step + 1
                 val randomStep = Random.nextInt(numberOfSteps)
                 val value = start + randomStep * step
-                return context.klass.safeCast(value)!!
+                return context.cast(value)
             }
 
             Double::class -> {
@@ -45,7 +46,7 @@ class RangedVariable(
                 val numberOfSteps = (((end - start) / step) + 1).roundToInt()
                 val randomStep = Random.nextInt(numberOfSteps)
                 val value = start + randomStep * step
-                return context.klass.safeCast(value)!!
+                return context.cast(value)
             }
 
             Duration::class -> {
@@ -60,10 +61,10 @@ class RangedVariable(
                 val numberOfSteps = ((endNanos - startNanos) / stepNanos + 1).toInt()
                 val randomStep = Random.nextInt(numberOfSteps)
                 val value = startNanos + randomStep * stepNanos
-                return context.klass.safeCast(Duration.ofNanos(value))!!
+                return context.cast(Duration.ofNanos(value))
             }
 
-            else -> throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+            else -> throw IllegalArgumentException("Unrecognized range type ${context.klass.qualifiedName} on entry $id")
         }
     }
 }

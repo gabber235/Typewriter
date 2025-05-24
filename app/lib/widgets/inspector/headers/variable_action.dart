@@ -8,6 +8,7 @@ import "package:typewriter/widgets/components/app/entry_search.dart";
 import "package:typewriter/widgets/components/app/header_button.dart";
 import "package:typewriter/widgets/components/app/search_bar.dart";
 import "package:typewriter/widgets/inspector/editors.dart";
+import "package:typewriter/widgets/inspector/editors/generic.dart";
 import "package:typewriter/widgets/inspector/editors/variable.dart";
 import "package:typewriter/widgets/inspector/header.dart";
 import "package:typewriter/widgets/inspector/inspector.dart";
@@ -54,19 +55,38 @@ class VariableHeaderAction extends HookConsumerWidget {
   final String path;
   final CustomBlueprint customBlueprint;
 
-  Future<void> _createVariable(PassingRef ref) async {
+  Future<void> _createVariable(PassingRef ref, BuildContext context) async {
+    var blueprint = customBlueprint.shape;
+
+    // If the blueprint is a generic blueprint, we want to use the actual blueprint instead.
+    if (blueprint is CustomBlueprint && blueprint.editor == "generic") {
+      final generic = Generic.maybeOf(context);
+      if (generic != null) {
+        blueprint = generic.dataBlueprint;
+      } else {
+        final b = ref.read(inspectingEntryProvider)?.genericBlueprint;
+        if (b != null) {
+          blueprint = b;
+        } else {
+          throw Exception(
+            "Could not find generic blueprint, this should not happen! For path: $path",
+          );
+        }
+      }
+    }
+
     ref.read(searchProvider.notifier).asBuilder()
       ..fetchNewEntry(
-        genericBlueprint: customBlueprint.shape,
-        onAdded: (entry) => _update(ref, entry),
+        genericBlueprint: blueprint,
+        onAdded: (entry) => _update(ref, entry, blueprint),
       )
-      ..fetchEntry(onSelect: (entry) => _update(ref, entry))
-      ..genericEntry(customBlueprint.shape)
+      ..fetchEntry(onSelect: (entry) => _update(ref, entry, blueprint))
+      ..genericEntry(blueprint)
       ..tag("variable", canRemove: false)
       ..open();
   }
 
-  bool _update(PassingRef ref, Entry? entry) {
+  bool _update(PassingRef ref, Entry? entry, DataBlueprint blueprint) {
     if (entry == null) return false;
     final targetBlueprint = ref.read(entryBlueprintProvider(entry.blueprintId));
     if (targetBlueprint == null) return false;
@@ -83,7 +103,7 @@ class VariableHeaderAction extends HookConsumerWidget {
       ref.read(entryDefinitionProvider(entry.id))?.updateField(
             ref,
             "_genericBlueprint",
-            customBlueprint.shape.toJson(),
+            blueprint.toJson(),
           );
     }
 
@@ -105,7 +125,7 @@ class VariableHeaderAction extends HookConsumerWidget {
         tooltip: "Replace with Variable",
         icon: TWIcons.variable,
         color: Colors.green,
-        onTap: () => _createVariable(ref.passing),
+        onTap: () => _createVariable(ref.passing, context),
       );
     }
 

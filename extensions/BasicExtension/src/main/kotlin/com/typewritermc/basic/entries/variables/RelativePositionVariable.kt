@@ -2,14 +2,15 @@ package com.typewritermc.basic.entries.variables
 
 import com.typewritermc.basic.entries.variables.CoordinatePart.*
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.point.Coordinate
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData
+import com.typewritermc.engine.paper.entry.entries.safeCast
 import com.typewritermc.engine.paper.utils.position
-import kotlin.reflect.safeCast
 
 @Entry(
     "relative_position_variable",
@@ -36,7 +37,7 @@ class RelativePositionVariable(
     override fun <T : Any> get(context: VarContext<T>): T {
         val player = context.player
         val data = context.getData<RelativePositionVariableData>()
-            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data}")
+            ?: throw ContextDataNotFoundException(context.klass, context.data)
 
         val basePosition = player.position
 
@@ -50,7 +51,7 @@ class RelativePositionVariable(
                 if (PITCH in data.absolute) data.coordinate.pitch else basePosition.pitch + data.coordinate.pitch
             )
 
-        return context.klass.safeCast(position)
+        return context.safeCast(position)
             ?: throw IllegalStateException("Could not cast position to ${context.klass}, RelativePositionVariable is only compatible with Position fields")
     }
 }

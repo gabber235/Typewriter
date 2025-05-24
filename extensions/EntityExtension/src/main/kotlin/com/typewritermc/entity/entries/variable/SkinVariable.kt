@@ -1,18 +1,20 @@
 package com.typewritermc.entity.entries.variable
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.extension.annotations.VariableData
+import com.typewritermc.core.utils.server
 import com.typewritermc.engine.paper.entry.entity.SkinProperty
 import com.typewritermc.engine.paper.entry.entity.skin
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData
+import com.typewritermc.engine.paper.entry.entries.safeCast
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.logger
-import com.typewritermc.core.utils.server
 import java.util.*
 import kotlin.reflect.safeCast
 
@@ -38,7 +40,7 @@ class SkinVariable(
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
         val data = context.getData<SkinVariableData>()
-            ?: throw IllegalStateException("Could not find data for ${context.klass}, data: ${context.data} for entry $id")
+            ?: throw ContextDataNotFoundException(context.klass, context.data, id)
         val possibleUUID = data.uuid.parsePlaceholders(context.player)
         val uuid = try {
             UUID.fromString(possibleUUID)
@@ -47,7 +49,7 @@ class SkinVariable(
             context.player.uniqueId
         }
         val skin = server.getOfflinePlayer(uuid).skin
-        return context.klass.safeCast(skin)
+        return context.safeCast(skin)
             ?: throw IllegalStateException("Could not cast skin to ${context.klass}, SkinProperty is only compatible with SkinProperty fields")
     }
 }

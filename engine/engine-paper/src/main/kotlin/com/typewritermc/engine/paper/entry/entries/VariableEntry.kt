@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.core.utils.Generic
+import com.typewritermc.core.utils.ultraSafeCast
 import com.typewritermc.engine.paper.entry.StaticEntry
 import com.typewritermc.engine.paper.interaction.interactionContext
 import org.bukkit.entity.Player
@@ -36,6 +37,15 @@ data class VarContext<T : Any>(
 
 inline fun <reified T> VarContext<*>.getData(): T? {
     return getData(T::class.java)
+}
+
+fun <T : Any> VarContext<T>.cast(value: Any): T {
+    return klass.ultraSafeCast(value)
+        ?: throw ClassCastException("Could not cast $value to ${klass.qualifiedName} for ${this.player.name} when trying to get a variable")
+}
+
+fun <T : Any> VarContext<T>.safeCast(value: Any?): T? {
+    return klass.ultraSafeCast(value)
 }
 
 sealed interface Var<T : Any> {
@@ -76,12 +86,13 @@ class BackedVar<T : Any>(
 }
 
 class MappedVar<T : Any>(
-    private val variable:Var<T>,
+    private val variable: Var<T>,
     private val mapper: (Player, T) -> T,
 ) : Var<T> {
     override fun get(player: Player, interactionContext: InteractionContext?): T {
         return mapper(player, variable.get(player, interactionContext))
     }
+
     override fun toString(): String {
         return "MappedVar(variable=$variable, mapper=$mapper)"
     }
@@ -95,6 +106,7 @@ class ComputeVar<T : Any>(
     override fun get(player: Player, interactionContext: InteractionContext?): T {
         return compute(player, interactionContext)
     }
+
     override fun toString(): String {
         return "ComputeVar(compute=$compute)"
     }

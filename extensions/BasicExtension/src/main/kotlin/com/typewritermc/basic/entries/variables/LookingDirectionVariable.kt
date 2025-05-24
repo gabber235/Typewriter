@@ -1,10 +1,14 @@
 package com.typewritermc.basic.entries.variables
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.Default
+import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.GenericConstraint
+import com.typewritermc.core.extension.annotations.VariableData
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
+import com.typewritermc.engine.paper.entry.entries.cast
 import com.typewritermc.engine.paper.entry.entries.getData
 import com.typewritermc.engine.paper.utils.toVector
 import kotlin.reflect.cast
@@ -29,7 +33,7 @@ class LookingDirectionVariable(
 
         val player = context.player
         val lookDirection = player.location.direction.toVector()
-        return context.klass.cast(lookDirection * vector)
+        return context.cast(lookDirection * vector)
     }
 }
 

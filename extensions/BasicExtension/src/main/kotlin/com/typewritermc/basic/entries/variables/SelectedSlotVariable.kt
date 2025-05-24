@@ -5,6 +5,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
+import com.typewritermc.engine.paper.entry.entries.cast
 import kotlin.reflect.cast
 
 @Entry(
@@ -25,6 +26,6 @@ class SelectedSlotVariable(
     override val name: String = "",
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        return context.klass.cast(context.player.inventory.heldItemSlot)
+        return context.cast(context.player.inventory.heldItemSlot)
     }
 }
