@@ -2,14 +2,18 @@ import "dart:math";
 
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart";
+import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
+import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 @RoutePage()
 class IndexPage extends HookConsumerWidget {
@@ -24,17 +28,62 @@ class IndexPage extends HookConsumerWidget {
           constraints: BoxConstraints(maxWidth: 600),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (organizations.value?.isNotEmpty ?? false) ...[
-                  _OrganizationsSelector(organizations: organizations.value!),
-                  SizedBox(height: 24),
-                  LabeledDivider(),
-                  SizedBox(height: 24),
+            child: organizations.when(
+              data: (orgs) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (orgs.isNotEmpty) ...[
+                    _OrganizationsSelector(organizations: orgs),
+                    SizedBox(height: 24),
+                    LabeledDivider()
+                        .animate()
+                        .fadeIn(duration: 300.ms, delay: 300.ms)
+                        .slideY(begin: 0.05, end: 0),
+                    SizedBox(height: 24),
+                  ],
+                  _CreateOrganization(),
                 ],
-                _CreateOrganization(),
-              ],
+              ),
+              loading: () => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 24),
+                    Text(
+                      "Loading organizations...",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                )
+                    .animate()
+                    .slideY(
+                      duration: 1.seconds,
+                      begin: 0.05,
+                      end: 0,
+                      curve: Curves.easeInOutCubic,
+                    )
+                    .fadeIn(),
+              ),
+              error: (error, stackTrace) => ErrorScreen(
+                title: "Failed to load organizations",
+                message: error.toString(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "Retrying...",
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -65,7 +114,7 @@ class _OrganizationsSelector extends HookConsumerWidget {
         Text(
           "Select organization",
           style: Theme.of(context).textTheme.headlineMedium,
-        ),
+        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
         SizedBox(height: 16),
         if (organizations.length > 5) ...[
           TextFormField(
@@ -76,7 +125,10 @@ class _OrganizationsSelector extends HookConsumerWidget {
             onChanged: (query) {
               searchQuery.value = query;
             },
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 100.ms)
+              .slideY(begin: 0.05, end: 0),
           SizedBox(height: 16),
         ],
         if (filteredOrganizations.isEmpty)
@@ -122,7 +174,10 @@ class _OrganizationsSelector extends HookConsumerWidget {
                   ),
                 );
               },
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 200.ms)
+                .slideY(begin: 0.05, end: 0),
           ),
       ],
     );
@@ -151,9 +206,15 @@ class _CreateOrganization extends HookConsumerWidget {
           Text(
             "Create organisation",
             style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 400.ms)
+              .slideY(begin: 0.05, end: 0),
           SizedBox(height: 24),
-          SectionTitle(title: "Name"),
+          SectionTitle(title: "Name")
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 500.ms)
+              .slideY(begin: 0.05, end: 0),
           TextFormField(
             controller: nameController,
             inputFormatters: [
@@ -183,7 +244,10 @@ class _CreateOrganization extends HookConsumerWidget {
               }
               return null;
             },
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 550.ms)
+              .slideY(begin: 0.05, end: 0),
           SizedBox(height: 24),
           Material(
             borderRadius: BorderRadius.circular(12),
@@ -225,24 +289,47 @@ class _CreateOrganization extends HookConsumerWidget {
                 ),
               ),
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 650.ms)
+              .slideY(begin: 0.05, end: 0),
           SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
-              onPressed: () {
+            child: LoadingButton(
+              onPressed: () async {
                 if (formKey.currentState?.validate() != true) {
                   return;
                 }
-                ref.read(organizationsProvider.notifier).createOrganization(
+                final navigator = ref.read(appRouterProvider);
+                final organizationId = await ref
+                    .read(organizationsProvider.notifier)
+                    .createOrganization(
                       name: nameController.text,
                       iconUrl: iconUrl,
                     );
-                // TODO: Implement create organization logic
+                if (organizationId == null) {
+                  if (!context.mounted) {
+                    return;
+                  }
+                  showErrorSnackBar(
+                    context,
+                    "Failed to create organization",
+                  );
+                  return;
+                }
+                await navigator.push(
+                  OrganizationRoute(
+                    organizationId: organizationId,
+                  ),
+                );
               },
               child: Text("Create"),
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 750.ms)
+              .slideY(begin: 0.05, end: 0),
         ],
       ),
     );

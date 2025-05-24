@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:rive/rive.dart";
 import "package:typewriter_panel/main.dart";
 
@@ -28,7 +29,7 @@ class ErrorScreen extends StatelessWidget {
               child: RiveAnimation.asset(
                 "assets/robot_island.riv",
                 stateMachines: ["Motion"],
-              ),
+              ).animate().fadeIn(duration: 300.ms),
             ),
           ),
           SizedBox(height: 24),
@@ -46,7 +47,10 @@ class ErrorScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.red,
                   ),
-                ),
+                )
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: 100.ms)
+                    .slideY(begin: 0.1, end: 0),
                 Text(
                   message,
                   textAlign: TextAlign.center,
@@ -58,12 +62,19 @@ class ErrorScreen extends StatelessWidget {
                     ),
                     color: Colors.grey,
                   ),
-                ),
+                )
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: 200.ms)
+                    .slideY(begin: 0.1, end: 0),
               ],
             ),
           ),
           SizedBox(height: 24),
-          if (child != null) child!,
+          if (child != null)
+            child!
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 300.ms)
+                .slideY(begin: 0.1, end: 0),
           Spacer(),
         ],
       ),

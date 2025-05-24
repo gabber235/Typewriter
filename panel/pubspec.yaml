@@ -23,6 +23,8 @@ dependencies:
   collection: ^1.19.1
   iconify_flutter: ^0.0.7
   responsive_framework: ^1.5.1
+  flutter_animate: ^4.5.2
+  mocktail: ^1.0.4
 
 dev_dependencies:
   flutter_test:

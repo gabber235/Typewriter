@@ -3,6 +3,7 @@ import "dart:ui";
 
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/utils/snackbar.dart";
 
 class LoadingButton extends HookWidget {
   const LoadingButton({
@@ -35,16 +36,15 @@ class LoadingButton extends HookWidget {
           ? null
           : () async {
               isLoading.value = true;
-              final scaffold = ScaffoldMessenger.of(context);
               try {
                 await onPressed?.call();
-              } on Exception {
-                scaffold.showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "An error occurred, please report on the Typewriter Discord",
-                    ),
-                  ),
+              } on Exception catch (e) {
+                if (!context.mounted) {
+                  return;
+                }
+                showErrorSnackBar(
+                  context,
+                  e.toString(),
                 );
               } finally {
                 if (context.mounted) {
