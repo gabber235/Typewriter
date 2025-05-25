@@ -11,6 +11,7 @@ import com.typewritermc.engine.paper.entry.entity.AudienceEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
+import com.typewritermc.engine.paper.entry.findDisplay
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.quest.trackedShowingObjectives
 import com.typewritermc.roadnetwork.RoadNetworkEntry
@@ -45,8 +46,7 @@ class InteractEntityObjectivesPathStream(
             .groupBy { it.definition }
             .mapValues { (_, value) ->
                 value
-                    .mapNotNull { manager[it.ref()] }
-                    .filterIsInstance<AudienceEntityDisplay>()
+                    .mapNotNull { it.ref().findDisplay<AudienceEntityDisplay>() }
             }
     }
 

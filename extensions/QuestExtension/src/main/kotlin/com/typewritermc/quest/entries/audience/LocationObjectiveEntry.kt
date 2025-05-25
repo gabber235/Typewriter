@@ -11,8 +11,9 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.get
-import com.typewritermc.quest.ObjectiveEntry
+import com.typewritermc.quest.LocatableObjective
 import com.typewritermc.quest.QuestEntry
+import org.bukkit.entity.Player
 import java.util.*
 
 @Entry("location_objective", "A location objective definition", Colors.BLUE_VIOLET, "streamline:target-solid")
@@ -41,7 +42,7 @@ class LocationObjectiveEntry(
     override val display: Var<String> = ConstVar(""),
     val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
     override val priorityOverride: Optional<Int> = Optional.empty(),
-) : ObjectiveEntry {
+) : LocatableObjective {
     override fun parser(): PlaceholderParser = placeholderParser {
         include(super.parser())
 
@@ -54,5 +55,10 @@ class LocationObjectiveEntry(
 
             supply { targetLocation.get(it)?.formatted() }
         }
+    }
+
+    override fun positions(player: Player?): List<Position> {
+        val position = targetLocation.get(player) ?: return emptyList()
+        return listOf(position)
     }
 }
