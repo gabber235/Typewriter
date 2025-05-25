@@ -1,10 +1,7 @@
 package com.typewritermc.engine.paper.utils
 
 import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.ComponentIteratorType
-import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.TextReplacementConfig
+import net.kyori.adventure.text.*
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -187,14 +184,23 @@ fun String.splitComponents(vararg resolvers: TagResolver): List<Component> {
 private fun Component.splitLines(): Sequence<Component> = sequence {
     val children = mutableListOf<Component>()
 
-    var remaining = if (this@splitLines is TextComponent) {
-        val content = this@splitLines.content()
-        val split = content.lines()
-        for (i in 0 until split.size - 1) {
-            yield(this@splitLines.content(split[i]).noChildren())
+    var remaining = when (this@splitLines) {
+        is TextComponent -> {
+            val content = this@splitLines.content()
+            val split = content.lines()
+            for (i in 0 until split.size - 1) {
+                yield(this@splitLines.content(split[i]).noChildren())
+            }
+            this@splitLines.content(split.last()).noChildren()
         }
-        this@splitLines.content(split.last()).noChildren()
-    } else null
+
+        is TranslatableComponent -> {
+            yield(this@splitLines.noChildren())
+            null
+        }
+
+        else -> null
+    }
 
     for (child in children()) {
         val splits = child.splitLines().toMutableList()
