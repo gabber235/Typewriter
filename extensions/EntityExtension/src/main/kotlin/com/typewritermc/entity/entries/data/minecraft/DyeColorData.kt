@@ -10,6 +10,7 @@ import com.typewritermc.engine.paper.extensions.packetevents.metas
 import me.tofaa.entitylib.extras.DyeColor
 import me.tofaa.entitylib.meta.mobs.golem.ShulkerMeta
 import me.tofaa.entitylib.meta.mobs.horse.LlamaMeta
+import me.tofaa.entitylib.meta.mobs.passive.SheepMeta
 import me.tofaa.entitylib.meta.mobs.tameable.CatMeta
 import me.tofaa.entitylib.meta.mobs.tameable.WolfMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -23,7 +24,7 @@ import kotlin.reflect.KClass
     Colors.RED,
     "fluent:paint-bucket-16-filled"
 )
-@Tags("dye_color_data", "cat_data", "wolf_data", "llama_data", "shulker_data")
+@Tags("dye_color_data", "cat_data", "wolf_data", "llama_data", "shulker_data", "sheep_data")
 class DyeColorData(
     override val id: String = "",
     override val name: String = "",
@@ -45,6 +46,7 @@ fun applyDyeColorData(entity: WrapperEntity, property: DyeColorProperty) {
         meta<WolfMeta> { collarColor = property.color.ordinal }
         meta<LlamaMeta> { carpetColor = property.color.ordinal }
         meta<ShulkerMeta> { color = property.color.ordinal.toByte() }
-        error("Could not apply CatCollarColorData to ${entity.entityType} entity.")
+        meta<SheepMeta> { setColor(property.color.ordinal.toByte()) }
+        error("Could not apply DyeColorData to ${entity.entityType} entity.")
     }
 }
