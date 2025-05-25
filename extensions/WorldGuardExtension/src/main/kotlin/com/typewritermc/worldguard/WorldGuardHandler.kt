@@ -9,7 +9,7 @@ import com.sk89q.worldguard.session.Session
 import com.sk89q.worldguard.session.handler.Handler
 import com.typewritermc.worldguard.events.RegionsEnterEvent
 import com.typewritermc.worldguard.events.RegionsExitEvent
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 
 class WorldGuardHandler(session: Session?) : Handler(session) {
     object Factory : Handler.Factory<WorldGuardHandler>() {

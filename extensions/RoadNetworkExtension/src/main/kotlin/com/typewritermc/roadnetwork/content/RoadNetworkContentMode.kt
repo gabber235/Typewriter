@@ -7,7 +7,9 @@ import com.github.retrooper.packetevents.util.Vector3f
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.content.*
 import com.typewritermc.engine.paper.content.components.*
@@ -16,8 +18,8 @@ import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.extensions.packetevents.toVector3d
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.*
+import kotlinx.coroutines.Dispatchers
 import lirand.api.extensions.math.add
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.format.NamedTextColor
@@ -139,7 +141,7 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         return RoadNode(RoadNodeId(id), centerLocation, 1.0)
     }
 
-    private fun addRoadNode(location: Location) = DISPATCHERS_ASYNC.launch {
+    private fun addRoadNode(location: Location) = Dispatchers.UntickedAsync.launch {
         val node = createNode(location)
         editorComponent.update { it.copy(nodes = it.nodes + node) }
         ContentModeTrigger(
@@ -148,7 +150,7 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         ).triggerFor(player, context())
     }
 
-    private fun addNegativeNode(location: Location) = DISPATCHERS_ASYNC.launch {
+    private fun addNegativeNode(location: Location) = Dispatchers.UntickedAsync.launch {
         val node = createNode(location)
         editorComponent.update { it.copy(negativeNodes = it.negativeNodes + node) }
         ContentModeTrigger(

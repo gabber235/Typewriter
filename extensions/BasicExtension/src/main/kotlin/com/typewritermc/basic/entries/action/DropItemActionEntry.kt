@@ -1,22 +1,22 @@
 package com.typewritermc.basic.entries.action
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.engine.paper.entry.Criteria
-import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.engine.paper.entry.Criteria
+import com.typewritermc.engine.paper.entry.Modifier
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.item.Item
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
 import com.typewritermc.engine.paper.utils.toBukkitLocation
-import io.github.retrooper.packetevents.util.SpigotConversionUtil.toBukkitLocation
-import org.bukkit.entity.Player
+import kotlinx.coroutines.Dispatchers
 import java.util.*
 
 @Entry("drop_item", "Drop an item at location, or on player", Colors.RED, "fa-brands:dropbox")
@@ -42,7 +42,7 @@ class DropItemActionEntry(
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         // Run on main thread
-        SYNC.launch {
+        Dispatchers.Sync.launch {
             if (location.isPresent) {
                 val position = location.get()
                 val bukkitLocation = position.get(player, context).toBukkitLocation()

@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -12,9 +13,9 @@ import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.toTicks
-import org.bukkit.entity.Player
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.time.Duration
@@ -59,7 +60,7 @@ class AddPotionEffectActionEntry(
             particles,
             icon
         )
-        SYNC.launch {
+        Dispatchers.Sync.launch {
             player.addPotionEffect(potion)
         }
     }

@@ -1,6 +1,6 @@
 package com.typewritermc.entity.entries.activity
 
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref

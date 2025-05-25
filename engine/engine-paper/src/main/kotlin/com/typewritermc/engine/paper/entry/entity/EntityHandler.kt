@@ -9,7 +9,7 @@ import com.typewritermc.engine.paper.entry.AudienceManager
 import com.typewritermc.engine.paper.events.AsyncEntityDefinitionInteract
 import com.typewritermc.engine.paper.events.AsyncFakeEntityInteract
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import me.tofaa.entitylib.APIConfig
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform
@@ -34,8 +34,8 @@ class EntityHandler : PacketListenerAbstract(), KoinComponent {
         if (event.packetType != Play.Client.INTERACT_ENTITY) return
         val packet = WrapperPlayClientInteractEntity(event)
 
-        val entityId = packet.entityId
         val player = event.getPlayer<Player>() ?: server.getPlayer(event.user.uuid) ?: return
+        val entityId = packet.entityId
 
         AsyncFakeEntityInteract(player, entityId, packet.hand, packet.action).callEvent()
 

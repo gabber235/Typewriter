@@ -1,13 +1,18 @@
 package com.typewritermc.engine.paper.interaction
 
 import com.typewritermc.core.interaction.*
+import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.getAll
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
+import com.typewritermc.engine.paper.utils.AVERAGE_SCHEDULING_DELAY_MS
+import com.typewritermc.engine.paper.utils.TICK_MS
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.bukkit.entity.Player
@@ -20,7 +25,7 @@ import kotlin.reflect.safeCast
 
 
 class PlayerSession(val player: Player) : KoinComponent {
-    private var job: Job? = null
+    private var sessionTickingJob: Job? = null
 
     internal var scope: InteractionScope? = null
     val interaction: Interaction? get() = scope?.interaction
@@ -39,32 +44,32 @@ class PlayerSession(val player: Player) : KoinComponent {
         trackers.forEach {
             try {
                 it.setup()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                logger.severe("Failed to setup player session for '${player.name}'.")
                 e.printStackTrace()
             }
         }
-        startJob()
+        sessionTickingJob = startSessionTicking()
     }
 
-    private fun startJob() {
-        job = DISPATCHERS_ASYNC.launch {
-            // Wait for the plugin to be enabled
-            delay(100)
-            while (plugin.isEnabled) {
-                val startTime = System.currentTimeMillis()
-                eventMutex.withLock {
-                    runSchedule()
-                }
-                val now = System.currentTimeMillis()
-                val deltaTime = now - lastTickTime
-                lastTickTime = now
-                tick(Duration.ofMillis(deltaTime))
-                val endTime = System.currentTimeMillis()
-                // Wait for the remainder or the tick
-                val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
-                if (wait > 0) delay(wait)
-                else if (wait < -100) logger.warning("The session ticker for ${player.name} is running behind! Took ${endTime - startTime}ms (if this happens only occasionally, it's fine)")
+    private fun startSessionTicking(): Job = Dispatchers.UntickedAsync.launch {
+        // Wait for the plugin to be enabled
+        delay(100)
+        while (plugin.isEnabled && isActive) {
+            // TODO use kotlin.time.measureTime for these time measurements
+            val startTime = System.currentTimeMillis()
+            eventMutex.withLock {
+                runSchedule()
             }
+            val now = System.currentTimeMillis()
+            val deltaTime = now - lastTickTime
+            lastTickTime = now
+            tick(Duration.ofMillis(deltaTime))
+            val endTime = System.currentTimeMillis()
+            // Wait for the remainder or the tick
+            val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
+            if (wait > 0) delay(wait)
+            else if (wait < -100) logger.warning("The session ticker for ${player.name} is running behind! Took ${endTime - startTime}ms (if this only happens occasionally, it's fine)")
         }
     }
 
@@ -135,10 +140,15 @@ class PlayerSession(val player: Player) : KoinComponent {
                     }
                 }
 
-                handler.trigger(triggering, interaction).apply()
+                try {
+                    handler.trigger(triggering, interaction).apply()
+                } catch (t: Throwable) {
+                    logger.severe("Exception thrown while triggering handler $handler.")
+                    t.printStackTrace()
+                }
             }
 
-            // We want todo the filtering before the next event
+            // We want to do the filtering before the next event
             //  but after all the handlers to make sure the criteria match as expected
             todo.addAll(addingEvents.map(Event::filterAllowedTriggers))
         }
@@ -180,9 +190,14 @@ class PlayerSession(val player: Player) : KoinComponent {
     }
 
     suspend fun teardown() {
-        job?.cancel()
-        scope?.teardown(force = true)
-        trackers.forEach { it.teardown() }
+        try {
+            sessionTickingJob?.cancel()
+            scope?.teardown(force = true)
+            trackers.forEach { it.teardown() }
+        } catch (t: Throwable) {
+            logger.severe("Exception thrown while tearing down session for player '${player.name}'.")
+            t.printStackTrace()
+        }
     }
 }
 

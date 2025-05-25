@@ -79,11 +79,11 @@ class RandomActionBarDialogueCinematicEntry(
 }
 
 
-val actionBarFormat: String by snippet(
+private val actionBarFormat: String by snippet(
     "cinematic.dialogue.actionbar.format",
     "<bold><speaker></bold><reset><gray>: <white><message><padding>"
 )
-val actionBarPercentage: Double by snippet(
+private val actionBarPercentage: Double by snippet(
     "cinematic.dialogue.actionbar.percentage",
     0.4
 )

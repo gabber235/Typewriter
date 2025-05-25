@@ -10,6 +10,7 @@ import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.logger
+import com.typewritermc.engine.paper.utils.toTicks
 import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import java.time.Duration
@@ -107,7 +108,7 @@ private class CinematicDisplay(
 ) {
     private var startTime: Instant? = null
     val frame: Int
-        get() = (Duration.between(startTime, Instant.now()).toMillis() / 50).toInt()
+        get() = Duration.between(startTime, Instant.now()).toTicks().toInt()
 
     val isFinished: Boolean
         get() = actions.all { it canFinish frame }

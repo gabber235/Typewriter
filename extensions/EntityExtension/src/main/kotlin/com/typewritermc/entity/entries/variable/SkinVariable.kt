@@ -6,7 +6,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.GenericConstraint
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.extension.annotations.VariableData
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.engine.paper.entry.entity.SkinProperty
 import com.typewritermc.engine.paper.entry.entity.skin
 import com.typewritermc.engine.paper.entry.entries.VarContext

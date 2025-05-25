@@ -4,65 +4,41 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.utils.Reloadable
-import com.typewritermc.core.utils.server
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.formatCompact
 import com.typewritermc.engine.paper.entry.entries.*
-import com.typewritermc.engine.paper.interaction.AVERAGE_SCHEDULING_DELAY_MS
-import com.typewritermc.engine.paper.interaction.TICK_MS
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.typewritermc.engine.paper.utils.AVERAGE_SCHEDULING_DELAY_MS
+import com.typewritermc.engine.paper.utils.TICK_MS
+import com.typewritermc.engine.paper.utils.server
+import kotlinx.coroutines.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.koin.java.KoinJavaComponent.get
 import kotlin.reflect.KClass
 import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.safeCast
+import kotlin.reflect.full.safeCast
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 
-class AudienceManager : Listener, Reloadable {
+class AudienceManager : Listener, Reloadable, KoinComponent {
+    private val isEnabled by inject<Boolean>(named("isEnabled"))
     private var displays = emptyMap<Ref<out AudienceEntry>, AudienceDisplay>()
     private var parents = emptyMap<Ref<out AudienceEntry>, List<Ref<out AudienceFilterEntry>>>()
     private var roots = emptyList<Ref<out AudienceEntry>>()
-    private var job: Job? = null
+
+    private var coroutineScope: CoroutineScope? = null
 
     fun initialize() {
         server.pluginManager.registerEvents(this, plugin)
-        job = DISPATCHERS_ASYNC.launch {
-            while (plugin.isEnabled) {
-                val startTime = System.currentTimeMillis()
-                val traces = mutableMapOf<Ref<out AudienceEntry>, Long>()
-                displays.asSequence()
-                    .filter { it.value.isActive }
-                    .filter { it.value is TickableDisplay }
-                    .forEach { (ref, display) ->
-                        val start = System.currentTimeMillis()
-                        try {
-                            (display as TickableDisplay).tick()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        val end = System.currentTimeMillis()
-                        traces[ref] = end - start
-                    }
-                val endTime = System.currentTimeMillis()
-                // Wait for the remainder or the tick
-                val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
-                if (wait > 0) delay(wait)
-                else if (wait < -100) {
-                    val top5 = traces.entries.sortedByDescending { it.value }.take(5)
-                    logger.warning(
-                        "Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms) Top 5 longest ticks: ${
-                            top5.joinToString(", ") { "${it.key}: ${it.value}ms" }
-                        } (if this happens only occasionally, it's fine)"
-                    )
-                }
-            }
-        }
     }
 
     override suspend fun load() {
@@ -89,14 +65,56 @@ class AudienceManager : Listener, Reloadable {
 
         displays = entries.associate { it.ref() to it.display() }
 
+        coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.UntickedAsync)
+
+        for ((ref, display) in displays) {
+            if (display !is TickableDisplay) continue
+            coroutineScope?.launch {
+                loopDisplay(ref, display)
+            }
+        }
+
         server.onlinePlayers.forEach { player ->
             addPlayerForRoots(player)
         }
     }
 
+    private suspend fun <TD> loopDisplay(ref: Ref<out AudienceEntry>, display: TD)
+            where TD : AudienceDisplay, TD : TickableDisplay {
+        while (isEnabled && coroutineScope?.isActive == true) {
+            if (!display.isActive) {
+                delay(TICK_MS - AVERAGE_SCHEDULING_DELAY_MS)
+                continue
+            }
+            val time = measureTime {
+                try {
+                    withTimeout(30.seconds) {
+                        display.tick()
+                    }
+                } catch (t: Throwable) {
+                    logger.warning("Exception thrown while ticking $display")
+                    t.printStackTrace()
+                }
+            }
+
+            val wait = TICK_MS - time.inWholeMilliseconds - AVERAGE_SCHEDULING_DELAY_MS
+            if (wait > 0) delay(wait)
+            else if (wait < -100) {
+                logger.warning(
+                    "Audience entry $ref took to long to tick ${time.formatCompact()} (if this happens only occasionally, it's fine)"
+                )
+            }
+        }
+    }
+
     fun addPlayerFor(player: Player, ref: Ref<out AudienceEntry>) {
         val display = displays[ref] ?: return
-        display.addPlayer(player)
+        try {
+            display.addPlayer(player)
+        } catch (t: Throwable) {
+            logger.severe("Exception thrown while adding player '${player.name}' to $display")
+            t.printStackTrace()
+        }
     }
 
     fun addPlayerForRoots(player: Player) {
@@ -105,7 +123,12 @@ class AudienceManager : Listener, Reloadable {
 
     fun removePlayerFor(player: Player, ref: Ref<out AudienceEntry>) {
         val display = displays[ref] ?: return
-        display.removePlayer(player)
+        try {
+            display.removePlayer(player)
+        } catch (t: Throwable) {
+            logger.severe("Exception thrown while removing player '${player.name}' from $display")
+            t.printStackTrace()
+        }
     }
 
     fun removePlayerForRoots(player: Player) {
@@ -133,6 +156,8 @@ class AudienceManager : Listener, Reloadable {
     fun getParents(ref: Ref<out AudienceEntry>): List<Ref<out AudienceFilterEntry>> = parents[ref] ?: emptyList()
 
     override suspend fun unload() {
+        coroutineScope?.cancel()
+        coroutineScope = null
         val displays = displays
         this.displays = emptyMap()
         displays.values.forEach { it.dispose() }
@@ -149,8 +174,6 @@ class AudienceManager : Listener, Reloadable {
     }
 
     suspend fun shutdown() {
-        job?.cancel()
-        job = null
         unload()
         HandlerList.unregisterAll(this)
     }
@@ -175,12 +198,12 @@ val Ref<out AudienceEntry>.isActive: Boolean
         return manager[this]?.isActive ?: false
     }
 
-fun <D : AudienceDisplay> Ref<out AudienceEntry>.findDisplay(klass: KClass<D>): D? {
+fun <D : Any> Ref<out AudienceEntry>.findDisplay(klass: KClass<D>): D? {
     val manager = get<AudienceManager>(AudienceManager::class.java)
     return klass.safeCast(manager[this])
 }
 
-inline fun <reified D : AudienceDisplay> Ref<out AudienceEntry>.findDisplay(): D? {
+inline fun <reified D : Any> Ref<out AudienceEntry>.findDisplay(): D? {
     return findDisplay(D::class)
 }
 

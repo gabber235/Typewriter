@@ -4,24 +4,23 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.ModifierOperator
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.triggerFor
-import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.engine.paper.utils.logErrorIfNull
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
 
 private const val FACT_STORAGE_DELAY = 60 * 3
 
@@ -41,7 +40,7 @@ class FactDatabase : KoinComponent {
 
         // Filter expired facts every second.
         // After that, save the facts of the players who have facts that expired or changed.
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             var cycle = 1
             while (plugin.isEnabled) {
                 delay(1000)
@@ -123,6 +122,7 @@ class FactDatabase : KoinComponent {
                         val fact = entry.readForPlayersGroup(player)
                         modifier.value.get(player, context) + fact.value
                     }
+
                     ModifierOperator.MULTIPLY -> {
                         val entry =
                             modifier.fact.get().logErrorIfNull("Could not find ${modifier.fact}") ?: return@forEach

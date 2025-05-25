@@ -1,23 +1,27 @@
 package com.typewritermc.basic.entries.action
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
-import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.item.Item
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.asMini
-import org.bukkit.entity.Player
+import com.typewritermc.engine.paper.utils.item.Item
+import kotlinx.coroutines.Dispatchers
 
-private val dropMessage by snippet("give_item.drop", "<gray>Some items have been dropped because your inventory is full")
+private val dropMessage by snippet(
+    "give_item.drop",
+    "<gray>Some items have been dropped because your inventory is full"
+)
 
 @Entry("give_item", "Give an item to the player", Colors.RED, "streamline:give-gift-solid")
 /**
@@ -36,7 +40,7 @@ class GiveItemActionEntry(
     val item: Var<Item> = ConstVar(Item.Empty),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        SYNC.launch {
+        Dispatchers.Sync.launch {
             val itemStack = item.get(player, context).build(player, context)
             val leftOver = player.inventory.addItem(itemStack)
             leftOver.values.forEach {

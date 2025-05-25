@@ -7,6 +7,8 @@ import com.extollit.gaming.ai.path.model.IPathingEntity
 import com.extollit.gaming.ai.path.model.Passibility
 import com.extollit.linalg.immutable.Vec3d
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.logger
@@ -20,6 +22,7 @@ import com.typewritermc.roadnetwork.gps.toVector
 import com.typewritermc.roadnetwork.pathfinding.PFCapabilities
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import org.bukkit.util.BoundingBox
 import org.koin.java.KoinJavaComponent.get
@@ -99,7 +102,7 @@ private sealed interface NavigationActivityTaskState {
         private val location: PositionProperty,
     ) : NavigationActivityTaskState {
         var path: List<GPSEdge>? = null
-        private val job: Job = ThreadType.DISPATCHERS_ASYNC.launch {
+        private val job: Job = Dispatchers.UntickedAsync.launch {
             val result = gps.findPath()
             path = if (result.isFailure) {
                 logger.severe("Failed to find path: ${result.exceptionOrNull()}")

@@ -3,8 +3,10 @@ package com.typewritermc.engine.paper.entry.temporal
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
@@ -15,7 +17,7 @@ import com.typewritermc.engine.paper.events.AsyncCinematicEndEvent
 import com.typewritermc.engine.paper.events.AsyncCinematicStartEvent
 import com.typewritermc.engine.paper.events.AsyncCinematicTickEvent
 import com.typewritermc.engine.paper.interaction.*
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -59,7 +61,7 @@ class TemporalInteraction(
 
         state = PLAYING
 
-        DISPATCHERS_ASYNC.switchContext {
+        Dispatchers.UntickedAsync.switchContext {
             AsyncCinematicStartEvent(player, pageId).callEvent()
         }
         return ok(Unit)
@@ -114,7 +116,7 @@ class TemporalInteraction(
 
         if (force) return
 
-        DISPATCHERS_ASYNC.switchContext {
+        Dispatchers.UntickedAsync.switchContext {
             AsyncCinematicEndEvent(player, originalFrame, pageId).callEvent()
         }
     }

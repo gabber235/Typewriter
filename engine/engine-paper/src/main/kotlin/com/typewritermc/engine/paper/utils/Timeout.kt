@@ -1,8 +1,10 @@
 package com.typewritermc.engine.paper.utils
 
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import org.koin.core.component.KoinComponent
 import kotlin.time.Duration
 
@@ -15,7 +17,7 @@ class Timeout(
     operator fun invoke() {
         immediateRunnable?.run()
         if (job == null) {
-            job = DISPATCHERS_ASYNC.launch {
+            job = Dispatchers.UntickedAsync.launch {
                 delay(duration)
                 job = null
                 invoker()

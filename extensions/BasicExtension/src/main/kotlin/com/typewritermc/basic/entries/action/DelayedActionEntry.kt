@@ -1,17 +1,20 @@
 package com.typewritermc.basic.entries.action
 
-import com.google.gson.annotations.SerializedName
-import kotlinx.coroutines.delay
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
-import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.engine.paper.entry.entries.*
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
-import org.bukkit.entity.Player
+import com.typewritermc.engine.paper.entry.entries.ActionEntry
+import com.typewritermc.engine.paper.entry.entries.ActionTrigger
+import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.Var
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import java.time.Duration
 
 @Entry("delayed_action", "Delay an action for a certain amount of time", Colors.RED, "fa-solid:hourglass")
@@ -34,7 +37,7 @@ class DelayedActionEntry(
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         disableAutomaticTriggering()
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             delay(duration.get(player, context).toMillis())
             triggerManually()
         }

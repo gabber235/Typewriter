@@ -6,6 +6,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.MultiLine
 import com.typewritermc.core.extension.annotations.Placeholder
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -15,8 +16,9 @@ import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.Sync
+import com.typewritermc.engine.paper.utils.server
+import kotlinx.coroutines.Dispatchers
 
 @Entry("player_run_command", "Make player run command", Colors.RED, "mingcute:terminal-fill")
 /**
@@ -48,7 +50,7 @@ class PlayerCommandActionEntry(
         val command = command.get(player, context)
         // Run in main thread
         if (command.isBlank()) return
-        SYNC.launch {
+        Dispatchers.Sync.launch {
             val attachment = if (sudo) {
                 player.addAttachment(plugin)
             } else null

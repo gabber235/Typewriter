@@ -1,6 +1,6 @@
 package com.typewritermc.engine.paper.events
 
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 

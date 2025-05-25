@@ -2,9 +2,11 @@ package com.typewritermc.engine.paper.extensions.modrinth
 
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.TickedAsync
 import com.typewritermc.engine.paper.utils.asMini
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import lirand.api.extensions.events.SimpleListener
@@ -28,7 +30,7 @@ object Modrinth {
     suspend fun initialize() {
         plugin.listen<PlayerJoinEvent>(listener) {
             if (!canSendNotification(it.player)) return@listen
-            SYNC.launch {
+            Dispatchers.TickedAsync.launch {
                 delay(5.seconds)
                 notifyPlayer(it.player)
             }

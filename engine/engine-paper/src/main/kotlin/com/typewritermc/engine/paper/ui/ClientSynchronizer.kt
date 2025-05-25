@@ -7,16 +7,18 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.content.ContentContext
 import com.typewritermc.engine.paper.content.ContentMode
 import com.typewritermc.engine.paper.content.ContentModeTrigger
 import com.typewritermc.engine.paper.entry.StagingManager
 import com.typewritermc.engine.paper.entry.triggerFor
-import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.logger
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.Sync
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.loader.ExtensionLoader
-import com.typewritermc.core.utils.server
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -128,7 +130,7 @@ class ClientSynchronizer : KoinComponent {
     }
 
     fun handlePublish(client: SocketIOClient, data: String, ack: AckRequest) {
-        SYNC.launch {
+        Dispatchers.Sync.launch {
             val result = stagingManager.publish()
             ack.sendResult(result)
         }

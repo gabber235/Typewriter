@@ -11,7 +11,7 @@ import com.github.retrooper.packetevents.util.Dummy
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
-import com.typewritermc.core.utils.serverVersion
+import com.typewritermc.engine.paper.utils.serverVersion
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.plugin

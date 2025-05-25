@@ -12,6 +12,7 @@ import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.InteractionBoundStateOverrideSubscription
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
@@ -26,8 +27,8 @@ import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.*
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import lirand.api.extensions.events.SimpleListener
 import lirand.api.extensions.events.listen
@@ -188,14 +189,14 @@ class CameraCinematicAction(
             EffectStateProvider(INVISIBILITY)
         )
 
-        SYNC.switchContext {
+        Dispatchers.Sync.switchContext {
             allowFlight = true
             isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
 
             server.onlinePlayers.filter { it.uniqueId != uniqueId }.forEach {
-                it.hidePlayer(plugin, this)
-                this.hidePlayer(plugin, it)
+                it.hidePlayer(plugin, this@setup)
+                this@setup.hidePlayer(plugin, it)
             }
 
             // In creative mode, when the player opens the inventory while their inventory is fake cleared,
@@ -257,7 +258,7 @@ class CameraCinematicAction(
     private suspend fun Player.teardown() {
         listener?.unregister()
         listener = null
-        SYNC.switchContext {
+        Dispatchers.Sync.switchContext {
             interceptor?.cancel()
             interceptor = null
 
@@ -425,7 +426,7 @@ private class TeleportCameraAction(
 
     override suspend fun tickSegment(frame: Int) {
         val position = path.interpolate(frame)
-        SYNC.switchContext {
+        Dispatchers.Sync.switchContext {
             player.teleport(position.toBukkitLocation())
             player.allowFlight = true
             player.isFlying = true

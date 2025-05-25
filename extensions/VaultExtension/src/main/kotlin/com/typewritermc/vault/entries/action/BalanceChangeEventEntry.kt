@@ -8,18 +8,19 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.extension.annotations.Singleton
 import com.typewritermc.core.interaction.EntryContextKey
-import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.triggerAllFor
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.vault.VaultInitializer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
-import com.typewritermc.core.utils.server
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -81,7 +82,7 @@ class BalanceLoop : Initializable, Listener, KoinComponent {
         }
         plugin.registerEvents(this)
 
-        job = ThreadType.DISPATCHERS_ASYNC.launch {
+        job = Dispatchers.UntickedAsync.launch {
             while (plugin.isEnabled) {
                 delay(100)
                 val economy = vaultInitializer.economy ?: continue

@@ -1,6 +1,6 @@
 package lirand.api.extensions.inventory
 
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.engine.paper.utils.asMini
 import org.bukkit.Material
 import org.bukkit.event.inventory.InventoryType

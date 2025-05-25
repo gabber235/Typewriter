@@ -1,15 +1,17 @@
 package com.typewritermc.engine.paper.interaction
 
 import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.dialogue.isInDialogue
 import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
+import com.typewritermc.engine.paper.utils.server
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import lirand.api.extensions.server.registerEvents
-import com.typewritermc.core.utils.server
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -19,11 +21,6 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.koin.core.component.KoinComponent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-
-internal const val TICK_MS = 50L
-
-// This is the most magic value I have ever seen.
-internal const val AVERAGE_SCHEDULING_DELAY_MS = 5L
 
 class PlayerSessionManager : Listener, KoinComponent {
     private val sessions = ConcurrentHashMap<UUID, PlayerSession>()
@@ -45,10 +42,8 @@ class PlayerSessionManager : Listener, KoinComponent {
         initialTriggers: List<EventTrigger>,
         continueTrigger: EventTrigger? = null
     ) {
-        if (player.isInDialogue) {
-            if (continueTrigger != null) {
-                triggerEvent(Event(player, context, continueTrigger))
-            }
+        if (player.isInDialogue && continueTrigger != null) {
+            triggerEvent(Event(player, context, continueTrigger))
         } else {
             triggerEvent(Event(player, context, initialTriggers))
         }
@@ -82,7 +77,7 @@ class PlayerSessionManager : Listener, KoinComponent {
         // If the event is empty, we don't need to do anything
         if (event.triggers.isEmpty()) return
 
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             try {
                 event.player.session?.addToSchedule(event)
             } catch (e: Exception) {
@@ -107,7 +102,7 @@ class PlayerSessionManager : Listener, KoinComponent {
     // When a player leaves the server, we need to end the session.
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerQuit(event: PlayerQuitEvent) {
-        runBlocking {
+        runBlocking { // Maybe make Dispatchers.Unconfined
             sessions.remove(event.player.uniqueId)?.teardown()
         }
     }

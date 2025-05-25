@@ -1,15 +1,16 @@
 package com.typewritermc.example.entries.manifest
 
-import com.typewritermc.example.entries.trigger.SomeBukkitEvent
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.TickableDisplay
 import com.typewritermc.engine.paper.entry.inAudience
-import com.typewritermc.engine.paper.utils.ThreadType
+import com.typewritermc.engine.paper.utils.Sync
+import com.typewritermc.example.entries.trigger.SomeBukkitEvent
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 
@@ -65,7 +66,7 @@ class TickableAudienceDisplay : AudienceDisplay(), TickableDisplay {
 
         // This is running asynchronously
         // If you need to do something on the main thread
-        ThreadType.SYNC.launch {
+        Dispatchers.Sync.launch {
             // Though this will run a tick later, to sync with the bukkit scheduler.
         }
     }

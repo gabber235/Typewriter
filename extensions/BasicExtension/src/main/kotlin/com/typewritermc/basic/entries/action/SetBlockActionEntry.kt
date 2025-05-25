@@ -1,23 +1,23 @@
 package com.typewritermc.basic.entries.action
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.MaterialProperties
+import com.typewritermc.core.extension.annotations.MaterialProperty
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
-import com.typewritermc.core.entries.Ref
-import com.typewritermc.core.extension.annotations.MaterialProperties
-import com.typewritermc.core.extension.annotations.MaterialProperty
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.toBukkitLocation
-import io.github.retrooper.packetevents.util.SpigotConversionUtil.toBukkitLocation
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.Material
-import org.bukkit.entity.Player
 
 @Entry("set_block", "Set a block at a location", Colors.RED, "fluent:cube-add-20-filled")
 /**
@@ -43,7 +43,7 @@ class SetBlockActionEntry(
     val location: Var<Position> = ConstVar(Position.ORIGIN),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        SYNC.launch {
+        Dispatchers.Sync.launch {
             val bukkitLocation = location.get(player, context).toBukkitLocation()
             bukkitLocation.block.type = material.get(player, context)
         }

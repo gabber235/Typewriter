@@ -4,17 +4,19 @@ import com.google.gson.*
 import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.pageId
+import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.core.utils.onFail
+import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.StagingState.*
 import com.typewritermc.engine.paper.events.StagingChangeEvent
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.ui.ClientSynchronizer
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.engine.paper.utils.Timeout
 import com.typewritermc.engine.paper.utils.get
+import kotlinx.coroutines.Dispatchers
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -24,9 +26,6 @@ import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
 import kotlin.time.Duration.Companion.seconds
 
 interface StagingManager {
@@ -274,7 +273,7 @@ class StagingManagerImpl : StagingManager, KoinComponent {
         if (this._pages == null) return failure("Pages are not loaded yet")
         stagingState = PUBLISHING
         autoSaver.cancel()
-        return DISPATCHERS_ASYNC.switchContext {
+        return Dispatchers.UntickedAsync.switchContext {
             if (!publishedDir.exists()) publishedDir.mkdirs()
 
             try {
@@ -393,6 +392,7 @@ private fun JsonElement.createPath(path: String) {
         }
     }
 }
+
 enum class StagingState {
     PUBLISHING,
     STAGING,

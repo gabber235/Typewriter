@@ -1,20 +1,22 @@
 package com.typewritermc.basic.entries.audience
 
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.logger
-import com.typewritermc.engine.paper.utils.ThreadType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import org.bukkit.entity.Player
 import java.time.Duration
 import java.util.*
@@ -56,8 +58,8 @@ class TimerAudienceDisplay(
             logger.warning("Timer duration must be positive, otherwise it will infinitely trigger.")
             return
         }
-        jobs[player.uniqueId] = ThreadType.DISPATCHERS_ASYNC.launch {
-            while (player in this) {
+        jobs[player.uniqueId] = Dispatchers.UntickedAsync.launch {
+            while (player in this@TimerAudienceDisplay) {
                 delay(duration.toMillis())
                 onTimer.triggerFor(player, context())
             }

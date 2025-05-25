@@ -5,15 +5,17 @@ import com.extollit.gaming.ai.path.model.IBlockObject
 import com.extollit.gaming.ai.path.model.IInstanceSpace
 import com.typewritermc.core.extension.Initializable
 import com.typewritermc.core.extension.annotations.Singleton
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.engine.paper.utils.toBukkitWorld
 import com.typewritermc.engine.paper.utils.toWorld
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import lirand.api.extensions.events.unregister
-import com.typewritermc.core.utils.server
 import org.bukkit.World
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -92,7 +94,7 @@ class InstanceSpaceCache : Initializable, Listener {
     }
 
     override suspend fun initialize() {
-        job = ThreadType.DISPATCHERS_ASYNC.launch {
+        job = Dispatchers.UntickedAsync.launch {
             while (true) {
                 delay(5000)
                 cache.values.retainAll { it.refresh() }

@@ -4,7 +4,7 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.utils.Reloadable
 import com.typewritermc.engine.paper.entry.PlaceholderEntry
 import com.typewritermc.engine.paper.entry.PlaceholderParser
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import me.clip.placeholderapi.PlaceholderAPI
 import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import org.bukkit.OfflinePlayer

@@ -7,6 +7,8 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.WithAlpha
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -18,8 +20,8 @@ import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
 import com.typewritermc.engine.paper.utils.Color
-import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.toPacketLocation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.meta.Metadata
@@ -74,7 +76,7 @@ class FireworkActionEntry(
             entity.despawn()
             return
         }
-        ThreadType.DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             delay(flightDuration.toMillis())
             WrapperPlayServerEntityStatus(entityId, FIREWORK_EXPLOSION_STATUS) sendPacketTo player
             entity.despawn()

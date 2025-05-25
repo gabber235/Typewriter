@@ -4,6 +4,8 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
 import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
@@ -14,8 +16,8 @@ import com.typewritermc.engine.paper.events.AsyncDialogueStartEvent
 import com.typewritermc.engine.paper.events.AsyncDialogueSwitchEvent
 import com.typewritermc.engine.paper.facts.FactDatabase
 import com.typewritermc.engine.paper.interaction.*
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.engine.paper.utils.playSound
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -59,7 +61,7 @@ class DialogueInteraction(
     override suspend fun initialize(): Result<Unit> {
         setup()
         tick(playTime)
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             AsyncDialogueStartEvent(player).callEvent()
         }
         return ok(Unit)
@@ -98,7 +100,7 @@ class DialogueInteraction(
         currentMessenger =
             nextEntry.messenger(player, nextContext) ?: EmptyDialogueMessenger(player, nextContext, nextEntry)
         setup()
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             AsyncDialogueSwitchEvent(player).callEvent()
         }
     }
@@ -119,7 +121,7 @@ class DialogueInteraction(
     override suspend fun teardown(force: Boolean) {
         isActive = false
         cleanupEntry(true)
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             AsyncDialogueEndEvent(player).callEvent()
         }
     }

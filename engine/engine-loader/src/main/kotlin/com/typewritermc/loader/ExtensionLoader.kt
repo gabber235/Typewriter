@@ -3,6 +3,7 @@ package com.typewritermc.loader
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -11,7 +12,6 @@ import java.io.File
 import java.net.URLClassLoader
 import java.util.logging.Logger
 import java.util.zip.ZipFile
-import kotlin.jvm.java
 import kotlin.math.abs
 import kotlin.math.log10
 
@@ -33,8 +33,17 @@ class ExtensionLoader : KoinComponent {
     // TODO: Remove this when the database update is implemented
     var extensionJson: JsonArray = JsonArray()
 
+    fun readJsonTexts(json: List<String>): Map<Extension, String> = json.associateBy { extensionJson ->
+        try {
+            gson.fromJson(extensionJson, Extension::class.java)
+        } catch (e: JsonSyntaxException) {
+            logger.severe("Error while loading extension meta: ${e.message}")
+            null
+        }
+    }.filter { it.key != null } as Map<Extension, String>
+
     fun load(jars: List<File>) {
-        jars.forEach { assert(it.exists() && it.canRead() && it.endsWith(".jar")) }
+        jars.forEach { assert(it.exists() && it.canRead() && it.extension == "jar") }
 
         if (classLoader != null) {
             unload()
@@ -53,38 +62,33 @@ class ExtensionLoader : KoinComponent {
             }
         }
 
-
         // TODO: Remove this when the database update is implemented
         extensionJson = JsonArray()
 
-        val possibleExtensions =
-
-            extensionJsonTexts.map { extensionJson ->
-                gson.fromJson(extensionJson, Extension::class.java) to extensionJson
-            }.filter { (extension, _) ->
-                if (extension.extension.engineVersion != version) {
-                    logger.warning("Extension '${extension.extension.name}Extension' was made for Typewriter ${extension.extension.engineVersion} but you are using Typewriter $version. Ignoring extension.")
-                    return@filter false
-                }
-
-                val paper = extension.extension.paper
-                if (paper == null) {
-                    logger.warning("Extension '${extension.extension.name}Extension' does not seem to be a paper extension. Ignoring extension.")
-                    return@filter false
-                }
-
-                val dependencies = paper.dependencies
-                val missingDependencies = dependencies.filter { !dependencyChecker.hasDependency(it) }
-                if (missingDependencies.isNotEmpty()) {
-                    val missing = missingDependencies.joinToString(", ")
-                    logger.warning(
-                        "Extension '${extension.extension.name}Extension' is missing external dependencies: '${missing}'. Ignoring extension."
-                    )
-                    return@filter false
-                }
-
-                true
+        val possibleExtensions = readJsonTexts(extensionJsonTexts).filter { (extension, _) ->
+            if (extension.extension.engineVersion != version) {
+                logger.warning("Extension '${extension.extension.name}Extension' was made for Typewriter ${extension.extension.engineVersion} but you are using Typewriter $version. Ignoring extension.")
+                return@filter false
             }
+
+            val paper = extension.extension.paper
+            if (paper == null) {
+                logger.warning("Extension '${extension.extension.name}Extension' does not seem to be a paper extension. Ignoring extension.")
+                return@filter false
+            }
+
+            val dependencies = paper.dependencies
+            val missingDependencies = dependencies.filter { !dependencyChecker.hasDependency(it) }
+            if (missingDependencies.isNotEmpty()) {
+                val missing = missingDependencies.joinToString(", ")
+                logger.warning(
+                    "Extension '${extension.extension.name}Extension' is missing external dependencies: '${missing}'. Ignoring extension."
+                )
+                return@filter false
+            }
+
+            true
+        }
 
         extensions = possibleExtensions
             .filter { (extension, _) ->
@@ -105,11 +109,9 @@ class ExtensionLoader : KoinComponent {
                 }
                 true
             }
-            .map { (extension, extensionJson) ->
-                // TODO: Remove this when the database update is implemented
-                this.extensionJson.add(JsonParser.parseString(extensionJson))
-
-                extension
+            .map {
+                this.extensionJson.add(JsonParser.parseString(it.value))
+                it.key
             }
 
         if (hasShownLoadedMessage) return
@@ -129,7 +131,7 @@ class ExtensionLoader : KoinComponent {
             )
         } else {
             val unsupportedMessage = if (extensions.any { it.extension.flags.contains(ExtensionFlag.Unsupported) }) {
-                "\nThere are unsupported extensions loaded. You won't get any support for these and should migrate them away from.\n"
+                "\nThere are unsupported extensions loaded. You won't get any support for these and should migrate from away them.\n"
             } else {
                 ""
             }

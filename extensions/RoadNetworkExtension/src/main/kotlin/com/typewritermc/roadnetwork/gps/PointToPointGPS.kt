@@ -1,13 +1,15 @@
 package com.typewritermc.roadnetwork.gps
 
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.utils.ComputedMap
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,7 +28,7 @@ class PointToPointGPS(
     private var previousEnd: Pair<RoadNode, List<RoadEdge>?>? = null
     private var previousPath: List<RoadEdge> = emptyList()
 
-    override suspend fun findPath(): Result<List<GPSEdge>> = DISPATCHERS_ASYNC.switchContext {
+    override suspend fun findPath(): Result<List<GPSEdge>> = Dispatchers.UntickedAsync.switchContext {
         var network = roadNetworkManager.getNetwork(roadNetwork)
 
         val start = startFetcher(network)

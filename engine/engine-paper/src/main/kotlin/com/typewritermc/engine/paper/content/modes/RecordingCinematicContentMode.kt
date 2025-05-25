@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.content.*
 import com.typewritermc.engine.paper.content.components.*
 import com.typewritermc.engine.paper.entry.AssetManager
@@ -16,10 +17,11 @@ import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.interaction.startBlockingActionBar
 import com.typewritermc.engine.paper.interaction.stopBlockingActionBar
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.loreString
 import com.typewritermc.engine.paper.utils.name
 import com.typewritermc.engine.paper.utils.toTicks
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -249,7 +251,7 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
 
     private suspend fun applyStartingState() {
         val value = recorder[frame] ?: return
-        SYNC.switchContext {
+        Dispatchers.Sync.switchContext {
             applyState(value)
         }
     }

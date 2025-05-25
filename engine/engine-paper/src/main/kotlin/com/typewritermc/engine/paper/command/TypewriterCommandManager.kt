@@ -5,10 +5,10 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import com.typewritermc.core.entries.Query
-import com.typewritermc.core.utils.server
 import com.typewritermc.engine.paper.command.dsl.DslCommand
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
 import com.typewritermc.engine.paper.plugin
+import com.typewritermc.engine.paper.utils.server
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -58,9 +58,13 @@ class TypewriterCommandManager {
     }
 }
 
-private val lookup: MethodHandles.Lookup by lazy { MethodHandles.lookup() }
-private val methodType: MethodType by lazy { MethodType.methodType(Void.TYPE, String::class.java) }
-private val removeCommandMethod by lazy { lookup.findVirtual(CommandNode::class.java, "removeCommand", methodType) }
+private val removeCommandMethod by lazy {
+    MethodHandles.lookup().findVirtual(
+        CommandNode::class.java,
+        "removeCommand",
+        MethodType.methodType(Void.TYPE, String::class.java)
+    )
+}
 
 fun <S> CommandDispatcher<S>.unregister(literal: String) {
     try {

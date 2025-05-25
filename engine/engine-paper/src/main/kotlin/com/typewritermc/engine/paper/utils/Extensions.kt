@@ -9,7 +9,6 @@ import com.github.retrooper.packetevents.util.Vector3f
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.logger
-import com.typewritermc.core.utils.server
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -47,7 +46,7 @@ fun <T> T?.logErrorIfNull(message: String): T? {
 infix fun <T> Boolean.then(t: T): T? = if (this) t else null
 
 
-fun Duration.toTicks(): Long = this.toMillis() / 50
+fun Duration.toTicks(): Long = this.toMillis() / TICK_MS
 operator fun Duration.times(other: Double): Duration = Duration.ofMillis((this.toMillis() * other).roundToLong())
 
 fun Audience.playSound(

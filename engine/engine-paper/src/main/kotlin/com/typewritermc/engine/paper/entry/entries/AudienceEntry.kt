@@ -9,7 +9,7 @@ import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.plugin
 import lirand.api.extensions.events.unregister
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.koin.java.KoinJavaComponent.get

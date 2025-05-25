@@ -10,7 +10,7 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.triggerAllFor
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import net.islandearth.rpgregions.api.events.RegionsEnterEvent
 
 

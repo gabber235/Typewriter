@@ -6,6 +6,8 @@ import com.typewritermc.core.books.pages.PageType
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.formattedName
 import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.command.dsl.*
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.audienceState
@@ -14,20 +16,21 @@ import com.typewritermc.engine.paper.entry.inAudience
 import com.typewritermc.engine.paper.entry.temporal.temporalCommand
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.interaction.chatHistory
+import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.ui.CommunicationHandler
-import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.msg
 import com.typewritermc.engine.paper.utils.sendMini
 import com.typewritermc.loader.ExtensionLoader
-import io.papermc.paper.command.brigadier.CommandSourceStack
+import kotlinx.coroutines.Dispatchers
 import net.kyori.adventure.inventory.Book
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
 import java.time.format.DateTimeFormatter
 
-fun typewriterCommand() = command<CommandSourceStack>("typewriter", "tw") {
+fun typewriterCommand() = command("typewriter", "tw") {
+    versionCommand()
     reloadCommand()
     factsCommand()
     clearChatCommand()
@@ -39,6 +42,7 @@ fun typewriterCommand() = command<CommandSourceStack>("typewriter", "tw") {
     registerDynamicCommands()
 }
 
+
 fun CommandTree.registerDynamicCommands() {
     val extensionLoader = get<ExtensionLoader>(ExtensionLoader::class.java)
     extensionLoader.extensions.flatMap { it.typewriterCommands }
@@ -47,15 +51,27 @@ fun CommandTree.registerDynamicCommands() {
             clazz.getMethod(it.methodName, CommandTree::class.java)
         }
         .forEach {
-            it.invoke(null, this)
+            try {
+                it.invoke(null, this)
+            } catch (t: Throwable) {
+                logger.severe("Exception thrown while registering command '${it.declaringClass.simpleName}'.")
+                t.printStackTrace()
+            }
         }
+}
+
+private fun CommandTree.versionCommand() = literal("version") {
+    withPermission("typewriter.version")
+    executes {
+        sender.msg("You are running typewriter version: <b>${plugin.pluginMeta.version}</b>")
+    }
 }
 
 private fun CommandTree.reloadCommand() = literal("reload") {
     withPermission("typewriter.reload")
     executes {
         sender.msg("Reloading configuration...")
-        ThreadType.DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             plugin.reload()
             sender.msg("Configuration reloaded!")
         }

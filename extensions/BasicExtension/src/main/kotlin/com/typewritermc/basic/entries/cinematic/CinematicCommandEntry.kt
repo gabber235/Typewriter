@@ -2,6 +2,7 @@ package com.typewritermc.basic.entries.cinematic
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
@@ -9,7 +10,8 @@ import com.typewritermc.engine.paper.entry.entries.Segment
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.SYNC
+import com.typewritermc.engine.paper.utils.Sync
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 
 interface CinematicCommandEntry : CinematicEntry {
@@ -100,7 +102,7 @@ class CommandAction(
     override suspend fun startSegment(segment: CommandSegment) {
         super.startSegment(segment)
         if (segment.command.isBlank()) return
-        SYNC.switchContext {
+        Dispatchers.Sync.switchContext {
             val attachment = if (segment.sudo) {
                 player.addAttachment(plugin)
             } else null
@@ -109,7 +111,7 @@ class CommandAction(
                 .lines()
                 .filter { it.isNotBlank() }
                 .forEach(run)
-            
+
             attachment?.remove()
         }
     }

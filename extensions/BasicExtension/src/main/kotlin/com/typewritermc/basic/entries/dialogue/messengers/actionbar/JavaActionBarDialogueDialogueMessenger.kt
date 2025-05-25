@@ -6,8 +6,6 @@ import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.interaction.acceptActionBarMessage
 import com.typewritermc.engine.paper.interaction.chatHistory
-import com.typewritermc.engine.paper.interaction.startBlockingActionBar
-import com.typewritermc.engine.paper.interaction.stopBlockingActionBar
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
 import net.kyori.adventure.text.Component
@@ -16,9 +14,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 import java.time.Duration
 
-val actionBarFormat: String by snippet(
+private val actionBarFormat: String by snippet(
     "dialogue.actionbar.format",
-    "<bold><speaker></bold><reset><gray>: <white><message><padding>",
+    "<bold><speaker></bold><reset><gray>: <white><message> <gray>[<confirmation_key>]</gray><padding>",
 )
 
 class JavaActionBarDialogueDialogueMessenger(

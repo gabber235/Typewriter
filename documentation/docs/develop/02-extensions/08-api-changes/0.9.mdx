@@ -1,0 +1,40 @@
+---
+title: 0.9.X API changes
+---
+
+---
+title: 0.9.X API changes
+---
+
+# 0.9.X API changes
+
+## `ThreadType` Deprecation
+
+Originally, `ThreadType` was used to invoke the coroutine context for different processes in Typewriter.
+This is now deprecated in favor of actual coroutines dispatchers and contexts.
+
+### Primary Bukkit Thread
+```kotlin showLineNumbers
+// highlight-red
+ThreadType.SYNC.launch {}
+// highlight-green
+Dispatchers.Sync.launch {}
+```
+
+### Async Bukkit Thread
+```kotlin showLineNumbers
+// highlight-red
+ThreadType.ASYNC.launch {}
+// highlight-green
+Dispatchers.TickedAsync.launch {}
+```
+
+### Async Bukkit Thread
+```kotlin showLineNumbers
+// highlight-red
+ThreadType.DISPATCHERS_ASYNC.launch {}
+// highlight-green
+Dispatchers.UntickedAsync.launch {}
+```
+
+If working in **IntelliJ**, it will automatically suggest the correct replacements.

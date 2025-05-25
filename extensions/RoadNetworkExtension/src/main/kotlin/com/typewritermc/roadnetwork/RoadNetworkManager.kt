@@ -7,13 +7,11 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.Initializable
 import com.typewritermc.core.extension.annotations.Singleton
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -31,14 +29,14 @@ class RoadNetworkManager : Initializable, KoinComponent {
     private val editors = CacheBuilder.newBuilder()
         .expireAfterAccess(2, TimeUnit.MINUTES)
         .removalListener<Ref<out RoadNetworkEntry>, RoadNetworkEditor> { notification ->
-            DISPATCHERS_ASYNC.launch {
+            Dispatchers.UntickedAsync.launch {
                 notification.value?.dispose()
             }
         }
         .build(CacheLoader.from(::createEditor))
 
     override suspend fun initialize() {
-        job = DISPATCHERS_ASYNC.launch {
+        job = Dispatchers.UntickedAsync.launch {
             while (plugin.isEnabled) {
                 delay(500)
                 editors.asMap().values.forEach { it.refresh() }
@@ -48,7 +46,7 @@ class RoadNetworkManager : Initializable, KoinComponent {
 
     private fun loadRoadNetwork(id: String): CompletableDeferred<RoadNetwork> {
         val deferred = CompletableDeferred<RoadNetwork>()
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             val network = try {
                 Query.findById<RoadNetworkEntry>(id)?.loadRoadNetwork(gson)
             } catch (e: Exception) {

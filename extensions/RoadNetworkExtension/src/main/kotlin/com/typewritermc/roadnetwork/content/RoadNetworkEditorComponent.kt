@@ -1,12 +1,14 @@
 package com.typewritermc.roadnetwork.content
 
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.content.ContentComponent
-import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.roadnetwork.RoadNetwork
 import com.typewritermc.roadnetwork.RoadNetworkEditorState
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -26,7 +28,7 @@ class RoadNetworkEditorComponent(
     }
 
     fun updateAsync(block: suspend (RoadNetwork) -> RoadNetwork) {
-        ThreadType.DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             update(block)
         }
     }

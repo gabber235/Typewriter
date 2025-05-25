@@ -9,6 +9,8 @@ import com.github.retrooper.packetevents.util.Vector3f
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.interaction.context
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.loopingDistance
 import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.content.*
@@ -18,10 +20,10 @@ import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
-import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import kotlinx.coroutines.Dispatchers
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
 import net.kyori.adventure.bossbar.BossBar
@@ -38,9 +40,6 @@ import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
 import java.time.Duration
 import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
 
 class SelectedRoadNodeContentMode(
     context: ContentContext,
@@ -284,7 +283,7 @@ private class SelectedNodePathsComponent(
         get() = paths != null
 
     override suspend fun initialize(player: Player) {
-        DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             paths = loadEdgePaths()
         }
     }

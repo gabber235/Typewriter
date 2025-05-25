@@ -14,7 +14,7 @@ import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.asMiniWithResolvers
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.parsed
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

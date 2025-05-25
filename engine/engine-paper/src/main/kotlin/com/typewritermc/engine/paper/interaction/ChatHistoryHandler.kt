@@ -13,7 +13,7 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.asMiniWithResolvers
 import com.typewritermc.engine.paper.utils.plainText
-import com.typewritermc.core.utils.server
+import com.typewritermc.engine.paper.utils.server
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TranslatableComponent
