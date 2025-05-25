@@ -1,15 +1,19 @@
 package com.typewritermc.basic.entries.audience
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.books.pages.PageType
 import com.typewritermc.core.entries.Query
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Page
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.logger
-import com.typewritermc.engine.paper.utils.ThreadType
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -101,29 +105,31 @@ private class LoopingCinematicPlayerDisplay(
 private class CinematicDisplay(
     private val actions: List<CinematicAction>,
 ) {
-    private var hasSetupCompleted = false
-    var frame: Int = -1
+    private var startTime: Instant? = null
+    val frame: Int
+        get() = (Duration.between(startTime, Instant.now()).toMillis() / 50).toInt()
 
     val isFinished: Boolean
         get() = actions.all { it canFinish frame }
 
     fun setup() {
-        ThreadType.DISPATCHERS_ASYNC.launch {
+        Dispatchers.UntickedAsync.launch {
             actions.forEach { it.setup() }
-            hasSetupCompleted = true
+            startTime = Instant.now()
         }
     }
 
     fun tick() {
-        if (!hasSetupCompleted) return
-        frame++
-        ThreadType.DISPATCHERS_ASYNC.launch {
+        if (startTime == null) return
+        val frame = frame
+        Dispatchers.UntickedAsync.launch {
             actions.forEach { it.tick(frame) }
         }
     }
 
     fun teardown() {
-        ThreadType.DISPATCHERS_ASYNC.launch {
+        startTime = null
+        Dispatchers.UntickedAsync.launch {
             actions.forEach { it.teardown() }
         }
     }
