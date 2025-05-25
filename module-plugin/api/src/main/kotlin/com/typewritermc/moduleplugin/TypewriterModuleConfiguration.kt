@@ -1,7 +1,6 @@
 package com.typewritermc.moduleplugin
 
 import com.typewritermc.loader.ExtensionFlag
-import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -35,7 +34,7 @@ open class TypewriterModuleConfiguration {
 
 const val MIN_NAMESPACE_LENGTH = 5
 const val MAX_NAMESPACE_LENGTH = 20
-val NAMESPACE_REGEX = Regex("^([a-z0-9])+\$")
+val NAMESPACE_REGEX = Regex("^([a-z0-9])+$")
 private fun String.validateAsNamespace(path: String) {
     if (isBlank()) {
         throw MissingFieldException(path)
@@ -107,6 +106,7 @@ data class TypewriterExtensionConfiguration(
     fun dependencies(block: ExtensionDependencyConfiguration.() -> Unit) {
         dependencies = ExtensionDependencyConfiguration().apply(block)
     }
+
     fun paper(block: PaperExtensionConfiguration.() -> Unit) {
         paper = PaperExtensionConfiguration().apply(block)
     }
@@ -210,7 +210,7 @@ data class PaperExtensionConfiguration(
 
 internal fun PaperExtensionConfiguration.validate() {
     val invalidDependencies = dependencies.filter {
-        !Regex("^([a-zA-Z0-9])+\$").matches(it)
+        !Regex("^([a-zA-Z0-9-])+$").matches(it)
     }
     if (invalidDependencies.isNotEmpty()) {
         throw IllegalArgumentException("Invalid dependency(s): ${invalidDependencies.joinToString(", ")}")
