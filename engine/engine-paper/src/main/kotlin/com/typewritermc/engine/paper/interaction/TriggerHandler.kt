@@ -6,6 +6,12 @@ import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 
 interface TriggerHandler {
+    /**
+     * Determines the order in which a handler will be triggered for a player
+     *
+     * Higher priorities get triggered before lower priorities
+     */
+    val priority: Int get() = 0
     suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation
 }
 
@@ -21,6 +27,7 @@ class InteractionTriggerHandler : TriggerHandler {
 sealed interface TriggerContinuation {
     // Signals that the trigger is completed.
     data object Nothing : TriggerContinuation
+
     @Deprecated("Use Nothing instead", ReplaceWith("Nothing"), level = DeprecationLevel.ERROR)
     data object Done
 

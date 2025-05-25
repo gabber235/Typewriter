@@ -5,7 +5,6 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.utils.Reloadable
 import com.typewritermc.core.utils.UntickedAsync
-import com.typewritermc.core.utils.formatCompact
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
@@ -101,7 +100,7 @@ class AudienceManager : Listener, Reloadable, KoinComponent {
             if (wait > 0) delay(wait)
             else if (wait < -100) {
                 logger.warning(
-                    "Audience entry $ref took to long to tick ${time.formatCompact()} (if this happens only occasionally, it's fine)"
+                    "Audience entry $ref took to long to tick ${time.inWholeMilliseconds}ms (if this happens only occasionally, it's fine)"
                 )
             }
         }

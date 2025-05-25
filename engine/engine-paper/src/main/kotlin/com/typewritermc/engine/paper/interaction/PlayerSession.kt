@@ -39,7 +39,7 @@ class PlayerSession(val player: Player) : KoinComponent {
     private var lastTickTime = System.currentTimeMillis()
 
     internal fun setup() {
-        triggerHandlers = getKoin().getAll<TriggerHandler>()
+        triggerHandlers = getKoin().getAll<TriggerHandler>().sortedByDescending { it.priority }
         trackers = getKoin().getAll<SessionTracker>(player)
         trackers.forEach {
             try {

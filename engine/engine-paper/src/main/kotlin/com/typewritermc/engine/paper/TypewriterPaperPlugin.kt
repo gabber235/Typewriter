@@ -163,9 +163,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         // We want to initialize all the extensions after all the plugins have been enabled to make sure
         // that all the plugins are loaded.
         Dispatchers.Sync.launch {
-            println("Current thread : ${Thread.currentThread()}")
             delay(100)
-            println("Current thread : ${Thread.currentThread()}")
             load()
             get<CommunicationHandler>().initialize()
 

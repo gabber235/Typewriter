@@ -9,6 +9,9 @@ import com.typewritermc.engine.paper.interaction.TriggerContinuation
 import com.typewritermc.engine.paper.interaction.TriggerHandler
 
 class ActionHandler : TriggerHandler {
+    override val priority: Int
+        get() = 10
+
     override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {
         val actions = event.entries<ActionEntry>()
         if (actions.isEmpty()) return TriggerContinuation.Nothing
