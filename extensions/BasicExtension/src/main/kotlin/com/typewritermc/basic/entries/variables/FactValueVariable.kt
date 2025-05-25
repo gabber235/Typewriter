@@ -10,6 +10,7 @@ import com.typewritermc.engine.paper.entry.entries.*
 
 @Entry("fact_value_variable", "A variable that returns the value of a fact", Colors.GREEN, "solar:hashtag-square-bold")
 @GenericConstraint(Int::class)
+@GenericConstraint(Double::class)
 @VariableData(FactValueVariableData::class)
 /**
  * The `Fact Value Variable` is a variable that returns the value of a fact.
