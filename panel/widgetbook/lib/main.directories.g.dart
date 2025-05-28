@@ -11,17 +11,17 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:widgetbook/widgetbook.dart' as _i1;
+import 'package:widgetbook_workspace/stories/components/input_field.stories.dart'
+    as _i2;
 import 'package:widgetbook_workspace/stories/components/labeled_divider.stories.dart'
     as _i4;
+import 'package:widgetbook_workspace/stories/components/organization_icon.stories.dart'
+    as _i5;
 import 'package:widgetbook_workspace/stories/components/text_scroller.stories.dart'
     as _i6;
 import 'package:widgetbook_workspace/stories/routes/route.dart' as _i3;
 import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
     as _i7;
-import 'package:widgetbook_workspace/stories/widgets/generic/components/input_field.stories.dart'
-    as _i2;
-import 'package:widgetbook_workspace/stories/widgets/generic/components/organization_icon.stories.dart'
-    as _i5;
 
 final directories = <_i1.WidgetbookNode>[
   _i1.WidgetbookFolder(
