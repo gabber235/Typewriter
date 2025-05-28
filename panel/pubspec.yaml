@@ -29,15 +29,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  riverpod_generator: ^3.0.0-dev.15
-  build_runner: ^2.4.15
-  custom_lint: ^0.7.5
-  riverpod_lint: ^3.0.0-dev.15
-  flutter_lints: ^5.0.0
-  auto_route_generator: ^10.0.1
-  icons_launcher: ^3.0.1
-  freezed: ^3.0.4
-  json_serializable: ^6.9.4
+  riverpod_generator: 
+  build_runner: 
+  custom_lint: 
+  riverpod_lint: 
+  flutter_lints: 
+  auto_route_generator: 
+  icons_launcher: 
+  freezed: 
+  json_serializable:
 
 icons_launcher:
   image_path: "assets/typewriter_app_icon.png"

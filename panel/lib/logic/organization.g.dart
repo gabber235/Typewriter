@@ -54,7 +54,7 @@ final class OrganizationsProvider
           $AsyncNotifierProviderElement(pointer);
 }
 
-String _$organizationsHash() => r'b1057c8c55f65f37c0e5f9923cca375bbb5be033';
+String _$organizationsHash() => r'c7888d4baaf55f73c6535389e4a266080fc09619';
 
 abstract class _$Organizations extends $AsyncNotifier<List<OrganizationData>> {
   FutureOr<List<OrganizationData>> build();

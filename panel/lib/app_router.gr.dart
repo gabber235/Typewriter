@@ -18,10 +18,10 @@ class AuthRoute extends PageRouteInfo<AuthRouteArgs> {
     Key? key,
     List<PageRouteInfo>? children,
   }) : super(
-         AuthRoute.name,
-         args: AuthRouteArgs(onResult: onResult, key: key),
-         initialChildren: children,
-       );
+          AuthRoute.name,
+          args: AuthRouteArgs(onResult: onResult, key: key),
+          initialChildren: children,
+        );
 
   static const String name = 'AuthRoute';
 
@@ -45,13 +45,23 @@ class AuthRouteArgs {
   String toString() {
     return 'AuthRouteArgs{onResult: $onResult, key: $key}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! AuthRouteArgs) return false;
+    return key == other.key;
+  }
+
+  @override
+  int get hashCode => key.hashCode;
 }
 
 /// generated route for
 /// [IndexPage]
 class IndexRoute extends PageRouteInfo<void> {
   const IndexRoute({List<PageRouteInfo>? children})
-    : super(IndexRoute.name, initialChildren: children);
+      : super(IndexRoute.name, initialChildren: children);
 
   static const String name = 'IndexRoute';
 
@@ -71,11 +81,11 @@ class OrganizationRoute extends PageRouteInfo<OrganizationRouteArgs> {
     Key? key,
     List<PageRouteInfo>? children,
   }) : super(
-         OrganizationRoute.name,
-         args: OrganizationRouteArgs(organizationId: organizationId, key: key),
-         rawPathParams: {'organizationId': organizationId},
-         initialChildren: children,
-       );
+          OrganizationRoute.name,
+          args: OrganizationRouteArgs(organizationId: organizationId, key: key),
+          rawPathParams: {'organizationId': organizationId},
+          initialChildren: children,
+        );
 
   static const String name = 'OrganizationRoute';
 
@@ -107,4 +117,14 @@ class OrganizationRouteArgs {
   String toString() {
     return 'OrganizationRouteArgs{organizationId: $organizationId, key: $key}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! OrganizationRouteArgs) return false;
+    return organizationId == other.organizationId && key == other.key;
+  }
+
+  @override
+  int get hashCode => organizationId.hashCode ^ key.hashCode;
 }

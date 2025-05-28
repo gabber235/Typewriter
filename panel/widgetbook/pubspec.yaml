@@ -21,12 +21,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
-  widgetbook_generator: ^3.13.0
-  build_runner: ^2.4.15
-  riverpod_generator: ^3.0.0-dev.15
-  custom_lint: ^0.7.5
-  riverpod_lint: ^3.0.0-dev.15
+  flutter_lints:
+  widgetbook_generator: 
+  build_runner: 
+  riverpod_generator: 
+  custom_lint: 
+  riverpod_lint: 
 
 flutter:
   uses-material-design: true
