@@ -39,6 +39,7 @@ class PlayerRespawnEventEntry(
 enum class RespawnLocationType {
     BED,
     ANCHOR,
+    NONE
 }
 
 enum class RespawnContextKeys(override val klass: KClass<*>) : EntryContextKey {
@@ -60,6 +61,7 @@ fun onRespawn(event: PlayerRespawnEvent, query: Query<PlayerRespawnEventEntry>) 
             when (it) {
                 RespawnLocationType.BED -> event.isBedSpawn
                 RespawnLocationType.ANCHOR -> event.isAnchorSpawn
+                RespawnLocationType.NONE -> !event.isBedSpawn && !event.isAnchorSpawn
             }
         }
     }.toList()
