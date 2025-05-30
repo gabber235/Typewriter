@@ -60,6 +60,7 @@ private class ArmorStandEntity(player: Player) : WrapperFakeEntity(
             is MarkerProperty -> applyMarkerData(entity, property)
             is RotationProperty -> applyRotationData(entity, property)
             is SmallProperty -> applySmallData(entity, property)
+            is InvisibleProperty -> applyInvisibleData(entity, property)
             else -> {}
         }
         if (applyGenericEntityData(entity, property)) return
