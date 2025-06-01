@@ -1,6 +1,7 @@
 package com.typewritermc.verification
 
 import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -15,6 +16,7 @@ class EntryConstructorAllHaveDefaultValueValidator(
         val entries = resolver.getSymbolsWithAnnotation(Entry::class.qualifiedName!!)
         val invalidEntries = entries
             .filterIsInstance<KSClassDeclaration>()
+            .filter { it.classKind == ClassKind.CLASS }
             .flatMap {
                 with(logger) {
                     with(resolver) {
