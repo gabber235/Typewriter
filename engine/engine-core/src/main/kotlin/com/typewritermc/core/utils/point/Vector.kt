@@ -1,7 +1,7 @@
 package com.typewritermc.core.utils.point
 
 import org.intellij.lang.annotations.Language
-import java.util.Objects
+import java.util.*
 import kotlin.math.sqrt
 
 data class Vector(
@@ -14,6 +14,9 @@ data class Vector(
     companion object {
         val ZERO = Vector(0.0, 0.0, 0.0)
         val UNIT = Vector(1.0, 1.0, 1.0)
+
+        @Language("JSON")
+        const val ZERO_JSON = "{\"x\": 0.0, \"y\": 0.0, \"z\": 0.0}"
 
         @Language("JSON")
         const val UNIT_JSON = "{\"x\": 1.0, \"y\": 1.0, \"z\": 1.0}"
