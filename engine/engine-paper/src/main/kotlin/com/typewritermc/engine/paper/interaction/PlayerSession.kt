@@ -4,6 +4,7 @@ import com.typewritermc.core.interaction.*
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.getAll
 import com.typewritermc.core.utils.launch
+import com.typewritermc.core.utils.tryCatch
 import com.typewritermc.engine.paper.entry.entries.Event
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
@@ -94,7 +95,9 @@ class PlayerSession(val player: Player) : KoinComponent {
 
     suspend fun tick(deltaTime: Duration) {
         scope?.tick(deltaTime)
-        trackers.forEach { it.tick() }
+        trackers.forEach {
+            tryCatch { it.tick() }
+        }
     }
 
     private suspend fun runSchedule() {
@@ -179,9 +182,23 @@ class PlayerSession(val player: Player) : KoinComponent {
 
         if (scope == null) {
             this.scope = InteractionScope(nextInteraction, nextBound)
-            this.scope?.initialize()
+            try {
+                this.scope?.initialize()
+            } catch (exception: Exception) {
+                logger.severe("Something when wrong while trying to start ${nextInteraction}, skipping...")
+                exception.printStackTrace()
+                this.scope?.teardown()
+                this.scope = null
+            }
         } else {
-            this.scope?.swapInteraction(nextInteraction)
+            try {
+                this.scope?.swapInteraction(nextInteraction)
+            } catch (exception: Exception) {
+                logger.severe("Exception thrown while trying to start ${nextInteraction}, skipping....")
+                exception.printStackTrace()
+                this.scope?.teardown()
+                this.scope = null
+            }
         }
     }
 

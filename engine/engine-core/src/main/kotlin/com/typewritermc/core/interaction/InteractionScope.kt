@@ -1,7 +1,8 @@
 package com.typewritermc.core.interaction
 
+import com.typewritermc.core.utils.tryCatchSuspend
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class InteractionScope(
@@ -29,15 +30,16 @@ class InteractionScope(
         interaction.initialize()
         bound.initialize()
     }
+
     suspend fun tick(deltaTime: Duration) {
-        interaction.tick(deltaTime)
-        refreshBoundState()
-        bound.tick()
+        tryCatchSuspend { interaction.tick(deltaTime) }
+        tryCatchSuspend { refreshBoundState() }
+        tryCatchSuspend { bound.tick() }
     }
 
     private suspend fun refreshBoundState() {
         if (boundState != previousBoundState) {
-            bound.boundStateChange(previousBoundState, boundState)
+            tryCatchSuspend { bound.boundStateChange(previousBoundState, boundState) }
             previousBoundState = boundState
         }
     }
@@ -49,17 +51,21 @@ class InteractionScope(
     }
 
     suspend fun swapBound(bound: InteractionBound) {
-        this.bound.teardown()
+        tryCatchSuspend { this.bound.teardown() }
         this.bound = bound
-        bound.initialize()
+        tryCatchSuspend { bound.initialize() }
     }
 
     suspend fun teardown(force: Boolean = false) {
-        bound.teardown()
-        interaction.teardown(force)
+        tryCatchSuspend { this.bound.teardown() }
+        tryCatchSuspend { interaction.teardown(force) }
     }
 
-    suspend fun addBoundStateOverride(id: UUID = UUID.randomUUID(), state: InteractionBoundState, priority: Int = 0): UUID {
+    suspend fun addBoundStateOverride(
+        id: UUID = UUID.randomUUID(),
+        state: InteractionBoundState,
+        priority: Int = 0
+    ): UUID {
         interactionBoundStateOverrides[id] = InteractionBoundStateOverride(state, priority)
         refreshBoundState()
         return id
