@@ -1,7 +1,10 @@
 package com.typewritermc.entity.entries.cinematic
 
 import com.github.retrooper.packetevents.protocol.entity.pose.EntityPose
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.protocol.player.DiggingAction
 import com.github.retrooper.packetevents.protocol.player.EquipmentSlot.*
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerDigging
 import com.google.gson.Gson
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
@@ -24,12 +27,15 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.extensions.packetevents.ArmSwing
 import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
+import com.typewritermc.engine.paper.interaction.InterceptionBundle
+import com.typewritermc.engine.paper.interaction.interceptPackets
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.engine.paper.utils.toCoordinate
 import com.typewritermc.engine.paper.utils.toWorld
 import com.typewritermc.entity.entries.data.minecraft.*
 import com.typewritermc.entity.entries.data.minecraft.living.DamagedProperty
 import com.typewritermc.entity.entries.data.minecraft.living.EquipmentProperty
+import com.typewritermc.entity.entries.data.minecraft.living.UseItemProperty
 import io.papermc.paper.event.player.PlayerArmSwingEvent
 import org.bukkit.SoundCategory
 import org.bukkit.entity.Player
@@ -134,6 +140,7 @@ class EntityCinematicAction(
                 (FakeProvider(PoseProperty::class) { streamer?.currentFrame()?.pose?.toProperty() } to Int.MAX_VALUE) +
                 (FakeProvider(ArmSwingProperty::class) { streamer?.currentFrame()?.swing?.toProperty() } to Int.MAX_VALUE) +
                 (FakeProvider(DamagedProperty::class) { DamagedProperty(streamer?.currentFrame()?.damaged == true) } to Int.MAX_VALUE) +
+                (FakeProvider(UseItemProperty::class) { UseItemProperty(streamer?.currentFrame()?.useItem == true) } to Int.MAX_VALUE) +
                 (FakeProvider(EquipmentProperty::class) {
                     val equipment =
                         mutableMapOf<com.github.retrooper.packetevents.protocol.player.EquipmentSlot, com.github.retrooper.packetevents.protocol.item.ItemStack>()
@@ -240,6 +247,7 @@ data class EntityFrame(
     val pose: EntityPose? = null,
     val swing: ArmSwing? = null,
     val damaged: Boolean? = null,
+    val useItem: Boolean? = null,
 
     val mainHand: ItemStack? = null,
     val offHand: ItemStack? = null,
@@ -254,6 +262,7 @@ data class EntityFrame(
             pose = next.pose ?: pose,
             swing = next.swing,
             damaged = next.damaged,
+            useItem = next.useItem ?: useItem,
             mainHand = next.mainHand ?: mainHand,
             offHand = next.offHand ?: offHand,
             helmet = next.helmet ?: helmet,
@@ -269,6 +278,7 @@ data class EntityFrame(
             pose = if (previous.pose == pose) null else pose,
             swing = if (previous.swing == swing) null else swing,
             damaged = if (previous.damaged == damaged) null else damaged,
+            useItem = if (previous.useItem == useItem) null else useItem,
             mainHand = if (previous.mainHand == mainHand) null else mainHand,
             offHand = if (previous.offHand == offHand) null else offHand,
             helmet = if (previous.helmet == helmet) null else helmet,
@@ -279,7 +289,7 @@ data class EntityFrame(
     }
 
     override fun isEmpty(): Boolean {
-        return location == null && pose == null && swing == null && damaged == null && mainHand == null && offHand == null
+        return location == null && pose == null && swing == null && damaged == null && useItem == null && mainHand == null && offHand == null
                 && helmet == null && chestplate == null && leggings == null && boots == null
     }
 }
@@ -305,6 +315,28 @@ class EntityCinematicRecording(
 ) : RecordingCinematicContentMode<EntityFrame>(context, player, klass, initialFrame) {
     private var swing: ArmSwing? = null
     private var damaged: Boolean = false
+    private var useItem: Boolean = false
+    private var interceptionBundle: InterceptionBundle? = null
+
+    override suspend fun initialize() {
+        interceptionBundle = player.interceptPackets {
+            PacketType.Play.Client.USE_ITEM {
+                useItem = true
+            }
+            PacketType.Play.Client.PLAYER_DIGGING {
+                val packet = WrapperPlayClientPlayerDigging(it)
+                if (packet.action != DiggingAction.RELEASE_USE_ITEM) return@PLAYER_DIGGING
+                useItem = false
+            }
+        }
+        super.initialize()
+    }
+
+    override suspend fun dispose() {
+        interceptionBundle?.cancel()
+        interceptionBundle = null
+        super.dispose()
+    }
 
     @EventHandler
     fun onArmSwing(event: PlayerArmSwingEvent) {
@@ -341,6 +373,7 @@ class EntityCinematicRecording(
             pose = pose.toEntityPose(),
             swing = swing,
             damaged = damaged,
+            useItem = useItem,
             mainHand = inv.itemInMainHand.clone(),
             offHand = inv.itemInOffHand.clone(),
             helmet = inv.helmet?.clone(),

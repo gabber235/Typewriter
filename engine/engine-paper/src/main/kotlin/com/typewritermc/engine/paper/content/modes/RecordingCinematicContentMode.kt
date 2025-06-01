@@ -104,7 +104,7 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
     private var asset: AssetEntry? = null
     private lateinit var actions: List<CinematicAction>
     private var totalTime = Duration.ZERO
-    private val frame: Int get() = initialFrame + totalTime.toTicks().toInt()
+    protected val frame: Int get() = initialFrame + totalTime.toTicks().toInt()
     private lateinit var frames: IntRange
 
     private var recorder = Recorder<F>()
