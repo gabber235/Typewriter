@@ -5,7 +5,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.WithAlpha
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
-import com.typewritermc.engine.paper.entry.entries.GenericEntityData
+import com.typewritermc.engine.paper.entry.entries.LivingEntityData
 import com.typewritermc.engine.paper.extensions.packetevents.metas
 import com.typewritermc.engine.paper.utils.Color
 import me.tofaa.entitylib.meta.types.LivingEntityMeta
@@ -21,7 +21,7 @@ class PotionEffectColorData(
     @WithAlpha
     val color: Color = Color(0),
     override val priorityOverride: Optional<Int> = Optional.empty(),
-) : GenericEntityData<PotionEffectColorProperty> {
+) : LivingEntityData<PotionEffectColorProperty> {
     override fun type(): KClass<PotionEffectColorProperty> = PotionEffectColorProperty::class
 
     override fun build(player: Player): PotionEffectColorProperty = PotionEffectColorProperty(color)

@@ -4,7 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
-import com.typewritermc.engine.paper.entry.entries.GenericEntityData
+import com.typewritermc.engine.paper.entry.entries.LivingEntityData
 import com.typewritermc.engine.paper.extensions.packetevents.metas
 import me.tofaa.entitylib.meta.types.LivingEntityMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -18,7 +18,7 @@ class ArrowCountData(
     override val name: String = "",
     val arrowCount: Int = 0,
     override val priorityOverride: Optional<Int> = Optional.empty(),
-) : GenericEntityData<ArrowCountProperty> {
+) : LivingEntityData<ArrowCountProperty> {
     override fun type(): KClass<ArrowCountProperty> = ArrowCountProperty::class
 
     override fun build(player: Player): ArrowCountProperty = ArrowCountProperty(arrowCount)

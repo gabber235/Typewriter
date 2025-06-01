@@ -11,6 +11,8 @@ fun applyLivingEntityData(entity: WrapperEntity, property: EntityProperty): Bool
         is ScaleProperty -> applyScaleData(entity, property)
         is DamagedProperty -> applyDamagedData(entity, property)
         is UseItemProperty -> applyUseItemData(entity, property)
+        is ArrowCountProperty -> applyArrowCountData(entity, property)
+        is PotionEffectColorProperty -> applyPotionEffectColorData(entity, property)
         else -> return false
     }
 
