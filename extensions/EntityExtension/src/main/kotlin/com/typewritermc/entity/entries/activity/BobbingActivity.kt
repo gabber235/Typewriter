@@ -26,7 +26,7 @@ import kotlin.math.sin
  * - Giving decorative entities a subtle animation to make them feel more alive.
  * - Creating a visual cue for interactive objects, like a quest item that pulses slightly.
  *
- * You can control how fast the entity bobs and how high it moves.
+ * You can control how fast the entity bobs and the amplitude of its motion.
  * It can also be combined with other movement activities. For example,
  * you could have an entity patrol along a path while also bobbing.
  */
@@ -36,9 +36,9 @@ class BobbingActivityEntry(
     @Help("The speed of the bobbing motion in cycles per second. Higher values mean faster bobbing.")
     @Default("1.0")
     val speed: Var<Float> = ConstVar(1.0f),
-    @Help("The total vertical distance the entity will travel up and down in blocks. For example, a height of 0.5 means it will move 0.25 blocks up and 0.25 blocks down from its starting point.")
+    @Help("The amplitude of the bobbing motion in blocks. For example, an amplitude of 0.5 means it will move 0.25 blocks up and 0.25 blocks down from its starting point.")
     @Default("0.5")
-    val height: Var<Float> = ConstVar(0.5f),
+    val amplitude: Var<Float> = ConstVar(0.5f),
     @Help("The activity that supplies the base position. If not set, the entity will bob in place around its initial position.")
     val childActivity: Ref<out EntityActivityEntry> = emptyRef()
 ) : GenericEntityActivityEntry {
@@ -46,7 +46,7 @@ class BobbingActivityEntry(
         val baseActivity = childActivity.get()?.create(context, currentLocation) ?: IdleActivity(currentLocation)
         return BobbingActivity(
             speed = speed,
-            height = height,
+            amplitude = amplitude,
             childActivity = baseActivity
         )
     }
@@ -54,7 +54,7 @@ class BobbingActivityEntry(
 
 class BobbingActivity(
     private val speed: Var<Float>,
-    private val height: Var<Float>,
+    private val amplitude: Var<Float>,
     private val childActivity: EntityActivity<ActivityContext>
 ) : EntityActivity<ActivityContext> {
     private var startTime: Instant = Instant.now()
@@ -67,10 +67,10 @@ class BobbingActivity(
 
     override fun tick(context: ActivityContext): TickResult {
         val currentSpeed = context.randomViewer?.let { speed.get(it) } ?: 1.0f
-        val currentHeight = context.randomViewer?.let { height.get(it) } ?: 0.5f
+        val currentAmplitude = context.randomViewer?.let { amplitude.get(it) } ?: 0.5f
 
         val elapsedSeconds = Duration.between(startTime, Instant.now()).toMillis() / 1000.0f
-        lastOffset = sin(elapsedSeconds * currentSpeed * 2 * Math.PI).toFloat() * currentHeight
+        lastOffset = sin(elapsedSeconds * currentSpeed * 2 * Math.PI).toFloat() * currentAmplitude
 
         return childActivity.tick(context)
     }
