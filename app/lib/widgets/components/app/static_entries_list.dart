@@ -18,6 +18,10 @@ List<String> _staticEntryIds(Ref ref) {
   return page.entries
       .where((entry) {
         final tags = ref.watch(entryBlueprintTagsProvider(entry.blueprintId));
+        if (tags.isEmpty) {
+          // Entries without a blueprint are always shown. So that the user can delete them.
+          return true;
+        }
         return tags.contains("static");
       })
       .map((entry) => entry.id)
