@@ -14,6 +14,8 @@ Originally, `ThreadType` was used to invoke the coroutine context for different 
 This is now deprecated in favor of actual coroutines dispatchers and contexts.
 
 ### Primary Bukkit Thread
+This operates on the Paper main thread and should be used for all Paper API interactions.
+
 ```kotlin showLineNumbers
 // highlight-red
 ThreadType.SYNC.launch {}
@@ -22,6 +24,8 @@ Dispatchers.Sync.launch {}
 ```
 
 ### Async Bukkit Thread
+This executes on the asynchronous Paper thread, suitable for tasks without strict timing requirements or those intended for the Paper scheduler.
+
 ```kotlin showLineNumbers
 // highlight-red
 ThreadType.ASYNC.launch {}
@@ -29,7 +33,10 @@ ThreadType.ASYNC.launch {}
 Dispatchers.TickedAsync.launch {}
 ```
 
-### Async Bukkit Thread
+### Async Typewriter Thread Pool
+Utilize the Typewriter thread pool for time-sensitive tasks.
+As the most asynchronous of the three dispatchers and independent of the paper scheduler, it continues operating even during scheduler lag.
+
 ```kotlin showLineNumbers
 // highlight-red
 ThreadType.DISPATCHERS_ASYNC.launch {}
