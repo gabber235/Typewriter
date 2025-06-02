@@ -35,7 +35,7 @@ class TemporalInteraction(
     internal var state = STARTING
         private set
     private var playTime = Duration.ofMillis(-1)
-    private val frame: Int get() = (playTime.toMillis() / 50).toInt()
+    val frame: Int get() = (playTime.toMillis() / 50).toInt()
 
     override val priority by lazy { Query.findPageById(pageId)?.priority ?: 0 }
 
@@ -137,6 +137,8 @@ private val Player.temporalInteraction: TemporalInteraction?
     get() = with(KoinJavaComponent.get<PlayerSessionManager>(PlayerSessionManager::class.java)) {
         session?.interaction as? TemporalInteraction
     }
+
+fun Player.currentTemporalFrame(): Int? = temporalInteraction?.frame
 
 fun Player.isPlayingTemporal(pageId: String): Boolean = temporalInteraction?.pageId == pageId
 
