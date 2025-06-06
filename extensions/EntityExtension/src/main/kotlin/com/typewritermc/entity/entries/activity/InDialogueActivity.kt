@@ -78,7 +78,11 @@ class InDialogueActivity(
         val definition =
             context.instanceRef.get()?.definition.logErrorIfNull("Could not find definition, this should not happen. Please report this on the TypeWriter Discord!")
                 ?: return idleActivity
-        val inDialogue = context.viewers.filter { it.speakersInDialogue.any { it.id == definition.id } }
+        val inDialogue = context.viewers.filter { viewer ->
+            viewer.speakersInDialogue.any {
+                it == definition || it == context.instanceRef
+            }
+        }
 
         trackers.keys.removeIf { uuid -> inDialogue.none { it.uniqueId == uuid } }
 
