@@ -69,6 +69,11 @@ Fuzzy<Page> _fuzzyPages(Ref ref) {
           weight: 0.2,
           getter: (page) => page.type.name,
         ),
+        WeightedKey(
+          name: "id",
+          weight: 0.1,
+          getter: (page) => page.id,
+        ),
       ],
     ),
   );
