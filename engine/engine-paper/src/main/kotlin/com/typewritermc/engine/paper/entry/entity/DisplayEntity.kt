@@ -8,10 +8,12 @@ import com.typewritermc.engine.paper.entry.entries.PropertySupplier
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import org.bukkit.SoundCategory
 import org.bukkit.entity.Player
+import org.jetbrains.annotations.ApiStatus
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 
-internal class DisplayEntity(
+@ApiStatus.Internal
+class DisplayEntity(
     private val player: Player,
     creator: EntityCreator,
     private val activityManager: ActivityManager<*>,
