@@ -17,6 +17,10 @@ dependencies:
   riverpod_annotation: ^3.0.0-dev.15
   flutter_animate: ^4.5.2
   mocktail: ^1.0.4
+  faker: ^2.2.0
+  flutter_hooks: ^0.21.2
+  iconify_flutter: ^0.0.7
+  logto_dart_sdk: ^3.0.0
 
 dev_dependencies:
   flutter_test:

@@ -25,6 +25,10 @@ dependencies:
   responsive_framework: ^1.5.1
   flutter_animate: ^4.5.2
   mocktail: ^1.0.4
+  dart_casing: ^3.0.1
+  okcolor: ^1.1.0
+  url_launcher: ^6.3.1
+  flutter_context_menu: ^0.2.4
 
 dev_dependencies:
   flutter_test:

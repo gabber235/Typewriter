@@ -297,6 +297,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0+7.4.5"
+  dart_casing:
+    dependency: transitive
+    description:
+      name: dart_casing
+      sha256: "653573035e25d8dd414056bee16a7d10bedc32dbb8f519199450f552218881a0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   dart_nats:
     dependency: transitive
     description:
@@ -345,6 +353,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.3"
+  faker:
+    dependency: "direct main"
+    description:
+      name: faker
+      sha256: "544c34e9e1d322824156d5a8d451bc1bb778263b892aded24ec7ba77b0706624"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   ffi:
     dependency: transitive
     description:
@@ -382,8 +398,16 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.2"
-  flutter_hooks:
+  flutter_context_menu:
     dependency: transitive
+    description:
+      name: flutter_context_menu
+      sha256: "5e9c62a5937aba135e3787711b04c73b78729a9751c6c71c2bece4ed9a480d76"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.4"
+  flutter_hooks:
+    dependency: "direct main"
     description:
       name: flutter_hooks
       sha256: b772e710d16d7a20c0740c4f855095026b31c7eb5ba3ab67d2bd52021cd9461d
@@ -569,7 +593,7 @@ packages:
     source: hosted
     version: "4.1.2"
   iconify_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: iconify_flutter
       sha256: ad331a480c49284e3fb66a3896f04a9afa368147b0131897feff6aa0a8397ddb
@@ -665,7 +689,7 @@ packages:
     source: hosted
     version: "1.3.0"
   logto_dart_sdk:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: logto_dart_sdk
       sha256: "9be9eda4379cdefe0e8d7f91c4282b960c124eded3644f13ab90a39ed96c4050"
@@ -744,6 +768,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  okcolor:
+    dependency: transitive
+    description:
+      name: okcolor
+      sha256: "4d5332b52720fd4e0cf451bd63786a64ae5e4f88ab77efba6166a8ca8f2f0db1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   package_config:
     dependency: transitive
     description:

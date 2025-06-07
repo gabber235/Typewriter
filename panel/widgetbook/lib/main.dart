@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:mocktail/mocktail.dart";
 import "package:typewriter_panel/main.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -8,6 +9,9 @@ import "main.directories.g.dart";
 
 void main() {
   Animate.restartOnHotReload = true;
+
+  registerFallbackValue(ThemeMode.system);
+
   runApp(const WidgetbookApp());
 }
 
@@ -46,6 +50,7 @@ class WidgetbookApp extends StatelessWidget {
           builder: (context, child) => Responsive(child: child),
         ),
         AlignmentAddon(),
+        ZoomAddon(),
         TimeDilationAddon(),
       ],
       directories: directories,

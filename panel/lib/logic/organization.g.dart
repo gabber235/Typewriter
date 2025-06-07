@@ -72,6 +72,46 @@ abstract class _$Organizations extends $AsyncNotifier<List<OrganizationData>> {
   }
 }
 
+@ProviderFor(organizationId)
+const organizationIdProvider = OrganizationIdProvider._();
+
+final class OrganizationIdProvider extends $FunctionalProvider<String?, String?>
+    with $Provider<String?> {
+  const OrganizationIdProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'organizationIdProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$organizationIdHash();
+
+  @$internal
+  @override
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String? create(Ref ref) {
+    return organizationId(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $ValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$organizationIdHash() => r'013e2c6e1ab3e419defc8d87912ade098515dd7b';
+
 @ProviderFor(Organization)
 const organizationProvider = OrganizationProvider._();
 
@@ -83,7 +123,7 @@ final class OrganizationProvider
           argument: null,
           retry: null,
           name: r'organizationProvider',
-          isAutoDispose: false,
+          isAutoDispose: true,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -102,7 +142,7 @@ final class OrganizationProvider
       $AsyncNotifierProviderElement(pointer);
 }
 
-String _$organizationHash() => r'ccc46390c5fcdbddc4b61aa083b6b9dd8b605636';
+String _$organizationHash() => r'9fe52811cf7445c0cebdc75a52997745b10b5895';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

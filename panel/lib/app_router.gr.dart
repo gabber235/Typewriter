@@ -74,6 +74,22 @@ class IndexRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [LibraryPage]
+class LibraryRoute extends PageRouteInfo<void> {
+  const LibraryRoute({List<PageRouteInfo>? children})
+      : super(LibraryRoute.name, initialChildren: children);
+
+  static const String name = 'LibraryRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const LibraryPage();
+    },
+  );
+}
+
+/// generated route for
 /// [OrganizationPage]
 class OrganizationRoute extends PageRouteInfo<OrganizationRouteArgs> {
   OrganizationRoute({

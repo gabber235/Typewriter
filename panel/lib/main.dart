@@ -1,15 +1,20 @@
+import "dart:math";
+
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:localstorage/localstorage.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/widgets/generic/components/nats_connection.dart";
 import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 import "package:typewriter_panel/widgets/generic/screens/loading_screen.dart";
+
+final random = Random();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,11 +28,14 @@ class TypewriterPanel extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(appearanceProvider);
+
     return _EagerInitialization(
       child: MaterialApp.router(
         title: "Typewriter",
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
+        themeMode: themeMode,
         routerConfig: router.config(),
         shortcuts: WidgetsApp.defaultShortcuts,
         builder: (context, child) => Responsive(
@@ -41,10 +49,51 @@ class TypewriterPanel extends HookConsumerWidget {
 }
 
 ThemeData buildTheme(Brightness brightness) {
-  final baseTheme = ThemeData(brightness: brightness);
+  final baseTheme = ThemeData(
+    brightness: brightness,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blueAccent,
+      brightness: brightness,
+      error: Colors.redAccent,
+      surface: brightness == Brightness.light
+          ? const Color(0xFFF5F5F5)
+          : const Color(0xFF141218),
+      onSurfaceVariant: brightness == Brightness.light
+          ? const Color(0xFF6c6d76)
+          : const Color(0xFFC4C6D0),
+      surfaceContainerLowest: brightness == Brightness.light
+          ? const Color(0xFFFFFFFF)
+          : const Color(0xFF1F2123),
+      surfaceContainer: brightness == Brightness.light
+          ? const Color(0xFFF3EDF7)
+          : const Color(0xFF1f1d23),
+    ),
+  );
 
   return baseTheme.copyWith(
-    textTheme: baseTheme.textTheme.apply(fontFamily: "JetBrainsMono"),
+    textTheme: baseTheme.textTheme.apply(fontFamily: "JetBrainsMono").copyWith(
+          labelLarge: TextStyle(
+            fontFamily: "JetBrainsMono",
+            color: baseTheme.colorScheme.onSurface,
+            fontSize: 14,
+            letterSpacing: 0.5,
+            fontVariations: [FontVariation("wght", 700)],
+          ),
+          labelMedium: TextStyle(
+            fontFamily: "JetBrainsMono",
+            color: baseTheme.colorScheme.onSurface,
+            fontSize: 13,
+            letterSpacing: 0.5,
+            fontVariations: [FontVariation("wght", 700)],
+          ),
+          labelSmall: TextStyle(
+            fontFamily: "JetBrainsMono",
+            color: baseTheme.colorScheme.onSurface,
+            fontSize: 12,
+            letterSpacing: 0.5,
+            fontVariations: [FontVariation("wght", 700)],
+          ),
+        ),
     inputDecorationTheme: InputDecorationTheme(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       border: OutlineInputBorder(
@@ -77,16 +126,22 @@ ThemeData buildTheme(Brightness brightness) {
       ),
     ),
     hoverColor: Colors.black.withValues(alpha: 0.1),
-    colorScheme: baseTheme.colorScheme.copyWith(
-      primary: Colors.blueAccent,
-      brightness: brightness,
-      error: Colors.redAccent,
-      surfaceContainer: brightness == Brightness.light
-          ? const Color(0xFFF3EDF7)
-          : const Color(0xFF1f1d23),
-    ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       strokeCap: StrokeCap.round,
+    ),
+    listTileTheme: ListTileThemeData(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: EdgeInsets.zero,
+      ),
     ),
   );
 }
@@ -106,24 +161,6 @@ class Responsive extends StatelessWidget {
       ],
       child: child,
     );
-  }
-}
-
-extension ResponsiveBreakpointsX on BuildContext {
-  bool get isMobile => ResponsiveBreakpoints.of(this).isMobile;
-  bool get isTablet => ResponsiveBreakpoints.of(this).isTablet;
-  bool get isDesktop => ResponsiveBreakpoints.of(this).isDesktop;
-  bool get is4K => ResponsiveBreakpoints.of(this).breakpoint.name == "4K";
-
-  T responsive<T>({required T mobile, T? tablet, T? desktop, T? fourK}) {
-    if (isMobile) {
-      return mobile;
-    } else if (isTablet) {
-      return tablet ?? mobile;
-    } else if (isDesktop) {
-      return desktop ?? tablet ?? mobile;
-    }
-    return fourK ?? desktop ?? tablet ?? mobile;
   }
 }
 

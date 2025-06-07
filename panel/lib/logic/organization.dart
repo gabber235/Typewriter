@@ -71,17 +71,28 @@ class OrganizationsMock extends _$Organizations
     implements
         Organizations {}
 
-@Riverpod(keepAlive: true)
+@riverpod
+String? organizationId(Ref ref) {
+  final routeData = ref.watch(currentRouteDataProvider(OrganizationRoute.name));
+  return routeData?.params.getString("organizationId");
+}
+
+@riverpod
 class Organization extends _$Organization {
   @override
   Future<OrganizationData?> build() async {
-    final routeData =
-        ref.watch(currentRouteDataProvider(OrganizationRoute.name));
-    final organizationId = routeData?.params.getString("organizationId");
+    final organizationId = ref.watch(organizationIdProvider);
 
     return null;
   }
 }
+
+class OrganizationMock extends _$Organization
+    with
+        // ignore: prefer_mixin
+        Mock
+    implements
+        Organization {}
 
 @freezed
 abstract class OrganizationData with _$OrganizationData {

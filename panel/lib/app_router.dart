@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/routes/auth/route.dart";
+import "package:typewriter_panel/routes/organization/library/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_panel/routes/route.dart";
 
@@ -31,12 +32,18 @@ class AppRouter extends RootStackRouter {
           path: "/",
           initial: true,
           guards: [AuthGuard(ref)],
-          keepHistory: false,
-          maintainState: false,
           children: [
             AutoRoute(
               page: OrganizationRoute.page,
               path: "organization/:organizationId",
+              children: [
+                RedirectRoute(path: "", redirectTo: LibraryRoute.name),
+                AutoRoute(
+                  page: LibraryRoute.page,
+                  path: "library",
+                  initial: true,
+                ),
+              ],
             ),
           ],
         ),

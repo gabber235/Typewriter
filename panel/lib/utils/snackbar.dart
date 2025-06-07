@@ -1,10 +1,14 @@
 import "package:flutter/material.dart";
 
-void showErrorSnackBar(BuildContext context, String message) {
+void showSnackBar(
+  BuildContext context, {
+  required String message,
+  Color? backgroundColor,
+}) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
-      backgroundColor: Theme.of(context).colorScheme.error,
+      backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.floating,
       dismissDirection: DismissDirection.down,
       showCloseIcon: true,
@@ -13,5 +17,13 @@ void showErrorSnackBar(BuildContext context, String message) {
         borderRadius: BorderRadius.circular(8),
       ),
     ),
+  );
+}
+
+void showErrorSnackBar(BuildContext context, String message) {
+  showSnackBar(
+    context,
+    message: message,
+    backgroundColor: Theme.of(context).colorScheme.error,
   );
 }
