@@ -22,6 +22,7 @@ fun <T : Any> KClass<T>.ultraSafeCast(value: Any?): T? {
         return cast(value)
     }
     when (this) {
+        String::class -> return safeCast(value.toString())
         Int::class -> return safeCast(intCast(value))
         Long::class -> return safeCast(longCast(value))
         Double::class -> return safeCast(doubleCast(value))
