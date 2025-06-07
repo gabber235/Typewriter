@@ -195,8 +195,7 @@ private fun Component.splitLines(): Sequence<Component> = sequence {
         }
 
         is TranslatableComponent -> {
-            yield(this@splitLines.noChildren())
-            null
+            this@splitLines.noChildren()
         }
 
         else -> null
