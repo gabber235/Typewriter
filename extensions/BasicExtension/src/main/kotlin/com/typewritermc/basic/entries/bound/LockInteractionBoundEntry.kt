@@ -19,6 +19,7 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.dialogue.DialogueTrigger
+import com.typewritermc.engine.paper.entry.entity.toProperty
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.Var
@@ -268,7 +269,8 @@ private class JavaLockInteractionBoundHandler(
             return
         }
 
-        entity.teleport(to.withY { it + positionYCorrection }.toPacketLocation())
+        val target = to.withY { it + positionYCorrection }.toProperty()
+        entity.move(target)
 
         if (player.position.distanceSquared(to) > MAX_DISTANCE_SQUARED) {
             player.teleportAsync(to.toBukkitLocation()).await()

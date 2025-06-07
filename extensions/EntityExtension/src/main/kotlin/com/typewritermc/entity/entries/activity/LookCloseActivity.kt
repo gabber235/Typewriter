@@ -12,7 +12,12 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
 
-private val playerCloseLookRange by snippet("entity.activity.look_close.range", 10.0)
+private val playerLookCloseRange by snippet("entity.activity.look_close.range", 10.0)
+private val playerLookCloseSmoothingTime by snippet(
+    "entity.activity.look_close.smoothing",
+    0.2f,
+    "This determines how quickly the npc will look at the player."
+)
 
 @Entry("look_close_activity", "A look close activity", Colors.BLUE, "fa6-solid:eye")
 /**
@@ -56,7 +61,7 @@ class LookCloseActivity(
         }
         val distance = currentPosition.distanceSqrt(closestTarget.location)
 
-        if (distance == null || distance > playerCloseLookRange * playerCloseLookRange) {
+        if (distance == null || distance > playerLookCloseRange * playerLookCloseRange) {
             return null
         }
 
@@ -81,11 +86,19 @@ class LookCloseActivity(
                 LookDirection(currentPosition.yaw, currentPosition.pitch),
                 LookDirection(targetYaw, targetPitch),
                 yawVelocity,
-                pitchVelocity
+                pitchVelocity,
+                smoothTime = playerLookCloseSmoothingTime,
             )
 
             currentPosition =
-                PositionProperty(currentPosition.world, currentPosition.x, currentPosition.y, currentPosition.z, yaw, pitch)
+                PositionProperty(
+                    currentPosition.world,
+                    currentPosition.x,
+                    currentPosition.y,
+                    currentPosition.z,
+                    yaw,
+                    pitch
+                )
 
             return TickResult.IGNORED
         }
@@ -121,7 +134,7 @@ class LookCloseActivity(
             get() {
                 if (!player.isValid) return true
                 if (player.location.world.uid.toString() != this@Target.position.world.identifier) return true
-                if (this@Target.position.distanceSquared(player.location.toProperty()) > playerCloseLookRange * playerCloseLookRange) return true
+                if (this@Target.position.distanceSquared(player.location.toProperty()) > playerLookCloseRange * playerLookCloseRange) return true
                 return System.currentTimeMillis() - lookupTime > 1000
             }
 

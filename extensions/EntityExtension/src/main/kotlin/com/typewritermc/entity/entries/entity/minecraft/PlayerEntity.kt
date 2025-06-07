@@ -17,13 +17,13 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.utils.Sound
+import com.typewritermc.engine.paper.utils.move
 import com.typewritermc.engine.paper.utils.stripped
 import com.typewritermc.engine.paper.utils.toPacketLocation
 import com.typewritermc.entity.entries.data.minecraft.PoseProperty
 import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
 import com.typewritermc.entity.entries.entity.custom.state
-import com.typewritermc.entity.entries.entity.move
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.meta.types.PlayerMeta
 import me.tofaa.entitylib.spigot.SpigotEntityLibAPI

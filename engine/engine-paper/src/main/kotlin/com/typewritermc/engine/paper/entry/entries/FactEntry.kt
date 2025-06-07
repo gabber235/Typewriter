@@ -26,7 +26,7 @@ interface FactEntry : StaticEntry {
     @Help("A comment to keep track of what this fact is used for.")
     val comment: String
 
-    @Help("The group that this fact is for.")
+    @Help("If left empty, every player has its own group.")
     val group: Ref<GroupEntry>
 
     fun identifier(player: Player): FactId? {
