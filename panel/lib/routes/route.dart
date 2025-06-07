@@ -11,7 +11,9 @@ import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
+import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/organization_icon.dart";
+import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
@@ -44,45 +46,13 @@ class IndexPage extends HookConsumerWidget {
                   _CreateOrganization(),
                 ],
               ),
-              loading: () => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 24),
-                    Text(
-                      "Loading organizations...",
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
-                )
-                    .animate()
-                    .slideY(
-                      duration: 1.seconds,
-                      begin: 0.05,
-                      end: 0,
-                      curve: Curves.easeInOutCubic,
-                    )
-                    .fadeIn(),
+              loading: () => LoadingIndicator(
+                message: "Loading organizations...",
               ),
               error: (error, stackTrace) => ErrorScreen(
                 title: "Failed to load organizations",
                 message: error.toString(),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(),
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      "Retrying...",
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                  ],
-                ),
+                child: RetryIndicator(),
               ),
             ),
           ),

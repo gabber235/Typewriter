@@ -7,3 +7,5 @@ alwaysApply: false
 
 - Prefer double quotes (`"`) instead of single quotes (`'`) for all strings in Dart/Flutter code.
 - Do not use the `labelText` property on text fields. Use only `hintText` for placeholder text.
+- When editing a file with code generation, always run `dart run build_runner build -d` afterwards.
+- Always use absolute imports, NEVER USE RELATIVE IMPORTS!

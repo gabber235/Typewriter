@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:rive/rive.dart";
-import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/context.dart";
 
 class ErrorScreen extends StatelessWidget {
   const ErrorScreen({
