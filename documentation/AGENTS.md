@@ -49,3 +49,11 @@ Reusable React components live in `src/components/`. Commonly used elements are
 the `Admonition` component or the Markdown `::note`/`::warning` syntax depending
 on the context. Import these when interactive UI is required.
 
+## Code Highlighting
+
+Code blocks support line highlighting via Prism "magic comments" configured in
+`docusaurus.config.ts`. Prefix a line with `// highlight-next-line` or wrap
+multiple lines with `// highlight-start` and `// highlight-end`. Colored
+variants (`-red`, `-green`, `-blue`) are also available and map to CSS classes in
+`src/css/custom.css`.
+
