@@ -95,7 +95,7 @@ class NavigationActivity(
 }
 
 
-private sealed interface NavigationActivityTaskState {
+sealed interface NavigationActivityTaskState {
     fun position(): PositionProperty
     fun isComplete(): Boolean
     fun tick(context: ActivityContext) {}
@@ -167,6 +167,7 @@ private sealed interface NavigationActivityTaskState {
         val edge: GPSEdge,
         startLocation: PositionProperty,
         val speed: Float,
+        private val rotationLookAhead: Int = 3,
     ) : NavigationActivityTaskState, IPathingEntity {
         private var location: PositionProperty = startLocation
         private var path: IPath?
@@ -265,7 +266,7 @@ private sealed interface NavigationActivityTaskState {
 
         fun calculateRotation(): Pair<Float, Float> {
             val path = path ?: return Pair(location.yaw, location.pitch)
-            val targetNode = path.at(min(path.cursor() + 3, path.length() - 1))
+            val targetNode = path.at(min(path.cursor() + rotationLookAhead, path.length() - 1))
             val targetLookPoint = targetNode.coordinates().toVector().mid()
             val targetYaw = getLookYaw(targetLookPoint.x - location.x, targetLookPoint.z - location.z)
             val targetPitch = getLookPitch(

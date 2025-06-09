@@ -294,7 +294,7 @@ data class EntityFrame(
     }
 }
 
-private class FakeProvider<P : EntityProperty>(private val klass: KClass<P>, private val supplier: () -> P?) :
+class FakeProvider<P : EntityProperty>(private val klass: KClass<P>, private val supplier: () -> P?) :
     PropertySupplier<P> {
     override fun type(): KClass<P> = klass
 

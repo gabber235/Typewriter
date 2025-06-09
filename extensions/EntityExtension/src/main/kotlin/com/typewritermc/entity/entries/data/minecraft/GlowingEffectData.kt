@@ -15,6 +15,7 @@ import com.typewritermc.engine.paper.utils.Color
 import me.tofaa.entitylib.meta.EntityMeta
 import me.tofaa.entitylib.meta.display.AbstractDisplayMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
+import me.tofaa.entitylib.wrapper.WrapperPlayer
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -40,37 +41,46 @@ class GlowingEffectData(
 }
 
 data class GlowingEffectProperty(val glowing: Boolean = false, val color: Color) : EntityProperty {
-    companion object : SinglePropertyCollectorSupplier<GlowingEffectProperty>(GlowingEffectProperty::class, GlowingEffectProperty(false, Color.WHITE))
+    companion object : SinglePropertyCollectorSupplier<GlowingEffectProperty>(
+        GlowingEffectProperty::class,
+        GlowingEffectProperty(false, Color.WHITE)
+    )
 }
 
 fun applyGlowingEffectData(entity: WrapperEntity, property: GlowingEffectProperty) {
+    println("applyGlowingEffectData for ${entity.entityType.name}: ${entity.entityId}")
+    val info = WrapperPlayServerTeams.ScoreBoardTeamInfo(
+        Component.empty(),
+        null,
+        null,
+        WrapperPlayServerTeams.NameTagVisibility.NEVER,
+        WrapperPlayServerTeams.CollisionRule.NEVER,
+        NamedTextColor.nearestTo(TextColor.color(property.color.color)),
+        WrapperPlayServerTeams.OptionData.NONE
+    )
     if (property.glowing && entity.entityMeta is AbstractDisplayMeta) {
         entity.metas {
             meta<AbstractDisplayMeta> { glowColorOverride = property.color.color }
             error("Could not apply GlowingEffectData to ${entity.entityType} entity.")
         }
+    } else if (entity is WrapperPlayer) {
+        entity.viewers.firstOrNull()?.let { viewerUuid ->
+            Bukkit.getPlayer(viewerUuid)?.let { player ->
+                WrapperPlayServerTeams(
+                    "typewriter-${entity.entityId}",
+                    WrapperPlayServerTeams.TeamMode.UPDATE,
+                    info
+                ) sendPacketTo player
+            }
+        }
     } else {
         entity.viewers.firstOrNull()?.let { viewerUuid ->
             Bukkit.getPlayer(viewerUuid)?.let { player ->
-                val info = WrapperPlayServerTeams.ScoreBoardTeamInfo(
-                    Component.empty(),
-                    null,
-                    null,
-                    WrapperPlayServerTeams.NameTagVisibility.NEVER,
-                    WrapperPlayServerTeams.CollisionRule.NEVER,
-                    NamedTextColor.nearestTo(TextColor.color(property.color.color)),
-                    WrapperPlayServerTeams.OptionData.NONE
-                )
                 WrapperPlayServerTeams(
                     "typewriter-${entity.entityId}",
                     WrapperPlayServerTeams.TeamMode.CREATE,
-                    info
-                ) sendPacketTo player
-                WrapperPlayServerTeams(
-                    "typewriter-${entity.entityId}",
-                    WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
-                    Optional.empty(),
-                    listOf(entity.uuid.toString())
+                    info,
+                    entity.uuid.toString()
                 ) sendPacketTo player
             }
         }

@@ -31,8 +31,7 @@ class FallingDustPathStreamDisplayEntry(
     override val id: String = "",
     override val name: String = "",
     @Default("2000")
-    @Help("The time between a new stream being calculated")
-    val refreshDuration: Duration = Duration.ofMillis(2000),
+    override val refreshDuration: Duration = Duration.ofMillis(2000),
     @Help("How fast the stream travels in blocks per second")
     @Default("20.0")
     val speed: Double = 20.0,

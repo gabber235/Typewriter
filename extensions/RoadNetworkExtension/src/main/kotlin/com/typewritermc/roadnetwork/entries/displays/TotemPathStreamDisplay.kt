@@ -34,9 +34,7 @@ import kotlin.reflect.KClass
 class TotemPathStreamDisplayEntry(
     override val id: String = "",
     override val name: String = "",
-    @Default("1700")
-    @Help("The time between a new stream being calculated")
-    val refreshDuration: Duration = Duration.ofMillis(1700),
+    override val refreshDuration: Duration = Duration.ofMillis(1700),
     @Help("How fast the stream travels in blocks per second")
     @Default("20.0")
     val speed: Double = 20.0,

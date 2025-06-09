@@ -1,6 +1,7 @@
 package com.typewritermc.entity.entries.data.minecraft.living
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
@@ -21,7 +22,8 @@ import kotlin.reflect.KClass
 class AgeableData(
     override val id: String = "",
     override val name: String = "",
-    val baby: Boolean = false,
+    @Default("true")
+    val baby: Boolean = true,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : EntityData<AgeableProperty> {
     override fun type(): KClass<AgeableProperty> = AgeableProperty::class

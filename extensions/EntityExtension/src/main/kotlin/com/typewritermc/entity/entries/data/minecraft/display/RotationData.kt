@@ -3,7 +3,6 @@ package com.typewritermc.entity.entries.data.minecraft.display
 import com.github.retrooper.packetevents.util.Quaternion4f
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
@@ -29,7 +28,6 @@ import kotlin.reflect.KClass
 class PreRotationData(
     override val id: String = "",
     override val name: String = "",
-    @Help("")
     val rotation: Var<Vector> = ConstVar(Vector.ZERO),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : DisplayEntityData<PreRotationProperty> {

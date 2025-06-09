@@ -5,6 +5,8 @@ import com.extollit.gaming.ai.path.model.Passibility
 import com.extollit.linalg.immutable.Vec3d
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
+import com.typewritermc.core.extension.annotations.Default
+import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
@@ -142,6 +144,10 @@ class StreamDisplay(
 
 @Tags("path_stream_display")
 interface PathStreamDisplayEntry<PSD : PathStreamDisplay> : AudienceEntry {
+    @Default("1700")
+    @Help("The time between a new stream being calculated")
+    val refreshDuration: Duration
+
     val klass: KClass<PSD>
     fun createDisplay(
         ref: Ref<RoadNetworkEntry>,
@@ -201,8 +207,9 @@ abstract class PathStreamDisplay(
 
     suspend fun calculatePathing(): Pair<List<GPSEdge>, List<List<Position>>>? {
         val (start, end) = points() ?: return null
-        val edges = findEdges(start, end) ?: return null
-        val path = findVisiblePaths(edges, start) ?: return null
+        val edges = findEdges() ?: return null
+        val visibleEdges = edges.filterVisible(start, end)
+        val path = findPaths(visibleEdges) ?: return null
         return edges to path
     }
 
@@ -217,23 +224,27 @@ abstract class PathStreamDisplay(
         return start to end
     }
 
-    suspend fun findEdges(
-        start: Position,
-        end: Position,
-    ): List<GPSEdge>? {
+    suspend fun findEdges(): List<GPSEdge>? {
         return gps.findPath().getOrElse { emptyList() }
     }
 
-    suspend fun findVisiblePaths(
-        edges: List<GPSEdge>,
+    fun List<GPSEdge>.filterVisible(
         start: Position,
+        end: Position,
+    ) = filter {
+        ((it.start.distanceSqrt(start) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
+                || (it.end.distanceSqrt(start)
+            ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
+                ||
+                ((it.start.distanceSqrt(end) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
+                        || (it.end.distanceSqrt(end)
+                    ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
+    }
+
+    suspend fun findPaths(
+        edges: List<GPSEdge>,
     ): List<List<Position>>? = coroutineScope {
-        // We only need to calculate the paths that the player will be able to see
-        edges.filter {
-            ((it.start.distanceSqrt(start) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
-                    || (it.end.distanceSqrt(start)
-                ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
-        }
+        edges
             .map { edge ->
                 async {
                     findPath(edge.start, edge.end)
