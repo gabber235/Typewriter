@@ -32,18 +32,18 @@ object DurationParser {
 		}
 	}
 
-	/**
-	 * Parses a duration string into a [Duration] object.`
-	 *
-	 * Examples:
-	 * ```
-	 * parse("1 hr 20 mins"'") // => 1 * h + 20 * m
-	 * parse("1.5 hours"'") // => 1.5 * h
-	 * parse("1h20m0s") // => 1 * h + 20 * m
-	 * parse("2hr -40mins") // => 1 * h + 20 * m
-	 * parse("27,681 ms") // => 27681 * ms
-	 * ```
-	 */
+        /**
+         * Parses a duration string into a [Duration] object.
+         *
+         * Examples:
+         * ```
+         * parse("1 hr 20 mins") // => 1 * h + 20 * m
+         * parse("1.5 hours") // => 1.5 * h
+         * parse("1h20m0s") // => 1 * h + 20 * m
+         * parse("2hr -40mins") // => 1 * h + 20 * m
+         * parse("27,681 ms") // => 27681 * ms
+         * ```
+         */
 	fun parse(string: String): Duration {
 		var result: Long = 0
 		val parsable = string.replace(Regex("(\\d)[,_](\\d)"), "\$1\$2")
