@@ -2,6 +2,14 @@
 
 This folder contains the Docusaurus website. Documentation and blog posts are written in Markdown/MDX.
 
+## Setup
+
+Install dependencies once with:
+
+```bash
+npm ci
+```
+
 ## Validate Changes
 
 Before committing documentation updates make sure the site builds:
