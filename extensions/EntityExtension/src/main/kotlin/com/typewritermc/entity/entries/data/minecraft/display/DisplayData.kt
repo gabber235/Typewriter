@@ -15,6 +15,7 @@ fun applyDisplayEntityData(entity: WrapperEntity, property: EntityProperty): Boo
         is Scale3DProperty -> applyScale3DData(entity, property)
         is PreRotationProperty -> applyPreRotationData(entity, property)
         is PostRotationProperty -> applyPostRotationData(entity, property)
+        is InterpolationDurationProperty -> applyInterpolationDurationData(entity, property)
         is BrightnessProperty -> applyBrightnessData(entity, property)
         else -> return false
     }
