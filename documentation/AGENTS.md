@@ -15,7 +15,7 @@ npm ci
 Before committing documentation updates make sure the site builds:
 
 ```bash
-npm run build -- --dev
+npm run test
 ```
 
 ## Writing Docs
