@@ -2,6 +2,18 @@
 
 The Flutter application provides a web interface for managing Typewriter projects.
 
+## Environment Setup
+
+On Linux install Flutter once by running:
+
+```bash
+./install_flutter_linux.sh
+```
+
+Run this script before executing any Flutter commands.
+It adds `~/development/flutter/bin` to your `PATH`, so open a new shell or run
+`source ~/.bashrc` after installation.
+
 ## Validate Changes
 
 Install dependencies and build the web app:
