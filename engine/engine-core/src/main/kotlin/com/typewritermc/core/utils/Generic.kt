@@ -40,10 +40,10 @@ class Generic(
             return data.asString.compareTo(other.data.asString)
         }
         if (data.isJsonObject && other.data.isJsonObject) {
-            data.asJsonObject.size().compareTo(other.data.asJsonObject.size())
+            return data.asJsonObject.size().compareTo(other.data.asJsonObject.size())
         }
         if (data.isJsonArray && other.data.isJsonArray) {
-            data.asJsonArray.size().compareTo(other.data.asJsonArray.size())
+            return data.asJsonArray.size().compareTo(other.data.asJsonArray.size())
         }
         return 0
     }
