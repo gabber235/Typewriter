@@ -24,6 +24,13 @@ The `state` of the messenger determines what happens to the messenger.
 
 The state object can be changed inside the `tick` method or from outside. It can even be changed from the plugin itself. For example when the user runs a command the dialogue will be cancelled.
 
+### Confirmation Key
+Some dialogue messengers may wait for the player to press a key before continuing. This key is configured globally in the plugin's `config.yml` under `confirmationKey`.
+Available values are `JUMP`, `SWAP_HANDS`, and `SNEAK`. Use the `<confirmation_key>` tag in your messages to display the correct keybind to the player.
+
+Here is a minimal example of a dialogue that waits for the configured confirmation key before moving on.
+<CodeSnippet tag="dialogue_confirmation_messenger" json={require("../../../snippets.json")} />
+
 There are some additional lifecycle methods that can be overridden.
 - `init` - Called when the messenger is initialized. Will be called before the first `tick` call.
 - `dispose` - Called when the messenger is disposed. By default this will unregister any listeners that were registered by the messenger.
