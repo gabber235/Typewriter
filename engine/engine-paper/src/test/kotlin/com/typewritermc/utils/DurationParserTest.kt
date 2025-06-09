@@ -40,4 +40,9 @@ class DurationParserTest : FunSpec({
     test("empty duration string parsing") {
         DurationParser.parse("").inWholeSeconds shouldBe 0
     }
+
+    test("negative duration parsing") {
+        DurationParser.parse("-1 hr").inWholeHours shouldBe -1
+        DurationParser.parse("-30min").inWholeMinutes shouldBe -30
+    }
 })
