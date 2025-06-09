@@ -20,5 +20,5 @@ Each folder contains its own `AGENTS.md` with more details:
 
 1. Use descriptive branch names and keep commit messages short (<72 characters for the subject).
 2. Validate that the code builds before submitting a PR. Each module has build instructions in its own `AGENTS.md` file.
-3. Follow the code style conventions described in the folder-specific `AGENTS.md` files.
-
+3. Only run the commands and setup steps when required. We don't want to waste time on setup that is not required.
+4. Follow the code style conventions described in the folder-specific `AGENTS.md` files.
