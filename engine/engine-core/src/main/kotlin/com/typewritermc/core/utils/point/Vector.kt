@@ -79,13 +79,9 @@ data class Vector(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
+        if (other !is Point<*>) return false
 
-        if (other is Point<*>) {
-            if (other.x != x) return false
-            if (other.y != y) return false
-            if (other.z != z) return false
-        }
-        return true
+        return other.x == x && other.y == y && other.z == z
     }
 
     override fun hashCode(): Int = Objects.hash(x, y, z)
