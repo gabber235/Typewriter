@@ -56,7 +56,12 @@ class ExampleDialogueDialogueMessenger(player: Player, context: InteractionConte
 }
 //</code-block:dialogue_messenger>
 
-@Entry("example_confirmation_dialogue", "A dialogue requiring confirmation.", Colors.BLUE, "material-symbols:chat-rounded")
+@Entry(
+    "example_confirmation_dialogue",
+    "A dialogue requiring confirmation.",
+    Colors.BLUE,
+    "material-symbols:chat-rounded"
+)
 class ExampleConfirmationDialogueEntry(
     override val id: String = "",
     override val name: String = "",
@@ -82,11 +87,16 @@ class ExampleConfirmationDialogueMessenger(
     entry: ExampleConfirmationDialogueEntry,
 ) : DialogueMessenger<ExampleConfirmationDialogueEntry>(player, context, entry) {
 
+    // highlight-next-line
     private var confirmationKeyHandler: ConfirmationKeyHandler? = null
 
     override fun init() {
         super.init()
-        player.sendMessage("${entry.speakerDisplayName}: ${entry.text}".parsePlaceholders(player).asMini())
+        player.sendMessage(
+            "${entry.speakerDisplayName}: ${entry.text} <gray><confirmation_key>".parsePlaceholders(
+                player
+            ).asMini()
+        )
         // highlight-start
         confirmationKeyHandler = confirmationKey.handler(player) {
             state = MessengerState.FINISHED
@@ -96,9 +106,10 @@ class ExampleConfirmationDialogueMessenger(
 
     override fun dispose() {
         super.dispose()
-        // highlight-next-line
+        // highlight-start
         confirmationKeyHandler?.dispose()
         confirmationKeyHandler = null
+        // highlight-end
     }
 }
 //</code-block:dialogue_confirmation_messenger>
