@@ -70,7 +70,7 @@ class RoadNetworkEditor(
             coroutineScope {
                 network.nodes.map {
                     launch {
-                        recalculateEdgesForNode(it, it.location.world.instanceSpace)
+                        recalculateEdgesForNode(it, it.position.world.instanceSpace)
                         recalculateEdges.decrementAndGet()
                     }
                 }
@@ -81,7 +81,7 @@ class RoadNetworkEditor(
 
     private suspend fun recalculateEdgesForNode(node: RoadNode, instance: PFInstanceSpace) {
         val interestingNodes = network.nodes
-            .filter { it != node && it.location.world == node.location.world && it.location.distanceSquared(node.location) < roadNetworkMaxDistance * roadNetworkMaxDistance }
+            .filter { it != node && it.position.world == node.position.world && it.position.distanceSquared(node.position) < roadNetworkMaxDistance * roadNetworkMaxDistance }
         val generatedEdges =
             interestingNodes
                 .filter { !network.modifications.containsRemoval(node.id, it.id) }

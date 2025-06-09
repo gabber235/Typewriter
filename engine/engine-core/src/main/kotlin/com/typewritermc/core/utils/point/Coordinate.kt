@@ -81,5 +81,17 @@ fun <RP> RP.lookAt(point: Point<*>): RP where RP : Point<RP>, RP : Rotatable<RP>
     return this.withRotation(yaw, pitch)
 }
 
+fun <RP> RP.lerp(to: RP, amount: Double): RP where RP : Point<RP>, RP : Rotatable<RP> {
+    val percent = amount.coerceIn(0.0, 1.0)
+    val x = this.x + (to.x - this.x) * percent
+    val y = this.y + (to.y - this.y) * percent
+    val z = this.z + (to.z - this.z) * percent
+    val yaw = this.yaw + (correctYaw(this.yaw, to.yaw) - this.yaw) * percent
+    val pitch = this.pitch + (to.pitch - this.pitch) * percent
+
+    return withX(x).withY(y).withZ(z).withRotation(yaw.toFloat(), pitch.toFloat())
+}
+
+
 fun Coordinate.toPosition(world: World) =
     Position(world, x, y, z, yaw, pitch)

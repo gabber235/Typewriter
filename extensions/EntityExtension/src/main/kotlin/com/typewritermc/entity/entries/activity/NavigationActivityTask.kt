@@ -10,9 +10,13 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Vector
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.logger
-import com.typewritermc.engine.paper.utils.*
+import com.typewritermc.engine.paper.utils.BlockCollision
+import com.typewritermc.engine.paper.utils.BukkitBlockGetter
+import com.typewritermc.engine.paper.utils.PhysicsResult
+import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
 import com.typewritermc.roadnetwork.gps.GPS
@@ -182,7 +186,7 @@ private sealed interface NavigationActivityTaskState {
             // Since we just queried the network, it is likely that the network is already loaded.
             get<RoadNetworkManager>(RoadNetworkManager::class.java).getNetworkOrNull(roadNetwork)?.let { network ->
                 val interestingNegativeNodes = network.negativeNodes.filter {
-                    val distance = edge.start.distanceSqrt(it.location) ?: 0.0
+                    val distance = edge.start.distanceSqrt(it.position) ?: 0.0
                     distance > it.radius * it.radius && distance < roadNetworkMaxDistance * roadNetworkMaxDistance
                 }
                 val additionalRadius = navigator.subject().width().toDouble()

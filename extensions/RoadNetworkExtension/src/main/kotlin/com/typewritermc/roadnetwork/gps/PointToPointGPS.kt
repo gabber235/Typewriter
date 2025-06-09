@@ -4,24 +4,24 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.utils.ComputedMap
-import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import org.bukkit.Location
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.*
 
 class PointToPointGPS(
     override val roadNetwork: Ref<RoadNetworkEntry>,
-    private val startFetcher: suspend (RoadNetwork) -> Location,
-    private val endFetcher: suspend (RoadNetwork) -> Location,
+    private val startFetcher: suspend (RoadNetwork) -> Position,
+    private val endFetcher: suspend (RoadNetwork) -> Position,
 ) : GPS, KoinComponent {
     private val roadNetworkManager: RoadNetworkManager by inject()
     private var previousStart: Pair<RoadNode, List<RoadEdge>?>? = null
@@ -69,8 +69,8 @@ class PointToPointGPS(
         previousPath = path.getOrThrow()
         ok(previousPath.map { edge ->
             GPSEdge(
-                nodes[edge.start]!!.location,
-                nodes[edge.end]!!.location,
+                nodes[edge.start]!!.position,
+                nodes[edge.end]!!.position,
                 edge.weight,
                 edge.length,
             )
@@ -84,14 +84,14 @@ class PointToPointGPS(
         start: RoadNode,
         end: RoadNode,
     ): Result<List<RoadEdge>> {
-        val startEndDistance = start.location.distanceSqrt(end.location)
+        val startEndDistance = start.position.distanceSqrt(end.position)
         val visited = mutableMapOf<RoadNodeId, VisitedNode>()
         val inspecting = PriorityQueue<InspectingNode>()
         inspecting += InspectingNode(
             start.id,
             null,
             0.0,
-            distanceWeight(startEndDistance, start.location, end.location)
+            distanceWeight(startEndDistance, start.position, end.position)
         )
 
         while (inspecting.isNotEmpty()) {
@@ -121,7 +121,7 @@ class PointToPointGPS(
 
                 val next = nodes[edge.end]
                     ?: throw IllegalStateException("Could not find node ${edge.end} in the network, possible nodes: ${nodes.keys}")
-                insertInspecting(end.location, startEndDistance, edge, next, current, inspecting)
+                insertInspecting(end.position, startEndDistance, edge, next, current, inspecting)
             }
         }
 
@@ -135,10 +135,10 @@ class PointToPointGPS(
         start: RoadNode,
         end: RoadNode
     ): Result<List<RoadEdge>> {
-        val startEndDistance = start.location.distanceSqrt(end.location)
+        val startEndDistance = start.position.distanceSqrt(end.position)
         val visited = mutableMapOf<RoadNodeId, VisitedNode>()
         val inspecting = PriorityQueue<InspectingNode>()
-        inspecting += InspectingNode(end.id, null, 0.0, distanceWeight(startEndDistance, end.location, start.location))
+        inspecting += InspectingNode(end.id, null, 0.0, distanceWeight(startEndDistance, end.position, start.position))
 
         while (inspecting.isNotEmpty()) {
             val current = inspecting.poll()
@@ -163,7 +163,7 @@ class PointToPointGPS(
 
                 val next = nodes[edge.start]
                     ?: throw IllegalStateException("Could not find node ${edge.start} in the network, possible nodes: ${nodes.keys}")
-                insertInspecting(start.location, startEndDistance, edge, next, current, inspecting)
+                insertInspecting(start.position, startEndDistance, edge, next, current, inspecting)
             }
         }
 
@@ -171,7 +171,7 @@ class PointToPointGPS(
     }
 
     private fun insertInspecting(
-        targetLocation: Location,
+        targetPosition: Position,
         startEndDistance: Double?,
         edge: RoadEdge,
         next: RoadNode,
@@ -183,7 +183,7 @@ class PointToPointGPS(
         if (oldInspecting != null && oldInspecting.weight <= weight) return
         inspecting -= oldInspecting
         val inspectingNode =
-            InspectingNode(next.id, edge, weight, distanceWeight(startEndDistance, next.location, targetLocation))
+            InspectingNode(next.id, edge, weight, distanceWeight(startEndDistance, next.position, targetPosition))
         inspecting += inspectingNode
     }
 
@@ -221,22 +221,22 @@ class PointToPointGPS(
     private suspend fun getOrCreateNode(
         nodes: List<RoadNode>,
         negativeNodes: List<RoadNode>,
-        location: Location,
+        position: Position,
         previous: Pair<RoadNode, List<RoadEdge>?>?,
         id: Int,
         asEnd: Boolean,
     ): Pair<RoadNode, List<RoadEdge>?> {
-        if (previous != null && (previous.first.location.distanceSqrt(location)
+        if (previous != null && (previous.first.position.distanceSqrt(position)
                 ?: Double.MAX_VALUE) < previous.first.radius * previous.first.radius
         ) {
             return previous
         }
 
         val node = nodes.firstOrNull {
-            (it.location.distanceSqrt(location) ?: Double.MAX_VALUE) < it.radius * it.radius
+            (it.position.distanceSqrt(position) ?: Double.MAX_VALUE) < it.radius * it.radius
         }
         if (node != null) return node to null
-        val newNode = RoadNode(RoadNodeId(id), location, 0.5)
+        val newNode = RoadNode(RoadNodeId(id), position, 0.5)
         val additionalEdges = findAdditionalEdges(nodes, negativeNodes, newNode, asEnd)
         return newNode to additionalEdges
     }
@@ -248,10 +248,10 @@ class PointToPointGPS(
         asEnd: Boolean,
     ): List<RoadEdge> =
         coroutineScope {
-            val instance = node.location.world.instanceSpace
+            val instance = node.position.world.instanceSpace
             val intersectingNodes = nodes
                 .filter {
-                    it != node && it.location.world == node.location.world && (it.location.distanceSqrt(node.location)
+                    it != node && it.position.world == node.position.world && (it.position.distanceSqrt(node.position)
                         ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
                 }
             intersectingNodes
@@ -289,7 +289,7 @@ class PointToPointGPS(
         )
     }
 
-    private fun distanceWeight(startEnd: Double?, end: Location, current: Location): Double? {
+    private fun distanceWeight(startEnd: Double?, end: Position, current: Position): Double? {
         if (startEnd == null) return null
         val currentEnd = current.distanceSqrt(end) ?: return null
         if (currentEnd == 0.0) return 0.0

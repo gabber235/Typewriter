@@ -1,14 +1,16 @@
-package com.typewritermc.roadnetwork.entries
+package com.typewritermc.roadnetwork.entries.streams
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.GroupEntry
+import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.roadnetwork.RoadNetworkEntry
-import com.typewritermc.roadnetwork.gps.PathStreamDisplay
+import com.typewritermc.roadnetwork.gps.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.gps.SinglePathStreamDisplay
 
 @Entry(
     "closest_group_member_path_stream",
@@ -32,15 +34,16 @@ class ClosestGroupMemberPathStream(
     override val id: String = "",
     override val name: String = "",
     val road: Ref<RoadNetworkEntry> = emptyRef(),
+    val display: Ref<PathStreamDisplayEntry<*>> = emptyRef(),
     val group: Ref<out GroupEntry> = emptyRef(),
 ) : AudienceEntry {
-    override suspend fun display(): AudienceDisplay = PathStreamDisplay(road) { player ->
+    override suspend fun display(): AudienceDisplay = SinglePathStreamDisplay(road, { display }) { player ->
         group.get()?.group(player)?.players
             ?.asSequence()
             ?.filter { it != player }
             ?.filter { player.world == it.world }
-            ?.minByOrNull { it.location.distanceSquared(player.location) }
-            ?.location
-            ?: player.location
+            ?.minByOrNull { it.position.distanceSquared(player.position) }
+            ?.position
+            ?: player.position
     }
 }

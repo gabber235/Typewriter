@@ -13,6 +13,7 @@ import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.loopingDistance
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.content.*
 import com.typewritermc.engine.paper.content.components.*
 import com.typewritermc.engine.paper.entry.forceTriggerFor
@@ -30,7 +31,6 @@ import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Color
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -99,7 +99,7 @@ class SelectedRoadNodeContentMode(
 
         +ModificationComponent(::selectedNode, ::network)
 
-        nodes({ network.nodes }, ::showingLocation) { node ->
+        nodes({ network.nodes }, ::showingPosition) { node ->
             item = ItemStack(node.material(network.modifications))
             glow = when {
                 node == selectedNode -> NamedTextColor.WHITE
@@ -122,7 +122,7 @@ class SelectedRoadNodeContentMode(
             onInteract { interactWithNode(node) }
         }
 
-        nodes({ network.negativeNodes }, ::showingLocation) {
+        nodes({ network.negativeNodes }, ::showingPosition) {
             item = ItemStack(Material.NETHERITE_BLOCK)
             glow = NamedTextColor.BLACK
             scale = Vector3f(0.5f, 0.5f, 0.5f)
@@ -144,9 +144,7 @@ class SelectedRoadNodeContentMode(
         return ok(Unit)
     }
 
-    private fun showingLocation(node: RoadNode): Location = node.location.clone().apply {
-        yaw = (cycle % 360).toFloat()
-    }
+    private fun showingPosition(node: RoadNode): Position = node.position.withYaw((cycle % 360).toFloat())
 
     private fun interactWithNode(node: RoadNode) {
         if (node == selectedNode) {
@@ -292,7 +290,7 @@ private class SelectedNodePathsComponent(
         val node = nodeFetcher() ?: return emptyMap()
         val network = networkFetcher()
         val nodes = network.nodes.associateBy { it.id }
-        val instance = node.location.world.instanceSpace
+        val instance = node.position.world.instanceSpace
         return network.edges.filter { it.start == node.id }
             .mapNotNull { edge ->
                 val start = nodes[edge.start] ?: return@mapNotNull null
@@ -413,7 +411,7 @@ class NodeRadiusComponent(
         if (tick++ % 2 == 0) return
         val node = nodeFetcher() ?: return
         val radius = node.radius
-        val location = node.location
+        val location = node.position
 
         location.particleSphere(player, radius, color, phiDivisions = 16, thetaDivisions = 8)
     }

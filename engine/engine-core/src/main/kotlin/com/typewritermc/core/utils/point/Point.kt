@@ -251,4 +251,13 @@ interface Point<P : Point<P>> {
     }
 }
 
+fun <P> P.lerp(other: P, amount: Double): P where P : Point<P> {
+    val percent = amount.coerceIn(0.0, 1.0)
+    val x = this.x + (other.x - this.x) * percent
+    val y = this.y + (other.y - this.y) * percent
+    val z = this.z + (other.z - this.z) * percent
+
+    return withX(x).withY(y).withZ(z)
+}
+
 fun Double.squared(): Double = this * this

@@ -3,53 +3,51 @@ package com.typewritermc.roadnetwork.gps
 import com.extollit.gaming.ai.path.HydrazinePathFinder
 import com.extollit.gaming.ai.path.model.Passibility
 import com.extollit.linalg.immutable.Vec3d
-import com.github.retrooper.packetevents.protocol.particle.Particle
-import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes
-import com.github.retrooper.packetevents.util.Vector3f
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.priority
+import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
-import com.typewritermc.engine.paper.utils.server
+import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.engine.paper.entry.descendants
 import com.typewritermc.engine.paper.entry.entity.toProperty
-import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
-import com.typewritermc.engine.paper.entry.entries.TickableDisplay
-import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
-import com.typewritermc.engine.paper.extensions.packetevents.toVector3d
-import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.distanceSqrt
+import com.typewritermc.engine.paper.entry.entries.*
+import com.typewritermc.engine.paper.entry.inAudience
 import com.typewritermc.engine.paper.utils.firstWalkableLocationBelow
+import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
+import com.typewritermc.roadnetwork.entries.displays.TotemPathStreamDisplay
 import com.typewritermc.roadnetwork.pathfinding.PFEmptyEntity
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import org.bukkit.Location
+import kotlinx.coroutines.*
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.seconds
 
-private val pathStreamRefreshTime by snippet(
-    "path_stream.refresh_time",
-    1700,
-    "The time in milliseconds between a new stream being calculated.",
-)
-
-class PathStreamDisplay(
+class SinglePathStreamDisplay(
     private val ref: Ref<RoadNetworkEntry>,
-    private val startLocation: (Player) -> Location = Player::getLocation,
-    private val endLocation: (Player) -> Location,
+    private val display: (Player) -> Ref<PathStreamDisplayEntry<*>>,
+    private val startPosition: (Player) -> Position = Player::position,
+    private val endPosition: (Player) -> Position,
 ) : AudienceDisplay(), TickableDisplay {
-    private val displays = ConcurrentHashMap<UUID, PlayerPathStreamDisplay>()
+    private val displays = ConcurrentHashMap<UUID, PathStreamDisplay>()
     override fun onPlayerAdd(player: Player) {
-        displays[player.uniqueId] = PlayerPathStreamDisplay(ref, player, startLocation, endLocation)
+        val entry = display(player).get()
+        displays[player.uniqueId] =
+            entry?.createDisplay(ref, player, startPosition, endPosition) ?: TotemPathStreamDisplay(
+                ref,
+                player,
+                startPosition,
+                endPosition
+            )
     }
 
     override fun onPlayerRemove(player: Player) {
@@ -57,134 +55,203 @@ class PathStreamDisplay(
     }
 
     override fun tick() {
-        displays.values.forEach { it.tick() }
+        players.forEach { player ->
+            displays.computeIfPresent(player.uniqueId) { _, display ->
+                val entry = this.display(player).get()
+                val klass = entry?.klass ?: TotemPathStreamDisplay::class
+                if (klass.isInstance(display)) {
+                    display.tick()
+                    return@computeIfPresent display
+                }
+
+                display.dispose()
+                (entry?.createDisplay(ref, player, startPosition, endPosition) ?: TotemPathStreamDisplay(
+                    ref,
+                    player,
+                    startPosition,
+                    endPosition
+                )).apply { tick() }
+            }
+        }
+        displays.values.forEach {
+            it.tick()
+        }
     }
 }
 
 class MultiPathStreamDisplay(
     private val ref: Ref<RoadNetworkEntry>,
-    private val startLocation: (Player) -> Location = Player::getLocation,
-    private val endLocations: (Player) -> List<Location>,
+    private val streams: (Player) -> List<StreamDisplay>,
 ) : AudienceDisplay(), TickableDisplay {
-    private val displays = ConcurrentHashMap<UUID, MutableList<StreamDisplay>>()
+    private val displays = ConcurrentHashMap<UUID, MutableMap<String, PathStreamDisplay>>()
 
     override fun tick() {
-        displays.forEach { (uuid, displays) ->
-            val player = server.getPlayer(uuid) ?: return@forEach
-            val endLocations = endLocations(player)
-            while (displays.size < endLocations.size) {
-                displays.add(StreamDisplay(ref, player, startLocation, endLocations[displays.size]))
-            }
-            while (displays.size > endLocations.size) {
-                displays.removeLastOrNull()?.display?.dispose()
-            }
-            displays.forEachIndexed { index, stream ->
-                stream.location = endLocations[index]
-                stream.display.tick()
+        players.forEach { player ->
+            displays.computeIfPresent(player.uniqueId) { _, displays ->
+                val streams = streams(player).associateBy { it.id }
+                streams.filter { it.key !in displays }.forEach { (key, stream) ->
+                    displays[key] = stream.createDisplay(ref, player)
+                }
+
+                streams.mapNotNull {
+                    val display = displays[it.key] ?: return@mapNotNull null
+                    it.key to (it.value to display)
+                }.forEach { (key, value) ->
+                    val (stream, display) = value
+                    val klass = stream.displayRef.get()?.klass ?: TotemPathStreamDisplay::class
+                    if (klass.isInstance(display)) {
+                        display.tick()
+                        return@forEach
+                    }
+                    display.dispose()
+                    displays[key] = stream.createDisplay(ref, player).apply { tick() }
+                }
+
+                displays.keys.filter { it !in streams }.forEach { key ->
+                    displays.remove(key)?.dispose()
+                }
+                displays
             }
         }
     }
 
     override fun onPlayerAdd(player: Player) {
-        displays[player.uniqueId] = mutableListOf()
+        displays.putIfAbsent(player.uniqueId, mutableMapOf())
     }
 
     override fun onPlayerRemove(player: Player) {
-        displays.remove(player.uniqueId)?.forEach { it.display.dispose() }
+        displays.remove(player.uniqueId)?.forEach { it.value.dispose() }
     }
 }
 
-private class StreamDisplay(
-    ref: Ref<RoadNetworkEntry>,
-    player: Player,
-    startLocation: (Player) -> Location,
-    var location: Location,
+class StreamDisplay(
+    val id: String,
+    val displayRef: Ref<PathStreamDisplayEntry<*>>,
+    val startPosition: (Player) -> Position = Player::position,
+    val endPosition: (Player) -> Position,
 ) {
-    val display = PlayerPathStreamDisplay(ref, player, startLocation) { location }
+    fun createDisplay(ref: Ref<RoadNetworkEntry>, player: Player): PathStreamDisplay {
+        return displayRef.get()?.createDisplay(ref, player, startPosition, endPosition) ?: TotemPathStreamDisplay(
+            ref,
+            player,
+            startPosition,
+            endPosition
+        )
+    }
 }
 
-private class PlayerPathStreamDisplay(
-    ref: Ref<RoadNetworkEntry>,
-    private val player: Player,
-    private val startLocation: (Player) -> Location,
-    private val endLocation: (Player) -> Location,
+@Tags("path_stream_display")
+interface PathStreamDisplayEntry<PSD : PathStreamDisplay> : AudienceEntry {
+    val klass: KClass<PSD>
+    fun createDisplay(
+        ref: Ref<RoadNetworkEntry>,
+        player: Player,
+        startPosition: (Player) -> Position,
+        endPosition: (Player) -> Position,
+    ): PSD
+
+    override suspend fun display(): AudienceDisplay = PassThroughDisplay()
+}
+
+fun Ref<out AudienceFilterEntry>.highestPathStreamDisplay(
+    player: Player,
+    or: Ref<PathStreamDisplayEntry<*>>
+): Ref<PathStreamDisplayEntry<*>> =
+    descendants(PathStreamDisplayEntry::class)
+        .filter { player.inAudience(it) }
+        .maxByOrNull { it.priority } ?: or
+
+abstract class PathStreamDisplay(
+    protected val ref: Ref<RoadNetworkEntry>,
+    val player: Player,
+    protected val startPosition: (Player) -> Position,
+    protected val endPosition: (Player) -> Position,
+    protected val refreshDuration: Duration,
 ) : KoinComponent {
-    private val roadNetworkManager: RoadNetworkManager by inject()
+    protected val roadNetworkManager: RoadNetworkManager by inject()
 
-    private var gps = PointToPointGPS(ref, { startLocation(player) }, { endLocation(player) })
-    private var edges = emptyList<GPSEdge>()
+    protected val gps = PointToPointGPS(ref, { startPosition(player) }, { endPosition(player) })
 
-    private val lines = ConcurrentHashMap<PathLine, Unit>()
-    private var lastRefresh = 0L
+    protected var lastRefresh = 0L
+    protected var job: Job? = null
 
-    private var job: Job? = null
+    abstract suspend fun refreshPath()
+    abstract fun displayPath()
 
     fun tick() {
         if (job?.isActive == false) {
             lastRefresh = System.currentTimeMillis()
             job = null
         }
-        if (job == null && (System.currentTimeMillis() - lastRefresh) > pathStreamRefreshTime) {
-            job = refreshPath()
+        if (job == null && (System.currentTimeMillis() - lastRefresh) > refreshDuration.toMillis()) {
+            job = Dispatchers.UntickedAsync.launch {
+                withTimeout(30.seconds) {
+                    refreshPath()
+                }
+            }
         }
 
         displayPath()
     }
 
-    private fun displayPath() {
-        lines.keys.retainAll { line ->
-            val location = line.currentLocation ?: return@retainAll false
-            WrapperPlayServerParticle(
-                Particle(ParticleTypes.TOTEM_OF_UNDYING),
-                true,
-                location.also { it.y += 0.5 }.toVector3d(),
-                Vector3f(0.3f, 0.0f, 0.3f),
-                0f,
-                1
-            ) sendPacketTo player
-
-            line.next()
-        }
+    open fun dispose() {
+        job?.cancel()
+        job = null
     }
 
-    private fun refreshPath() = Dispatchers.UntickedAsync.launch {
-        val start = startLocation(player).firstWalkableLocationBelow ?: return@launch
-        val end = endLocation(player).firstWalkableLocationBelow ?: return@launch
+    suspend fun calculatePathing(): Pair<List<GPSEdge>, List<List<Position>>>? {
+        val (start, end) = points() ?: return null
+        val edges = findEdges(start, end) ?: return null
+        val path = findVisiblePaths(edges, start) ?: return null
+        return edges to path
+    }
+
+    fun points(): Pair<Position, Position>? {
+        val start = startPosition(player).firstWalkableLocationBelow() ?: return null
+        val end = endPosition(player).firstWalkableLocationBelow() ?: return null
 
         // When the start and end location are the same, we don't need to find a path.
         if ((start.distanceSqrt(end) ?: Double.MAX_VALUE) < 1) {
-            return@launch
+            return null
         }
-
-        edges = gps.findPath().getOrElse { emptyList() }
-        coroutineScope {
-            // We only need to calculate the paths that the player will be able to see
-            val path = edges.filter {
-                ((it.start.distanceSqrt(start) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
-                        || (it.end.distanceSqrt(start)
-                    ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
-            }
-                .map { edge ->
-                    async {
-                        findPath(edge.start, edge.end)
-                    }
-                }
-                .awaitAll()
-                .flatten()
-                .map { it.toCenterLocation() }
-            if (path.isEmpty()) return@coroutineScope
-            lines[PathLine(path)] = Unit
-        }
+        return start to end
     }
 
+    suspend fun findEdges(
+        start: Position,
+        end: Position,
+    ): List<GPSEdge>? {
+        return gps.findPath().getOrElse { emptyList() }
+    }
+
+    suspend fun findVisiblePaths(
+        edges: List<GPSEdge>,
+        start: Position,
+    ): List<List<Position>>? = coroutineScope {
+        // We only need to calculate the paths that the player will be able to see
+        edges.filter {
+            ((it.start.distanceSqrt(start) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
+                    || (it.end.distanceSqrt(start)
+                ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
+        }
+            .map { edge ->
+                async {
+                    findPath(edge.start, edge.end)
+                }
+            }
+            .awaitAll()
+            .map { positions -> positions.map { it.mid() } }
+    }
+
+
     private suspend fun findPath(
-        start: Location,
-        end: Location,
-    ): Iterable<Location> {
+        start: Position,
+        end: Position,
+    ): Iterable<Position> {
         val roadNetwork = roadNetworkManager.getNetwork(gps.roadNetwork)
 
         val interestingNegativeNodes = roadNetwork.negativeNodes.filter {
-            val distance = start.distanceSqrt(it.location) ?: 0.0
+            val distance = start.distanceSqrt(it.position) ?: 0.0
             distance > it.radius * it.radius && distance < roadNetworkMaxDistance * roadNetworkMaxDistance
         }
 
@@ -205,24 +272,7 @@ private class PlayerPathStreamDisplay(
         val path = pathfinder.computePathTo(Vec3d(end.x, end.y, end.z)) ?: return emptyList()
         return path.map {
             val coordinate = it.coordinates()
-            Location(start.world, coordinate.x.toDouble(), coordinate.y.toDouble(), coordinate.z.toDouble())
+            Position(start.world, coordinate.x.toDouble(), coordinate.y.toDouble(), coordinate.z.toDouble())
         }
-    }
-
-    fun dispose() {
-        job?.cancel()
-    }
-}
-
-private data class PathLine(
-    val path: List<Location>,
-    var index: Int = 0,
-) {
-    val currentLocation: Location?
-        get() = path.getOrNull(index)
-
-    fun next(): Boolean {
-        index++
-        return index < path.size
     }
 }

@@ -15,6 +15,7 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.RuntimeTypeAdapterFactory
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.World
 import com.typewritermc.engine.paper.content.*
 import com.typewritermc.engine.paper.content.components.bossBar
@@ -23,15 +24,14 @@ import com.typewritermc.engine.paper.content.components.nodes
 import com.typewritermc.engine.paper.entry.entries.ArtifactEntry
 import com.typewritermc.engine.paper.entry.fieldValue
 import com.typewritermc.engine.paper.entry.triggerFor
+import com.typewritermc.engine.paper.loader.serializers.PositionSerializer
 import com.typewritermc.engine.paper.loader.serializers.WorldSerializer
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.LocationSerializer
 import com.typewritermc.engine.paper.utils.playSound
 import com.typewritermc.roadnetwork.content.RoadNetworkEditorComponent
 import com.typewritermc.roadnetwork.content.material
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.time.Duration
@@ -79,9 +79,15 @@ value class RoadNodeId(val id: Int = 0) {
 
 data class RoadNode(
     val id: RoadNodeId,
-    val location: Location,
+    // TODO: Migrate to correct name
+    @Deprecated("Change to position", ReplaceWith("position"), DeprecationLevel.WARNING)
+    val location: Position,
     val radius: Double,
 ) {
+    val position: Position
+        @SuppressWarnings("deprecation")
+        get() = location
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -170,7 +176,7 @@ fun Collection<RoadModification>.containsAddition(start: RoadNodeId, end: RoadNo
 @Factory
 @Named("roadNetworkParser")
 fun createRoadNetworkParser(): Gson = GsonBuilder()
-    .registerTypeAdapter(Location::class.java, LocationSerializer())
+    .registerTypeAdapter(Position::class.java, PositionSerializer())
     .registerTypeAdapter(World::class.java, WorldSerializer())
     .registerTypeAdapterFactory(
         RuntimeTypeAdapterFactory.of(RoadModification::class.java)
@@ -207,7 +213,7 @@ class SelectRoadNodeContentMode(context: ContentContext, player: Player) : Conte
             color = BossBar.Color.WHITE
         }
 
-        nodes({ network.nodes }, ::showingLocation) { node ->
+        nodes({ network.nodes }, ::showingPosition) { node ->
             item = ItemStack(node.material(network.modifications))
             glow = NamedTextColor.WHITE
             scale = Vector3f(0.5f, 0.5f, 0.5f)
@@ -227,9 +233,7 @@ class SelectRoadNodeContentMode(context: ContentContext, player: Player) : Conte
         cycle++
     }
 
-    private fun showingLocation(node: RoadNode): Location = node.location.clone().apply {
-        yaw = (cycle % 360).toFloat()
-    }
+    private fun showingPosition(node: RoadNode): Position = node.position.withYaw((cycle % 360).toFloat())
 }
 
 class SelectRoadNodeCollectionContentMode(context: ContentContext, player: Player) : ContentMode(context, player) {
@@ -266,7 +270,7 @@ class SelectRoadNodeCollectionContentMode(context: ContentContext, player: Playe
             color = BossBar.Color.WHITE
         }
 
-        nodes({ network.nodes }, ::showingLocation) { node ->
+        nodes({ network.nodes }, ::showingPosition) { node ->
             item = ItemStack(node.material(network.modifications))
             glow = when {
                 nodes.any { it.id == node.id.id } -> NamedTextColor.BLUE
@@ -295,7 +299,5 @@ class SelectRoadNodeCollectionContentMode(context: ContentContext, player: Playe
         cycle++
     }
 
-    private fun showingLocation(node: RoadNode): Location = node.location.clone().apply {
-        yaw = (cycle % 360).toFloat()
-    }
+    private fun showingPosition(node: RoadNode): Position = node.position.withYaw((cycle % 360).toFloat())
 }

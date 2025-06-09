@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.util.Vector3f
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.content.ContentContext
 import com.typewritermc.engine.paper.content.ContentMode
 import com.typewritermc.engine.paper.content.ContentModeSwapTrigger
@@ -20,7 +21,6 @@ import com.typewritermc.roadnetwork.RoadNodeId
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Color
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -74,7 +74,7 @@ class SelectedNegativeNodeContentMode(
             }
         }
 
-        nodes({ network.negativeNodes }, ::showingLocation) {
+        nodes({ network.negativeNodes }, ::showingPosition) {
             item = ItemStack(Material.NETHERITE_BLOCK)
             glow = if (it.id == selectedNodeId) NamedTextColor.BLACK else null
             scale = Vector3f(0.5f, 0.5f, 0.5f)
@@ -104,7 +104,5 @@ class SelectedNegativeNodeContentMode(
         cycle++
     }
 
-    private fun showingLocation(node: RoadNode): Location = node.location.clone().apply {
-        yaw = (cycle % 360).toFloat()
-    }
+    private fun showingPosition(node: RoadNode): Position = node.position.withYaw((cycle % 360).toFloat())
 }

@@ -1,6 +1,7 @@
 package com.typewritermc.engine.paper.utils
 
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.correctYaw
 
 /**
  * Use catmull-rom interpolation to get a point between a list of points.
@@ -101,17 +102,4 @@ fun interpolatePoints(
             )
 }
 
-/**
- * Correct the yaw rotation so that it correctly interpolates between -180 and 180.
- */
-fun correctYaw(currentYaw: Double, nextYaw: Double): Double {
-    val difference = nextYaw - currentYaw
-    return if (difference > 180) {
-        nextYaw - 360
-    } else if (difference < -180) {
-        nextYaw + 360
-    } else {
-        nextYaw
-    }
-}
 

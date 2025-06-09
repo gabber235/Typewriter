@@ -12,10 +12,13 @@ import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
 import com.typewritermc.engine.paper.entry.findDisplay
-import com.typewritermc.engine.paper.utils.toBukkitLocation
+import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.quest.trackedShowingObjectives
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.gps.MultiPathStreamDisplay
+import com.typewritermc.roadnetwork.gps.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.gps.StreamDisplay
+import com.typewritermc.roadnetwork.gps.highestPathStreamDisplay
 import org.koin.java.KoinJavaComponent
 
 @Entry(
@@ -37,6 +40,7 @@ class InteractEntityObjectivesPathStream(
     override val id: String = "",
     override val name: String = "",
     val road: Ref<RoadNetworkEntry> = emptyRef(),
+    val display: Ref<PathStreamDisplayEntry<*>> = emptyRef(),
     val ignoreInstances: List<Ref<EntityInstanceEntry>> = emptyList(),
 ) : AudienceEntry {
     private val displays by lazy(LazyThreadSafetyMode.NONE) {
@@ -51,14 +55,31 @@ class InteractEntityObjectivesPathStream(
     }
 
     override suspend fun display(): AudienceDisplay {
-        return MultiPathStreamDisplay(road, endLocations = { player ->
-            player.trackedShowingObjectives()
-                .filterIsInstance<InteractEntityObjective>()
-                .map { it.entity }
-                .flatMap { displays[it]?.asSequence() ?: emptySequence() }
-                .filter { it.canView(player.uniqueId) }
-                .mapNotNull { it.position(player.uniqueId)?.toBukkitLocation() }
-                .toList()
+        return MultiPathStreamDisplay(road, streams = { player ->
+            val streams = mutableListOf<StreamDisplay>()
+            val entityObjectives = player.trackedShowingObjectives().filterIsInstance<InteractEntityObjective>()
+
+            for (objective in entityObjectives) {
+                val entity = objective.entity
+                val displays = displays[entity] ?: continue
+
+                for (entityDisplay in displays) {
+                    if (!entityDisplay.canView(player.uniqueId)) continue
+                    streams.add(
+                        StreamDisplay(
+                            entityDisplay.instanceEntryRef.id,
+                            objective.ref().highestPathStreamDisplay(
+                                player,
+                                or = entityDisplay.instanceEntryRef.highestPathStreamDisplay(
+                                    player,
+                                    or = display
+                                )
+                            ),
+                            endPosition = { entityDisplay.position(it.uniqueId) ?: it.position }
+                        ))
+                }
+            }
+            streams
         })
     }
 }

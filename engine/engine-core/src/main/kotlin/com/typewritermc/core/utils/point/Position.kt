@@ -1,6 +1,6 @@
 package com.typewritermc.core.utils.point
 
-import java.util.Objects
+import java.util.*
 
 data class Position(
     override val world: World,
@@ -47,6 +47,9 @@ data class Position(
     fun mid(): Position {
         return toBlockPosition().add(0.5, 0.0, 0.5).rotate(yaw, pitch)
     }
+
+    fun center(): Position =
+        toBlockPosition().add(0.5, 0.5, 0.5).rotate(yaw, pitch)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

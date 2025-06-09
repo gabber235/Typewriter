@@ -1,19 +1,18 @@
 package com.typewritermc.entity.entries.activity
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
-import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.toBukkitLocation
+import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.gps.PointToPointGPS
 
 private val locationActivityRange by snippet("entity.activity.target_location.range", 1.0)
@@ -94,10 +93,10 @@ class TargetLocationActivity(
         ): EntityActivity<ActivityContext> {
             return NavigationActivity(
                 PointToPointGPS(
-                network,
-                { currentLocation.toBukkitLocation() },
-                { targetPosition.toBukkitLocation() }
-            ), currentLocation)
+                    network,
+                    { currentLocation.toPosition() },
+                    { targetPosition }
+                ), currentLocation)
         }
     }
 

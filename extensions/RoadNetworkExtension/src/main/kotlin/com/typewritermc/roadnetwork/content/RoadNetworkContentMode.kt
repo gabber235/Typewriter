@@ -11,20 +11,20 @@ import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.ok
+import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.lerp
 import com.typewritermc.engine.paper.content.*
 import com.typewritermc.engine.paper.content.components.*
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
-import com.typewritermc.engine.paper.extensions.packetevents.toVector3d
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.roadnetwork.*
 import kotlinx.coroutines.Dispatchers
-import lirand.api.extensions.math.add
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Color
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -83,7 +83,7 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
             editorComponent.recalculateEdges()
         }
         +NetworkAddNodeComponent(::addRoadNode, ::addNegativeNode)
-        nodes({ network.nodes }, ::showingLocation) {
+        nodes({ network.nodes }, ::showingPosition) {
             item = ItemStack(it.material(network.modifications))
             glow = if (highlighting) NamedTextColor.WHITE else null
             scale = Vector3f(0.5f, 0.5f, 0.5f)
@@ -101,7 +101,7 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
             }
         }
 
-        nodes({ network.negativeNodes }, ::showingLocation) {
+        nodes({ network.negativeNodes }, ::showingPosition) {
             item = ItemStack(Material.NETHERITE_BLOCK)
             glow = if (highlighting) NamedTextColor.BLACK else null
             scale = Vector3f(0.5f, 0.5f, 0.5f)
@@ -129,11 +129,8 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         highlighting = !highlighting
     }
 
-    private fun createNode(location: Location): RoadNode {
-        val centerLocation = location.toCenterLocation().apply {
-            yaw = 0.0f
-            pitch = 0.0f
-        }
+    private fun createNode(position: Position): RoadNode {
+        val centerLocation = position.center().withRotation(0f, 0f)
         var id: Int
         do {
             id = Random().nextInt(Int.MAX_VALUE)
@@ -141,8 +138,8 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         return RoadNode(RoadNodeId(id), centerLocation, 1.0)
     }
 
-    private fun addRoadNode(location: Location) = Dispatchers.UntickedAsync.launch {
-        val node = createNode(location)
+    private fun addRoadNode(position: Position) = Dispatchers.UntickedAsync.launch {
+        val node = createNode(position)
         editorComponent.update { it.copy(nodes = it.nodes + node) }
         ContentModeTrigger(
             context,
@@ -150,8 +147,8 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         ).triggerFor(player, context())
     }
 
-    private fun addNegativeNode(location: Location) = Dispatchers.UntickedAsync.launch {
-        val node = createNode(location)
+    private fun addNegativeNode(position: Position) = Dispatchers.UntickedAsync.launch {
+        val node = createNode(position)
         editorComponent.update { it.copy(negativeNodes = it.negativeNodes + node) }
         ContentModeTrigger(
             context,
@@ -168,9 +165,7 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         super.dispose()
     }
 
-    private fun showingLocation(node: RoadNode): Location = node.location.clone().apply {
-        yaw = (cycle % 360).toFloat()
-    }
+    private fun showingPosition(node: RoadNode): Position = node.position.withYaw((cycle % 360).toFloat())
 }
 
 fun RoadNode.material(modifications: List<RoadModification>): Material {
@@ -185,8 +180,8 @@ fun RoadNode.material(modifications: List<RoadModification>): Material {
 }
 
 private class NetworkAddNodeComponent(
-    private val onAdd: (Location) -> Unit = {},
-    private val onAddNegative: (Location) -> Unit = {},
+    private val onAdd: (Position) -> Unit = {},
+    private val onAddNegative: (Position) -> Unit = {},
 ) : ContentComponent, ItemsComponent {
     override fun items(player: Player): Map<Int, IntractableItem> {
         val addNodeItem = ItemStack(Material.DIAMOND).apply {
@@ -195,7 +190,7 @@ private class NetworkAddNodeComponent(
                 meta.loreString = "<line> <gray>Click to add a new node to the road network"
             }
         } onInteract {
-            if (it.type.isClick) onAdd(it.clickedBlock?.location?.clone()?.add(0, 1, 0) ?: player.location)
+            if (it.type.isClick) onAdd(it.clickedBlock?.location?.toPosition()?.add(0.0, 1.0, 0.0) ?: player.position)
         }
 
         val addNegativeNodeItem = ItemStack(Material.NETHERITE_INGOT).apply {
@@ -207,7 +202,9 @@ private class NetworkAddNodeComponent(
                 """.trimMargin()
             }
         } onInteract {
-            if (it.type.isClick) onAddNegative(it.clickedBlock?.location?.clone()?.add(0, 1, 0) ?: player.location)
+            if (it.type.isClick) onAddNegative(
+                it.clickedBlock?.location?.toPosition()?.add(0.0, 1.0, 0.0) ?: player.position
+            )
         }
 
         return mapOf(
@@ -273,12 +270,12 @@ internal class NetworkEdgesComponent(
         val nodes = fetchNodes().associateBy { it.id }
         showingEdges = fetchEdges()
             .filter {
-                (nodes[it.start]?.location?.distanceSqrt(player.location)
+                (nodes[it.start]?.position?.distanceSqrt(player.position)
                     ?: Double.MAX_VALUE) < (showEdgeDistance * showEdgeDistance)
             }
             .mapNotNull { edge ->
-                val start = nodes[edge.start]?.location ?: return@mapNotNull null
-                val end = nodes[edge.end]?.location ?: return@mapNotNull null
+                val start = nodes[edge.start]?.position ?: return@mapNotNull null
+                val end = nodes[edge.end]?.position ?: return@mapNotNull null
                 ShowingEdge(start, end, colorFromHash(edge.start.hashCode()))
             }
     }
@@ -290,15 +287,15 @@ internal class NetworkEdgesComponent(
 
         val progress = (cycle.toDouble() / EDGE_SHOW_DURATION).easeInOutQuad()
         showingEdges.forEach { edge ->
-            val start = edge.startLocation
-            val end = edge.endLocation
+            val start = edge.startPosition
+            val end = edge.endPosition
             for (i in 0..1) {
                 val percentage = progress - i * 0.05
-                val location = start.lerp(end, percentage)
+                val position = start.lerp(end, percentage)
                 WrapperPlayServerParticle(
                     Particle(ParticleTypes.DUST, ParticleDustData(1f, edge.color.toPacketColor())),
                     true,
-                    location.toVector3d(),
+                    position.toPacketVector3d(),
                     Vector3f.zero(),
                     0f,
                     1
@@ -320,8 +317,8 @@ internal class NetworkEdgesComponent(
     override suspend fun dispose(player: Player) {}
 
     class ShowingEdge(
-        val startLocation: Location,
-        val endLocation: Location,
+        val startPosition: Position,
+        val endPosition: Position,
         val color: Color = Color.RED,
     )
 
@@ -352,16 +349,16 @@ class NegativeNodePulseComponent(
         if (cycle == 0) {
             showingNodes = negativeNodes()
                 .filter {
-                    (it.location.distanceSqrt(player.location)
+                    (it.position.distanceSqrt(player.position)
                         ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
                 }
-                .map { Pulse(it.location, it.radius) }
+                .map { Pulse(it.position, it.radius) }
         }
 
         val percentage = (cycle.toDouble() / PULSE_DURATION).easeOutBack()
         showingNodes.forEach { pulse ->
             val radius = percentage * (pulse.radius - 0.2)
-            pulse.location.particleSphere(player, radius, Color.BLACK, phiDivisions = 8, thetaDivisions = 5)
+            pulse.position.particleSphere(player, radius, Color.BLACK, phiDivisions = 8, thetaDivisions = 5)
         }
 
         cycle++
@@ -370,7 +367,7 @@ class NegativeNodePulseComponent(
         }
     }
 
-    data class Pulse(val location: Location, val radius: Double)
+    data class Pulse(val position: Position, val radius: Double)
 
     private fun Double.easeOutBack(): Double {
         val c1 = 1.70158

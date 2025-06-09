@@ -29,4 +29,8 @@ class Color(
     fun toBukkitColor(): org.bukkit.Color {
         return org.bukkit.Color.fromARGB(alpha, red, green, blue)
     }
+
+    fun toPacketColor(): com.github.retrooper.packetevents.protocol.color.Color {
+        return com.github.retrooper.packetevents.protocol.color.Color(red, green, blue)
+    }
 }

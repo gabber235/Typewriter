@@ -1,13 +1,6 @@
 package com.typewritermc.engine.paper.utils
 
 import com.destroystokyo.paper.profile.PlayerProfile
-import com.github.retrooper.packetevents.protocol.particle.Particle
-import com.github.retrooper.packetevents.protocol.particle.data.ParticleDustData
-import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes
-import com.github.retrooper.packetevents.util.Vector3d
-import com.github.retrooper.packetevents.util.Vector3f
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle
-import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.logger
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.key.Key
@@ -27,7 +20,10 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.time.Duration
 import java.util.*
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.log10
+import kotlin.math.round
+import kotlin.math.roundToLong
 
 
 operator fun File.get(name: String): File = File(this, name)
@@ -65,61 +61,13 @@ fun Location.distanceSqrt(other: Location): Double? {
     return dx * dx + dy * dy + dz * dz
 }
 
-fun Location.lerp(other: Location, amount: Double): Location {
-    val percentage = amount.coerceIn(0.0, 1.0)
-    val x = this.x + (other.x - this.x) * percentage
-    val y = this.y + (other.y - this.y) * percentage
-    val z = this.z + (other.z - this.z) * percentage
-    return Location(world, x, y, z)
-}
-
 val Location.up: Location
     get() = clone().apply { y += 1 }
-
-val Location.firstWalkableLocationBelow: Location?
-    get() = clone().apply {
-        var max = 7
-        while (block.isPassable && max-- > 0) y--
-        if (max == 0) return null
-        // We want to be on top of the block
-        y++
-    }
 
 operator fun Location.component1(): Double = x
 operator fun Location.component2(): Double = y
 operator fun Location.component3(): Double = z
 
-fun Location.particleSphere(
-    player: Player,
-    radius: Double,
-    color: Color,
-    phiDivisions: Int = 16,
-    thetaDivisions: Int = 8,
-) {
-    var phi = 0.0
-    while (phi < Math.PI) {
-        phi += Math.PI / phiDivisions
-        var theta = 0.0
-        while (theta < 2 * Math.PI) {
-            theta += Math.PI / thetaDivisions
-            val x = radius * sin(phi) * cos(theta)
-            val y = radius * cos(phi)
-            val z = radius * sin(phi) * sin(theta)
-
-            WrapperPlayServerParticle(
-                Particle(
-                    ParticleTypes.DUST,
-                    ParticleDustData(sqrt(radius / 3).toFloat(), color.toPacketColor())
-                ),
-                true,
-                Vector3d(this.x + x, this.y + y, this.z + z),
-                Vector3f.zero(),
-                0f,
-                1
-            ) sendPacketTo player
-        }
-    }
-}
 
 fun Color.toPacketColor(): com.github.retrooper.packetevents.protocol.color.Color {
     return com.github.retrooper.packetevents.protocol.color.Color(red, green, blue)

@@ -3,16 +3,16 @@ package com.typewritermc.roadnetwork.gps
 import com.extollit.gaming.ai.path.HydrazinePathFinder
 import com.extollit.gaming.ai.path.model.*
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.entity.toProperty
-import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNode
 import com.typewritermc.roadnetwork.pathfinding.PFEmptyEntity
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
 import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
-import org.bukkit.Location
 
 interface GPS {
     val roadNetwork: Ref<RoadNetworkEntry>
@@ -20,8 +20,8 @@ interface GPS {
 }
 
 data class GPSEdge(
-    val start: Location,
-    val end: Location,
+    val start: Position,
+    val end: Position,
     val weight: Double,
     /**
      * The number of blocks the path is long.
@@ -35,8 +35,8 @@ data class GPSEdge(
 fun roadNetworkFindPath(
     start: RoadNode,
     end: RoadNode,
-    entity: IPathingEntity = PFEmptyEntity(start.location.toProperty(), searchRange = roadNetworkMaxDistance.toFloat()),
-    instance: PFInstanceSpace = start.location.world.instanceSpace,
+    entity: IPathingEntity = PFEmptyEntity(start.position.toProperty(), searchRange = roadNetworkMaxDistance.toFloat()),
+    instance: PFInstanceSpace = start.position.world.instanceSpace,
     nodes: List<RoadNode> = emptyList(),
     negativeNodes: List<RoadNode> = emptyList(),
 ): IPath? {
@@ -56,7 +56,7 @@ fun roadNetworkFindPath(
         true
     }
     val interestingNegativeNodes = negativeNodes.filter {
-        val distance = start.location.distanceSqrt(it.location) ?: 0.0
+        val distance = start.position.distanceSqrt(it.position) ?: 0.0
         distance > it.radius * it.radius && distance < roadNetworkMaxDistance * roadNetworkMaxDistance
     }
 
@@ -74,7 +74,7 @@ fun roadNetworkFindPath(
 
     // When the pathfinder wants to go through another intermediary node, we know that we probably want to use that.
     // So we don't want this edge to be used.
-    val path = pathfinder.computePathTo(end.location.x, end.location.y, end.location.z) ?: return null
+    val path = pathfinder.computePathTo(end.position.x, end.position.y, end.position.z) ?: return null
     if (interestingNodes.isNotEmpty() && path.any { it.isInRangeOf(interestingNodes, additionalRadius) }) {
         return null
     }
@@ -86,7 +86,7 @@ fun INode.isInRangeOf(roadNodes: List<RoadNode>, additionalRadius: Double = 0.0)
     return roadNodes.any { roadNode ->
         val point = this.coordinates().toVector().mid()
         val radius = roadNode.radius + additionalRadius
-        roadNode.location.toProperty().distanceSquared(point) <= radius * radius
+        roadNode.position.toProperty().distanceSquared(point) <= radius * radius
     }
 }
 

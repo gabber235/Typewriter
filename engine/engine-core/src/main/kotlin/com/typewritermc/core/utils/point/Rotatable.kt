@@ -88,3 +88,31 @@ interface Rotatable<R : Rotatable<R>> {
         return Vector(x, y, z)
     }
 }
+
+/**
+ * Correct the yaw rotation so that it correctly interpolates between -180 and 180.
+ */
+fun correctYaw(currentYaw: Double, nextYaw: Double): Double {
+    val difference = nextYaw - currentYaw
+    return if (difference > 180) {
+        nextYaw - 360
+    } else if (difference < -180) {
+        nextYaw + 360
+    } else {
+        nextYaw
+    }
+}
+
+/**
+ * Correct the yaw rotation so that it correctly interpolates between -180 and 180.
+ */
+fun correctYaw(currentYaw: Float, nextYaw: Float): Float {
+    val difference = nextYaw - currentYaw
+    return if (difference > 180) {
+        nextYaw - 360
+    } else if (difference < -180) {
+        nextYaw + 360
+    } else {
+        nextYaw
+    }
+}

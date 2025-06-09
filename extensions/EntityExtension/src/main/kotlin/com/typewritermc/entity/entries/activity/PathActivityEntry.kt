@@ -9,7 +9,6 @@ import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
-import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.gps.PointToPointGPS
 import org.koin.java.KoinJavaComponent
@@ -64,8 +63,8 @@ private class PathActivity(
         activity = NavigationActivity(
             PointToPointGPS(
                 roadNetwork,
-                { currentPosition.toBukkitLocation() }) {
-                targetNode.location
+                { currentPosition.toPosition() }) {
+                targetNode.position
             }, currentPosition
         )
         activity.initialize(context)
@@ -81,7 +80,7 @@ private class PathActivity(
         // Get the closest node to the start location
         val closestNode = network!!.nodes
             .filter { it.id in nodes }
-            .minByOrNull { it.location.distanceSquared(currentPosition.toBukkitLocation()) }
+            .minByOrNull { it.position.distanceSquared(currentPosition.toPosition()) }
             ?: return
 
         val index = nodes.indexOf(closestNode.id)

@@ -4,21 +4,22 @@ import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.github.retrooper.packetevents.protocol.player.InteractionHand
 import com.github.retrooper.packetevents.util.Vector3f
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
-import lirand.api.extensions.events.unregister
-import lirand.api.extensions.server.registerEvents
+import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.content.ComponentContainer
 import com.typewritermc.engine.paper.content.ContentComponent
 import com.typewritermc.engine.paper.events.AsyncFakeEntityInteract
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
-import com.typewritermc.engine.paper.extensions.packetevents.toPacketLocation
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.distanceSqrt
+import com.typewritermc.engine.paper.utils.position
+import com.typewritermc.engine.paper.utils.toPacketLocation
+import lirand.api.extensions.events.unregister
+import lirand.api.extensions.server.registerEvents
 import me.tofaa.entitylib.meta.display.ItemDisplayMeta
 import me.tofaa.entitylib.meta.other.InteractionMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -30,13 +31,13 @@ const val NODE_SHOW_DISTANCE_SQUARED = 50 * 50
 
 fun <N> ComponentContainer.nodes(
     nodeFetcher: () -> Collection<N>,
-    nodeLocation: (N) -> Location,
+    nodePosition: (N) -> Position,
     builder: NodeDisplayBuilder.(N) -> Unit
-) = +NodesComponent(nodeFetcher, nodeLocation, builder)
+) = +NodesComponent(nodeFetcher, nodePosition, builder)
 
 class NodesComponent<N>(
     private val nodeFetcher: () -> Collection<N>,
-    private val nodeLocation: (N) -> Location,
+    private val nodePosition: (N) -> Position,
     private val builder: NodeDisplayBuilder.(N) -> Unit
 ) : ContentComponent, Listener {
     private val nodes = mutableMapOf<N, NodeDisplay>()
@@ -45,7 +46,7 @@ class NodesComponent<N>(
     private fun refreshNodes(player: Player) {
         val newNodes = nodeFetcher()
             .filter {
-                (nodeLocation(it).distanceSqrt(player.location) ?: Double.MAX_VALUE) < NODE_SHOW_DISTANCE_SQUARED
+                (nodePosition(it).distanceSqrt(player.position) ?: Double.MAX_VALUE) < NODE_SHOW_DISTANCE_SQUARED
             }
             .toSet()
 
@@ -58,12 +59,12 @@ class NodesComponent<N>(
                 .apply { builder(n) }
                 .run {
                     val display = NodeDisplay()
-                    display.apply(this, nodeLocation(n))
+                    display.apply(this, nodePosition(n))
                     display
                 }
-                .also { it.show(player, nodeLocation(n)) }
+                .also { it.show(player, nodePosition(n)) }
         }
-        toRefresh.forEach { n -> nodes[n]?.apply(NodeDisplayBuilder().apply { builder(n) }, nodeLocation(n)) }
+        toRefresh.forEach { n -> nodes[n]?.apply(NodeDisplayBuilder().apply { builder(n) }, nodePosition(n)) }
         lastRefresh = 0
     }
 
@@ -112,7 +113,7 @@ private class NodeDisplay {
     val entityId: Int
         get() = interaction.entityId
 
-    fun apply(builder: NodeDisplayBuilder, location: Location) {
+    fun apply(builder: NodeDisplayBuilder, position: Position) {
         itemDisplay.meta<ItemDisplayMeta> {
             item = builder.item.toPacketItem()
             isGlowing = builder.glow != null
@@ -126,25 +127,25 @@ private class NodeDisplay {
         }
         onInteract = builder.interaction
         if (itemDisplay.isSpawned) {
-            itemDisplay.teleport(location.toPacketLocation())
+            itemDisplay.teleport(position.toPacketLocation())
         }
         if (interaction.isSpawned &&
-            (interaction.location.x != location.x
-                    || interaction.location.y != (location.y - builder.scale.y / 2)
-                    || interaction.location.z != location.z)
+            (interaction.location.x != position.x
+                    || interaction.location.y != (position.y - builder.scale.y / 2)
+                    || interaction.location.z != position.z)
         ) {
-            interaction.teleport(location
-                .clone()
-                .apply { y -= builder.scale.y / 2 }
-                .toPacketLocation())
+            interaction.teleport(
+                position
+                    .withY { it - builder.scale.y / 2 }
+                    .toPacketLocation())
         }
     }
 
-    fun show(player: Player, location: Location) {
+    fun show(player: Player, position: Position) {
         itemDisplay.addViewer(player.uniqueId)
-        itemDisplay.spawn(location.toPacketLocation())
+        itemDisplay.spawn(position.toPacketLocation())
         interaction.addViewer(player.uniqueId)
-        interaction.spawn(location.toPacketLocation())
+        interaction.spawn(position.toPacketLocation())
     }
 
     fun interact() {
