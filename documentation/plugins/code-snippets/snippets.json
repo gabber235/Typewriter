@@ -214,5 +214,9 @@
   "temporal_triggers": {
     "file": "src\\main\\kotlin\\com\\typewritermc\\example\\TriggerExample.kt",
     "content": "    // To start a temporal sequence\n    TemporalStartTrigger(\n        pageId = \"some_id\",\n        eventTriggers = listOf<EventTrigger>(),\n        settings = TemporalSettings(\n            blockChatMessages = true,\n            blockActionBarMessages = true\n        )\n    ).triggerFor(player, context())\n\n    // To stop the temporal sequence and trigger the following entries.\n    TemporalStopTrigger.triggerFor(player, player.interactionContext ?: context())"
+  },
+  "dialogue_confirmation_messenger": {
+    "file": "src\\main\\kotlin\\com\\typewritermc\\example\\entries\\trigger\\ExampleDialogueEntry.kt",
+    "content": "class ExampleConfirmationDialogueMessenger(\n    player: Player,\n    context: InteractionContext,\n    entry: ExampleConfirmationDialogueEntry,\n) : DialogueMessenger<ExampleConfirmationDialogueEntry>(player, context, entry) {\n\n    private var confirmationKeyHandler: ConfirmationKeyHandler? = null\n\n    override fun init() {\n        super.init()\n        player.sendMessage(\"${entry.speakerDisplayName}: ${entry.text}\".parsePlaceholders(player).asMini())\n        // highlight-start\n        confirmationKeyHandler = confirmationKey.handler(player) {\n            state = MessengerState.FINISHED\n        }\n        // highlight-end\n    }\n\n    override fun dispose() {\n        super.dispose()\n        // highlight-next-line\n        confirmationKeyHandler?.dispose()\n        confirmationKeyHandler = null\n    }\n}"
   }
 }

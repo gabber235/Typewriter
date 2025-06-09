@@ -8,9 +8,7 @@ import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
-import com.typewritermc.engine.paper.entry.dialogue.MessengerState
-import com.typewritermc.engine.paper.entry.dialogue.TickContext
+import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.entry.entries.SpeakerEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
@@ -57,3 +55,50 @@ class ExampleDialogueDialogueMessenger(player: Player, context: InteractionConte
     }
 }
 //</code-block:dialogue_messenger>
+
+@Entry("example_confirmation_dialogue", "A dialogue requiring confirmation.", Colors.BLUE, "material-symbols:chat-rounded")
+class ExampleConfirmationDialogueEntry(
+    override val id: String = "",
+    override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
+    override val modifiers: List<Modifier> = emptyList(),
+    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    override val speaker: Ref<SpeakerEntry> = emptyRef(),
+    @MultiLine
+    @Placeholder
+    @Colored
+    @Help("The text to display to the player.")
+    val text: String = "",
+) : DialogueEntry {
+    override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<*>? {
+        return ExampleConfirmationDialogueMessenger(player, context, this)
+    }
+}
+
+//<code-block:dialogue_confirmation_messenger>
+class ExampleConfirmationDialogueMessenger(
+    player: Player,
+    context: InteractionContext,
+    entry: ExampleConfirmationDialogueEntry,
+) : DialogueMessenger<ExampleConfirmationDialogueEntry>(player, context, entry) {
+
+    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+
+    override fun init() {
+        super.init()
+        player.sendMessage("${entry.speakerDisplayName}: ${entry.text}".parsePlaceholders(player).asMini())
+        // highlight-start
+        confirmationKeyHandler = confirmationKey.handler(player) {
+            state = MessengerState.FINISHED
+        }
+        // highlight-end
+    }
+
+    override fun dispose() {
+        super.dispose()
+        // highlight-next-line
+        confirmationKeyHandler?.dispose()
+        confirmationKeyHandler = null
+    }
+}
+//</code-block:dialogue_confirmation_messenger>
