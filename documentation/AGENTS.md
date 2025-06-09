@@ -7,7 +7,7 @@ This folder contains the Docusaurus website. Documentation and blog posts are wr
 Before committing documentation updates make sure the site builds:
 
 ```bash
-npm run build
+npm run build -- --dev
 ```
 
 ## Writing Docs
@@ -31,6 +31,8 @@ Wrap Kotlin samples with `//<code-block:some_tag>` and `//</code-block:some_tag>
 and use the `<CodeSnippet tag="some_tag" json={require('../snippets.json')} />`
 component to embed them. This applies to every code snippet, especially pages
 under `develop`.
+
+Never write directly to the `snippets.json` file. It will be automcatically generated during the build.
 
 ## Common Components
 
