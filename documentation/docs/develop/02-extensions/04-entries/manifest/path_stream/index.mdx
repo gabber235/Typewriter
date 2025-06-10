@@ -2,16 +2,26 @@ import CodeSnippet from "@site/src/components/CodeSnippet";
 
 # Path Streams
 
-`PathStream` visuals guide players to important places in the world. A `PathStreamProducer` calculates the route and feeds positions to one or more `PathStreamDisplay` implementations that render it for each viewer.
+`PathStreams` visually guide players to important locations within the game world.
+If you have key (dynamic) locations you want players to easily find, you can integrate with the `PathStream` system.
 
-## Display Helpers
+## Setting up a PathStream
 
-When you want to highlight a single destination or a list of locations inside an `AudienceEntry`, two helpers manage the lifecycle for you:
+There are two methods for setting up a `PathStream`, depending on the number of target positions you need to display.
 
-- `SinglePathStreamDisplay` – manages a single `PathStreamProducer` for each player.
-- `MultiPathStreamDisplay` – manages multiple producers identified by an id.
+### Single PathStream
+
+If you only have a single (dynamic) target position, use the `SinglePathStream` component.
 
 <CodeSnippet tag="single_path_stream_display" json={require("../../../../snippets.json")} />
 
+### Multi PathStream
+
+For multiple (dynamic) target positions, use the `MultiPathStream` component.
+
 <CodeSnippet tag="multi_path_stream_display" json={require("../../../../snippets.json")} />
 
+:::warning
+The `MultiPathStream` component's callback function is invoked every tick to determine if the targets should still be displayed.
+**Ensure this call is efficient!** Pre-calculate as much information as possible using `lazy` properties.
+:::
