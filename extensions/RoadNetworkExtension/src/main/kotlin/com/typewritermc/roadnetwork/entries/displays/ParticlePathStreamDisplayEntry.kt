@@ -1,7 +1,5 @@
 package com.typewritermc.roadnetwork.entries.displays
 
-import com.github.retrooper.packetevents.protocol.particle.Particle
-import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
@@ -16,6 +14,7 @@ import com.typewritermc.roadnetwork.entries.LinePathStreamProducer
 import com.typewritermc.roadnetwork.entries.ParticlePathStreamDisplay
 import com.typewritermc.roadnetwork.entries.PathStreamDisplay
 import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
+import io.github.retrooper.packetevents.util.SpigotConversionUtil
 import org.bukkit.entity.Player
 import java.time.Duration
 
@@ -41,11 +40,13 @@ class ParticlePathStreamDisplayEntry(
     @Default("20.0")
     val travelSpeed: Double = 20.0,
     @Default("\"TOTEM_OF_UNDYING\"")
-    val particleType: ParticleTypes = ParticleTypes.TOTEM_OF_UNDYING,
+    val particle: org.bukkit.Particle = org.bukkit.Particle.TOTEM_OF_UNDYING,
 ) : PathStreamDisplayEntry {
     override fun createDisplay(player: Player): PathStreamDisplay = ParticlePathStreamDisplay(
         player,
-        Particle(particleType),
+        com.github.retrooper.packetevents.protocol.particle.Particle(
+            SpigotConversionUtil.fromBukkitParticle(particle),
+        ),
         particleOffset,
         positionOffset,
         count,
