@@ -1,0 +1,47 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# PathStreamDisplayEntry
+
+`PathStreamDisplayEntry` lets you render path streams to players. A path stream is a
+sequence of positions calculated by a `PathStreamProducer` and visualised by one or
+more `PathStreamDisplay` implementations.
+
+A new display is generated for each viewer whenever a stream is recalculated. This
+recalculation happens at the interval defined by `refreshDuration`.
+
+## When to use it
+
+Use a `PathStreamDisplayEntry` whenever you want full control over how a path
+stream is visualised. This is useful for quest paths or when highlighting group
+members with custom effects.
+
+## Basic Structure
+
+The entry constructs a `PathStreamProducer` that computes the route and returns a
+`PathStream`. Every `PathStreamDisplay` created for the viewer consumes that
+stream and renders its positions. In practice you only override the methods that
+create the producer and display.
+
+```
+Player
+  └─ PathStreamDisplayEntry
+        ├─ createDisplay() ──> PathStreamDisplay
+        └─ createProducer() ─> PathStreamProducer
+                                      └─> PathStream
+```
+
+<CodeSnippet tag="custom_path_stream_display" json={require("../../../../snippets.json")} />
+
+<CodeSnippet tag="path_stream_display_entry" json={require("../../../../snippets.json")} />
+
+The example above uses `LinePathStreamProducer` which moves from block to block
+towards the end position, displaying each step once. It is the simplest producer
+to start with.
+
+## Custom Producers
+
+When you need more advanced behaviour implement your own `PathStreamProducer`
+and `PathStream`. Override `refreshPath()` to supply the custom stream logic.
+
+<CodeSnippet tag="custom_path_stream_producer" json={require("../../../../snippets.json")} />
+
