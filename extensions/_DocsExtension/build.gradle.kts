@@ -1,5 +1,7 @@
 repositories {}
-dependencies {}
+dependencies {
+    compileOnly(project(":RoadNetworkExtension"))
+}
 
 typewriter {
     namespace = "typewritermc"
@@ -14,6 +16,10 @@ typewriter {
             """.trimMargin()
         engineVersion = file("../../version.txt").readText().trim()
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
+
+        dependencies {
+            dependency("typewritermc", "RoadNetwork")
+        }
 
 
         paper()
