@@ -64,7 +64,9 @@ data class PositionProperty(
 
     override fun hashCode(): Int = Objects.hash(x, y, z, yaw, pitch, world)
 
-    companion object : SinglePropertyCollectorSupplier<PositionProperty>(PositionProperty::class)
+    companion object : SinglePropertyCollectorSupplier<PositionProperty>(PositionProperty::class) {
+        val ORIGIN = PositionProperty(World(""), 0.0, 0.0, 0.0, 0f, 0f)
+    }
 }
 
 fun org.bukkit.Location.toProperty(): PositionProperty {

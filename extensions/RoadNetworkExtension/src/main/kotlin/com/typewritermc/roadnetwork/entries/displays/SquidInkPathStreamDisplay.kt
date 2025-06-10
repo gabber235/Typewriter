@@ -2,23 +2,22 @@ package com.typewritermc.roadnetwork.entries.displays
 
 import com.github.retrooper.packetevents.protocol.particle.Particle
 import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes
-import com.github.retrooper.packetevents.util.Vector3f
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
-import com.typewritermc.engine.paper.utils.toPacketVector3d
+import com.typewritermc.core.utils.point.Vector
+import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.roadnetwork.RoadNetworkEntry
-import com.typewritermc.roadnetwork.gps.PathStreamDisplay
-import com.typewritermc.roadnetwork.gps.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.entries.LinePathStreamProducer
+import com.typewritermc.roadnetwork.entries.ParticlePathStreamDisplay
+import com.typewritermc.roadnetwork.entries.PathStreamDisplay
+import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
 import org.bukkit.entity.Player
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
 
 enum class InkVariant {
     NORMAL,
@@ -34,57 +33,48 @@ enum class InkVariant {
 class InkPathStreamDisplayEntry(
     override val id: String = "",
     override val name: String = "",
-    @Default("1700")
+    override val children: List<Ref<out AudienceEntry>> = emptyList(),
     override val refreshDuration: Duration = Duration.ofMillis(1700),
+    @Default("{\"x\": 0.3, \"y\": 0.0, \"z\": 0.3}")
+    val particleOffset: Vector = Vector(0.3, 0.0, 0.3),
+    @Default("{\"x\": 0.0, \"y\": 0.2, \"z\": 0.0}")
+    val positionOffset: Vector = Vector(0.0, 0.2, 0.0),
+    @Default("1")
+    val count: Int = 1,
+    val particleSpeed: Float = 0f,
     @Help("How fast the stream travels in blocks per second")
     @Default("20.0")
-    val speed: Double = 20.0,
+    val travelSpeed: Double = 20.0,
     @Default("\"GLOW\"")
     val variant: InkVariant = InkVariant.GLOW,
-) : PathStreamDisplayEntry<SquidInkPathStreamDisplay> {
-    override val klass: KClass<SquidInkPathStreamDisplay> get() = SquidInkPathStreamDisplay::class
-    override fun createDisplay(
-        ref: Ref<RoadNetworkEntry>,
-        player: Player,
-        startPosition: (Player) -> Position,
-        endPosition: (Player) -> Position
-    ): SquidInkPathStreamDisplay =
-        SquidInkPathStreamDisplay(ref, player, startPosition, endPosition, refreshDuration, speed, variant)
-}
-
-class SquidInkPathStreamDisplay(
-    ref: Ref<RoadNetworkEntry>,
-    player: Player,
-    startPosition: (Player) -> Position,
-    endPosition: (Player) -> Position,
-    refreshDuration: Duration = Duration.ofMillis(1700),
-    val speed: Double = 20.0,
-    val variant: InkVariant = InkVariant.GLOW,
-) : PathStreamDisplay(ref, player, startPosition, endPosition, refreshDuration) {
-    private val lines = ConcurrentHashMap<PathLine, Unit>()
-
-    override suspend fun refreshPath() {
-        val (_, paths) = calculatePathing() ?: return
-        lines[PathLine(paths.flatten(), speed)] = Unit
-    }
-
-    override fun displayPath() {
-        lines.keys.retainAll { line ->
-            val location = line.currentPosition ?: return@retainAll false
-            val particle = when (variant) {
+) : PathStreamDisplayEntry {
+    override fun createDisplay(player: Player): PathStreamDisplay = ParticlePathStreamDisplay(
+        player,
+        Particle(
+            when (variant) {
                 InkVariant.NORMAL -> ParticleTypes.SQUID_INK
                 InkVariant.GLOW -> ParticleTypes.GLOW_SQUID_INK
             }
-            WrapperPlayServerParticle(
-                Particle(particle),
-                true,
-                location.withY { it + 0.2 }.toPacketVector3d(),
-                Vector3f(0.3f, 0.0f, 0.3f),
-                0f,
-                1
-            ) sendPacketTo player
+        ),
+        particleOffset,
+        positionOffset,
+        count,
+        particleSpeed,
+    )
 
-            line.shouldContinue()
-        }
-    }
+    override fun createProducer(
+        player: Player,
+        roadNetwork: Ref<RoadNetworkEntry>,
+        startPosition: (Player) -> Position,
+        endPosition: (Player) -> Position
+    ) = LinePathStreamProducer(
+        player,
+        ref(),
+        roadNetwork,
+        startPosition,
+        endPosition,
+        refreshDuration,
+        travelSpeed,
+        displays(),
+    )
 }

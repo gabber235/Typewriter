@@ -220,6 +220,10 @@ fun <E : AudienceEntry> List<Ref<out AudienceEntry>>.descendants(klass: KClass<E
     }
 }
 
+fun <E : AudienceEntry> AudienceFilterEntry.descendants(klass: KClass<E>): List<Ref<E>> {
+    return children.descendants(klass)
+}
+
 fun <E : AudienceEntry> Ref<out AudienceFilterEntry>.descendants(klass: KClass<E>): List<Ref<E>> {
     val entry = get() ?: return emptyList()
     return entry.children.descendants(klass)

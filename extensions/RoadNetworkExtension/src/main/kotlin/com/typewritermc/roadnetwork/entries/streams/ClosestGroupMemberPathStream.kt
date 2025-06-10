@@ -9,8 +9,8 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.GroupEntry
 import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.roadnetwork.RoadNetworkEntry
-import com.typewritermc.roadnetwork.gps.PathStreamDisplayEntry
-import com.typewritermc.roadnetwork.gps.SinglePathStreamDisplay
+import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.entries.SinglePathStreamDisplay
 
 @Entry(
     "closest_group_member_path_stream",
@@ -34,7 +34,7 @@ class ClosestGroupMemberPathStream(
     override val id: String = "",
     override val name: String = "",
     val road: Ref<RoadNetworkEntry> = emptyRef(),
-    val display: Ref<PathStreamDisplayEntry<*>> = emptyRef(),
+    val display: Ref<PathStreamDisplayEntry> = emptyRef(),
     val group: Ref<out GroupEntry> = emptyRef(),
 ) : AudienceEntry {
     override suspend fun display(): AudienceDisplay = SinglePathStreamDisplay(road, { display }) { player ->

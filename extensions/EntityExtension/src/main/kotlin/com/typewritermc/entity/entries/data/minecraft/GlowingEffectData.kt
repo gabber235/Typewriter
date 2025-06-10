@@ -48,7 +48,6 @@ data class GlowingEffectProperty(val glowing: Boolean = false, val color: Color)
 }
 
 fun applyGlowingEffectData(entity: WrapperEntity, property: GlowingEffectProperty) {
-    println("applyGlowingEffectData for ${entity.entityType.name}: ${entity.entityId}")
     val info = WrapperPlayServerTeams.ScoreBoardTeamInfo(
         Component.empty(),
         null,

@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 
 inline fun <reified E : Entry> emptyRef() = Ref("", E::class)
 
-inline fun <reified E : Entry> E.ref() = Ref(id, E::class)
+inline fun <reified E : Entry> E.ref() = Ref(id, E::class, this)
 
 /**
  * A reference to an entry. This is used to reference an entry from another entry.
@@ -14,15 +14,20 @@ inline fun <reified E : Entry> E.ref() = Ref(id, E::class)
  */
 class Ref<E : Entry>(
     val id: String,
-    private val klass: KClass<E>
+    private val klass: KClass<E>,
+    private var cache: E? = null,
 ) {
     val isSet: Boolean
         get() = id.isNotBlank()
 
-    val entry: E? by lazy(LazyThreadSafetyMode.NONE) {
-        if (!isSet) return@lazy null
-        Query.findById(klass, id)
-    }
+    val entry: E?
+        get() {
+            if (cache != null) return cache
+            if (!isSet) return null
+            val foundEntry = Query.findById(klass, id)
+            cache = foundEntry
+            return foundEntry
+        }
 
     fun get(): E? = entry
 

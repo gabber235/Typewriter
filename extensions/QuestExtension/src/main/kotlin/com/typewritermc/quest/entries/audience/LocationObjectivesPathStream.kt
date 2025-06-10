@@ -1,18 +1,20 @@
 package com.typewritermc.quest.entries.audience
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.engine.paper.entry.descendants
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.quest.trackedShowingObjectives
 import com.typewritermc.roadnetwork.RoadNetworkEntry
-import com.typewritermc.roadnetwork.gps.MultiPathStreamDisplay
-import com.typewritermc.roadnetwork.gps.PathStreamDisplayEntry
-import com.typewritermc.roadnetwork.gps.StreamDisplay
-import com.typewritermc.roadnetwork.gps.highestPathStreamDisplay
+import com.typewritermc.roadnetwork.entries.MultiPathStreamDisplay
+import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.entries.StreamProducer
+import com.typewritermc.roadnetwork.entries.highestPathStreamDisplayEntry
 
 @Entry(
     "location_objectives_path_stream",
@@ -30,15 +32,29 @@ import com.typewritermc.roadnetwork.gps.highestPathStreamDisplay
 class LocationObjectivesPathStream(
     override val id: String = "",
     override val name: String = "",
-    val display: Ref<PathStreamDisplayEntry<*>> = emptyRef(),
+    val display: Ref<PathStreamDisplayEntry> = emptyRef(),
     val road: Ref<RoadNetworkEntry> = emptyRef(),
 ) : AudienceEntry {
+    private val objectiveDisplays: Map<Ref<LocationObjectiveEntry>, List<Ref<PathStreamDisplayEntry>>> by lazy(
+        LazyThreadSafetyMode.NONE
+    ) {
+        Query.findWhere<LocationObjectiveEntry>() { true }.associate { objective ->
+            val displays = mutableListOf<Ref<PathStreamDisplayEntry>>()
+
+            displays.addAll(objective.descendants(PathStreamDisplayEntry::class))
+            displays.addAll(objective.quest.descendants(PathStreamDisplayEntry::class))
+            displays.add(display)
+
+            objective.ref() to displays
+        }
+    }
+
     override suspend fun display(): AudienceDisplay = MultiPathStreamDisplay(road, streams = { player ->
         player.trackedShowingObjectives().filterIsInstance<LocationObjectiveEntry>()
             .map { objective ->
-                StreamDisplay(
+                StreamProducer(
                     objective.id,
-                    objective.ref().highestPathStreamDisplay(player, or = display),
+                    objectiveDisplays[objective.ref()]?.highestPathStreamDisplayEntry(player) ?: display,
                     endPosition = objective.targetLocation::get
                 )
             }.toList()
