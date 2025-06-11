@@ -18,21 +18,21 @@ import kotlin.reflect.KClass
 class InvisibleData(
     override val id: String = "",
     override val name: String = "",
-    val isInvisible: Boolean = false,
+    val invisible: Boolean = false,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : EntityData<InvisibleProperty> {
     override fun type(): KClass<InvisibleProperty> = InvisibleProperty::class
 
-    override fun build(player: Player): InvisibleProperty = InvisibleProperty(isInvisible)
+    override fun build(player: Player): InvisibleProperty = InvisibleProperty(invisible)
 }
 
-data class InvisibleProperty(val isInvisible: Boolean) : EntityProperty {
+data class InvisibleProperty(val invisible: Boolean) : EntityProperty {
     companion object : SinglePropertyCollectorSupplier<InvisibleProperty>(InvisibleProperty::class, InvisibleProperty(false))
 }
 
 fun applyInvisibleData(entity: WrapperEntity, property: InvisibleProperty) {
     entity.metas {
-        meta<ArmorStandMeta> { isInvisible = property.isInvisible }
+        meta<ArmorStandMeta> { isInvisible = property.invisible }
         error("Could not apply InvisibleData to ${entity.entityType} entity.")
     }
 }
