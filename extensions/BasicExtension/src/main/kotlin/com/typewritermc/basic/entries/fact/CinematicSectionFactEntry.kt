@@ -14,7 +14,6 @@ import com.typewritermc.engine.paper.entry.temporal.currentTemporalFrame
 import com.typewritermc.engine.paper.entry.temporal.isPlayingTemporal
 import com.typewritermc.engine.paper.facts.FactData
 import org.bukkit.entity.Player
-import java.util.*
 
 @Entry(
     "cinematic_section_fact",
@@ -50,14 +49,14 @@ class CinematicSectionFactEntry(
     val pageId: String = "",
     val sections: List<CinematicSection> = emptyList(),
     @Help("Will be returned when the player is not in a cinematic, or not in any of the given sections")
-    val default: Optional<Int> = Optional.empty()
+    val default: Int = 0,
 ) : ReadableFactEntry {
     override fun readSinglePlayer(player: Player): FactData {
         val inCinematic = if (pageId.isNotBlank()) player.isPlayingTemporal(pageId) else player.isPlayingTemporal()
-        val default = default.orElse(0)
         if (!inCinematic) return FactData(default)
 
-        val output = sections.firstOrNull { it.frameRange.contains(player.currentTemporalFrame() ?: -1) }?.value
+        val frame = player.currentTemporalFrame() ?: return FactData(default)
+        val output = sections.firstOrNull { it.frameRange.contains(frame) }?.value
         return FactData(output ?: default)
     }
 
