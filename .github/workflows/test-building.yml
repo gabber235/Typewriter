@@ -1,6 +1,18 @@
 name: Test Building of TypeWriter
 
-on: push
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'extensions/**'
+      - 'engine/**'
+      - 'module-plugin/**'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'extensions/**'
+      - 'engine/**'
+      - 'module-plugin/**'
 
 jobs:
   build:
@@ -27,4 +39,4 @@ jobs:
           path: |
             jars/engine/*.jar
             jars/extensions/*.jar
-          retention-days: 1
+          retention-days: 3
