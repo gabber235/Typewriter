@@ -1,6 +1,6 @@
 package com.typewritermc.core.extension.annotations
 
-@Target(AnnotationTarget.CLASS)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 annotation class Singleton
 
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
