@@ -18,3 +18,13 @@ An optional `Query` parameter can be added to easily fetch all the different eve
 Sometimes you want to pass some information to the context so that subsequent entries can use it.
 
 <CodeSnippet tag="event_entry_with_context_keys" json={require("../../../snippets.json")} />
+
+## CancelableEventEntry
+Sometimes you may want the underlying Bukkit event to be cancelled after triggering your entries.
+For this the `CancelableEventEntry` interface extends `EventEntry` with a single `cancel` field.
+
+<CodeSnippet tag="cancelable_event_entry" json={require("../../../snippets.json")} />
+
+Inside your event listener you can inspect all matching entries and decide whether to cancel the Bukkit event.
+
+<CodeSnippet tag="cancelable_event_listener" json={require("../../../snippets.json")} />
