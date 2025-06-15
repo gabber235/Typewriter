@@ -40,8 +40,9 @@ class GiveItemActionEntry(
     val item: Var<Item> = ConstVar(Item.Empty),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
+        // Build the item before modifying fact or continuing other triggers to ensure that the item is built with the correct state and context.
+        val itemStack = item.get(player, context).build(player, context)
         Dispatchers.Sync.launch {
-            val itemStack = item.get(player, context).build(player, context)
             val leftOver = player.inventory.addItem(itemStack)
             leftOver.values.forEach {
                 player.world.dropItemNaturally(player.location, it)

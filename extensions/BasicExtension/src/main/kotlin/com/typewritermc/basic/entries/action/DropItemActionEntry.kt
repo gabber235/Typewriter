@@ -41,15 +41,15 @@ class DropItemActionEntry(
     private val location: Optional<Var<Position>> = Optional.empty(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
+        val location = if (location.isPresent) {
+            location.get().get(player, context).toBukkitLocation()
+        } else {
+            player.location
+        }
+        val item = item.get(player, context).build(player, context)
         // Run on main thread
         Dispatchers.Sync.launch {
-            if (location.isPresent) {
-                val position = location.get()
-                val bukkitLocation = position.get(player, context).toBukkitLocation()
-                bukkitLocation.world.dropItem(bukkitLocation, item.get(player, context).build(player, context))
-            } else {
-                player.location.world.dropItem(player.location, item.get(player, context).build(player, context))
-            }
+            location.world.dropItem(location, item)
         }
     }
 }
