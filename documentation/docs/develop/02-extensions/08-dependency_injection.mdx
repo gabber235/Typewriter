@@ -1,0 +1,79 @@
+import CodeSnippet from "@site/src/components/CodeSnippet";
+
+# Dependency Injection
+
+Typewriter uses the [Koin](https://insert-koin.io/) library internally to provide dependency injection.
+Extensions can register components that other parts of the engine or extensions may depend on.
+The module plugin scans your code for `@Singleton` and `@Factory` annotations and automatically registers them with Koin when the extension loads.
+
+## Registering Singletons
+
+A component annotated with `@Singleton` is created once and shared across the entire application.
+This can be a class or an object.
+
+<CodeSnippet tag="di_singleton_class" json={require("../snippets.json")} />
+
+Objects can be singletons as well and the object instance itself is registered.
+
+<CodeSnippet tag="di_singleton_object" json={require("../snippets.json")} />
+
+A top level function can also provide a singleton value:
+
+<CodeSnippet tag="di_singleton_function" json={require("../snippets.json")} />
+
+
+You can retrieve these values by implementing `KoinComponent` and using `inject`.
+The `KoinJavaComponent.get` helper works in both Kotlin and Java classes.
+
+<CodeSnippet tag="di_singleton_inject" json={require("../snippets.json")} />
+
+## Registering Factories
+
+Classes or top level functions annotated with `@Factory` create a new instance every time they are requested. 
+Use a
+factory when the dependency should not be shared across callers.
+
+<CodeSnippet tag="di_factory_class" json={require("../snippets.json")} />
+
+A top level function can also declare a factory binding:
+
+<CodeSnippet tag="di_factory_function" json={require("../snippets.json")} />
+
+Retrieving a factory produces a fresh instance each time.
+
+<CodeSnippet tag="di_factory_inject" json={require("../snippets.json")} />
+
+### Named Bindings
+
+You can assign a name to any `@Factory` or `@Singleton` component using the `@Named` annotation.
+This allows multiple bindings of the same type.
+
+<CodeSnippet tag="di_named_function" json={require("../snippets.json")} />
+
+Use `@Inject` on a constructor or function parameter to request a specific named dependency.
+
+<CodeSnippet tag="di_named_inject" json={require("../snippets.json")} />
+
+Named dependencies can also be fetched manually:
+
+<CodeSnippet tag="di_named_usage" json={require("../snippets.json")} />
+
+<CodeSnippet tag="di_named_usage_java" json={require("../snippets.json")} />
+
+## Parameters
+
+Constructor parameters annotated with `@Parameter` are provided when the object is created. 
+This is useful when you want to pass a dynamic value to the factory.
+Other constructor parameters are resolved from Koin.
+
+<CodeSnippet tag="di_parameter_factory" json={require("../snippets.json")} />
+
+When requesting the dependency, supply the parameter using `parametersOf`.
+
+<CodeSnippet tag="di_parameter_usage" json={require("../snippets.json")} />
+
+## Fetching All Bindings
+
+To retrieve every binding of a given type use `getAll<T>()`:
+
+<CodeSnippet tag="di_get_all" json={require("../snippets.json")} />

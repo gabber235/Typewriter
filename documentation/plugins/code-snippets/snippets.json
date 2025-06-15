@@ -1,4 +1,60 @@
 {
+  "di_singleton_class": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "// highlight-next-line\n@Singleton\nclass ExampleService {\n    fun greet(player: Player) {\n        player.sendMessage(\"Hello ${player.name}\")\n    }\n}"
+  },
+  "di_singleton_object": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "// highlight-next-line\n@Singleton\nobject ExampleObject {\n    const val prefix: String = \"[Typewriter]\"\n}"
+  },
+  "di_singleton_function": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "// highlight-next-line\n@Singleton\nfun providePrefix(): String = \"[Typewriter]\""
+  },
+  "di_singleton_inject": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "class ExampleSingletonUsage : KoinComponent {\n    // highlight-next-line\n    private val service: ExampleService by inject()\n\n    fun welcome(player: Player) {\n        service.greet(player)\n        // highlight-start\n        // Or if you want to directly get the prefix inline you can do:\n        val prefix: String = KoinJavaComponent.get(String::class.java)\n        // highlight-end\n        player.sendMessage(prefix)\n    }\n}"
+  },
+  "di_factory_class": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "// highlight-next-line\n@Factory\nclass ExampleRunner(\n    // Parameters are automatically injected by Koin,\n    // make sure to register these types with @Singleton or @Factory\n    private val service: ExampleService,\n) {\n    fun start(player: Player) {\n        service.greet(player)\n    }\n}"
+  },
+  "di_factory_function": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "// highlight-next-line\n@Factory\nfun createGson(): Gson = GsonBuilder().setPrettyPrinting().create()"
+  },
+  "di_factory_inject": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "class TrackerManager : KoinComponent {\n    // highlight-start\n    // You can inject a factory like this,\n    // it will create a new instance every time you get the field\n    val exampleRunner: ExampleRunner by inject()\n    // highlight-end\n\n    fun create(): ExampleRunner =\n    // highlight-start\n        // Or you can get it from the Koin scope directly\n        KoinJavaComponent.get(ExampleObject::class.java)\n    // highlight-end\n}"
+  },
+  "di_named_function": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "@Factory\n// highlight-next-line\n@Named(\"exampleParser\")\nfun provideParser(): Gson = GsonBuilder().create()"
+  },
+  "di_named_inject": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "@Factory\nclass ParserUser(\n    // highlight-next-line\n    @Inject(\"exampleParser\") val parser: Gson,\n)"
+  },
+  "di_named_usage": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "class NamedUsage : KoinComponent {\n    // highlight-next-line\n    private val parser: Gson by inject(named(\"exampleParser\"))\n}"
+  },
+  "di_named_usage_java": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "class NamedUsageJava {\n    private val parser: Gson =\n        // highlight-next-line\n        KoinJavaComponent.get(Gson::class.java, named(\"exampleParser\"))\n}"
+  },
+  "di_parameter_factory": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "@Factory\nclass GreetingTracker(\n    // highlight-next-line\n    @Parameter val player: Player,\n    private val service: ExampleService,\n) {\n    fun greet() {\n        service.greet(player)\n    }\n}"
+  },
+  "di_parameter_usage": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "class ParameterManager : KoinComponent {\n    fun trackerFor(player: Player): GreetingTracker =\n        // highlight-next-line\n        getKoin().get(parameters = { parametersOf(player) })\n}"
+  },
+  "di_get_all": {
+    "file": "src/main/kotlin/com/typewritermc/example/DependencyInjectionExample.kt",
+    "content": "class GetAllExample : KoinComponent {\n    fun services(): List<ExampleService> =\n        // highlight-next-line\n        getKoin().getAll()\n}"
+  },
   "initializer": {
     "file": "src/main/kotlin/com/typewritermc/example/ExampleInitializer.kt",
     "content": "import com.typewritermc.core.extension.Initializable\nimport com.typewritermc.core.extension.annotations.Singleton\n\n@Singleton\nobject ExampleInitializer : Initializable {\n    override suspend fun initialize() {\n        // Do something when the extension is initialized\n    }\n\n    override suspend fun shutdown() {\n        // Do something when the extension is shutdown\n    }\n}"
@@ -141,11 +197,11 @@
   },
   "single_path_stream_display": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/manifest/pathstream/PathStreamBasics.kt",
-    "content": "class SingleDisplayEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    private val road: Ref<RoadNetworkEntry> = emptyRef(),\n    private val display: Ref<PathStreamDisplayEntry> = emptyRef(),\n    val target: Position,\n) : AudienceEntry {\n    override suspend fun display(): AudienceDisplay =\n        SinglePathStreamDisplay(\n            road,\n            { display },\n            endPosition = { target }\n        )\n}"
+    "content": "class SingleDisplayEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    private val road: Ref<RoadNetworkEntry> = emptyRef(),\n    private val display: Ref<PathStreamDisplayEntry> = emptyRef(),\n    val target: Position = Position.ORIGIN,\n) : AudienceEntry {\n    override suspend fun display(): AudienceDisplay =\n        SinglePathStreamDisplay(\n            road,\n            { display },\n            endPosition = { target }\n        )\n}"
   },
   "multi_path_stream_display": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/manifest/pathstream/PathStreamBasics.kt",
-    "content": "class MultiDisplayEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    private val road: Ref<RoadNetworkEntry>,\n    private val display: Ref<PathStreamDisplayEntry> = emptyRef(),\n    private val targets: List<Position> = emptyList(),\n) : AudienceEntry {\n    override suspend fun display(): AudienceDisplay =\n        MultiPathStreamDisplay(road) { player ->\n            targets.mapIndexed { index, target ->\n                StreamProducer(\n                    // ID must stay consistent between calls to this supplier.\n                    // It is used to efficiently manage the display.\n                    id = \"$index\",\n                    display,\n                    // Though the location itself can change, even dynamically,\n                    endPosition = { target }\n                )\n            }\n        }\n}"
+    "content": "class MultiDisplayEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    private val road: Ref<RoadNetworkEntry> = emptyRef(),\n    private val display: Ref<PathStreamDisplayEntry> = emptyRef(),\n    private val targets: List<Position> = emptyList(),\n) : AudienceEntry {\n    override suspend fun display(): AudienceDisplay =\n        MultiPathStreamDisplay(road) { player ->\n            targets.mapIndexed { index, target ->\n                StreamProducer(\n                    // ID must stay consistent between calls to this supplier.\n                    // It is used to efficiently manage the display.\n                    id = \"$index\",\n                    display,\n                    // Though the location itself can change, even dynamically,\n                    endPosition = { target }\n                )\n            }\n        }\n}"
   },
   "path_stream_display_entry": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/manifest/pathstream/PathStreamDisplayExample.kt",
