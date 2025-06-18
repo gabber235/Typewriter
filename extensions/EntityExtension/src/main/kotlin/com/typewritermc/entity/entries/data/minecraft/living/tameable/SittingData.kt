@@ -8,6 +8,7 @@ import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplie
 import com.typewritermc.engine.paper.entry.entries.EntityData
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.extensions.packetevents.metas
+import me.tofaa.entitylib.meta.mobs.FoxMeta
 import me.tofaa.entitylib.meta.types.TameableMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
 import org.bukkit.entity.Player
@@ -15,7 +16,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 @Entry("sitting_data", "Have a tameable entity sit", Colors.RED, "pepicons-pop:folding-stool")
-@Tags("sitting_data")
+@Tags("sitting_data", "fox_data")
 class SittingData(
     override val id: String = "",
     override val name: String = "",
@@ -34,6 +35,8 @@ data class SittingProperty(val sitting: Boolean) : EntityProperty {
 fun applySittingData(entity: WrapperEntity, property: SittingProperty) {
     entity.metas {
         meta<TameableMeta> { isSitting = property.sitting }
+        meta<FoxMeta> { isSitting = property.sitting }
         error("Could not apply SittingData to ${entity.entityType} entity.")
     }
 }
+
