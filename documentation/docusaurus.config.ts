@@ -269,16 +269,10 @@ const config: Config = {
         contextualSearch: true,
       },
     },
-  // future: {
-  //     experimental_faster: {
-  //         swcJsLoader: true,
-  //         swcJsMinimizer: true,
-  //         swcHtmlMinimizer: true,
-  //         lightningCssMinimizer: true,
-  //         rspackBundler: false,
-  //         mdxCrossCompilerCache: true,
-  //     },
-  // },
+  future: {
+    experimental_faster: true,
+    v4: true,
+  },
 };
 
 export default config;
