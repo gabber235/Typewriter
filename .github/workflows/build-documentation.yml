@@ -13,15 +13,28 @@ jobs:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-         fetch-depth: 0
-      - run: sudo apt update && sudo apt install libvips-dev -y
-      - uses: actions/setup-node@v3
+          fetch-depth: 0
+      - name: Cache node modules
+        uses: actions/cache@v3
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: ./documentation/package-lock.json
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Cache Docusaurus build folder
+        uses: actions/cache@v3
+        with:
+          path: .docusaurus
+          key: ${{ runner.os }}-docusaurus-${{ hashFiles('**/*.md') }}
+          restore-keys: |
+            ${{ runner.os }}-docusaurus-
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24  
       - name: Install dependencies
         run: npm ci
         working-directory: ./documentation
@@ -34,7 +47,7 @@ jobs:
         run: echo "docs.typewritermc.com" > ./documentation/build/CNAME
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Build output to publish to the `gh-pages` branch:
