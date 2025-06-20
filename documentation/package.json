@@ -37,6 +37,7 @@
     "documentation": "file:",
     "docusaurus-plugin-sass": "^0.2.6",
     "js-yaml": "4.1.0",
+    "lightningcss": "^1.28.2",
     "posthog-docusaurus": "^2.0.4",
     "prism-react-renderer": "^2.4.1",
     "raw-loader": "4.0.2",
