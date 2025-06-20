@@ -64,6 +64,9 @@
     "tailwindcss": "^3.4.16",
     "typescript": "^5.8.3"
   },
+  "optionalDependencies": {
+    "@swc/html-linux-x64-gnu": "^1.12.4"
+  },
   "browserslist": {
     "production": [
       ">0.5%",
