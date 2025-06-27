@@ -1,13 +1,13 @@
 package com.typewritermc.core.utils
 
-import com.typewritermc.core.utils.CachedThreadPoolDispatcher.counter
 import kotlinx.coroutines.*
 import org.jetbrains.annotations.ApiStatus
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 @ApiStatus.NonExtendable
@@ -27,17 +27,56 @@ abstract class TypewriterDispatcher(
     }
 }
 
-private object CachedThreadPoolDispatcher : TypewriterDispatcher(Executors.newCachedThreadPool {
-    Thread.ofPlatform().unstarted(it).apply {
-        name = "TypewriterPoolThread-${counter.andIncrement}"
+/**
+ * The maximum number of threads to allow in the pool at any
+ * given time.
+ */
+const val MAX_THREAD_POOL_SIZE = 180
+
+/**
+ * Upon the [pool's active thread count][ThreadPoolExecutor.getActiveCount] reaching or exceeding this value,
+ * [virtual threads][VirtualThread] will be created instead of [platform threads][Thread].
+ *
+ * In other words, there is a maximum of [VIRTUAL_THREAD_THRESHOLD] platform threads in the [pool][CachedThreadPoolDispatcher].
+ */
+const val VIRTUAL_THREAD_THRESHOLD = 30
+
+/**
+ * The number of threads that are always present in the [pool][CachedThreadPoolDispatcher].
+ */
+const val CORE_POOL_SIZE = 6
+
+@OptIn(ExperimentalStdlibApi::class)
+private object CachedThreadPoolDispatcher : TypewriterDispatcher(
+    run {
+        // threads won't be created until this is initialized.
+        lateinit var pool: ThreadPoolExecutor
+
+        pool = ThreadPoolExecutor(
+            CORE_POOL_SIZE,
+            MAX_THREAD_POOL_SIZE,
+            60L,
+            TimeUnit.SECONDS,
+            SynchronousQueue()
+        ) {
+            (
+                    if (pool.activeCount > VIRTUAL_THREAD_THRESHOLD) Thread.ofVirtual()
+                    else Thread.ofPlatform().daemon(true)
+            )
+                .name("TypewriterPoolThread-", 1)
+                .unstarted(it)
+        }
+
+        pool.asCoroutineDispatcher()
     }
-}.asCoroutineDispatcher()) {
-    private val counter = AtomicInteger(0)
-}
+)
 
 val Dispatchers.UntickedAsync: CoroutineDispatcher get() = CachedThreadPoolDispatcher
 
-fun CoroutineContext.launch(block: suspend CoroutineScope.() -> Unit): Job = CoroutineScope(this).launch(block = block)
+fun CoroutineContext.launch(
+    block: suspend CoroutineScope.() -> Unit
+): Job = CoroutineScope(this).launch(block = block)
 
-suspend fun <T> CoroutineContext.switchContext(block: suspend CoroutineScope.() -> T): T =
-    withContext(this, block = block)
+suspend fun <T> CoroutineContext.switchContext(
+    block: suspend CoroutineScope.() -> T
+): T = withContext(this, block = block)
