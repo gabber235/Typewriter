@@ -10,7 +10,7 @@ part of 'app_router.dart';
 const appRouterProvider = AppRouterProvider._();
 
 final class AppRouterProvider
-    extends $FunctionalProvider<Raw<AppRouter>, Raw<AppRouter>>
+    extends $FunctionalProvider<Raw<AppRouter>, Raw<AppRouter>, Raw<AppRouter>>
     with $Provider<Raw<AppRouter>> {
   const AppRouterProvider._()
       : super(
@@ -40,7 +40,7 @@ final class AppRouterProvider
   Override overrideWithValue(Raw<AppRouter> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<Raw<AppRouter>>(value),
+      providerOverride: $SyncValueProvider<Raw<AppRouter>>(value),
     );
   }
 }
@@ -53,7 +53,7 @@ const currentRouteDataProvider = CurrentRouteDataFamily._();
 
 /// Provides the current route data for the given [name].
 final class CurrentRouteDataProvider
-    extends $FunctionalProvider<RouteData?, RouteData?>
+    extends $FunctionalProvider<RouteData?, RouteData?, RouteData?>
     with $Provider<RouteData?> {
   /// Provides the current route data for the given [name].
   const CurrentRouteDataProvider._(
@@ -95,7 +95,7 @@ final class CurrentRouteDataProvider
   Override overrideWithValue(RouteData? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<RouteData?>(value),
+      providerOverride: $SyncValueProvider<RouteData?>(value),
     );
   }
 

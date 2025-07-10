@@ -28,17 +28,11 @@ final class AuthProvider extends $NotifierProvider<Auth, LogtoClient> {
   @override
   Auth create() => Auth();
 
-  @$internal
-  @override
-  $NotifierProviderElement<Auth, LogtoClient> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(LogtoClient value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<LogtoClient>(value),
+      providerOverride: $SyncValueProvider<LogtoClient>(value),
     );
   }
 }
@@ -51,9 +45,9 @@ abstract class _$Auth extends $Notifier<LogtoClient> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<LogtoClient>;
+    final ref = this.ref as $Ref<LogtoClient, LogtoClient>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<LogtoClient>, LogtoClient, Object?, Object?>;
+        AnyNotifier<LogtoClient, LogtoClient>, LogtoClient, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -62,7 +56,7 @@ abstract class _$Auth extends $Notifier<LogtoClient> {
 const isAuthenticatedProvider = IsAuthenticatedProvider._();
 
 final class IsAuthenticatedProvider
-    extends $FunctionalProvider<AsyncValue<bool>, FutureOr<bool>>
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
   const IsAuthenticatedProvider._()
       : super(
@@ -95,7 +89,7 @@ String _$isAuthenticatedHash() => r'a122de67d3dbd6bae712235e8a57c8ff7399edf8';
 const userIdProvider = UserIdProvider._();
 
 final class UserIdProvider
-    extends $FunctionalProvider<AsyncValue<String?>, FutureOr<String?>>
+    extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
   const UserIdProvider._()
       : super(
@@ -128,7 +122,7 @@ String _$userIdHash() => r'6655b62760fa3487a0f1aa8c80604428f5d78ce6';
 const accessTokenProvider = AccessTokenProvider._();
 
 final class AccessTokenProvider extends $FunctionalProvider<
-        AsyncValue<AccessToken?>, FutureOr<AccessToken?>>
+        AsyncValue<AccessToken?>, AccessToken?, FutureOr<AccessToken?>>
     with $FutureModifier<AccessToken?>, $FutureProvider<AccessToken?> {
   const AccessTokenProvider._()
       : super(
@@ -162,7 +156,9 @@ String _$accessTokenHash() => r'9c7cde866e768bda04a70eafbbe8ab76408843ac';
 const authUserInfoProvider = AuthUserInfoProvider._();
 
 final class AuthUserInfoProvider extends $FunctionalProvider<
-        AsyncValue<LogtoUserInfoResponse>, FutureOr<LogtoUserInfoResponse>>
+        AsyncValue<LogtoUserInfoResponse>,
+        LogtoUserInfoResponse,
+        FutureOr<LogtoUserInfoResponse>>
     with
         $FutureModifier<LogtoUserInfoResponse>,
         $FutureProvider<LogtoUserInfoResponse> {

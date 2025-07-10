@@ -28,17 +28,11 @@ final class NatsProvider extends $NotifierProvider<Nats, Client> {
   @override
   Nats create() => Nats();
 
-  @$internal
-  @override
-  $NotifierProviderElement<Nats, Client> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Client value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<Client>(value),
+      providerOverride: $SyncValueProvider<Client>(value),
     );
   }
 }
@@ -51,9 +45,9 @@ abstract class _$Nats extends $Notifier<Client> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<Client>;
-    final element = ref.element
-        as $ClassProviderElement<AnyNotifier<Client>, Client, Object?, Object?>;
+    final ref = this.ref as $Ref<Client, Client>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<Client, Client>, Client, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -80,17 +74,11 @@ final class NatsStatusProvider extends $NotifierProvider<NatsStatus, Status> {
   @override
   NatsStatus create() => NatsStatus();
 
-  @$internal
-  @override
-  $NotifierProviderElement<NatsStatus, Status> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Status value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<Status>(value),
+      providerOverride: $SyncValueProvider<Status>(value),
     );
   }
 }
@@ -103,9 +91,9 @@ abstract class _$NatsStatus extends $Notifier<Status> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<Status>;
-    final element = ref.element
-        as $ClassProviderElement<AnyNotifier<Status>, Status, Object?, Object?>;
+    final ref = this.ref as $Ref<Status, Status>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<Status, Status>, Status, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }

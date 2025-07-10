@@ -80,6 +80,7 @@ class LibraryPage extends HookConsumerWidget {
                     itemBuilder: (context, index) {
                       final book = books[index];
                       return BookWidget(
+                        id: book.id,
                         title: book.title,
                         icon: Icones(book.icon),
                         color: book.color,

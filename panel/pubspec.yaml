@@ -21,7 +21,7 @@ dependencies:
   dart_nats: ^0.6.5
   rive: ^0.13.20
   collection: 
-  iconify_flutter: ^0.0.7
+  iconify_flutter_plus: ^1.0.4
   responsive_framework: ^1.5.1
   flutter_animate: ^4.5.2
   mocktail: ^1.0.4
@@ -29,6 +29,9 @@ dependencies:
   okcolor: ^1.1.0
   url_launcher: ^6.3.1
   flutter_context_menu: ^0.2.4
+  uuid: ^4.5.1
+  dotted_border: ^3.1.0
+  collapsible: ^1.0.0
 
 dev_dependencies:
   flutter_test:

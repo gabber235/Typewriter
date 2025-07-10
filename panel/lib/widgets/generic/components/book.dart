@@ -3,18 +3,20 @@ import "dart:math";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:iconify_flutter/iconify_flutter.dart";
-import "package:iconify_flutter/icons/heroicons_solid.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
 import "package:okcolor/models/extensions.dart";
-import "package:typewriter_panel/hooks/auto_scroll.dart";
+import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/tag.dart";
 
-class BookWidget extends HookWidget {
+class BookWidget extends HookConsumerWidget {
   const BookWidget({
+    required this.id,
     required this.title,
     required this.icon,
     required this.color,
@@ -22,22 +24,17 @@ class BookWidget extends HookWidget {
     super.key,
   });
 
+  final String id;
   final String title;
   final Widget icon;
   final Color color;
   final List<Tag> tags;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final inspecting = useState(false);
-    final scrollController = useScrollController();
-    useAutoScroll(
-      scrollController,
-      enabled: inspecting.value,
-      delay: const Duration(milliseconds: 1000),
-      velocity: .02,
-      loopingMode: AutoScrollLoopingMode.pingPong,
-    );
+
+    final selectableId = BookSelector(id);
 
     return MouseRegion(
       onEnter: (_) => inspecting.value = true,
@@ -132,7 +129,7 @@ class BookWidget extends HookWidget {
                           child: icon,
                         ),
                       ),
-                      Iconify(
+                      Icones(
                         HeroiconsSolid.bars_3_bottom_left,
                         color: Colors.white38,
                       ),
@@ -165,16 +162,13 @@ class BookWidget extends HookWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       padding: const EdgeInsets.all(4),
-                      height: inspecting.value
-                          ? 100
-                          : min(
-                              100,
-                              tags.length * 8 + (tags.length - 1) * 5 + 8,
-                            ),
+                      height: min(
+                        100,
+                        tags.length * 8 + (tags.length - 1) * 5 + 8,
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(2),
                         child: ListView.separated(
-                          controller: scrollController,
                           scrollDirection: Axis.vertical,
                           itemCount: tags.length,
                           physics: const BouncingScrollPhysics(),
@@ -182,14 +176,12 @@ class BookWidget extends HookWidget {
                             final tag = tags[index];
                             return TagWidget(
                               tag: tag,
-                              isExpanded: inspecting.value,
+                              isExpanded: false,
                               key: Key(tag.id),
                             );
                           },
                           separatorBuilder: (context, index) {
-                            return SizedBox(
-                              height: inspecting.value ? 10 : 5,
-                            );
+                            return SizedBox(height: 5);
                           },
                         ),
                       ),

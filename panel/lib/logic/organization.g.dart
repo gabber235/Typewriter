@@ -46,12 +46,6 @@ final class OrganizationsProvider
   @$internal
   @override
   Organizations create() => Organizations();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<Organizations, List<OrganizationData>>
-      $createElement($ProviderPointer pointer) =>
-          $AsyncNotifierProviderElement(pointer);
 }
 
 String _$organizationsHash() => r'c7888d4baaf55f73c6535389e4a266080fc09619';
@@ -62,9 +56,10 @@ abstract class _$Organizations extends $AsyncNotifier<List<OrganizationData>> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<List<OrganizationData>>>;
+    final ref = this.ref
+        as $Ref<AsyncValue<List<OrganizationData>>, List<OrganizationData>>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<OrganizationData>>>,
+        AnyNotifier<AsyncValue<List<OrganizationData>>, List<OrganizationData>>,
         AsyncValue<List<OrganizationData>>,
         Object?,
         Object?>;
@@ -75,7 +70,8 @@ abstract class _$Organizations extends $AsyncNotifier<List<OrganizationData>> {
 @ProviderFor(organizationId)
 const organizationIdProvider = OrganizationIdProvider._();
 
-final class OrganizationIdProvider extends $FunctionalProvider<String?, String?>
+final class OrganizationIdProvider
+    extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
   const OrganizationIdProvider._()
       : super(
@@ -105,7 +101,7 @@ final class OrganizationIdProvider extends $FunctionalProvider<String?, String?>
   Override overrideWithValue(String? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<String?>(value),
+      providerOverride: $SyncValueProvider<String?>(value),
     );
   }
 }
@@ -134,12 +130,6 @@ final class OrganizationProvider
   @$internal
   @override
   Organization create() => Organization();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<Organization, OrganizationData?> $createElement(
-          $ProviderPointer pointer) =>
-      $AsyncNotifierProviderElement(pointer);
 }
 
 String _$organizationHash() => r'9fe52811cf7445c0cebdc75a52997745b10b5895';
@@ -150,9 +140,10 @@ abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<OrganizationData?>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<OrganizationData?>, OrganizationData?>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<OrganizationData?>>,
+        AnyNotifier<AsyncValue<OrganizationData?>, OrganizationData?>,
         AsyncValue<OrganizationData?>,
         Object?,
         Object?>;

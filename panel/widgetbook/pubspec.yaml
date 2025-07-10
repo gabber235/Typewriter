@@ -1,6 +1,6 @@
 name: widgetbook_workspace
 description: "Widgetbook workspace"
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -14,23 +14,24 @@ dependencies:
   typewriter_panel:
     path: ../
   flutter_riverpod: ^3.0.0-dev.15
+  hooks_riverpod: ^3.0.0-dev.15
   riverpod_annotation: ^3.0.0-dev.15
   flutter_animate: ^4.5.2
   mocktail: ^1.0.4
   faker: ^2.2.0
   flutter_hooks: ^0.21.2
-  iconify_flutter: ^0.0.7
+  iconify_flutter_plus: ^1.0.4
   logto_dart_sdk: ^3.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints:
-  widgetbook_generator: 
-  build_runner: 
-  riverpod_generator: 
-  custom_lint: 
-  riverpod_lint: 
+  widgetbook_generator:
+  build_runner:
+  riverpod_generator:
+  custom_lint:
+  riverpod_lint:
 
 flutter:
   uses-material-design: true
@@ -42,5 +43,3 @@ flutter:
         - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf
         - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf
           style: italic
-
-

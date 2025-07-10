@@ -13,7 +13,9 @@ import "package:typewriter_panel/widgets/generic/components/nats_connection.dart
 import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 import "package:typewriter_panel/widgets/generic/screens/loading_screen.dart";
+import "package:uuid/uuid.dart";
 
+const uuid = Uuid();
 final random = Random();
 
 void main() async {
@@ -118,7 +120,7 @@ ThemeData buildTheme(Brightness brightness) {
           : const Color(0x99FFFFFF),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.redAccent.shade200, width: 1),
+        borderSide: BorderSide(color: Colors.redAccent.shade200, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -141,6 +143,11 @@ ThemeData buildTheme(Brightness brightness) {
           borderRadius: BorderRadius.circular(8),
         ),
         padding: EdgeInsets.zero,
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        foregroundColor: Colors.white,
       ),
     ),
   );

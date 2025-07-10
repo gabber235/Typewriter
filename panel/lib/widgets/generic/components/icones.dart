@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:iconify_flutter/iconify_flutter.dart";
+import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 
 class Icones extends StatelessWidget {
   const Icones(

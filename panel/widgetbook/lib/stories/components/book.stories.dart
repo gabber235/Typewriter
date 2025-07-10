@@ -1,6 +1,6 @@
 import "package:faker/faker.dart";
 import "package:flutter/material.dart";
-import "package:iconify_flutter/icons/fa6_solid.dart";
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/collection.dart";
@@ -38,6 +38,7 @@ Book generateRandomBook() {
 Widget bookUseCase(BuildContext context) {
   final book = generateRandomBook();
   return BookWidget(
+    id: book.id,
     title: book.title,
     icon: Icones(book.icon),
     color: book.color,

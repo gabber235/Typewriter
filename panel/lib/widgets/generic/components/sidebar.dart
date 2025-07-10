@@ -2,7 +2,7 @@ import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_context_menu/flutter_context_menu.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter/icons/icomoon_free.dart";
+import "package:iconify_flutter_plus/icons/icomoon_free.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";

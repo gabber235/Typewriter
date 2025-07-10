@@ -29,17 +29,11 @@ final class AppearanceProvider
   @override
   Appearance create() => Appearance();
 
-  @$internal
-  @override
-  $NotifierProviderElement<Appearance, ThemeMode> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ThemeMode value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<ThemeMode>(value),
+      providerOverride: $SyncValueProvider<ThemeMode>(value),
     );
   }
 }
@@ -52,9 +46,9 @@ abstract class _$Appearance extends $Notifier<ThemeMode> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<ThemeMode>;
-    final element = ref.element as $ClassProviderElement<AnyNotifier<ThemeMode>,
-        ThemeMode, Object?, Object?>;
+    final ref = this.ref as $Ref<ThemeMode, ThemeMode>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<ThemeMode, ThemeMode>, ThemeMode, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }
