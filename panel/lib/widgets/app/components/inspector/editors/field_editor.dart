@@ -124,12 +124,12 @@ class _ConflictValueEditor extends HookConsumerWidget {
             : null,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Icones(
                 Fa6Solid.xmark,
-                size: 16,
+                size: 22,
                 color: Theme.of(context).colorScheme.error,
               ),
               const SizedBox(width: 12),
@@ -211,8 +211,7 @@ class _LoadingValueEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useAnimationController(
-    )..repeat(period: 2200.ms);
+    final controller = useAnimationController()..repeat(period: 2200.ms);
 
     return Container(
       decoration: BoxDecoration(

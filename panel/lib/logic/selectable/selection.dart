@@ -1,3 +1,5 @@
+import "package:flutter/foundation.dart";
+import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
@@ -13,6 +15,14 @@ class Selection extends _$Selection {
   @override
   List<SelectableIdentifier> build() {
     return [];
+  }
+
+  @override
+  bool updateShouldNotify(
+    List<SelectableIdentifier> previous,
+    List<SelectableIdentifier> next,
+  ) {
+    return !listEquals(previous, next);
   }
 
   void select(SelectableIdentifier selectable) {
@@ -47,9 +57,22 @@ class Selected extends _$Selected {
   @override
   Future<List<Selectable>> build() async {
     final ids = ref.watch(selectionProvider);
-    if (ids.isEmpty) return [];
-
     return Future.wait(ids.map((id) async => id.create(ref)));
+  }
+
+  @override
+  bool updateShouldNotify(
+    AsyncValue<List<Selectable>> previous,
+    AsyncValue<List<Selectable>> next,
+  ) {
+    if (previous.runtimeType != next.runtimeType) return true;
+    if (previous.hasValue && next.hasValue) {
+      return !listEquals(previous.value, next.value);
+    }
+    if (previous.hasError && next.hasError) {
+      return previous.error != next.error;
+    }
+    return false;
   }
 
   void updateFieldValue(String path, dynamic value) {
@@ -107,11 +130,20 @@ extension SelectedValueExtension on SelectedValue {
 }
 
 @riverpod
-DataBlueprint? selectedDataBlueprint(Ref ref) {
+ObjectBlueprint? selectedDataBlueprint(Ref ref) {
   final selected = ref.watch(selectedProvider).value;
   if (selected == null) return null;
   if (selected.isEmpty) return null;
   return selected.map((s) => s.objectBlueprint).toList().overlap;
+}
+
+@riverpod
+Widget? selectedHeader(Ref ref) {
+  final selected = ref.watch(selectedProvider).value;
+  if (selected == null) return null;
+  if (selected.isEmpty) return null;
+  if (selected.length > 1) return null;
+  return selected.first.header();
 }
 
 class SelectableNotFoundException implements Exception {

@@ -40,13 +40,15 @@ abstract class Editor {
           return filter.shouldShow(path, context, dataBlueprint, mode);
         })
         .groupListsBy(
-            (filter) => filter.location(path, context, dataBlueprint, mode))
+          (filter) => filter.location(path, context, dataBlueprint, mode),
+        )
         .map(
           (key, value) => MapEntry(
             key,
             value
-                .map((filter) =>
-                    filter.build(path, context, dataBlueprint, mode))
+                .map(
+                  (filter) => filter.build(path, context, dataBlueprint, mode),
+                )
                 .toList(),
           ),
         );

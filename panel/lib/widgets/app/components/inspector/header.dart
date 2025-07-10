@@ -107,7 +107,7 @@ class FieldHeader extends HookConsumerWidget {
         : HeaderActions();
 
     final name =
-        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Fields";
+        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Editor";
 
     final expanded = useState(defaultExpanded ?? !editorMode.hasHeaderActions);
     final depth = (parent?.depth ?? -1) + 1;

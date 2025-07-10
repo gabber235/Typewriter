@@ -1,5 +1,6 @@
 import "dart:math";
 
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -9,6 +10,7 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
+import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 import "package:typewriter_panel/widgets/generic/components/nats_connection.dart";
 import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
@@ -32,17 +34,20 @@ class TypewriterPanel extends HookConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(appearanceProvider);
 
-    return _EagerInitialization(
-      child: MaterialApp.router(
-        title: "Typewriter",
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
-        themeMode: themeMode,
-        routerConfig: router.config(),
-        shortcuts: WidgetsApp.defaultShortcuts,
-        builder: (context, child) => Responsive(
-          child: RequiredNatsConnection(
-            child: child ?? const SizedBox.shrink(),
+    return GlobalCursorController(
+      child: _EagerInitialization(
+        child: MaterialApp.router(
+          title: "Typewriter",
+          theme: buildTheme(Brightness.light),
+          darkTheme: buildTheme(Brightness.dark),
+          themeMode: themeMode,
+          routerConfig: router.config(),
+          shortcuts: WidgetsApp.defaultShortcuts,
+          scrollBehavior: GlobalCustomScrollBehavior(),
+          builder: (context, child) => Responsive(
+            child: RequiredNatsConnection(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),
@@ -247,4 +252,13 @@ class _Error extends HookConsumerWidget {
       ),
     );
   }
+}
+
+class GlobalCustomScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+      };
 }

@@ -11,6 +11,10 @@ extension ResponsiveBreakpointsX on BuildContext {
   bool get isDesktop => ResponsiveBreakpoints.of(this).isDesktop;
   bool get is4K => ResponsiveBreakpoints.of(this).breakpoint.name == "4K";
 
+  bool isSmalerThan(double width) {
+    return ResponsiveBreakpoints.of(this).screenWidth < width;
+  }
+
   T responsive<T>({required T mobile, T? tablet, T? desktop, T? fourK}) {
     if (isMobile) {
       return mobile;

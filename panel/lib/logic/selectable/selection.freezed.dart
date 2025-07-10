@@ -13,7 +13,12 @@ part of 'selection.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$SelectedValue {
+mixin _$SelectedValue implements DiagnosticableTreeMixin {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties..add(DiagnosticsProperty('type', 'SelectedValue'));
+  }
+
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
@@ -24,7 +29,7 @@ mixin _$SelectedValue {
   int get hashCode => runtimeType.hashCode;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'SelectedValue()';
   }
 }
@@ -243,8 +248,13 @@ extension SelectedValuePatterns on SelectedValue {
 
 /// @nodoc
 
-class LoadingValue implements SelectedValue {
+class LoadingValue with DiagnosticableTreeMixin implements SelectedValue {
   const LoadingValue();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties..add(DiagnosticsProperty('type', 'SelectedValue.loading'));
+  }
 
   @override
   bool operator ==(Object other) {
@@ -256,14 +266,14 @@ class LoadingValue implements SelectedValue {
   int get hashCode => runtimeType.hashCode;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'SelectedValue.loading()';
   }
 }
 
 /// @nodoc
 
-class Value implements SelectedValue {
+class Value with DiagnosticableTreeMixin implements SelectedValue {
   const Value(this.value);
 
   final dynamic value;
@@ -274,6 +284,13 @@ class Value implements SelectedValue {
   @pragma('vm:prefer-inline')
   $ValueCopyWith<Value> get copyWith =>
       _$ValueCopyWithImpl<Value>(this, _$identity);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+      ..add(DiagnosticsProperty('type', 'SelectedValue.value'))
+      ..add(DiagnosticsProperty('value', value));
+  }
 
   @override
   bool operator ==(Object other) {
@@ -288,7 +305,7 @@ class Value implements SelectedValue {
       Object.hash(runtimeType, const DeepCollectionEquality().hash(value));
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'SelectedValue.value(value: $value)';
   }
 }
@@ -326,8 +343,13 @@ class _$ValueCopyWithImpl<$Res> implements $ValueCopyWith<$Res> {
 
 /// @nodoc
 
-class ConflictValue implements SelectedValue {
+class ConflictValue with DiagnosticableTreeMixin implements SelectedValue {
   const ConflictValue();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties..add(DiagnosticsProperty('type', 'SelectedValue.conflict'));
+  }
 
   @override
   bool operator ==(Object other) {
@@ -339,15 +361,20 @@ class ConflictValue implements SelectedValue {
   int get hashCode => runtimeType.hashCode;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'SelectedValue.conflict()';
   }
 }
 
 /// @nodoc
 
-class NoneValue implements SelectedValue {
+class NoneValue with DiagnosticableTreeMixin implements SelectedValue {
   const NoneValue();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties..add(DiagnosticsProperty('type', 'SelectedValue.none'));
+  }
 
   @override
   bool operator ==(Object other) {
@@ -359,7 +386,7 @@ class NoneValue implements SelectedValue {
   int get hashCode => runtimeType.hashCode;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'SelectedValue.none()';
   }
 }

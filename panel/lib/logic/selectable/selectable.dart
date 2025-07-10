@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 
@@ -14,6 +15,7 @@ abstract class Selectable<I extends SelectableIdentifier> {
   String get name;
 
   ObjectBlueprint get objectBlueprint;
+  Widget? header();
 
   dynamic fieldValue(String path);
   void setFieldValue(String path, dynamic value);

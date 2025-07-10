@@ -38,7 +38,7 @@ final class SelectionProvider
   }
 }
 
-String _$selectionHash() => r'dec26bd9d5ba59030543b2f39ec87203ece939c3';
+String _$selectionHash() => r'0b3cb01f49d579076ec617a4141c23ac52d8ff45';
 
 abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   List<SelectableIdentifier> build();
@@ -202,7 +202,7 @@ final class SelectedProvider
   Selected create() => Selected();
 }
 
-String _$selectedHash() => r'4b1d4d310a0ac78bbaa81770e36073e187f11bda';
+String _$selectedHash() => r'b9a198d55a39afef6d9b4f26cf0f360cb8b18e66';
 
 abstract class _$Selected extends $AsyncNotifier<List<Selectable>> {
   FutureOr<List<Selectable>> build();
@@ -305,9 +305,10 @@ final class FieldValueFamily extends $Family
 @ProviderFor(selectedDataBlueprint)
 const selectedDataBlueprintProvider = SelectedDataBlueprintProvider._();
 
-final class SelectedDataBlueprintProvider
-    extends $FunctionalProvider<DataBlueprint?, DataBlueprint?, DataBlueprint?>
-    with $Provider<DataBlueprint?> {
+final class SelectedDataBlueprintProvider extends $FunctionalProvider<
+    ObjectBlueprint?,
+    ObjectBlueprint?,
+    ObjectBlueprint?> with $Provider<ObjectBlueprint?> {
   const SelectedDataBlueprintProvider._()
       : super(
           from: null,
@@ -324,25 +325,66 @@ final class SelectedDataBlueprintProvider
 
   @$internal
   @override
-  $ProviderElement<DataBlueprint?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<ObjectBlueprint?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  DataBlueprint? create(Ref ref) {
+  ObjectBlueprint? create(Ref ref) {
     return selectedDataBlueprint(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DataBlueprint? value) {
+  Override overrideWithValue(ObjectBlueprint? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DataBlueprint?>(value),
+      providerOverride: $SyncValueProvider<ObjectBlueprint?>(value),
     );
   }
 }
 
 String _$selectedDataBlueprintHash() =>
-    r'aafc4632bf8d45a81935783e1e5ec4204f9e8e49';
+    r'2f96a34451bc57ff90a879d78150ddd175cd55e1';
+
+@ProviderFor(selectedHeader)
+const selectedHeaderProvider = SelectedHeaderProvider._();
+
+final class SelectedHeaderProvider
+    extends $FunctionalProvider<Widget?, Widget?, Widget?>
+    with $Provider<Widget?> {
+  const SelectedHeaderProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'selectedHeaderProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedHeaderHash();
+
+  @$internal
+  @override
+  $ProviderElement<Widget?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Widget? create(Ref ref) {
+    return selectedHeader(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Widget? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Widget?>(value),
+    );
+  }
+}
+
+String _$selectedHeaderHash() => r'b6c7dab8571eee08f6a293fa86978574533c145f';
 
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

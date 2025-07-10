@@ -95,6 +95,12 @@ class BookSelection extends Selectable<BookSelector> {
   }
 
   @override
+  Widget? header() {
+    // TODO: implement header
+    throw UnimplementedError();
+  }
+
+  @override
   fieldValue(String path) {
     // TODO: implement fieldValue
     throw UnimplementedError();
@@ -104,4 +110,5 @@ class BookSelection extends Selectable<BookSelector> {
   void setFieldValue(String path, value) {
     // TODO: implement setFieldValue
   }
+
 }
