@@ -53,6 +53,7 @@ val MAX_VIRTUAL_THREADS = Runtime.getRuntime().availableProcessors() * 10
  *
  * If [MAX_PLATFORM_THREADS] is less than the [CORE_POOL_SIZE], then virtual threads will be in the core pool.
  *
+ * @throws IllegalStateException If `MAX_PLATFORM_THREADS + MAX_VIRTUAL_THREADS < CORE_POOL_SIZE`.
  * @see ThreadPoolExecutor.corePoolSize
  */
 const val CORE_POOL_SIZE = 6
