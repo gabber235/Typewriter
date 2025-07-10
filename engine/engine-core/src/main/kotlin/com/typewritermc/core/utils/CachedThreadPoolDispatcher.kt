@@ -28,21 +28,32 @@ abstract class TypewriterDispatcher(
 }
 
 /**
- * The maximum number of threads to allow in the pool at any
- * given time.
+ * The maximum number of platform threads allowed in the pool.
+ *
+ * [MAX_PLATFORM_THREADS] + [MAX_VIRTUAL_THREADS] = The maximum number of threads in the pool.
+ *
+ * All platform threads in the pool are [daemon threads][Thread.setDaemon]
+ *
+ * @see Thread
  */
-const val MAX_THREAD_POOL_SIZE = 180
+val MAX_PLATFORM_THREADS = Runtime.getRuntime().availableProcessors() * 2
 
 /**
- * Upon the [pool's active thread count][ThreadPoolExecutor.getActiveCount] reaching or exceeding this value,
- * [virtual threads][VirtualThread] will be created instead of [platform threads][Thread].
+ * The maximum number of virtual threads allowed in the pool.
  *
- * In other words, there is a maximum of [VIRTUAL_THREAD_THRESHOLD] platform threads in the [pool][CachedThreadPoolDispatcher].
+ * [MAX_PLATFORM_THREADS] + [MAX_VIRTUAL_THREADS] = The maximum number of threads in the pool.
+ *
+ * @see Thread
+ * @see VirtualThread
  */
-const val VIRTUAL_THREAD_THRESHOLD = 30
+val MAX_VIRTUAL_THREADS = Runtime.getRuntime().availableProcessors() * 10
 
 /**
  * The number of threads that are always present in the [pool][CachedThreadPoolDispatcher].
+ *
+ * If [MAX_PLATFORM_THREADS] is less than the [CORE_POOL_SIZE], then virtual threads will be in the core pool.
+ *
+ * @see ThreadPoolExecutor.corePoolSize
  */
 const val CORE_POOL_SIZE = 6
 
@@ -54,13 +65,13 @@ private object CachedThreadPoolDispatcher : TypewriterDispatcher(
 
         pool = ThreadPoolExecutor(
             CORE_POOL_SIZE,
-            MAX_THREAD_POOL_SIZE,
+            MAX_VIRTUAL_THREADS + MAX_PLATFORM_THREADS,
             60L,
             TimeUnit.SECONDS,
             SynchronousQueue()
         ) {
             (
-                    if (pool.activeCount > VIRTUAL_THREAD_THRESHOLD) Thread.ofVirtual()
+                    if (pool.activeCount > MAX_PLATFORM_THREADS) Thread.ofVirtual()
                     else Thread.ofPlatform().daemon(true)
             )
                 .name("TypewriterPoolThread-", 1)
