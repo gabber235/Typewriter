@@ -1,5 +1,7 @@
 package com.typewritermc.core.entries
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.koin.java.KoinJavaComponent
 import kotlin.reflect.KClass
 
@@ -12,10 +14,11 @@ inline fun <reified E : Entry> E.ref() = Ref(id, E::class, this)
  *
  * @param E The type of the entry that this reference points to.
  */
+@Serializable
 class Ref<E : Entry>(
     val id: String,
     private val klass: KClass<E>,
-    private var cache: E? = null,
+    @Transient private var cache: E? = null,
 ) {
     val isSet: Boolean
         get() = id.isNotBlank()

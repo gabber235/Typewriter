@@ -1,17 +1,24 @@
 package com.typewritermc.core.entries
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.typewritermc.core.books.pages.PageType
 import com.typewritermc.core.utils.Reloadable
 import com.typewritermc.loader.ExtensionLoader
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.serializer
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.io.File
 import java.util.logging.Logger
 import kotlin.reflect.full.findAnnotations
+import kotlin.reflect.full.hasAnnotation
 
 class Library : KoinComponent, Reloadable {
     internal var pages: List<Page> = emptyList()
@@ -28,17 +35,17 @@ class Library : KoinComponent, Reloadable {
     private val logger: Logger by inject()
     private val extensionLoader by inject<ExtensionLoader>()
     private val directory by inject<File>(named("baseDir"))
-    private val gson by inject<Gson>(named("dataSerializer"))
+    private val jsonFormat by inject<Json>(named("dataSerializer"))
 
     override suspend fun load() {
         pages = directory.resolve("pages").listFiles().orEmpty()
             .filter { it.isFile && it.canRead() && it.name.endsWith(".json") }
             .map {
-                val json = JsonParser.parseString(it.readText())
-                if (!json.isJsonObject) throw IllegalArgumentException("Page ${it.name} does not contain a valid json object")
-                val obj = json.asJsonObject
-                obj.addProperty("id", it.name.removeSuffix(".json"))
-                obj
+                val json = jsonFormat.parseToJsonElement(it.readText())
+                if (json !is JsonObject) throw IllegalArgumentException("Page ${it.name} does not contain a valid json object")
+                JsonObject(json.toMutableMap().apply {
+                    put("id", JsonPrimitive(it.name.removeSuffix(".json")))
+                })
             }
             .map { parsePage(it) }
 
@@ -61,29 +68,34 @@ class Library : KoinComponent, Reloadable {
     }
 
     private fun parsePage(obj: JsonObject): Page {
-        val id = obj.getAsJsonPrimitive("id")?.asString ?: throw IllegalArgumentException("Page does not have an id")
-        val name =
-            obj.getAsJsonPrimitive("name")?.asString ?: throw IllegalArgumentException("Page $id does not have a name")
-        val type = obj.getAsJsonPrimitive("type")?.asString
+        val id = obj["id"]?.jsonPrimitive?.toString()
+            ?: throw IllegalArgumentException("Page does not have an id")
+        val name = obj["name"]?.jsonPrimitive?.toString()
+            ?: throw IllegalArgumentException("Page $id does not have a name")
+        val type = obj["type"]?.jsonPrimitive?.toString()
             ?: throw IllegalArgumentException("Page $name ($id) does not have a type ")
         val pageType =
             PageType.fromId(type) ?: throw IllegalArgumentException("Page $name ($id) has an invalid type $type")
-        val priority = obj.getAsJsonPrimitive("priority")?.asInt ?: 0
+        val priority = obj["priority"]?.jsonPrimitive?.int ?: 0
 
-        val entries = obj.getAsJsonArray("entries").mapNotNull { parseEntry(it.asJsonObject, name) }
+        val entries = obj["entries"]!!.jsonArray.mapNotNull { parseEntry(it.jsonObject, name) }
 
         return Page(id, name, entries, pageType, priority)
     }
 
     private fun parseEntry(obj: JsonObject, pageName: String): Entry? {
-        val id = obj.getAsJsonPrimitive("id")?.asString.logErrorIfNull("Entry does not have an id") ?: return null
+        val id = obj["id"]?.jsonPrimitive?.toString().logErrorIfNull("Entry does not have an id") ?: return null
         // TODO: Remove type as valid field
-        val blueprintId = obj.getAsJsonPrimitive("blueprintId")?.asString ?:
-            obj.getAsJsonPrimitive("type")?.asString.logErrorIfNull("Entry '$id' does not have a blueprintId or type") ?: return null
+        val blueprintId = obj["blueprintId"]?.jsonPrimitive?.toString()
+            ?: obj["type"]?.jsonPrimitive?.toString().logErrorIfNull("Entry '$id' does not have a blueprintId or type")
+            ?: return null
         val clazz = extensionLoader.entryClass(blueprintId)
             .logErrorIfNull("Could not find entry class for '$id' on page '${pageName}' with type '$blueprintId' in any extension.") ?: return null
+        // require(clazz.kotlin.hasAnnotation<Serializable>()) { "Entry class '${clazz.name}' is not annotated with @Serializable." }
         try {
-            val entry = gson.fromJson<Entry>(obj, clazz)
+            // Might work.
+            val serial = jsonFormat.serializersModule.serializer(clazz)
+            val entry = jsonFormat.decodeFromJsonElement(serial, obj) as Entry
             entryValidation(entry, pageName, blueprintId)
             return entry
         } catch (e: Exception) {

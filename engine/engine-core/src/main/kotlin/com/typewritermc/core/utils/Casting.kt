@@ -1,7 +1,9 @@
 package com.typewritermc.core.utils
 
-import com.google.gson.Gson
+import com.typewritermc.core.serialization.createJsonFormat
 import com.typewritermc.core.utils.point.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import org.koin.core.qualifier.named
 import org.koin.java.KoinJavaComponent
 import kotlin.contracts.ExperimentalContracts
@@ -77,8 +79,8 @@ fun floatCast(value: Any): Float? = when (value) {
 }
 
 fun genericCast(value: Any): Generic {
-    val gson = KoinJavaComponent.get<Gson>(Gson::class.java, named("dataSerializer"))
-    return Generic(gson.toJsonTree(value))
+    val json = KoinJavaComponent.get<Json>(Json::class.java, named("dataSerializer"))
+    return Generic(json.encodeToJsonElement(value))
 }
 
 fun coordinateCast(value: Any): Coordinate? = when (value) {

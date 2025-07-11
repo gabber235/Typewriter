@@ -1,9 +1,16 @@
 package com.typewritermc.engine.paper.utils
 
 import com.google.gson.*
+import com.typewritermc.core.serialization.serializer
+import com.typewritermc.core.serialization.xmap
 import com.typewritermc.core.utils.point.Coordinate
 import com.typewritermc.engine.paper.loader.serializers.CoordinateSerializer
 import com.typewritermc.engine.paper.logger
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -12,47 +19,44 @@ import java.lang.reflect.Type
 import java.util.*
 
 
+// TODO better serialization module management.
+fun createBukkitJsonFormat(): Json = Json {
+    serializersModule = SerializersModule {
+        contextual(Location::class, LocationSerializer)
+        contextual(ItemStack::class, ItemStackSerializer)
+        contextual(Coordinate::class, CoordinateSerializer)
+    }
+}
+
 fun createBukkitDataParser(): Gson = GsonBuilder()
-    .registerTypeAdapter(Location::class.java, LocationSerializer())
-    .registerTypeHierarchyAdapter(ItemStack::class.java, ItemStackSerializer())
-    .registerTypeAdapter(Coordinate::class.java, CoordinateSerializer())
     .create()
 
 
-class ItemStackSerializer : JsonSerializer<ItemStack>, JsonDeserializer<ItemStack> {
-    @Throws(JsonParseException::class)
-    override fun deserialize(jsonElement: JsonElement, type: Type?, context: JsonDeserializationContext?): ItemStack {
-        val data = jsonElement.asString
-        if (data.isEmpty()) return ItemStack(Material.AIR, 0)
-        return ItemStack.deserializeBytes(Base64.getDecoder().decode(data))
-    }
+object ItemStackSerializer : KSerializer<ItemStack> by String.serializer().xmap(
+    { Base64.getEncoder().encodeToString(serializeAsBytes()) },
+    { ItemStack.deserializeBytes(Base64.getDecoder().decode(this)) }
+)
 
-    override fun serialize(src: ItemStack, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        if (src.type == Material.AIR) return JsonPrimitive("")
-        return JsonPrimitive(Base64.getEncoder().encodeToString(src.serializeAsBytes()))
-    }
-}
+object UUIDSerializer : KSerializer<UUID> by serializer(
+    "most", { mostSignificantBits }, Long.serializer(),
+    "least", { leastSignificantBits }, Long.serializer(),
+    ::UUID
+)
 
-class LocationSerializer : JsonSerializer<Location>, JsonDeserializer<Location> {
-    override fun serialize(src: Location, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive("${src.world?.name},${src.x},${src.y},${src.z},${src.yaw},${src.pitch}")
+object LocationSerializer : KSerializer<Location> by serializer(
+    "x", { x }, Double.serializer(),
+    "y", { y }, Double.serializer(),
+    "z", { z }, Double.serializer(),
+    "yaw", { yaw }, Float.serializer().nullable,
+    "pitch", { pitch }, Float.serializer().nullable,
+    "world", { world.uuid }, UUIDSerializer,
+    { x, y, z, yaw, pitch, world ->
+        val worldObj = Bukkit.getWorld(world)
+        if (worldObj == null) {
+            logger.warning("Failed to find world '$world' while deserializing location '$this'")
+            Location(Bukkit.getWorlds()[0], x, y, z, yaw ?: 0f, pitch ?: 0f)
+        } else {
+            Location(worldObj, x, y, z, yaw ?: 0f, pitch ?: 0f)
+        }
     }
-
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Location {
-        val split = json.asString.split(",")
-        return Location(
-            split[0].let { worldName ->
-                val world = Bukkit.getWorld(worldName)
-                if (world == null) {
-                    logger.severe("World $worldName not found!")
-                }
-                world
-            },
-            split[1].toDouble(),
-            split[2].toDouble(),
-            split[3].toDouble(),
-            split[4].toFloat(),
-            split[5].toFloat()
-        )
-    }
-}
+)

@@ -12,7 +12,7 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 class VarSerializer : DataSerializer<Var<*>> {
-    override val type: Class<*> = Var::class.java
+    override val clazz: Class<*> = Var::class.java
 
     override fun serialize(src: Var<*>, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         when (src) {

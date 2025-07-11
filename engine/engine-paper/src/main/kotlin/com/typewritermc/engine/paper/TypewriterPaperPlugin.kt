@@ -4,7 +4,8 @@ import com.github.retrooper.packetevents.PacketEvents
 import com.google.gson.Gson
 import com.typewritermc.core.TypewriterCore
 import com.typewritermc.core.interaction.SessionTracker
-import com.typewritermc.core.serialization.createDataSerializerGson
+import com.typewritermc.core.serialization.createJsonFormat
+import com.typewritermc.core.serialization.createSerializationModule
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.command.TypewriterCommandManager
 import com.typewritermc.engine.paper.content.ContentHandler
@@ -35,11 +36,13 @@ import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.ui.Writers
 import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.createBukkitDataParser
+import com.typewritermc.engine.paper.utils.createBukkitJsonFormat
 import com.typewritermc.loader.DependencyChecker
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
 import lirand.api.architecture.KotlinPlugin
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
@@ -121,8 +124,9 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
 
             single { TemporalPlaceholders() } bind PlaceholderHandler::class
 
-            factory<Gson>(named("dataSerializer")) { createDataSerializerGson(getAll()) }
-            factory<Gson>(named("bukkitDataParser")) { createBukkitDataParser() }
+            // TODO Merge into single kser serialization module
+            factory<Json>(named("dataSerializer")) { createJsonFormat(createSerializationModule(getAll())) }
+            factory<Json>(named("bukkitDataParser")) { createBukkitJsonFormat() }
 
             single<ClassLoader>(named("globalClassloader")) { globalClassloader() }
 

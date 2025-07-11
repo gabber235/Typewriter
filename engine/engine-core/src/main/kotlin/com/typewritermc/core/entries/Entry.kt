@@ -2,6 +2,7 @@ package com.typewritermc.core.entries
 
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
+import kotlinx.serialization.Serializable
 import java.util.*
 
 val Entry.formattedName: String
@@ -25,4 +26,3 @@ interface PriorityEntry : Entry {
     @Help("The priority of the entry. If not set, the priority of the page will be used.")
     val priorityOverride: Optional<Int>
 }
-

@@ -1,0 +1,32 @@
+[versions]
+kotlin = "2.0.21"
+
+kotlinSerialization = "1.8.1"
+coroutines = "1.10.2"
+koin = "4.0.4"
+
+kotest = "5.9.1"
+
+shadow = "8.1.7"
+mockk = "1.13.16"
+
+[libraries]
+kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+koin = { module = "io.insert-koin:koin-core", version.ref = "koin"  }
+
+kotest-junit = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-frameworkDatatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
+kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
+
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+[bundles]
+kotest = ["kotest-junit", "kotest-frameworkDatatest", "kotest-assertions", "kotest-property"]
+
+[plugins]
+shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

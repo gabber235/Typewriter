@@ -10,7 +10,7 @@ import java.lang.reflect.Type
 import java.util.*
 
 class OptionalSerializer : DataSerializer<Optional<*>> {
-    override val type: Type = Optional::class.java
+    override val clazz: Type = Optional::class.java
 
     override fun serialize(src: Optional<*>?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
         val obj = JsonObject()

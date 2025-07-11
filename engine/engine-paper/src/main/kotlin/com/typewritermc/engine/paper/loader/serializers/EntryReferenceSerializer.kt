@@ -11,28 +11,28 @@ import com.typewritermc.core.serialization.DataSerializer
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
-
-class EntryReferenceSerializer : DataSerializer<Ref<*>> {
-    override val type: Type = Ref::class.java
-
-    override fun serialize(src: Ref<*>?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        return JsonPrimitive(src?.id ?: "")
-    }
-
-    override fun deserialize(
-        json: JsonElement?,
-        typeOfT: Type?,
-        context: JsonDeserializationContext?
-    ): Ref<*> {
-        val subType = (typeOfT as ParameterizedType).actualTypeArguments[0]
-        val clazz = TypeToken.of(subType).rawType
-        val klass = clazz.kotlin as KClass<Entry>
-
-        if (json?.isJsonNull == true) {
-            return Ref("", klass)
-        }
-
-        val id = json?.asString ?: ""
-        return Ref(id, klass)
-    }
-}
+// should be handled by @Serializable
+//class EntryReferenceSerializer : DataSerializer<Ref<*>> {
+//    override val clazz: Type = Ref::class.java
+//
+//    override fun serialize(src: Ref<*>?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+//        return JsonPrimitive(src?.id ?: "")
+//    }
+//
+//    override fun deserialize(
+//        json: JsonElement?,
+//        typeOfT: Type?,
+//        context: JsonDeserializationContext?
+//    ): Ref<*> {
+//        val subType = (typeOfT as ParameterizedType).actualTypeArguments[0]
+//        val clazz = TypeToken.of(subType).rawType
+//        val klass = clazz.kotlin as KClass<Entry>
+//
+//        if (json?.isJsonNull == true) {
+//            return Ref("", klass)
+//        }
+//
+//        val id = json?.asString ?: ""
+//        return Ref(id, klass)
+//    }
+//}

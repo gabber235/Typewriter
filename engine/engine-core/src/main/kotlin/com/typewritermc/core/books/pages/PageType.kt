@@ -1,18 +1,18 @@
 package com.typewritermc.core.books.pages
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
 
 enum class PageType(val id: String) {
-    @SerializedName("sequence")
+    @SerialName("sequence")
     SEQUENCE("sequence"),
 
-    @SerializedName("static")
+    @SerialName("static")
     STATIC("static"),
 
-    @SerializedName("cinematic")
+    @SerialName("cinematic")
     CINEMATIC("cinematic"),
 
-    @SerializedName("manifest")
+    @SerialName("manifest")
     MANIFEST("manifest"),
     ;
 

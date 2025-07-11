@@ -1,10 +1,13 @@
 package com.typewritermc.loader
 
-import com.google.gson.Gson
-import com.google.gson.JsonArray
-import com.google.gson.JsonParser
-import com.google.gson.JsonSyntaxException
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonArray
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -19,10 +22,10 @@ class ExtensionLoader : KoinComponent {
     private val version: String by inject(named("version"))
     private val logger: Logger by inject()
     private val dependencyChecker: DependencyChecker by inject()
-    private val gson: Gson by inject(named("dataSerializer"))
+    private val jsonFormat: Json by inject(named("dataSerializer"))
     private val globalClassloader: ClassLoader by inject(named("globalClassloader"))
     private var classLoader: URLClassLoader? = null
-    var extensions: List<Extension> = emptyList()
+    var extensions: Set<Extension> = emptySet()
         private set
     private var entryClasses: Map<String, Class<*>> = emptyMap()
 
@@ -31,19 +34,21 @@ class ExtensionLoader : KoinComponent {
 
 
     // TODO: Remove this when the database update is implemented
-    var extensionJson: JsonArray = JsonArray()
+    var extensionJson: JsonArray = buildJsonArray {}
 
+    @OptIn(ExperimentalSerializationApi::class)
     fun readJsonTexts(json: List<String>): Map<Extension, String> = json.associateBy { extensionJson ->
         try {
-            gson.fromJson(extensionJson, Extension::class.java)
-        } catch (e: JsonSyntaxException) {
+            jsonFormat.decodeFromString(jsonFormat.serializersModule.getContextual(Extension::class)!!, extensionJson)
+        } catch (e: SerializationException) {
             logger.severe("Error while loading extension meta: ${e.message}")
             null
         }
     }.filter { it.key != null } as Map<Extension, String>
 
     fun load(jars: List<File>) {
-        jars.forEach { assert(it.exists() && it.canRead() && it.extension == "jar") }
+
+        for (jar in jars) assert(jar.exists() && jar.canRead() && jar.extension == "jar")
 
         if (classLoader != null) {
             unload()
@@ -63,7 +68,6 @@ class ExtensionLoader : KoinComponent {
         }
 
         // TODO: Remove this when the database update is implemented
-        extensionJson = JsonArray()
 
         val possibleExtensions = readJsonTexts(extensionJsonTexts).filter { (extension, _) ->
             if (extension.extension.engineVersion != version) {
@@ -108,11 +112,16 @@ class ExtensionLoader : KoinComponent {
                     return@filter false
                 }
                 true
+            }.let {
+                extensionJson = buildJsonArray {
+                    for (extension in it.values) {
+                        add(jsonFormat.decodeFromString(JsonElement.serializer(), extension))
+                    }
+                }
+                it.keys
             }
-            .map {
-                this.extensionJson.add(JsonParser.parseString(it.value))
-                it.key
-            }
+
+
 
         if (hasShownLoadedMessage) return
         hasShownLoadedMessage = true
@@ -178,11 +187,12 @@ class ExtensionLoader : KoinComponent {
     fun unload() {
         classLoader?.close()
         classLoader = null
-        extensions = emptyList()
+        extensions = emptySet()
         entryClasses = emptyMap()
     }
 }
 
+@Serializable
 data class Extension(
     val extension: ExtensionInfo,
     val entries: List<EntryInfo>,
@@ -191,6 +201,7 @@ data class Extension(
     val dependencyInjections: List<DependencyInjectionInfo>,
 )
 
+@Serializable
 data class ExtensionInfo(
     val name: String = "",
     val shortDescription: String = "",
@@ -203,11 +214,13 @@ data class ExtensionInfo(
     val paper: PaperExtensionInfo? = null,
 )
 
+@Serializable
 data class ExtensionDependencyInfo(
     val namespace: String = "",
     val name: String = "",
 )
 
+@Serializable
 data class PaperExtensionInfo(
     val dependencies: List<String> = emptyList(),
 )
@@ -243,11 +256,13 @@ private fun String.rightPad(length: Int, padChar: Char = ' '): String {
 private val Int.digits: Int
     get() = if (this == 0) 1 else log10(abs(this.toDouble())).toInt() + 1
 
+@Serializable
 data class EntryInfo(
     val id: String,
     val className: String,
 )
 
+@Serializable
 data class EntryListenerInfo(
     val entryBlueprintId: String,
     val entryClassName: String,
@@ -258,11 +273,13 @@ data class EntryListenerInfo(
     val arguments: List<String>,
 )
 
+@Serializable
 data class TypewriterCommandInfo(
     val className: String,
     val methodName: String,
 )
 
+@Serializable
 data class DialogueMessengerInfo(
     val entryBlueprintId: String,
     val entryClassName: String,
@@ -270,18 +287,21 @@ data class DialogueMessengerInfo(
     val priority: Int,
 )
 
+@Serializable
 sealed interface DependencyInjectionInfo {
     val className: String
     val type: SerializableType
     val name: String?
 }
 
+@Serializable
 data class DependencyInjectionClassInfo(
     override val className: String,
     override val type: SerializableType,
     override val name: String?,
 ) : DependencyInjectionInfo
 
+@Serializable
 data class DependencyInjectionMethodInfo(
     override val className: String,
     val methodName: String,
@@ -289,12 +309,12 @@ data class DependencyInjectionMethodInfo(
     override val name: String?,
 ) : DependencyInjectionInfo
 
-
+@Serializable
 enum class SerializableType {
-    @SerializedName("singleton")
+    @SerialName("singleton")
     SINGLETON,
 
-    @SerializedName("factory")
+    @SerialName("factory")
     FACTORY,
 }
 

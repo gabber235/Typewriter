@@ -1,86 +1,53 @@
 package com.typewritermc.core.serialization
 
-import com.google.gson.*
-import com.google.gson.internal.Streams
-import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonWriter
-import com.typewritermc.core.utils.RuntimeTypeAdapterFactory
-import com.typewritermc.loader.DependencyInjectionClassInfo
-import com.typewritermc.loader.DependencyInjectionInfo
-import com.typewritermc.loader.DependencyInjectionMethodInfo
-import java.lang.reflect.Type
+import com.typewritermc.core.utils.point.Coordinate
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.SerializersModuleBuilder
+import kotlin.reflect.KClass
 
-interface DataSerializer<T : Any> : JsonSerializer<T>, JsonDeserializer<T> {
-    val type: Type
-}
+interface DataSerializer<T : Any> : KSerializer<T> {
+    val clazz: KClass<T>
 
-fun createDataSerializerGson(serializers: List<DataSerializer<*>>): Gson {
-    var builder = GsonBuilder()
-        .serializeNulls()
-        .registerTypeAdapterFactory(AlgebraicSerializationFactory())
-        .registerTypeAdapterFactory(
-            RuntimeTypeAdapterFactory.of(DependencyInjectionInfo::class.java, "kind")
-                .registerSubtype(DependencyInjectionClassInfo::class.java, "class")
-                .registerSubtype(DependencyInjectionMethodInfo::class.java, "method")
-        )
+    companion object {
+        inline fun <reified T : Any> KSerializer<T>.toDataSerializer(): DataSerializer<T> = object: DataSerializer<T> {
+            override val clazz: KClass<T> = T::class
+            override val descriptor: SerialDescriptor = this@toDataSerializer.descriptor
 
-    serializers.forEach {
-        val typeToken = TypeToken.get(it.type)
-        val matchRawType = typeToken.type == typeToken.rawType
-        builder = builder.registerTypeAdapterFactory(TypeAdapterFactoryDataSerializer(it, typeToken, matchRawType))
-    }
-
-    return builder
-        .create()
-}
-
-/**
- * Thank you GSON for not allowing JSON serialization of null values :|
- * Now I have to write all of this boilerplate myself...
- */
-private class TypeAdapterFactoryDataSerializer<T : Any>(
-    private val serializer: DataSerializer<T>,
-    private val typeToken: TypeToken<*>,
-    private val matchRawType: Boolean = false,
-) : TypeAdapterFactory {
-    override fun <R : Any> create(gson: Gson, type: TypeToken<R>): TypeAdapter<R>? {
-        val matches = typeToken == type || matchRawType && typeToken.type === type.rawType
-        if (!matches) return null
-        val type = type as TypeToken<T>
-        return TypeAdapterDataSerializer(serializer, gson, type) as TypeAdapter<R>?
+            override fun serialize(encoder: Encoder, value: T) = this@toDataSerializer.serialize(encoder, value)
+            override fun deserialize(decoder: Decoder): T = this@toDataSerializer.deserialize(decoder)
+        }
     }
 }
 
-private class TypeAdapterDataSerializer<T : Any>(
-    private val serializer: DataSerializer<T>,
-    private val gson: Gson,
-    private val typeToken: TypeToken<T>,
-) : TypeAdapter<T>() {
-    override fun write(out: JsonWriter, value: T?) {
-        val tree = serializer.serialize(value, typeToken.type, GsonContextImpl(gson))
-        Streams.write(tree, out)
+@OptIn(ExperimentalSerializationApi::class)
+fun createJsonFormat(module: SerializersModule) = Json {
+    prettyPrint = false
+    serializersModule = module
+    namingStrategy = JsonNamingStrategy.SnakeCase
+}
+
+fun createSerializationModule(serializers: List<DataSerializer<*>>): SerializersModule {
+    fun <R : Any> SerializersModuleBuilder.add(serializer: DataSerializer<R>) {
+        contextual(serializer.clazz, serializer)
     }
 
-    override fun read(`in`: JsonReader?): T {
-        val element = Streams.parse(`in`)
-        return serializer.deserialize(element, typeToken.type, GsonContextImpl(gson))
+    return SerializersModule {
+        for (serializer in serializers) {
+            add(serializer)
+        }
     }
 }
 
-private class GsonContextImpl(
-    private val gson: Gson,
-) : JsonSerializationContext, JsonDeserializationContext {
-    override fun serialize(src: Any): JsonElement {
-        return gson.toJsonTree(src)
-    }
-
-    override fun serialize(src: Any, typeOfSrc: Type): JsonElement {
-        return gson.toJsonTree(src, typeOfSrc)
-    }
-
-    @Throws(JsonParseException::class)
-    override fun <R> deserialize(json: JsonElement, typeOfT: Type): R {
-        return gson.fromJson<R>(json, typeOfT)
-    }
+// Name inspo from mojang.serialization!!!1
+fun <T, R> KSerializer<T>.xmap(serial: R.() -> T, deserial: T.() -> R): KSerializer<R> = object: KSerializer<R> {
+    override val descriptor: SerialDescriptor = this@xmap.descriptor
+    override fun deserialize(decoder: Decoder): R = this@xmap.deserialize(decoder).deserial()
+    override fun serialize(encoder: Encoder, value: R) = this@xmap.serialize(encoder, value.serial())
 }

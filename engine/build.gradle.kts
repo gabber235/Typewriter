@@ -1,9 +1,10 @@
 plugins {
     id("java")
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version libs.versions.kotlin.get()
     id("java-library")
     `maven-publish`
-    id("io.github.goooler.shadow") version "8.1.7" apply false
+    alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.kotlin.serialization) version libs.versions.kotlin.get() apply false
 }
 
 group = "com.typewritermc"
@@ -30,7 +31,8 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "io.github.goooler.shadow")
+    apply(plugin = rootProject.libs.plugins.shadow.get().pluginId)
+    apply(plugin = rootProject.libs.plugins.kotlin.serialization.get().pluginId)
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
 
@@ -38,19 +40,17 @@ subprojects {
     version = rootProject.version
 
     dependencies {
-        api("io.insert-koin:koin-core:4.0.4")
-        compileOnly("com.google.code.gson:gson:2.13.1")
+        api(rootProject.libs.koin)
 
-        compileOnlyApi(kotlin("stdlib"))
-        compileOnlyApi(kotlin("reflect"))
-        compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+        api(rootProject.libs.kotlin.serialization)
+        //compileOnly("com.google.code.gson:gson:2.13.1")
 
-        val kotestVersion = "5.9.1"
-        testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-        testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
-        testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
-        testImplementation("io.kotest:kotest-property:$kotestVersion")
-        testImplementation("io.mockk:mockk:1.13.16")
+        compileOnlyApi(kotlin("stdlib", rootProject.libs.versions.kotlin.get()))
+        compileOnlyApi(kotlin("reflect", rootProject.libs.versions.kotlin.get()))
+        compileOnlyApi(rootProject.libs.kotlinx.coroutines)
+
+        testImplementation(rootProject.libs.bundles.kotest)
+        testImplementation(rootProject.libs.mockk)
     }
 
     tasks.register("releaseSourcesJar", Jar::class) {

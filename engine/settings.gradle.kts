@@ -1,3 +1,11 @@
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files(rootDir.resolve("./dependencies.toml")))
+        }
+    }
+}
+
 rootProject.name = "engine"
 
 plugins {

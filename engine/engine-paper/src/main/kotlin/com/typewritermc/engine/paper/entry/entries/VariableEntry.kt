@@ -8,6 +8,9 @@ import com.typewritermc.core.utils.Generic
 import com.typewritermc.core.utils.ultraSafeCast
 import com.typewritermc.engine.paper.entry.StaticEntry
 import com.typewritermc.engine.paper.interaction.interactionContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -27,10 +30,10 @@ data class VarContext<T : Any>(
     val klass: KClass<T>,
     val interactionContext: InteractionContext?,
 ) : KoinComponent {
-    private val gson: Gson by inject(named("dataSerializer"))
+    private val json: Json by inject(named("dataSerializer"))
 
     fun <T> getData(klass: Class<T>): T? {
-        return gson.fromJson(data.data, klass)
+        return json.decodeFromJsonElement(json.serializersModule.serializer(klass), data.data) as T?
     }
 
 }
@@ -48,6 +51,7 @@ fun <T : Any> VarContext<T>.safeCast(value: Any?): T? {
     return klass.ultraSafeCast(value)
 }
 
+@Serializable
 sealed interface Var<T : Any> {
     fun get(player: Player, interactionContext: InteractionContext? = player.interactionContext): T
 }
@@ -70,6 +74,7 @@ class ConstVar<T : Any>(val value: T) : Var<T> {
     }
 }
 
+@Serializable
 class BackedVar<T : Any>(
     val ref: Ref<VariableEntry>,
     val data: Generic,
@@ -85,6 +90,7 @@ class BackedVar<T : Any>(
     }
 }
 
+@Serializable
 class MappedVar<T : Any>(
     private val variable: Var<T>,
     private val mapper: (Player, T) -> T,

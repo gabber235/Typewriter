@@ -6,6 +6,8 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.time.Duration
 import kotlin.random.Random
 import kotlin.reflect.KClass
@@ -58,7 +60,7 @@ sealed interface InteractionContextKey<T : Any> {
 @AlgebraicTypeInfo("entry", Colors.BLUE, "mingcute:unlink-fill")
 data class EntryInteractionContextKey<T : Any>(
     val ref: Ref<out Entry> = emptyRef(),
-    val key: EntryContextKey = EntryContextKey.Empty,
+    val key: @Contextual EntryContextKey = EntryContextKey.Empty,
 ) : InteractionContextKey<T> {
     override val klass: KClass<T> get() = key.klass as KClass<T>
 }

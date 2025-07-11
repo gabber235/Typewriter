@@ -17,7 +17,7 @@ import java.lang.reflect.Type
 import kotlin.reflect.safeCast
 
 class EntryInteractionContextKeySerializer : DataSerializer<EntryInteractionContextKey<*>>, KoinComponent {
-    override val type: Type = EntryInteractionContextKey::class.java
+    override val clazz: Type = EntryInteractionContextKey::class.java
     private val extensionLoader: ExtensionLoader by inject()
 
     override fun deserialize(
