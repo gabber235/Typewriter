@@ -4,7 +4,6 @@ import com.google.gson.*
 import com.typewritermc.core.serialization.serializer
 import com.typewritermc.core.serialization.xmap
 import com.typewritermc.core.utils.point.Coordinate
-import com.typewritermc.engine.paper.loader.serializers.CoordinateSerializer
 import com.typewritermc.engine.paper.logger
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.nullable
@@ -24,7 +23,6 @@ fun createBukkitJsonFormat(): Json = Json {
     serializersModule = SerializersModule {
         contextual(Location::class, LocationSerializer)
         contextual(ItemStack::class, ItemStackSerializer)
-        contextual(Coordinate::class, CoordinateSerializer)
     }
 }
 

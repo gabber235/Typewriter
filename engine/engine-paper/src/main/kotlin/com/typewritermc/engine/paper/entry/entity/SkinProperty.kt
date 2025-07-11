@@ -1,8 +1,10 @@
 package com.typewritermc.engine.paper.entry.entity
 
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import kotlinx.serialization.Serializable
 import org.bukkit.OfflinePlayer
 
+@Serializable
 data class SkinProperty(
     val texture: String = "",
     val signature: String = "",

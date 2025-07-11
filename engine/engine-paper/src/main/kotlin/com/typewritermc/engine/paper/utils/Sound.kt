@@ -12,6 +12,8 @@ import com.typewritermc.engine.paper.entry.entries.SoundIdEntry
 import com.typewritermc.engine.paper.entry.entries.SoundSourceEntry
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.logger
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.audience.ForwardingAudience
 import net.kyori.adventure.sound.SoundStop
@@ -77,6 +79,7 @@ data class Sound(
 fun Audience.playSound(sound: Sound) = sound.play(this)
 fun Audience.stopSound(sound: Sound) = sound.soundStop?.let { this.stopSound(it) }
 
+@Serializable
 sealed interface SoundId {
     companion object {
         val EMPTY = DefaultSoundId(null)
@@ -85,10 +88,12 @@ sealed interface SoundId {
     val namespacedKey: NamespacedKey?
 }
 
-class DefaultSoundId(override val namespacedKey: NamespacedKey?) : SoundId {
+@Serializable
+class DefaultSoundId(override val namespacedKey: @Contextual NamespacedKey?) : SoundId {
     constructor(key: String) : this(if (key.isEmpty()) null else NamespacedKey.fromString(key))
 }
 
+@Serializable
 class EntrySoundId(val entryId: String) : SoundId {
     override val namespacedKey: NamespacedKey?
         get() {
@@ -101,11 +106,15 @@ class EntrySoundId(val entryId: String) : SoundId {
         }
 }
 
+@Serializable
 sealed interface SoundSource
 
+@Serializable
 data object SelfSoundSource : SoundSource
+@Serializable
 class EmitterSoundSource(val entryId: String) : SoundSource
 
+@Serializable
 class LocationSoundSource(val position: Position) : SoundSource
 
 val Audience.viewers: List<Player>

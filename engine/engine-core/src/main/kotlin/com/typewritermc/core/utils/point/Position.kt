@@ -1,7 +1,9 @@
 package com.typewritermc.core.utils.point
 
+import kotlinx.serialization.Serializable
 import java.util.*
 
+@Serializable
 data class Position(
     override val world: World,
     override val x: Double = 0.0,
