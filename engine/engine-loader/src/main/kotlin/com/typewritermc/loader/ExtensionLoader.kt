@@ -22,7 +22,7 @@ class ExtensionLoader : KoinComponent {
     private val version: String by inject(named("version"))
     private val logger: Logger by inject()
     private val dependencyChecker: DependencyChecker by inject()
-    private val jsonFormat: Json by inject(named("dataSerializer"))
+    private val json: Json by inject()
     private val globalClassloader: ClassLoader by inject(named("globalClassloader"))
     private var classLoader: URLClassLoader? = null
     var extensions: Set<Extension> = emptySet()
@@ -37,9 +37,9 @@ class ExtensionLoader : KoinComponent {
     var extensionJson: JsonArray = buildJsonArray {}
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun readJsonTexts(json: List<String>): Map<Extension, String> = json.associateBy { extensionJson ->
+    fun readJsonTexts(jsonStrings: List<String>): Map<Extension, String> = jsonStrings.associateBy { extensionJson ->
         try {
-            jsonFormat.decodeFromString(jsonFormat.serializersModule.getContextual(Extension::class)!!, extensionJson)
+            json.decodeFromString(json.serializersModule.getContextual(Extension::class)!!, extensionJson)
         } catch (e: SerializationException) {
             logger.severe("Error while loading extension meta: ${e.message}")
             null
@@ -115,7 +115,7 @@ class ExtensionLoader : KoinComponent {
             }.let {
                 extensionJson = buildJsonArray {
                     for (extension in it.values) {
-                        add(jsonFormat.decodeFromString(JsonElement.serializer(), extension))
+                        add(json.decodeFromString(JsonElement.serializer(), extension))
                     }
                 }
                 it.keys

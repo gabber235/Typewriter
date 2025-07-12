@@ -1,7 +1,6 @@
 package com.typewritermc.engine.paper
 
 import com.github.retrooper.packetevents.PacketEvents
-import com.google.gson.Gson
 import com.typewritermc.core.TypewriterCore
 import com.typewritermc.core.interaction.SessionTracker
 import com.typewritermc.core.serialization.createJsonFormat
@@ -27,7 +26,8 @@ import com.typewritermc.engine.paper.facts.FactTracker
 import com.typewritermc.engine.paper.facts.storage.FileFactStorage
 import com.typewritermc.engine.paper.interaction.*
 import com.typewritermc.engine.paper.loader.PaperDependencyChecker
-import com.typewritermc.engine.paper.loader.dataSerializerModule
+import com.typewritermc.engine.paper.serialization.createPaperSerializersModule
+import com.typewritermc.engine.paper.serialization.koinSerializationModule
 import com.typewritermc.engine.paper.snippets.SnippetDatabase
 import com.typewritermc.engine.paper.snippets.SnippetDatabaseImpl
 import com.typewritermc.engine.paper.ui.ClientSynchronizer
@@ -35,7 +35,6 @@ import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.ui.Writers
 import com.typewritermc.engine.paper.utils.Sync
-import com.typewritermc.engine.paper.utils.createBukkitDataParser
 import com.typewritermc.engine.paper.utils.createBukkitJsonFormat
 import com.typewritermc.loader.DependencyChecker
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent
@@ -124,16 +123,12 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
 
             single { TemporalPlaceholders() } bind PlaceholderHandler::class
 
-            // TODO Merge into single kser serialization module
-            factory<Json>(named("dataSerializer")) { createJsonFormat(createSerializationModule(getAll())) }
-            factory<Json>(named("bukkitDataParser")) { createBukkitJsonFormat() }
-
             single<ClassLoader>(named("globalClassloader")) { globalClassloader() }
 
             factory<Boolean>(named("isEnabled")) { isEnabled }
         }
         startKoin {
-            modules(modules, TypewriterCore.module, dataSerializerModule)
+            modules(modules, TypewriterCore.module, koinSerializationModule)
         }
     }
 

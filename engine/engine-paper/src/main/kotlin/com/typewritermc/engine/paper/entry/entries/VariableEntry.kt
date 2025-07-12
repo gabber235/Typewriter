@@ -66,6 +66,7 @@ fun <T : Any> Var<T>.get(player: Player?, interactionContext: InteractionContext
     return get(player, interactionContext)
 }
 
+@Serializable
 class ConstVar<T : Any>(val value: T) : Var<T> {
     override fun get(player: Player, interactionContext: InteractionContext?): T = value
 

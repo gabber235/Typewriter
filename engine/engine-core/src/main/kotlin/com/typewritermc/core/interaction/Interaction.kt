@@ -58,9 +58,10 @@ sealed interface InteractionContextKey<T : Any> {
 }
 
 @AlgebraicTypeInfo("entry", Colors.BLUE, "mingcute:unlink-fill")
+@Serializable
 data class EntryInteractionContextKey<T : Any>(
     val ref: Ref<out Entry> = emptyRef(),
-    val key: @Contextual EntryContextKey = EntryContextKey.Empty,
+    val key: EntryContextKey = EntryContextKey.Empty,
 ) : InteractionContextKey<T> {
     override val klass: KClass<T> get() = key.klass as KClass<T>
 }

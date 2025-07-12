@@ -19,6 +19,7 @@ import com.typewritermc.vault.VaultInitializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
 import net.milkbowl.vault.economy.Economy
@@ -51,6 +52,7 @@ class BalanceChangeEventEntry(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
 ) : EventEntry
 
+@Serializable
 enum class BalanceChangeContextKeys(override val klass: KClass<*>) : EntryContextKey {
     @KeyType(Double::class)
     PREVIOUS_BALANCE(Double::class),
