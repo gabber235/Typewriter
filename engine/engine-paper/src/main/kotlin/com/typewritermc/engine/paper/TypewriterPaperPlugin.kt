@@ -14,6 +14,7 @@ import com.typewritermc.engine.paper.entry.dialogue.DialogueHandler
 import com.typewritermc.engine.paper.entry.entity.EntityHandler
 import com.typewritermc.engine.paper.entry.temporal.TemporalHandler
 import com.typewritermc.engine.paper.entry.temporal.TemporalPlaceholders
+import com.typewritermc.engine.paper.events.TypewriterLoadedEvent
 import com.typewritermc.engine.paper.events.TypewriterUnloadEvent
 import com.typewritermc.engine.paper.extensions.bstats.BStatsMetrics
 import com.typewritermc.engine.paper.extensions.modrinth.Modrinth
@@ -186,6 +187,9 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
             PlaceholderExpansion.load()
         }
+
+        TypewriterLoadedEvent().callEvent()
+
     }
 
     suspend fun unload() {
