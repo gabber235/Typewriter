@@ -105,6 +105,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             singleOf<AssetStorage>(::LocalAssetStorage)
             singleOf<AssetManager>(::AssetManager)
             singleOf(::ChatHistoryHandler)
+            singleOf(::ResendTokenRegistry)
             singleOf(::ActionBarBlockerHandler)
             singleOf(::PacketInterceptor)
             singleOf(::EntityHandler)

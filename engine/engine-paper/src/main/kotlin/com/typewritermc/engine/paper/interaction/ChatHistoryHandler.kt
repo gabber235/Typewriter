@@ -10,6 +10,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerCh
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDisguisedChat
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSystemChatMessage
 import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
+import com.google.common.cache.CacheBuilder
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
@@ -24,9 +25,13 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.koin.java.KoinJavaComponent.get
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.min
 
@@ -37,15 +42,61 @@ private val darkenLimit by snippet(
 )
 private val spacing by snippet("chat.spacing", 3, "The amount of padding between the dialogue and the chat history")
 
+/**
+ * Token-based registry to prevent duplicate message processing during chat history resends.
+
+ * Known edge case: If a player sends an identical message simultaneously with a history resend,
+ * and chat formatting removes distinguishing information (like player names), the new message might
+ * be incorrectly consumed as a resend token. This could cause a previous message to be re-added to
+ * history, but is considered acceptable in practice due to identical visual result.
+ */
+class ResendTokenRegistry {
+
+    @JvmInline
+    private value class MessageToken private constructor(val value: Long) {
+        companion object {
+            fun of(recipientId: UUID, message: Component): MessageToken {
+                val recipientHash = recipientId.mostSignificantBits xor recipientId.leastSignificantBits
+                val contentHash = message.plainText().hashCode().toLong()
+                return MessageToken(recipientHash xor contentHash)
+            }
+        }
+    }
+
+    private val tokenCountsCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(2, TimeUnit.SECONDS)
+        .build<MessageToken, AtomicInteger>()
+
+    fun issue(recipientId: UUID, message: Component) {
+        val token = MessageToken.of(recipientId, message)
+        tokenCountsCache.asMap().compute(token) { _, existing ->
+            existing?.apply { incrementAndGet() } ?: AtomicInteger(1)
+        }
+    }
+
+    fun consume(recipientId: UUID, message: Component): Boolean {
+        val token = MessageToken.of(recipientId, message)
+
+        return tokenCountsCache.getIfPresent(token)?.let { count ->
+            if (count.decrementAndGet() <= 0) {
+                tokenCountsCache.invalidate(token)
+            }
+            true
+        } ?: false
+    }
+}
+
 class ChatHistoryHandler :
-    PacketListenerAbstract(PacketListenerPriority.HIGH), Listener {
+    PacketListenerAbstract(PacketListenerPriority.HIGH), Listener, KoinComponent {
+
+    private val resendTokenRegistry: ResendTokenRegistry by inject()
 
     fun initialize() {
         PacketEvents.getAPI().eventManager.registerListener(this)
         server.pluginManager.registerSuspendingEvents(this, plugin)
     }
 
-    private val chatIndices = mutableMapOf<UUID, Int>()
     private val histories = mutableMapOf<UUID, ChatHistory>()
 
     // When the serer sends a message to the player
@@ -56,11 +107,14 @@ class ChatHistoryHandler :
             val component = message.message
             val history = getHistory(event.user.uuid)
             if (component is TextComponent && component.content().startsWith("no-index")) {
-                if (component.content().endsWith("resend")) return
-
                 history.allowedMessageThrough()
                 return
             }
+
+            if (resendTokenRegistry.consume(event.user.uuid, component)) {
+                return
+            }
+
             if (component.shouldSaveMessage()) {
                 history.addMessage(message)
             }
@@ -129,7 +183,6 @@ class ChatHistoryHandler :
 
     @EventHandler(priority = EventPriority.MONITOR)
     fun onQuit(event: PlayerQuitEvent) {
-        chatIndices.remove(event.player.uniqueId)
         histories.remove(event.player.uniqueId)
     }
 
@@ -149,8 +202,6 @@ class ChatHistory {
     private var blocking = false
     private var blockingState: BlockingStatus = BlockingStatus.FullBlocking
 
-    private var ignore = false
-
     fun startBlocking() {
         if (blocking) return
         blockingState = BlockingStatus.PartialBlocking(0)
@@ -161,13 +212,9 @@ class ChatHistory {
         blocking = false
     }
 
-    fun shouldBlockMessage(): Boolean = blocking && !ignore
+    fun shouldBlockMessage(): Boolean = blocking
 
     internal fun addMessage(message: Message) {
-        if (ignore) {
-            // If we are ignoring messages, we don't add them to the history.
-            return
-        }
         if (blocking) {
             blockingState = blockingState.addMessage()
         }
@@ -182,19 +229,16 @@ class ChatHistory {
     }
 
     fun clear() {
-        if (ignore) return
         messages.clear()
     }
 
     fun allowedMessageThrough() {
-        if (ignore) return
         blockingState = BlockingStatus.FullBlocking
     }
 
     private fun clearMessage() = "\n".repeat(100 - min(messages.size, darkenLimit))
 
     fun resendMessages(player: Player, clear: Boolean = true) {
-        ignore = true
         when (val status = blockingState) {
             is BlockingStatus.FullBlocking -> {
                 var msg: Message = Message.TextMessage(Component.text(clearMessage()))
@@ -215,7 +259,6 @@ class ChatHistory {
             }
         }
         blockingState = BlockingStatus.PartialBlocking(0)
-        ignore = false
     }
 
     fun composeDarkMessage(message: Component, clear: Boolean = true): Component {
@@ -251,7 +294,7 @@ sealed interface BlockingStatus {
     }
 }
 
-internal interface Message {
+internal interface Message : KoinComponent {
     val message: Component
     val darkenMessage: Component
     val canMerge: Boolean
@@ -276,6 +319,7 @@ internal interface Message {
     }
 
     data class TextMessage(override val message: Component) : Message {
+        private val resendTokenRegistry: ResendTokenRegistry by inject()
         override val canMerge: Boolean = true
         override val canDelete: Boolean = true
 
@@ -284,6 +328,7 @@ internal interface Message {
         }
 
         override fun send(player: Player) {
+            resendTokenRegistry.issue(player.uniqueId, message)
             player.sendMessage(message)
         }
     }
@@ -292,6 +337,7 @@ internal interface Message {
         override val message: Component,
         var packet: WrapperPlayServerChatMessage?
     ) : Message {
+        private val resendTokenRegistry: ResendTokenRegistry by inject()
         override val canMerge: Boolean = packet == null
         override val canDelete: Boolean = packet == null
 
@@ -300,6 +346,7 @@ internal interface Message {
         }
 
         override fun send(player: Player) {
+            resendTokenRegistry.issue(player.uniqueId, message)
             if (packet != null) {
                 packet!!.sendPacketTo(player)
                 packet = null // Clear the packet to prevent resending
