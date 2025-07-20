@@ -215,6 +215,7 @@ class ChatHistory {
     fun shouldBlockMessage(): Boolean = blocking
 
     internal fun addMessage(message: Message) {
+        message.onAddedToHistory(blocking)
         if (blocking) {
             blockingState = blockingState.addMessage()
         }
@@ -308,6 +309,8 @@ internal interface Message : KoinComponent {
         return TextMessage(message.append(Component.text("\n")).append(other.message))
     }
 
+    fun onAddedToHistory(isBlocking: Boolean) {}
+
     object Empty : Message {
         override val message: Component = Component.empty()
         override val darkenMessage: Component = Component.empty()
@@ -343,6 +346,12 @@ internal interface Message : KoinComponent {
 
         override val darkenMessage: Component by lazy(LazyThreadSafetyMode.NONE) {
             Component.text("${message.plainText()}\n").color(TextColor.color(0x7d8085))
+        }
+
+        override fun onAddedToHistory(isBlocking: Boolean) {
+            if (!isBlocking) {
+                packet = null
+            }
         }
 
         override fun send(player: Player) {
