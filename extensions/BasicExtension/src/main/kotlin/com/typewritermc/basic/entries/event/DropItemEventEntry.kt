@@ -17,8 +17,7 @@ import com.typewritermc.engine.paper.entry.entries.shouldCancel
 import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.item.toItem
-import org.bukkit.entity.Player
-import org.bukkit.event.entity.EntityDropItemEvent
+import org.bukkit.event.player.PlayerDropItemEvent
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -45,10 +44,8 @@ enum class DropItemContextKeys(override val klass: KClass<*>) : EntryContextKey 
 }
 
 @EntryListener(DropItemEventEntry::class)
-fun onDropItem(event: EntityDropItemEvent, query: Query<DropItemEventEntry>) {
-    if (event.entity !is Player) return
-
-    val player = event.entity as Player
+fun onDropItem(event: PlayerDropItemEvent, query: Query<DropItemEventEntry>) {
+    val player = event.player
 
     val entries = query.findWhere { entry ->
         if (entry.item.isPresent && !entry.item.get().get(player)
