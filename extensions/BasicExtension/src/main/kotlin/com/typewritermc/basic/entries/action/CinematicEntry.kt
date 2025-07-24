@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.books.pages.PageType
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Page
@@ -13,6 +14,7 @@ import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
+import com.typewritermc.engine.paper.entry.temporal.TemporalSettings
 import com.typewritermc.engine.paper.entry.temporal.TemporalStartTrigger
 
 
@@ -38,9 +40,15 @@ class CinematicEntry(
     @Page(PageType.CINEMATIC)
     @Help("The cinematic page to start.")
     val pageId: String = "",
+    @Default("true")
+    @Help("Whether to block chat messages from showing to the player while in the cinematic.")
+    val blockChatMessages: Boolean = true,
+    @Default("true")
+    @Help("Whether to block actionbar messages from showing to the player while in the cinematic.")
+    val blockActionBarMessages: Boolean = true
 ) : ActionEntry {
     override val eventTriggers: List<EventTrigger>
-        get() = listOf(TemporalStartTrigger(pageId, super.eventTriggers))
+        get() = listOf(TemporalStartTrigger(pageId, super.eventTriggers, TemporalSettings(blockChatMessages, blockActionBarMessages)))
 
     override fun ActionTrigger.execute() {}
 }
