@@ -50,12 +50,12 @@ class OffsetActivity(
     private var lastOffset: Vector = Vector.ZERO
     override fun initialize(context: ActivityContext) {
         childActivity.initialize(context)
-        lastOffset = context.randomViewer?.let { offset.get(it) } ?: Vector.ZERO
+        lastOffset = offset.get(context.randomViewer) ?: Vector.ZERO
     }
 
     override fun tick(context: ActivityContext): TickResult {
         if (offset !is ConstVar) {
-            lastOffset = context.randomViewer?.let { offset.get(it) } ?: Vector.ZERO
+            lastOffset = offset.get(context.randomViewer) ?: Vector.ZERO
         }
         return childActivity.tick(context)
     }
@@ -65,7 +65,7 @@ class OffsetActivity(
     }
 
     override val currentPosition: PositionProperty
-        get() = childActivity.currentPosition + lastOffset
+        get() = (childActivity.currentPosition.add(lastOffset))
 
     override val currentProperties: List<EntityProperty>
         get() = childActivity.currentProperties.filter { it !is PositionProperty } + currentPosition

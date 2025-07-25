@@ -11,7 +11,9 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContextBuilder
+import com.typewritermc.engine.paper.command.dsl.ExecutionContext
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import kotlin.reflect.KClass
 
 @Entry("word_argument", "A single word argument", Colors.RED, "fa6-solid:font")
@@ -28,7 +30,7 @@ class WordArgumentEntry(
     override val type: ArgumentType<String> get() = StringArgumentType.word()
     override val klass: KClass<String> get() = String::class
 
-    override fun InteractionContextBuilder.apply(value: String) {
+    override fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: String) {
         set(WordArgumentContextKeys.VALUE, value)
     }
 }
@@ -53,7 +55,7 @@ class StringArgumentEntry(
     override val type: ArgumentType<String> get() = StringArgumentType.string()
     override val klass: KClass<String> get() = String::class
 
-    override fun InteractionContextBuilder.apply(value: String) {
+    override fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: String) {
         set(StringArgumentContextKeys.VALUE, value)
     }
 }
@@ -79,7 +81,7 @@ class GreedyStringArgumentEntry(
     override val type: ArgumentType<String> get() = StringArgumentType.greedyString()
     override val klass: KClass<String> get() = String::class
 
-    override fun InteractionContextBuilder.apply(value: String) {
+    override fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: String) {
         set(GreedyStringArgumentContextKeys.VALUE, value)
     }
 }

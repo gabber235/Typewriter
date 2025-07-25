@@ -37,42 +37,6 @@ interface DisplayDialogueSegment : Segment {
     val text: Var<String>
 }
 
-@Deprecated("Replaced with RandomVariable")
-data class SingleLineRandomDisplayDialogueSegment(
-    override val startFrame: Int = 0,
-    override val endFrame: Int = 0,
-    override val texts: List<String> = emptyList(),
-) : RandomDisplayDialogueSegment {
-    override fun toDisplaySegment(): DisplayDialogueSegment {
-        return SingleLineDisplayDialogueSegment(startFrame, endFrame, ConstVar(texts.random()))
-    }
-}
-
-@Deprecated("Replaced with RandomVariable")
-data class MultiLineRandomDisplayDialogueSegment(
-    override val startFrame: Int = 0,
-    override val endFrame: Int = 0,
-    @MultiLine
-    override val texts: List<String> = emptyList(),
-) : RandomDisplayDialogueSegment {
-    override fun toDisplaySegment(): DisplayDialogueSegment {
-        return MultiLineDisplayDialogueSegment(startFrame, endFrame, ConstVar(texts.random()))
-    }
-}
-
-@Deprecated("Replaced with RandomVariable")
-interface RandomDisplayDialogueSegment : Segment {
-    @Help("One of the possible texts is chosen randomly, and displayed to the player.")
-    val texts: List<String>
-
-    fun toDisplaySegment(): DisplayDialogueSegment
-}
-
-fun List<RandomDisplayDialogueSegment>.toDisplaySegments(): List<DisplayDialogueSegment> {
-    return map { it.toDisplaySegment() }
-}
-
-
 class DisplayDialogueCinematicAction(
     val player: Player,
     val speaker: SpeakerEntry?,

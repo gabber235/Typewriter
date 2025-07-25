@@ -16,12 +16,13 @@ import kotlin.reflect.full.companionObjectInstance
 class DisplayEntity(
     private val player: Player,
     creator: EntityCreator,
-    private val activityManager: ActivityManager<*>,
-    private val collectors: List<PropertyCollector<*>>,
+    val activityManager: ActivityManager<*>,
+    val collectors: List<PropertyCollector<*>>,
 ) {
-    private val entity = creator.create(player)
+    val entity = creator.create(player)
 
-    private var lastSoundLocation = activityManager.position
+    var lastSoundLocation = activityManager.position
+        private set
 
     val state: EntityState
         get() = entity.state

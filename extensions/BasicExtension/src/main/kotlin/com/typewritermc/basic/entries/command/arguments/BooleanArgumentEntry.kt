@@ -11,7 +11,9 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContextBuilder
+import com.typewritermc.engine.paper.command.dsl.ExecutionContext
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import kotlin.reflect.KClass
 
 @Entry("boolean_argument", "A boolean argument", Colors.RED, "fa6-solid:toggle-on")
@@ -28,7 +30,7 @@ class BooleanArgumentEntry(
     override val type: ArgumentType<Boolean> get() = BoolArgumentType.bool()
     override val klass: KClass<Boolean> get() = Boolean::class
 
-    override fun InteractionContextBuilder.apply(value: Boolean) {
+    override fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: Boolean) {
         set(BooleanArgumentContextKeys.VALUE, value)
     }
 }

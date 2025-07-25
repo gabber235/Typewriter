@@ -62,7 +62,7 @@ class SpinActivity(
     }
 
     override fun tick(context: ActivityContext): TickResult {
-        val rotationDuration = context.randomViewer?.let { viewer -> duration.get(viewer) }
+        val rotationDuration = duration.get(context.randomViewer)
             ?: Duration.ofSeconds(2)
 
         val elapsed = Duration.between(startTime, Instant.now())

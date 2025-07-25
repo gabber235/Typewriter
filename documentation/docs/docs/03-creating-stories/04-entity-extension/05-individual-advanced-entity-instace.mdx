@@ -1,0 +1,40 @@
+---
+difficulty: Normal
+---
+
+# The Individual Advanced Entity Instance
+
+## What is an `Individual Advanced Entity Instance`?
+
+An `Individual Advanced Entity Instance` is a type of Entity Instance that allows **customized activity calculations for each player**.
+
+Unlike a traditional `NPC Instance` (or more broadly a `Shared Entity Instance`), where a single activity is shared among all players, an individual instance generates **a separate activity for each player**.
+
+## Key Differences from an `NPC Instance`
+
+| Characteristic       | `NPC Instance`             | `Individual Advanced Entity Instance` |
+| -------------------- | -------------------------- | ------------------------------------- |
+| Activity Calculation | A single shared activity   | An activity calculated per player     |
+| Entity Position      | Same for all players       | Customized based on the player        |
+| Recommended Use Case | Generic or global behavior | Individualized behavior               |
+
+## Example: Patrolling NPC
+
+Consider an NPC with a **patrol** activity using a `Patrol Activity`.
+
+* **`NPC Instance`:**
+  If 200 players can see this NPC, **only one** patrol activity is calculated. All players see the NPC moving along the **same path**.
+
+* **`Individual Advanced Entity Instance`:**
+  Here, **200 patrol activities** are calculated — **one per player**. The path taken by the NPC can therefore **differ from player to player**, but this comes with a **very high performance cost**.
+
+---
+
+## When should you use an `Individual Advanced Entity Instance`?
+
+Use this type of instance **only if you need a behavior or position that differs per player**, such as having the NPC follow the player or show them a path without being seen moving by other players.
+
+:::warning[Recommendation]
+Do not use this type of instance for standard NPCs or those visible to many players. **Always prefer using a default NPC Instance**, unless truly individualized behavior is necessary.
+:::
+

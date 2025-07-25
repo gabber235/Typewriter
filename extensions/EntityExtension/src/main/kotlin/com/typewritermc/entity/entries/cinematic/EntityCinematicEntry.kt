@@ -44,6 +44,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.MainHand
 import org.koin.core.qualifier.named
 import org.koin.java.KoinJavaComponent
 import kotlin.math.abs
@@ -117,14 +118,14 @@ class EntityCinematicAction(
     private var lastRelativeFrame = 0
 
     override suspend fun setup() {
-        super.setup()
-
         recordings = entry.segments
             .associate { it.artifact.id to it.artifact.get() }
             .filterValues { it != null }
-            .mapValues { assetManager.fetchAsset(it.value!!) }
+            .mapValues { assetManager.fetchStringAsset(it.value!!) }
             .filterValues { it != null }
             .mapValues { parseTape(gson, EntityFrame::class, it.value!!) }
+
+        super.setup()
     }
 
     override suspend fun startSegment(segment: EntityRecordedSegment) {
@@ -272,6 +273,22 @@ data class EntityFrame(
         )
     }
 
+    override fun clean(): EntityFrame {
+        return EntityFrame(
+            location = location,
+            pose = pose,
+            swing = null,
+            damaged = null,
+            useItem = useItem,
+            mainHand = mainHand,
+            offHand = offHand,
+            helmet = helmet,
+            chestplate = chestplate,
+            leggings = leggings,
+            boots = boots,
+        )
+    }
+
     override fun optimize(previous: EntityFrame): EntityFrame {
         return EntityFrame(
             location = if (previous.location == location) null else location,
@@ -341,10 +358,13 @@ class EntityCinematicRecording(
     @EventHandler
     fun onArmSwing(event: PlayerArmSwingEvent) {
         if (event.player.uniqueId != player.uniqueId) return
+        player.mainHand
         addSwing(
-            when (event.hand) {
-                EquipmentSlot.OFF_HAND -> ArmSwing.LEFT
-                EquipmentSlot.HAND -> ArmSwing.RIGHT
+            when (event.hand to player.mainHand) {
+                EquipmentSlot.HAND to MainHand.RIGHT -> ArmSwing.RIGHT
+                EquipmentSlot.HAND to MainHand.LEFT -> ArmSwing.LEFT
+                EquipmentSlot.OFF_HAND to MainHand.RIGHT -> ArmSwing.LEFT
+                EquipmentSlot.OFF_HAND to MainHand.LEFT -> ArmSwing.RIGHT
                 else -> ArmSwing.BOTH
             }
         )
@@ -390,10 +410,13 @@ class EntityCinematicRecording(
         value.location?.let { player.teleport(it.toBukkitLocation(player.world)) }
         value.pose?.let { player.pose = it.toBukkitPose() }
         value.swing?.let { swing ->
-            when (swing) {
-                ArmSwing.LEFT -> player.swingMainHand()
-                ArmSwing.RIGHT -> player.swingOffHand()
-                ArmSwing.BOTH -> {
+            when (swing to player.mainHand) {
+                ArmSwing.RIGHT to MainHand.RIGHT -> player.swingMainHand()
+                ArmSwing.RIGHT to MainHand.LEFT -> player.swingOffHand()
+                ArmSwing.LEFT to MainHand.RIGHT -> player.swingOffHand()
+                ArmSwing.LEFT to MainHand.LEFT -> player.swingOffHand()
+                ArmSwing.BOTH to MainHand.RIGHT,
+                ArmSwing.BOTH to MainHand.LEFT -> {
                     player.swingMainHand()
                     player.swingOffHand()
                 }

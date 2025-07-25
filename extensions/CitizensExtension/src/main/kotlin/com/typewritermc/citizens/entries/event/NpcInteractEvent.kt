@@ -1,18 +1,17 @@
 package com.typewritermc.citizens.entries.event
 
-import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.citizens.entries.entity.ReferenceNpcEntry
+import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Query
+import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
+import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.interaction.context
-import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
-import com.typewritermc.engine.paper.logger
+import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import net.citizensnpcs.api.event.NPCLeftClickEvent
 import net.citizensnpcs.api.event.NPCRightClickEvent
 import org.bukkit.entity.Player

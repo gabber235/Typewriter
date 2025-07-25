@@ -1,8 +1,8 @@
 package com.typewritermc.entity.entries.data.minecraft.display
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
@@ -19,6 +19,7 @@ import kotlin.reflect.KClass
 class BillboardConstraintData(
     override val id: String = "",
     override val name: String = "",
+    @Default("\"CENTER\"")
     val constraint: BillboardConstraints = BillboardConstraints.CENTER,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : DisplayEntityData<BillboardConstraintProperty> {
@@ -29,7 +30,10 @@ class BillboardConstraintData(
 }
 
 data class BillboardConstraintProperty(val constraint: BillboardConstraints) : EntityProperty {
-    companion object : SinglePropertyCollectorSupplier<BillboardConstraintProperty>(BillboardConstraintProperty::class, BillboardConstraintProperty(BillboardConstraints.CENTER))
+    companion object : SinglePropertyCollectorSupplier<BillboardConstraintProperty>(
+        BillboardConstraintProperty::class,
+        BillboardConstraintProperty(BillboardConstraints.CENTER)
+    )
 }
 
 fun applyBillboardConstraintData(entity: WrapperEntity, property: BillboardConstraintProperty) {

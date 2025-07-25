@@ -2,7 +2,6 @@ package com.typewritermc.engine.paper.utils
 
 import com.github.retrooper.packetevents.protocol.entity.EntityPositionData
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityPositionSync
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityRelativeMoveAndRotation
 import com.typewritermc.core.utils.point.toVector
 import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -21,20 +20,21 @@ fun WrapperEntity.move(property: PositionProperty) {
 
     if (distanceSquared == 0.0) {
         return
-    } else if (distanceSquared < 7 * 7) {
-        sendPacketsToViewers(
-            WrapperPlayServerEntityRelativeMoveAndRotation(
-                entityId,
-                delta.x,
-                delta.y,
-                delta.z,
-                property.yaw,
-                property.pitch,
-                isOnGround
-            ),
-        )
-    } else {
-//        println("Teleporting $distanceSquared by $delta to $property")
+    }
+//    else if (distanceSquared < 7 * 7) {
+//        sendPacketsToViewers(
+//            WrapperPlayServerEntityRelativeMoveAndRotation(
+//                entityId,
+//                delta.x,
+//                delta.y,
+//                delta.z,
+//                property.yaw,
+//                property.pitch,
+//                isOnGround
+//            ),
+//        )
+//    }
+    else {
         sendPacketsToViewers(
             WrapperPlayServerEntityPositionSync(
                 entityId, EntityPositionData(

@@ -19,12 +19,26 @@ suspend fun AssetEntry.hasData(): Boolean {
     return KoinJavaComponent.get<AssetManager>(AssetManager::class.java).containsAsset(this)
 }
 
-suspend fun AssetEntry.data(): String? {
-    return KoinJavaComponent.get<AssetManager>(AssetManager::class.java).fetchAsset(this)
+@Deprecated("Use stringData() or binaryData() instead.", ReplaceWith("stringData()"))
+suspend fun AssetEntry.data(): String? = stringData()
+
+suspend fun AssetEntry.stringData(): String? {
+    return KoinJavaComponent.get<AssetManager>(AssetManager::class.java).fetchStringAsset(this)
 }
 
-suspend fun AssetEntry.data(data: String) {
-    KoinJavaComponent.get<AssetManager>(AssetManager::class.java).storeAsset(this, data)
+suspend fun AssetEntry.binaryData(): ByteArray? {
+    return KoinJavaComponent.get<AssetManager>(AssetManager::class.java).fetchBinaryAsset(this)
+}
+
+@Deprecated("Use stringData() or binaryData() instead.", ReplaceWith("stringData(data)"))
+suspend fun AssetEntry.data(data: String) = stringData(data)
+
+suspend fun AssetEntry.stringData(data: String) {
+    KoinJavaComponent.get<AssetManager>(AssetManager::class.java).storeStringAsset(this, data)
+}
+
+suspend fun AssetEntry.binaryData(data: ByteArray) {
+    KoinJavaComponent.get<AssetManager>(AssetManager::class.java).storeBinaryAsset(this, data)
 }
 
 /**

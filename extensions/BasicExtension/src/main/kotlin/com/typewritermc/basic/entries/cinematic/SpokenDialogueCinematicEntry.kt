@@ -8,7 +8,6 @@ import com.typewritermc.core.extension.annotations.Segments
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
-import com.typewritermc.engine.paper.entry.entries.PrimaryCinematicEntry
 import com.typewritermc.engine.paper.entry.entries.SpeakerEntry
 import com.typewritermc.engine.paper.interaction.acceptActionBarMessage
 import com.typewritermc.engine.paper.interaction.chatHistory
@@ -47,38 +46,6 @@ class SpokenDialogueCinematicEntry(
         )
     }
 }
-
-@Deprecated("Use RandomVariable entry with a normal SpokenDialogueCinematic instead")
-@Entry(
-    "random_spoken_dialogue_cinematic",
-    "Play a random spoken dialogue cinematic",
-    Colors.CYAN,
-    "mingcute:message-4-fill"
-)
-class RandomSpokenDialogueCinematicEntry(
-    override val id: String = "",
-    override val name: String = "",
-    override val criteria: List<Criteria> = emptyList(),
-    val speaker: Ref<SpeakerEntry> = emptyRef(),
-    @Segments(icon = "mingcute:message-4-fill")
-    val segments: List<MultiLineRandomDisplayDialogueSegment> = emptyList(),
-) : PrimaryCinematicEntry {
-    override fun create(player: Player): CinematicAction {
-        return DisplayDialogueCinematicAction(
-            player,
-            speaker.get(),
-            segments.toDisplaySegments(),
-            spokenPercentage,
-            setup = {},
-            reset = reset@{
-                if (isFloodgate) return@reset
-                chatHistory.resendMessages(this)
-            },
-            display = ::displaySpokenDialogue,
-        )
-    }
-}
-
 
 val spokenFormat: String by snippet(
     "cinematic.dialogue.spoken.format",

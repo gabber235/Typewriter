@@ -184,7 +184,7 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
         // Load in the old tape if it exists
         val asset = asset
             ?: throw IllegalStateException("No asset found for recording cinematic after setup, this should not happen. Asset: '${context.fieldValue}'")
-        val oldTapeData = if (assetManager.containsAsset(asset)) assetManager.fetchAsset(asset) else null
+        val oldTapeData = if (assetManager.containsAsset(asset)) assetManager.fetchStringAsset(asset) else null
         if (oldTapeData != null) {
             recorder = Recorder.create(gson, klass, oldTapeData).apply {
                 resetFramesAfter(max(frames.first, frame))
@@ -266,7 +266,7 @@ abstract class RecordingCinematicContentMode<F : Frame<F>>(
         val asset = asset ?: return
         val tape = recorder.buildAndOptimize()
         val json = gson.toJsonTree(tape)
-        assetManager.storeAsset(asset, json.toString())
+        assetManager.storeStringAsset(asset, json.toString())
     }
 
     override suspend fun dispose() {

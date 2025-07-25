@@ -16,8 +16,28 @@ import kotlin.reflect.KClass
 typealias Tape<F> = Map<Int, F>
 
 interface Frame<F : Frame<F>> {
+    /**
+     * Merge the previous (this) frame with the next frame to reverse the optimizations.
+     */
     fun merge(next: F): F
+
+    /**
+     * Clean the frame.
+     * This can be used when the optimization determined no frame was needed here but some data still needs to be removed.
+     */
+    fun clean(): F
+
+    /**
+     * Optimize the current frame based on the previous frame.
+     * This is used to reduce the size of the tape by removing unnecessary frames.
+     * Or unnecessary data in the frame.
+     */
     fun optimize(previous: F): F
+
+    /**
+     * Check if the frame is empty.
+     * This is used to determine if the frame should be added to the tape.
+     */
     fun isEmpty(): Boolean
 }
 
@@ -107,16 +127,13 @@ class Streamer<F : Frame<F>>(private val tape: Tape<F>) {
 
     private fun forwardUntil(frame: Int) {
         while (currentFrame < frame) {
-            val index = keys.indexOf(currentFrame)
-            if (index == -1) {
-                return
+            currentFrame++
+            val nextFrame = tape[currentFrame]
+            currentValue = if (nextFrame == null) {
+                currentValue.clean()
+            } else {
+                currentValue.merge(nextFrame)
             }
-            if (index == keys.lastIndex) {
-                return
-            }
-
-            currentFrame = keys[index + 1]
-            currentValue = currentValue.merge(tape[currentFrame]!!)
         }
     }
 }

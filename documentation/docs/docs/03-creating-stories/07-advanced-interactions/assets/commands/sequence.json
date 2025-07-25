@@ -8,7 +8,7 @@
         "criteria": [],
         "modifiers": [],
         "triggers": [],
-        "message": "Hi <1>, you are <2> years old.",
+        "message": "Hi <pseudo>, you are <age> years old.",
         "type": "simple_message",
         "_genericBlueprint": null
       }

@@ -7,11 +7,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.InteractionContextBuilder
-import com.typewritermc.engine.paper.command.dsl.CommandTree
-import com.typewritermc.engine.paper.command.dsl.DslCommand
-import com.typewritermc.engine.paper.command.dsl.ExecutionContext
-import com.typewritermc.engine.paper.command.dsl.requiresPlayer
-import com.typewritermc.engine.paper.command.dsl.sender
+import com.typewritermc.engine.paper.command.dsl.*
 import com.typewritermc.engine.paper.entry.ManifestEntry
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
@@ -45,13 +41,15 @@ class CustomCommandEntry(
     val triggers: List<Ref<TriggerableEntry>> = emptyList(),
 ) : ManifestEntry, CustomCommandEntry {
     @Suppress("UnstableApiUsage")
-    override fun command(): DslCommand<CommandSourceStack> = com.typewritermc.engine.paper.command.dsl.command(command, *aliases.toTypedArray()) {
-        arguments.applyTo(this, CustomCommandArgumentBuilder(emptyList()))
-        triggers.applyTo(this, CustomCommandArgumentBuilder(emptyList()))
-    }
+    override fun command(): DslCommand<CommandSourceStack> =
+        com.typewritermc.engine.paper.command.dsl.command(command, *aliases.toTypedArray()) {
+            arguments.applyTo(this, CustomCommandArgumentBuilder(emptyList()))
+            triggers.applyTo(this, CustomCommandArgumentBuilder(emptyList()))
+        }
 }
 
 typealias ContextBuilder = InteractionContextBuilder.(ExecutionContext<CommandSourceStack>) -> Unit
+
 class CustomCommandArgumentBuilder(
     val contextBuilders: List<ContextBuilder> = emptyList(),
 ) {
@@ -72,7 +70,12 @@ sealed interface CommandArgumentEntry : ManifestEntry {
     fun build(tree: CommandTree, builder: CustomCommandArgumentBuilder)
 }
 
-@Entry("literal_command_argument", "A literal command argument", Colors.BLUE, "material-symbols:format-color-text-rounded")
+@Entry(
+    "literal_command_argument",
+    "A literal command argument",
+    Colors.BLUE,
+    "material-symbols:format-color-text-rounded"
+)
 /**
  * The `Literal Command Argument` entry is a command argument that is a literal.
  *
@@ -99,9 +102,9 @@ interface ArgumentCommandArgument<T : Any> : CommandArgumentEntry {
 
     override fun build(tree: CommandTree, builder: CustomCommandArgumentBuilder) {
         tree.argument(name, type, klass) {
-            val builder = builder.copyWith {
-                val value = it.getArgument<T>(name, klass)
-                this.apply(value)
+            val builder = builder.copyWith { context ->
+                val value = context.getArgument<T>(name, klass)
+                this.apply(context, value)
             }
             requiresPlayer()
             children.applyTo(this, builder)
@@ -109,7 +112,7 @@ interface ArgumentCommandArgument<T : Any> : CommandArgumentEntry {
         }
     }
 
-    fun InteractionContextBuilder.apply(value: T)
+    fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: T)
 }
 
 @JvmName("applyCommandArgumentsToTree")

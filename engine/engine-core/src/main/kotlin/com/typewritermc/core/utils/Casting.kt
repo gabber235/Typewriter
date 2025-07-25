@@ -1,6 +1,7 @@
 package com.typewritermc.core.utils
 
 import com.google.gson.Gson
+import com.typewritermc.core.utils.point.*
 import org.koin.core.qualifier.named
 import org.koin.java.KoinJavaComponent
 import kotlin.contracts.ExperimentalContracts
@@ -21,15 +22,17 @@ fun <T : Any> KClass<T>.ultraSafeCast(value: Any?): T? {
     if (isInstance(value)) {
         return cast(value)
     }
-    when (this) {
-        String::class -> return safeCast(value.toString())
-        Int::class -> return safeCast(intCast(value))
-        Long::class -> return safeCast(longCast(value))
-        Double::class -> return safeCast(doubleCast(value))
-        Float::class -> return safeCast(floatCast(value))
-        Generic::class -> return cast(genericCast(value))
+    return when (this) {
+        String::class -> safeCast(value.toString())
+        Int::class -> safeCast(intCast(value))
+        Long::class -> safeCast(longCast(value))
+        Double::class -> safeCast(doubleCast(value))
+        Float::class -> safeCast(floatCast(value))
+        Generic::class -> cast(genericCast(value))
+        Coordinate::class -> safeCast(coordinateCast(value))
+        Vector::class -> safeCast(vectorCast(value))
+        else -> null
     }
-    return null
 }
 
 
@@ -76,4 +79,18 @@ fun floatCast(value: Any): Float? = when (value) {
 fun genericCast(value: Any): Generic {
     val gson = KoinJavaComponent.get<Gson>(Gson::class.java, named("dataSerializer"))
     return Generic(gson.toJsonTree(value))
+}
+
+fun coordinateCast(value: Any): Coordinate? = when (value) {
+    is Position -> value.toCoordinate()
+    is Coordinate -> value
+    is Vector -> Coordinate(value.x, value.y, value.z, 0f, 0f)
+    else -> null
+}
+
+fun vectorCast(value: Any): Vector? = when (value) {
+    is Position -> value.toVector()
+    is Coordinate -> value.toVector()
+    is Vector -> value
+    else -> null
 }

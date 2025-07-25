@@ -27,14 +27,14 @@ repositories {
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    compileOnlyApi("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("me.tofaa.entitylib:spigot:+630837f-SNAPSHOT")
+    api("me.tofaa.entitylib:spigot:+34db96d-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 

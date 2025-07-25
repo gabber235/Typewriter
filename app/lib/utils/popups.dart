@@ -135,7 +135,7 @@ Future<bool> showConfirmationDialogue({
           confirmText: confirmText,
           confirmIcon: confirmIcon,
           confirmColor: confirmColor,
-          delayConfirm: delayConfirm,
+          delayConfirm: hasShiftDown ? Duration.zero : delayConfirm,
           cancelText: cancelText,
           cancelIcon: cancelIcon,
           onCancel: onCancel,

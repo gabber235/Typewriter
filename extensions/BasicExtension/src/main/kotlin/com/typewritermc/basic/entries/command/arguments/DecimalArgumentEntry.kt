@@ -12,10 +12,17 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContextBuilder
+import com.typewritermc.engine.paper.command.dsl.ExecutionContext
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import kotlin.reflect.KClass
 
-@Entry("decimal_argument", "A double-precision floating-point argument", Colors.RED, "material-symbols:decimal-increase-rounded")
+@Entry(
+    "decimal_argument",
+    "A double-precision floating-point argument",
+    Colors.RED,
+    "material-symbols:decimal-increase-rounded"
+)
 @ContextKeys(DecimalArgumentContextKeys::class)
 /**
  * The `Decimal Argument` entry is an argument that takes a decimal.
@@ -35,7 +42,7 @@ class DecimalArgumentEntry(
     override val type: ArgumentType<Double> get() = DoubleArgumentType.doubleArg(min, max)
     override val klass: KClass<Double> get() = Double::class
 
-    override fun InteractionContextBuilder.apply(value: Double) {
+    override fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: Double) {
         set(DecimalArgumentContextKeys.VALUE, value)
     }
 }

@@ -10,7 +10,9 @@ import com.typewritermc.entity.entries.data.minecraft.SpeedProperty
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
 import com.typewritermc.entity.entries.data.minecraft.living.ScaleProperty
 import com.typewritermc.entity.entries.data.minecraft.living.SizeProperty
+import com.typewritermc.entity.entries.data.minecraft.living.SleepingProperty
 import com.typewritermc.entity.entries.data.minecraft.living.pufferfish.PuffStateProperty
+import com.typewritermc.entity.entries.data.minecraft.living.tameable.SittingProperty
 import com.typewritermc.entity.entries.data.minecraft.other.MarkerProperty
 import com.typewritermc.entity.entries.data.minecraft.other.SmallProperty
 import me.tofaa.entitylib.meta.mobs.water.PufferFishMeta
@@ -55,15 +57,24 @@ private class EntityDataMatcher(
     }
 }
 
+private fun EntityType.pose(properties: Map<KClass<*>, EntityProperty>): EntityPose {
+    val pose = properties.property(PoseProperty::class)?.pose
+    if (pose != null) return pose
+    val isSitting = properties.property(SittingProperty::class)?.sitting
+    if (isSitting == true) return EntityPose.SITTING
+    val isSleeping = properties.property(SleepingProperty::class)?.sleeping
+    if (isSleeping == true) return EntityPose.SLEEPING
+    return EntityPose.STANDING
+}
+
 private fun EntityType.matcher(properties: Map<KClass<*>, EntityProperty>): EntityDataMatcher {
     val isBaby = properties.property(AgeableProperty::class)?.baby ?: false
-    val pose = properties.property(PoseProperty::class)?.pose ?: EntityPose.STANDING
     val size = properties.property(SizeProperty::class)?.size ?: 0
     val small = properties.property(SmallProperty::class)?.small ?: false
     val marker = properties.property(MarkerProperty::class)?.marker ?: false
     val puffState = properties.property(PuffStateProperty::class)?.state ?: PufferFishMeta.State.UNPUFFED
 
-    return EntityDataMatcher(this, isBaby, pose, size, small, marker, puffState)
+    return EntityDataMatcher(this, isBaby, pose(properties), size, small, marker, puffState)
 }
 
 fun EntityType.state(properties: Map<KClass<*>, EntityProperty>): EntityState {
@@ -78,6 +89,10 @@ private val EntityDataMatcher.eyeHeight: Double
     get() {
         return when (this) {
             EntityDataMatcher(EntityTypes.PLAYER, pose = EntityPose.SITTING) -> 0.98
+            EntityDataMatcher(EntityTypes.CAT, isBaby = false, pose = EntityPose.SITTING) -> 0.64
+            EntityDataMatcher(EntityTypes.CAT, isBaby = true, pose = EntityPose.SITTING) -> 0.37
+            EntityDataMatcher(EntityTypes.CAT, isBaby = false) -> 0.48
+            EntityDataMatcher(EntityTypes.CAT, isBaby = true) -> 0.28
 //<editor-fold desc="Entity EntityEyeHeightProperty by properties">
             EntityDataMatcher(EntityTypes.ALLAY) -> 0.36
             EntityDataMatcher(EntityTypes.AREA_EFFECT_CLOUD) -> 0.425
@@ -103,8 +118,6 @@ private val EntityDataMatcher.eyeHeight: Double
             EntityDataMatcher(EntityTypes.CAMEL, isBaby = true, pose = EntityPose.STANDING) -> 1.02375
             EntityDataMatcher(EntityTypes.CAMEL, isBaby = false, pose = EntityPose.SITTING) -> 0.845
             EntityDataMatcher(EntityTypes.CAMEL, isBaby = false, pose = EntityPose.STANDING) -> 2.275
-            EntityDataMatcher(EntityTypes.CAT, isBaby = false) -> 0.35
-            EntityDataMatcher(EntityTypes.CAT, isBaby = true) -> 0.175
             EntityDataMatcher(EntityTypes.CAVE_SPIDER) -> 0.45
             EntityDataMatcher(EntityTypes.CHICKEN, isBaby = false) -> 0.644
             EntityDataMatcher(EntityTypes.CHICKEN, isBaby = true) -> 0.2975

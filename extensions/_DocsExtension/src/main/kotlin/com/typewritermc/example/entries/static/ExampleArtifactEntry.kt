@@ -20,7 +20,7 @@ class ExampleArtifactEntry(
 suspend fun accessArtifactData(ref: Ref<out ArtifactEntry>) {
     val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)
     val entry = ref.get() ?: return
-    val content: String? = assetManager.fetchAsset(entry)
+    val content: String? = assetManager.fetchStringAsset(entry)
     // Do something with the content
 }
 //</code-block:artifact_access>

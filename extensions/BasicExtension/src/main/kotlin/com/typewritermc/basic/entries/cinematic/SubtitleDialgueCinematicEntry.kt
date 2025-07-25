@@ -8,7 +8,6 @@ import com.typewritermc.core.extension.annotations.Segments
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
-import com.typewritermc.engine.paper.entry.entries.PrimaryCinematicEntry
 import com.typewritermc.engine.paper.entry.entries.SpeakerEntry
 import com.typewritermc.engine.paper.interaction.acceptActionBarMessage
 import com.typewritermc.engine.paper.snippets.snippet
@@ -47,32 +46,9 @@ class SubtitleDialogueCinematicEntry(
             segments,
             subtitlePercentage,
             reset = {
-                sendActionBar(Component.empty())
-                player.clearTitle()
-            },
-            display = ::displaySubTitle
-        )
-    }
-}
-
-@Deprecated("Use RandomVariable entry with a normal SubtitleDialogue instead")
-@Entry("random_subtitle_dialogue_cinematic", "Show a random action bar message", Colors.CYAN, "fa6-solid:diagram-next")
-class RandomSubtitleDialogueCinematicEntry(
-    override val id: String = "",
-    override val name: String = "",
-    override val criteria: List<Criteria> = emptyList(),
-    val speaker: Ref<SpeakerEntry> = emptyRef(),
-    @Segments(icon = "fa6-solid:diagram-next")
-    val segments: List<SingleLineRandomDisplayDialogueSegment> = emptyList(),
-) : PrimaryCinematicEntry {
-    override fun create(player: Player): CinematicAction {
-        return DisplayDialogueCinematicAction(
-            player,
-            speaker.get(),
-            segments.toDisplaySegments(),
-            subtitlePercentage,
-            reset = {
-                sendActionBar(Component.empty())
+                val emptyActionBar = Component.empty()
+                player.acceptActionBarMessage(emptyActionBar)
+                sendActionBar(emptyActionBar)
                 player.clearTitle()
             },
             display = ::displaySubTitle

@@ -9,12 +9,8 @@ import com.typewritermc.core.extension.annotations.WithRotation
 import com.typewritermc.core.utils.point.Coordinate
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.toPosition
-import com.typewritermc.engine.paper.entry.entries.VarContext
-import com.typewritermc.engine.paper.entry.entries.VariableEntry
-import com.typewritermc.engine.paper.entry.entries.getData
-import com.typewritermc.engine.paper.entry.entries.safeCast
+import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.position
-import kotlin.reflect.safeCast
 
 @Entry(
     "player_world_position_variable",
@@ -39,7 +35,7 @@ class PlayerWorldPositionVariable(
         val player = context.player
         val data = context.getData<PlayerWorldPositionVariableData>()
             ?: throw ContextDataNotFoundException(context.klass, context.data)
-        val position = data.coordinate.toPosition(player.position.world)
+        val position = data.coordinate.get(player, context.interactionContext).toPosition(player.position.world)
 
         return context.safeCast(position)
             ?: throw IllegalStateException("Could not cast position to ${context.klass}, PlayerWorldPositionVariable is only compatible with Position fields")
@@ -48,5 +44,5 @@ class PlayerWorldPositionVariable(
 
 data class PlayerWorldPositionVariableData(
     @WithRotation
-    val coordinate: Coordinate = Coordinate.ORIGIN,
+    val coordinate: Var<Coordinate> = ConstVar(Coordinate.ORIGIN)
 )

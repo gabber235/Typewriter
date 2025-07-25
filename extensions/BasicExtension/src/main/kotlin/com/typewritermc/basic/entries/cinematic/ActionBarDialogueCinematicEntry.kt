@@ -7,7 +7,6 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Segments
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
-import com.typewritermc.engine.paper.entry.entries.CinematicEntry
 import com.typewritermc.engine.paper.entry.entries.PrimaryCinematicEntry
 import com.typewritermc.engine.paper.entry.entries.SpeakerEntry
 import com.typewritermc.engine.paper.interaction.acceptActionBarMessage
@@ -46,38 +45,6 @@ class ActionBarDialogueCinematicEntry(
         )
     }
 }
-
-@Deprecated("Use RandomVariable entry with a normal ActionBarDialogue instead")
-@Entry(
-    "random_actionbar_dialogue_cinematic",
-    "Show a random action bar typed dialogue",
-    Colors.CYAN,
-    "fa6-solid:xmarks-lines"
-)
-class RandomActionBarDialogueCinematicEntry(
-    override val id: String = "",
-    override val name: String = "",
-    override val criteria: List<Criteria> = emptyList(),
-    val speaker: Ref<SpeakerEntry> = emptyRef(),
-    @Segments(icon = "fa6-solid:xmarks-lines")
-    val segments: List<SingleLineRandomDisplayDialogueSegment> = emptyList(),
-) : CinematicEntry {
-    override fun create(player: Player): CinematicAction {
-        return DisplayDialogueCinematicAction(
-            player,
-            speaker.get(),
-            segments.toDisplaySegments(),
-            actionBarPercentage,
-            reset = {
-                val message = Component.empty()
-                acceptActionBarMessage(message)
-                sendActionBar(message)
-            },
-            display = ::displayActionBar,
-        )
-    }
-}
-
 
 private val actionBarFormat: String by snippet(
     "cinematic.dialogue.actionbar.format",

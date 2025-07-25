@@ -6,10 +6,8 @@ import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.point.Coordinate
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.engine.paper.entry.entries.VarContext
-import com.typewritermc.engine.paper.entry.entries.VariableEntry
-import com.typewritermc.engine.paper.entry.entries.getData
-import com.typewritermc.engine.paper.entry.entries.safeCast
+import com.typewritermc.core.utils.point.Vector
+import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.position
 
 @Entry(
@@ -19,6 +17,8 @@ import com.typewritermc.engine.paper.utils.position
     "streamline:target-solid"
 )
 @GenericConstraint(Position::class)
+@GenericConstraint(Coordinate::class)
+@GenericConstraint(Vector::class)
 @VariableData(RelativePositionVariableData::class)
 /**
  * The `RelativePositionVariable` is a variable that returns the position relative to the player.
@@ -40,19 +40,20 @@ class RelativePositionVariable(
             ?: throw ContextDataNotFoundException(context.klass, context.data)
 
         val basePosition = player.position
+        val coordinate = data.coordinate.get(player, context.interactionContext)
 
         val position =
             Position(
                 basePosition.world,
-                if (X in data.absolute) data.coordinate.x else basePosition.x + data.coordinate.x,
-                if (Y in data.absolute) data.coordinate.y else basePosition.y + data.coordinate.y,
-                if (Z in data.absolute) data.coordinate.z else basePosition.z + data.coordinate.z,
-                if (YAW in data.absolute) data.coordinate.yaw else basePosition.yaw + data.coordinate.yaw,
-                if (PITCH in data.absolute) data.coordinate.pitch else basePosition.pitch + data.coordinate.pitch
+                if (X in data.absolute) coordinate.x else basePosition.x + coordinate.x,
+                if (Y in data.absolute) coordinate.y else basePosition.y + coordinate.y,
+                if (Z in data.absolute) coordinate.z else basePosition.z + coordinate.z,
+                if (YAW in data.absolute) coordinate.yaw else basePosition.yaw + coordinate.yaw,
+                if (PITCH in data.absolute) coordinate.pitch else basePosition.pitch + coordinate.pitch
             )
 
         return context.safeCast(position)
-            ?: throw IllegalStateException("Could not cast position to ${context.klass}, RelativePositionVariable is only compatible with Position fields")
+            ?: throw IllegalStateException("Could not cast position to ${context.klass}, RelativePositionVariable is only compatible with Position/Coordinate/Vector fields")
     }
 }
 
@@ -62,7 +63,7 @@ enum class CoordinatePart {
 
 data class RelativePositionVariableData(
     @WithRotation
-    val coordinate: Coordinate = Coordinate.ORIGIN,
+    val coordinate: Var<Coordinate> = ConstVar(Coordinate.ORIGIN),
 
     @Help("Select which parts of the position will use absolute values")
     val absolute: List<CoordinatePart> = emptyList(),

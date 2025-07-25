@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
 import java.time.Duration
+import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -73,6 +74,20 @@ interface EntryContextKey {
 @AlgebraicTypeInfo("global", Colors.RED, "mdi:application-variable")
 open class GlobalContextKey<T : Any>(override val klass: KClass<T>) : InteractionContextKey<T>
 
+/**
+ * A key for storing a random seed in the interaction context.
+ *
+ * This random seed can be used when random values need to be generated consistently across an interaction.
+ */
+object RandomSeedContextKey : GlobalContextKey<Long>(Long::class) {
+    override fun toString(): String = "RandomSeedContextKey"
+}
+
+fun InteractionContext?.randomSeed(): Long {
+    if (this == null) return Random.nextLong()
+    return this[RandomSeedContextKey] ?: Random.nextLong()
+}
+
 class InteractionContextBuilder {
     private val data = mutableMapOf<InteractionContextKey<*>, Any>()
 
@@ -91,6 +106,8 @@ class InteractionContextBuilder {
     operator fun <T : Any> Entry.set(key: EntryContextKey, value: T) = ref().set(key, value)
 
     fun build(): InteractionContext {
+        // Always add a random seed to the context
+        data.putIfAbsent(RandomSeedContextKey, Random.nextLong())
         return InteractionContext(data)
     }
 }

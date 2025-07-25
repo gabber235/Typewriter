@@ -20,7 +20,7 @@ public class TypewriterPaperLoader implements PluginLoader {
         RemoteRepository central = new RemoteRepository.Builder(
             "central",
             "default",
-            "https://repo1.maven.org/maven2/"
+            getDefaultMavenCentralMirror()
         ).build();
 
         addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-stdlib:2.0.21", central);
@@ -50,5 +50,17 @@ public class TypewriterPaperLoader implements PluginLoader {
             resolver.addRepository(repository);
         }
         classpathBuilder.addLibrary(resolver);
+    }
+
+    // Because we still want to support <1.21.6 versions, we just copy this from Paper's API.
+    private static String getDefaultMavenCentralMirror() {
+        String central = System.getenv("PAPER_DEFAULT_CENTRAL_REPOSITORY");
+        if (central == null) {
+            central = System.getProperty("org.bukkit.plugin.java.LibraryLoader.centralURL");
+        }
+        if (central == null) {
+            central = "https://maven-central.storage-download.googleapis.com/maven2";
+        }
+        return central;
     }
 }

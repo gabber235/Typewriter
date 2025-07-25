@@ -8,6 +8,7 @@ import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.get
 import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
@@ -54,7 +55,7 @@ class RandomLookActivity(
         if (currentTime > nextChangeTime) {
             targetPitch = pitchRange.random()
             targetYaw = yawRange.random()
-            val duration = context.randomViewer?.let { viewer -> this.duration.get(viewer) } ?: Duration.ofSeconds(1)
+            val duration = this.duration.get(context.randomViewer) ?: Duration.ofSeconds(1)
             nextChangeTime = currentTime + duration
         }
 

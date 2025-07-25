@@ -3,10 +3,10 @@ package com.typewritermc.roadnetwork.entries
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.ContentEditor
-import com.typewritermc.engine.paper.entry.entries.data
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.hasData
+import com.typewritermc.engine.paper.entry.entries.stringData
 import com.typewritermc.roadnetwork.RoadNetwork
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.content.RoadNetworkContentMode
@@ -28,10 +28,10 @@ class BaseRoadNetworkEntry(
 ) : RoadNetworkEntry {
     override suspend fun loadRoadNetwork(gson: Gson): RoadNetwork {
         if (!hasData()) return RoadNetwork()
-        return gson.fromJson(data(), object : TypeToken<RoadNetwork>() {}.type)
+        return gson.fromJson(stringData(), object : TypeToken<RoadNetwork>() {}.type)
     }
 
     override suspend fun saveRoadNetwork(gson: Gson, network: RoadNetwork) {
-        data(gson.toJson(network))
+        stringData(gson.toJson(network))
     }
 }

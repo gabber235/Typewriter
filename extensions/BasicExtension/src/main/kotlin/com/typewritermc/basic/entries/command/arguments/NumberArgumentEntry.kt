@@ -2,7 +2,6 @@ package com.typewritermc.basic.entries.command.arguments
 
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType
-import com.mojang.brigadier.arguments.LongArgumentType
 import com.typewritermc.basic.entries.command.ArgumentCommandArgument
 import com.typewritermc.basic.entries.command.CommandArgumentEntry
 import com.typewritermc.core.books.pages.Colors
@@ -13,7 +12,9 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContextBuilder
+import com.typewritermc.engine.paper.command.dsl.ExecutionContext
 import com.typewritermc.engine.paper.entry.TriggerableEntry
+import io.papermc.paper.command.brigadier.CommandSourceStack
 import kotlin.reflect.KClass
 
 @Entry("number_argument", "An number argument", Colors.RED, "fa6-solid:hashtag")
@@ -37,7 +38,7 @@ class NumberArgumentEntry(
     override val type: ArgumentType<Int> get() = IntegerArgumentType.integer(min, max)
     override val klass: KClass<Int> get() = Int::class
 
-    override fun InteractionContextBuilder.apply(value: Int) {
+    override fun InteractionContextBuilder.apply(context: ExecutionContext<CommandSourceStack>, value: Int) {
         set(NumberArgumentContextKeys.VALUE, value)
     }
 }

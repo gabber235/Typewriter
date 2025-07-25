@@ -72,7 +72,7 @@ jobs:
           loaders: |
             paper
           game-versions: |
-            [1.21.3, 1.21.5]
+            [1.21.3, 1.21.7]
           dependencies: |
             packetevents(required)
 

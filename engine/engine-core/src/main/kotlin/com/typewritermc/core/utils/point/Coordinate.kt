@@ -92,6 +92,7 @@ fun <RP> RP.lerp(to: RP, amount: Double): RP where RP : Point<RP>, RP : Rotatabl
     return withX(x).withY(y).withZ(z).withRotation(yaw.toFloat(), pitch.toFloat())
 }
 
+fun <RP> RP.toCoordinate(): Coordinate where RP : Point<RP>, RP : Rotatable<RP> = Coordinate(x, y, z, yaw, pitch)
 
 fun Coordinate.toPosition(world: World) =
     Position(world, x, y, z, yaw, pitch)

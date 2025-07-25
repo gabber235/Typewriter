@@ -66,13 +66,13 @@ class BobbingActivity(
     }
 
     override fun tick(context: ActivityContext): TickResult {
-        val currentSpeed = context.randomViewer?.let { speed.get(it) } ?: 1.0f
+        val currentSpeed = speed.get(context.randomViewer) ?: 1.0f
 
         if (currentSpeed <= 0) {
             return childActivity.tick(context)
         }
 
-        val currentAmplitude = context.randomViewer?.let { amplitude.get(it) } ?: 0.5f
+        val currentAmplitude = amplitude.get(context.randomViewer) ?: 0.5f
 
         val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000.0f
         lastOffset = sin(elapsedSeconds * currentSpeed * 2 * Math.PI).toFloat() * currentAmplitude
