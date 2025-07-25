@@ -99,7 +99,10 @@ private object CachedThreadPoolDispatcher : TypewriterDispatcher(
 
         // Select whether we need a platform thread or a virtual thread.
         fun selectThreadBuilder(): Thread.Builder =
-            if (pool.activeCount > MAX_PLATFORM_THREADS) Thread.ofVirtual()
+            // I just realized that if a platform thread is destroyed for being idle,
+            // and there are more virtual threads than MAX_PLATFORM_THREADS in the pool,
+            // it will create a virtual thread instead of another platform. Little can be done about that, though.
+            if (pool.activeCount >= MAX_PLATFORM_THREADS) Thread.ofVirtual()
             else Thread.ofPlatform().daemon(true)
 
         // ThreadPoolExecutor parameters
@@ -116,7 +119,7 @@ private object CachedThreadPoolDispatcher : TypewriterDispatcher(
             println("Typewriter thread pool is full, and the caller will execute the task. ($r)")
             // Valuable info
             println("There are approx: ${pool.activeCount} active threads, ${pool.taskCount - pool.completedTaskCount} " +
-                    "tasks queued, and ${pool.poolSize - pool.maximumPoolSize} idle threads.")
+                    "tasks queued, and ${pool.poolSize - pool.activeCount} idle threads.")
             callerRunsPolicy.rejectedExecution(r, e)
         }
 
