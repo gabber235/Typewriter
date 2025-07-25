@@ -5,8 +5,7 @@ import com.typewritermc.core.entries.priority
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.engine.paper.entry.entries.LinesEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
-import com.typewritermc.engine.paper.utils.asMini
-import com.typewritermc.engine.paper.utils.asMiniWithResolvers
+import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.quest.trackedShowingObjectives
 import org.bukkit.entity.Player
 import java.util.*
@@ -35,12 +34,7 @@ class ObjectiveLinesEntry(
 ) : LinesEntry {
     override fun lines(player: Player): String {
         return player.trackedShowingObjectives().sortedByDescending { it.priority }.joinToString("\n") {
-            format.parsePlaceholders(player).asMiniWithResolvers(
-                net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.parsed(
-                    "objective",
-                    it.display(player)
-                )
-            ).asMini()
+            format.parsePlaceholders(player).replaceTagPlaceholders("objective", it.display(player))
         }
     }
 }

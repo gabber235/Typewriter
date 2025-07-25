@@ -13,13 +13,11 @@ import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.asMini
-import com.typewritermc.engine.paper.utils.asMiniWithResolvers
+import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.quest.ObjectiveEntry
 import com.typewritermc.quest.QuestEntry
 import com.typewritermc.quest.inactiveObjectiveDisplay
 import com.typewritermc.quest.showingObjectiveDisplay
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.parsed
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -65,6 +63,6 @@ class CompletableObjective(
             showCriteria.matches(player) -> showingObjectiveDisplay
             else -> inactiveObjectiveDisplay
         }
-        return text.asMiniWithResolvers(parsed("display", display.get(player) ?: "")).asMini().parsePlaceholders(player)
+        return text.replaceTagPlaceholders("display", display.get(player) ?: "").parsePlaceholders(player)
     }
 }

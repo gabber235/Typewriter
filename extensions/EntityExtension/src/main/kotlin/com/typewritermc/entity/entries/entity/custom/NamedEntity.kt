@@ -10,13 +10,15 @@ import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.*
+import com.typewritermc.engine.paper.utils.Color
+import com.typewritermc.engine.paper.utils.Sound
+import com.typewritermc.engine.paper.utils.isFloodgate
+import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstraintProperty
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
 import com.typewritermc.entity.entries.data.minecraft.display.text.BackgroundColorProperty
 import com.typewritermc.entity.entries.entity.minecraft.TextDisplayEntity
 import me.tofaa.entitylib.meta.display.AbstractDisplayMeta
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 
 
@@ -113,10 +115,10 @@ class NamedEntity(
         val other = property(LinesProperty::class)?.lines ?: ""
         val displayName = this.displayName
 
-        return namePlate.parsePlaceholders(player).asMiniWithResolvers(
-            Placeholder.parsed("other", other),
-            Placeholder.parsed("display_name", displayName.get(player).parsePlaceholders(player)),
-        ).asMini().trim()
+        return namePlate.parsePlaceholders(player).replaceTagPlaceholders(
+            "other" to other,
+            "display_name" to displayName.get(player).parsePlaceholders(player),
+        ).trim()
     }
 
     private fun calculateIndicatorOffset(hologramText: String): Vector {

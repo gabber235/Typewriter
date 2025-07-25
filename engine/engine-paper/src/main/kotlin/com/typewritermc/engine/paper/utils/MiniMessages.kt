@@ -48,6 +48,20 @@ fun String.asMini() = mm.deserialize(this)
 
 fun String.asMiniWithResolvers(vararg resolvers: TagResolver) = mm.deserialize(this, *resolvers)
 
+fun String.replaceTagPlaceholders(placeholder: String, value: String): String =
+    this.replaceTagPlaceholders(mapOf(placeholder to value))
+
+fun String.replaceTagPlaceholders(vararg placeholders: Pair<String, String>): String =
+    replaceTagPlaceholders(placeholders.toMap())
+
+fun String.replaceTagPlaceholders(placeholders: Map<String, String>): String {
+    if (placeholders.isEmpty()) return this
+
+    return placeholders.entries.fold(this) { acc, (placeholder, value) ->
+        acc.replace("<$placeholder>", value)
+    }
+}
+
 fun CommandSender.sendMini(message: String) = sendMessage(message.asMini())
 
 fun CommandSender.sendMiniWithResolvers(message: String, vararg resolvers: TagResolver) =

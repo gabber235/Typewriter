@@ -12,11 +12,9 @@ import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.asMini
-import com.typewritermc.engine.paper.utils.asMiniWithResolvers
+import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.parsed
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import java.util.*
@@ -88,7 +86,7 @@ interface ObjectiveEntry : AudienceFilterEntry, PlaceholderEntry, PriorityEntry 
         }
         val display = display.get(player) ?: ""
 
-        return text.asMiniWithResolvers(parsed("display", display)).asMini().parsePlaceholders(player)
+        return text.replaceTagPlaceholders("display", display).parsePlaceholders(player)
     }
 
     override fun parser(): PlaceholderParser = placeholderParser {
