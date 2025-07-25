@@ -18,7 +18,8 @@ import io.papermc.paper.plugin.provider.classloader.PluginClassLoaderGroup
 class GlobalClassloader(
     private val group: PluginClassLoaderGroup,
     private val requester: ConfiguredPluginClassLoader,
-) : ClassLoader() {
+    parent: ClassLoader
+) : ClassLoader(parent) {
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
         return group.getClassByName(name, resolve, requester) ?: super.loadClass(name, resolve)
     }
@@ -30,5 +31,5 @@ internal fun globalClassloader(): GlobalClassloader {
     val group = storage.javaClass.getDeclaredMethod("getGlobalGroup").invoke(storage) as PluginClassLoaderGroup
     val requester = plugin.javaClass.classLoader as ConfiguredPluginClassLoader
 
-    return GlobalClassloader(group, requester)
+    return GlobalClassloader(group, requester, plugin.javaClass.classLoader.parent)
 }
