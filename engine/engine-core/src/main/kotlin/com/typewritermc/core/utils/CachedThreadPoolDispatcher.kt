@@ -6,6 +6,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.RejectedExecutionHandler
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
@@ -85,6 +87,47 @@ const val THREAD_KEEP_ALIVE_SECONDS = 60L
 // This often happened with the road network editor as it would tend to queue many, many tasks at one moment (recalculating edges).
 const val TASK_QUEUE_SIZE = 16
 
+private class QueuedThreadPoolExecutor(
+    corePoolSize: Int,
+    maximumPoolSize: Int,
+    keepAliveTime: Long,
+    unit: TimeUnit,
+    workQueue: BlockingQueue<Runnable>,
+    threadFactory: ThreadFactory
+) : ThreadPoolExecutor(
+    corePoolSize,
+    maximumPoolSize,
+    keepAliveTime,
+    unit,
+    workQueue,
+    threadFactory,
+    fun (r: Runnable, e: ThreadPoolExecutor) {
+        // Log, then have the caller run the task. It is possible we want to change this approach.
+        println("Typewriter thread pool is full, and the caller will execute the task. ($r)")
+        // Valuable info
+        println("There are approx: ${e.activeCount} active threads, ${e.taskCount - e.completedTaskCount} " +
+                "tasks queued, and ${e.poolSize - e.activeCount} idle threads.")
+
+        if (e !is QueuedThreadPoolExecutor) error("Unexpected type of ThreadPoolExecutor: ${e::class.simpleName}")
+        if (!e.taskQueue.contains(r)) e.taskQueue.add(r)
+    }
+) {
+    private val taskQueue = ConcurrentLinkedQueue<Runnable>()
+
+    override fun execute(command: Runnable?) {
+        taskQueue.add(command)
+    }
+
+    init {
+        super.execute {
+            while (!isShutdown) {
+                val task = (taskQueue as BlockingQueue<*>).take() as Runnable
+                super.execute(task)
+            }
+        }
+    }
+}
+
 /**
  * The thread pool used for typewriter's various asynchronous tasks.
  *
@@ -109,7 +152,6 @@ private object CachedThreadPoolDispatcher : TypewriterDispatcher(
         val maximumPoolSize = MAX_PLATFORM_THREADS + MAX_VIRTUAL_THREADS
         val workQueue = ArrayBlockingQueue<Runnable>(TASK_QUEUE_SIZE)
         val threadFactory = ThreadFactory {
-            // Create a thread and name it.
             selectThreadBuilder()
                 .name("TypewriterPoolThread-", 1)
                 .unstarted(it)
@@ -118,8 +160,8 @@ private object CachedThreadPoolDispatcher : TypewriterDispatcher(
             // Log, then have the caller run the task. It is possible we want to change this approach.
             println("Typewriter thread pool is full, and the caller will execute the task. ($r)")
             // Valuable info
-            println("There are approx: ${pool.activeCount} active threads, ${pool.taskCount - pool.completedTaskCount} " +
-                    "tasks queued, and ${pool.poolSize - pool.activeCount} idle threads.")
+            println("There are approx: ${e.activeCount} active threads, ${e.taskCount - e.completedTaskCount} " +
+                    "tasks queued, and ${e.poolSize - e.activeCount} idle threads.")
             callerRunsPolicy.rejectedExecution(r, e)
         }
 
@@ -135,7 +177,8 @@ private object CachedThreadPoolDispatcher : TypewriterDispatcher(
 
         return@run pool.asCoroutineDispatcher()
     }
-)
+) {
+}
 
 @Suppress("UnusedReceiverParameter")
 val Dispatchers.UntickedAsync: CoroutineDispatcher get() = CachedThreadPoolDispatcher
