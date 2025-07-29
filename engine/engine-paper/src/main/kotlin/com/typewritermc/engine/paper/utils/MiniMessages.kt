@@ -35,6 +35,8 @@ private val mm = MiniMessage.builder()
                 StandardTags.selector(),
                 StandardTags.score(),
                 StandardTags.nbt(),
+                StandardTags.pride(),
+                StandardTags.shadowColor(),
             )
             .tag("confirmation_key") { _, _ -> Tag.preProcessParsed(confirmationKey.keybind) }
             .resolver(Placeholder.parsed("line", "<#ECFFF8><bold>│</bold></#ECFFF8><white>"))
