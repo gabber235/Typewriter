@@ -14,19 +14,7 @@ import com.typewritermc.engine.paper.entry.entity.SimpleEntityInstance
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.Sound
 import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
-import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
-import com.typewritermc.entity.entries.data.minecraft.living.applyAgeableData
-import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
-import com.typewritermc.entity.entries.data.minecraft.living.DefendingProperty
-import com.typewritermc.entity.entries.data.minecraft.living.FaceplantedProperty
-import com.typewritermc.entity.entries.data.minecraft.living.InterestedProperty
-import com.typewritermc.entity.entries.data.minecraft.living.PouncingProperty
-import com.typewritermc.entity.entries.data.minecraft.living.applyDefendingData
-import com.typewritermc.entity.entries.data.minecraft.living.applyFaceplantedData
-import com.typewritermc.entity.entries.data.minecraft.living.applyInterestedData
-import com.typewritermc.entity.entries.data.minecraft.living.applyPouncingData
-import com.typewritermc.entity.entries.data.minecraft.living.SleepingProperty
-import com.typewritermc.entity.entries.data.minecraft.living.applySleepingData
+import com.typewritermc.entity.entries.data.minecraft.living.*
 import com.typewritermc.entity.entries.data.minecraft.living.fox.FoxTypeProperty
 import com.typewritermc.entity.entries.data.minecraft.living.fox.applyFoxTypeData
 import com.typewritermc.entity.entries.data.minecraft.living.tameable.SittingProperty
@@ -40,7 +28,7 @@ class FoxDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "ageable_data", "fox_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {

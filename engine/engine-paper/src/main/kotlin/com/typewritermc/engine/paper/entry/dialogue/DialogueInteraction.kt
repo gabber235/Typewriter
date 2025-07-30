@@ -150,7 +150,7 @@ val Player.speakersInDialogue: Set<Ref<SpeakerEntry>>
     }
 
 fun Player.playSpeakerSound(speaker: SpeakerEntry?, context: InteractionContext? = this.interactionContext) {
-    val sound = speaker?.sound ?: return
+    val sound = speaker?.sound?.get(this, context) ?: return
     playSound(sound, context)
 }
 

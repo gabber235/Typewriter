@@ -21,7 +21,7 @@ import java.util.*
 class SelfSpeaker(
     override val id: String = "",
     override val name: String = "",
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     val overrideName: Optional<Var<String>> = Optional.empty(),
 ) : SpeakerEntry, SoundSourceEntry, StaticEntry {
     override val displayName: Var<String>

@@ -37,7 +37,7 @@ class HitBoxDefinition(
     val height: Double = 1.0,
 ) : EntityDefinitionEntry {
     override val displayName: Var<String> get() = baseEntity.get()?.displayName ?: ConstVar("")
-    override val sound: Sound get() = baseEntity.get()?.sound ?: Sound.EMPTY
+    override val sound: Var<Sound> get() = baseEntity.get()?.sound ?: ConstVar(Sound.EMPTY)
     override val data: List<Ref<EntityData<*>>> get() = baseEntity.get()?.data ?: emptyList()
 
     override fun create(player: Player): FakeEntity {

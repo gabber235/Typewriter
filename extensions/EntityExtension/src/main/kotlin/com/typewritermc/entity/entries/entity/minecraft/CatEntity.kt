@@ -37,7 +37,7 @@ class CatDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "ageable_data", "tameable_data", "cat_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {

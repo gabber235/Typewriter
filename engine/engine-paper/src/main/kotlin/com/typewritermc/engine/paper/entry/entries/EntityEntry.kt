@@ -21,7 +21,7 @@ interface SpeakerEntry : PlaceholderEntry {
     val displayName: Var<String>
 
     @Help("The sound that will be played when the entity speaks.")
-    val sound: Sound
+    val sound: Var<Sound>
 
     override fun parser(): PlaceholderParser = placeholderParser {
         supply { player -> displayName.get(player) }
@@ -84,8 +84,8 @@ interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry, SpeakerEn
                 ?: ""
         }
 
-    override val sound: Sound
-        get() = definition.get()?.sound ?: Sound.EMPTY
+    override val sound: Var<Sound>
+        get() = definition.get()?.sound ?: ConstVar(Sound.EMPTY)
 
     override fun getEmitter(player: Player): SoundEmitter {
         val display = ref().findDisplay() as? AudienceEntityDisplay ?: return SoundEmitter(player.entityId)

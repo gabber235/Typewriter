@@ -13,6 +13,6 @@ class ExampleSpeakerEntry(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
 ) : SpeakerEntry
 //</code-block:speaker_entry>
