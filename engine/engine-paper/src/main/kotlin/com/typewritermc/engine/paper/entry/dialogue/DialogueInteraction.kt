@@ -149,9 +149,9 @@ val Player.speakersInDialogue: Set<Ref<SpeakerEntry>>
         return sequence.speakers
     }
 
-fun Player.playSpeakerSound(speaker: SpeakerEntry?) {
+fun Player.playSpeakerSound(speaker: SpeakerEntry?, context: InteractionContext? = this.interactionContext) {
     val sound = speaker?.sound ?: return
-    playSound(sound)
+    playSound(sound, context)
 }
 
 enum class DialogueTrigger : EventTrigger {

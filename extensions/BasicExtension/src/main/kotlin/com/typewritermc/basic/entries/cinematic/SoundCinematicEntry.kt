@@ -1,12 +1,15 @@
 package com.typewritermc.basic.entries.cinematic
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Segments
+import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
-import com.typewritermc.engine.paper.utils.*
+import com.typewritermc.engine.paper.interaction.interactionContext
+import com.typewritermc.engine.paper.utils.Sound
+import com.typewritermc.engine.paper.utils.playSound
+import com.typewritermc.engine.paper.utils.stopSound
 import org.bukkit.entity.Player
 
 @Entry("sound_cinematic", "Play a sound during a cinematic", Colors.YELLOW, "fa6-solid:music")
@@ -48,7 +51,7 @@ class SoundCinematicAction(
     override suspend fun startSegment(segment: SoundSegment) {
         super.startSegment(segment)
         previousSound = segment.sound.get(player)
-        player.playSound(previousSound!!)
+        player.playSound(previousSound!!, player.interactionContext)
     }
 
     override suspend fun stopSegment(segment: SoundSegment) {
