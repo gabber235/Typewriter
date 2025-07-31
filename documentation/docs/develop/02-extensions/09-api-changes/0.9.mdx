@@ -2,10 +2,6 @@
 title: 0.9.X API changes
 ---
 
----
-title: 0.9.X API changes
----
-
 # 0.9.X API changes
 
 ## `ThreadType` Deprecation
@@ -45,3 +41,109 @@ Dispatchers.UntickedAsync.launch {}
 ```
 
 If working in **IntelliJ**, it will automatically suggest the correct replacements.
+
+## `SpeakerEntry` and `EntityInstanceEntry` Changes
+
+The way sound is handled in `SpeakerEntry` and, by extension, `EntityInstanceEntry` has been updated to use variables.
+
+
+### Introduction of `InteractionContext`
+
+Many updated methods now require a nullable `InteractionContext`. This context is essential for resolving `Var` values, allowing properties like sound or volume to be dynamic based on the current game state.
+
+You can typically obtain the `InteractionContext` in two ways:
+
+1.  **From the `Player` object using the `interactionContext` extension property:**
+    ```kotlin showLineNumbers
+    val interactionContext: InteractionContext? = player.interactionContext
+    ```
+
+2.  **From the execution scope of an entry**, where it is often provided as a `context` property (e.g., in `ActionTrigger`).
+    ```kotlin showLineNumbers
+    override fun ActionTrigger.execute() {
+        // The 'context' property is directly available here
+        val dynamicSound = sound.get(player, context)
+        player.playSound(dynamicSound, context)
+    }
+    ```
+
+### Sound Field
+
+The `sound` field now utilizes a `Var<Sound>` type. This change affects how you set and get sound values.
+
+```kotlin showLineNumbers
+// highlight-red
+class CustomEntityDefinition(
+    ...
+    override val sound: Sound = Sound.EMPTY,
+    ...
+) : SimpleEntityDefinition {
+// highlight-green
+class CustomEntityDefinition(
+    ...
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
+    ...
+) : SimpleEntityDefinition {
+```
+
+**To get the sound:**
+Retrieving the sound now requires the context of a `player` and an optional `interactionContext`.
+
+```kotlin showLineNumbers
+// highlight-red
+val sound: Sound = entry.sound
+// highlight-green
+val sound: Sound = entry.sound.get(player, interactionContext)
+```
+
+## `Sound` Class Changes
+
+Several fields and methods within the `Sound` class have been updated.
+
+### Volume and Pitch Fields
+
+The `volume` and `pitch` fields have been changed from `Float` to `Var<Float>`.
+
+**To set the volume and pitch:**
+When creating a new `Sound` instance, you now need to wrap the `volume` and `pitch` values in a `Var`, such as `ConstVar`.
+
+```kotlin showLineNumbers
+// highlight-red
+val sound = Sound(DefaultSoundId("minecraft:ambient.cave"), SelfSoundSource, AdventureSound.Source.MASTER, 1.0f, 1.0f)
+// highlight-green
+val sound = Sound(DefaultSoundId("minecraft:ambient.cave"), SelfSoundSource, AdventureSound.Source.MASTER, ConstVar(1.0f), ConstVar(1.0f))
+```
+
+**To get the volume and pitch:**
+Accessing the `volume` and `pitch` now requires a `player` and an optional `interactionContext`.
+
+```kotlin showLineNumbers
+// highlight-red
+val volume: Float = sound.volume
+val pitch: Float = sound.pitch
+// highlight-green
+val volume: Float = sound.volume.get(player, interactionContext)
+val pitch: Float = sound.pitch.get(player, interactionContext)
+```
+
+### `play` Method
+
+The `play` method's signature has been updated. It now takes a `Player` and a nullable `InteractionContext` instead of an `Audience`.
+
+```kotlin showLineNumbers
+// highlight-red
+sound.play(audience)
+// highlight-green
+sound.play(player, interactionContext)
+```
+
+The corresponding extension functions have also been updated to reflect this change.
+
+```kotlin showLineNumbers
+// highlight-red
+fun Audience.playSound(sound: Sound)
+fun Audience.stopSound(sound: Sound)
+// highlight-green
+fun Player.playSound(sound: Sound, context: InteractionContext?)
+fun Player.stopSound(sound: Sound)
+```
