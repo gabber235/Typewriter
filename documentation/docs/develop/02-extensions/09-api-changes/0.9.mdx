@@ -72,15 +72,16 @@ You can typically obtain the `InteractionContext` in two ways:
 The `sound` field now utilizes a `Var<Sound>` type. This change affects how you set and get sound values.
 
 ```kotlin showLineNumbers
-// highlight-red
 class CustomEntityDefinition(
     ...
+    // highlight-red
     override val sound: Sound = Sound.EMPTY,
     ...
 ) : SimpleEntityDefinition {
-// highlight-green
+
 class CustomEntityDefinition(
     ...
+    // highlight-green
     override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     ...
 ) : SimpleEntityDefinition {
@@ -118,12 +119,14 @@ val sound = Sound(DefaultSoundId("minecraft:ambient.cave"), SelfSoundSource, Adv
 Accessing the `volume` and `pitch` now requires a `player` and an optional `interactionContext`.
 
 ```kotlin showLineNumbers
-// highlight-red
+// highlight-red-start
 val volume: Float = sound.volume
 val pitch: Float = sound.pitch
-// highlight-green
+// highlight-red-end
+// highlight-green-start
 val volume: Float = sound.volume.get(player, interactionContext)
 val pitch: Float = sound.pitch.get(player, interactionContext)
+// highlight-green-end
 ```
 
 ### `play` Method
@@ -140,10 +143,12 @@ sound.play(player, interactionContext)
 The corresponding extension functions have also been updated to reflect this change.
 
 ```kotlin showLineNumbers
-// highlight-red
+// highlight-red-start
 fun Audience.playSound(sound: Sound)
 fun Audience.stopSound(sound: Sound)
-// highlight-green
+// highlight-red-end
+// highlight-green-start
 fun Player.playSound(sound: Sound, context: InteractionContext?)
 fun Player.stopSound(sound: Sound)
+// highlight-green-end
 ```
