@@ -3,7 +3,6 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:iconify_flutter_plus/icons/jam.dart";
 import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 

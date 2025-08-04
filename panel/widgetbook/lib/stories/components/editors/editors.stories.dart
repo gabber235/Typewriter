@@ -7,6 +7,7 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
+import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -36,23 +37,26 @@ class EditorStories extends StatelessWidget {
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: overrides,
-      child: Consumer(
-        builder: (context, ref, child) {
-          ref.watch(selectedProvider);
-          return Scaffold(
-            body: Center(
-              child: Section(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: this.child,
+      child: AppRequiredWidgets(
+        child: Consumer(
+          child: child,
+          builder: (context, ref, child) {
+            ref.watch(selectedProvider);
+            return Scaffold(
+              body: Center(
+                child: Section(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: child,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

@@ -5,9 +5,9 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
-import "package:typewriter_panel/widgets/generic/components/organization_icon.dart";
 
 class OrganizationSelector extends HookConsumerWidget {
   const OrganizationSelector({super.key});
@@ -178,18 +178,23 @@ class _OrganizationPopupRoute extends PopupRoute<void> {
             targetAnchor: Alignment.bottomLeft,
             child: FadeTransition(
               opacity: animation,
-              child: Material(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 420,
-                    maxHeight: 420,
-                  ),
-                  child: child,
-                ),
+              child: Builder(
+                builder: (context) {
+                  return Material(
+                    elevation: 4,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 420,
+                        maxHeight: 420,
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -317,8 +322,9 @@ class _OrganizationsList extends HookConsumerWidget {
             itemBuilder: (context, index) {
               final org = organizations[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 child: Material(
+                  borderRadius: BorderRadius.circular(8),
                   child: ListTile(
                     dense: true,
                     leading: OrganizationIcon(
@@ -444,6 +450,7 @@ class ActionList extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }

@@ -101,14 +101,13 @@ class BookSelection extends Selectable<BookSelector> {
   }
 
   @override
-  fieldValue(String path) {
+  dynamic fieldValue(String path) {
     // TODO: implement fieldValue
     throw UnimplementedError();
   }
 
   @override
-  void setFieldValue(String path, value) {
+  void setFieldValue(String path, dynamic value) {
     // TODO: implement setFieldValue
   }
-
 }

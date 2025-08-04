@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/logic/organization.dart";
-import "package:typewriter_panel/widgets/generic/components/organization_icon.dart";
+import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 

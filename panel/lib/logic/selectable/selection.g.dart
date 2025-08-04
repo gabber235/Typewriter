@@ -202,7 +202,7 @@ final class SelectedProvider
   Selected create() => Selected();
 }
 
-String _$selectedHash() => r'b9a198d55a39afef6d9b4f26cf0f360cb8b18e66';
+String _$selectedHash() => r'9cd62c8ddf1d3e96594c7c6da01e9cdc13b1f63e';
 
 abstract class _$Selected extends $AsyncNotifier<List<Selectable>> {
   FutureOr<List<Selectable>> build();

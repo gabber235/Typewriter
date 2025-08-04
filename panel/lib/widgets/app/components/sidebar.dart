@@ -1,13 +1,16 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
-import "package:flutter_context_menu/flutter_context_menu.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/icomoon_free.dart";
+import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/hooks/menu_controller.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:url_launcher/url_launcher.dart";
 
@@ -132,66 +135,75 @@ class _UserMenu extends HookConsumerWidget {
         final name = user.name ?? user.username ?? user.sub;
         final avatarUrl = user.picture ?? "$userIconUrl&seed=${user.sub}";
 
-        final menu = ContextMenu(
-          entries: <ContextMenuEntry>[
-            MenuItem(
+        final controller = useMenuController();
+        final focusNode = useFocusNode();
+
+        return ContextMenuRegion(
+          items: [
+            const MenuItem(
               label: "Account",
-              icon: Icons.person_outline,
-              enabled: false,
-              onSelected: () {
-                // TODO: Implement account/profile navigation
-              },
+              icon: Icones(MaterialSymbols.person),
             ),
             MenuItem.submenu(
               label: "Appearance",
-              icon: Icons.palette_outlined,
+              icon: Icones(MaterialSymbols.palette_outline),
               items: [
                 MenuItem(
                   label: "System",
                   icon: currentThemeMode == ThemeMode.system
-                      ? Icons.check
-                      : Icons.brightness_auto,
+                      ? Icones(MaterialSymbols.check)
+                      : Icones(MaterialSymbols.brightness_auto),
                   color: currentThemeMode == ThemeMode.system
                       ? Theme.of(context).colorScheme.primary
                       : null,
-                  onSelected: () {
-                    ref
-                        .read(appearanceProvider.notifier)
-                        .mode(ThemeMode.system);
-                  },
+                  onSelected: currentThemeMode == ThemeMode.system
+                      ? null
+                      : () {
+                          ref
+                              .read(appearanceProvider.notifier)
+                              .mode(ThemeMode.system);
+                        },
                 ),
                 MenuItem(
                   label: "Light",
                   icon: currentThemeMode == ThemeMode.light
-                      ? Icons.check
-                      : Icons.light_mode,
+                      ? Icones(MaterialSymbols.check)
+                      : Icones(MaterialSymbols.light_mode),
                   color: currentThemeMode == ThemeMode.light
                       ? Theme.of(context).colorScheme.primary
                       : null,
-                  onSelected: () {
-                    ref.read(appearanceProvider.notifier).mode(ThemeMode.light);
-                  },
+                  onSelected: currentThemeMode == ThemeMode.light
+                      ? null
+                      : () {
+                          ref
+                              .read(appearanceProvider.notifier)
+                              .mode(ThemeMode.light);
+                        },
                 ),
                 MenuItem(
                   label: "Dark",
                   icon: currentThemeMode == ThemeMode.dark
-                      ? Icons.check
-                      : Icons.dark_mode,
+                      ? Icones(MaterialSymbols.check)
+                      : Icones(MaterialSymbols.dark_mode),
                   color: currentThemeMode == ThemeMode.dark
                       ? Theme.of(context).colorScheme.primary
                       : null,
-                  onSelected: () {
-                    ref.read(appearanceProvider.notifier).mode(ThemeMode.dark);
-                  },
+                  onSelected: currentThemeMode == ThemeMode.dark
+                      ? null
+                      : () {
+                          ref
+                              .read(appearanceProvider.notifier)
+                              .mode(ThemeMode.dark);
+                        },
                 ),
               ],
             ),
-            const MenuDivider(),
+            const MenuItem.divider(),
             MenuItem(
               label: "Help & Support",
-              icon: Icons.help_outline,
+              icon: Icones(MaterialSymbols.help_outline),
               onSelected: () async {
-                final url = Uri.parse("https://discord.gg/typewriter");
+                final url = Uri.parse("https://discord.gg/j5WWscvQkW");
                 if (await canLaunchUrl(url)) {
                   await launchUrl(
                     url,
@@ -200,10 +212,10 @@ class _UserMenu extends HookConsumerWidget {
                 }
               },
             ),
-            const MenuDivider(),
+            const MenuItem.divider(),
             MenuItem(
               label: "Logout",
-              icon: Icons.logout,
+              icon: Icones(MaterialSymbols.logout),
               color: Theme.of(context).colorScheme.error,
               onSelected: () async {
                 final router = ref.read(appRouterProvider);
@@ -220,35 +232,31 @@ class _UserMenu extends HookConsumerWidget {
               },
             ),
           ],
-        );
-
-        return InkWell(
-          onTapUp: (details) {
-            showContextMenu(
-              context,
-              contextMenu: menu.copyWith(
-                position: details.globalPosition,
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundImage: NetworkImage(avatarUrl),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    name,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    overflow: TextOverflow.ellipsis,
+          enableGestures: false,
+          childFocusNode: focusNode,
+          controller: controller,
+          child: InkWell(
+            onTapDown: ContextMenuRegion.onSecondaryTapDown(controller),
+            borderRadius: BorderRadius.circular(8),
+            focusNode: focusNode,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundImage: NetworkImage(avatarUrl),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

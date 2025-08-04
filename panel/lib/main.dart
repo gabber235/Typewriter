@@ -1,7 +1,9 @@
 import "dart:math";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:localstorage/localstorage.dart";
@@ -10,7 +12,7 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
-import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
+import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/nats_connection.dart";
 import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
@@ -34,7 +36,7 @@ class TypewriterPanel extends HookConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(appearanceProvider);
 
-    return GlobalCursorController(
+    return AppRequiredWidgets(
       child: _EagerInitialization(
         child: MaterialApp.router(
           title: "Typewriter",
@@ -56,73 +58,69 @@ class TypewriterPanel extends HookConsumerWidget {
 }
 
 ThemeData buildTheme(Brightness brightness) {
+  final isLight = brightness == Brightness.light;
   final baseTheme = ThemeData(
     brightness: brightness,
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.blueAccent,
       brightness: brightness,
       error: Colors.redAccent,
-      surface: brightness == Brightness.light
-          ? const Color(0xFFF5F5F5)
-          : const Color(0xFF141218),
-      onSurfaceVariant: brightness == Brightness.light
-          ? const Color(0xFF6c6d76)
-          : const Color(0xFFC4C6D0),
-      surfaceContainerLowest: brightness == Brightness.light
-          ? const Color(0xFFFFFFFF)
-          : const Color(0xFF1F2123),
-      surfaceContainer: brightness == Brightness.light
-          ? const Color(0xFFF3EDF7)
-          : const Color(0xFF1f1d23),
+      surface: isLight ? const Color(0xFFF5F5F5) : const Color(0xFF141218),
+      onSurfaceVariant:
+          isLight ? const Color(0xFF6c6d76) : const Color(0xFFC4C6D0),
+      surfaceContainerLowest:
+          isLight ? const Color(0xFFFFFFFF) : const Color(0xFF1F2123),
+      surfaceContainer:
+          isLight ? const Color(0xFFF3EDF7) : const Color(0xFF1f1d23),
     ),
   );
 
+  final textTheme =
+      baseTheme.textTheme.apply(fontFamily: "JetBrainsMono").copyWith(
+            labelLarge: TextStyle(
+              fontFamily: "JetBrainsMono",
+              color: baseTheme.colorScheme.onSurface,
+              fontSize: 14,
+              letterSpacing: 0.5,
+              fontVariations: [FontVariation("wght", 700)],
+            ),
+            labelMedium: TextStyle(
+              fontFamily: "JetBrainsMono",
+              color: baseTheme.colorScheme.onSurface,
+              fontSize: 13,
+              letterSpacing: 0.5,
+              fontVariations: [FontVariation("wght", 700)],
+            ),
+            labelSmall: TextStyle(
+              fontFamily: "JetBrainsMono",
+              color: baseTheme.colorScheme.onSurface,
+              fontSize: 12,
+              letterSpacing: 0.5,
+              fontVariations: [FontVariation("wght", 700)],
+            ),
+          );
+
   return baseTheme.copyWith(
-    textTheme: baseTheme.textTheme.apply(fontFamily: "JetBrainsMono").copyWith(
-          labelLarge: TextStyle(
-            fontFamily: "JetBrainsMono",
-            color: baseTheme.colorScheme.onSurface,
-            fontSize: 14,
-            letterSpacing: 0.5,
-            fontVariations: [FontVariation("wght", 700)],
-          ),
-          labelMedium: TextStyle(
-            fontFamily: "JetBrainsMono",
-            color: baseTheme.colorScheme.onSurface,
-            fontSize: 13,
-            letterSpacing: 0.5,
-            fontVariations: [FontVariation("wght", 700)],
-          ),
-          labelSmall: TextStyle(
-            fontFamily: "JetBrainsMono",
-            color: baseTheme.colorScheme.onSurface,
-            fontSize: 12,
-            letterSpacing: 0.5,
-            fontVariations: [FontVariation("wght", 700)],
-          ),
-        ),
+    textTheme: textTheme,
     inputDecorationTheme: InputDecorationTheme(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide.none,
       ),
-      fillColor: brightness == Brightness.light
+      fillColor: isLight
           ? Colors.black.withValues(alpha: 0.05)
           : Colors.black.withValues(alpha: 0.2),
       filled: true,
       hoverColor: Colors.black.withValues(alpha: 0.1),
       errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
       hintStyle: TextStyle(
-        color: brightness == Brightness.light
-            ? const Color(0x99000000)
-            : const Color(0x99FFFFFF),
+        color: isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
         fontSize: 16,
         fontVariations: const [normalWeight],
       ),
-      prefixIconColor: brightness == Brightness.light
-          ? const Color(0x99000000)
-          : const Color(0x99FFFFFF),
+      prefixIconColor:
+          isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: Colors.redAccent.shade200, width: 2),
@@ -130,6 +128,27 @@ ThemeData buildTheme(Brightness brightness) {
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+    ),
+    tooltipTheme: TooltipThemeData(
+      preferBelow: false,
+      triggerMode: TooltipTriggerMode.longPress,
+      verticalOffset: 32,
+      waitDuration: 100.ms,
+      decoration: BoxDecoration(
+        color: baseTheme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: baseTheme.colorScheme.onSurface.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: TextStyle(
+        color: baseTheme.colorScheme.onSurface.withValues(alpha: 0.5),
+        fontWeight: isLight ? FontWeight.w400 : FontWeight.w200,
       ),
     ),
     hoverColor: Colors.black.withValues(alpha: 0.1),
@@ -153,6 +172,26 @@ ThemeData buildTheme(Brightness brightness) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         foregroundColor: Colors.white,
+      ),
+    ),
+    menuButtonTheme: MenuButtonThemeData(
+      style: MenuItemButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        iconSize: 16,
+        textStyle: textTheme.bodySmall?.copyWith(fontSize: 12),
+      ),
+    ),
+    menuTheme: MenuThemeData(
+      style: MenuStyle(
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        elevation: WidgetStatePropertyAll(1),
+        visualDensity:
+            VisualDensity.defaultDensityForPlatform(defaultTargetPlatform),
       ),
     ),
   );

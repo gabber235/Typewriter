@@ -10,9 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  hooks_riverpod: ^3.0.0-dev.15
+  hooks_riverpod: ^3.0.0-dev.16
+  riverpod_annotation: ^3.0.0-dev.16
   flutter_hooks: ^0.21.2
-  riverpod_annotation: ^3.0.0-dev.15
   auto_route: ^10.0.1
   logto_dart_sdk: ^3.0.0
   localstorage: ^6.0.0
@@ -28,7 +28,6 @@ dependencies:
   dart_casing: ^3.0.1
   okcolor: ^1.1.0
   url_launcher: ^6.3.1
-  flutter_context_menu: ^0.2.4
   uuid: ^4.5.1
   dotted_border: ^3.1.0
   collapsible: ^1.0.0

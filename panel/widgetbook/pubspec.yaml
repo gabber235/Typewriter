@@ -13,7 +13,6 @@ dependencies:
   widgetbook_annotation: ^3.5.0
   typewriter_panel:
     path: ../
-  flutter_riverpod: ^3.0.0-dev.15
   hooks_riverpod: ^3.0.0-dev.15
   riverpod_annotation: ^3.0.0-dev.15
   flutter_animate: ^4.5.2

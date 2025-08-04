@@ -123,23 +123,27 @@ class _ConflictValueEditor extends HookConsumerWidget {
               }
             : null,
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icones(
-                Fa6Solid.xmark,
-                size: 22,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "Field has different values",
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+        child: Tooltip(
+          message: "Click to reset field to default value",
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icones(
+                  Fa6Solid.xmark,
+                  size: 22,
+                  color: Theme.of(context).colorScheme.error,
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Field has different values",
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -180,24 +184,28 @@ class _NoneValueEditor extends HookConsumerWidget {
                 }
               : null,
           borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Icones(
-                  Fa6Solid.xmark,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Field is missing",
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error),
+          child: Tooltip(
+            message: "Click to reset field to default value",
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icones(
+                    Fa6Solid.xmark,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      "Field is missing",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -218,7 +226,7 @@ class _LoadingValueEditor extends HookConsumerWidget {
         borderRadius: BorderRadius.circular(8),
         color: Theme.of(context).inputDecorationTheme.fillColor,
       ),
-      height: 20 + 12 * 2,
+      height: 24 + 12 * 2,
     ).animate(controller: controller).shimmer(delay: 500.ms, duration: 1200.ms);
   }
 }

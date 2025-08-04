@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:typewriter_panel/widgets/generic/components/organization_selector.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/logic/organization.mock.dart";
 

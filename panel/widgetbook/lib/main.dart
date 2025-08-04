@@ -1,9 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:mocktail/mocktail.dart";
 import "package:typewriter_panel/main.dart";
-import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
@@ -55,15 +53,13 @@ class WidgetbookApp extends StatelessWidget {
         ZoomAddon(),
         TimeDilationAddon(),
       ],
+      lightTheme: buildTheme(Brightness.light),
+      darkTheme: buildTheme(Brightness.dark),
       appBuilder: (context, child) {
-        return ProviderScope(
-          child: GlobalCursorController(
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              scrollBehavior: GlobalCustomScrollBehavior(),
-              home: Material(child: child),
-            ),
-          ),
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          scrollBehavior: GlobalCustomScrollBehavior(),
+          home: Material(child: child),
         );
       },
       directories: directories,

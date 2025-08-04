@@ -1,9 +1,9 @@
-import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:logto_dart_sdk/logto_client.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/logic/auth.dart";
-import "package:typewriter_panel/widgets/generic/components/sidebar.dart";
+import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 
 final mockUserInfo = LogtoUserInfoResponse(
   sub: "1",

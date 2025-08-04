@@ -1,8 +1,9 @@
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart"
     show OrganizationScaffold;
+import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/logic/appearance.mock.dart";
@@ -30,6 +31,8 @@ Widget libraryPageUseCase(BuildContext context) {
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],
-    child: OrganizationScaffold(child: LibraryPage()),
+    child: AppRequiredWidgets(
+      child: OrganizationScaffold(child: LibraryPage()),
+    ),
   );
 }

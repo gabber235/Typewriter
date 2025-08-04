@@ -1,5 +1,4 @@
 import "dart:math";
- 
 
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
@@ -10,10 +9,10 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
+import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
-import "package:typewriter_panel/widgets/generic/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";

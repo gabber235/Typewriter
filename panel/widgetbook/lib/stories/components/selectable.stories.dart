@@ -8,7 +8,7 @@ import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
-import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
+import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -263,5 +263,5 @@ class SelectableDemo extends HookConsumerWidget {
 
 @widgetbook.UseCase(name: "Selectable Boxes", type: SelectableBox)
 Widget selectableUseCase(BuildContext context) {
-  return SelectableDemo();
+  return ProviderScope(child: AppRequiredWidgets(child: SelectableDemo()));
 }

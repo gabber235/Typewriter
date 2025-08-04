@@ -2,8 +2,8 @@ import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/widgets/generic/components/custom_appbar.dart";
-import "package:typewriter_panel/widgets/generic/components/sidebar.dart";
+import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
+import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 
 @RoutePage()
 class OrganizationPage extends HookConsumerWidget {

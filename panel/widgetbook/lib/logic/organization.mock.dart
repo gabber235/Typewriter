@@ -1,9 +1,9 @@
 import "package:faker/faker.dart";
+import "package:mocktail/mocktail.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:mocktail/mocktail.dart";
 
 enum MockOrganizationsState {
   loading,

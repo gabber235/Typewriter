@@ -2,7 +2,6 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
-import "package:iconify_flutter_plus/icons/mingcute.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/validated_editor_text_field.dart";
