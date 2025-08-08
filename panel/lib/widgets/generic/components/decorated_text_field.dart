@@ -41,13 +41,6 @@ class DecoratedTextField extends HookWidget {
   final TextAlign textAlign;
   final bool readOnly;
 
-  static final _ignoringKeys = <LogicalKeyboardKey>{
-    LogicalKeyboardKey.keyH,
-    LogicalKeyboardKey.keyJ,
-    LogicalKeyboardKey.keyK,
-    LogicalKeyboardKey.keyL,
-  };
-
   @override
   Widget build(BuildContext context) {
     final controller = this.controller ?? useTextEditingController(text: text);
@@ -115,11 +108,12 @@ class DecoratedTextField extends HookWidget {
                 : FocusType.none;
           },
           onKeyEvent: (node, event) {
-            if (focusNode.hasPrimaryFocus &&
-                _ignoringKeys.contains(event.logicalKey)) {
-              return KeyEventResult.skipRemainingHandlers;
-            }
-            return KeyEventResult.ignored;
+            if (!focusNode.hasPrimaryFocus) return KeyEventResult.ignored;
+            final shouldBlock =
+                _shouldBlockKeyEventForTextField(context, event);
+            return shouldBlock
+                ? KeyEventResult.skipRemainingHandlers
+                : KeyEventResult.ignored;
           },
           child: TextField(
             focusNode: focusNode,
@@ -153,6 +147,24 @@ class DecoratedTextField extends HookWidget {
       ),
     );
   }
+}
+
+bool _shouldBlockKeyEventForTextField(BuildContext context, KeyEvent event) {
+  if (event.logicalKey == LogicalKeyboardKey.escape) {
+    return false;
+  }
+
+  final hardware = HardwareKeyboard.instance;
+  final isControlDown =
+      hardware.isLogicalKeyPressed(LogicalKeyboardKey.controlLeft) ||
+          hardware.isLogicalKeyPressed(LogicalKeyboardKey.controlRight);
+  final isMetaDown =
+      hardware.isLogicalKeyPressed(LogicalKeyboardKey.metaLeft) ||
+          hardware.isLogicalKeyPressed(LogicalKeyboardKey.metaRight);
+  final isAltDown = hardware.isLogicalKeyPressed(LogicalKeyboardKey.altLeft) ||
+      hardware.isLogicalKeyPressed(LogicalKeyboardKey.altRight);
+
+  return !isControlDown && !isMetaDown && !isAltDown;
 }
 
 class DismissActionCallback extends DismissAction {
