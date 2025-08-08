@@ -137,8 +137,8 @@ class FieldHeader extends HookConsumerWidget {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(4),
-                onTapDown: (_) =>
-                    canExpand ? expanded.value = !expanded.value : null,
+                onTapDown: canExpand ? (_) =>
+                    expanded.value = !expanded.value : null,
                 child: Row(
                   children: [
                     if (canExpand && editorMode.hasHeaderActions)

@@ -39,7 +39,7 @@ final class TestSelectableDataProvider
 }
 
 String _$testSelectableDataHash() =>
-    r'bfe0ee6486ccd63deeed9148f6f494cc7e9ec998';
+    r'dd1112799a552d563269d28b996461d5c73d9673';
 
 abstract class _$TestSelectableData
     extends $Notifier<Map<String, DynamicData>> {
@@ -119,7 +119,7 @@ final class TestDataProvider
   }
 }
 
-String _$testDataHash() => r'584e149f8e6a1220140632deff69059f8e7f9bba';
+String _$testDataHash() => r'e9ff1c253ffa6f4d78cebcc29855e24399ce9c0a';
 
 final class TestDataFamily extends $Family
     with $FunctionalFamilyOverride<DynamicData?, String> {

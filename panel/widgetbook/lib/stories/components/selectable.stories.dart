@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -10,146 +11,35 @@ import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
+import "package:typewriter_panel/widgets/generic/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 part "selectable.stories.g.dart";
 
-@riverpod
-class TestSelectableData extends _$TestSelectableData {
-  @override
-  Map<String, DynamicData> build() {
-    return {};
-  }
-
-  void set(String id, DynamicData data) {
-    state = {...state, id: data};
-  }
+@widgetbook.UseCase(name: "Selectable Boxes", type: SelectableBox)
+Widget selectableUseCase(BuildContext context) {
+  return ProviderScope(
+    observers: [Logger()],
+    child: AppRequiredWidgets(child: SelectableDemo()),
+  );
 }
 
-@riverpod
-DynamicData? testData(Ref ref, String id) {
-  return ref.watch(testSelectableDataProvider)[id];
-}
-
-// Custom selectable identifier for testing
-class TestSelectableIdentifier extends SelectableIdentifier {
-  TestSelectableIdentifier({
-    required this.id,
-    required this.dataBlueprint,
-    this.color = Colors.redAccent,
-  });
-
+class Logger extends ProviderObserver {
   @override
-  final String id;
-  final ObjectBlueprint dataBlueprint;
-  final Color color;
-
-  @override
-  Future<Selectable> create(Ref ref) async {
-    return TestSelectable(
-      ref: ref,
-      id: this,
-      objectBlueprint: dataBlueprint,
-      data:
-          ref.watch(testDataProvider(id)) ??
-          DynamicData(dataBlueprint.defaultValue()),
-      color: color,
-    );
+  void didUpdateProvider(
+    ProviderObserverContext context,
+    Object? previousValue,
+    Object? newValue,
+  ) {
+    print('''
+{
+  "provider": "${context.provider}",
+  "newValue": "$newValue",
+  "mutation": "${context.mutation}"
+}''');
   }
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TestSelectableIdentifier &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  String toString() {
-    return "TestSelectableIdentifier(id: $id)";
-  }
-}
-
-// Custom selectable implementation for testing
-class TestSelectable extends Selectable<TestSelectableIdentifier> {
-  TestSelectable({
-    required this.ref,
-    required this.id,
-    required this.objectBlueprint,
-    required this.data,
-    required this.color,
-  });
-
-  final Ref ref;
-
-  @override
-  final TestSelectableIdentifier id;
-
-  @override
-  final ObjectBlueprint objectBlueprint;
-
-  @override
-  String get name {
-    final name = data.get("name") as String?;
-    return (name?.nullIfEmpty ?? id.id).formatted;
-  }
-
-  final DynamicData data;
-
-  final Color color;
-
-  @override
-  Widget? header() => TestSelectableHeader(selectable: this);
-
-  @override
-  dynamic fieldValue(String path) {
-    final value = data.get(path);
-    return value;
-  }
-
-  @override
-  void setFieldValue(String path, dynamic value) {
-    ref
-        .read(testSelectableDataProvider.notifier)
-        .set(id.id, data.copyWith(path, value));
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TestSelectable &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  String toString() {
-    return "TestSelectable(id: $id, name: $name)";
-  }
-}
-
-class TestSelectableHeader extends HookConsumerWidget {
-  const TestSelectableHeader({required this.selectable, super.key});
-
-  final TestSelectable selectable;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Title(title: selectable.name, color: selectable.color),
-        const SizedBox(height: 8),
-        Identifier(id: selectable.id.id),
-      ],
-    );
-  }
 }
 
 // Selectable box widget
@@ -160,11 +50,18 @@ class SelectableBox extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final focusNode = useFocusNode();
     return Selector(
       selectableId: selectable,
-      builder: (isSelected) {
+      focusNode: focusNode,
+      builder: (isSelected, isFocused, isHovered) {
         return AnimatedOpacity(
-          opacity: isSelected ? 1 : 0.3,
+          opacity:
+              isHovered || isFocused
+                  ? 0.7
+                  : isSelected
+                  ? 1
+                  : 0.3,
           duration: const Duration(milliseconds: 200),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -174,7 +71,7 @@ class SelectableBox extends HookConsumerWidget {
               color: selectable.color.withValues(alpha: isSelected ? 0.8 : 0.3),
               borderRadius: BorderRadius.circular(12),
               boxShadow:
-                  isSelected
+                  isFocused
                       ? [
                         BoxShadow(
                           color: selectable.color.withValues(alpha: 0.5),
@@ -213,6 +110,24 @@ class SelectableBox extends HookConsumerWidget {
   }
 }
 
+class TestSelectableHeader extends HookConsumerWidget {
+  const TestSelectableHeader({required this.selectable, super.key});
+
+  final TestSelectable selectable;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Title(title: selectable.name, color: selectable.color),
+        const SizedBox(height: 8),
+        Identifier(id: selectable.id.id),
+      ],
+    );
+  }
+}
+
 // Main demo widget
 class SelectableDemo extends HookConsumerWidget {
   const SelectableDemo({super.key});
@@ -246,13 +161,17 @@ class SelectableDemo extends HookConsumerWidget {
 
     return Scaffold(
       body: Inspector(
-        child: Center(
-          child: Wrap(
-            spacing: 24,
-            runSpacing: 24,
-            children: List.generate(
-              3,
-              (index) => SelectableBox(selectable: selectables[index]),
+        child: Pane(
+          id: "boxes",
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: Wrap(
+              spacing: 24,
+              runSpacing: 24,
+              children: List.generate(
+                3,
+                (index) => SelectableBox(selectable: selectables[index]),
+              ),
             ),
           ),
         ),
@@ -261,7 +180,140 @@ class SelectableDemo extends HookConsumerWidget {
   }
 }
 
-@widgetbook.UseCase(name: "Selectable Boxes", type: SelectableBox)
-Widget selectableUseCase(BuildContext context) {
-  return ProviderScope(child: AppRequiredWidgets(child: SelectableDemo()));
+// Custom selectable implementation for testing
+class TestSelectable extends Selectable<TestSelectableIdentifier> {
+  TestSelectable({
+    required this.ref,
+    required this.id,
+    required this.objectBlueprint,
+    required this.data,
+    required this.color,
+  });
+
+  final Ref ref;
+
+  @override
+  final TestSelectableIdentifier id;
+
+  @override
+  final ObjectBlueprint objectBlueprint;
+
+  final DynamicData data;
+
+  final Color color;
+
+  @override
+  int get hashCode => Object.hash(id, objectBlueprint, data, color);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TestSelectable &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          objectBlueprint == other.objectBlueprint &&
+          data == other.data &&
+          color == other.color;
+
+  @override
+  String get name {
+    final name = data.get("name") as String?;
+    return (name?.nullIfEmpty ?? id.id).formatted;
+  }
+
+  @override
+  dynamic fieldValue(String path) {
+    final value = data.get(path);
+    return value;
+  }
+
+  @override
+  Widget? header() => TestSelectableHeader(selectable: this);
+
+  @override
+  void setFieldValue(String path, dynamic value) {
+    ref
+        .read(testSelectableDataProvider.notifier)
+        .set(id.id, data.copyWith(path, value));
+  }
+
+  @override
+  String toString() {
+    return "TestSelectable(id: $id, name: $name)";
+  }
+}
+
+@riverpod
+class TestSelectableData extends _$TestSelectableData {
+  @override
+  Map<String, DynamicData> build() {
+    return {};
+  }
+
+  void set(String id, DynamicData data) {
+    print("Setting data for $id: $data");
+    state = {...state, id: data};
+  }
+
+  @override
+  bool updateShouldNotify(
+    Map<String, DynamicData> previous,
+    Map<String, DynamicData> next,
+  ) {
+    print("Should update? ${!mapEquals(previous, next)}");
+    return !mapEquals(previous, next);
+  }
+}
+
+@riverpod
+DynamicData? testData(Ref ref, String id) {
+  final data = ref.watch(testSelectableDataProvider)[id];
+  print("Reading data for $id: $data");
+  return data;
+}
+
+// Custom selectable identifier for testing
+class TestSelectableIdentifier extends SelectableIdentifier {
+  TestSelectableIdentifier({
+    required this.id,
+    required this.dataBlueprint,
+    this.color = Colors.redAccent,
+  });
+
+  @override
+  final String id;
+  final ObjectBlueprint dataBlueprint;
+  final Color color;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TestSelectableIdentifier &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  AsyncValue<Selectable> create(Ref ref) {
+    final data =
+        ref.watch(testDataProvider(id)) ??
+        DynamicData(dataBlueprint.defaultValue());
+
+    return AsyncValue.data(
+      TestSelectable(
+        ref: ref,
+        id: this,
+        objectBlueprint: dataBlueprint,
+        data: data,
+        color: color,
+      ),
+    );
+  }
+
+  @override
+  String toString() {
+    return "TestSelectableIdentifier(id: $id)";
+  }
 }

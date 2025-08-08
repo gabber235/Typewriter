@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
@@ -7,7 +5,7 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 abstract class SelectableIdentifier {
   String get id;
 
-  FutureOr<Selectable> create(Ref ref);
+  AsyncValue<Selectable> create(Ref ref);
 }
 
 abstract class Selectable<I extends SelectableIdentifier> {

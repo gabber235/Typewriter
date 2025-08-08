@@ -10,8 +10,10 @@ import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/panes.dart";
 import "package:url_launcher/url_launcher.dart";
 
 class SidebarContent extends HookConsumerWidget {
@@ -47,7 +49,21 @@ class Sidebar extends HookConsumerWidget {
         context.responsive(mobile: 64.0, tablet: 80.0, desktop: 180.0);
     return SizedBox(
       width: width,
-      child: const SidebarContent(),
+      child: Pane(
+        id: "sidebar",
+        margin: EdgeInsets.only(left: 4, top: 4, bottom: 4),
+        borderRadius: BorderRadius.circular(8),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: const SidebarContent(),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -88,31 +104,36 @@ class SidebarLink extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final focusNode =
+        useFocusNode(debugLabel: "SidebarLink-${text.snakeCase()}");
     final router = ref.watch(appRouterProvider);
     final selected = router.isRouteActive(route.routeName);
     final color = selected
         ? Theme.of(context).colorScheme.onSurface
         : Theme.of(context).colorScheme.onSurfaceVariant;
-    return InkWell(
-      onTap: () {
-        if (!selected) {
-          router.push(route);
-        }
-      },
-      hoverColor:
-          Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        child: Row(
-          children: [
-            IconTheme(
-              data: IconThemeData(color: color, size: 20),
-              child: icon,
-            ),
-            const SizedBox(width: 12),
-            Text(text, style: TextStyle(color: color, fontSize: 14)),
-          ],
+    return Material(
+      child: InkWell(
+        focusNode: focusNode,
+        onTap: () {
+          if (!selected) {
+            router.push(route);
+          }
+        },
+        hoverColor:
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            children: [
+              IconTheme(
+                data: IconThemeData(color: color, size: 20),
+                child: icon,
+              ),
+              const SizedBox(width: 12),
+              Text(text, style: TextStyle(color: color, fontSize: 14)),
+            ],
+          ),
         ),
       ),
     );
@@ -130,13 +151,13 @@ class _UserMenu extends HookConsumerWidget {
     final userInfoAsync = ref.watch(authUserInfoProvider);
     final currentThemeMode = ref.watch(appearanceProvider);
 
+    final controller = useMenuController();
+    final focusNode = useFocusNode(debugLabel: "UserMenu");
+
     return userInfoAsync.when(
       data: (user) {
         final name = user.name ?? user.username ?? user.sub;
         final avatarUrl = user.picture ?? "$userIconUrl&seed=${user.sub}";
-
-        final controller = useMenuController();
-        final focusNode = useFocusNode();
 
         return ContextMenuRegion(
           items: [
@@ -235,27 +256,30 @@ class _UserMenu extends HookConsumerWidget {
           enableGestures: false,
           childFocusNode: focusNode,
           controller: controller,
-          child: InkWell(
-            onTapDown: ContextMenuRegion.onSecondaryTapDown(controller),
-            borderRadius: BorderRadius.circular(8),
-            focusNode: focusNode,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundImage: NetworkImage(avatarUrl),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      name,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      overflow: TextOverflow.ellipsis,
+          child: Material(
+            child: InkWell(
+              onTapDown: ContextMenuRegion.onSecondaryTapDown(controller),
+              onTap: ContextMenuRegion.onPress(controller),
+              borderRadius: BorderRadius.circular(8),
+              focusNode: focusNode,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundImage: NetworkImage(avatarUrl),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

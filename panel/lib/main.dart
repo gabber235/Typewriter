@@ -3,6 +3,7 @@ import "dart:math";
 import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -14,6 +15,7 @@ import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/nats_connection.dart";
+import "package:typewriter_panel/widgets/generic/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 import "package:typewriter_panel/widgets/generic/screens/loading_screen.dart";
@@ -44,7 +46,7 @@ class TypewriterPanel extends HookConsumerWidget {
           darkTheme: buildTheme(Brightness.dark),
           themeMode: themeMode,
           routerConfig: router.config(),
-          shortcuts: WidgetsApp.defaultShortcuts,
+          shortcuts: typewriterShortcuts,
           scrollBehavior: GlobalCustomScrollBehavior(),
           builder: (context, child) => Responsive(
             child: RequiredNatsConnection(
@@ -55,6 +57,66 @@ class TypewriterPanel extends HookConsumerWidget {
       ),
     );
   }
+
+  static Map<ShortcutActivator, Intent> typewriterShortcuts =
+      <ShortcutActivator, Intent>{
+    // Default Shortcuts
+    ...WidgetsApp.defaultShortcuts,
+
+    SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
+        ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateIntent(),
+
+    // Focus Navigation
+    SingleActivator(LogicalKeyboardKey.keyH):
+        DirectionalFocusIntent(TraversalDirection.left),
+    SingleActivator(LogicalKeyboardKey.keyL):
+        DirectionalFocusIntent(TraversalDirection.right),
+    SingleActivator(LogicalKeyboardKey.keyJ):
+        DirectionalFocusIntent(TraversalDirection.down),
+    SingleActivator(LogicalKeyboardKey.keyK):
+        DirectionalFocusIntent(TraversalDirection.up),
+    SingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
+    SingleActivator(LogicalKeyboardKey.keyP, control: true):
+        PreviousFocusIntent(),
+
+    // Scroll Navigation
+    SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(
+      direction: AxisDirection.down,
+      type: ScrollIncrementType.page,
+    ),
+    SingleActivator(LogicalKeyboardKey.pageDown): ScrollIntent(
+      direction: AxisDirection.up,
+      type: ScrollIncrementType.page,
+    ),
+    SingleActivator(LogicalKeyboardKey.keyU, control: true): ScrollIntent(
+      direction: AxisDirection.up,
+      type: ScrollIncrementType.page,
+    ),
+    SingleActivator(LogicalKeyboardKey.keyD, control: true): ScrollIntent(
+      direction: AxisDirection.down,
+      type: ScrollIncrementType.page,
+    ),
+
+    // Pane Navigation
+    SingleActivator(LogicalKeyboardKey.keyH, control: true):
+        NavigatePaneIntent(AxisDirection.left),
+    SingleActivator(LogicalKeyboardKey.keyL, control: true):
+        NavigatePaneIntent(AxisDirection.right),
+    SingleActivator(LogicalKeyboardKey.keyJ, control: true):
+        NavigatePaneIntent(AxisDirection.down),
+    SingleActivator(LogicalKeyboardKey.keyK, control: true):
+        NavigatePaneIntent(AxisDirection.up),
+    SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
+        NavigatePaneIntent(AxisDirection.left),
+    SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
+        NavigatePaneIntent(AxisDirection.right),
+    SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
+        NavigatePaneIntent(AxisDirection.down),
+    SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
+        NavigatePaneIntent(AxisDirection.up),
+  };
 }
 
 ThemeData buildTheme(Brightness brightness) {

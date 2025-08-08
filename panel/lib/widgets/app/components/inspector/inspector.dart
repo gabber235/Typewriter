@@ -11,6 +11,7 @@ import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
 import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
+import "package:typewriter_panel/widgets/generic/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 
 part "inspector.g.dart";
@@ -36,8 +37,26 @@ class Inspector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasSelection = ref.watch(hasSelectionProvider);
     final size = ref.watch(inspectorSizeProvider);
+
+    if (context.isSmalerThan(size * 2)) {
+      return MobileInspector(child: child);
+    }
+
+    return DesktopInspector(child: child);
+  }
+}
+
+class MobileInspector extends HookConsumerWidget {
+  const MobileInspector({
+    required this.child,
+    super.key,
+  });
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasSelection = ref.watch(hasSelectionProvider);
     final controller = useDraggableScrollableController();
 
     useEffect(
@@ -61,88 +80,108 @@ class Inspector extends HookConsumerWidget {
       [controller, hasSelection, ResponsiveBreakpoints.of(context).screenWidth],
     );
 
-    if (context.isSmalerThan(size * 2)) {
-      return Stack(
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return AnimatedPadding(
-                duration: hasSelection ? 750.ms : 400.ms,
-                curve: hasSelection
-                    ? ElasticOutCurve(0.8)
-                    : Curves.fastEaseInToSlowEaseOut,
-                padding: EdgeInsets.only(
-                  bottom: hasSelection ? constraints.maxHeight * 0.1 : 0,
+    return Stack(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return AnimatedPadding(
+              duration: hasSelection ? 750.ms : 400.ms,
+              curve: hasSelection
+                  ? ElasticOutCurve(0.8)
+                  : Curves.fastEaseInToSlowEaseOut,
+              padding: EdgeInsets.only(
+                bottom: hasSelection ? constraints.maxHeight * 0.1 : 0,
+              ),
+              child: child,
+            );
+          },
+        ),
+        NotificationListener<DraggableScrollableNotification>(
+          onNotification: (notification) {
+            if (notification.extent <= notification.minExtent &&
+                notification.shouldCloseOnMinExtent) {
+              ref.read(selectionProvider.notifier).clear();
+            }
+            return false;
+          },
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.0,
+            minChildSize: 0.0,
+            maxChildSize: 0.9,
+            shouldCloseOnMinExtent: true,
+            snapSizes: [0.1, 0.9],
+            snap: true,
+            controller: controller,
+            snapAnimationDuration: 200.ms,
+            builder: (context, scrollController) {
+              return Section(
+                child: CustomScrollView(
+                  controller: scrollController,
+                  slivers: [
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _MobileDragHandleDelegate(),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          left: 12,
+                          right: 12,
+                          bottom: 12,
+                        ),
+                        child: _InspectorContent(),
+                      ),
+                    ),
+                  ],
                 ),
-                child: child,
               );
             },
           ),
-          NotificationListener<DraggableScrollableNotification>(
-            onNotification: (notification) {
-              if (notification.extent <= notification.minExtent &&
-                  notification.shouldCloseOnMinExtent) {
-                ref.read(selectionProvider.notifier).clear();
-              }
-              return false;
-            },
-            child: DraggableScrollableSheet(
-              initialChildSize: 0.0,
-              minChildSize: 0.0,
-              maxChildSize: 0.9,
-              shouldCloseOnMinExtent: true,
-              snapSizes: [0.1, 0.9],
-              snap: true,
-              controller: controller,
-              snapAnimationDuration: 200.ms,
-              builder: (context, scrollController) {
-                return Section(
-                  child: CustomScrollView(
-                    controller: scrollController,
-                    slivers: [
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _DragHandleDelegate(),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 12,
-                            right: 12,
-                            bottom: 12,
-                          ),
-                          child: _InspectorContent(),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    }
+        ),
+      ],
+    );
+  }
+}
+
+class DesktopInspector extends HookConsumerWidget {
+  const DesktopInspector({
+    required this.child,
+    super.key,
+  });
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasSelection = ref.watch(hasSelectionProvider);
+    final size = ref.watch(inspectorSizeProvider);
 
     return Row(
       children: [
         Expanded(child: child),
-        _DragHandle(),
-        Section(
-          margin: EdgeInsets.only(top: 8, right: 8, bottom: 8),
-          child: AnimatedSize(
-            duration: hasSelection ? 1000.ms : 750.ms,
-            curve: hasSelection
-                ? ElasticOutCurve(0.9)
-                : Curves.fastEaseInToSlowEaseOut,
-            alignment: Alignment.centerLeft,
-            child: SizedBox(
-              width: hasSelection ? size : 0,
-              height: double.infinity,
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: _InspectorContent(),
+        _DesktopDragHandle(),
+        Pane(
+          id: "inspector",
+          borderRadius: BorderRadius.circular(12),
+          margin: hasSelection
+              ? EdgeInsets.only(top: 8, right: 8, bottom: 8)
+              : EdgeInsets.zero,
+          enabled: hasSelection,
+          child: Section(
+            margin: EdgeInsets.zero,
+            child: AnimatedSize(
+              duration: hasSelection ? 1000.ms : 750.ms,
+              curve: hasSelection
+                  ? ElasticOutCurve(0.9)
+                  : Curves.fastEaseInToSlowEaseOut,
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: hasSelection ? size : 0,
+                height: double.infinity,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: _InspectorContent(),
+                  ),
                 ),
               ),
             ),
@@ -178,7 +217,7 @@ class _InspectorContent extends HookConsumerWidget {
   }
 }
 
-class _DragHandle extends HookConsumerWidget {
+class _DesktopDragHandle extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasSelection = ref.watch(hasSelectionProvider);
@@ -252,7 +291,7 @@ class _DragHandle extends HookConsumerWidget {
   }
 }
 
-class _DragHandleDelegate extends SliverPersistentHeaderDelegate {
+class _MobileDragHandleDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
     BuildContext context,

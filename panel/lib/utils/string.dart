@@ -1,5 +1,4 @@
 import "package:dart_casing/dart_casing.dart";
-import "package:flutter/services.dart";
 
 extension StringX on String {
   String titleCase() {
@@ -39,12 +38,3 @@ extension StringX on String {
     return this;
   }
 }
-
-TextInputFormatter snakeCaseFormatter() => TextInputFormatter.withFunction(
-      (oldValue, newValue) => newValue.copyWith(
-        text: newValue.text
-            .toLowerCase()
-            .replaceAll(" ", "_")
-            .replaceAll("-", "_"),
-      ),
-    );

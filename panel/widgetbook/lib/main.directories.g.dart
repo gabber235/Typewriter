@@ -62,34 +62,6 @@ import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
 
 final directories = <_widgetbook.WidgetbookNode>[
   _widgetbook.WidgetbookFolder(
-    name: 'material',
-    children: [
-      _widgetbook.WidgetbookComponent(
-        name: 'TextField',
-        useCases: [
-          _widgetbook.WidgetbookUseCase(
-            name: 'Default',
-            builder:
-                _widgetbook_workspace_stories_components_input_field_stories
-                    .inputFieldUseCase,
-          ),
-          _widgetbook.WidgetbookUseCase(
-            name: 'Error',
-            builder:
-                _widgetbook_workspace_stories_components_input_field_stories
-                    .inputFieldErrorUseCase,
-          ),
-          _widgetbook.WidgetbookUseCase(
-            name: 'With Prefix Icon',
-            builder:
-                _widgetbook_workspace_stories_components_input_field_stories
-                    .inputFieldWithPrefixIconUseCase,
-          ),
-        ],
-      ),
-    ],
-  ),
-  _widgetbook.WidgetbookFolder(
     name: 'routes',
     children: [
       _widgetbook.WidgetbookLeafComponent(
@@ -157,6 +129,50 @@ final directories = <_widgetbook.WidgetbookNode>[
           _widgetbook.WidgetbookFolder(
             name: 'components',
             children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'CustomAppBar',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_components_custom_appbar_stories
+                          .customAppBarUseCase,
+                ),
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'OrganizationIcon',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_components_organization_icon_stories
+                            .organizationIconUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Placeholder',
+                    builder:
+                        _widgetbook_workspace_stories_components_organization_icon_stories
+                            .organizationIconPlaceholderUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'OrganizationSelector',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'OrganizationSelector',
+                  builder:
+                      _widgetbook_workspace_stories_components_organization_selector_stories
+                          .organizationSelectorUseCase,
+                ),
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'Sidebar',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_components_sidebar_stories
+                          .sidebarUseCase,
+                ),
+              ),
               _widgetbook.WidgetbookFolder(
                 name: 'inspector',
                 children: [
@@ -260,14 +276,40 @@ final directories = <_widgetbook.WidgetbookNode>[
                           .bookUseCase,
                 ),
               ),
-              _widgetbook.WidgetbookLeafComponent(
-                name: 'CustomAppBar',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Default',
-                  builder:
-                      _widgetbook_workspace_stories_components_custom_appbar_stories
-                          .customAppBarUseCase,
-                ),
+              _widgetbook.WidgetbookComponent(
+                name: 'DecoratedTextField',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_components_input_field_stories
+                            .inputFieldUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Error',
+                    builder:
+                        _widgetbook_workspace_stories_components_input_field_stories
+                            .inputFieldErrorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Multiline',
+                    builder:
+                        _widgetbook_workspace_stories_components_input_field_stories
+                            .inputFieldMultilineUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Callbacks',
+                    builder:
+                        _widgetbook_workspace_stories_components_input_field_stories
+                            .inputFieldWithCallbacksUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Prefix Icon',
+                    builder:
+                        _widgetbook_workspace_stories_components_input_field_stories
+                            .inputFieldWithPrefixIconUseCase,
+                  ),
+                ],
               ),
               _widgetbook.WidgetbookLeafComponent(
                 name: 'LabeledDivider',
@@ -285,32 +327,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                   builder:
                       _widgetbook_workspace_stories_components_loading_indicator_stories
                           .loadingIndicatorUseCase,
-                ),
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'OrganizationIcon',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
-                    builder:
-                        _widgetbook_workspace_stories_components_organization_icon_stories
-                            .organizationIconUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Placeholder',
-                    builder:
-                        _widgetbook_workspace_stories_components_organization_icon_stories
-                            .organizationIconPlaceholderUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookLeafComponent(
-                name: 'OrganizationSelector',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'OrganizationSelector',
-                  builder:
-                      _widgetbook_workspace_stories_components_organization_selector_stories
-                          .organizationSelectorUseCase,
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(
@@ -338,15 +354,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                   builder:
                       _widgetbook_workspace_stories_components_section_stories
                           .sectionUseCase,
-                ),
-              ),
-              _widgetbook.WidgetbookLeafComponent(
-                name: 'Sidebar',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Default',
-                  builder:
-                      _widgetbook_workspace_stories_components_sidebar_stories
-                          .sidebarUseCase,
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(

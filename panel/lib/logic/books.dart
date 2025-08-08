@@ -61,14 +61,14 @@ class BookSelector extends SelectableIdentifier {
   final String id;
 
   @override
-  Future<Selectable> create(Ref ref) async {
-    final book = await ref.watch(bookProvider(id).future);
-    if (book == null) throw SelectableNotFoundException(this);
-
-    return BookSelection(
-      id: this,
-      name: book.title,
-    );
+  AsyncValue<Selectable> create(Ref ref) {
+    final asyncBook = ref.watch(bookProvider(id));
+    return asyncBook.whenData((value) {
+      if (value == null) {
+        throw SelectableNotFoundException(this);
+      }
+      return BookSelection(id: this, name: value.title);
+    });
   }
 }
 

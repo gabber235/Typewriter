@@ -1,5 +1,6 @@
 import "dart:convert";
 
+import "package:flutter/foundation.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/string.dart";
 
@@ -295,7 +296,7 @@ class DynamicData {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is DynamicData && data == other.data;
+      identical(this, other) || other is DynamicData && mapEquals(data, other.data);
 
   @override
   int get hashCode => data.hashCode;

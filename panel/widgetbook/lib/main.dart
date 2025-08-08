@@ -59,6 +59,7 @@ class WidgetbookApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           scrollBehavior: GlobalCustomScrollBehavior(),
+          shortcuts: TypewriterPanel.typewriterShortcuts,
           home: Material(child: child),
         );
       },

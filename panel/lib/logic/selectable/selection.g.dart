@@ -182,7 +182,7 @@ final class IsSelectedFamily extends $Family
 const selectedProvider = SelectedProvider._();
 
 final class SelectedProvider
-    extends $AsyncNotifierProvider<Selected, List<Selectable>> {
+    extends $NotifierProvider<Selected, AsyncValue<List<Selectable>>> {
   const SelectedProvider._()
       : super(
           from: null,
@@ -200,20 +200,28 @@ final class SelectedProvider
   @$internal
   @override
   Selected create() => Selected();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<Selectable>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<Selectable>>>(value),
+    );
+  }
 }
 
-String _$selectedHash() => r'9cd62c8ddf1d3e96594c7c6da01e9cdc13b1f63e';
+String _$selectedHash() => r'695b256fd19ccba5701243c850a2de6b938a1222';
 
-abstract class _$Selected extends $AsyncNotifier<List<Selectable>> {
-  FutureOr<List<Selectable>> build();
+abstract class _$Selected extends $Notifier<AsyncValue<List<Selectable>>> {
+  AsyncValue<List<Selectable>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref =
-        this.ref as $Ref<AsyncValue<List<Selectable>>, List<Selectable>>;
+    final ref = this.ref
+        as $Ref<AsyncValue<List<Selectable>>, AsyncValue<List<Selectable>>>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<Selectable>>, List<Selectable>>,
+        AnyNotifier<AsyncValue<List<Selectable>>, AsyncValue<List<Selectable>>>,
         AsyncValue<List<Selectable>>,
         Object?,
         Object?>;

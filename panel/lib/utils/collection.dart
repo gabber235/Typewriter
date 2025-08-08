@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:typewriter_panel/main.dart";
 
 extension ListX<T> on List<T> {
@@ -16,4 +17,12 @@ extension ListX<T> on List<T> {
     }
     return result;
   }
+}
+
+extension IterableX<T> on Iterable<T> {
+  T? minByOrNull<S>(S Function(T) orderBy, {int Function(S, S)? compare}) =>
+      minBy(this, orderBy, compare: compare);
+
+  T? maxByOrNull<S>(S Function(T) orderBy, {int Function(S, S)? compare}) =>
+      maxBy(this, orderBy, compare: compare);
 }

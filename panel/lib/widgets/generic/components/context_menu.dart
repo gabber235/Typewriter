@@ -160,6 +160,7 @@ class ContextMenuRegion extends HookWidget {
       final _MenuItem menuItem => Padding(
           padding: padding,
           child: MenuItemButton(
+            autofocus: isFirst,
             leadingIcon: menuItem.icon,
             onPressed: menuItem.onSelected,
             style: MenuItemButton.styleFrom(

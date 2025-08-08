@@ -55,9 +55,19 @@ bool isSelected(Ref ref, SelectableIdentifier selectable) {
 @riverpod
 class Selected extends _$Selected {
   @override
-  Future<List<Selectable>> build() async {
+  AsyncValue<List<Selectable>> build() {
     final ids = ref.watch(selectionProvider);
-    return Future.wait(ids.map((id) async => id.create(ref)));
+
+    final values = <Selectable>[];
+    for (final id in ids) {
+      final value = id.create(ref);
+      if (!value.hasValue) {
+        return value.whenData((_) => []);
+      }
+      values.add(value.requireValue);
+    }
+    print("values: $values");
+    return AsyncData(values);
   }
 
   @override
@@ -69,10 +79,7 @@ class Selected extends _$Selected {
     if (previous.hasValue && next.hasValue) {
       return !listEquals(previous.value, next.value);
     }
-    if (previous.hasError && next.hasError) {
-      return previous.error != next.error;
-    }
-    return false;
+    return previous != next;
   }
 
   void updateFieldValue(String path, dynamic value) {

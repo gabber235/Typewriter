@@ -5,6 +5,7 @@ import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
+import "package:typewriter_panel/widgets/generic/components/panes.dart";
 
 /// A customizable app bar for flexible layouts, always including the organization selector if available.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
@@ -22,39 +23,45 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      color: backgroundColor ??
-          Theme.of(context).appBarTheme.backgroundColor ??
-          Theme.of(context).colorScheme.surface,
+    return Pane(
+      id: "appbar",
+      margin: EdgeInsets.only(top: 2, left: 2, right: 2),
+      borderRadius: BorderRadius.circular(8),
       child: SafeArea(
         bottom: false,
         child: SizedBox(
           height: height,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 8,
-              children: [
-                if (ref.watch(organizationIdProvider) != null)
-                  const OrganizationSelector(),
-                const Spacer(),
-                if (context.isMobile)
-                  IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (ctx) => UncontrolledProviderScope(
-                          container: ProviderScope.containerOf(context),
-                          child: const _MobileSidebarMenu(),
-                        ),
-                      );
-                    },
-                  ),
-              ],
+          child: Material(
+            color: backgroundColor ??
+                Theme.of(context).appBarTheme.backgroundColor ??
+                Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 8,
+                children: [
+                  if (ref.watch(organizationIdProvider) != null)
+                    const OrganizationSelector(),
+                  const Spacer(),
+                  if (context.isMobile)
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (ctx) => UncontrolledProviderScope(
+                            container: ProviderScope.containerOf(context),
+                            child: const _MobileSidebarMenu(),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
           ),
         ),

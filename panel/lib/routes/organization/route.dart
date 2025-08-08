@@ -36,11 +36,7 @@ class OrganizationScaffold extends StatelessWidget {
       appBar: const CustomAppBar(),
       body: Row(
         children: [
-          if (!context.isMobile)
-            const Padding(
-              padding: EdgeInsets.only(left: 8, top: 8, bottom: 8),
-              child: Sidebar(),
-            ),
+          if (!context.isMobile) Sidebar(),
           Expanded(
             child: child,
           ),
