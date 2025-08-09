@@ -1,9 +1,11 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:mocktail/mocktail.dart";
+import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/main.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/stories/components/selectable.stories.dart";
 
 import "main.directories.g.dart";
 
@@ -11,6 +13,12 @@ void main() {
   Animate.restartOnHotReload = true;
 
   registerFallbackValue(ThemeMode.system);
+  registerFallbackValue(
+    TestSelectableIdentifier(
+      id: "",
+      dataBlueprint: ObjectBlueprint(fields: {}),
+    ),
+  );
 
   runApp(const WidgetbookApp());
 }

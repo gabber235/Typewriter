@@ -1,10 +1,14 @@
 import "dart:async";
 
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
+import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 
 /// A selectable-level operation holding the asynchronous delete callback.
@@ -34,9 +38,9 @@ class DeleteOperation extends Operation {
 
   @override
   FutureOr<void> executeOn(
-    BuildContext context,
-    List<Selectable> selection,
+    WidgetRef ref,
   ) async {
+    final selection = ref.read(selectedProvider).requireValue;
     final callbacks = <(Selectable, Future<void> Function())>[];
     for (final (s, op) in selection
         .collectOperationsWithSelectables<DeleteSelectableOperation>()) {
@@ -52,9 +56,24 @@ class DeleteOperation extends Operation {
       }
     }
 
+    if (!ref.context.mounted) return;
+    final removed = selection
+        .map((s) => s.id)
+        .where((id) => errors.none((e) => e.$1.id == id))
+        .toList();
+    ref.read(selectionProvider.notifier).unselectAll(removed);
     if (errors.isEmpty) return;
-    if (!context.mounted) return;
-    await _showErrorsPopup(context, errors);
+    await _showErrorsPopup(ref.context, errors);
+  }
+
+  @override
+  MenuItem menuItem(WidgetRef ref) {
+    return MenuItem(
+      icon: Icon(Icons.delete),
+      label: "Delete",
+      color: Theme.of(ref.context).colorScheme.error,
+      onPressed: () => executeOn(ref),
+    );
   }
 
   @override
@@ -62,7 +81,7 @@ class DeleteOperation extends Operation {
       DeleteOperationButton(selection: selection, operation: this);
 }
 
-class DeleteOperationButton extends HookWidget {
+class DeleteOperationButton extends HookConsumerWidget {
   const DeleteOperationButton({
     required this.selection,
     required this.operation,
@@ -73,14 +92,14 @@ class DeleteOperationButton extends HookWidget {
   final DeleteOperation operation;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDeleting = useState(false);
 
     Future<void> runDeletes() async {
       if (isDeleting.value) return;
       isDeleting.value = true;
 
-      await operation.executeOn(context, selection);
+      await operation.executeOn(ref);
 
       if (!context.mounted) return;
       isDeleting.value = false;
@@ -149,6 +168,7 @@ Future<void> _showErrorsPopup(
               child: Text("Delete errors"),
             ),
             IconButton(
+              autofocus: true,
               splashRadius: 18,
               icon: const Icon(Icons.close),
               tooltip: "Close",

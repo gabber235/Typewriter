@@ -14,6 +14,7 @@ import "package:typewriter_panel/widgets/app/components/inspector/operations.dar
 import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 import "package:typewriter_panel/widgets/generic/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
+import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 
 part "inspector.g.dart";
 
@@ -316,7 +317,7 @@ class _InspectorContent extends HookConsumerWidget {
             editorMode: EditorMode.interactiveInspector,
             defaultExpanded: true,
           ),
-        const SizedBox(height: 30),
+          const SizedBox(height: 5),
         Operations(),
         const SizedBox(height: 30),
       ],
@@ -332,8 +333,11 @@ class Operations extends HookConsumerWidget {
     final selected = ref.watch(selectedProvider).value ?? [];
     final operations = ref.watch(availableOperationsProvider);
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
+      spacing: 12,
       children: [
+        const SectionTitle(title: "Operations"),
         for (final operation in operations) operation.inspectorButton(selected),
       ],
     );

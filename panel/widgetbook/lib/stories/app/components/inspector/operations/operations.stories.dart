@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:mocktail/mocktail.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
@@ -11,9 +12,20 @@ Widget operationUseCase(
   return Scaffold(
     body: Builder(
       builder: (ctx) {
-        final identifiers = builders.map((b) => b(ctx)).toList();
         return ProviderScope(
-          overrides: [selectionProvider.overrideWithValue(identifiers)],
+          overrides: [
+            selectionProvider.overrideWith(() {
+              final selection = SelectionMock();
+              when(
+                selection.build,
+              ).thenReturn(builders.map((b) => b(ctx)).toList());
+              when(() => selection.select(any())).thenAnswer((_) {});
+              when(() => selection.unselect(any())).thenAnswer((_) {});
+              when(() => selection.unselectAll(any())).thenAnswer((_) {});
+              when(selection.clear).thenAnswer((_) {});
+              return selection;
+            }),
+          ],
           child: Center(child: Operations()),
         );
       },

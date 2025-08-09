@@ -17,7 +17,7 @@ final class TestSelectableDataProvider
         argument: null,
         retry: null,
         name: r'testSelectableDataProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -39,7 +39,7 @@ final class TestSelectableDataProvider
 }
 
 String _$testSelectableDataHash() =>
-    r'dd1112799a552d563269d28b996461d5c73d9673';
+    r'20a72093ec235fb0cefd4e82a0d0b20ac8e5dbe3';
 
 abstract class _$TestSelectableData
     extends $Notifier<Map<String, DynamicData>> {

@@ -17,7 +17,10 @@ class ContextMenuRegion extends HookWidget {
     this.child,
     this.builder,
     super.key,
-  });
+  }) : assert(
+          items.length > 0 || builder == null,
+          "You cannot have a builder with no items",
+        );
 
   final List<MenuItem> items;
   final bool enableGestures;
@@ -30,6 +33,8 @@ class ContextMenuRegion extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (items.isEmpty) return child ?? const SizedBox.shrink();
+
     final controller = this.controller ?? useMenuController();
 
     final menu = MenuAnchor(
@@ -51,7 +56,7 @@ class ContextMenuRegion extends HookWidget {
     if (enableGestures) {
       return GestureDetector(
         onSecondaryTapDown: onSecondaryTapDown(controller),
-        onLongPressDown: onLongPressDown(controller),
+        onLongPressStart: onLongPressStart(controller),
         onTapDown: onTapDown(controller),
         child: menu,
       );
@@ -68,7 +73,7 @@ class ContextMenuRegion extends HookWidget {
     };
   }
 
-  static void Function(LongPressDownDetails) onLongPressDown(
+  static void Function(LongPressStartDetails) onLongPressStart(
     MenuController controller,
   ) {
     return (details) {
@@ -80,6 +85,10 @@ class ContextMenuRegion extends HookWidget {
     MenuController controller,
   ) {
     return () {
+      if (controller.isOpen) {
+        controller.close();
+        return;
+      }
       controller.open();
     };
   }
@@ -151,6 +160,55 @@ class ContextMenuRegion extends HookWidget {
             child: Text(submenu.label),
           ),
         ),
+      final MenuItemSection section => Padding(
+          padding: padding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (section.label != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                  child: DefaultTextStyle(
+                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: section.color ??
+                              Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                        ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (section.icon != null) ...[
+                          IconTheme(
+                            data: IconThemeData(
+                              size: 14,
+                              color: section.color ??
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.6),
+                            ),
+                            child: section.icon!,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(section.label!),
+                      ],
+                    ),
+                  ),
+                ),
+              for (final (index, item) in section.items.indexed)
+                _buildMenuItem(
+                  context,
+                  item,
+                  isFirst: index == 0,
+                  isLast: index == section.items.length - 1,
+                ),
+            ],
+          ),
+        ),
       MenuItemDivider() => Divider(
           radius: BorderRadiusGeometry.circular(20),
           indent: 4,
@@ -162,7 +220,7 @@ class ContextMenuRegion extends HookWidget {
           child: MenuItemButton(
             autofocus: isFirst,
             leadingIcon: menuItem.icon,
-            onPressed: menuItem.onSelected,
+            onPressed: menuItem.onPressed,
             style: MenuItemButton.styleFrom(
               foregroundColor: menuItem.color,
               iconColor: menuItem.color,
@@ -184,7 +242,7 @@ abstract class MenuItem with _$MenuItem {
     required String label,
     Widget? icon,
     Color? color,
-    VoidCallback? onSelected,
+    VoidCallback? onPressed,
   }) = _MenuItem;
 
   const factory MenuItem.submenu({
@@ -193,6 +251,13 @@ abstract class MenuItem with _$MenuItem {
     Widget? icon,
     Color? color,
   }) = MenuItemSubmenu;
+
+  const factory MenuItem.section({
+    required List<MenuItem> items,
+    String? label,
+    Widget? icon,
+    Color? color,
+  }) = MenuItemSection;
 
   const factory MenuItem.divider() = MenuItemDivider;
 }

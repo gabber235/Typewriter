@@ -1,8 +1,10 @@
 import "package:flutter/material.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
+import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
 part "operations.g.dart";
 
@@ -48,7 +50,26 @@ abstract class Operation {
   /// - Do not retain the passed list instance; the function should be emphemeral.
   /// - Validation / enablement logic should reside in [canExecuteOn]; this
   ///   method should only throw for unrecoverable programmer errors.
-  FutureOr<void> executeOn(BuildContext context, List<Selectable> selection);
+  FutureOr<void> executeOn(WidgetRef ref);
+
+  /// Builds the context menu representation for this operation.
+  ///
+  /// Implementations should return a lightweight [MenuItem] that, when
+  /// activated, triggers [executeOn]. This is used by components such as
+  /// [ContextMenuRegion] to surface the operation in right‑click / long‑press
+  /// menus.
+  ///
+  /// Parameter:
+  /// - [ref]: A [WidgetRef] giving access to providers needed to evaluate
+  ///   current selection state or perform the operation when invoked.
+  ///
+  /// Expectations / guidelines:
+  /// - Must be fast and side‑effect free (other than creating the menu item).
+  /// - Enable / disable logic should already be handled via [canExecuteOn] and
+  ///   filtering (i.e. this method is only called for applicable operations).
+  /// - Implementations may still defensively guard against unexpected states,
+  ///   but should avoid heavy recomputation.
+  MenuItem menuItem(WidgetRef ref);
 
   /// Builds the UI control (e.g. a button) representing this operation for
   /// the given selection. The control is responsible for invoking the action.

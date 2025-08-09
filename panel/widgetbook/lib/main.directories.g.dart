@@ -380,15 +380,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(
-                name: 'RotatingShortcuts',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Rotating',
-                  builder:
-                      _widgetbook_workspace_stories_components_shortcut_display_stories
-                          .rotatingShortcutsUseCase,
-                ),
-              ),
-              _widgetbook.WidgetbookLeafComponent(
                 name: 'Section',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
@@ -397,14 +388,22 @@ final directories = <_widgetbook.WidgetbookNode>[
                           .sectionUseCase,
                 ),
               ),
-              _widgetbook.WidgetbookLeafComponent(
+              _widgetbook.WidgetbookComponent(
                 name: 'ShortcutDisplay',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Single',
-                  builder:
-                      _widgetbook_workspace_stories_components_shortcut_display_stories
-                          .singleShortcutDisplayUseCase,
-                ),
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Rotating',
+                    builder:
+                        _widgetbook_workspace_stories_components_shortcut_display_stories
+                            .rotatingShortcutsUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Single',
+                    builder:
+                        _widgetbook_workspace_stories_components_shortcut_display_stories
+                            .singleShortcutDisplayUseCase,
+                  ),
+                ],
               ),
               _widgetbook.WidgetbookLeafComponent(
                 name: 'TagWidget',

@@ -2,6 +2,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
@@ -22,7 +23,8 @@ class Selection extends _$Selection {
     List<SelectableIdentifier> previous,
     List<SelectableIdentifier> next,
   ) {
-    return !listEquals(previous, next);
+    print("Updating identifiers to $next");
+    return true;
   }
 
   void select(SelectableIdentifier selectable) {
@@ -37,10 +39,21 @@ class Selection extends _$Selection {
     };
   }
 
+  void unselect(SelectableIdentifier selectable) {
+    state = state.where((s) => s != selectable).toList();
+  }
+
+  void unselectAll(List<SelectableIdentifier> selectables) {
+    state = state.where((s) => !selectables.contains(s)).toList();
+  }
+
   void clear() {
     state = [];
   }
 }
+
+// ignore: prefer_mixin
+class SelectionMock extends _$Selection with Mock implements Selection {}
 
 @riverpod
 bool hasSelection(Ref ref) {
@@ -57,6 +70,7 @@ class Selected extends _$Selected {
   @override
   AsyncValue<List<Selectable>> build() {
     final ids = ref.watch(selectionProvider);
+    print("ids: $ids");
 
     final values = <Selectable>[];
     for (final id in ids) {

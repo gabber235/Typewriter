@@ -1,3 +1,4 @@
+import "package:faker/faker.dart" hide Color;
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -6,9 +7,12 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
+import "package:typewriter_panel/utils/collection.dart";
+import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
@@ -21,6 +25,7 @@ part "selectable.stories.g.dart";
 @widgetbook.UseCase(name: "Selectable Boxes", type: SelectableBox)
 Widget selectableUseCase(BuildContext context) {
   return ProviderScope(
+    retry: (_, _) => null,
     child: AppRequiredWidgets(child: SelectableDemo()),
   );
 }
@@ -82,6 +87,7 @@ class SelectableBox extends HookConsumerWidget {
                           isSelected ? FontWeight.bold : FontWeight.normal,
                       color: Colors.white,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -117,30 +123,33 @@ class SelectableDemo extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final blueprint = ObjectBlueprint(
-      fields: {
-        "name": DataBlueprint.string(modifiers: [const Modifier.snakeCase()]),
-      },
-    );
-    final selectables = useMemoized(
-      () => [
-        TestSelectableIdentifier(
-          id: "box1",
-          dataBlueprint: blueprint,
-          color: Colors.red,
-        ),
-        TestSelectableIdentifier(
-          id: "box2",
-          dataBlueprint: blueprint,
-          color: Colors.green,
-        ),
-        TestSelectableIdentifier(
-          id: "box3",
-          dataBlueprint: blueprint,
-          color: Colors.blueAccent,
-        ),
-      ],
-    );
+    final selectables = useState(<TestSelectableIdentifier>[]);
+
+    TestSelectableIdentifier generate() {
+      final id = faker.person.name().snakeCase();
+      final blueprint = ObjectBlueprint(
+        fields: {
+          "name": DataBlueprint.string(modifiers: [const Modifier.snakeCase()]),
+          "count": DataBlueprint.integer(),
+        },
+      );
+      return TestSelectableIdentifier(
+        id: id,
+        dataBlueprint: blueprint,
+        color: safeColors.randomOrNull()!,
+        onDelete: () {
+          selectables.value =
+              selectables.value.where((s) => s.id != id).toList();
+        },
+      );
+    }
+
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        selectables.value = List.generate(3, (index) => generate());
+      });
+      return null;
+    }, []);
 
     return Scaffold(
       body: Inspector(
@@ -152,12 +161,18 @@ class SelectableDemo extends HookConsumerWidget {
               spacing: 24,
               runSpacing: 24,
               children: List.generate(
-                3,
-                (index) => SelectableBox(selectable: selectables[index]),
+                selectables.value.length,
+                (index) => SelectableBox(selectable: selectables.value[index]),
               ),
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          selectables.value = [...selectables.value, generate()];
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -171,6 +186,7 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
     required this.objectBlueprint,
     required this.data,
     required this.color,
+    required this.onDelete,
   });
 
   final Ref ref;
@@ -185,8 +201,12 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
 
   final Color color;
 
+  final VoidCallback? onDelete;
+
   @override
-  List<SelectableOperation> get operations => [];
+  List<SelectableOperation> get operations => [
+    if (onDelete != null) DeleteSelectableOperation(onDelete: onDelete!),
+  ];
 
   @override
   int get hashCode => Object.hash(id, objectBlueprint, data, color);
@@ -229,7 +249,7 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class TestSelectableData extends _$TestSelectableData {
   @override
   Map<String, DynamicData> build() {
@@ -246,7 +266,6 @@ class TestSelectableData extends _$TestSelectableData {
     Map<String, DynamicData> previous,
     Map<String, DynamicData> next,
   ) {
-    print("Should update? ${!mapEquals(previous, next)}");
     return !mapEquals(previous, next);
   }
 }
@@ -264,12 +283,14 @@ class TestSelectableIdentifier extends SelectableIdentifier {
     required this.id,
     required this.dataBlueprint,
     this.color = Colors.redAccent,
+    this.onDelete,
   });
 
   @override
   final String id;
   final ObjectBlueprint dataBlueprint;
   final Color color;
+  final VoidCallback? onDelete;
 
   @override
   int get hashCode => id.hashCode;
@@ -285,7 +306,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
   AsyncValue<Selectable> create(Ref ref) {
     final data =
         ref.watch(testDataProvider(id)) ??
-        DynamicData(dataBlueprint.defaultValue());
+        DynamicData({...dataBlueprint.defaultValue(), "name": id.formatted});
 
     return AsyncValue.data(
       TestSelectable(
@@ -294,6 +315,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
         objectBlueprint: dataBlueprint,
         data: data,
         color: color,
+        onDelete: onDelete,
       ),
     );
   }

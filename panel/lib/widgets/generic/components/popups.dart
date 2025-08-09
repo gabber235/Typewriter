@@ -76,6 +76,7 @@ class ConfirmationDialogue extends HookWidget {
       content: Text(content),
       actions: [
         TextButton.icon(
+          autofocus: !canConfirm,
           icon: Icones(
             cancelIcon,
             color: Theme.of(context).textTheme.bodySmall?.color,
@@ -90,6 +91,7 @@ class ConfirmationDialogue extends HookWidget {
           ),
         ),
         FilledButton.icon(
+          autofocus: canConfirm,
           icon: Icones(confirmIcon, size: 16),
           label: Text(
             canConfirm ? confirmText : "$confirmText (${secondsLeft.value})",

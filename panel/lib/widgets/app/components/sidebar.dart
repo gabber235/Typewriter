@@ -177,7 +177,7 @@ class _UserMenu extends HookConsumerWidget {
                   color: currentThemeMode == ThemeMode.system
                       ? Theme.of(context).colorScheme.primary
                       : null,
-                  onSelected: currentThemeMode == ThemeMode.system
+                  onPressed: currentThemeMode == ThemeMode.system
                       ? null
                       : () {
                           ref
@@ -193,7 +193,7 @@ class _UserMenu extends HookConsumerWidget {
                   color: currentThemeMode == ThemeMode.light
                       ? Theme.of(context).colorScheme.primary
                       : null,
-                  onSelected: currentThemeMode == ThemeMode.light
+                  onPressed: currentThemeMode == ThemeMode.light
                       ? null
                       : () {
                           ref
@@ -209,7 +209,7 @@ class _UserMenu extends HookConsumerWidget {
                   color: currentThemeMode == ThemeMode.dark
                       ? Theme.of(context).colorScheme.primary
                       : null,
-                  onSelected: currentThemeMode == ThemeMode.dark
+                  onPressed: currentThemeMode == ThemeMode.dark
                       ? null
                       : () {
                           ref
@@ -223,7 +223,7 @@ class _UserMenu extends HookConsumerWidget {
             MenuItem(
               label: "Help & Support",
               icon: Icones(MaterialSymbols.help_outline),
-              onSelected: () async {
+              onPressed: () async {
                 final url = Uri.parse("https://discord.gg/j5WWscvQkW");
                 if (await canLaunchUrl(url)) {
                   await launchUrl(
@@ -238,7 +238,7 @@ class _UserMenu extends HookConsumerWidget {
               label: "Logout",
               icon: Icones(MaterialSymbols.logout),
               color: Theme.of(context).colorScheme.error,
-              onSelected: () async {
+              onPressed: () async {
                 final router = ref.read(appRouterProvider);
                 try {
                   await ref.read(authProvider.notifier).signOut();
@@ -258,7 +258,6 @@ class _UserMenu extends HookConsumerWidget {
           controller: controller,
           child: Material(
             child: InkWell(
-              onTapDown: ContextMenuRegion.onSecondaryTapDown(controller),
               onTap: ContextMenuRegion.onPress(controller),
               borderRadius: BorderRadius.circular(8),
               focusNode: focusNode,

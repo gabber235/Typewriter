@@ -57,6 +57,7 @@ extension MenuItemPatterns on MenuItem {
   TResult maybeMap<TResult extends Object?>(
     TResult Function(_MenuItem value)? $default, {
     TResult Function(MenuItemSubmenu value)? submenu,
+    TResult Function(MenuItemSection value)? section,
     TResult Function(MenuItemDivider value)? divider,
     required TResult orElse(),
   }) {
@@ -66,6 +67,8 @@ extension MenuItemPatterns on MenuItem {
         return $default(_that);
       case MenuItemSubmenu() when submenu != null:
         return submenu(_that);
+      case MenuItemSection() when section != null:
+        return section(_that);
       case MenuItemDivider() when divider != null:
         return divider(_that);
       case _:
@@ -90,6 +93,7 @@ extension MenuItemPatterns on MenuItem {
   TResult map<TResult extends Object?>(
     TResult Function(_MenuItem value) $default, {
     required TResult Function(MenuItemSubmenu value) submenu,
+    required TResult Function(MenuItemSection value) section,
     required TResult Function(MenuItemDivider value) divider,
   }) {
     final _that = this;
@@ -98,6 +102,8 @@ extension MenuItemPatterns on MenuItem {
         return $default(_that);
       case MenuItemSubmenu():
         return submenu(_that);
+      case MenuItemSection():
+        return section(_that);
       case MenuItemDivider():
         return divider(_that);
       case _:
@@ -121,6 +127,7 @@ extension MenuItemPatterns on MenuItem {
   TResult? mapOrNull<TResult extends Object?>(
     TResult? Function(_MenuItem value)? $default, {
     TResult? Function(MenuItemSubmenu value)? submenu,
+    TResult? Function(MenuItemSection value)? section,
     TResult? Function(MenuItemDivider value)? divider,
   }) {
     final _that = this;
@@ -129,6 +136,8 @@ extension MenuItemPatterns on MenuItem {
         return $default(_that);
       case MenuItemSubmenu() when submenu != null:
         return submenu(_that);
+      case MenuItemSection() when section != null:
+        return section(_that);
       case MenuItemDivider() when divider != null:
         return divider(_that);
       case _:
@@ -151,20 +160,25 @@ extension MenuItemPatterns on MenuItem {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
-            String label, Widget? icon, Color? color, VoidCallback? onSelected)?
+            String label, Widget? icon, Color? color, VoidCallback? onPressed)?
         $default, {
     TResult Function(
             String label, List<MenuItem> items, Widget? icon, Color? color)?
         submenu,
+    TResult Function(
+            List<MenuItem> items, String? label, Widget? icon, Color? color)?
+        section,
     TResult Function()? divider,
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _MenuItem() when $default != null:
-        return $default(_that.label, _that.icon, _that.color, _that.onSelected);
+        return $default(_that.label, _that.icon, _that.color, _that.onPressed);
       case MenuItemSubmenu() when submenu != null:
         return submenu(_that.label, _that.items, _that.icon, _that.color);
+      case MenuItemSection() when section != null:
+        return section(_that.items, _that.label, _that.icon, _that.color);
       case MenuItemDivider() when divider != null:
         return divider();
       case _:
@@ -188,19 +202,24 @@ extension MenuItemPatterns on MenuItem {
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
     TResult Function(
-            String label, Widget? icon, Color? color, VoidCallback? onSelected)
+            String label, Widget? icon, Color? color, VoidCallback? onPressed)
         $default, {
     required TResult Function(
             String label, List<MenuItem> items, Widget? icon, Color? color)
         submenu,
+    required TResult Function(
+            List<MenuItem> items, String? label, Widget? icon, Color? color)
+        section,
     required TResult Function() divider,
   }) {
     final _that = this;
     switch (_that) {
       case _MenuItem():
-        return $default(_that.label, _that.icon, _that.color, _that.onSelected);
+        return $default(_that.label, _that.icon, _that.color, _that.onPressed);
       case MenuItemSubmenu():
         return submenu(_that.label, _that.items, _that.icon, _that.color);
+      case MenuItemSection():
+        return section(_that.items, _that.label, _that.icon, _that.color);
       case MenuItemDivider():
         return divider();
       case _:
@@ -223,19 +242,24 @@ extension MenuItemPatterns on MenuItem {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
-            String label, Widget? icon, Color? color, VoidCallback? onSelected)?
+            String label, Widget? icon, Color? color, VoidCallback? onPressed)?
         $default, {
     TResult? Function(
             String label, List<MenuItem> items, Widget? icon, Color? color)?
         submenu,
+    TResult? Function(
+            List<MenuItem> items, String? label, Widget? icon, Color? color)?
+        section,
     TResult? Function()? divider,
   }) {
     final _that = this;
     switch (_that) {
       case _MenuItem() when $default != null:
-        return $default(_that.label, _that.icon, _that.color, _that.onSelected);
+        return $default(_that.label, _that.icon, _that.color, _that.onPressed);
       case MenuItemSubmenu() when submenu != null:
         return submenu(_that.label, _that.items, _that.icon, _that.color);
+      case MenuItemSection() when section != null:
+        return section(_that.items, _that.label, _that.icon, _that.color);
       case MenuItemDivider() when divider != null:
         return divider();
       case _:
@@ -247,13 +271,12 @@ extension MenuItemPatterns on MenuItem {
 /// @nodoc
 
 class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
-  const _MenuItem(
-      {required this.label, this.icon, this.color, this.onSelected});
+  const _MenuItem({required this.label, this.icon, this.color, this.onPressed});
 
   final String label;
   final Widget? icon;
   final Color? color;
-  final VoidCallback? onSelected;
+  final VoidCallback? onPressed;
 
   /// Create a copy of MenuItem
   /// with the given fields replaced by the non-null parameter values.
@@ -269,7 +292,7 @@ class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
       ..add(DiagnosticsProperty('label', label))
       ..add(DiagnosticsProperty('icon', icon))
       ..add(DiagnosticsProperty('color', color))
-      ..add(DiagnosticsProperty('onSelected', onSelected));
+      ..add(DiagnosticsProperty('onPressed', onPressed));
   }
 
   @override
@@ -280,16 +303,16 @@ class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
             (identical(other.label, label) || other.label == label) &&
             (identical(other.icon, icon) || other.icon == icon) &&
             (identical(other.color, color) || other.color == color) &&
-            (identical(other.onSelected, onSelected) ||
-                other.onSelected == onSelected));
+            (identical(other.onPressed, onPressed) ||
+                other.onPressed == onPressed));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, label, icon, color, onSelected);
+  int get hashCode => Object.hash(runtimeType, label, icon, color, onPressed);
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'MenuItem(label: $label, icon: $icon, color: $color, onSelected: $onSelected)';
+    return 'MenuItem(label: $label, icon: $icon, color: $color, onPressed: $onPressed)';
   }
 }
 
@@ -300,7 +323,7 @@ abstract mixin class _$MenuItemCopyWith<$Res>
       __$MenuItemCopyWithImpl;
   @useResult
   $Res call(
-      {String label, Widget? icon, Color? color, VoidCallback? onSelected});
+      {String label, Widget? icon, Color? color, VoidCallback? onPressed});
 }
 
 /// @nodoc
@@ -317,7 +340,7 @@ class __$MenuItemCopyWithImpl<$Res> implements _$MenuItemCopyWith<$Res> {
     Object? label = null,
     Object? icon = freezed,
     Object? color = freezed,
-    Object? onSelected = freezed,
+    Object? onPressed = freezed,
   }) {
     return _then(_MenuItem(
       label: null == label
@@ -332,9 +355,9 @@ class __$MenuItemCopyWithImpl<$Res> implements _$MenuItemCopyWith<$Res> {
           ? _self.color
           : color // ignore: cast_nullable_to_non_nullable
               as Color?,
-      onSelected: freezed == onSelected
-          ? _self.onSelected
-          : onSelected // ignore: cast_nullable_to_non_nullable
+      onPressed: freezed == onPressed
+          ? _self.onPressed
+          : onPressed // ignore: cast_nullable_to_non_nullable
               as VoidCallback?,
     ));
   }
@@ -435,6 +458,110 @@ class _$MenuItemSubmenuCopyWithImpl<$Res>
           ? _self._items
           : items // ignore: cast_nullable_to_non_nullable
               as List<MenuItem>,
+      icon: freezed == icon
+          ? _self.icon
+          : icon // ignore: cast_nullable_to_non_nullable
+              as Widget?,
+      color: freezed == color
+          ? _self.color
+          : color // ignore: cast_nullable_to_non_nullable
+              as Color?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class MenuItemSection with DiagnosticableTreeMixin implements MenuItem {
+  const MenuItemSection(
+      {required final List<MenuItem> items, this.label, this.icon, this.color})
+      : _items = items;
+
+  final List<MenuItem> _items;
+  List<MenuItem> get items {
+    if (_items is EqualUnmodifiableListView) return _items;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_items);
+  }
+
+  final String? label;
+  final Widget? icon;
+  final Color? color;
+
+  /// Create a copy of MenuItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $MenuItemSectionCopyWith<MenuItemSection> get copyWith =>
+      _$MenuItemSectionCopyWithImpl<MenuItemSection>(this, _$identity);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+      ..add(DiagnosticsProperty('type', 'MenuItem.section'))
+      ..add(DiagnosticsProperty('items', items))
+      ..add(DiagnosticsProperty('label', label))
+      ..add(DiagnosticsProperty('icon', icon))
+      ..add(DiagnosticsProperty('color', color));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is MenuItemSection &&
+            const DeepCollectionEquality().equals(other._items, _items) &&
+            (identical(other.label, label) || other.label == label) &&
+            (identical(other.icon, icon) || other.icon == icon) &&
+            (identical(other.color, color) || other.color == color));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(_items), label, icon, color);
+
+  @override
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'MenuItem.section(items: $items, label: $label, icon: $icon, color: $color)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $MenuItemSectionCopyWith<$Res>
+    implements $MenuItemCopyWith<$Res> {
+  factory $MenuItemSectionCopyWith(
+          MenuItemSection value, $Res Function(MenuItemSection) _then) =
+      _$MenuItemSectionCopyWithImpl;
+  @useResult
+  $Res call({List<MenuItem> items, String? label, Widget? icon, Color? color});
+}
+
+/// @nodoc
+class _$MenuItemSectionCopyWithImpl<$Res>
+    implements $MenuItemSectionCopyWith<$Res> {
+  _$MenuItemSectionCopyWithImpl(this._self, this._then);
+
+  final MenuItemSection _self;
+  final $Res Function(MenuItemSection) _then;
+
+  /// Create a copy of MenuItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? items = null,
+    Object? label = freezed,
+    Object? icon = freezed,
+    Object? color = freezed,
+  }) {
+    return _then(MenuItemSection(
+      items: null == items
+          ? _self._items
+          : items // ignore: cast_nullable_to_non_nullable
+              as List<MenuItem>,
+      label: freezed == label
+          ? _self.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
       icon: freezed == icon
           ? _self.icon
           : icon // ignore: cast_nullable_to_non_nullable
