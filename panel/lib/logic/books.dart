@@ -8,6 +8,7 @@ import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 
 part "books.g.dart";
 part "books.freezed.dart";
@@ -93,6 +94,9 @@ class BookSelection extends Selectable<BookSelector> {
       },
     );
   }
+
+  @override
+  List<SelectableOperation> get operations => [];
 
   @override
   Widget? header() {

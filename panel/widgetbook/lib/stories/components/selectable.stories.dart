@@ -8,6 +8,7 @@ import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
@@ -20,26 +21,8 @@ part "selectable.stories.g.dart";
 @widgetbook.UseCase(name: "Selectable Boxes", type: SelectableBox)
 Widget selectableUseCase(BuildContext context) {
   return ProviderScope(
-    observers: [Logger()],
     child: AppRequiredWidgets(child: SelectableDemo()),
   );
-}
-
-class Logger extends ProviderObserver {
-  @override
-  void didUpdateProvider(
-    ProviderObserverContext context,
-    Object? previousValue,
-    Object? newValue,
-  ) {
-    print('''
-{
-  "provider": "${context.provider}",
-  "newValue": "$newValue",
-  "mutation": "${context.mutation}"
-}''');
-  }
-
 }
 
 // Selectable box widget
@@ -201,6 +184,9 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
   final DynamicData data;
 
   final Color color;
+
+  @override
+  List<SelectableOperation> get operations => [];
 
   @override
   int get hashCode => Object.hash(id, objectBlueprint, data, color);

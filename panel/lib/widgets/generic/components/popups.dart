@@ -13,6 +13,7 @@ class ConfirmationDialogue extends HookWidget {
     required this.confirmText,
     required this.confirmIcon,
     required this.confirmColor,
+    required this.onConfirmColor,
     required this.delayConfirm,
     required this.cancelText,
     required this.cancelIcon,
@@ -35,6 +36,9 @@ class ConfirmationDialogue extends HookWidget {
 
   /// The color of the confirm button
   final Color confirmColor;
+
+  /// The color of the text on the confirm button
+  final Color onConfirmColor;
 
   /// When [delayConfirm] is larger than 0, the confirm button will be disabled for [delayConfirm] seconds.
   /// This may be useful when the user is about to perform an irreversible action.
@@ -92,6 +96,7 @@ class ConfirmationDialogue extends HookWidget {
           ),
           style: FilledButton.styleFrom(
             backgroundColor: confirmColor,
+            foregroundColor: onConfirmColor,
           ),
           onPressed: canConfirm
               ? () {
@@ -112,7 +117,8 @@ Future<bool> showConfirmationDialogue({
   String content = "This action cannot be undone.",
   String confirmText = "Confirm",
   String confirmIcon = Fa6Solid.trash,
-  Color confirmColor = Colors.redAccent,
+  Color? confirmColor,
+  Color? onConfirmColor,
   Duration delayConfirm = Duration.zero,
   String cancelText = "Cancel",
   String cancelIcon = Fa6Solid.xmark,
@@ -135,7 +141,9 @@ Future<bool> showConfirmationDialogue({
           content: content,
           confirmText: confirmText,
           confirmIcon: confirmIcon,
-          confirmColor: confirmColor,
+          confirmColor: confirmColor ?? Theme.of(context).colorScheme.error,
+          onConfirmColor:
+              onConfirmColor ?? Theme.of(context).colorScheme.onError,
           delayConfirm: hasShiftDown ? Duration.zero : delayConfirm,
           cancelText: cancelText,
           cancelIcon: cancelIcon,

@@ -11,6 +11,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
+import 'package:widgetbook_workspace/stories/app/components/inspector/operations/delete_operation.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/components/auto_scroller.stories.dart'
     as _widgetbook_workspace_stories_components_auto_scroller_stories;
 import 'package:widgetbook_workspace/stories/components/book.stories.dart'
@@ -47,6 +49,8 @@ import 'package:widgetbook_workspace/stories/components/section.stories.dart'
     as _widgetbook_workspace_stories_components_section_stories;
 import 'package:widgetbook_workspace/stories/components/selectable.stories.dart'
     as _widgetbook_workspace_stories_components_selectable_stories;
+import 'package:widgetbook_workspace/stories/components/shortcut_display.stories.dart'
+    as _widgetbook_workspace_stories_components_shortcut_display_stories;
 import 'package:widgetbook_workspace/stories/components/sidebar.stories.dart'
     as _widgetbook_workspace_stories_components_sidebar_stories;
 import 'package:widgetbook_workspace/stories/components/tag.stories.dart'
@@ -246,6 +250,34 @@ final directories = <_widgetbook.WidgetbookNode>[
                       ),
                     ],
                   ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'operations',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'DeleteOperationButton',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Multiple Success',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories
+                                    .deleteMultipleSuccessUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Partial Failures',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories
+                                    .deletePartialFailureUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Single Success',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories
+                                    .deleteSingleSuccessUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
@@ -348,12 +380,30 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(
+                name: 'RotatingShortcuts',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Rotating',
+                  builder:
+                      _widgetbook_workspace_stories_components_shortcut_display_stories
+                          .rotatingShortcutsUseCase,
+                ),
+              ),
+              _widgetbook.WidgetbookLeafComponent(
                 name: 'Section',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
                       _widgetbook_workspace_stories_components_section_stories
                           .sectionUseCase,
+                ),
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'ShortcutDisplay',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Single',
+                  builder:
+                      _widgetbook_workspace_stories_components_shortcut_display_stories
+                          .singleShortcutDisplayUseCase,
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(

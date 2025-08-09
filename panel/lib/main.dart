@@ -124,7 +124,7 @@ ThemeData buildTheme(Brightness brightness) {
   final baseTheme = ThemeData(
     brightness: brightness,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blueAccent,
+      seedColor: Color(0xFF009FFF),
       brightness: brightness,
       error: Colors.redAccent,
       surface: isLight ? const Color(0xFFF5F5F5) : const Color(0xFF141218),
@@ -164,6 +164,9 @@ ThemeData buildTheme(Brightness brightness) {
 
   return baseTheme.copyWith(
     textTheme: textTheme,
+    dialogTheme: DialogThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       border: OutlineInputBorder(
@@ -223,17 +226,28 @@ ThemeData buildTheme(Brightness brightness) {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        foregroundColor: baseTheme.colorScheme.onPrimary,
+        disabledForegroundColor: baseTheme.colorScheme.onSurface.withValues(
+          alpha: 0.38,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: baseTheme.colorScheme.primary,
+        disabledForegroundColor: baseTheme.colorScheme.onSurface.withValues(
+          alpha: 0.38,
+        ),
+      ),
+    ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
         padding: EdgeInsets.zero,
-      ),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        foregroundColor: Colors.white,
       ),
     ),
     menuButtonTheme: MenuButtonThemeData(

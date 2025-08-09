@@ -10,6 +10,7 @@ import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 import "package:typewriter_panel/widgets/generic/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
@@ -192,31 +193,6 @@ class DesktopInspector extends HookConsumerWidget {
   }
 }
 
-class _InspectorContent extends HookConsumerWidget {
-  const _InspectorContent();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedHeader = ref.watch(selectedHeaderProvider);
-    final selectedDataBlueprint = ref.watch(selectedDataBlueprintProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 12,
-      children: [
-        if (selectedHeader != null) selectedHeader,
-        if (selectedDataBlueprint != null)
-          ObjectEditorWidget(
-            path: "",
-            objectBlueprint: selectedDataBlueprint,
-            editorMode: EditorMode.interactiveInspector,
-            defaultExpanded: true,
-          ),
-        const SizedBox(height: 30),
-      ],
-    );
-  }
-}
-
 class _DesktopDragHandle extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -319,4 +295,47 @@ class _MobileDragHandleDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       false;
+}
+
+class _InspectorContent extends HookConsumerWidget {
+  const _InspectorContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedHeader = ref.watch(selectedHeaderProvider);
+    final selectedDataBlueprint = ref.watch(selectedDataBlueprintProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 12,
+      children: [
+        if (selectedHeader != null) selectedHeader,
+        if (selectedDataBlueprint != null)
+          ObjectEditorWidget(
+            path: "",
+            objectBlueprint: selectedDataBlueprint,
+            editorMode: EditorMode.interactiveInspector,
+            defaultExpanded: true,
+          ),
+        const SizedBox(height: 30),
+        Operations(),
+        const SizedBox(height: 30),
+      ],
+    );
+  }
+}
+
+class Operations extends HookConsumerWidget {
+  const Operations({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(selectedProvider).value ?? [];
+    final operations = ref.watch(availableOperationsProvider);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final operation in operations) operation.inspectorButton(selected),
+      ],
+    );
+  }
 }
