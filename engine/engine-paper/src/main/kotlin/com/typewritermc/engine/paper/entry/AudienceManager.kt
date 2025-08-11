@@ -208,15 +208,20 @@ inline fun <reified D : Any> Ref<out AudienceEntry>.findDisplay(): D? {
 
 
 fun <E : AudienceEntry> List<Ref<out AudienceEntry>>.descendants(klass: KClass<E>): List<Ref<E>> {
-    return flatMap {
-        val child = it.get() ?: return@flatMap emptyList<Ref<E>>()
-        if (klass.isInstance(child)) {
-            listOf(it as Ref<E>)
-        } else if (child is AudienceFilterEntry) {
-            child.children.descendants(klass)
-        } else {
-            emptyList()
+    try {
+        return flatMap {
+            val child = it.get() ?: return@flatMap emptyList<Ref<E>>()
+            if (klass.isInstance(child)) {
+                listOf(it as Ref<E>)
+            } else if (child is AudienceFilterEntry) {
+                child.children.descendants(klass)
+            } else {
+                emptyList()
+            }
         }
+    } catch (e: StackOverflowError) {
+        logger.severe("[CRITICAL] StackOverflowError for entries: " + this.joinToString(", ") { it.id } + "due to circular references.")
+        throw e
     }
 }
 
