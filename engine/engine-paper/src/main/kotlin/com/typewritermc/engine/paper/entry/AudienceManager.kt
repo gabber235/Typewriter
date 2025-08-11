@@ -220,7 +220,7 @@ fun <E : AudienceEntry> List<Ref<out AudienceEntry>>.descendants(klass: KClass<E
             }
         }
     } catch (e: StackOverflowError) {
-        logger.severe("[CRITICAL] StackOverflowError for entries: " + this.joinToString(", ") { it.id } + "due to circular references.")
+        logger.severe("[CRITICAL] StackOverflowError for entries: " + this.joinToString(", ") { it.id } + " due to circular references.")
         throw e
     }
 }
