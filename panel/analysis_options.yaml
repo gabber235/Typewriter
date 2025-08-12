@@ -12,7 +12,7 @@ linter:
     avoid_field_initializers_in_const_classes: true
     avoid_final_parameters: true
     avoid_multiple_declarations_per_line: true
-    avoid_positional_boolean_parameters: true
+    avoid_positional_boolean_parameters: false
     avoid_private_typedef_functions: true
     avoid_redundant_argument_values: false
     avoid_setters_without_getters: true
@@ -76,7 +76,6 @@ linter:
     use_string_buffers: true
     use_test_throws_matchers: true
     use_to_and_as_if_applicable: true
-
 
 analyzer:
   plugins:

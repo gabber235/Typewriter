@@ -28,6 +28,9 @@ mixin _$Book {
   $BookCopyWith<Book> get copyWith =>
       _$BookCopyWithImpl<Book>(this as Book, _$identity);
 
+  /// Serializes this Book to a JSON map.
+  Map<String, dynamic> toJson();
+
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
@@ -40,6 +43,7 @@ mixin _$Book {
             const DeepCollectionEquality().equals(other.tags, tags));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, title, icon, color,
       const DeepCollectionEquality().hash(tags));
@@ -273,7 +277,7 @@ extension BookPatterns on Book {
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _Book implements Book {
   const _Book(
       {required this.id,
@@ -282,6 +286,7 @@ class _Book implements Book {
       @ColorConverter() this.color = Colors.redAccent,
       final List<Tag> tags = const []})
       : _tags = tags;
+  factory _Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
 
   @override
   final String id;
@@ -311,6 +316,13 @@ class _Book implements Book {
       __$BookCopyWithImpl<_Book>(this, _$identity);
 
   @override
+  Map<String, dynamic> toJson() {
+    return _$BookToJson(
+      this,
+    );
+  }
+
+  @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
@@ -322,6 +334,7 @@ class _Book implements Book {
             const DeepCollectionEquality().equals(other._tags, _tags));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, title, icon, color,
       const DeepCollectionEquality().hash(_tags));

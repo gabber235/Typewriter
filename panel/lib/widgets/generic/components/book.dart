@@ -1,6 +1,5 @@
 import "dart:math";
-
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" hide Title;
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -11,9 +10,17 @@ import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/tag.dart";
+import "package:typewriter_panel/widgets/generic/components/title.dart";
 
+const bookWidth = 175.0;
+const bookHeight = 230.0;
+const bookAspectRatio = bookWidth / bookHeight;
+
+/// Displays a selectable animated book.
 class BookWidget extends HookConsumerWidget {
   const BookWidget({
     required this.id,
@@ -32,176 +39,464 @@ class BookWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final inspecting = useState(false);
-
+    final focusNode = useFocusNode();
     final selectableId = BookSelector(id);
 
-    return MouseRegion(
-      onEnter: (_) => inspecting.value = true,
-      onExit: (_) => inspecting.value = false,
-      child: SizedBox(
-        width: 175,
-        height: 230,
-        child: Stack(
-          children: [
-            Positioned(
-              top: 10,
-              bottom: 10,
-              right: 0,
-              child: SizedBox(
-                width: 30,
-                child: Material(
-                  color: color
-                      .toOkLch()
-                      .darker(context.isDarkMode ? 0.3 : -0.1)
-                      .desaturate(0.3)
-                      .toColor(),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+    return Selector(
+      selectableId: selectableId,
+      focusNode: focusNode,
+      builder: (isSelected, isFocused, isHovered) {
+        return SizedBox(
+          width: bookWidth,
+          height: bookHeight,
+          child: _BookOutline(
+            show: isFocused,
+            color: color,
+            builder: () => _BookStack(
+              key: const ValueKey("content"),
+              color: color,
+              icon: icon,
+              title: title,
+              tags: tags,
+              isSelected: isSelected,
             ),
-            Positioned(
-              top: 5,
-              bottom: 5,
-              right: 5,
-              child: SizedBox(
-                width: 30,
-                child: Material(
-                  color: color
-                      .toOkLch()
-                      .darker(context.isDarkMode ? -0.1 : -0.3)
-                      .desaturate(0.3)
-                      .toColor(),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              right: 10,
-              child: Material(
-                color: color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 0,
-              bottom: 0,
-              left: 0,
-              child: SizedBox(
-                width: 16,
-                child: Material(
-                  color: color
-                      .toOkLch()
-                      .darker(context.isDarkMode ? 0.3 : 0.2)
-                      .desaturate(context.isDarkMode ? 0.3 : 0.2)
-                      .toColor(),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 10,
-              bottom: 10,
-              left: 24,
-              right: 20,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                // spacing: 4,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                        width: 16,
-                        child: IconTheme(
-                          data: IconThemeData(color: Colors.white60),
-                          child: icon,
-                        ),
-                      ),
-                      Icones(
-                        HeroiconsSolid.bars_3_bottom_left,
-                        color: Colors.white38,
-                      ),
-                    ],
-                  ),
-                  Flexible(
-                    child: Text(
-                      title.formatted,
-                      style: TextStyle(
-                        fontSize: context.responsive(
-                          mobile: 12,
-                          tablet: 14,
-                          desktop: 16,
-                        ),
-                        fontVariations: [boldWeight],
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  if (tags.isNotEmpty)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.fastEaseInToSlowEaseOut,
-                      decoration: BoxDecoration(
-                        color: color
-                            .toOkLch()
-                            .darker(context.isDarkMode ? 0.5 : -0.5)
-                            .desaturate(context.isDarkMode ? 0.5 : 0.5)
-                            .toColor(),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      height: min(
-                        100,
-                        tags.length * 8 + (tags.length - 1) * 5 + 8,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: ListView.separated(
-                          scrollDirection: Axis.vertical,
-                          itemCount: tags.length,
-                          physics: const BouncingScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            final tag = tags[index];
-                            return TagWidget(
-                              tag: tag,
-                              isExpanded: false,
-                              key: Key(tag.id),
-                            );
-                          },
-                          separatorBuilder: (context, index) {
-                            return SizedBox(height: 5);
-                          },
-                        ),
-                      ),
-                    )
-                  else
-                    SizedBox.shrink(),
-                ],
-              ),
-            ),
-          ],
+          ),
+        )
+            .animate(target: isHovered ? 1 : 0)
+            .scaleXY(
+              duration: isHovered ? 750.ms : 300.ms,
+              curve: isHovered ? ElasticOutCurve(0.4) : Curves.easeInOutQuad,
+              begin: 1,
+              end: 1.05,
+            )
+            .rotate(
+              duration: 300.ms,
+              delay: isHovered ? 50.ms : 0.ms,
+              curve: Curves.easeInOutQuad,
+              begin: 0,
+              end: 0.005,
+            );
+      },
+    );
+  }
+}
+
+class _BookStack extends StatelessWidget {
+  const _BookStack({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.tags,
+    required this.isSelected,
+    super.key,
+  });
+
+  final Color color;
+  final Widget icon;
+  final String title;
+  final List<Tag> tags;
+  final bool isSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        _SpineLayers(isSelected: isSelected, color: color),
+        Positioned.fill(
+          child: _BookCover(
+            isSelected: isSelected,
+            color: color,
+            icon: icon,
+            title: title,
+            tags: tags,
+          ),
         ),
-      )
-          .animate(target: inspecting.value ? 1 : 0)
-          .scaleXY(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOutQuad,
-            begin: 1.0,
-            end: 1.05,
-          )
-          .rotate(begin: 0, end: 0.005),
+      ],
+    );
+  }
+}
+
+class _SpineLayers extends StatelessWidget {
+  const _SpineLayers({
+    required this.isSelected,
+    required this.color,
+  });
+
+  final bool isSelected;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+    final specs = <_SpineSpec>[
+      _SpineSpec(
+        top: (s) => s ? 15 : 10,
+        bottom: (s) => s ? 15 : 10,
+        right: (s) => 0,
+        color: (c, d) =>
+            c.toOkLch().darker(d ? 0.3 : -0.1).desaturate(0.3).toColor(),
+      ),
+      _SpineSpec(
+        top: (s) => s ? 12 : 5,
+        bottom: (s) => s ? 12 : 5,
+        right: (s) => s ? 4 : 5,
+        color: (c, d) =>
+            c.toOkLch().darker(d ? 0.1 : -0.3).desaturate(0.3).toColor(),
+      ),
+      _SpineSpec(
+        top: (s) => s ? 10 : 5,
+        bottom: (s) => s ? 10 : 5,
+        right: (s) => s ? 8 : 5,
+        color: (c, d) =>
+            c.toOkLch().darker(d ? -0.0 : -0.3).desaturate(0.3).toColor(),
+      ),
+      _SpineSpec(
+        top: (s) => 5,
+        bottom: (s) => 5,
+        right: (s) => s ? 14 : 5,
+        color: (c, d) =>
+            c.toOkLch().darker(d ? -0.1 : -0.3).desaturate(0.3).toColor(),
+      ),
+    ];
+
+    return Stack(
+      children: [
+        for (final spec in specs)
+          _AnimatedSpineLayer(
+            spec: spec,
+            isSelected: isSelected,
+            color: color,
+            isDark: isDark,
+          ),
+      ],
+    );
+  }
+}
+
+class _SpineSpec {
+  const _SpineSpec({
+    required this.top,
+    required this.bottom,
+    required this.right,
+    required this.color,
+  });
+
+  final double Function(bool isSelected) top;
+  final double Function(bool isSelected) bottom;
+  final double Function(bool isSelected) right;
+  final Color Function(Color base, bool isDark) color;
+}
+
+class _AnimatedSpineLayer extends StatelessWidget {
+  const _AnimatedSpineLayer({
+    required this.spec,
+    required this.isSelected,
+    required this.color,
+    required this.isDark,
+  });
+
+  final _SpineSpec spec;
+  final bool isSelected;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      duration: isSelected ? 750.ms : 300.ms,
+      curve: isSelected ? ElasticOutCurve(0.9) : Curves.fastEaseInToSlowEaseOut,
+      top: spec.top(isSelected),
+      bottom: spec.bottom(isSelected),
+      right: spec.right(isSelected),
+      child: SizedBox(
+        width: 30,
+        child: Material(
+          color: spec.color(color, isDark),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BookCover extends StatelessWidget {
+  const _BookCover({
+    required this.isSelected,
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.tags,
+  });
+
+  final bool isSelected;
+  final Color color;
+  final Widget icon;
+  final String title;
+  final List<Tag> tags;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: isSelected ? 750.ms : 300.ms,
+      curve: isSelected ? ElasticOutCurve(0.9) : Curves.fastEaseInToSlowEaseOut,
+      tween: Tween<double>(begin: 0, end: isSelected ? 1 : 0),
+      builder: (context, t, child) {
+        final scale = 1 - 0.1 * t;
+        final matrix = Matrix4(
+          1.0, 0.0, 0.0, 0.0, //
+          0.0, 1.0, 0.0, 0.0, //
+          0.0, 0.0, 1.0, 0.002 * t, //
+          0.0, 0.0, 0.0, 1.0,
+        )
+          ..rotateY(0.1 * pi * t)
+          ..scaleByDouble(scale, scale, 1, 1);
+        return Transform(
+          alignment: Alignment.centerLeft,
+          transform: matrix,
+          child: child,
+        );
+      },
+      child: Stack(
+        children: [
+          Positioned.fill(
+            right: 10,
+            child: Material(
+              color: color,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            child: SizedBox(
+              width: 16,
+              child: Material(
+                color: color
+                    .toOkLch()
+                    .darker(context.isDarkMode ? 0.3 : 0.2)
+                    .desaturate(context.isDarkMode ? 0.3 : 0.2)
+                    .toColor(),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 10,
+            bottom: 10,
+            left: 24,
+            right: 20,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _TopRow(icon: icon),
+                _TitleText(title: title),
+                if (tags.isNotEmpty)
+                  _TagsList(
+                    color: color,
+                    tags: tags,
+                  )
+                else
+                  const SizedBox.shrink(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopRow extends StatelessWidget {
+  const _TopRow({required this.icon});
+
+  final Widget icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        SizedBox(
+          width: 16,
+          child: IconTheme(
+            data: const IconThemeData(color: Colors.white60),
+            child: icon,
+          ),
+        ),
+        const Icones(
+          HeroiconsSolid.bars_3_bottom_left,
+          color: Colors.white38,
+        ),
+      ],
+    );
+  }
+}
+
+class _TitleText extends StatelessWidget {
+  const _TitleText({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Text(
+        title.formatted,
+        style: TextStyle(
+          fontSize: context.responsive(
+            mobile: 12,
+            tablet: 14,
+            desktop: 16,
+          ),
+          fontVariations: [boldWeight],
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class _TagsList extends StatelessWidget {
+  const _TagsList({
+    required this.color,
+    required this.tags,
+  });
+
+  final Color color;
+  final List<Tag> tags;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+    final double height = min(
+      100.0,
+      tags.length * 8.0 + (tags.length - 1) * 5.0 + 8.0,
+    );
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.fastEaseInToSlowEaseOut,
+      decoration: BoxDecoration(
+        color: color
+            .toOkLch()
+            .darker(isDark ? 0.5 : -0.5)
+            .desaturate(isDark ? 0.5 : 0.5)
+            .toColor(),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      padding: const EdgeInsets.all(4),
+      height: height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: ListView.separated(
+          scrollDirection: Axis.vertical,
+          itemCount: tags.length,
+          physics: const BouncingScrollPhysics(),
+          itemBuilder: (context, index) {
+            final tag = tags[index];
+            return TagWidget(
+              tag: tag,
+              isExpanded: false,
+              key: Key(tag.id),
+            );
+          },
+          separatorBuilder: (context, index) => const SizedBox(height: 5),
+        ),
+      ),
+    );
+  }
+}
+
+class _BookOutline extends HookWidget {
+  const _BookOutline({
+    required this.show,
+    required this.color,
+    required this.builder,
+  });
+
+  final bool show;
+  final Color color;
+  final Widget Function() builder;
+
+  @override
+  Widget build(BuildContext context) {
+    const outerThickness = 5.5;
+    const innerThickness = 2.5;
+    const gap = 0.5;
+
+    double scaleXFor(double thickness) => 1 + (2 * thickness) / bookWidth;
+    double scaleYFor(double thickness) => 1 + (2 * thickness) / bookHeight;
+
+    Widget outlineLayer({
+      required double thickness,
+      required Color outlineColor,
+    }) {
+      return TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: show ? 1 : 0),
+        duration: 100.ms,
+        curve: Curves.fastLinearToSlowEaseIn,
+        builder: (context, t, _) {
+          return Transform(
+            transform: Matrix4.translationValues(gap, gap, 0),
+            child: Transform.scale(
+              scaleX: scaleXFor(thickness * t),
+              scaleY: scaleYFor(thickness * t),
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(outlineColor, BlendMode.srcIn),
+                child: builder(),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return Stack(
+      children: [
+        outlineLayer(
+          thickness: outerThickness,
+          outlineColor: color,
+        ),
+        outlineLayer(
+          thickness: innerThickness,
+          outlineColor: Theme.of(context).colorScheme.surface,
+        ),
+        builder(),
+      ],
+    );
+  }
+}
+
+/// Header for a book displaying title and identifier.
+class BookHeader extends HookWidget {
+  const BookHeader({
+    required this.id,
+    required this.name,
+    required this.color,
+    super.key,
+  });
+
+  final String id;
+  final String name;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Title(title: name, color: color),
+        const SizedBox(height: 8),
+        Identifier(id: id),
+      ],
     );
   }
 }

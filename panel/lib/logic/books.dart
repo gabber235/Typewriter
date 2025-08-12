@@ -4,11 +4,14 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
+import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
+import "package:typewriter_panel/widgets/generic/components/book.dart";
 
 part "books.g.dart";
 part "books.freezed.dart";
@@ -19,6 +22,10 @@ class Books extends _$Books {
   FutureOr<List<Book>> build() async {
     // TODO: implement build
     return [];
+  }
+
+  Future<void> updateBook(Book book) async {
+    throw UnimplementedError();
   }
 }
 
@@ -53,6 +60,8 @@ abstract class Book with _$Book {
     @ColorConverter() @Default(Colors.redAccent) Color color,
     @Default([]) List<Tag> tags,
   }) = _Book;
+
+  factory Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
 }
 
 class BookSelector extends SelectableIdentifier {
@@ -68,24 +77,51 @@ class BookSelector extends SelectableIdentifier {
       if (value == null) {
         throw SelectableNotFoundException(this);
       }
-      return BookSelection(id: this, name: value.title);
+      return BookSelection(
+        ref: ref,
+        id: this,
+        book: value,
+      );
     });
   }
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BookSelector && other.id == id;
+  }
+
+  @override
+  String toString() => "BookSelector(id: $id)";
 }
 
 class BookSelection extends Selectable<BookSelector> {
-  BookSelection({required this.id, required this.name});
+  BookSelection({
+    required this.ref,
+    required this.id,
+    required this.book,
+  }) : _data = DynamicData(book.toJson());
 
   @override
   final BookSelector id;
+
+  final Book book;
+
   @override
-  final String name;
+  String get name => book.title;
+
+  final Ref ref;
+
+  final DynamicData _data;
 
   @override
   ObjectBlueprint get objectBlueprint {
     return ObjectBlueprint(
       fields: {
-        "name": DataBlueprint.string(),
+        "title": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
         // "icon": DataBlueprint.primitive(type: PrimitiveType.string),
         // "color": DataBlueprint.custom("color"),
         // "tags": DataBlueprint.list(
@@ -99,19 +135,32 @@ class BookSelection extends Selectable<BookSelector> {
   List<SelectableOperation> get operations => [];
 
   @override
-  Widget? header() {
-    // TODO: implement header
-    throw UnimplementedError();
-  }
+  Widget? header() => BookHeader(
+        id: book.id,
+        name: book.title.formatted,
+        color: book.color,
+      );
 
   @override
-  dynamic fieldValue(String path) {
-    // TODO: implement fieldValue
-    throw UnimplementedError();
-  }
+  dynamic fieldValue(String path) => _data.get(path);
 
   @override
   void setFieldValue(String path, dynamic value) {
-    // TODO: implement setFieldValue
+    final newData = _data.copyWith(path, value);
+    final newBook = Book.fromJson(newData.toJson());
+    ref.read(booksProvider.notifier).updateBook(newBook);
   }
+
+  @override
+  int get hashCode => Object.hash(id, book);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! BookSelection) return false;
+    return other.id == id && other.book == book;
+  }
+
+  @override
+  String toString() => "BookSelection(id: $id, book: $book)";
 }

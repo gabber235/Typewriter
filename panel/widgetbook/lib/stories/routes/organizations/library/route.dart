@@ -15,7 +15,7 @@ import "package:widgetbook_workspace/logic/organization.mock.dart";
 Widget libraryPageUseCase(BuildContext context) {
   final state = context.knobs.list(
     label: "State",
-    initialOption: MockBooksState.loading,
+    initialOption: MockBooksState.fewBooks,
     options: MockBooksState.values,
     labelBuilder: (option) => option.name,
   );

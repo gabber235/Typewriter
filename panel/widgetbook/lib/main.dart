@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:mocktail/mocktail.dart";
+import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/main.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -21,6 +22,7 @@ void main() {
       dataBlueprint: ObjectBlueprint(fields: {}),
     ),
   );
+  registerFallbackValue(Book(id: "", title: "", icon: ""));
 
   runApp(const WidgetbookApp());
 }

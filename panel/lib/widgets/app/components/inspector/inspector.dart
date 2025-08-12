@@ -37,7 +37,7 @@ class Inspector extends HookConsumerWidget {
     super.key,
   });
 
-  final EdgeInsetsGeometry margin;
+  final EdgeInsets margin;
 
   final Widget child;
 
@@ -123,25 +123,31 @@ class MobileInspector extends HookConsumerWidget {
             controller: controller,
             snapAnimationDuration: 200.ms,
             builder: (context, scrollController) {
-              return Section(
-                child: CustomScrollView(
-                  controller: scrollController,
-                  slivers: [
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _MobileDragHandleDelegate(),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 12,
-                          right: 12,
-                          bottom: 12,
-                        ),
-                        child: _InspectorContent(),
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Section(
+                  child: CustomScrollView(
+                    controller: scrollController,
+                    slivers: [
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _MobileDragHandleDelegate(),
                       ),
-                    ),
-                  ],
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            left: 12,
+                            right: 12,
+                            bottom: 12,
+                          ),
+                          child: _InspectorContent(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -159,7 +165,7 @@ class DesktopInspector extends HookConsumerWidget {
     super.key,
   });
 
-  final EdgeInsetsGeometry margin;
+  final EdgeInsets margin;
   final Widget child;
 
   @override
@@ -171,26 +177,42 @@ class DesktopInspector extends HookConsumerWidget {
       children: [
         Expanded(child: child),
         _DesktopDragHandle(),
-        Pane(
-          id: "inspector",
-          borderRadius: BorderRadius.circular(12),
-          margin: hasSelection ? margin : EdgeInsets.zero,
-          enabled: hasSelection,
-          child: Section(
-            margin: EdgeInsets.zero,
-            child: AnimatedSize(
-              duration: hasSelection ? 1000.ms : 750.ms,
-              curve: hasSelection
-                  ? ElasticOutCurve(0.9)
-                  : Curves.fastEaseInToSlowEaseOut,
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                width: hasSelection ? size : 0,
-                height: double.infinity,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: _InspectorContent(),
+        Padding(
+          padding: EdgeInsets.only(top: margin.top, bottom: margin.bottom),
+          child: AnimatedPadding(
+            duration: hasSelection ? 1000.ms : 750.ms,
+            curve: hasSelection
+                ? ElasticOutCurve(0.9)
+                : Curves.fastEaseInToSlowEaseOut,
+            padding: hasSelection
+                ? EdgeInsets.only(left: margin.left, right: margin.right)
+                : EdgeInsets.zero,
+            child: Pane(
+              id: "inspector",
+              borderRadius: BorderRadius.circular(12),
+              enabled: hasSelection,
+              margin: null,
+              child: Section(
+                margin: EdgeInsets.zero,
+                child: AnimatedContainer(
+                  duration: hasSelection ? 1000.ms : 750.ms,
+                  curve: hasSelection
+                      ? ElasticOutCurve(0.9)
+                      : Curves.fastEaseInToSlowEaseOut,
+                  width: hasSelection ? size : 0,
+                  height: double.infinity,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.centerLeft,
+                      minWidth: size,
+                      maxWidth: size,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: _InspectorContent(),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -206,7 +228,17 @@ class _DesktopDragHandle extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasSelection = ref.watch(hasSelectionProvider);
-    if (!hasSelection) return const SizedBox(width: 3);
+    final previousSelection = usePrevious(hasSelection);
+    if (!hasSelection) {
+      return TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: previousSelection != null ? 16 : 3, end: 3),
+        duration: 750.ms,
+        curve: Curves.fastEaseInToSlowEaseOut,
+        builder: (context, width, _) {
+          return SizedBox(width: width);
+        },
+      );
+    }
     final hovering = useState(false);
     final startSize = useState(0.0);
     final startPosition = useState(Offset.zero);

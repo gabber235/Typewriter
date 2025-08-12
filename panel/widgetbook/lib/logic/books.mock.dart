@@ -49,6 +49,7 @@ BooksMock createBooksMockForState(MockBooksState state) {
       MockBooksState.error => Future.error(Exception("Error")),
     },
   );
+  when(() => books.updateBook(any())).thenAnswer((_) => Future.value());
   return books;
 }
 
