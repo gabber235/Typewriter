@@ -10,6 +10,7 @@ import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
+import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
 /// A selectable-level operation holding the asynchronous delete callback.
 class DeleteSelectableOperation extends SelectableOperation {
@@ -24,6 +25,9 @@ class DeleteOperation extends Operation {
 
   @override
   String get name => "Delete";
+
+  @override
+  String get description => "Delete selected items";
 
   @override
   List<ShortcutActivator> get shortcutActivators => [
@@ -140,12 +144,22 @@ class DeleteOperationButton extends HookConsumerWidget {
                 Icons.delete_outline,
                 size: 16,
               ),
-        label: Text(
-          isDeleting.value
-              ? "Deleting..."
-              : selection.length > 1
-                  ? "Delete (${selection.length})"
-                  : "Delete",
+        label: Row(
+          children: [
+            Text(
+              isDeleting.value
+                  ? "Deleting..."
+                  : selection.length > 1
+                      ? "Delete (${selection.length})"
+                      : "Delete",
+            ),
+            if (operation.shortcutActivators.isEmpty) ...[
+              const SizedBox(width: 8),
+              RotatingShortcuts(
+                shortcuts: operation.shortcutActivators,
+              ),
+            ],
+          ],
         ),
       ),
     );

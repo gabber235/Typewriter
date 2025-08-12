@@ -1,12 +1,16 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/hooks/delayed_execution.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/rect.dart";
 import "package:typewriter_panel/utils/render_box.dart";
+import "package:typewriter_panel/utils/shortuct.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 
 part "panes.g.dart";
@@ -214,7 +218,8 @@ class Pane extends HookConsumerWidget {
             node: focusScopeNode,
             skipTraversal: true,
             debugLabel: debugLabel,
-            onFocusChange: (_) => focusType.value = FocusHighlight.focusType(node),
+            onFocusChange: (_) =>
+                focusType.value = FocusHighlight.focusType(node),
             child: child,
           )
         : Focus(
@@ -222,7 +227,8 @@ class Pane extends HookConsumerWidget {
             focusNode: focusNode,
             skipTraversal: true,
             debugLabel: debugLabel,
-            onFocusChange: (_) => focusType.value = FocusHighlight.focusType(focusNode),
+            onFocusChange: (_) =>
+                focusType.value = FocusHighlight.focusType(focusNode),
             child: child,
           );
 
@@ -267,16 +273,13 @@ class GlobalPaneNavigator extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final panes = ref.watch(panesProvider);
 
-    useEffect(
+    useDelayedExecution(
       () {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!context.mounted) return;
-          panes.values
-              .where((pane) => pane.key.currentContext == null)
-              .map((pane) => pane.id)
-              .forEach((id) => ref.read(panesProvider.notifier).unregister(id));
-        });
-        return null;
+        if (!context.mounted) return;
+        panes.values
+            .where((pane) => pane.key.currentContext == null)
+            .map((pane) => pane.id)
+            .forEach((id) => ref.read(panesProvider.notifier).unregister(id));
       },
     );
 
@@ -289,7 +292,34 @@ class GlobalPaneNavigator extends HookConsumerWidget {
           },
         ),
       },
-      child: child,
+      child: ActionSet(
+        shortcuts: [
+          if (panes.length > 1)
+            ActionShortcut(
+              id: "global_nav_panes",
+              label: "Switch Panes",
+              description: "Move between panes directionally",
+              activators: [
+                SortedLogicalKeyActivator.fromList([
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.arrowLeft,
+                  LogicalKeyboardKey.arrowDown,
+                  LogicalKeyboardKey.arrowUp,
+                  LogicalKeyboardKey.arrowRight,
+                ]),
+                SortedLogicalKeyActivator.fromList([
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyH,
+                  LogicalKeyboardKey.keyJ,
+                  LogicalKeyboardKey.keyK,
+                  LogicalKeyboardKey.keyL,
+                ]),
+              ],
+              priority: -1,
+            ),
+        ],
+        child: child,
+      ),
     );
   }
 }

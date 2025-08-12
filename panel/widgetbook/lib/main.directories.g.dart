@@ -13,6 +13,8 @@
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 import 'package:widgetbook_workspace/stories/app/components/inspector/operations/delete_operation.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories;
+import 'package:widgetbook_workspace/stories/components/action_shortcuts.stories.dart'
+    as _widgetbook_workspace_stories_components_action_shortcuts_stories;
 import 'package:widgetbook_workspace/stories/components/auto_scroller.stories.dart'
     as _widgetbook_workspace_stories_components_auto_scroller_stories;
 import 'package:widgetbook_workspace/stories/components/book.stories.dart'
@@ -290,6 +292,15 @@ final directories = <_widgetbook.WidgetbookNode>[
           _widgetbook.WidgetbookFolder(
             name: 'components',
             children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'ActionRow',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_components_action_shortcuts_stories
+                          .actionRowUseCase,
+                ),
+              ),
               _widgetbook.WidgetbookLeafComponent(
                 name: 'AutoScroller',
                 useCase: _widgetbook.WidgetbookUseCase(

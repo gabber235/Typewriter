@@ -3,7 +3,9 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
 part "operations.g.dart";
@@ -23,6 +25,9 @@ List<Operation> operations(Ref ref) => [
 abstract class Operation {
   /// Human readable label displayed in menus / buttons.
   String get name;
+
+  /// Human readable description displayed in tooltips.
+  String get description;
 
   /// Keyboard shortcuts that trigger this operation (platform aware).
   List<ShortcutActivator> get shortcutActivators;
@@ -114,11 +119,66 @@ extension SelectableOperationSelectionX on Iterable<Selectable> {
 /// no selection or nothing applicable, allowing the UI to hide controls.
 @riverpod
 List<Operation> availableOperations(Ref ref) {
+  final operations = ref.watch(operationsProvider);
   final selected = ref.watch(selectedProvider).value;
   if (selected == null) return [];
   if (selected.isEmpty) return [];
-  final operations = ref.watch(operationsProvider);
   return operations
       .where((operation) => operation.canExecuteOn(selected))
       .toList();
+}
+
+/// Global widget that registers keyboard shortcuts for currently available
+/// operations (based on current selection) and invokes them when triggered.
+class GlobalOperationShortcuts extends ConsumerWidget {
+  const GlobalOperationShortcuts({
+    required this.child,
+    super.key,
+  });
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final operations = ref.watch(availableOperationsProvider.select(
+        (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList()));
+    print("operations: $operations");
+
+    return ActionSet(
+      shortcuts: [
+        for (final op in operations)
+          ActionShortcut(
+            id: "operation_${op.name.snakeCase()}",
+            label: op.name,
+            description: op.description,
+            activators: op.shortcutActivators,
+            onInvoke: op.executeOn,
+            priority: 10,
+          ),
+      ],
+      child: Shortcuts(
+        shortcuts: {
+          for (final op in operations)
+            for (final activator in op.shortcutActivators)
+              activator: _OperationIntent(operation: op),
+        },
+        child: Actions(
+          actions: {
+            _OperationIntent: CallbackAction<_OperationIntent>(
+              onInvoke: (intent) {
+                intent.operation.executeOn(ref);
+                return null;
+              },
+            ),
+          },
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _OperationIntent extends Intent {
+  const _OperationIntent({required this.operation});
+  final Operation operation;
 }

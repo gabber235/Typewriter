@@ -105,7 +105,7 @@ final class AvailableOperationsProvider extends $FunctionalProvider<
 }
 
 String _$availableOperationsHash() =>
-    r'9a668d4f67690f9352f28a5031274c940c544532';
+    r'8881f73674144088572f007a9f8c5dbf16869f4f';
 
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

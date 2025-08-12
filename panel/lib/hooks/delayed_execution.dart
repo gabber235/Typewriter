@@ -2,16 +2,12 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 
 /// Run code after the widget tree has build.
-///
-/// By default this is only ran on initialization.
-/// But this can be changed to run every build.
-void useDelayedExecution(Function function, {bool runEveryBuild = false}) =>
-    use(_DelayedExecutionHook(function, runEveryBuild: runEveryBuild));
+void useDelayedExecution(Function function, [List<Object?>? keys]) =>
+    use(_DelayedExecutionHook(function, keys: keys));
 
 class _DelayedExecutionHook extends Hook<void> {
-  const _DelayedExecutionHook(this.function, {required this.runEveryBuild});
+  const _DelayedExecutionHook(this.function, {super.keys});
   final Function function;
-  final bool runEveryBuild;
 
   @override
   _DelayedExecutionHookState createState() => _DelayedExecutionHookState();
@@ -19,18 +15,32 @@ class _DelayedExecutionHook extends Hook<void> {
 
 class _DelayedExecutionHookState
     extends HookState<void, _DelayedExecutionHook> {
-  void _run() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => hook.function());
+  void scheduleRun() {
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => hook.function(), debugLabel: debugLabel);
   }
 
   @override
   void initHook() {
-    _run();
     super.initHook();
+    scheduleRun();
   }
 
   @override
-  void build(BuildContext context) {
-    if (hook.runEveryBuild) _run();
+  void didUpdateHook(_DelayedExecutionHook oldHook) {
+    super.didUpdateHook(oldHook);
+
+    if (hook.keys == null) {
+      scheduleRun();
+    }
   }
+
+  @override
+  void build(BuildContext context) {}
+
+  @override
+  String debugLabel = "DelayedExecutionHook";
+
+  @override
+  bool get debugSkipValue => true;
 }

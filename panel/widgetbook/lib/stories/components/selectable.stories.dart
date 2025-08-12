@@ -14,9 +14,11 @@ import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/panes.dart";
+import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
@@ -152,22 +154,36 @@ class SelectableDemo extends HookConsumerWidget {
     }, []);
 
     return Scaffold(
-      body: Inspector(
-        child: Pane(
-          id: "boxes",
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Wrap(
-              spacing: 24,
-              runSpacing: 24,
-              children: List.generate(
-                selectables.value.length,
-                (index) => SelectableBox(selectable: selectables.value[index]),
+      body: Column(
+        children: [
+          Expanded(
+            child: Inspector(
+              margin: EdgeInsets.only(top: 8, right: 8),
+              child: Pane(
+                id: "boxes",
+                borderRadius: BorderRadius.circular(12),
+                margin: EdgeInsets.only(top: 8, left: 8),
+                child: Section(
+                  margin: EdgeInsets.zero,
+                  child: Center(
+                    child: Wrap(
+                      spacing: 24,
+                      runSpacing: 24,
+                      children: List.generate(
+                        selectables.value.length,
+                        (index) =>
+                            SelectableBox(selectable: selectables.value[index]),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          ActionRow(),
+        ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           selectables.value = [...selectables.value, generate()];

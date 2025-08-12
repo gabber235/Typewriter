@@ -4,6 +4,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 
 @RoutePage()
 class OrganizationPage extends HookConsumerWidget {
@@ -38,7 +39,12 @@ class OrganizationScaffold extends StatelessWidget {
         children: [
           if (!context.isMobile) Sidebar(),
           Expanded(
-            child: child,
+            child: Column(
+              children: [
+                Expanded(child: child),
+                ActionRow(),
+              ],
+            ),
           ),
         ],
       ),

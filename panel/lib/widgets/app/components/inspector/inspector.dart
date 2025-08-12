@@ -33,8 +33,12 @@ class InspectorSize extends _$InspectorSize {
 class Inspector extends HookConsumerWidget {
   const Inspector({
     required this.child,
+    this.margin = const EdgeInsets.only(top: 8, bottom: 8, right: 8),
     super.key,
   });
+
+  final EdgeInsetsGeometry margin;
+
   final Widget child;
 
   @override
@@ -45,7 +49,10 @@ class Inspector extends HookConsumerWidget {
       return MobileInspector(child: child);
     }
 
-    return DesktopInspector(child: child);
+    return DesktopInspector(
+      margin: margin,
+      child: child,
+    );
   }
 }
 
@@ -148,8 +155,11 @@ class MobileInspector extends HookConsumerWidget {
 class DesktopInspector extends HookConsumerWidget {
   const DesktopInspector({
     required this.child,
+    this.margin = const EdgeInsets.only(top: 8, right: 8, bottom: 8),
     super.key,
   });
+
+  final EdgeInsetsGeometry margin;
   final Widget child;
 
   @override
@@ -164,9 +174,7 @@ class DesktopInspector extends HookConsumerWidget {
         Pane(
           id: "inspector",
           borderRadius: BorderRadius.circular(12),
-          margin: hasSelection
-              ? EdgeInsets.only(top: 8, right: 8, bottom: 8)
-              : EdgeInsets.zero,
+          margin: hasSelection ? margin : EdgeInsets.zero,
           enabled: hasSelection,
           child: Section(
             margin: EdgeInsets.zero,
@@ -317,7 +325,7 @@ class _InspectorContent extends HookConsumerWidget {
             editorMode: EditorMode.interactiveInspector,
             defaultExpanded: true,
           ),
-          const SizedBox(height: 5),
+        const SizedBox(height: 5),
         Operations(),
         const SizedBox(height: 30),
       ],
@@ -332,6 +340,9 @@ class Operations extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedProvider).value ?? [];
     final operations = ref.watch(availableOperationsProvider);
+
+    if (operations.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,

@@ -38,43 +38,46 @@ class Selector extends HookConsumerWidget {
 
     final operations = ref.watch(availableOperationsProvider);
 
-    return ContextMenuRegion(
-      childFocusNode: focusNode,
-      items: [
-        if (operations.isNotEmpty)
-          MenuItem.section(
-            label: "Operations",
-            items: [
-              for (final operation in operations) operation.menuItem(ref),
-            ],
-          ),
-      ],
-      enableGestures: false,
-      controller: controller,
-      child: GestureDetector(
-        onSecondaryTapDown: ContextMenuRegion.onSecondaryTapDown(controller),
-        onLongPressStart: ContextMenuRegion.onLongPressStart(controller),
-        onTapDown: ContextMenuRegion.onTapDown(
-          controller,
-          orElse: (_) {
-            ref.read(selectionProvider.notifier).select(selectableId);
-            focusNode?.requestFocus();
-          },
-        ),
-        child: FocusableActionDetector(
-          focusNode: focusNode,
-          onShowFocusHighlight: (focus) => isFocused.value = focus,
-          onShowHoverHighlight: (hover) => isHovered.value = hover,
-          onFocusChange: onFocusChange,
-          mouseCursor: SystemMouseCursors.click,
-          actions: {
-            ActivateIntent: CallbackAction(
-              onInvoke: (_) => ref.read(selectionProvider.notifier).select(
-                    selectableId,
-                  ),
+    return KeyedSubtree(
+      key: Key(selectableId.id),
+      child: ContextMenuRegion(
+        childFocusNode: focusNode,
+        items: [
+          if (operations.isNotEmpty)
+            MenuItem.section(
+              label: "Operations",
+              items: [
+                for (final operation in operations) operation.menuItem(ref),
+              ],
             ),
-          },
-          child: builder(isSelected, isFocused.value, isHovered.value),
+        ],
+        enableGestures: false,
+        controller: controller,
+        child: GestureDetector(
+          onSecondaryTapDown: ContextMenuRegion.onSecondaryTapDown(controller),
+          onLongPressStart: ContextMenuRegion.onLongPressStart(controller),
+          onTapDown: ContextMenuRegion.onTapDown(
+            controller,
+            orElse: (_) {
+              ref.read(selectionProvider.notifier).select(selectableId);
+              focusNode?.requestFocus();
+            },
+          ),
+          child: FocusableActionDetector(
+            focusNode: focusNode,
+            onShowFocusHighlight: (focus) => isFocused.value = focus,
+            onShowHoverHighlight: (hover) => isHovered.value = hover,
+            onFocusChange: onFocusChange,
+            mouseCursor: SystemMouseCursors.click,
+            actions: {
+              ActivateIntent: CallbackAction(
+                onInvoke: (_) => ref.read(selectionProvider.notifier).select(
+                      selectableId,
+                    ),
+              ),
+            },
+            child: builder(isSelected, isFocused.value, isHovered.value),
+          ),
         ),
       ),
     );

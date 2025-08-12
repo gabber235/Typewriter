@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:mocktail/mocktail.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
@@ -11,6 +12,7 @@ import "main.directories.g.dart";
 
 void main() {
   Animate.restartOnHotReload = true;
+  debugTracePostFrameCallbacks = true;
 
   registerFallbackValue(ThemeMode.system);
   registerFallbackValue(

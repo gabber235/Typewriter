@@ -1,10 +1,10 @@
 name: typewriter_panel
 description: "The panel to configure all of Typewriter"
-publish_to: 'none'
+publish_to: "none"
 version: 1000.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -13,14 +13,14 @@ dependencies:
   hooks_riverpod: ^3.0.0-dev.16
   riverpod_annotation: ^3.0.0-dev.16
   flutter_hooks: ^0.21.2
-  auto_route: ^10.0.1
+  auto_route: ^10.0.0
   logto_dart_sdk: ^3.0.0
   localstorage: ^6.0.0
-  freezed_annotation: ^3.0.0
-  json_annotation: ^4.9.0
+  freezed_annotation:
+  json_annotation:
   dart_nats: ^0.6.5
   rive: ^0.13.20
-  collection: 
+  collection:
   iconify_flutter_plus: ^1.0.4
   responsive_framework: ^1.5.1
   flutter_animate: ^4.5.2
@@ -36,14 +36,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  riverpod_generator: 
-  build_runner: 
-  custom_lint: 
-  riverpod_lint: 
-  flutter_lints: 
-  auto_route_generator: 
-  icons_launcher: 
-  freezed: 
+  riverpod_generator:
+  build_runner:
+  custom_lint:
+  riverpod_lint:
+  flutter_lints:
+  auto_route_generator:
+  icons_launcher:
+  freezed:
   json_serializable:
 
 icons_launcher:
@@ -60,7 +60,6 @@ icons_launcher:
     linux:
       enable: true
 
-
 flutter:
   uses-material-design: true
   assets:
@@ -71,4 +70,3 @@ flutter:
         - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf
         - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf
           style: italic
-

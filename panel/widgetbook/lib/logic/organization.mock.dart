@@ -1,4 +1,5 @@
 import "package:faker/faker.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:mocktail/mocktail.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
