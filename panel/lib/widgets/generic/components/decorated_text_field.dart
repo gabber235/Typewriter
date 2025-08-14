@@ -1,7 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart" hide useFocusNode;
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 
 class DecoratedTextField extends HookWidget {
@@ -12,6 +14,9 @@ class DecoratedTextField extends HookWidget {
     this.onChanged,
     this.onDone,
     this.onSubmitted,
+    this.actions,
+    this.textFieldActions,
+    this.surroundingActions,
     this.style,
     this.inputFormatters,
     this.keyboardType = TextInputType.text,
@@ -33,6 +38,16 @@ class DecoratedTextField extends HookWidget {
 
   /// Called when the user presses done.
   final Function(String)? onSubmitted;
+
+  /// Actions that can be performed when either the text field or the surrounding is focused.
+  final List<ActionShortcut>? actions;
+
+  /// Actions that can be performed when the text field is focused.
+  final List<ActionShortcut>? textFieldActions;
+
+  /// Actions that can be performed when the surrounding of the text field is focused.
+  final List<ActionShortcut>? surroundingActions;
+
   final TextStyle? style;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType keyboardType;
@@ -77,71 +92,103 @@ class DecoratedTextField extends HookWidget {
       descendantsAreTraversable: false,
     );
 
+    useListenable(surroundingFocusNode);
+
     final focusType = useState(FocusType.none);
 
     return FocusHighlight(
       type: focusType.value,
       borderRadius: BorderRadius.circular(12),
-      child: Actions(
-        actions: {
-          ActivateIntent: CallbackAction(
-            onInvoke: (intent) {
-              if (surroundingFocusNode.hasPrimaryFocus) {
-                focusNode.requestFocus();
-              }
-              return null;
-            },
-          ),
-          DismissIntent: DismissActionCallback(
-            onInvoke: (intent) {
-              if (focusNode.hasPrimaryFocus) {
-                surroundingFocusNode.requestFocus();
-              }
-            },
-          ),
-        },
-        child: Focus(
-          focusNode: surroundingFocusNode,
-          onFocusChange: (_) {
-            focusType.value = surroundingFocusNode.hasPrimaryFocus
-                ? FocusType.focus
-                : FocusType.none;
+      child: ManagedActionSet(
+        shortcuts: [
+          if (surroundingFocusNode.hasPrimaryFocus) ...[
+            ActionShortcut(
+              id: "focus_input",
+              label: "Focus Input",
+              description: "Focus the input field",
+              activators: [
+                SingleActivator(LogicalKeyboardKey.enter),
+                SingleActivator(LogicalKeyboardKey.space),
+              ],
+              priority: 100,
+            ),
+            ...?surroundingActions,
+          ],
+          if (focusNode.hasPrimaryFocus) ...[
+            ActionShortcut(
+              id: "dismiss_input",
+              label: "Dismiss Input",
+              description: "Dismiss the input field",
+              activators: [
+                SingleActivator(LogicalKeyboardKey.escape),
+              ],
+              priority: 100,
+            ),
+            ...?textFieldActions,
+          ],
+          if (surroundingFocusNode.hasFocus) ...?actions,
+        ],
+        child: Actions(
+          actions: {
+            ActivateIntent: CallbackAction(
+              onInvoke: (intent) {
+                if (surroundingFocusNode.hasPrimaryFocus) {
+                  focusNode.requestFocus();
+                }
+                return null;
+              },
+            ),
+            DismissIntent: DismissActionCallback(
+              onInvoke: (intent) {
+                if (focusNode.hasPrimaryFocus) {
+                  surroundingFocusNode.requestFocus();
+                }
+              },
+            ),
           },
-          onKeyEvent: (node, event) {
-            if (!focusNode.hasPrimaryFocus) return KeyEventResult.ignored;
-            final shouldBlock =
-                _shouldBlockKeyEventForTextField(context, event);
-            return shouldBlock
-                ? KeyEventResult.skipRemainingHandlers
-                : KeyEventResult.ignored;
-          },
-          child: TextField(
-            focusNode: focusNode,
-            controller: controller,
-            onEditingComplete: () {
-              onDone?.call(controller.text);
-              onChanged?.call(controller.text);
-              onSubmitted?.call(controller.text);
+          child: Focus(
+            focusNode: surroundingFocusNode,
+            onFocusChange: (_) {
+              focusType.value =
+                  FocusHighlighting.onlyPrimary(surroundingFocusNode);
             },
-            onSubmitted: (value) {
-              onDone?.call(value);
-              onChanged?.call(value);
-              onSubmitted?.call(value);
+            onKeyEvent: (node, event) {
+              if (!focusNode.hasPrimaryFocus) return KeyEventResult.ignored;
+              final shouldBlock =
+                  _shouldBlockKeyEventForTextField(context, event);
+              return shouldBlock
+                  ? KeyEventResult.skipRemainingHandlers
+                  : KeyEventResult.ignored;
             },
-            onChanged: onChanged,
-            style: style,
-            textCapitalization: TextCapitalization.none,
-            textInputAction:
-                maxLines == 1 ? TextInputAction.done : TextInputAction.newline,
-            textAlign: textAlign,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            readOnly: readOnly,
-            selectAllOnFocus: false,
-            inputFormatters: [
-              if (inputFormatters != null) ...inputFormatters!,
-            ],
-            decoration: decoration,
+            child: TextField(
+              focusNode: focusNode,
+              controller: controller,
+              onEditingComplete: () {
+                onDone?.call(controller.text);
+                onChanged?.call(controller.text);
+                onSubmitted?.call(controller.text);
+              },
+              onSubmitted: (value) {
+                onDone?.call(value);
+                onChanged?.call(value);
+                onSubmitted?.call(value);
+              },
+              onChanged: onChanged,
+              style: style,
+              textCapitalization: TextCapitalization.none,
+              textInputAction: maxLines == 1
+                  ? TextInputAction.done
+                  : TextInputAction.newline,
+              textAlign: textAlign,
+              maxLines: maxLines,
+              keyboardType: keyboardType,
+              readOnly: readOnly,
+              selectAllOnFocus: false,
+              inputFormatters: [
+                if (inputFormatters != null) ...inputFormatters!,
+              ],
+              decoration: decoration,
+            ),
           ),
         ),
       ),
@@ -176,81 +223,4 @@ class DismissActionCallback extends DismissAction {
     onInvoke?.call(intent);
     return null;
   }
-}
-
-/// Because the official flutter_hooks package doesn't support the `descendantsAreTraversable` parameter
-/// We have a pr waiting for it to be merged: https://github.com/rrousselGit/flutter_hooks/pull/476
-/// This is a workaround until it is merged
-FocusNode useFocusNode({
-  String? debugLabel,
-  FocusOnKeyEventCallback? onKeyEvent,
-  bool skipTraversal = false,
-  bool canRequestFocus = true,
-  bool descendantsAreFocusable = true,
-  bool descendantsAreTraversable = true,
-}) {
-  return use(
-    _FocusNodeHook(
-      debugLabel: debugLabel,
-      onKeyEvent: onKeyEvent,
-      skipTraversal: skipTraversal,
-      canRequestFocus: canRequestFocus,
-      descendantsAreFocusable: descendantsAreFocusable,
-      descendantsAreTraversable: descendantsAreTraversable,
-    ),
-  );
-}
-
-class _FocusNodeHook extends Hook<FocusNode> {
-  const _FocusNodeHook({
-    this.debugLabel,
-    this.onKeyEvent,
-    required this.skipTraversal,
-    required this.canRequestFocus,
-    required this.descendantsAreFocusable,
-    required this.descendantsAreTraversable,
-  });
-
-  final String? debugLabel;
-  final FocusOnKeyEventCallback? onKeyEvent;
-  final bool skipTraversal;
-  final bool canRequestFocus;
-  final bool descendantsAreFocusable;
-  final bool descendantsAreTraversable;
-
-  @override
-  _FocusNodeHookState createState() {
-    return _FocusNodeHookState();
-  }
-}
-
-class _FocusNodeHookState extends HookState<FocusNode, _FocusNodeHook> {
-  late final FocusNode _focusNode = FocusNode(
-    debugLabel: hook.debugLabel,
-    onKeyEvent: hook.onKeyEvent,
-    skipTraversal: hook.skipTraversal,
-    canRequestFocus: hook.canRequestFocus,
-    descendantsAreFocusable: hook.descendantsAreFocusable,
-    descendantsAreTraversable: hook.descendantsAreTraversable,
-  );
-
-  @override
-  void didUpdateHook(_FocusNodeHook oldHook) {
-    _focusNode
-      ..debugLabel = hook.debugLabel
-      ..skipTraversal = hook.skipTraversal
-      ..canRequestFocus = hook.canRequestFocus
-      ..descendantsAreFocusable = hook.descendantsAreFocusable
-      ..descendantsAreTraversable = hook.descendantsAreTraversable
-      ..onKeyEvent = hook.onKeyEvent;
-  }
-
-  @override
-  FocusNode build(BuildContext context) => _focusNode;
-
-  @override
-  void dispose() => _focusNode.dispose();
-
-  @override
-  String get debugLabel => 'useFocusNode';
 }

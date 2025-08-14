@@ -1,15 +1,17 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/hooks/timer.dart";
+import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
 class ConfirmationDialogue extends HookWidget {
   const ConfirmationDialogue({
     required this.title,
-    required this.content,
     required this.confirmText,
     required this.confirmIcon,
     required this.confirmColor,
@@ -18,15 +20,27 @@ class ConfirmationDialogue extends HookWidget {
     required this.cancelText,
     required this.cancelIcon,
     required this.onConfirm,
+    this.titleColor,
+    this.body,
+    this.content,
     this.onCancel,
     super.key,
-  });
+  }) : assert(
+          content != null || body != null,
+          "Either content or body must be provided",
+        );
 
   /// The title of the dialogue.
   final String title;
 
+  /// The color for the title text.
+  final Color? titleColor;
+
+  /// The body of the dialogue. This can be a widget that provides more information about the action being confirmed.
+  final Widget? body;
+
   /// The content of the dialogue. This can be a small piece of text to explain what the user is confirming.
-  final String content;
+  final String? content;
 
   /// The text of the confirm button
   final String confirmText;
@@ -51,7 +65,7 @@ class ConfirmationDialogue extends HookWidget {
   final String cancelIcon;
 
   /// The action to perform when the user confirms the action.
-  final Function onConfirm;
+  final FutureOr<void> Function() onConfirm;
 
   /// An optional action to perform when the user cancels the action.
   final Function? onCancel;
@@ -60,6 +74,8 @@ class ConfirmationDialogue extends HookWidget {
   Widget build(BuildContext context) {
     final secondsLeft = useState(delayConfirm.inSeconds);
     final canConfirm = secondsLeft.value <= 0;
+
+    final isLoading = useState(false);
 
     useTimer(
       1.seconds,
@@ -72,8 +88,8 @@ class ConfirmationDialogue extends HookWidget {
     );
 
     return AlertDialog(
-      title: Text(title),
-      content: Text(content),
+      title: Text(title, style: TextStyle(color: titleColor)),
+      content: body ?? Text(content!),
       actions: [
         TextButton.icon(
           autofocus: !canConfirm,
@@ -92,18 +108,49 @@ class ConfirmationDialogue extends HookWidget {
         ),
         FilledButton.icon(
           autofocus: canConfirm,
-          icon: Icones(confirmIcon, size: 16),
+          icon: isLoading.value
+              ? SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(
+                      FilledButtonTheme.of(context)
+                          .style
+                          ?.foregroundColor
+                          ?.resolve({WidgetState.disabled}),
+                    ),
+                  ),
+                )
+              : Icones(confirmIcon, size: 16),
           label: Text(
-            canConfirm ? confirmText : "$confirmText (${secondsLeft.value})",
+            isLoading.value
+                ? "$confirmText..."
+                : canConfirm
+                    ? confirmText
+                    : "$confirmText (${secondsLeft.value})",
           ),
           style: FilledButton.styleFrom(
             backgroundColor: confirmColor,
             foregroundColor: onConfirmColor,
           ),
-          onPressed: canConfirm
-              ? () {
-                  Navigator.of(context).pop(true);
-                  onConfirm();
+          onPressed: !isLoading.value && canConfirm
+              ? () async {
+                  try {
+                    isLoading.value = true;
+                    await onConfirm();
+                    if (!context.mounted) return;
+                    Navigator.of(context).pop(true);
+                  } on Error catch (error) {
+                    if (!context.mounted) return;
+                    showErrorSnackBar(
+                      context,
+                      "Something went wrong while $confirmText",
+                    );
+                    // TODO: Appropriately log errors
+                    debugPrint(error.toString());
+                    isLoading.value = false;
+                  }
                 }
               : null,
         ),
@@ -114,9 +161,11 @@ class ConfirmationDialogue extends HookWidget {
 
 Future<bool> showConfirmationDialogue({
   required BuildContext context,
-  required Function onConfirm,
+  required FutureOr<void> Function() onConfirm,
   String title = "Are you sure?",
-  String content = "This action cannot be undone.",
+  Color? titleColor,
+  String? content = "This action cannot be undone.",
+  Widget? body,
   String confirmText = "Confirm",
   String confirmIcon = Fa6Solid.trash,
   Color? confirmColor,
@@ -131,7 +180,7 @@ Future<bool> showConfirmationDialogue({
   final hasShiftDown = HardwareKeyboard.instance
       .isLogicalKeyPressed(LogicalKeyboardKey.shiftLeft);
   if (hasShiftDown && delayConfirm.inSeconds == 0) {
-    onConfirm();
+    await onConfirm();
     return true;
   }
 
@@ -140,7 +189,9 @@ Future<bool> showConfirmationDialogue({
         builder: (context) => ConfirmationDialogue(
           onConfirm: onConfirm,
           title: title,
-          content: content,
+          titleColor: titleColor,
+          content: body != null ? null : content,
+          body: body,
           confirmText: confirmText,
           confirmIcon: confirmIcon,
           confirmColor: confirmColor ?? Theme.of(context).colorScheme.error,

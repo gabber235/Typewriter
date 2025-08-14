@@ -119,6 +119,13 @@ class TypewriterPanel extends HookConsumerWidget {
   };
 }
 
+List<ShortcutActivator> shortcutsFor(Type intent) {
+  return TypewriterPanel.typewriterShortcuts.entries
+      .where((entry) => entry.value.runtimeType == intent)
+      .map((entry) => entry.key)
+      .toList();
+}
+
 ThemeData buildTheme(Brightness brightness) {
   final isLight = brightness == Brightness.light;
   final baseTheme = ThemeData(
@@ -159,6 +166,15 @@ ThemeData buildTheme(Brightness brightness) {
               fontSize: 12,
               letterSpacing: 0.5,
               fontVariations: [FontVariation("wght", 700)],
+            ),
+            bodySmall: TextStyle(
+              fontFamily: "JetBrainsMono",
+              color: isLight
+                  ? Colors.black.withValues(alpha: 0.6)
+                  : Colors.white.withValues(alpha: 0.6),
+              fontSize: 11,
+              letterSpacing: 0.2,
+              fontVariations: [FontVariation("wght", 300)],
             ),
           );
 

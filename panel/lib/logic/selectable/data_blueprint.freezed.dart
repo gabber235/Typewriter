@@ -1613,6 +1613,10 @@ class _$CustomBlueprintCopyWithImpl<$Res>
 
 Modifier _$ModifierFromJson(Map<String, dynamic> json) {
   switch (json['kind']) {
+    case 'readOnly':
+      return ReadOnlyModifier.fromJson(json);
+    case 'expanded':
+      return ExpandedModifier.fromJson(json);
     case 'multiline':
       return MultilineModifier.fromJson(json);
     case 'snakeCase':
@@ -1681,6 +1685,8 @@ extension ModifierPatterns on Modifier {
 
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
+    TResult Function(ReadOnlyModifier value)? readOnly,
+    TResult Function(ExpandedModifier value)? expanded,
     TResult Function(MultilineModifier value)? multiline,
     TResult Function(SnakeCaseModifier value)? snakeCase,
     TResult Function(GeneratedModifier value)? generated,
@@ -1692,6 +1698,10 @@ extension ModifierPatterns on Modifier {
   }) {
     final _that = this;
     switch (_that) {
+      case ReadOnlyModifier() when readOnly != null:
+        return readOnly(_that);
+      case ExpandedModifier() when expanded != null:
+        return expanded(_that);
       case MultilineModifier() when multiline != null:
         return multiline(_that);
       case SnakeCaseModifier() when snakeCase != null:
@@ -1726,6 +1736,8 @@ extension ModifierPatterns on Modifier {
 
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
+    required TResult Function(ReadOnlyModifier value) readOnly,
+    required TResult Function(ExpandedModifier value) expanded,
     required TResult Function(MultilineModifier value) multiline,
     required TResult Function(SnakeCaseModifier value) snakeCase,
     required TResult Function(GeneratedModifier value) generated,
@@ -1736,6 +1748,10 @@ extension ModifierPatterns on Modifier {
   }) {
     final _that = this;
     switch (_that) {
+      case ReadOnlyModifier():
+        return readOnly(_that);
+      case ExpandedModifier():
+        return expanded(_that);
       case MultilineModifier():
         return multiline(_that);
       case SnakeCaseModifier():
@@ -1769,6 +1785,8 @@ extension ModifierPatterns on Modifier {
 
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ReadOnlyModifier value)? readOnly,
+    TResult? Function(ExpandedModifier value)? expanded,
     TResult? Function(MultilineModifier value)? multiline,
     TResult? Function(SnakeCaseModifier value)? snakeCase,
     TResult? Function(GeneratedModifier value)? generated,
@@ -1779,6 +1797,10 @@ extension ModifierPatterns on Modifier {
   }) {
     final _that = this;
     switch (_that) {
+      case ReadOnlyModifier() when readOnly != null:
+        return readOnly(_that);
+      case ExpandedModifier() when expanded != null:
+        return expanded(_that);
       case MultilineModifier() when multiline != null:
         return multiline(_that);
       case SnakeCaseModifier() when snakeCase != null:
@@ -1812,6 +1834,8 @@ extension ModifierPatterns on Modifier {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
+    TResult Function(bool recursive)? readOnly,
+    TResult Function()? expanded,
     TResult Function()? multiline,
     TResult Function()? snakeCase,
     TResult Function()? generated,
@@ -1823,6 +1847,10 @@ extension ModifierPatterns on Modifier {
   }) {
     final _that = this;
     switch (_that) {
+      case ReadOnlyModifier() when readOnly != null:
+        return readOnly(_that.recursive);
+      case ExpandedModifier() when expanded != null:
+        return expanded();
       case MultilineModifier() when multiline != null:
         return multiline();
       case SnakeCaseModifier() when snakeCase != null:
@@ -1857,6 +1885,8 @@ extension ModifierPatterns on Modifier {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
+    required TResult Function(bool recursive) readOnly,
+    required TResult Function() expanded,
     required TResult Function() multiline,
     required TResult Function() snakeCase,
     required TResult Function() generated,
@@ -1867,6 +1897,10 @@ extension ModifierPatterns on Modifier {
   }) {
     final _that = this;
     switch (_that) {
+      case ReadOnlyModifier():
+        return readOnly(_that.recursive);
+      case ExpandedModifier():
+        return expanded();
       case MultilineModifier():
         return multiline();
       case SnakeCaseModifier():
@@ -1900,6 +1934,8 @@ extension ModifierPatterns on Modifier {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(bool recursive)? readOnly,
+    TResult? Function()? expanded,
     TResult? Function()? multiline,
     TResult? Function()? snakeCase,
     TResult? Function()? generated,
@@ -1910,6 +1946,10 @@ extension ModifierPatterns on Modifier {
   }) {
     final _that = this;
     switch (_that) {
+      case ReadOnlyModifier() when readOnly != null:
+        return readOnly(_that.recursive);
+      case ExpandedModifier() when expanded != null:
+        return expanded();
       case MultilineModifier() when multiline != null:
         return multiline();
       case SnakeCaseModifier() when snakeCase != null:
@@ -1927,6 +1967,131 @@ extension ModifierPatterns on Modifier {
       case _:
         return null;
     }
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class ReadOnlyModifier with DiagnosticableTreeMixin implements Modifier {
+  const ReadOnlyModifier({this.recursive = true, final String? $type})
+      : $type = $type ?? 'readOnly';
+  factory ReadOnlyModifier.fromJson(Map<String, dynamic> json) =>
+      _$ReadOnlyModifierFromJson(json);
+
+  @JsonKey()
+  final bool recursive;
+
+  @JsonKey(name: 'kind')
+  final String $type;
+
+  /// Create a copy of Modifier
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $ReadOnlyModifierCopyWith<ReadOnlyModifier> get copyWith =>
+      _$ReadOnlyModifierCopyWithImpl<ReadOnlyModifier>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$ReadOnlyModifierToJson(
+      this,
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+      ..add(DiagnosticsProperty('type', 'Modifier.readOnly'))
+      ..add(DiagnosticsProperty('recursive', recursive));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is ReadOnlyModifier &&
+            (identical(other.recursive, recursive) ||
+                other.recursive == recursive));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, recursive);
+
+  @override
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'Modifier.readOnly(recursive: $recursive)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $ReadOnlyModifierCopyWith<$Res>
+    implements $ModifierCopyWith<$Res> {
+  factory $ReadOnlyModifierCopyWith(
+          ReadOnlyModifier value, $Res Function(ReadOnlyModifier) _then) =
+      _$ReadOnlyModifierCopyWithImpl;
+  @useResult
+  $Res call({bool recursive});
+}
+
+/// @nodoc
+class _$ReadOnlyModifierCopyWithImpl<$Res>
+    implements $ReadOnlyModifierCopyWith<$Res> {
+  _$ReadOnlyModifierCopyWithImpl(this._self, this._then);
+
+  final ReadOnlyModifier _self;
+  final $Res Function(ReadOnlyModifier) _then;
+
+  /// Create a copy of Modifier
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? recursive = null,
+  }) {
+    return _then(ReadOnlyModifier(
+      recursive: null == recursive
+          ? _self.recursive
+          : recursive // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class ExpandedModifier with DiagnosticableTreeMixin implements Modifier {
+  const ExpandedModifier({final String? $type}) : $type = $type ?? 'expanded';
+  factory ExpandedModifier.fromJson(Map<String, dynamic> json) =>
+      _$ExpandedModifierFromJson(json);
+
+  @JsonKey(name: 'kind')
+  final String $type;
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$ExpandedModifierToJson(
+      this,
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties..add(DiagnosticsProperty('type', 'Modifier.expanded'));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is ExpandedModifier);
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'Modifier.expanded()';
   }
 }
 

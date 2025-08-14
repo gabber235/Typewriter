@@ -83,6 +83,15 @@ class LogicalKeyBoardDisplay extends HookWidget {
         return const Text("Del");
       case LogicalKeyboardKey.enter:
         return const Icon(Icons.keyboard_return_rounded);
+      case LogicalKeyboardKey.numpadEnter:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Num"),
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_return_rounded),
+          ],
+        );
       case LogicalKeyboardKey.tab:
         return const Icon(Icons.keyboard_tab_rounded);
       case LogicalKeyboardKey.space:

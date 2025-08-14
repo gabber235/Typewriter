@@ -106,6 +106,7 @@ class ListEditorWidget extends HookConsumerWidget {
 
     return FieldHeader(
       path: path,
+      dataBlueprint: listBlueprint,
       canExpand: true,
       editorMode: editorMode,
       child: length > 0
@@ -131,7 +132,9 @@ class ListEditorWidget extends HookConsumerWidget {
             )
           : NoElements(
               path: path,
-              onAdd: editorMode.canEdit ? () => _addNew(ref) : null,
+              onAdd: (editorMode, listBlueprint).canEdit
+                  ? () => _addNew(ref)
+                  : null,
             ),
     );
   }
@@ -199,6 +202,7 @@ class _ListItem extends HookConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: FieldHeader(
         path: childPath,
+        dataBlueprint: dataBlueprint,
         canExpand: true,
         editorMode: editorMode,
         child: FieldEditor(

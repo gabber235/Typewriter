@@ -5,30 +5,95 @@ import "package:typewriter_panel/utils/context.dart";
 
 enum FocusType { none, focus, primaryFocus }
 
+FocusType _primaryFocus(FocusNode node) {
+  return node.hasPrimaryFocus ? FocusType.focus : FocusType.none;
+}
+
+FocusType _childFocus(FocusNode node) {
+  return node.hasFocus ? FocusType.focus : FocusType.none;
+}
+
+FocusType _childPrimaryFocus(FocusNode node) {
+  return node.hasPrimaryFocus
+      ? FocusType.primaryFocus
+      : node.hasFocus
+          ? FocusType.focus
+          : FocusType.none;
+}
+
+enum FocusHighlighting {
+  /// Only highlight when it has primary focus, otherwise don't highlight at all.
+  onlyPrimary(_primaryFocus),
+
+  /// Only highlight when a child has focus.
+  onlyChild(_childFocus),
+
+  // Highlight when it has primary focus or a child has focus.
+  primaryAndChild(_childPrimaryFocus);
+
+  const FocusHighlighting(this.fetchFocusType);
+
+  final FocusType Function(FocusNode) fetchFocusType;
+
+  FocusType call(FocusNode node) => fetchFocusType(node);
+}
+
 class ManagedFocusHighlight extends HookWidget {
   const ManagedFocusHighlight({
     required this.child,
+    this.focusNode,
+    this.highlighting = FocusHighlighting.onlyPrimary,
+    this.borderRadius,
+    this.size = 2,
+    this.autofocus = false,
+    this.canRequestFocus = true,
+    this.skipTraversal = false,
+    this.descendantsAreFocusable = true,
+    this.descendantsAreTraversable = true,
+    this.debugLabel,
+    this.onFocusChange,
+    this.onKeyEvent,
     super.key,
   });
   final Widget child;
+  final FocusNode? focusNode;
+  final FocusHighlighting highlighting;
+
+  final BorderRadiusGeometry? borderRadius;
+  final double size;
+
+  // Pass-through Focus properties for transparency.
+  final bool autofocus;
+  final bool canRequestFocus;
+  final bool skipTraversal;
+  final bool descendantsAreFocusable;
+  final bool descendantsAreTraversable;
+  final String? debugLabel;
+  final ValueChanged<bool>? onFocusChange;
+  final FocusOnKeyEventCallback? onKeyEvent;
 
   @override
   Widget build(BuildContext context) {
-    final focusNode = useFocusNode();
+    final focusNode = this.focusNode ?? useFocusNode();
     final focusType = useState(FocusType.none);
 
     return Focus(
       focusNode: focusNode,
-      canRequestFocus: false,
-      onFocusChange: (_) {
-        focusType.value = focusNode.hasPrimaryFocus
-            ? FocusType.primaryFocus
-            : focusNode.hasFocus
-                ? FocusType.focus
-                : FocusType.none;
+      autofocus: autofocus,
+      canRequestFocus: canRequestFocus,
+      skipTraversal: skipTraversal,
+      descendantsAreFocusable: descendantsAreFocusable,
+      descendantsAreTraversable: descendantsAreTraversable,
+      debugLabel: debugLabel,
+      onKeyEvent: onKeyEvent,
+      onFocusChange: (hasFocus) {
+        focusType.value = highlighting.fetchFocusType(focusNode);
+        onFocusChange?.call(hasFocus);
       },
       child: FocusHighlight(
         type: focusType.value,
+        borderRadius: borderRadius,
+        size: size,
         child: child,
       ),
     );
@@ -72,13 +137,5 @@ class FocusHighlight extends HookWidget {
       ),
       child: child,
     );
-  }
-
-  static FocusType focusType(FocusNode focusNode) {
-    return focusNode.hasPrimaryFocus
-        ? FocusType.primaryFocus
-        : focusNode.hasFocus
-            ? FocusType.focus
-            : FocusType.none;
   }
 }

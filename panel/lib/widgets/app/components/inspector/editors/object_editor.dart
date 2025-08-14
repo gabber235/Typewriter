@@ -58,6 +58,7 @@ class ObjectEditorWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return FieldHeader(
       path: path,
+      dataBlueprint: objectBlueprint,
       canExpand: true,
       defaultExpanded: defaultExpanded,
       editorMode: editorMode,
@@ -70,6 +71,7 @@ class ObjectEditorWidget extends HookConsumerWidget {
               if (!fieldBlueprint.value.hasCustomLayout)
                 FieldHeader(
                   path: path.join(fieldBlueprint.key),
+                  dataBlueprint: fieldBlueprint.value,
                   editorMode: editorMode,
                   child: buildFieldEditor(fieldBlueprint),
                 )

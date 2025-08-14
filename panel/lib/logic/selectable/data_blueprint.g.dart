@@ -19,7 +19,7 @@ _DataBlueprintType _$DataBlueprintTypeFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$DataBlueprintTypeToJson(_DataBlueprintType instance) =>
     <String, dynamic>{
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -38,7 +38,7 @@ Map<String, dynamic> _$PrimitiveBlueprintToJson(PrimitiveBlueprint instance) =>
     <String, dynamic>{
       'type': _$PrimitiveTypeEnumMap[instance.type]!,
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -65,7 +65,7 @@ Map<String, dynamic> _$EnumBlueprintToJson(EnumBlueprint instance) =>
     <String, dynamic>{
       'values': instance.values,
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -82,9 +82,9 @@ ListBlueprint _$ListBlueprintFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ListBlueprintToJson(ListBlueprint instance) =>
     <String, dynamic>{
-      'type': instance.type,
+      'type': instance.type.toJson(),
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -101,10 +101,10 @@ MapBlueprint _$MapBlueprintFromJson(Map<String, dynamic> json) => MapBlueprint(
 
 Map<String, dynamic> _$MapBlueprintToJson(MapBlueprint instance) =>
     <String, dynamic>{
-      'key': instance.key,
-      'value': instance.value,
+      'key': instance.key.toJson(),
+      'value': instance.value.toJson(),
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -124,9 +124,9 @@ ObjectBlueprint _$ObjectBlueprintFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ObjectBlueprintToJson(ObjectBlueprint instance) =>
     <String, dynamic>{
-      'fields': instance.fields,
+      'fields': instance.fields.map((k, e) => MapEntry(k, e.toJson())),
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -146,9 +146,9 @@ AlgebraicBlueprint _$AlgebraicBlueprintFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$AlgebraicBlueprintToJson(AlgebraicBlueprint instance) =>
     <String, dynamic>{
-      'cases': instance.cases,
+      'cases': instance.cases.map((k, e) => MapEntry(k, e.toJson())),
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
       'kind': instance.$type,
     };
 
@@ -167,9 +167,31 @@ CustomBlueprint _$CustomBlueprintFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CustomBlueprintToJson(CustomBlueprint instance) =>
     <String, dynamic>{
       'editor': instance.editor,
-      'shape': instance.shape,
+      'shape': instance.shape.toJson(),
       'default': instance.internalDefaultValue,
-      'modifiers': instance.modifiers,
+      'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
+      'kind': instance.$type,
+    };
+
+ReadOnlyModifier _$ReadOnlyModifierFromJson(Map<String, dynamic> json) =>
+    ReadOnlyModifier(
+      recursive: json['recursive'] as bool? ?? true,
+      $type: json['kind'] as String?,
+    );
+
+Map<String, dynamic> _$ReadOnlyModifierToJson(ReadOnlyModifier instance) =>
+    <String, dynamic>{
+      'recursive': instance.recursive,
+      'kind': instance.$type,
+    };
+
+ExpandedModifier _$ExpandedModifierFromJson(Map<String, dynamic> json) =>
+    ExpandedModifier(
+      $type: json['kind'] as String?,
+    );
+
+Map<String, dynamic> _$ExpandedModifierToJson(ExpandedModifier instance) =>
+    <String, dynamic>{
       'kind': instance.$type,
     };
 

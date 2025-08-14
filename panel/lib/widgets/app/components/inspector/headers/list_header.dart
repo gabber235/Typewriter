@@ -19,7 +19,7 @@ class AddListHeaderAction extends HeaderAction {
     DataBlueprint dataBlueprint,
     EditorMode mode,
   ) =>
-      mode.canEdit && dataBlueprint is ListBlueprint;
+      (mode, dataBlueprint).canEdit && dataBlueprint is ListBlueprint;
 
   @override
   HeaderActionLocation location(
@@ -77,7 +77,7 @@ class ReorderListHeaderAction extends HeaderAction {
     DataBlueprint dataBlueprint,
     EditorMode mode,
   ) =>
-      mode.canEdit && context.parentBlueprint is ListBlueprint;
+      (mode, dataBlueprint).canEdit && context.parentBlueprint is ListBlueprint;
 
   @override
   HeaderActionLocation location(
@@ -119,7 +119,7 @@ class DuplicateListItemAction extends HeaderAction {
     DataBlueprint dataBlueprint,
     EditorMode mode,
   ) =>
-      mode.canEdit && context.parentBlueprint is ListBlueprint;
+      (mode, dataBlueprint).canEdit && context.parentBlueprint is ListBlueprint;
 
   @override
   HeaderActionLocation location(
@@ -193,7 +193,7 @@ class RemoveListItemAction extends HeaderAction {
     DataBlueprint dataBlueprint,
     EditorMode mode,
   ) =>
-      mode.canEdit && context.parentBlueprint is ListBlueprint;
+      (mode, dataBlueprint).canEdit && context.parentBlueprint is ListBlueprint;
 
   @override
   HeaderActionLocation location(

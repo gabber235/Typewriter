@@ -2,7 +2,10 @@ import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:mocktail/mocktail.dart";
+import "package:pub_semver/pub_semver.dart";
 import "package:typewriter_panel/logic/books.dart";
+import "package:typewriter_panel/logic/module_version/module_version.dart";
+import "package:typewriter_panel/logic/modules.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/main.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -23,6 +26,9 @@ void main() {
     ),
   );
   registerFallbackValue(Book(id: "", title: "", icon: ""));
+  registerFallbackValue(Module(id: "", name: "", kind: ModuleKind.extension));
+  registerFallbackValue(Version.none);
+  registerFallbackValue(ModuleVersionState.developing);
 
   runApp(const WidgetbookApp());
 }

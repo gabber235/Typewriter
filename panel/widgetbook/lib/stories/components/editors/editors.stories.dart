@@ -7,6 +7,7 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/app_required.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -43,16 +44,22 @@ class EditorStories extends StatelessWidget {
           builder: (context, ref, child) {
             ref.watch(selectedProvider);
             return Scaffold(
-              body: Center(
-                child: Section(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: child,
+              body: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: Section(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: child,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  ActionRow(),
+                ],
               ),
             );
           },

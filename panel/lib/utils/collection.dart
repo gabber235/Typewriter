@@ -1,5 +1,8 @@
+import "dart:math";
+
 import "package:collection/collection.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/map.dart";
 
 extension ListX<T> on List<T> {
   T? randomOrNull() {
@@ -17,6 +20,20 @@ extension ListX<T> on List<T> {
     }
     return result;
   }
+
+  List<dynamic> mask(List<dynamic> other) {
+    final result = <dynamic>[];
+    for (var i = 0; i < max(length, other.length); i++) {
+      if (i < length && i < other.length) {
+        result.add(maskObjects(this[i], other[i]));
+      } else if (i < length) {
+        result.add(this[i]);
+      } else {
+        result.add(other[i]);
+      }
+    }
+    return result;
+  }
 }
 
 extension IterableX<T> on Iterable<T> {
@@ -25,4 +42,8 @@ extension IterableX<T> on Iterable<T> {
 
   T? maxByOrNull<S>(S Function(T) orderBy, {int Function(S, S)? compare}) =>
       maxBy(this, orderBy, compare: compare);
+
+  Iterable<T> excluding(List<Type> types) {
+    return where((element) => !types.contains(element.runtimeType));
+  }
 }

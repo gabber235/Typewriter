@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart" hide useFocusNode;
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -20,8 +20,8 @@ Widget inputFieldUseCase(BuildContext context) {
       return Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-        spacing: 20,
-        mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 20,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             for (final node in [first, second, third]) ...[
               DecoratedTextField(

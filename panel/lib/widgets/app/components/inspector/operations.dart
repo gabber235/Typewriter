@@ -142,7 +142,6 @@ class GlobalOperationShortcuts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final operations = ref.watch(availableOperationsProvider.select(
         (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList()));
-    print("operations: $operations");
 
     return ActionSet(
       shortcuts: [

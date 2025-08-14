@@ -24,7 +24,7 @@ Map<String, dynamic> _$BookToJson(_Book instance) => <String, dynamic>{
       'title': instance.title,
       'icon': instance.icon,
       'color': const ColorConverter().toJson(instance.color),
-      'tags': instance.tags,
+      'tags': instance.tags.map((e) => e.toJson()).toList(),
     };
 
 // **************************************************************************

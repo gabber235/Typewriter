@@ -23,7 +23,6 @@ class Selection extends _$Selection {
     List<SelectableIdentifier> previous,
     List<SelectableIdentifier> next,
   ) {
-    print("Updating identifiers to $next");
     return true;
   }
 
@@ -70,7 +69,6 @@ class Selected extends _$Selected {
   @override
   AsyncValue<List<Selectable>> build() {
     final ids = ref.watch(selectionProvider);
-    print("ids: $ids");
 
     final values = <Selectable>[];
     for (final id in ids) {
@@ -80,7 +78,6 @@ class Selected extends _$Selected {
       }
       values.add(value.requireValue);
     }
-    print("values: $values");
     return AsyncData(values);
   }
 

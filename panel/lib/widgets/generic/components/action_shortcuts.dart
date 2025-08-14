@@ -96,6 +96,45 @@ class GlobalActionsManager extends HookConsumerWidget {
   }
 }
 
+class ManagedActionSet extends HookConsumerWidget {
+  const ManagedActionSet({
+    required this.shortcuts,
+    this.child,
+    super.key,
+  });
+  final List<ActionShortcut> shortcuts;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final regKey = useGlobalKey(debugLabel: "ShortcutActionSet");
+    final callableShortcuts = useMemoized(
+      () => shortcuts
+          .where((s) => s.onInvoke != null && s.activators.isNotEmpty)
+          .toList(),
+      [shortcuts],
+    );
+    final hasFocus = useState(false);
+    return CallbackShortcuts(
+      key: regKey,
+      bindings: {
+        if (hasFocus.value)
+          for (final action in callableShortcuts)
+            for (final activator in action.activators)
+              activator: () => action.onInvoke!.call(ref),
+      },
+      child: Focus(
+        canRequestFocus: false,
+        onFocusChange: (focus) => hasFocus.value = focus,
+        child: ActionSet(
+          shortcuts: hasFocus.value ? shortcuts : [],
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class ActionSet extends HookConsumerWidget {
   const ActionSet({
     required this.shortcuts,

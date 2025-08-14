@@ -22,5 +22,5 @@ Map<String, dynamic> _$TagToJson(_Tag instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
       'color': const ColorConverter().toJson(instance.color),
-      'parents': instance.parents,
+      'parents': instance.parents.map((e) => e.toJson()).toList(),
     };

@@ -38,7 +38,7 @@ linter:
     parameter_assignments: true
     prefer_asserts_in_initializer_lists: true
     prefer_asserts_with_message: true
-    prefer_constructors_over_static_methods: true
+    prefer_constructors_over_static_methods: false
     prefer_double_quotes: true
     prefer_final_in_for_each: true
     prefer_final_locals: true

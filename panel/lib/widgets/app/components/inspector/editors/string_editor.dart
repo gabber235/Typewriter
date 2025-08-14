@@ -57,7 +57,7 @@ class StringEditorWidget extends HookConsumerWidget {
 
     final multiline = primitiveBlueprint.hasModifier<MultilineModifier>();
     final snakeCase = primitiveBlueprint.hasModifier<SnakeCaseModifier>();
-    final canEdit = editorMode.canEdit;
+    final canEdit = (editorMode, primitiveBlueprint).canEdit;
 
     return FieldValueEditor(
       path: path,

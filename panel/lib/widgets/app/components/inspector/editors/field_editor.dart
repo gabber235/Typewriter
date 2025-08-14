@@ -33,7 +33,7 @@ class FieldEditor extends HookConsumerWidget {
       return _NoEditorFound(path: path, dataBlueprint: dataBlueprint);
     }
 
-    return editor.build(path, dataBlueprint, editorMode);
+    return editor.build(path, dataBlueprint, editorMode.resolve(dataBlueprint));
   }
 }
 
@@ -115,7 +115,7 @@ class _ConflictValueEditor extends HookConsumerWidget {
       color: Theme.of(context).inputDecorationTheme.fillColor,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        onTap: editorMode.canEdit
+        onTap: (editorMode, dataBlueprint).canEdit
             ? () {
                 ref
                     .read(selectedProvider.notifier)
@@ -176,7 +176,7 @@ class _NoneValueEditor extends HookConsumerWidget {
         color: Theme.of(context).inputDecorationTheme.fillColor,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
-          onTap: editorMode.canEdit
+          onTap: (editorMode, dataBlueprint).canEdit
               ? () {
                   ref
                       .read(selectedProvider.notifier)

@@ -273,7 +273,6 @@ class TestSelectableData extends _$TestSelectableData {
   }
 
   void set(String id, DynamicData data) {
-    print("Setting data for $id: $data");
     state = {...state, id: data};
   }
 
@@ -289,7 +288,6 @@ class TestSelectableData extends _$TestSelectableData {
 @riverpod
 DynamicData? testData(Ref ref, String id) {
   final data = ref.watch(testSelectableDataProvider)[id];
-  print("Reading data for $id: $data");
   return data;
 }
 

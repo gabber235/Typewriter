@@ -21,6 +21,7 @@ dependencies:
   flutter_hooks: ^0.21.2
   iconify_flutter_plus: ^1.0.4
   logto_dart_sdk: ^3.0.0
+  pub_semver: ^2.2.0
 
 dev_dependencies:
   flutter_test:

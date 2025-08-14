@@ -29,6 +29,10 @@ import 'package:widgetbook_workspace/stories/components/editors/editors.stories.
     as _widgetbook_workspace_stories_components_editors_editors_stories;
 import 'package:widgetbook_workspace/stories/components/editors/list_editor.stories.dart'
     as _widgetbook_workspace_stories_components_editors_list_editor_stories;
+import 'package:widgetbook_workspace/stories/components/editors/module_version_editor.stories.dart'
+    as _widgetbook_workspace_stories_components_editors_module_version_editor_stories;
+import 'package:widgetbook_workspace/stories/components/editors/module_version_list_editor.stories.dart'
+    as _widgetbook_workspace_stories_components_editors_module_version_list_editor_stories;
 import 'package:widgetbook_workspace/stories/components/editors/number_editor.stories.dart'
     as _widgetbook_workspace_stories_components_editors_number_editor_stories;
 import 'package:widgetbook_workspace/stories/components/editors/string_editor.stories.dart'
@@ -59,8 +63,12 @@ import 'package:widgetbook_workspace/stories/components/tag.stories.dart'
     as _widgetbook_workspace_stories_components_tag_stories;
 import 'package:widgetbook_workspace/stories/components/text_scroller.stories.dart'
     as _widgetbook_workspace_stories_components_text_scroller_stories;
+import 'package:widgetbook_workspace/stories/generic/components/type_link.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_type_link_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/library/route.dart'
     as _widgetbook_workspace_stories_routes_organizations_library_route;
+import 'package:widgetbook_workspace/stories/routes/organizations/modules/route.dart'
+    as _widgetbook_workspace_stories_routes_organizations_modules_route;
 import 'package:widgetbook_workspace/stories/routes/route.dart'
     as _widgetbook_workspace_stories_routes_route;
 import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
@@ -90,6 +98,20 @@ final directories = <_widgetbook.WidgetbookNode>[
                   builder:
                       _widgetbook_workspace_stories_routes_organizations_library_route
                           .libraryPageUseCase,
+                ),
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'modules',
+            children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'ModulesPage',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'ModulesPage',
+                  builder:
+                      _widgetbook_workspace_stories_routes_organizations_modules_route
+                          .modulesPageUseCase,
                 ),
               ),
             ],
@@ -230,6 +252,24 @@ final directories = <_widgetbook.WidgetbookNode>[
                           builder:
                               _widgetbook_workspace_stories_components_editors_list_editor_stories
                                   .listEditorUseCase,
+                        ),
+                      ),
+                      _widgetbook.WidgetbookLeafComponent(
+                        name: 'ModuleVersionEditor',
+                        useCase: _widgetbook.WidgetbookUseCase(
+                          name: 'Default',
+                          builder:
+                              _widgetbook_workspace_stories_components_editors_module_version_editor_stories
+                                  .moduleVersionEditorUseCase,
+                        ),
+                      ),
+                      _widgetbook.WidgetbookLeafComponent(
+                        name: 'ModuleVersionListEditor',
+                        useCase: _widgetbook.WidgetbookUseCase(
+                          name: 'Default',
+                          builder:
+                              _widgetbook_workspace_stories_components_editors_module_version_list_editor_stories
+                                  .moduleVersionListEditorUseCase,
                         ),
                       ),
                       _widgetbook.WidgetbookLeafComponent(
@@ -432,6 +472,15 @@ final directories = <_widgetbook.WidgetbookNode>[
                   builder:
                       _widgetbook_workspace_stories_components_text_scroller_stories
                           .textScrollerUseCase,
+                ),
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'TypeLink',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_generic_components_type_link_stories
+                          .typeLinkDefaultUseCase,
                 ),
               ),
             ],

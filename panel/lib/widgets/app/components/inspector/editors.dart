@@ -5,6 +5,7 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/boolean_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/list_editor.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/editors/module_version_editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/number_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/string_editor.dart";
@@ -14,6 +15,8 @@ part "editors.g.dart";
 
 @riverpod
 List<Editor> editors(Ref ref) => [
+      ModuleVersionListEditor(),
+      ModuleVersionEditor(),
       StringEditor(),
       NumberEditor(),
       BooleanEditor(),
@@ -34,20 +37,23 @@ abstract class Editor {
     HeaderContext context,
     EditorMode mode,
   ) {
+    final resolvedMode = mode.resolve(dataBlueprint);
     final actions = ref
         .watch(headerActionsProvider)
         .where((filter) {
-          return filter.shouldShow(path, context, dataBlueprint, mode);
+          return filter.shouldShow(path, context, dataBlueprint, resolvedMode);
         })
         .groupListsBy(
-          (filter) => filter.location(path, context, dataBlueprint, mode),
+          (filter) =>
+              filter.location(path, context, dataBlueprint, resolvedMode),
         )
         .map(
           (key, value) => MapEntry(
             key,
             value
                 .map(
-                  (filter) => filter.build(path, context, dataBlueprint, mode),
+                  (filter) =>
+                      filter.build(path, context, dataBlueprint, resolvedMode),
                 )
                 .toList(),
           ),
@@ -73,6 +79,15 @@ enum EditorMode {
   const EditorMode({this.canEdit = true, this.hasHeaderActions = true});
   final bool canEdit;
   final bool hasHeaderActions;
+
+  EditorMode resolve(DataBlueprint dataBlueprint) {
+    if (dataBlueprint
+        .getModifiers<ReadOnlyModifier>()
+        .any((m) => m.recursive)) {
+      return readOnlyInspector;
+    }
+    return this;
+  }
 }
 
 @riverpod
@@ -89,4 +104,12 @@ String pathDisplayName(Ref ref, String path) {
   }
 
   return name.formatted;
+}
+
+extension EditorModeXDataBlueprint on (EditorMode, DataBlueprint) {
+  bool get canEdit {
+    if (!$1.canEdit) return false;
+    if ($2.hasModifier<ReadOnlyModifier>()) return false;
+    return true;
+  }
 }

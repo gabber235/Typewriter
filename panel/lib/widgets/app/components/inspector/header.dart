@@ -80,6 +80,7 @@ class FieldHeader extends HookConsumerWidget {
   const FieldHeader({
     required this.child,
     required this.path,
+    required this.dataBlueprint,
     required this.editorMode,
     this.canExpand = false,
     this.defaultExpanded,
@@ -88,10 +89,15 @@ class FieldHeader extends HookConsumerWidget {
 
   final Widget child;
   final String path;
+  final DataBlueprint dataBlueprint;
   final EditorMode editorMode;
 
   final bool canExpand;
   final bool? defaultExpanded;
+
+  bool get _defaultExpanded =>
+      (defaultExpanded ?? !editorMode.hasHeaderActions) ||
+      dataBlueprint.hasModifier<ExpandedModifier>();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,7 +115,7 @@ class FieldHeader extends HookConsumerWidget {
     final name =
         ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Editor";
 
-    final expanded = useState(defaultExpanded ?? !editorMode.hasHeaderActions);
+    final expanded = useState(_defaultExpanded);
     final depth = (parent?.depth ?? -1) + 1;
 
     return Header(
@@ -137,8 +143,8 @@ class FieldHeader extends HookConsumerWidget {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(4),
-                onTapDown: canExpand ? (_) =>
-                    expanded.value = !expanded.value : null,
+                onTap:
+                    canExpand ? () => expanded.value = !expanded.value : null,
                 child: Row(
                   children: [
                     if (canExpand && editorMode.hasHeaderActions)

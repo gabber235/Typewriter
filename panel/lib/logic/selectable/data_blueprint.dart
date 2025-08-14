@@ -1,7 +1,10 @@
 // ignore_for_file: sort_constructors_first
 import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:pub_semver/pub_semver.dart";
+import "package:typewriter_panel/logic/module_version/module_version.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/string.dart";
 
 part "data_blueprint.freezed.dart";
 part "data_blueprint.g.dart";
@@ -105,12 +108,44 @@ sealed class DataBlueprint with _$DataBlueprint {
     @Default([]) List<Modifier> modifiers,
   }) = CustomBlueprint;
 
+  /// Module version blueprint (custom editor: "module_version").
+  /// Persists as a string semantic version (no epoch folding logic here) plus separate state.
+  static CustomBlueprint moduleVersion({
+    ModuleVersion? version,
+    List<Modifier> modifiers = const [],
+  }) {
+    final mv = version ?? ModuleVersion(version: Version.none);
+    return CustomBlueprint(
+      editor: "module_version",
+      shape: DataBlueprint.object(
+        fields: {
+          "version": DataBlueprint.string(defaultValue: mv.canonical),
+          "state": DataBlueprint.enumBlueprint(
+            values: ModuleVersionState.values
+                .map((e) => e.name.snakeCase())
+                .toList(),
+            internalDefaultValue: mv.state.name.snakeCase(),
+          ),
+        },
+      ),
+      internalDefaultValue: mv.toJson(),
+      modifiers: modifiers,
+    );
+  }
+
   factory DataBlueprint.fromJson(Map<String, dynamic> json) =>
       _$DataBlueprintFromJson(json);
 }
 
 @Freezed(unionKey: "kind")
 abstract class Modifier with _$Modifier {
+  // Generic
+  const factory Modifier.readOnly({
+    @Default(true) bool recursive,
+  }) = ReadOnlyModifier;
+
+  const factory Modifier.expanded() = ExpandedModifier;
+
   // String Based
   const factory Modifier.multiline() = MultilineModifier;
   const factory Modifier.snakeCase() = SnakeCaseModifier;

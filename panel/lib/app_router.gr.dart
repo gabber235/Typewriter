@@ -90,6 +90,22 @@ class LibraryRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [ModulesPage]
+class ModulesRoute extends PageRouteInfo<void> {
+  const ModulesRoute({List<PageRouteInfo>? children})
+      : super(ModulesRoute.name, initialChildren: children);
+
+  static const String name = 'ModulesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ModulesPage();
+    },
+  );
+}
+
+/// generated route for
 /// [OrganizationPage]
 class OrganizationRoute extends PageRouteInfo<OrganizationRouteArgs> {
   OrganizationRoute({

@@ -80,7 +80,7 @@ class BooleanEditorWidget extends HookConsumerWidget {
             Checkbox(
               value: value,
               onChanged: (value) {
-                if (!editorMode.canEdit) return;
+                if (!(editorMode, primitiveBlueprint).canEdit) return;
                 ref
                     .read(selectedProvider.notifier)
                     .updateFieldValue(path, value ?? false);

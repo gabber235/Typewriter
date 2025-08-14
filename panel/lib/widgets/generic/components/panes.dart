@@ -219,7 +219,7 @@ class Pane extends HookConsumerWidget {
             skipTraversal: true,
             debugLabel: debugLabel,
             onFocusChange: (_) =>
-                focusType.value = FocusHighlight.focusType(node),
+                focusType.value = FocusHighlighting.primaryAndChild(node),
             child: child,
           )
         : Focus(
@@ -228,7 +228,7 @@ class Pane extends HookConsumerWidget {
             skipTraversal: true,
             debugLabel: debugLabel,
             onFocusChange: (_) =>
-                focusType.value = FocusHighlight.focusType(focusNode),
+                focusType.value = FocusHighlighting.primaryAndChild(focusNode),
             child: child,
           );
 
