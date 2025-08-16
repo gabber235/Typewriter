@@ -6,6 +6,37 @@ import "package:typewriter_panel/utils/collection.dart";
 part "module_version.freezed.dart";
 part "module_version.g.dart";
 
+/// JSON converter for pub_semver Version.
+///
+/// Accepts:
+/// - "1.2.3"
+/// - { "version": "1.2.3" }
+/// - { "epoch": 1, "major": 2, "minor": 3, "patch": 4 } → flattens to (epoch*1000+major).minor.patch
+class SemverJsonConverter implements JsonConverter<Version, dynamic> {
+  const SemverJsonConverter();
+
+  @override
+  Version fromJson(dynamic json) {
+    if (json is Version) return json;
+    if (json is String) return Version.parse(json);
+
+    if (json is Map<String, dynamic>) {
+      if (json.containsKey("version") && json["version"] is String) {
+        return Version.parse(json["version"] as String);
+      }
+      final epoch = (json["epoch"] as int?) ?? 0;
+      final major = (json["major"] as int?) ?? 0;
+      final minor = (json["minor"] as int?) ?? 0;
+      final patch = (json["patch"] as int?) ?? 0;
+      return Version(epoch * 1000 + major, minor, patch);
+    }
+    throw FormatException("Unsupported version JSON: $json");
+  }
+
+  @override
+  dynamic toJson(Version object) => object.canonicalizedVersion;
+}
+
 /// Lifecycle state for a module version.
 @JsonEnum(fieldRename: FieldRename.snake)
 enum ModuleVersionState {
@@ -28,38 +59,6 @@ enum ModuleVersionState {
   ModuleVersionState get next => values[(index + 1) % values.length];
 }
 
-/// JSON converter for pub_semver Version
-class _SemverFlexibleConverter implements JsonConverter<Version, dynamic> {
-  const _SemverFlexibleConverter();
-
-  @override
-  Version fromJson(dynamic json) {
-    if (json is Version) return json;
-    if (json is String) return Version.parse(json);
-
-    if (json is Map<String, dynamic>) {
-      final hasMajor = json.containsKey("major");
-      final hasEpoch = json.containsKey("epoch");
-      if (hasMajor || hasEpoch) {
-        final epoch = (json["epoch"] as int?) ?? 0;
-        final majorPart = (json["major"] as int?) ?? 0;
-        final minor = (json["minor"] as int?) ?? 0;
-        final patch = (json["patch"] as int?) ?? 0;
-        final combinedMajor = epoch * 1000 + majorPart;
-        return Version(combinedMajor, minor, patch);
-      }
-      if (json.containsKey("version")) {
-        final raw = json["version"];
-        if (raw is String) return Version.parse(raw);
-      }
-    }
-    throw FormatException("Unsupported version JSON: $json");
-  }
-
-  @override
-  dynamic toJson(Version object) => object.canonicalizedVersion;
-}
-
 /// Represents a module version: semantic version (with implicit epoch) + state.
 /// The stored canonical string form is `(epoch*1000 + major).minor.patch`.
 @freezed
@@ -67,7 +66,7 @@ abstract class ModuleVersion
     with _$ModuleVersion
     implements Comparable<ModuleVersion> {
   const factory ModuleVersion({
-    @_SemverFlexibleConverter() required Version version,
+    @SemverJsonConverter() required Version version,
     @Default(ModuleVersionState.developing) ModuleVersionState state,
   }) = _ModuleVersion;
 
@@ -76,7 +75,7 @@ abstract class ModuleVersion
     String input, {
     ModuleVersionState state = ModuleVersionState.developing,
   }) {
-    final converter = const _SemverFlexibleConverter();
+    final converter = const SemverJsonConverter();
     final parsed = converter.fromJson(input);
     return ModuleVersion(version: parsed, state: state);
   }

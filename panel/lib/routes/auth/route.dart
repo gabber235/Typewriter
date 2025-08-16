@@ -32,7 +32,7 @@ class AuthPage extends HookConsumerWidget {
             style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 24),
-          LoadingButton(
+          LoadingButton.filled(
             child: const Text("Sign in"),
             onPressed: () async {
               await ref.read(authProvider.notifier).signIn();

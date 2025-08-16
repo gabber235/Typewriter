@@ -1,126 +1,87 @@
 # AGENTS.md
 
-
-Tech overview (for context only)
+Project tech/context
 - Flutter + Dart
 - Riverpod (hooks + annotations) for state
 - auto_route for navigation
 - freezed + json_serializable for models
-- Widgetbook for component catalog
+- Widgetbook workspace for component catalog (separate Flutter app under widgetbook/)
+  - Use FakeApp (widgetbook/lib/widgetbook_utils.dart) as the standard shell for stories. It wraps MaterialApp, ProviderScope (supports overrides), AppRequiredWidgets, Responsive breakpoints, and propagates app-wide shortcuts/actions.
+  - Prefer wrapping each @widgetbook.UseCase content with FakeApp for consistent theming, scroll behavior, and padding.
 
-
-Build / Run / Test
+Primary commands
 - Codegen (run whenever annotations or model schemas change):
   - dart run build_runner build -d
-
+  - If issues persist: dart run build_runner clean && dart run build_runner build -d
 - Analyze & lints:
   - dart analyze
-
 - Run (web):
   - flutter run -d chrome
-
 - Run (desktop):
   - macOS: flutter run -d macos
-  - Windows/Linux as configured: flutter run -d windows | flutter run -d linux
-
+  - Windows/Linux: flutter run -d windows | flutter run -d linux
 - Run (mobile):
   - iOS: flutter run -d ios
   - Android: flutter run -d android
-
-- Run Widgetbook (component catalog):
+- Run Widgetbook (component catalog, from the repo root):
   - flutter run -t widgetbook/lib/main.dart -d macos
-  - Or choose another device with -d <device>
-
 - Tests:
   - flutter test
+  - Test utilities (test/test_utils.dart):
+    - testApp(child: ...) to wrap widgets with ProviderScope, Responsive, AppRequiredWidgets, and MaterialApp.
+    - WidgetTesterAppX.pumpTestApp(...) and pumpUntil(...) extensions for common setups.
+    - WidgetTesterScreenshotsX.captureScreenshot(name, directory: "test_screenshots") to export PNG screenshots.
+    - Call setupMocks() in test main() to register mocktail fallback values when needed.
+    - Editor helpers (test/widgets/utils/editor_utils.dart): use WidgetTester.pumpEditor(...) to mount Inspector editors with blueprints and initial data.
 
-
-Project layout (high-level expectations)
+Project layout expectations
 - lib/
-  - routes/            → simulated file based routing (index pages are namde `route.dart`)
+  - routes/            → simulated file-based routing (index pages named route.dart)
   - logic/             → providers/state, backend calls, domain logic
   - widgets/
-    - app/components/  → app chrome and larger app-level components
+    - app/components/  → app chrome and app-level components
     - generic/components/ → reusable UI building blocks
-    - generic/screens/ → generic screens like loading/error
+    - generic/screens/ → generic loading/error, etc.
   - hooks/             → custom flutter hooks
-  - utils/             → helpers formatters, extension methods
+  - utils/             → helpers, formatters, extensions
 - widgetbook/
   - lib/stories/       → stories mirroring component structure
-  - lib/logic/*.mock.dart → mocks for providers when needed
+- testkit/
+  - lib/src/mocks/       → reusable provider mocks and overrides for tests and Widgetbook (import via package:typewriter_testkit)
 
-Keep new code consistent with this structure. Do not hard-code imports to specific files outside these folders.
-
-
-Recipes
-
-1) Add a new UI component
-- Place the widget in widgets/generic/components/ (reusable between this project and possibly others) or widgets/app/components/ (app-specific to typewriter).
-- Prefer composable, stateless widgets; use hooks_riverpod if local provider reads are needed.
-- Keep public APIs (constructors/params) small and typed.
-- If it depends on providers, consider exposing a pure UI version that accepts data via parameters for easier testing and stories.
-
-2) Add a Widgetbook story for a component
-- Create a story under widgetbook/lib/stories/... mirroring the component’s folder structure.
-- Provide simple knobs/controls via Widgetbook where useful.
-- If the component reads providers, either:
-  - Wrap with minimal ProviderScope and supply overrides/mocks, or
-  - Prefer a pure UI constructor variant that accepts data directly.
-- Launch Widgetbook with the command above to iterate.
-
-3) Add a route (page)
-- Create a page widget under routes/ based on the path.
-- Annotate the page class with @RoutePage() (auto_route convention) to enable typed routing.
-- Register the route in the central router configuration (auto_route list) as a child of the appropriate parent route.
-- If route requires authentication, ensure it’s guarded by the auth guard in the router configuration.
-- Rebuild codegen after modifying routes:
-  - dart run build_runner build -d
-
-4) Add or change a provider (Riverpod)
-- Place provider code under logic/ grouped by feature or domain.
-- Use @riverpod (function/class-based) or @Riverpod(keepAlive: true) as needed.
-- If a provider consumes other providers, wire via Ref and specify dependencies when appropriate (custom_lint rules may enforce this).
-- For async providers, surface AsyncValue in the UI and handle loading/error states explicitly.
-- Run codegen after adding/updating annotated providers.
-
-5) Add or change a model (freezed + json_serializable)
-- Define an immutable data class using @freezed and factory constructors.
-- Include JSON helpers with json_serializable annotations (e.g., factory fromJson(Map<String,dynamic>)).
-- Add part files for generated outputs (e.g., part 'model.freezed.dart'; part 'model.g.dart';).
-- Keep fields explicitly typed; prefer non-dynamic JSON APIs.
-- Run codegen after changes.
-
-6) Call a backend operation (pattern)
-- Access backend clients through providers under logic/.
-- For request/response flows, expose a method on a provider that performs the call and returns strongly typed data.
-- Decode/encode JSON at the provider layer; do not leak Map<String, dynamic> into widgets when avoidable.
-- Propagate errors upward; let UI render generic loading/error widgets.
-
-
-Conventions
+Global conventions
 - Always use package: imports.
-- Prefer immutable data and copy-with patterns (freezed) for state.
-- Keep widgets small; extract components for reuse.
+- Prefer immutable data; use freezed with copyWith for state.
+- Keep widgets small and composable; extract reusable pieces.
 - Use trailing commas for better diffs; prefer double quotes (as enforced by lints).
-- Keep providers focused and testable; avoid side effects in build() beyond reading other providers and constructing values.
-- Keep navigation typed (auto_route) and colocate pages with their feature folders in routes/.
-
+- Keep providers focused and testable; avoid unintended side effects in build().
+- Keep navigation typed (auto_route). Co-locate pages under lib/routes/ by feature.
+- Do not hard-code imports to files outside the expected folders.
+- Widgetbook stories should wrap content with FakeApp when possible to inherit app theming, shortcuts, scroll behavior, and Responsive padding.
+- In widget tests, prefer testApp/pumpTestApp and captureScreenshot utilities over bespoke scaffolds.
 
 When to run codegen
-- After: adding/updating @freezed models, @riverpod/@Riverpod providers, auto_route annotations, creating new widgetbook stories.
+- After adding/updating:
+  - @freezed models
+  - @riverpod/@Riverpod providers
+  - auto_route annotations
+  - widgetbook @widgetbook.UseCase or @App changes
 - Commands:
   - dart run build_runner build -d
-  - For persistent issues: dart run build_runner clean && dart run build_runner build -d
-
+  - If issues persist: dart run build_runner clean && dart run build_runner build -d
 
 Minimal checklists
-- New component: file under widgets/... + (optional) story under widgetbook/lib/stories/... + run Widgetbook
+- New component: widget under widgets/... + story under widgetbook/lib/stories/... + regenerate widgetbook + run Widgetbook
 - New route: page under routes/... + add to router config + codegen
 - New model: freezed class + json helpers + part files + codegen
 - New provider: annotated provider + tests (if applicable) + codegen
 
+Agent behavior
+- Preserve and follow the directory structure above; colocate by feature.
+- Prefer pure UI widgets that accept data via parameters. If a widget depends on providers, consider a pure UI variant for testing and stories.
+- Surface AsyncValue states (loading/error/data) explicitly in UI.
+- Decode/encode JSON in the provider layer; avoid passing Map<String, dynamic> to widgets when avoidable.
+- For auth-required routes, ensure router guards are applied in configuration.
+- After route/provider/model changes, immediately run codegen and then analyze.
+- Keep examples and scaffolds idiomatic to this project’s patterns.
 
-Testing guidance (brief)
-- Prefer testing logic/providers with unit tests.
-- For widgets, use golden tests for stable components and verify basic interactions.
-- Keep tests deterministic; mock providers where needed.

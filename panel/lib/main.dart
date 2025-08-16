@@ -178,39 +178,41 @@ ThemeData buildTheme(Brightness brightness) {
             ),
           );
 
+  final inputDecorationTheme = InputDecorationTheme(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none,
+    ),
+    fillColor: isLight
+        ? Colors.black.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.2),
+    filled: true,
+    hoverColor: Colors.black.withValues(alpha: 0.1),
+    errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
+    hintStyle: TextStyle(
+      color: isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
+      fontSize: 16,
+      fontVariations: const [normalWeight],
+    ),
+    prefixIconColor:
+        isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: Colors.redAccent.shade200, width: 2),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+    ),
+  );
+
   return baseTheme.copyWith(
     textTheme: textTheme,
     dialogTheme: DialogThemeData(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none,
-      ),
-      fillColor: isLight
-          ? Colors.black.withValues(alpha: 0.05)
-          : Colors.black.withValues(alpha: 0.2),
-      filled: true,
-      hoverColor: Colors.black.withValues(alpha: 0.1),
-      errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
-      hintStyle: TextStyle(
-        color: isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
-        fontSize: 16,
-        fontVariations: const [normalWeight],
-      ),
-      prefixIconColor:
-          isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.redAccent.shade200, width: 2),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.red, width: 2),
-      ),
-    ),
+    inputDecorationTheme: inputDecorationTheme,
     tooltipTheme: TooltipThemeData(
       preferBelow: false,
       triggerMode: TooltipTriggerMode.longPress,
@@ -248,6 +250,7 @@ ThemeData buildTheme(Brightness brightness) {
         disabledForegroundColor: baseTheme.colorScheme.onSurface.withValues(
           alpha: 0.38,
         ),
+        iconSize: 18,
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -256,6 +259,16 @@ ThemeData buildTheme(Brightness brightness) {
         disabledForegroundColor: baseTheme.colorScheme.onSurface.withValues(
           alpha: 0.38,
         ),
+        iconSize: 18,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: baseTheme.colorScheme.primary,
+        disabledForegroundColor: baseTheme.colorScheme.onSurface.withValues(
+          alpha: 0.38,
+        ),
+        iconSize: 18,
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
@@ -265,6 +278,9 @@ ThemeData buildTheme(Brightness brightness) {
         ),
         padding: EdgeInsets.zero,
       ),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      disabledElevation: 0,
     ),
     menuButtonTheme: MenuButtonThemeData(
       style: MenuItemButton.styleFrom(
@@ -284,6 +300,21 @@ ThemeData buildTheme(Brightness brightness) {
         elevation: WidgetStatePropertyAll(1),
         visualDensity:
             VisualDensity.defaultDensityForPlatform(defaultTargetPlatform),
+      ),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      inputDecorationTheme: inputDecorationTheme,
+      menuStyle: MenuStyle(
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+        padding: WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        ),
+        elevation: WidgetStatePropertyAll(1),
+        minimumSize: WidgetStatePropertyAll<Size>(Size(112, 0.0)),
+        maximumSize: WidgetStatePropertyAll<Size>(Size.infinite),
+        visualDensity: VisualDensity.standard,
       ),
     ),
   );

@@ -133,6 +133,30 @@ sealed class DataBlueprint with _$DataBlueprint {
     );
   }
 
+  static CustomBlueprint manualPlatformTarget({
+    dynamic defaultValue,
+    List<Modifier> modifiers = const [],
+  }) {
+    return CustomBlueprint(
+      editor: "manual_platform_target",
+      shape: DataBlueprint.object(fields: {}),
+      internalDefaultValue: defaultValue,
+      modifiers: modifiers,
+    );
+  }
+
+  static CustomBlueprint manualModuleReference({
+    dynamic defaultValue,
+    List<Modifier> modifiers = const [],
+  }) {
+    return CustomBlueprint(
+      editor: "manual_module_reference",
+      shape: DataBlueprint.object(fields: {}),
+      internalDefaultValue: defaultValue,
+      modifiers: modifiers,
+    );
+  }
+
   factory DataBlueprint.fromJson(Map<String, dynamic> json) =>
       _$DataBlueprintFromJson(json);
 }
@@ -197,11 +221,8 @@ extension PrimitiveTypeExtension on PrimitiveType {
   }
 }
 
-final _customEditorCustomLayout = [
-  "item",
-  "skin",
-  "color",
-  "var",
+final _customEditorCustomLayout = <CustomBlueprint>[
+  DataBlueprint.manualPlatformTarget(),
 ];
 
 /// Since freezed does not support methods on data models, we have to create a separate extension class.
@@ -295,10 +316,7 @@ extension DataBlueprintExtension on DataBlueprint {
   /// If the [ObjectEditor] needs to show a default layout or if a field declares a custom layout.
   bool get hasCustomLayout {
     if (this is CustomBlueprint) {
-      final editor = (this as CustomBlueprint).editor;
-      if (_customEditorCustomLayout.contains(editor)) {
-        return true;
-      }
+      return _customEditorCustomLayout.any((e) => e.matches(this));
     }
     if (this is ObjectBlueprint) {
       return true;

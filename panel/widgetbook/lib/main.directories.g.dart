@@ -11,8 +11,26 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/boolean_editor.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_boolean_editor_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/editors.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_editors_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/list_editor.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_list_editor_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/manuals_editors.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/module_version_editor.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_module_version_editor_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/module_version_list_editor.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_module_version_list_editor_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/number_editor.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_number_editor_stories;
+import 'package:widgetbook_workspace/stories/app/components/inspector/editors/string_editor.stories.dart'
+    as _widgetbook_workspace_stories_app_components_inspector_editors_string_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/operations/delete_operation.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories;
+import 'package:widgetbook_workspace/stories/app/components/manuals/popups.stories.dart'
+    as _widgetbook_workspace_stories_app_components_manuals_popups_stories;
 import 'package:widgetbook_workspace/stories/components/action_shortcuts.stories.dart'
     as _widgetbook_workspace_stories_components_action_shortcuts_stories;
 import 'package:widgetbook_workspace/stories/components/auto_scroller.stories.dart'
@@ -23,22 +41,10 @@ import 'package:widgetbook_workspace/stories/components/color_swatch.dart'
     as _widgetbook_workspace_stories_components_color_swatch;
 import 'package:widgetbook_workspace/stories/components/custom_appbar.stories.dart'
     as _widgetbook_workspace_stories_components_custom_appbar_stories;
-import 'package:widgetbook_workspace/stories/components/editors/boolean_editor.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_boolean_editor_stories;
-import 'package:widgetbook_workspace/stories/components/editors/editors.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_editors_stories;
-import 'package:widgetbook_workspace/stories/components/editors/list_editor.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_list_editor_stories;
-import 'package:widgetbook_workspace/stories/components/editors/module_version_editor.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_module_version_editor_stories;
-import 'package:widgetbook_workspace/stories/components/editors/module_version_list_editor.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_module_version_list_editor_stories;
-import 'package:widgetbook_workspace/stories/components/editors/number_editor.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_number_editor_stories;
-import 'package:widgetbook_workspace/stories/components/editors/string_editor.stories.dart'
-    as _widgetbook_workspace_stories_components_editors_string_editor_stories;
-import 'package:widgetbook_workspace/stories/components/input_field.stories.dart'
-    as _widgetbook_workspace_stories_components_input_field_stories;
+import 'package:widgetbook_workspace/stories/components/decorated_text_field.stories.dart'
+    as _widgetbook_workspace_stories_components_decorated_text_field_stories;
+import 'package:widgetbook_workspace/stories/components/dropdown.stories.dart'
+    as _widgetbook_workspace_stories_components_dropdown_stories;
 import 'package:widgetbook_workspace/stories/components/labeled_divider.stories.dart'
     as _widgetbook_workspace_stories_components_labeled_divider_stories;
 import 'package:widgetbook_workspace/stories/components/loading_indicator.stories.dart'
@@ -63,10 +69,24 @@ import 'package:widgetbook_workspace/stories/components/tag.stories.dart'
     as _widgetbook_workspace_stories_components_tag_stories;
 import 'package:widgetbook_workspace/stories/components/text_scroller.stories.dart'
     as _widgetbook_workspace_stories_components_text_scroller_stories;
+import 'package:widgetbook_workspace/stories/generic/components/elastic_switcher.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_elastic_switcher_stories;
+import 'package:widgetbook_workspace/stories/generic/components/floating_button.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_floating_button_stories;
+import 'package:widgetbook_workspace/stories/generic/components/grid_selectable_card.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_grid_selectable_card_stories;
+import 'package:widgetbook_workspace/stories/generic/components/loading_button.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_loading_button_stories;
+import 'package:widgetbook_workspace/stories/generic/components/notification_bubble.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_notification_bubble_stories;
 import 'package:widgetbook_workspace/stories/generic/components/type_link.stories.dart'
     as _widgetbook_workspace_stories_generic_components_type_link_stories;
+import 'package:widgetbook_workspace/stories/generic/components/version_filter_bar.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_version_filter_bar_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/library/route.dart'
     as _widgetbook_workspace_stories_routes_organizations_library_route;
+import 'package:widgetbook_workspace/stories/routes/organizations/manuals/route.dart'
+    as _widgetbook_workspace_stories_routes_organizations_manuals_route;
 import 'package:widgetbook_workspace/stories/routes/organizations/modules/route.dart'
     as _widgetbook_workspace_stories_routes_organizations_modules_route;
 import 'package:widgetbook_workspace/stories/routes/route.dart'
@@ -99,7 +119,21 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_routes_organizations_library_route
                           .libraryPageUseCase,
                 ),
-              ),
+              )
+            ],
+          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'manuals',
+            children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'ManualsPage',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'ManualsPage',
+                  builder:
+                      _widgetbook_workspace_stories_routes_organizations_manuals_route
+                          .manualsPageUseCase,
+                ),
+              )
             ],
           ),
           _widgetbook.WidgetbookFolder(
@@ -113,7 +147,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_routes_organizations_modules_route
                           .modulesPageUseCase,
                 ),
-              ),
+              )
             ],
           ),
         ],
@@ -130,9 +164,8 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'ColorSwatchWidget',
             useCase: _widgetbook.WidgetbookUseCase(
               name: 'Default',
-              builder:
-                  _widgetbook_workspace_stories_components_color_swatch
-                      .colorSwatchUseCase,
+              builder: _widgetbook_workspace_stories_components_color_swatch
+                  .colorSwatchUseCase,
             ),
           ),
           _widgetbook.WidgetbookLeafComponent(
@@ -145,7 +178,7 @@ final directories = <_widgetbook.WidgetbookNode>[
             ),
           ),
         ],
-      ),
+      )
     ],
   ),
   _widgetbook.WidgetbookFolder(
@@ -212,7 +245,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                         useCase: _widgetbook.WidgetbookUseCase(
                           name: 'Default',
                           builder:
-                              _widgetbook_workspace_stories_components_editors_boolean_editor_stories
+                              _widgetbook_workspace_stories_app_components_inspector_editors_boolean_editor_stories
                                   .booleanEditorUseCase,
                         ),
                       ),
@@ -222,25 +255,25 @@ final directories = <_widgetbook.WidgetbookNode>[
                           _widgetbook.WidgetbookUseCase(
                             name: 'Conflict',
                             builder:
-                                _widgetbook_workspace_stories_components_editors_editors_stories
+                                _widgetbook_workspace_stories_app_components_inspector_editors_editors_stories
                                     .conflictValueEditorUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Loading',
                             builder:
-                                _widgetbook_workspace_stories_components_editors_editors_stories
+                                _widgetbook_workspace_stories_app_components_inspector_editors_editors_stories
                                     .loadingEditorUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'None',
                             builder:
-                                _widgetbook_workspace_stories_components_editors_editors_stories
+                                _widgetbook_workspace_stories_app_components_inspector_editors_editors_stories
                                     .noneValueEditorUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Value',
                             builder:
-                                _widgetbook_workspace_stories_components_editors_editors_stories
+                                _widgetbook_workspace_stories_app_components_inspector_editors_editors_stories
                                     .valueEditorUseCase,
                           ),
                         ],
@@ -250,16 +283,51 @@ final directories = <_widgetbook.WidgetbookNode>[
                         useCase: _widgetbook.WidgetbookUseCase(
                           name: 'Default',
                           builder:
-                              _widgetbook_workspace_stories_components_editors_list_editor_stories
+                              _widgetbook_workspace_stories_app_components_inspector_editors_list_editor_stories
                                   .listEditorUseCase,
                         ),
+                      ),
+                      _widgetbook.WidgetbookLeafComponent(
+                        name: 'ManualModuleReferenceEditor',
+                        useCase: _widgetbook.WidgetbookUseCase(
+                          name: 'Module Reference (single)',
+                          builder:
+                              _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
+                                  .manualModuleReferenceSingleUseCase,
+                        ),
+                      ),
+                      _widgetbook.WidgetbookLeafComponent(
+                        name: 'ManualModulesListEditor',
+                        useCase: _widgetbook.WidgetbookUseCase(
+                          name: 'Modules (grouped list)',
+                          builder:
+                              _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
+                                  .manualModulesGroupedListUseCase,
+                        ),
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ManualPlatformTargetEditor',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Platform Target (single)',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
+                                    .manualPlatformTargetSingleUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Platform Targets (list)',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
+                                    .manualPlatformTargetListUseCase,
+                          ),
+                        ],
                       ),
                       _widgetbook.WidgetbookLeafComponent(
                         name: 'ModuleVersionEditor',
                         useCase: _widgetbook.WidgetbookUseCase(
                           name: 'Default',
                           builder:
-                              _widgetbook_workspace_stories_components_editors_module_version_editor_stories
+                              _widgetbook_workspace_stories_app_components_inspector_editors_module_version_editor_stories
                                   .moduleVersionEditorUseCase,
                         ),
                       ),
@@ -268,7 +336,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                         useCase: _widgetbook.WidgetbookUseCase(
                           name: 'Default',
                           builder:
-                              _widgetbook_workspace_stories_components_editors_module_version_list_editor_stories
+                              _widgetbook_workspace_stories_app_components_inspector_editors_module_version_list_editor_stories
                                   .moduleVersionListEditorUseCase,
                         ),
                       ),
@@ -277,7 +345,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                         useCase: _widgetbook.WidgetbookUseCase(
                           name: 'Default',
                           builder:
-                              _widgetbook_workspace_stories_components_editors_number_editor_stories
+                              _widgetbook_workspace_stories_app_components_inspector_editors_number_editor_stories
                                   .numberEditorUseCase,
                         ),
                       ),
@@ -286,7 +354,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                         useCase: _widgetbook.WidgetbookUseCase(
                           name: 'Default',
                           builder:
-                              _widgetbook_workspace_stories_components_editors_string_editor_stories
+                              _widgetbook_workspace_stories_app_components_inspector_editors_string_editor_stories
                                   .stringEditorUseCase,
                         ),
                       ),
@@ -317,13 +385,36 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     .deleteSingleSuccessUseCase,
                           ),
                         ],
-                      ),
+                      )
                     ],
                   ),
                 ],
               ),
+              _widgetbook.WidgetbookFolder(
+                name: 'manuals',
+                children: [
+                  _widgetbook.WidgetbookLeafComponent(
+                    name: 'ManualChangeModulesPopup',
+                    useCase: _widgetbook.WidgetbookUseCase(
+                      name: 'Change Modules Popup',
+                      builder:
+                          _widgetbook_workspace_stories_app_components_manuals_popups_stories
+                              .manualChangeModulesPopupUseCase,
+                    ),
+                  ),
+                  _widgetbook.WidgetbookLeafComponent(
+                    name: 'ManualChangePlatformsPopup',
+                    useCase: _widgetbook.WidgetbookUseCase(
+                      name: 'Change Platforms Popup',
+                      builder:
+                          _widgetbook_workspace_stories_app_components_manuals_popups_stories
+                              .manualChangePlatformsPopupUseCase,
+                    ),
+                  ),
+                ],
+              ),
             ],
-          ),
+          )
         ],
       ),
       _widgetbook.WidgetbookFolder(
@@ -354,9 +445,8 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'BookWidget',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
-                  builder:
-                      _widgetbook_workspace_stories_components_book_stories
-                          .bookUseCase,
+                  builder: _widgetbook_workspace_stories_components_book_stories
+                      .bookUseCase,
                 ),
               ),
               _widgetbook.WidgetbookComponent(
@@ -365,32 +455,104 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'Default',
                     builder:
-                        _widgetbook_workspace_stories_components_input_field_stories
+                        _widgetbook_workspace_stories_components_decorated_text_field_stories
                             .inputFieldUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Error',
                     builder:
-                        _widgetbook_workspace_stories_components_input_field_stories
+                        _widgetbook_workspace_stories_components_decorated_text_field_stories
                             .inputFieldErrorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Multiline',
                     builder:
-                        _widgetbook_workspace_stories_components_input_field_stories
+                        _widgetbook_workspace_stories_components_decorated_text_field_stories
                             .inputFieldMultilineUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'With Callbacks',
                     builder:
-                        _widgetbook_workspace_stories_components_input_field_stories
+                        _widgetbook_workspace_stories_components_decorated_text_field_stories
                             .inputFieldWithCallbacksUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'With Prefix Icon',
                     builder:
-                        _widgetbook_workspace_stories_components_input_field_stories
+                        _widgetbook_workspace_stories_components_decorated_text_field_stories
                             .inputFieldWithPrefixIconUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'Dropdown',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_components_dropdown_stories
+                            .dropdownDefaultUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Preselected',
+                    builder:
+                        _widgetbook_workspace_stories_components_dropdown_stories
+                            .dropdownPreselectedUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Callbacks',
+                    builder:
+                        _widgetbook_workspace_stories_components_dropdown_stories
+                            .dropdownWithCallbacksUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'ElasticSwitcher',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Toggle',
+                  builder:
+                      _widgetbook_workspace_stories_generic_components_elastic_switcher_stories
+                          .elasticSwitcherToggle,
+                ),
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'FloatingButton',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Disabled',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_floating_button_stories
+                            .floatingButtonDisabled,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_floating_button_stories
+                            .floatingButtonFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_floating_button_stories
+                            .floatingButtonSuccess,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'GridSelectableCard',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_grid_selectable_card_stories
+                            .gridSelectableCardDefaultUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Grid Sample',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_grid_selectable_card_stories
+                            .gridSelectableCardGridUseCase,
                   ),
                 ],
               ),
@@ -403,6 +565,83 @@ final directories = <_widgetbook.WidgetbookNode>[
                           .labeledDividerUseCase,
                 ),
               ),
+              _widgetbook.WidgetbookComponent(
+                name: 'LoadingButton',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Filled - Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonFilledFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Filled - Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonFilledSuccess,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'FilledIcon - Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonFilledIconFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'FilledIcon - Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonFilledIconSuccess,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Outlined - Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonOutlinedFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Outlined - Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonOutlinedSuccess,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'OutlinedIcon - Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonOutlinedIconFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'OutlinedIcon - Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonOutlinedIconSuccess,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Text - Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonTextFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Text - Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonTextSuccess,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'TextIcon - Failure',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonTextIconFailure,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'TextIcon - Success',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_loading_button_stories
+                            .loadingButtonTextIconSuccess,
+                  ),
+                ],
+              ),
               _widgetbook.WidgetbookLeafComponent(
                 name: 'LoadingIndicator',
                 useCase: _widgetbook.WidgetbookUseCase(
@@ -411,6 +650,29 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_components_loading_indicator_stories
                           .loadingIndicatorUseCase,
                 ),
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'NotificationBubble',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Count',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_notification_bubble_stories
+                            .notificationBubbleCountUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Custom',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_notification_bubble_stories
+                            .notificationBubbleCustomUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Dot',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_notification_bubble_stories
+                            .notificationBubbleDotUseCase,
+                  ),
+                ],
               ),
               _widgetbook.WidgetbookLeafComponent(
                 name: 'PageHeading',
@@ -460,9 +722,8 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'TagWidget',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
-                  builder:
-                      _widgetbook_workspace_stories_components_tag_stories
-                          .tagUseCase,
+                  builder: _widgetbook_workspace_stories_components_tag_stories
+                      .tagUseCase,
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(
@@ -483,6 +744,23 @@ final directories = <_widgetbook.WidgetbookNode>[
                           .typeLinkDefaultUseCase,
                 ),
               ),
+              _widgetbook.WidgetbookComponent(
+                name: 'VersionFilterBar',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_version_filter_bar_stories
+                            .versionFilterBarDefaultUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Epoch + Large',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_version_filter_bar_stories
+                            .versionFilterBarEpochLargeUseCase,
+                  ),
+                ],
+              ),
             ],
           ),
           _widgetbook.WidgetbookFolder(
@@ -496,7 +774,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_screens_error_screen_stories
                           .errorScreenUseCase,
                 ),
-              ),
+              )
             ],
           ),
         ],

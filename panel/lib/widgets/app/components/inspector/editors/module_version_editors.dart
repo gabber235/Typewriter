@@ -17,10 +17,11 @@ import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/header.dart";
 import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
+
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
+import "package:typewriter_panel/widgets/generic/components/version_filter.dart";
 
 /// Renders a flat, chronologically sorted list of ModuleVersion items.
 /// Uses a query-driven filter with contextual suggestions optimized
@@ -65,110 +66,6 @@ class ModuleVersionListEditor extends Editor {
   }
 }
 
-/// Represents a structured, immutable filter over versions
-/// (epoch → major → minor → patch).
-class _ModuleVersionFilter {
-  const _ModuleVersionFilter({
-    this.epoch = const _Any(),
-    this.semanticMajor = const _Any(),
-    this.minor = const _Any(),
-    this.patch = const _Any(),
-  });
-
-  final _ModuleVersionPartFilter epoch;
-  final _ModuleVersionPartFilter semanticMajor;
-  final _ModuleVersionPartFilter minor;
-  final _ModuleVersionPartFilter patch;
-
-  _ModuleVersionFilter copyWith({
-    _ModuleVersionPartFilter? epoch,
-    _ModuleVersionPartFilter? semanticMajor,
-    _ModuleVersionPartFilter? minor,
-    _ModuleVersionPartFilter? patch,
-  }) {
-    return _ModuleVersionFilter(
-      epoch: epoch ?? this.epoch,
-      semanticMajor: semanticMajor ?? this.semanticMajor,
-      minor: minor ?? this.minor,
-      patch: patch ?? this.patch,
-    );
-  }
-
-  bool matches(ModuleVersion v) {
-    if (!epoch.matches(v.epoch)) return false;
-    if (!semanticMajor.matches(v.semanticMajor)) return false;
-    if (!minor.matches(v.minor)) return false;
-    if (!patch.matches(v.patch)) return false;
-
-    return true;
-  }
-
-  bool get isEmpty =>
-      epoch is _Any && semanticMajor is _Any && minor is _Any && patch is _Any;
-
-  bool get isNotEmpty => !isEmpty;
-
-  String display(bool hasEpoch) {
-    var string = "";
-    if (hasEpoch) string += "$epoch.";
-    return string += "$semanticMajor.$minor.$patch";
-  }
-
-  _ModuleVersionFilter unwind() {
-    if (patch is! _Any) return copyWith(patch: _Any());
-    if (minor is! _Any) return copyWith(minor: _Any());
-    if (semanticMajor is! _Any) return copyWith(semanticMajor: _Any());
-    return copyWith(epoch: _Any());
-  }
-}
-
-/// Version number segment filter abstraction used by the query parser and UI.
-sealed class _ModuleVersionPartFilter {
-  const _ModuleVersionPartFilter();
-  bool matches(int value);
-}
-
-class _Any extends _ModuleVersionPartFilter {
-  const _Any();
-  @override
-  bool matches(int value) => true;
-  @override
-  String toString() => "*";
-}
-
-/// Matches when a value equals the fixed integer.
-class _Fixed extends _ModuleVersionPartFilter {
-  const _Fixed(this.value);
-
-  final int value;
-
-  @override
-  bool matches(int value) => value == this.value;
-  @override
-  String toString() => value.toString();
-}
-
-/// Matches when a value is within [from, to] inclusive.
-class _Range extends _ModuleVersionPartFilter {
-  const _Range(this.from, this.to);
-  final int? from;
-  final int? to;
-
-  @override
-  bool matches(int value) {
-    if (from != null && value < from!) return false;
-    if (to != null && value > to!) return false;
-    return true;
-  }
-
-  @override
-  String toString() {
-    final fromStr = from?.toString() ?? "";
-    final toStr = to?.toString() ?? "";
-    return "$fromStr-$toStr";
-  }
-}
-
 class _ModuleVersionListEditorWidget extends HookConsumerWidget {
   const _ModuleVersionListEditorWidget({
     required this.path,
@@ -192,7 +89,7 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final filter = useState<_ModuleVersionFilter>(const _ModuleVersionFilter());
+    final filter = useState<VersionFilter>(const VersionFilter());
 
     final indexed = indexedModuleVersions(ref);
     final itemBlueprint = listBlueprint.type;
@@ -201,7 +98,7 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
         useMemoized(() => indexed.any((v) => v.$2.epoch != 0), [indexed]);
 
     final filtered = indexed
-        .where((e) => filter.value.matches(e.$2))
+        .where((e) => filter.value.matches(e.$2.version))
         .sorted((a, b) => b.$2.compareTo(a.$2));
 
     return FieldHeader(
@@ -212,8 +109,8 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _VersionFilterBar(
-            filtered: filtered.map((e) => e.$2).toList(),
+          VersionFilterBar(
+            filtered: filtered.map((e) => e.$2.version).toList(),
             filter: filter,
             hasEpoch: hasEpoch,
           ),
@@ -257,251 +154,6 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
         editorMode: editorMode,
         dataBlueprint: itemBlueprint,
       ),
-    );
-  }
-}
-
-// ignore: avoid_classes_with_only_static_members
-/// Parser utilities for ModuleVersionFilter.
-/// Converts a freeform query into a structured filter.
-/// Supported:
-/// - With epochs in data: epoch.major.minor.patch
-/// - Without epochs:      major.minor.patch
-/// - Wildcards:           *
-/// - Ranges:              a-b
-class _ModuleVersionFilterParser {
-  static _ModuleVersionFilter parse({
-    required String query,
-    required bool hasEpoch,
-  }) {
-    final q = query.trim();
-    if (q.isEmpty) return const _ModuleVersionFilter();
-
-    final parts =
-        q.split(".").map(_ModuleVersionFilterParser.parsePart).toList();
-
-    if (!hasEpoch && parts.length < 4) {
-      parts.insert(0, _Any());
-    }
-
-    while (parts.length < 4) {
-      parts.add(_Any());
-    }
-
-    final [epoch, major, minor, patch] = parts;
-    return _ModuleVersionFilter(
-      epoch: epoch,
-      semanticMajor: major,
-      minor: minor,
-      patch: patch,
-    );
-  }
-
-  static _ModuleVersionPartFilter parsePart(String part) {
-    final trimmed = part.trim();
-    if (trimmed.isEmpty) return _Any();
-
-    if (trimmed.contains("-")) {
-      final parts = trimmed.split("-").map((e) => e.trim().asInt).toList();
-      if (parts.length != 2) return _Any();
-      final [low, high] = parts;
-      return _Range(low, high);
-    }
-
-    final v = trimmed.asInt;
-    if (v != null) return _Fixed(v);
-    return _Any();
-  }
-
-  static List<String> suggestionStrings(
-    _ModuleVersionFilter filter,
-    List<ModuleVersion> filtered,
-    bool hasEpoch, {
-    int max = 10,
-  }) {
-    if (hasEpoch && filter.epoch is _Any) {
-      return _suggestions(
-        filtered,
-        (mv) => mv.epoch,
-        (f) => filter.copyWith(epoch: f),
-        hasEpoch,
-        max,
-      );
-    } else if (filter.semanticMajor is _Any) {
-      return _suggestions(
-        filtered,
-        (mv) => mv.semanticMajor,
-        (f) => filter.copyWith(semanticMajor: f),
-        hasEpoch,
-        max,
-      );
-    } else if (filter.minor is _Any) {
-      return _suggestions(
-        filtered,
-        (mv) => mv.minor,
-        (f) => filter.copyWith(minor: f),
-        hasEpoch,
-        max,
-      );
-    } else if (filter.patch is _Any) {
-      return _suggestions(
-        filtered,
-        (mv) => mv.patch,
-        (f) => filter.copyWith(patch: f),
-        hasEpoch,
-        max,
-      );
-    }
-    return [];
-  }
-
-  static List<String> _suggestions(
-    List<ModuleVersion> filtered,
-    int Function(ModuleVersion mv) toValue,
-    _ModuleVersionFilter Function(_ModuleVersionPartFilter part) toFilter,
-    bool hasEpoch,
-    int max,
-  ) {
-    final values = filtered
-        .map(toValue)
-        .toSet()
-        .sorted((a, b) => b.compareTo(a))
-        .take(max)
-        .map(_Fixed.new)
-        .map((f) => toFilter(f))
-        .map((f) => f.display(hasEpoch))
-        .toList();
-    return values;
-  }
-}
-
-/// Query-based version filter input with contextual suggestions.
-/// When epochs exist, it prioritizes epoch selection, then major,
-/// then minor and patch. Suggestions always update the input directly.
-class _VersionFilterBar extends HookWidget {
-  const _VersionFilterBar({
-    required this.filtered,
-    required this.filter,
-    required this.hasEpoch,
-  });
-
-  final List<ModuleVersion> filtered;
-  final ValueNotifier<_ModuleVersionFilter> filter;
-  final bool hasEpoch;
-
-  @override
-  Widget build(BuildContext context) {
-    final focusNode = useFocusNode();
-    final queryController = useTextEditingController(text: "");
-
-    final suggestionLabels = useMemoized(
-      () {
-        return _ModuleVersionFilterParser.suggestionStrings(
-          filter.value,
-          filtered,
-          hasEpoch,
-          max: 9,
-        );
-      },
-      [filtered],
-    );
-
-    void applyQuery(String q) {
-      final parsed = _ModuleVersionFilterParser.parse(
-        query: q.trim(),
-        hasEpoch: hasEpoch,
-      );
-
-      filter.value = parsed;
-    }
-
-    void unwind() {
-      final next = filter.value.unwind();
-      filter.value = next;
-      final text = next.isEmpty ? "" : next.display(hasEpoch);
-      queryController.text = text;
-    }
-
-    void clear() {
-      filter.value = _ModuleVersionFilter();
-      queryController.text = "";
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          hasEpoch
-              ? "Pattern: epoch.major.minor.patch • Supports * and ranges (a-b)"
-              : "Pattern: major.minor.patch • Supports * and ranges (a-b)",
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 6),
-        DecoratedTextField(
-          focusNode: focusNode,
-          controller: queryController,
-          decoration: InputDecoration(
-            hintText: "Filter versions",
-            prefixIcon: const Icon(Icons.filter_alt),
-            suffixIcon: filter.value.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.undo),
-                    tooltip: "Unwind",
-                    onPressed: unwind,
-                  ),
-            isDense: true,
-          ),
-          onChanged: applyQuery,
-          surroundingActions: [
-            if (filter.value.isNotEmpty) ...[
-              ActionShortcut(
-                id: "module_version_filter_unwind",
-                label: "Unwind",
-                description: "Unwind the filter",
-                activators: [
-                  SingleActivator(LogicalKeyboardKey.delete),
-                  SingleActivator(LogicalKeyboardKey.backspace),
-                ],
-                priority: 1001,
-                onInvoke: (_) => unwind(),
-              ),
-              ActionShortcut(
-                id: "module_version_filter_clear",
-                label: "Clear",
-                description: "Clear the filter",
-                activators: [
-                  SingleActivator(LogicalKeyboardKey.delete, control: true),
-                  SingleActivator(LogicalKeyboardKey.backspace, control: true),
-                  SingleActivator(LogicalKeyboardKey.delete, meta: true),
-                  SingleActivator(LogicalKeyboardKey.backspace, meta: true),
-                ],
-                priority: 1000,
-                onInvoke: (_) => clear(),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            ...suggestionLabels.take(8).map((label) {
-              return ChoiceChip(
-                label: Text(label),
-                selected: false,
-                onSelected: (_) {
-                  queryController.text = label;
-                  applyQuery(label);
-                },
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              );
-            }),
-          ],
-        ),
-      ],
     );
   }
 }

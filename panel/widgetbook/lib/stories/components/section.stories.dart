@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
@@ -9,5 +10,5 @@ Widget sectionUseCase(BuildContext context) {
     label: "Text",
     initialValue: "Section content goes here",
   );
-  return Center(child: Section(child: Text(text)));
+  return FakeApp(child: Center(child: Section(child: Text(text))));
 }

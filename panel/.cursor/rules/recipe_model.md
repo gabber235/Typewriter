@@ -9,7 +9,7 @@ Key guidance (project-specific)
 - Freezed types must be abstract or sealed in this project.
   - Prefer abstract for simple data classes.
   - Prefer sealed for unions (multiple constructors) when you want exhaustive pattern matching.
-- Always include the part files: part 'type.freezed.dart'; and part 'type.g.dart'; when using JSON.
+- Always include the part files: part "type.freezed.dart"; and part "type.g.dart"; when using JSON.
 
 Checklist
 1) Create an abstract or sealed class annotated with @freezed/@Freezed.
@@ -22,9 +22,9 @@ Checklist
 Scaffold: Simple data class (abstract)
 ```dart
 // lib/logic/user/models/user.dart
-import 'package:freezed_annotation/freezed_annotation.dart';
-part 'user.freezed.dart';
-part 'user.g.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
+part "user.freezed.dart";
+part "user.g.dart";
 
 @freezed
 abstract class User with _$User {
@@ -41,11 +41,11 @@ abstract class User with _$User {
 Scaffold: Union/sealed type with JSON (case distinction)
 ```dart
 // lib/logic/payment/models/payment_result.dart
-import 'package:freezed_annotation/freezed_annotation.dart';
-part 'payment_result.freezed.dart';
-part 'payment_result.g.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
+part "payment_result.freezed.dart";
+part "payment_result.g.dart";
 
-@Freezed(unionKey: 'type', unionValueCase: FreezedUnionCase.snake)
+@Freezed(unionKey: "type", unionValueCase: FreezedUnionCase.snake)
 sealed class PaymentResult with _$PaymentResult {
   const factory PaymentResult.success({
     required String transactionId,
@@ -70,9 +70,9 @@ Usage: pattern matching
 ```dart
 final PaymentResult result = /* ... */;
 final text = result.when(
-  success: (transactionId, amountCents) => 'OK $transactionId: $amountCents',
-  failure: (code, message) => 'ERR $code: ${message ?? "unknown"}',
-  pending: (eta) => 'PENDING until $eta',
+  success: (transactionId, amountCents) => "OK $transactionId: $amountCents",
+  failure: (code, message) => "ERR $code: ${message ?? \"unknown\"}",
+  pending: (eta) => "PENDING until $eta",
 );
 
 // Mapping to widgets

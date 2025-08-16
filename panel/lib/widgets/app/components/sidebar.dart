@@ -5,13 +5,13 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/icomoon_free.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:iconify_flutter_plus/icons/tabler.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/hooks/menu_controller.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
@@ -38,6 +38,11 @@ class SidebarContent extends HookConsumerWidget {
             icon: Icones(Fa6Solid.boxes_stacked),
             text: "Modules",
             route: ModulesRoute(),
+          ),
+          SidebarLink(
+            icon: Icones(MaterialSymbols.menu_book),
+            text: "Manuals",
+            route: ManualsRoute(),
           ),
         ],
         const Spacer(),
@@ -161,8 +166,9 @@ class _UserMenu extends HookConsumerWidget {
     final controller = useMenuController();
     final focusNode = useFocusNode(debugLabel: "UserMenu");
 
-    return userInfoAsync.when(
-      data: (user) {
+    return userInfoAsync(
+      name: "user info",
+      builder: (user) {
         final name = user.name ?? user.username ?? user.sub;
         final avatarUrl = user.picture ?? "$userIconUrl&seed=${user.sub}";
 
@@ -291,8 +297,6 @@ class _UserMenu extends HookConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox(height: 48),
-      error: (_, __) => const SizedBox(height: 48),
     );
   }
 }

@@ -1,131 +1,320 @@
 import "dart:async";
-import "dart:ui";
 
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/hooks/forward_animation.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
+import "package:typewriter_panel/widgets/generic/components/elastic_switcher.dart";
 
+enum LoadingVariant { filled, text, outlined }
+
+/// A button that manages async callbacks, shows a loading spinner, and reports errors.
+///
+/// Variants:
+/// - filled / filledIcon
+/// - text / textIcon
+/// - outlined / outlinedIcon
 class LoadingButton extends HookWidget {
   const LoadingButton({
     required this.child,
     required this.onPressed,
+    this.variant = LoadingVariant.filled,
     this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
     super.key,
-  });
+  }) : icon = null;
 
-  factory LoadingButton.icon({
-    required Widget icon,
+  const LoadingButton.icon({
+    required this.icon,
     required Widget label,
-    required FutureOr<void> Function()? onPressed,
-    ButtonStyle? style,
-    IconAlignment? iconAlignment,
-    Key? key,
-  }) = _LoadingButtonIcon;
+    required this.onPressed,
+    this.variant = LoadingVariant.filled,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  }) : child = label;
 
+  const LoadingButton.filled({
+    required this.child,
+    required this.onPressed,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  })  : variant = LoadingVariant.filled,
+        icon = null;
+
+  const LoadingButton.filledIcon({
+    required this.icon,
+    required Widget label,
+    required this.onPressed,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  })  : variant = LoadingVariant.filled,
+        child = label;
+
+  const LoadingButton.text({
+    required this.child,
+    required this.onPressed,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  })  : variant = LoadingVariant.text,
+        icon = null;
+
+  const LoadingButton.textIcon({
+    required this.icon,
+    required Widget label,
+    required this.onPressed,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  })  : variant = LoadingVariant.text,
+        child = label;
+
+  const LoadingButton.outlined({
+    required this.child,
+    required this.onPressed,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  })  : variant = LoadingVariant.outlined,
+        icon = null;
+
+  const LoadingButton.outlinedIcon({
+    required this.icon,
+    required Widget label,
+    required this.onPressed,
+    this.style,
+    this.onLongPress,
+    this.onHover,
+    this.onFocusChange,
+    this.focusNode,
+    this.autofocus = false,
+    this.clipBehavior = Clip.none,
+    this.statesController,
+    super.key,
+  })  : variant = LoadingVariant.outlined,
+        child = label;
+
+  final LoadingVariant variant;
+
+  final Widget? icon;
   final Widget child;
+
   final FutureOr<void> Function()? onPressed;
+  final VoidCallback? onLongPress;
+  final ValueChanged<bool>? onHover;
+  final ValueChanged<bool>? onFocusChange;
+  final FocusNode? focusNode;
+  final bool autofocus;
+  final Clip clipBehavior;
   final ButtonStyle? style;
+  final WidgetStatesController? statesController;
 
   @override
   Widget build(BuildContext context) {
     final isLoading = useState(false);
+    final lastError = useState<String?>(null);
 
-    return FilledButton(
-      style: style,
-      onPressed: onPressed == null || isLoading.value
-          ? null
-          : () async {
-              isLoading.value = true;
-              try {
-                await onPressed?.call();
-              } on Exception catch (e) {
-                if (!context.mounted) {
-                  return;
-                }
-                showErrorSnackBar(
-                  context,
-                  e.toString(),
-                );
-              } finally {
-                if (context.mounted) {
-                  isLoading.value = false;
-                }
-              }
-            },
-      child: IndexedStack(
-        index: isLoading.value ? 1 : 0,
-        alignment: Alignment.center,
-        children: [
-          child,
-          const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
+    final animation = useForwardAnimation(play: lastError.value != null);
+
+    final themeStyle = switch (variant) {
+      LoadingVariant.filled => FilledButtonTheme.of(context).style,
+      LoadingVariant.text => TextButtonTheme.of(context).style,
+      LoadingVariant.outlined => OutlinedButtonTheme.of(context).style,
+    };
+    final mergedStyle = style?.merge(themeStyle) ?? themeStyle;
+
+    Future<void> handlePress() async {
+      if (onPressed == null || isLoading.value) return;
+      isLoading.value = true;
+      lastError.value = null;
+      try {
+        await onPressed!.call();
+      } on Exception catch (e) {
+        if (!context.mounted) return;
+        lastError.value = e.toString();
+        final hasScaffold = ScaffoldMessenger.maybeOf(context) != null;
+        if (hasScaffold) {
+          showErrorSnackBar(context, lastError.value!);
+        }
+      } finally {
+        if (context.mounted) {
+          isLoading.value = false;
+        }
+      }
+    }
+
+    final button = switch ((variant, icon)) {
+      (LoadingVariant.filled, null) => FilledButton(
+          style: mergedStyle,
+          onPressed: onPressed == null || isLoading.value ? null : handlePress,
+          onLongPress: onLongPress,
+          onHover: onHover,
+          onFocusChange: onFocusChange,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          clipBehavior: clipBehavior,
+          statesController: statesController,
+          child: ElasticSwitcher(
+            child: isLoading.value ? _Spinner(buttonStyle: mergedStyle) : child,
           ),
-        ],
-      ),
+        ),
+      (LoadingVariant.filled, _) => FilledButton.icon(
+          style: mergedStyle,
+          onPressed: onPressed == null || isLoading.value ? null : handlePress,
+          onLongPress: onLongPress,
+          onHover: onHover,
+          onFocusChange: onFocusChange,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          clipBehavior: clipBehavior,
+          statesController: statesController,
+          icon: ElasticSwitcher(
+            child: isLoading.value ? _Spinner(buttonStyle: mergedStyle) : icon!,
+          ),
+          label: child,
+        ),
+      (LoadingVariant.text, null) => TextButton(
+          style: mergedStyle,
+          onPressed: onPressed == null || isLoading.value ? null : handlePress,
+          onLongPress: onLongPress,
+          onHover: onHover,
+          onFocusChange: onFocusChange,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          clipBehavior: clipBehavior,
+          statesController: statesController,
+          child: ElasticSwitcher(
+            child: isLoading.value ? _Spinner(buttonStyle: mergedStyle) : child,
+          ),
+        ),
+      (LoadingVariant.text, _) => TextButton.icon(
+          style: mergedStyle,
+          onPressed: onPressed == null || isLoading.value ? null : handlePress,
+          onLongPress: onLongPress,
+          onHover: onHover,
+          onFocusChange: onFocusChange,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          clipBehavior: clipBehavior,
+          statesController: statesController,
+          icon: ElasticSwitcher(
+            child: isLoading.value ? _Spinner(buttonStyle: mergedStyle) : icon!,
+          ),
+          label: child,
+        ),
+      (LoadingVariant.outlined, null) => OutlinedButton(
+          style: mergedStyle,
+          onPressed: onPressed == null || isLoading.value ? null : handlePress,
+          onLongPress: onLongPress,
+          onHover: onHover,
+          onFocusChange: onFocusChange,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          clipBehavior: clipBehavior,
+          statesController: statesController,
+          child: ElasticSwitcher(
+            child: isLoading.value ? _Spinner(buttonStyle: mergedStyle) : child,
+          ),
+        ),
+      (LoadingVariant.outlined, _) => OutlinedButton.icon(
+          style: mergedStyle,
+          onPressed: onPressed == null || isLoading.value ? null : handlePress,
+          onLongPress: onLongPress,
+          onHover: onHover,
+          onFocusChange: onFocusChange,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          clipBehavior: clipBehavior,
+          statesController: statesController,
+          icon: ElasticSwitcher(
+            child: isLoading.value ? _Spinner(buttonStyle: mergedStyle) : icon!,
+          ),
+          label: child,
+        ),
+    };
+
+    final animated =
+        button.animate(controller: animation, autoPlay: false).shakeX();
+
+    if (lastError.value == null) return animated;
+
+    return Tooltip(
+      message: lastError.value,
+      child: animated,
     );
   }
 }
 
-class _LoadingButtonIcon extends LoadingButton {
-  _LoadingButtonIcon({
-    required Widget icon,
-    required Widget label,
-    required super.onPressed,
-    IconAlignment? iconAlignment,
-    super.style,
-    super.key,
-  }) : super(
-          child: _LoadingButtonWithIconChild(
-            label: label,
-            icon: icon,
-            buttonStyle: style,
-            iconAlignment: iconAlignment,
-          ),
-        );
-}
-
-class _LoadingButtonWithIconChild extends StatelessWidget {
-  const _LoadingButtonWithIconChild({
-    required this.label,
-    required this.icon,
+class _Spinner extends StatelessWidget {
+  const _Spinner({
     required this.buttonStyle,
-    required this.iconAlignment,
   });
 
-  final Widget label;
-  final Widget icon;
   final ButtonStyle? buttonStyle;
-  final IconAlignment? iconAlignment;
 
   @override
   Widget build(BuildContext context) {
-    final defaultFontSize =
-        buttonStyle?.textStyle?.resolve(const <WidgetState>{})?.fontSize ??
-            14.0;
-    final scale = clampDouble(
-          MediaQuery.textScalerOf(context).scale(defaultFontSize) / 14.0,
-          1.0,
-          2.0,
-        ) -
-        1.0;
-    // Adjust the gap based on the text scale factor. Start at 8, and lerp
-    // to 4 based on how large the text is.
-    final gap = lerpDouble(8, 4, scale)!;
-    final filledButtonTheme = FilledButtonTheme.of(context);
-    final effectiveIconAlignment = iconAlignment ??
-        filledButtonTheme.style?.iconAlignment ??
-        buttonStyle?.iconAlignment ??
-        IconAlignment.start;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: effectiveIconAlignment == IconAlignment.start
-          ? <Widget>[icon, SizedBox(width: gap), Flexible(child: label)]
-          : <Widget>[Flexible(child: label), SizedBox(width: gap), icon],
+    final color =
+        buttonStyle?.foregroundColor?.resolve({WidgetState.disabled}) ??
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);
+
+    final size = buttonStyle?.iconSize?.resolve({WidgetState.disabled}) ??
+        buttonStyle?.iconSize?.resolve({});
+
+    final indicator = CircularProgressIndicator(
+      strokeWidth: 3,
+      valueColor: AlwaysStoppedAnimation(color),
+    );
+
+    return SizedBox.square(
+      dimension: size,
+      child: indicator,
     );
   }
 }

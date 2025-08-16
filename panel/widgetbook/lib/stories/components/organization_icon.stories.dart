@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
@@ -20,11 +21,13 @@ Widget organizationIconUseCase(BuildContext context) {
   );
   final seed = context.knobs.string(label: "Seed", initialValue: "test");
 
-  return Center(
-    child: OrganizationIcon(
-      iconUrl: OrganizationData.generateIconUrl(seed),
-      size: size,
-      borderRadius: borderRadius,
+  return FakeApp(
+    child: Center(
+      child: OrganizationIcon(
+        iconUrl: OrganizationData.generateIconUrl(seed),
+        size: size,
+        borderRadius: borderRadius,
+      ),
     ),
   );
 }
@@ -44,7 +47,9 @@ Widget organizationIconPlaceholderUseCase(BuildContext context) {
     max: 20,
   );
 
-  return Center(
-    child: OrganizationIcon(size: size, borderRadius: borderRadius),
+  return FakeApp(
+    child: Center(
+      child: OrganizationIcon(size: size, borderRadius: borderRadius),
+    ),
   );
 }

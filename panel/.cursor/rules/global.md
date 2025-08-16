@@ -8,6 +8,8 @@ Project tech/context
 - auto_route for navigation
 - freezed + json_serializable for models
 - Widgetbook workspace for component catalog (separate Flutter app under widgetbook/)
+  - Use FakeApp (widgetbook/lib/widgetbook_utils.dart) as the standard shell for stories. It wraps MaterialApp, ProviderScope (supports overrides), AppRequiredWidgets, Responsive breakpoints, and propagates app-wide shortcuts/actions.
+  - Prefer wrapping each @widgetbook.UseCase content with FakeApp for consistent theming, scroll behavior, and padding.
 
 Primary commands
 - Codegen (run whenever annotations or model schemas change):
@@ -27,6 +29,12 @@ Primary commands
   - flutter run -t widgetbook/lib/main.dart -d macos
 - Tests:
   - flutter test
+  - Test utilities (test/test_utils.dart):
+    - testApp(child: ...) to wrap widgets with ProviderScope, Responsive, AppRequiredWidgets, and MaterialApp.
+    - WidgetTesterAppX.pumpTestApp(...) and pumpUntil(...) extensions for common setups.
+    - WidgetTesterScreenshotsX.captureScreenshot(name, directory: "test_screenshots") to export PNG screenshots.
+    - Call setupMocks() in test main() to register mocktail fallback values when needed.
+    - Editor helpers (test/widgets/utils/editor_utils.dart): use WidgetTester.pumpEditor(...) to mount Inspector editors with blueprints and initial data.
 
 Project layout expectations
 - lib/
@@ -40,7 +48,8 @@ Project layout expectations
   - utils/             → helpers, formatters, extensions
 - widgetbook/
   - lib/stories/       → stories mirroring component structure
-  - lib/logic/*.mock.dart → mocks for providers when needed
+- testkit/
+  - lib/src/mocks/       → reusable provider mocks and overrides for tests and Widgetbook (import via package:typewriter_testkit)
 
 Global conventions
 - Always use package: imports.
@@ -50,6 +59,8 @@ Global conventions
 - Keep providers focused and testable; avoid unintended side effects in build().
 - Keep navigation typed (auto_route). Co-locate pages under lib/routes/ by feature.
 - Do not hard-code imports to files outside the expected folders.
+- Widgetbook stories should wrap content with FakeApp when possible to inherit app theming, shortcuts, scroll behavior, and Responsive padding.
+- In widget tests, prefer testApp/pumpTestApp and captureScreenshot utilities over bespoke scaffolds.
 
 When to run codegen
 - After adding/updating:

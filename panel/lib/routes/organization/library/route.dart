@@ -5,18 +5,15 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/generic/components/book.dart";
-import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart"
-    hide useFocusNode;
+import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
-import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
 import "package:typewriter_panel/widgets/generic/components/panes.dart";
-import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
-import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 @RoutePage()
 class LibraryPage extends HookConsumerWidget {
@@ -38,7 +35,8 @@ class LibraryPage extends HookConsumerWidget {
       child: Pane(
         id: "library",
         borderRadius: BorderRadius.circular(12),
-        margin: EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
+        margin:
+            EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
         child: Section(
           margin: EdgeInsets.zero,
           child: Column(
@@ -66,8 +64,9 @@ class LibraryPage extends HookConsumerWidget {
                 ),
               ),
               Expanded(
-                child: filteredBooks.when(
-                  data: (books) {
+                child: filteredBooks(
+                  name: "filtered books",
+                  builder: (books) {
                     if (books.isEmpty) {
                       return const Center(
                         child: Text(
@@ -80,7 +79,10 @@ class LibraryPage extends HookConsumerWidget {
                     return ClipPath(
                       clipper: VerticalClipper(additionalWidth: 100),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 16,
+                        ),
                         child: ResponsiveGridView.builder(
                           gridDelegate: ResponsiveGridDelegate(
                             crossAxisExtent: bookWidth,
@@ -105,14 +107,6 @@ class LibraryPage extends HookConsumerWidget {
                       ),
                     );
                   },
-                  loading: () => LoadingIndicator(
-                    message: "Loading books...",
-                  ),
-                  error: (error, stackTrace) => ErrorScreen(
-                    title: "Failed to load books",
-                    message: error.toString(),
-                    child: RetryIndicator(),
-                  ),
                 ),
               ),
             ],

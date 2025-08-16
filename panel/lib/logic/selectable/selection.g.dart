@@ -38,7 +38,7 @@ final class SelectionProvider
   }
 }
 
-String _$selectionHash() => r'a4ba0be959883a723a0b935e3d3f173864c9a7eb';
+String _$selectionHash() => r'5072d1c7c866e81cea89af9e2439ef0cbafd9e63';
 
 abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   List<SelectableIdentifier> build();
@@ -210,7 +210,7 @@ final class SelectedProvider
   }
 }
 
-String _$selectedHash() => r'145e042d5339fb78bb698edf7dc6174597c80e03';
+String _$selectedHash() => r'891f5372a052773631f1bca1e1c2505dfad04940';
 
 abstract class _$Selected extends $Notifier<AsyncValue<List<Selectable>>> {
   AsyncValue<List<Selectable>> build();

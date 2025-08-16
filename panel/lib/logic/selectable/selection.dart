@@ -7,6 +7,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/utils/collection.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 
 part "selection.freezed.dart";
 part "selection.g.dart";
@@ -26,16 +27,23 @@ class Selection extends _$Selection {
     return true;
   }
 
-  void select(SelectableIdentifier selectable) {
+  void select(SelectableIdentifier selectable, {bool? isShiftPressed}) {
     final selected = state.contains(selectable);
-    final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+    final shifting = isShiftPressed ?? HardwareKeyboard.instance.isShiftPressed;
 
-    state = switch ((selected, isShiftPressed)) {
+    state = switch ((selected, shifting)) {
       (true, true) => state.where((s) => s != selectable).toList(),
       (true, false) => state.length > 1 ? [selectable] : [],
       (false, true) => [...state, selectable],
       (false, false) => [selectable],
     };
+  }
+
+  void selectAll(
+    List<SelectableIdentifier> selectables, {
+    bool replaceCurrentSelection = true,
+  }) {
+    state = replaceCurrentSelection ? selectables : [...state, ...selectables];
   }
 
   void unselect(SelectableIdentifier selectable) {
@@ -86,11 +94,8 @@ class Selected extends _$Selected {
     AsyncValue<List<Selectable>> previous,
     AsyncValue<List<Selectable>> next,
   ) {
-    if (previous.runtimeType != next.runtimeType) return true;
-    if (previous.hasValue && next.hasValue) {
-      return !listEquals(previous.value, next.value);
-    }
-    return previous != next;
+    // return true;
+    return !previous.matches(next, listEquals);
   }
 
   void updateFieldValue(String path, dynamic value) {

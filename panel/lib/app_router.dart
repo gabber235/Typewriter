@@ -4,6 +4,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/routes/auth/route.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
+import "package:typewriter_panel/routes/organization/manuals/route.dart";
 import "package:typewriter_panel/routes/organization/modules/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_panel/routes/route.dart";
@@ -47,6 +48,10 @@ class AppRouter extends RootStackRouter {
                 AutoRoute(
                   page: ModulesRoute.page,
                   path: "modules",
+                ),
+                AutoRoute(
+                  page: ManualsRoute.page,
+                  path: "manuals",
                 ),
               ],
             ),

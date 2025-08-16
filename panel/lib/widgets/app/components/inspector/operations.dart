@@ -5,6 +5,7 @@ import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/manual_operations.dart";
 import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
@@ -15,7 +16,11 @@ part "operations.g.dart";
 /// Keep ordering meaningful; it will be used for presentation where applicable.
 @riverpod
 List<Operation> operations(Ref ref) => [
-      DeleteOperation(),
+      const DeleteOperation(),
+
+      /// Manual operations
+      const ManualChangePlatformTargetsOperation(),
+      const ManualChangeModulesOperation(),
     ];
 
 /// Defines a user-invokable action that can operate on the current selection
@@ -23,6 +28,8 @@ List<Operation> operations(Ref ref) => [
 /// weight; any expensive preparation should occur when executing, not on
 /// construction.
 abstract class Operation {
+  const Operation();
+
   /// Human readable label displayed in menus / buttons.
   String get name;
 
@@ -141,7 +148,7 @@ class GlobalOperationShortcuts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final operations = ref.watch(availableOperationsProvider.select(
-        (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList()));
+        (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList(),),);
 
     return ActionSet(
       shortcuts: [

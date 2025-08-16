@@ -53,7 +53,7 @@ final class OperationsProvider extends $FunctionalProvider<List<Operation>,
   }
 }
 
-String _$operationsHash() => r'bc74e71a98b3515f038dbeac86599efce859c909';
+String _$operationsHash() => r'4e0bb55b676ad3fa0b509c15816949f3f4c5cd8b';
 
 /// Computes the subset of registered [Operation]s that are currently
 /// executable for the active selection. Emits an empty list when there is

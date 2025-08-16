@@ -198,19 +198,26 @@ class _ListItem extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dataBlueprint = listBlueprint.type;
     final childPath = path.join("$index");
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: FieldHeader(
+
+    Widget widget = FieldEditor(
+      path: childPath,
+      dataBlueprint: dataBlueprint,
+      editorMode: editorMode,
+    );
+
+    if (!dataBlueprint.hasCustomLayout) {
+      widget = FieldHeader(
         path: childPath,
         dataBlueprint: dataBlueprint,
         canExpand: true,
         editorMode: editorMode,
-        child: FieldEditor(
-          path: childPath,
-          dataBlueprint: dataBlueprint,
-          editorMode: editorMode,
-        ),
-      ),
+        child: widget,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: widget,
     );
   }
 }

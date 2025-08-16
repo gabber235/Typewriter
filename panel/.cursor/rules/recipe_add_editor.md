@@ -56,13 +56,14 @@ When to use
    - Open `lib/widgets/app/components/inspector/editors.dart`.
    - Add an import for your editor file (absolute import).
    - Insert your editor in the returned list of `editors(Ref ref) => [...]`.
-     Place it before broader editors to ensure it is selected (e.g. a specialized primitive editor before a generic primitive editor).
+     Order the list from most-specific to least-specific: custom/specialized editors first (e.g., ColorEditor), then generic primitive editors, then collection/object editors, and finally any fallbacks.
 
 5. Widgetbook story
    - Mirror existing story patterns:
      - Path: `widgetbook/lib/stories/components/editors/<your_editor>.stories.dart`
      - Use `@widgetbook.UseCase`.
      - Reuse `EditorStory` if editing an object field blueprint, or build a small wrapper with overrides that feed a test `selectionProvider`.
+     - Wrap use cases with `FakeApp` and import it from your Widgetbook workspace package at `widgetbook/lib/widgetbook_utils.dart` (use a package import for the widgetbook package name defined in widgetbook/pubspec.yaml; do not use relative imports). For provider-aware stories, import `package:typewriter_testkit/typewriter_testkit.dart` and reuse its override helpers (e.g., `appearanceProviderOverrides(...)`, `authProviderOverrides(...)`, `booksProviderOverrides(...)`, `manualsProviderOverrides(...)`, `modulesProviderOverrides(...)`, `organizationsProviderOverrides(...)`).
    - Feed a `DataBlueprint` that your editor can handle (create `ObjectBlueprint` with a field referencing your target blueprint if needed).
    - Expose knobs if variation is useful (e.g. selecting `EditorMode` like existing stories do).
 
@@ -83,6 +84,7 @@ When to use
      - Editing flows (enter value, update provider).
      - Boundary conditions (min/max, conflict, none).
    - Golden tests for stable visual components.
+   - For Inspector editors in tests, use `WidgetTester.pumpEditor(...)` from `test/widgets/utils/editor_utils.dart` to quickly mount an editor with a blueprint and initial data.
 
 ---
 
@@ -161,7 +163,7 @@ If you introduce new semantics that alter defaults, extend the relevant private 
 
 ## Ordering & Conflict Avoidance
 
-- Put specific editors (e.g. `ColorEditor` for `DataBlueprint.color()`) before generic ones (like a fallback `StringEditor`).
+- Order editors from most-specific to least-specific in `editors(Ref ref)`: custom/specialized, enum, primitive specialized, primitive generic, collection/object, fallback.
 - Never broaden `canEdit` so much that multiple editors will logically match the same blueprint; only the first will be used, potentially hiding the intended editor.
 
 ---

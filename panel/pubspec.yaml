@@ -33,6 +33,7 @@ dependencies:
   collapsible: ^1.0.0
   auto_size_text: ^3.0.0
   pub_semver: ^2.2.0
+  material_color_utilities:
 
 dev_dependencies:
   flutter_test:
@@ -46,6 +47,9 @@ dev_dependencies:
   icons_launcher:
   freezed:
   json_serializable:
+  test_screenshot:
+  typewriter_testkit:
+    path: testkit
 
 icons_launcher:
   image_path: "assets/typewriter_app_icon.png"

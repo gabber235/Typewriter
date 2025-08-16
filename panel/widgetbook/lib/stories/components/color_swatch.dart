@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/color.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 class ColorSwatchWidget extends StatelessWidget {
@@ -33,14 +34,16 @@ class ColorSwatchWidget extends StatelessWidget {
 
 @widgetbook.UseCase(name: "Default", type: ColorSwatchWidget)
 Widget colorSwatchUseCase(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.all(20.0),
-    child: Wrap(
-      runSpacing: 4,
-      children: [
-        for (final color in safeColors)
-          ColorSwatchWidget(color: color, key: ValueKey(color)),
-      ],
+  return FakeApp(
+    child: Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Wrap(
+        runSpacing: 4,
+        children: [
+          for (final color in safeColors)
+            ColorSwatchWidget(color: color, key: ValueKey(color)),
+        ],
+      ),
     ),
   );
 }

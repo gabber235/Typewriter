@@ -81,7 +81,7 @@ String? organizationId(Ref ref) {
 class Organization extends _$Organization {
   @override
   Future<OrganizationData?> build() async {
-    final organizationId = ref.watch(organizationIdProvider);
+    final _ = ref.watch(organizationIdProvider);
 
     return null;
   }

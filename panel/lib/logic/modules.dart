@@ -9,6 +9,7 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
@@ -18,7 +19,7 @@ import "package:typewriter_panel/widgets/generic/components/type_link.dart";
 part "modules.freezed.dart";
 part "modules.g.dart";
 
-/// Provides the list of available modules (engines + extensions).
+/// Provides the list of available modules.
 @riverpod
 class Modules extends _$Modules {
   @override
@@ -29,11 +30,7 @@ class Modules extends _$Modules {
 
   Future<void> updateModule(Module module) async {
     // TODO: Persist module updates.
-    final current = state.when(
-      data: (d) => d,
-      error: (_, __) => <Module>[],
-      loading: () => <Module>[],
-    );
+    final current = state.value ?? [];
     final updated = [
       for (final m in current)
         if (m.id == module.id) module else m,
@@ -80,7 +77,7 @@ abstract class Module with _$Module {
   const factory Module({
     required String id,
     required String name,
-    required ModuleKind kind,
+    required ModuleType type,
     @Default("") String shortDescription,
     // TODO: dependencies: list of module ids this module depends on.
     // @Default(<String>[]) List<String> dependencies,
@@ -91,7 +88,7 @@ abstract class Module with _$Module {
 }
 
 @JsonEnum(fieldRename: FieldRename.snake)
-enum ModuleKind {
+enum ModuleType {
   engine(
     "Engine",
     Colors.blue,
@@ -104,7 +101,7 @@ enum ModuleKind {
   ),
   ;
 
-  const ModuleKind(
+  const ModuleType(
     this.displayName,
     this.lightColor,
     this.docsUrl, [
@@ -115,6 +112,10 @@ enum ModuleKind {
   final Color lightColor;
   final Color darkColor;
   final String docsUrl;
+
+  Color themedColor(BuildContext context) {
+    return context.isDarkMode ? darkColor : lightColor;
+  }
 }
 
 /// Identifier for a selectable Module.
@@ -192,7 +193,7 @@ class ModuleSelection extends Selectable<ModuleSelector> {
         children: [
           Title(
             title: module.name.formatted,
-            color: module.kind.lightColor.withValues(alpha: 0.9),
+            color: module.type.lightColor.withValues(alpha: 0.9),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -205,10 +206,10 @@ class ModuleSelection extends Selectable<ModuleSelector> {
               crossAxisAlignment: WrapCrossAlignment.start,
               children: [
                 TypeLink(
-                  text: module.kind.displayName,
-                  lightColor: module.kind.lightColor,
-                  darkColor: module.kind.darkColor,
-                  url: module.kind.docsUrl,
+                  text: module.type.displayName,
+                  lightColor: module.type.lightColor,
+                  darkColor: module.type.darkColor,
+                  url: module.type.docsUrl,
                 ),
                 Identifier(id: module.id),
               ],

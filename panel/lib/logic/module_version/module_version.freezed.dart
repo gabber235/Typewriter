@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ModuleVersion {
-  @_SemverFlexibleConverter()
+  @SemverJsonConverter()
   Version get version;
   ModuleVersionState get state;
 
@@ -54,8 +54,7 @@ abstract mixin class $ModuleVersionCopyWith<$Res> {
           ModuleVersion value, $Res Function(ModuleVersion) _then) =
       _$ModuleVersionCopyWithImpl;
   @useResult
-  $Res call(
-      {@_SemverFlexibleConverter() Version version, ModuleVersionState state});
+  $Res call({@SemverJsonConverter() Version version, ModuleVersionState state});
 }
 
 /// @nodoc
@@ -180,8 +179,8 @@ extension ModuleVersionPatterns on ModuleVersion {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(@_SemverFlexibleConverter() Version version,
-            ModuleVersionState state)?
+    TResult Function(
+            @SemverJsonConverter() Version version, ModuleVersionState state)?
         $default, {
     required TResult orElse(),
   }) {
@@ -209,8 +208,8 @@ extension ModuleVersionPatterns on ModuleVersion {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(@_SemverFlexibleConverter() Version version,
-            ModuleVersionState state)
+    TResult Function(
+            @SemverJsonConverter() Version version, ModuleVersionState state)
         $default,
   ) {
     final _that = this;
@@ -236,8 +235,8 @@ extension ModuleVersionPatterns on ModuleVersion {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(@_SemverFlexibleConverter() Version version,
-            ModuleVersionState state)?
+    TResult? Function(
+            @SemverJsonConverter() Version version, ModuleVersionState state)?
         $default,
   ) {
     final _that = this;
@@ -254,14 +253,14 @@ extension ModuleVersionPatterns on ModuleVersion {
 @JsonSerializable()
 class _ModuleVersion extends ModuleVersion {
   const _ModuleVersion(
-      {@_SemverFlexibleConverter() required this.version,
+      {@SemverJsonConverter() required this.version,
       this.state = ModuleVersionState.developing})
       : super._();
   factory _ModuleVersion.fromJson(Map<String, dynamic> json) =>
       _$ModuleVersionFromJson(json);
 
   @override
-  @_SemverFlexibleConverter()
+  @SemverJsonConverter()
   final Version version;
   @override
   @JsonKey()
@@ -309,8 +308,7 @@ abstract mixin class _$ModuleVersionCopyWith<$Res>
       __$ModuleVersionCopyWithImpl;
   @override
   @useResult
-  $Res call(
-      {@_SemverFlexibleConverter() Version version, ModuleVersionState state});
+  $Res call({@SemverJsonConverter() Version version, ModuleVersionState state});
 }
 
 /// @nodoc

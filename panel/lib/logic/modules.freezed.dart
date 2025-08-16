@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$Module {
   String get id;
   String get name;
-  ModuleKind get kind;
+  ModuleType get type;
   String
       get shortDescription; // TODO: dependencies: list of module ids this module depends on.
 // @Default(<String>[]) List<String> dependencies,
@@ -39,7 +39,7 @@ mixin _$Module {
             other is Module &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
-            (identical(other.kind, kind) || other.kind == kind) &&
+            (identical(other.type, type) || other.type == type) &&
             (identical(other.shortDescription, shortDescription) ||
                 other.shortDescription == shortDescription) &&
             const DeepCollectionEquality().equals(other.versions, versions));
@@ -47,12 +47,12 @@ mixin _$Module {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, kind, shortDescription,
+  int get hashCode => Object.hash(runtimeType, id, name, type, shortDescription,
       const DeepCollectionEquality().hash(versions));
 
   @override
   String toString() {
-    return 'Module(id: $id, name: $name, kind: $kind, shortDescription: $shortDescription, versions: $versions)';
+    return 'Module(id: $id, name: $name, type: $type, shortDescription: $shortDescription, versions: $versions)';
   }
 }
 
@@ -64,7 +64,7 @@ abstract mixin class $ModuleCopyWith<$Res> {
   $Res call(
       {String id,
       String name,
-      ModuleKind kind,
+      ModuleType type,
       String shortDescription,
       List<ModuleVersion> versions});
 }
@@ -83,7 +83,7 @@ class _$ModuleCopyWithImpl<$Res> implements $ModuleCopyWith<$Res> {
   $Res call({
     Object? id = null,
     Object? name = null,
-    Object? kind = null,
+    Object? type = null,
     Object? shortDescription = null,
     Object? versions = null,
   }) {
@@ -96,10 +96,10 @@ class _$ModuleCopyWithImpl<$Res> implements $ModuleCopyWith<$Res> {
           ? _self.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
-      kind: null == kind
-          ? _self.kind
-          : kind // ignore: cast_nullable_to_non_nullable
-              as ModuleKind,
+      type: null == type
+          ? _self.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as ModuleType,
       shortDescription: null == shortDescription
           ? _self.shortDescription
           : shortDescription // ignore: cast_nullable_to_non_nullable
@@ -205,7 +205,7 @@ extension ModulePatterns on Module {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(String id, String name, ModuleKind kind,
+    TResult Function(String id, String name, ModuleType type,
             String shortDescription, List<ModuleVersion> versions)?
         $default, {
     required TResult orElse(),
@@ -213,7 +213,7 @@ extension ModulePatterns on Module {
     final _that = this;
     switch (_that) {
       case _Module() when $default != null:
-        return $default(_that.id, _that.name, _that.kind,
+        return $default(_that.id, _that.name, _that.type,
             _that.shortDescription, _that.versions);
       case _:
         return orElse();
@@ -235,14 +235,14 @@ extension ModulePatterns on Module {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(String id, String name, ModuleKind kind,
+    TResult Function(String id, String name, ModuleType type,
             String shortDescription, List<ModuleVersion> versions)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _Module():
-        return $default(_that.id, _that.name, _that.kind,
+        return $default(_that.id, _that.name, _that.type,
             _that.shortDescription, _that.versions);
       case _:
         throw StateError('Unexpected subclass');
@@ -263,14 +263,14 @@ extension ModulePatterns on Module {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(String id, String name, ModuleKind kind,
+    TResult? Function(String id, String name, ModuleType type,
             String shortDescription, List<ModuleVersion> versions)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _Module() when $default != null:
-        return $default(_that.id, _that.name, _that.kind,
+        return $default(_that.id, _that.name, _that.type,
             _that.shortDescription, _that.versions);
       case _:
         return null;
@@ -284,7 +284,7 @@ class _Module implements Module {
   const _Module(
       {required this.id,
       required this.name,
-      required this.kind,
+      required this.type,
       this.shortDescription = "",
       final List<ModuleVersion> versions = const <ModuleVersion>[]})
       : _versions = versions;
@@ -295,7 +295,7 @@ class _Module implements Module {
   @override
   final String name;
   @override
-  final ModuleKind kind;
+  final ModuleType type;
   @override
   @JsonKey()
   final String shortDescription;
@@ -334,7 +334,7 @@ class _Module implements Module {
             other is _Module &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
-            (identical(other.kind, kind) || other.kind == kind) &&
+            (identical(other.type, type) || other.type == type) &&
             (identical(other.shortDescription, shortDescription) ||
                 other.shortDescription == shortDescription) &&
             const DeepCollectionEquality().equals(other._versions, _versions));
@@ -342,12 +342,12 @@ class _Module implements Module {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, kind, shortDescription,
+  int get hashCode => Object.hash(runtimeType, id, name, type, shortDescription,
       const DeepCollectionEquality().hash(_versions));
 
   @override
   String toString() {
-    return 'Module(id: $id, name: $name, kind: $kind, shortDescription: $shortDescription, versions: $versions)';
+    return 'Module(id: $id, name: $name, type: $type, shortDescription: $shortDescription, versions: $versions)';
   }
 }
 
@@ -360,7 +360,7 @@ abstract mixin class _$ModuleCopyWith<$Res> implements $ModuleCopyWith<$Res> {
   $Res call(
       {String id,
       String name,
-      ModuleKind kind,
+      ModuleType type,
       String shortDescription,
       List<ModuleVersion> versions});
 }
@@ -379,7 +379,7 @@ class __$ModuleCopyWithImpl<$Res> implements _$ModuleCopyWith<$Res> {
   $Res call({
     Object? id = null,
     Object? name = null,
-    Object? kind = null,
+    Object? type = null,
     Object? shortDescription = null,
     Object? versions = null,
   }) {
@@ -392,10 +392,10 @@ class __$ModuleCopyWithImpl<$Res> implements _$ModuleCopyWith<$Res> {
           ? _self.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
-      kind: null == kind
-          ? _self.kind
-          : kind // ignore: cast_nullable_to_non_nullable
-              as ModuleKind,
+      type: null == type
+          ? _self.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as ModuleType,
       shortDescription: null == shortDescription
           ? _self.shortDescription
           : shortDescription // ignore: cast_nullable_to_non_nullable

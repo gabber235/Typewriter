@@ -1,11 +1,12 @@
 import "dart:math" as math;
+
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
+import "package:typewriter_panel/widgets/generic/components/elastic_switcher.dart";
 
 class _KeyDisplay extends StatelessWidget {
   const _KeyDisplay({
@@ -177,16 +178,12 @@ class RotatingShortcuts extends HookWidget {
     required this.shortcuts,
     this.size = 12.0,
     this.interval = const Duration(seconds: 5),
-    this.transitionDuration = const Duration(milliseconds: 300),
-    this.curve = Curves.easeOut,
     super.key,
   });
 
   final List<ShortcutActivator> shortcuts;
   final double size;
   final Duration interval;
-  final Duration transitionDuration;
-  final Curve curve;
 
   @override
   Widget build(BuildContext context) {
@@ -205,24 +202,12 @@ class RotatingShortcuts extends HookWidget {
       index.value = (index.value + 1) % shortcuts.length;
     });
 
-    return AnimatedSize(
-      duration: 1000.ms,
-      curve: ElasticOutCurve(0.9),
-      child: AnimatedSwitcher(
-        duration: transitionDuration,
-        transitionBuilder: (child, animation) {
-          final curved = CurvedAnimation(parent: animation, curve: curve);
-          return FadeTransition(
-            opacity: curved,
-            child: ScaleTransition(scale: curved, child: child),
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey<int>(index.value),
-          child: ShortcutDisplay(
-            shortcut: shortcuts[index.value % shortcuts.length],
-            size: size,
-          ),
+    return ElasticSwitcher(
+      child: KeyedSubtree(
+        key: ValueKey<int>(index.value),
+        child: ShortcutDisplay(
+          shortcut: shortcuts[index.value % shortcuts.length],
+          size: size,
         ),
       ),
     );

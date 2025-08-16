@@ -1,10 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
 import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
+import "package:typewriter_panel/widgets/generic/components/input_field_container.dart";
 
 class DecoratedTextField extends HookWidget {
   const DecoratedTextField({
@@ -13,6 +12,7 @@ class DecoratedTextField extends HookWidget {
     this.text,
     this.onChanged,
     this.onDone,
+    this.onEditingComplete,
     this.onSubmitted,
     this.actions,
     this.textFieldActions,
@@ -31,13 +31,18 @@ class DecoratedTextField extends HookWidget {
   final String? text;
 
   /// Called any time the text changes.
-  final Function(String)? onChanged;
+  final ValueChanged<String>? onChanged;
 
   /// Called when the user is done editing. Either by pressing done, or by losing focus.
-  final Function(String)? onDone;
+  final ValueChanged<String>? onDone;
+
+  /// Called when the users is done editing. It is responsible for what happens with focus.
+  /// Prefer [onDone] or [onSubmitted] for handling the completion of editing.
+  /// If left null, then the focus will go to the surrounding focus node when done editing.
+  final VoidCallback? onEditingComplete;
 
   /// Called when the user presses done.
-  final Function(String)? onSubmitted;
+  final ValueChanged<String>? onSubmitted;
 
   /// Actions that can be performed when either the text field or the surrounding is focused.
   final List<ActionShortcut>? actions;
@@ -73,16 +78,19 @@ class DecoratedTextField extends HookWidget {
       [text],
     );
 
+    final previousFocus = useState(focusNode.hasFocus);
     useFocusedChange(
       focusNode,
       ({required hasFocus}) {
-        if (hasFocus) {
+        final hadFocus = previousFocus.value;
+        if (!hadFocus && hasFocus) {
           if (text != null) {
             controller.text = text!;
           }
-        } else {
+        } else if (hadFocus && !hasFocus) {
           onDone?.call(controller.text);
         }
+        previousFocus.value = hasFocus;
       },
       [text],
     );
@@ -92,135 +100,35 @@ class DecoratedTextField extends HookWidget {
       descendantsAreTraversable: false,
     );
 
-    useListenable(surroundingFocusNode);
-
-    final focusType = useState(FocusType.none);
-
-    return FocusHighlight(
-      type: focusType.value,
-      borderRadius: BorderRadius.circular(12),
-      child: ManagedActionSet(
-        shortcuts: [
-          if (surroundingFocusNode.hasPrimaryFocus) ...[
-            ActionShortcut(
-              id: "focus_input",
-              label: "Focus Input",
-              description: "Focus the input field",
-              activators: [
-                SingleActivator(LogicalKeyboardKey.enter),
-                SingleActivator(LogicalKeyboardKey.space),
-              ],
-              priority: 100,
-            ),
-            ...?surroundingActions,
-          ],
-          if (focusNode.hasPrimaryFocus) ...[
-            ActionShortcut(
-              id: "dismiss_input",
-              label: "Dismiss Input",
-              description: "Dismiss the input field",
-              activators: [
-                SingleActivator(LogicalKeyboardKey.escape),
-              ],
-              priority: 100,
-            ),
-            ...?textFieldActions,
-          ],
-          if (surroundingFocusNode.hasFocus) ...?actions,
+    return InputFieldContainer(
+      inputFocusNode: focusNode,
+      surroundingFocusNode: surroundingFocusNode,
+      actions: actions,
+      inputActions: textFieldActions,
+      surroundingActions: surroundingActions,
+      child: TextField(
+        focusNode: focusNode,
+        controller: controller,
+        onEditingComplete:
+            onEditingComplete ?? surroundingFocusNode.requestFocus,
+        onSubmitted: (value) {
+          onSubmitted?.call(value);
+        },
+        onChanged: onChanged,
+        style: style,
+        textCapitalization: TextCapitalization.none,
+        textInputAction:
+            maxLines == 1 ? TextInputAction.done : TextInputAction.newline,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        keyboardType: maxLines == 1 ? keyboardType : TextInputType.multiline,
+        readOnly: readOnly,
+        selectAllOnFocus: false,
+        inputFormatters: [
+          if (inputFormatters != null) ...inputFormatters!,
         ],
-        child: Actions(
-          actions: {
-            ActivateIntent: CallbackAction(
-              onInvoke: (intent) {
-                if (surroundingFocusNode.hasPrimaryFocus) {
-                  focusNode.requestFocus();
-                }
-                return null;
-              },
-            ),
-            DismissIntent: DismissActionCallback(
-              onInvoke: (intent) {
-                if (focusNode.hasPrimaryFocus) {
-                  surroundingFocusNode.requestFocus();
-                }
-              },
-            ),
-          },
-          child: Focus(
-            focusNode: surroundingFocusNode,
-            onFocusChange: (_) {
-              focusType.value =
-                  FocusHighlighting.onlyPrimary(surroundingFocusNode);
-            },
-            onKeyEvent: (node, event) {
-              if (!focusNode.hasPrimaryFocus) return KeyEventResult.ignored;
-              final shouldBlock =
-                  _shouldBlockKeyEventForTextField(context, event);
-              return shouldBlock
-                  ? KeyEventResult.skipRemainingHandlers
-                  : KeyEventResult.ignored;
-            },
-            child: TextField(
-              focusNode: focusNode,
-              controller: controller,
-              onEditingComplete: () {
-                onDone?.call(controller.text);
-                onChanged?.call(controller.text);
-                onSubmitted?.call(controller.text);
-              },
-              onSubmitted: (value) {
-                onDone?.call(value);
-                onChanged?.call(value);
-                onSubmitted?.call(value);
-              },
-              onChanged: onChanged,
-              style: style,
-              textCapitalization: TextCapitalization.none,
-              textInputAction: maxLines == 1
-                  ? TextInputAction.done
-                  : TextInputAction.newline,
-              textAlign: textAlign,
-              maxLines: maxLines,
-              keyboardType: keyboardType,
-              readOnly: readOnly,
-              selectAllOnFocus: false,
-              inputFormatters: [
-                if (inputFormatters != null) ...inputFormatters!,
-              ],
-              decoration: decoration,
-            ),
-          ),
-        ),
+        decoration: decoration,
       ),
     );
-  }
-}
-
-bool _shouldBlockKeyEventForTextField(BuildContext context, KeyEvent event) {
-  if (event.logicalKey == LogicalKeyboardKey.escape) {
-    return false;
-  }
-
-  final hardware = HardwareKeyboard.instance;
-  final isControlDown =
-      hardware.isLogicalKeyPressed(LogicalKeyboardKey.controlLeft) ||
-          hardware.isLogicalKeyPressed(LogicalKeyboardKey.controlRight);
-  final isMetaDown =
-      hardware.isLogicalKeyPressed(LogicalKeyboardKey.metaLeft) ||
-          hardware.isLogicalKeyPressed(LogicalKeyboardKey.metaRight);
-  final isAltDown = hardware.isLogicalKeyPressed(LogicalKeyboardKey.altLeft) ||
-      hardware.isLogicalKeyPressed(LogicalKeyboardKey.altRight);
-
-  return !isControlDown && !isMetaDown && !isAltDown;
-}
-
-class DismissActionCallback extends DismissAction {
-  DismissActionCallback({required this.onInvoke});
-
-  final ValueChanged<DismissIntent>? onInvoke;
-  @override
-  Object? invoke(DismissIntent intent) {
-    onInvoke?.call(intent);
-    return null;
   }
 }

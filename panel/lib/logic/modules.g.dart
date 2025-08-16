@@ -9,7 +9,7 @@ part of 'modules.dart';
 _Module _$ModuleFromJson(Map<String, dynamic> json) => _Module(
       id: json['id'] as String,
       name: json['name'] as String,
-      kind: $enumDecode(_$ModuleKindEnumMap, json['kind']),
+      type: $enumDecode(_$ModuleTypeEnumMap, json['type']),
       shortDescription: json['shortDescription'] as String? ?? "",
       versions: (json['versions'] as List<dynamic>?)
               ?.map((e) => ModuleVersion.fromJson(e as Map<String, dynamic>))
@@ -20,28 +20,28 @@ _Module _$ModuleFromJson(Map<String, dynamic> json) => _Module(
 Map<String, dynamic> _$ModuleToJson(_Module instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'kind': _$ModuleKindEnumMap[instance.kind]!,
+      'type': _$ModuleTypeEnumMap[instance.type]!,
       'shortDescription': instance.shortDescription,
       'versions': instance.versions.map((e) => e.toJson()).toList(),
     };
 
-const _$ModuleKindEnumMap = {
-  ModuleKind.engine: 'engine',
-  ModuleKind.extension: 'extension',
+const _$ModuleTypeEnumMap = {
+  ModuleType.engine: 'engine',
+  ModuleType.extension: 'extension',
 };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-/// Provides the list of available modules (engines + extensions).
+/// Provides the list of available modules.
 @ProviderFor(Modules)
 const modulesProvider = ModulesProvider._();
 
-/// Provides the list of available modules (engines + extensions).
+/// Provides the list of available modules.
 final class ModulesProvider
     extends $AsyncNotifierProvider<Modules, List<Module>> {
-  /// Provides the list of available modules (engines + extensions).
+  /// Provides the list of available modules.
   const ModulesProvider._()
       : super(
           from: null,
@@ -61,7 +61,7 @@ final class ModulesProvider
   Modules create() => Modules();
 }
 
-String _$modulesHash() => r'a45fe53577f8dfd90bf6f4e0d421e3fee8552ce2';
+String _$modulesHash() => r'be8391aa51fe7287f7316612a3cbbce03b019f11';
 
 abstract class _$Modules extends $AsyncNotifier<List<Module>> {
   FutureOr<List<Module>> build();

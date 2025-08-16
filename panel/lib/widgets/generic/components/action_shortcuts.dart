@@ -191,7 +191,6 @@ class ActionRow extends HookConsumerWidget {
     final keysMap = useRef<Map<String, GlobalKey>>({});
     final widths = useRef<Map<String, double>>({});
     final visibleCountState = useState<int?>(null);
-    final loadingState = useState<Map<String, bool>>({});
 
     for (final id in ids) {
       keysMap.value.putIfAbsent(id, () => GlobalKey(debugLabel: "Action-$id"));
@@ -200,8 +199,8 @@ class ActionRow extends HookConsumerWidget {
 
     void measureAndResolve(BoxConstraints constraints) {
       final maxWidth = constraints.maxWidth.isInfinite
-          ? MediaQuery.of(context).size.width
-          : constraints.maxWidth;
+          ? MediaQuery.of(context).size.width - 10
+          : constraints.maxWidth - 10;
 
       for (final id in ids) {
         final key = keysMap.value[id]!;
@@ -285,7 +284,6 @@ class ActionRow extends HookConsumerWidget {
                             key: keysMap.value[action.id],
                             child: _ActionShortcutButton(
                               action: action,
-                              loadingState: loadingState,
                               forceLargest: true,
                             ),
                           ),
@@ -293,16 +291,18 @@ class ActionRow extends HookConsumerWidget {
                     ],
                   ),
                 ),
-                Row(
-                  spacing: spacing,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    for (final action in toShow)
-                      _ActionShortcutButton(
-                        action: action,
-                        loadingState: loadingState,
-                      ),
-                  ],
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    spacing: spacing,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      for (final action in toShow)
+                        _ActionShortcutButton(
+                          action: action,
+                        ),
+                    ],
+                  ),
                 ),
               ],
             );
@@ -316,25 +316,23 @@ class ActionRow extends HookConsumerWidget {
 class _ActionShortcutButton extends HookConsumerWidget {
   const _ActionShortcutButton({
     required this.action,
-    required this.loadingState,
     this.forceLargest = false,
   });
 
   final ActionShortcut action;
-  final ValueNotifier<Map<String, bool>> loadingState;
   final bool forceLargest;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final loading = loadingState.value[action.id] ?? false;
-    final hasInvoke = action.onInvoke != null && !loading;
+    final loading = useState(false);
+    final hasInvoke = action.onInvoke != null && !loading.value;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       spacing: 8,
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (loading)
+        if (loading.value)
           const SizedBox.square(
             dimension: 12,
             child: CircularProgressIndicator(strokeWidth: 2),
@@ -359,7 +357,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
 
     final pill = AnimatedOpacity(
       duration: 150.ms,
-      opacity: loading ? 0.7 : 1.0,
+      opacity: loading.value ? 0.7 : 1.0,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: DefaultTextStyle(
@@ -392,18 +390,12 @@ class _ActionShortcutButton extends HookConsumerWidget {
         child: InkWell(
           customBorder: const StadiumBorder(),
           onTap: () async {
-            if (loadingState.value[action.id] ?? false) return;
-            loadingState.value = {
-              ...loadingState.value,
-              action.id: true,
-            };
+            if (loading.value) return;
+            loading.value = true;
             try {
               await action.onInvoke!(ref);
             } finally {
-              loadingState.value = {
-                ...loadingState.value,
-                action.id: false,
-              };
+              loading.value = false;
             }
           },
           child: pill,

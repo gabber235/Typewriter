@@ -1,27 +1,30 @@
 name: widgetbook_workspace
 description: "Widgetbook workspace"
 publish_to: "none"
-version: 0.1.0
+version: 0.0.0
 
 environment:
-  sdk: ^3.7.2
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  widgetbook: ^3.14.0
-  widgetbook_annotation: ^3.5.0
+  widgetbook:
+  widgetbook_annotation:
   typewriter_panel:
     path: ../
-  hooks_riverpod: ^3.0.0-dev.15
-  riverpod_annotation: ^3.0.0-dev.15
-  flutter_animate: ^4.5.2
-  mocktail: ^1.0.4
-  faker: ^2.2.0
-  flutter_hooks: ^0.21.2
-  iconify_flutter_plus: ^1.0.4
-  logto_dart_sdk: ^3.0.0
-  pub_semver: ^2.2.0
+  typewriter_testkit:
+    path: ../testkit
+  hooks_riverpod:
+  riverpod_annotation:
+  flutter_animate:
+  mocktail:
+  faker:
+  flutter_hooks:
+  iconify_flutter_plus:
+  logto_dart_sdk:
+  pub_semver:
+  collection:
 
 dev_dependencies:
   flutter_test:

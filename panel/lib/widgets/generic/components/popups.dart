@@ -4,10 +4,13 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/hooks/timer.dart";
-import "package:typewriter_panel/utils/snackbar.dart";
+import "package:typewriter_panel/main.dart";
+
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 
 class ConfirmationDialogue extends HookWidget {
   const ConfirmationDialogue({
@@ -75,8 +78,6 @@ class ConfirmationDialogue extends HookWidget {
     final secondsLeft = useState(delayConfirm.inSeconds);
     final canConfirm = secondsLeft.value <= 0;
 
-    final isLoading = useState(false);
-
     useTimer(
       1.seconds,
       (timer) {
@@ -106,51 +107,21 @@ class ConfirmationDialogue extends HookWidget {
             foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
-        FilledButton.icon(
+        LoadingButton.filledIcon(
           autofocus: canConfirm,
-          icon: isLoading.value
-              ? SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(
-                      FilledButtonTheme.of(context)
-                          .style
-                          ?.foregroundColor
-                          ?.resolve({WidgetState.disabled}),
-                    ),
-                  ),
-                )
-              : Icones(confirmIcon, size: 16),
-          label: Text(
-            isLoading.value
-                ? "$confirmText..."
-                : canConfirm
-                    ? confirmText
-                    : "$confirmText (${secondsLeft.value})",
-          ),
           style: FilledButton.styleFrom(
             backgroundColor: confirmColor,
             foregroundColor: onConfirmColor,
           ),
-          onPressed: !isLoading.value && canConfirm
+          icon: Icones(confirmIcon, size: 16),
+          label: Text(
+            canConfirm ? confirmText : "$confirmText (${secondsLeft.value})",
+          ),
+          onPressed: canConfirm
               ? () async {
-                  try {
-                    isLoading.value = true;
-                    await onConfirm();
-                    if (!context.mounted) return;
-                    Navigator.of(context).pop(true);
-                  } on Error catch (error) {
-                    if (!context.mounted) return;
-                    showErrorSnackBar(
-                      context,
-                      "Something went wrong while $confirmText",
-                    );
-                    // TODO: Appropriately log errors
-                    debugPrint(error.toString());
-                    isLoading.value = false;
-                  }
+                  await onConfirm();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop(true);
                 }
               : null,
         ),
@@ -184,7 +155,7 @@ Future<bool> showConfirmationDialogue({
     return true;
   }
 
-  return await showDialog<bool>(
+  return await showAdvancedDialogue<bool>(
         context: context,
         builder: (context) => ConfirmationDialogue(
           onConfirm: onConfirm,
@@ -205,3 +176,42 @@ Future<bool> showConfirmationDialogue({
       ) ??
       false;
 }
+
+Future<T?> showAdvancedDialogue<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool barrierDismissible = true,
+  Color? barrierColor,
+  String? barrierLabel,
+  bool useSafeArea = true,
+  bool useRootNavigator = true,
+  RouteSettings? routeSettings,
+  Offset? anchorPoint,
+  TraversalEdgeBehavior? traversalEdgeBehavior,
+  bool fullscreenDialog = false,
+  bool? requestFocus,
+  AnimationStyle? animationStyle,
+}) =>
+    showDialog<T>(
+      context: context,
+      builder: (ctx) => UncontrolledProviderScope(
+        container: ProviderScope.containerOf(context),
+        child: Shortcuts(
+          shortcuts: TypewriterPanel.typewriterShortcuts,
+          child: Responsive(
+            child: builder(ctx),
+          ),
+        ),
+      ),
+      barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor,
+      barrierLabel: barrierLabel,
+      useSafeArea: useSafeArea,
+      useRootNavigator: useRootNavigator,
+      routeSettings: routeSettings,
+      anchorPoint: anchorPoint,
+      traversalEdgeBehavior: traversalEdgeBehavior,
+      fullscreenDialog: fullscreenDialog,
+      requestFocus: requestFocus,
+      animationStyle: animationStyle,
+    );

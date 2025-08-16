@@ -1,8 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/app_required.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
@@ -37,14 +36,14 @@ Widget actionRowUseCase(BuildContext context) {
     final isAsync = i.isOdd;
     final activators = switch (i % 4) {
       0 => [
-        SingleActivator(LogicalKeyboardKey.keyS, meta: true),
-        SingleActivator(LogicalKeyboardKey.keyS, control: true),
-      ],
+          SingleActivator(LogicalKeyboardKey.keyS, meta: true),
+          SingleActivator(LogicalKeyboardKey.keyS, control: true),
+        ],
       1 => [SingleActivator(LogicalKeyboardKey.keyO, meta: true)],
       2 => [
-        SingleActivator(LogicalKeyboardKey.keyD, meta: true),
-        SingleActivator(LogicalKeyboardKey.keyD, control: true),
-      ],
+          SingleActivator(LogicalKeyboardKey.keyD, meta: true),
+          SingleActivator(LogicalKeyboardKey.keyD, control: true),
+        ],
       _ => <ShortcutActivator>[],
     };
 
@@ -61,48 +60,45 @@ Widget actionRowUseCase(BuildContext context) {
           2 => Icons.copy,
           3 => Icons.ios_share,
           _ => Icons.flash_on,
-        }),
-        onInvoke:
-            isAsync
-                ? (ref) async {
-                  await Future.delayed(asyncDelay);
-                }
-                : (ref) {},
+        },),
+        onInvoke: isAsync
+            ? (ref) async {
+                await Future.delayed(asyncDelay);
+              }
+            : (ref) {},
       ),
     );
   }
 
-  return ProviderScope(
-    child: AppRequiredWidgets(
-      child: Builder(
-        builder: (context) {
-          return ActionSet(
-            shortcuts: shortcuts,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Center(
-                    child: Text(
-                      "${shortcuts.length} registered action(s)\nResize the preview to test overflow truncation.\nHighest priority items stay on the right.",
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+  return FakeApp(
+    child: Builder(
+      builder: (context) {
+        return ActionSet(
+          shortcuts: shortcuts,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Center(
+                  child: Text(
+                    "${shortcuts.length} registered action(s)\nResize the preview to test overflow truncation.\nHighest priority items stay on the right.",
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 12,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [const ActionRow()],
-                  ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 12,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [const ActionRow()],
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     ),
   );
 }

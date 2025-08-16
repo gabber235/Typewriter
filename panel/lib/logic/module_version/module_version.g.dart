@@ -8,14 +8,14 @@ part of 'module_version.dart';
 
 _ModuleVersion _$ModuleVersionFromJson(Map<String, dynamic> json) =>
     _ModuleVersion(
-      version: const _SemverFlexibleConverter().fromJson(json['version']),
+      version: const SemverJsonConverter().fromJson(json['version']),
       state: $enumDecodeNullable(_$ModuleVersionStateEnumMap, json['state']) ??
           ModuleVersionState.developing,
     );
 
 Map<String, dynamic> _$ModuleVersionToJson(_ModuleVersion instance) =>
     <String, dynamic>{
-      'version': const _SemverFlexibleConverter().toJson(instance.version),
+      'version': const SemverJsonConverter().toJson(instance.version),
       'state': _$ModuleVersionStateEnumMap[instance.state]!,
     };
 

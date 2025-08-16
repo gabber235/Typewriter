@@ -10,6 +10,17 @@ extension ListX<T> on List<T> {
     return elementAt(random.nextInt(length));
   }
 
+  List<T> randomSubset(int count) {
+    if (count <= 0 || count > length) return [];
+    final indices = List.generate(length, (index) => index);
+    final result = <T>[];
+    for (var i = 0; i < count; i++) {
+      final index = indices.removeAt(random.nextInt(indices.length));
+      result.add(this[index]);
+    }
+    return result;
+  }
+
   List<int> get indices => List.generate(length, (index) => index);
 
   List<T> joinWith(T Function() separator) {
@@ -46,4 +57,7 @@ extension IterableX<T> on Iterable<T> {
   Iterable<T> excluding(List<Type> types) {
     return where((element) => !types.contains(element.runtimeType));
   }
+
+  /// Are all of a given type [T]. Returns false if the selection is empty.
+  bool allAre<S extends T>() => isNotEmpty && every((t) => t is S);
 }

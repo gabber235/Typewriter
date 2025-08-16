@@ -4,9 +4,9 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
-import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
 
 class OrganizationSelector extends HookConsumerWidget {
@@ -16,13 +16,12 @@ class OrganizationSelector extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedOrganizationAsync = ref.watch(organizationProvider);
 
-    return selectedOrganizationAsync.when(
-      data: (selectedOrganization) => _SelectorButton(
+    return selectedOrganizationAsync(
+      name: "selected organization",
+      builder: (selectedOrganization) => _SelectorButton(
         selectedOrganization: selectedOrganization,
         ref: ref,
       ),
-      loading: () => const CircularProgressIndicator(),
-      error: (error, _) => Text("Error: $error"),
     );
   }
 }
@@ -222,8 +221,9 @@ class _OrganizationMenuContent extends HookConsumerWidget {
       children: [
         _SearchField(searchQuery: searchQuery),
         Flexible(
-          child: organizationsAsync.when(
-            data: (organizations) {
+          child: organizationsAsync(
+            name: "organizations",
+            builder: (organizations) {
               final filteredOrganizations = organizations.where((org) {
                 if (searchQuery.value.isEmpty) return true;
                 return org.name
@@ -247,21 +247,6 @@ class _OrganizationMenuContent extends HookConsumerWidget {
                 ],
               );
             },
-            loading: () => const SizedBox(
-              height: 200,
-              child: LoadingIndicator(
-                message: "Loading organizations...",
-              ),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                "Error loading organizations: $error",
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-              ),
-            ),
           ),
         ),
       ],

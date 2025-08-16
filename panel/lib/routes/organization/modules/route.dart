@@ -3,20 +3,19 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_framework/responsive_framework.dart";
+import "package:typewriter_panel/logic/manuals/manuals.dart";
 import "package:typewriter_panel/logic/modules.dart";
 import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/utils/fonts.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
-import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart"
-    hide useFocusNode;
-import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
+import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/generic/components/floating_button.dart";
+import "package:typewriter_panel/widgets/generic/components/grid_selectable_card.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
 import "package:typewriter_panel/widgets/generic/components/panes.dart";
-import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
-import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 @RoutePage()
 class ModulesPage extends HookConsumerWidget {
@@ -40,77 +39,75 @@ class ModulesPage extends HookConsumerWidget {
             EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
         child: Section(
           margin: EdgeInsets.zero,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(padding, padding, padding, 0),
-                child: const PageHeading(
-                  title: "Modules",
-                  subtext:
-                      "Engines and extensions available for this organization.",
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: DecoratedTextField(
-                  focusNode: useFocusNode(),
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    hintText: "Search modules...",
-                    prefixIcon: const Icon(Icons.search),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          child: FloatingButton(
+            icon: const Icon(Icons.add),
+            onPressed: null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(padding, padding, padding, 0),
+                  child: const PageHeading(
+                    title: "Modules",
+                    subtext:
+                        "Modules are artifacts for the Typewriter system such as Engines or Extensions. Version release cycles can be managed here, while information about the module is handle inside the module setup itself, like in gradle.",
                   ),
-                  onChanged: (v) => searchQuery.value = v,
                 ),
-              ),
-              Expanded(
-                child: filtered.when(
-                  data: (modules) {
-                    if (modules.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          "No modules match your search",
-                          style: TextStyle(fontSize: 18),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: DecoratedTextField(
+                    focusNode: useFocusNode(),
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      hintText: "Search modules...",
+                      prefixIcon: const Icon(Icons.search),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    onChanged: (v) => searchQuery.value = v,
+                  ),
+                ),
+                Expanded(
+                  child: filtered(
+                    name: "modules",
+                    builder: (modules) {
+                      if (modules.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            "No modules match your search",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        );
+                      }
+                      return ClipPath(
+                        clipper: VerticalClipper(additionalWidth: 100),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 16,
+                          ),
+                          child: ResponsiveGridView.builder(
+                            gridDelegate: const ResponsiveGridDelegate(
+                              crossAxisExtent: _moduleCardWidth,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: _moduleAspectRatio,
+                            ),
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.center,
+                            itemCount: modules.length,
+                            itemBuilder: (context, index) {
+                              final module = modules[index];
+                              return _ModuleCard(module: module);
+                            },
+                          ),
                         ),
                       );
-                    }
-                    return ClipPath(
-                      clipper: VerticalClipper(additionalWidth: 100),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 16,
-                        ),
-                        child: ResponsiveGridView.builder(
-                          gridDelegate: const ResponsiveGridDelegate(
-                            crossAxisExtent: _moduleCardWidth,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: _moduleAspectRatio,
-                          ),
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.center,
-                          itemCount: modules.length,
-                          itemBuilder: (context, index) {
-                            final module = modules[index];
-                            return _ModuleCard(module: module);
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                  loading: () => const LoadingIndicator(
-                    message: "Loading modules...",
-                  ),
-                  error: (error, stack) => ErrorScreen(
-                    title: "Failed to load modules",
-                    message: error.toString(),
-                    child: const RetryIndicator(),
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -128,7 +125,7 @@ class _ModuleCard extends HookConsumerWidget {
   final Module module;
 
   Color _baseColor(BuildContext context) {
-    return context.isDarkMode ? module.kind.darkColor : module.kind.lightColor;
+    return context.isDarkMode ? module.type.darkColor : module.type.lightColor;
   }
 
   @override
@@ -142,86 +139,24 @@ class _ModuleCard extends HookConsumerWidget {
       selectableId: selectableId,
       focusNode: focusNode,
       builder: (isSelected, isFocused, isHovered) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.fastEaseInToSlowEaseOut,
+        return GridSelectableCard(
+          title: module.name,
+          baseColor: base,
+          onBaseColor: onBase,
+          isSelected: isSelected,
+          isFocused: isFocused,
+          isHovered: isHovered,
           width: _moduleCardWidth,
           height: _moduleCardHeight,
-          decoration: BoxDecoration(
-            color: isSelected
-                ? isFocused
-                    ? base.withValues(alpha: 0.80)
-                    : base
-                : base.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              width: 2,
-              color: isFocused ? base : Colors.transparent,
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ModuleKindBadge(
-                label: module.kind.name.toUpperCase(),
-                isSelected: isSelected,
-                color: base.withValues(alpha: 0.90),
-                onColor: onBase,
-              ),
-              const Spacer(),
-              Text(
-                module.name,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize:
-                      context.responsive(mobile: 14, tablet: 15, desktop: 16),
-                  color: isSelected ? onBase : base,
-                ),
-              ),
-            ],
+          badgeLabel: module.type.name,
+          badgeColor: base.withValues(alpha: 0.90),
+          badgeOnColor: onBase,
+          titleStyle: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: context.responsive(mobile: 14, tablet: 15, desktop: 16),
           ),
         );
       },
-    );
-  }
-}
-
-class _ModuleKindBadge extends StatelessWidget {
-  const _ModuleKindBadge({
-    required this.label,
-    required this.isSelected,
-    required this.color,
-    required this.onColor,
-  });
-
-  final String label;
-  final bool isSelected;
-  final Color color;
-  final Color onColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 4,
-      ),
-      decoration: ShapeDecoration(
-        color: isSelected ? onColor : color,
-        shape: StadiumBorder(),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontVariations: [boldWeight],
-          letterSpacing: 0.7,
-          color: isSelected ? color : onColor,
-        ),
-      ),
     );
   }
 }

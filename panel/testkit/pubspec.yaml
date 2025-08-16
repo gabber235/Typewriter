@@ -1,0 +1,32 @@
+name: typewriter_testkit
+description: "Shared testing utilities and mocks for Typewriter Panel editors and Widgetbook"
+publish_to: "none"
+version: 0.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  typewriter_panel:
+    path: ../
+  hooks_riverpod:
+  riverpod_annotation:
+  flutter_animate:
+  mocktail:
+  faker:
+  flutter_hooks:
+  iconify_flutter_plus:
+  logto_dart_sdk:
+  pub_semver:
+
+dev_dependencies:
+  build_runner:
+  custom_lint:
+  flutter_lints:
+  riverpod_generator:
+  riverpod_lint:
+
+flutter:
+  uses-material-design: true

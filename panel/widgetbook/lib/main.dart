@@ -1,16 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:mocktail/mocktail.dart";
-import "package:pub_semver/pub_semver.dart";
-import "package:typewriter_panel/logic/books.dart";
-import "package:typewriter_panel/logic/module_version/module_version.dart";
-import "package:typewriter_panel/logic/modules.dart";
-import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/components/selectable.stories.dart";
 
 import "main.directories.g.dart";
 
@@ -18,24 +12,14 @@ void main() {
   Animate.restartOnHotReload = true;
   debugTracePostFrameCallbacks = true;
 
-  registerFallbackValue(ThemeMode.system);
-  registerFallbackValue(
-    TestSelectableIdentifier(
-      id: "",
-      dataBlueprint: ObjectBlueprint(fields: {}),
-    ),
-  );
-  registerFallbackValue(Book(id: "", title: "", icon: ""));
-  registerFallbackValue(Module(id: "", name: "", kind: ModuleKind.extension));
-  registerFallbackValue(Version.none);
-  registerFallbackValue(ModuleVersionState.developing);
+  registerFallbackValues();
 
-  runApp(const WidgetbookApp());
+  runApp(const TypewriterWidgetbook());
 }
 
 @widgetbook.App()
-class WidgetbookApp extends StatelessWidget {
-  const WidgetbookApp({super.key});
+class TypewriterWidgetbook extends StatelessWidget {
+  const TypewriterWidgetbook({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,10 +47,6 @@ class WidgetbookApp extends StatelessWidget {
             WidgetbookTheme(name: "Light", data: buildTheme(Brightness.light)),
           ],
         ),
-        BuilderAddon(
-          name: "Responsive",
-          builder: (context, child) => Responsive(child: child),
-        ),
         AlignmentAddon(),
         ZoomAddon(),
         TimeDilationAddon(),
@@ -74,12 +54,9 @@ class WidgetbookApp extends StatelessWidget {
       lightTheme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       appBuilder: (context, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          scrollBehavior: GlobalCustomScrollBehavior(),
-          shortcuts: TypewriterPanel.typewriterShortcuts,
-          home: Material(child: child),
-        );
+        // Don't have the MaterialApp here.
+        // We have it in the `FakeApp` so that it rerenders when we make changes to the theme.
+        return child;
       },
       directories: directories,
     );

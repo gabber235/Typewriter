@@ -6,6 +6,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
@@ -18,15 +19,19 @@ import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 
 part "inspector.g.dart";
 
+const double kInspectorMinSize = 200;
+const double kInspectorDefaultSize = 400;
+const double kInspectorMaxFactor = 3 / 8;
+
 @riverpod
 class InspectorSize extends _$InspectorSize {
   @override
   double build() {
-    return 400;
+    return kInspectorDefaultSize;
   }
 
   void size(double size) {
-    state = max(size, 200);
+    state = max(size, kInspectorMinSize);
   }
 }
 
@@ -45,7 +50,7 @@ class Inspector extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final size = ref.watch(inspectorSizeProvider);
 
-    if (context.isSmalerThan(size * 2)) {
+    if (context.isSmallerThan(size / kInspectorMaxFactor)) {
       return MobileInspector(child: child);
     }
 
@@ -63,30 +68,52 @@ class MobileInspector extends HookConsumerWidget {
   });
   final Widget child;
 
+  void _runAnimation(
+    bool hasSelection,
+    DraggableScrollableController controller,
+  ) {
+    if (hasSelection) {
+      controller.animateTo(
+        0.1,
+        duration: 750.ms,
+        curve: ElasticOutCurve(0.8),
+      );
+    } else {
+      controller.animateTo(
+        0.0,
+        duration: 400.ms,
+        curve: Curves.fastEaseInToSlowEaseOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasSelection = ref.watch(hasSelectionProvider);
     final controller = useDraggableScrollableController();
 
+    // Ensure that after a resize the modal will show up.
+    useTimer(
+      200.ms,
+      (timer) => _runAnimation(hasSelection, controller),
+      repeat: false,
+    );
+
     useEffect(
       () {
-        if (!controller.isAttached) return null;
-        if (hasSelection) {
-          controller.animateTo(
-            0.1,
-            duration: 750.ms,
-            curve: ElasticOutCurve(0.8),
-          );
+        if (!controller.isAttached) {
+          return null;
         } else {
-          controller.animateTo(
-            0.0,
-            duration: 400.ms,
-            curve: Curves.fastEaseInToSlowEaseOut,
-          );
+          _runAnimation(hasSelection, controller);
         }
         return null;
       },
-      [controller, hasSelection, ResponsiveBreakpoints.of(context).screenWidth],
+      [
+        controller,
+        controller.isAttached,
+        hasSelection,
+        ResponsiveBreakpoints.of(context).screenWidth,
+      ],
     );
 
     return Stack(
@@ -265,7 +292,7 @@ class _DesktopDragHandle extends HookConsumerWidget {
         final size = startSize.value - dx;
 
         final screenWidth = ResponsiveBreakpoints.of(context).screenWidth;
-        final maxSize = (screenWidth / 2).floor() - 1.0;
+        final maxSize = (screenWidth * kInspectorMaxFactor).floor() - 1.0;
 
         final newSize = min(maxSize, size);
         ref.read(inspectorSizeProvider.notifier).size(newSize);
@@ -345,6 +372,7 @@ class _InspectorContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedHeader = ref.watch(selectedHeaderProvider);
     final selectedDataBlueprint = ref.watch(selectedDataBlueprintProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 12,

@@ -7,6 +7,7 @@ import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
 import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/tag.dart";
+import "package:typewriter_panel/utils/animation.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/utils/string.dart";
@@ -63,19 +64,8 @@ class BookWidget extends HookConsumerWidget {
           ),
         )
             .animate(target: isHovered ? 1 : 0)
-            .scaleXY(
-              duration: isHovered ? 750.ms : 300.ms,
-              curve: isHovered ? ElasticOutCurve(0.4) : Curves.easeInOutQuad,
-              begin: 1,
-              end: 1.05,
-            )
-            .rotate(
-              duration: 300.ms,
-              delay: isHovered ? 50.ms : 0.ms,
-              curve: Curves.easeInOutQuad,
-              begin: 0,
-              end: 0.005,
-            );
+            .hoverScale(isHovered)
+            .hoverRotate(isHovered);
       },
     );
   }

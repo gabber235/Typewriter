@@ -11,7 +11,7 @@ extension ResponsiveBreakpointsX on BuildContext {
   bool get isDesktop => ResponsiveBreakpoints.of(this).isDesktop;
   bool get is4K => ResponsiveBreakpoints.of(this).breakpoint.name == "4K";
 
-  bool isSmalerThan(double width) {
+  bool isSmallerThan(double width) {
     return ResponsiveBreakpoints.of(this).screenWidth < width;
   }
 

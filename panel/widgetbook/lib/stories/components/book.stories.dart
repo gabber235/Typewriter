@@ -8,8 +8,8 @@ import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/book.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/logic/tag.mock.dart";
 
 Book generateRandomBook() {
   final icon = Fa6Solid.iconsList.randomOrNull();
@@ -37,11 +37,13 @@ Book generateRandomBook() {
 @widgetbook.UseCase(name: "Default", type: BookWidget)
 Widget bookUseCase(BuildContext context) {
   final book = generateRandomBook();
-  return BookWidget(
-    id: book.id,
-    title: book.title,
-    icon: Icones(book.icon),
-    color: book.color,
-    tags: book.tags,
+  return FakeApp(
+    child: BookWidget(
+      id: book.id,
+      title: book.title,
+      icon: Icones(book.icon),
+      color: book.color,
+      tags: book.tags,
+    ),
   );
 }

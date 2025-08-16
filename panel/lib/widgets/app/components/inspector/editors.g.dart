@@ -45,7 +45,7 @@ final class EditorsProvider
   }
 }
 
-String _$editorsHash() => r'b4ed600096e105a0596251b8c94b16c3a8a4597b';
+String _$editorsHash() => r'8ebd044dba2e319bf5b45f5693bd63bac330aef0';
 
 @ProviderFor(pathDisplayName)
 const pathDisplayNameProvider = PathDisplayNameFamily._();

@@ -88,10 +88,13 @@ List<Todo> completedTodos(CompletedTodosRef ref) {
 
 UI usage patterns
 ```dart
+import "package:typewriter_panel/utils/riverpod.dart";
+
 // Async class provider with actions
 final todos = ref.watch(todosProvider);
-return todos.when(
-  data: (items) => ListView(
+return todos(
+  name: "todos",
+  builder: (items) => ListView(
     children: [
       for (final t in items)
         ListTile(
@@ -107,8 +110,6 @@ return todos.when(
         ),
     ],
   ),
-  loading: () => const CircularProgressIndicator(),
-  error: (e, st) => Text('Error: $e'),
 );
 
 // Trigger actions
@@ -125,11 +126,16 @@ final completed = ref.watch(completedTodosProvider);
 Commands
 - dart run build_runner build -d
 - dart analyze
-- flutter test (for provider tests)
+- flutter test (provider and widget tests; prefer testApp/pumpTestApp and captureScreenshot from panel/test/test_utils.dart where applicable)
 
 Notes
 - Keep providers small and composable; avoid side effects in build() beyond reading other providers and constructing values.
 - For side-effects (logging, navigation, toasts), use ref.listen in the UI layer instead of side-effects in build().
 - Prefer passing typed models to widgets; avoid Map< String, dynamic > in UI.
 - Use keepAlive: true sparingly for state that must persist without listeners.
+- Testing utilities:
+  - Wrap test widgets with testApp(...) or use WidgetTesterAppX.pumpTestApp(...) to get ProviderScope, Responsive, and a Material scaffold (see panel/test/test_utils.dart).
+  - Override providers in tests via ProviderScope(overrides: [...]) to inject fakes/mocks. Prefer using overrides from the testkit package (`package:typewriter_testkit/typewriter_testkit.dart`) for common app providers (e.g., appearanceProviderOverrides(...), authProviderOverrides(...), booksProviderOverrides(...), manualsProviderOverrides(...), modulesProviderOverrides(...), organizationsProviderOverrides(...)).
+  - Call setupMocks() in your test main() or setUpAll to register mocktail fallback values used by the testkit.
+  - Capture screenshots in widget tests with WidgetTesterScreenshotsX.captureScreenshot("name") for visual verification.
 

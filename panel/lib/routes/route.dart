@@ -7,15 +7,13 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
-import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
-import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
-import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 @RoutePage()
 class IndexPage extends HookConsumerWidget {
@@ -30,8 +28,9 @@ class IndexPage extends HookConsumerWidget {
           constraints: BoxConstraints(maxWidth: 600),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: organizations.when(
-              data: (orgs) => Column(
+            child: organizations(
+              name: "organizations",
+              builder: (orgs) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (orgs.isNotEmpty) ...[
@@ -45,14 +44,6 @@ class IndexPage extends HookConsumerWidget {
                   ],
                   _CreateOrganization(),
                 ],
-              ),
-              loading: () => LoadingIndicator(
-                message: "Loading organizations...",
-              ),
-              error: (error, stackTrace) => ErrorScreen(
-                title: "Failed to load organizations",
-                message: error.toString(),
-                child: RetryIndicator(),
               ),
             ),
           ),
@@ -266,7 +257,7 @@ class _CreateOrganization extends HookConsumerWidget {
           SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
-            child: LoadingButton(
+            child: LoadingButton.filled(
               onPressed: () async {
                 if (formKey.currentState?.validate() != true) {
                   return;

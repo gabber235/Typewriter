@@ -6,6 +6,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/ic.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
 import "package:typewriter_panel/utils/object.dart";
+import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
@@ -43,13 +44,23 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.keyboardType = TextInputType.text,
     this.inputFormatters = const [],
     this.keepValidVisibleWhileFocused = false,
+    this.keepErrorVisibleWhenUnfocused = true,
     this.deserialize,
     this.serialize,
     this.formatted,
     this.validator,
     this.onChanged,
     this.onDone,
+    this.onEditingComplete,
     this.onSubmitted,
+    this.actions,
+    this.textFieldActions,
+    this.surroundingActions,
+    this.decoration,
+    this.style,
+    this.maxLines = 1,
+    this.textAlign = TextAlign.start,
+    this.readOnly = false,
     super.key,
   });
   final T value;
@@ -60,13 +71,40 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final TextInputType keyboardType;
   final List<TextInputFormatter> inputFormatters;
   final bool keepValidVisibleWhileFocused;
+  final bool keepErrorVisibleWhenUnfocused;
   final String Function(T)? deserialize;
   final T Function(String)? serialize;
   final String Function(T)? formatted;
   final String? Function(T)? validator;
-  final void Function(T)? onChanged;
-  final void Function(T)? onDone;
-  final void Function(T)? onSubmitted;
+
+  /// Called any time the text changes.
+  final ValueChanged<T>? onChanged;
+
+  /// Called when the user is done editing. Either by pressing done, or by losing focus.
+  final ValueChanged<T>? onDone;
+
+  /// Called when the users is done editing. It is responsible for what happens with focus.
+  /// Prefer [onDone] or [onSubmitted] for handling the completion of editing.
+  /// If left null, then the focus will go to the surrounding focus node when done editing.
+  final VoidCallback? onEditingComplete;
+
+  /// Called when the user presses done.
+  final ValueChanged<T>? onSubmitted;
+
+  /// Actions that can be performed when either the text field or the surrounding is focused.
+  final List<ActionShortcut>? actions;
+
+  /// Actions that can be performed when the text field is focused.
+  final List<ActionShortcut>? textFieldActions;
+
+  /// Actions that can be performed when the surrounding of the text field is focused.
+  final List<ActionShortcut>? surroundingActions;
+
+  final InputDecoration? decoration;
+  final TextStyle? style;
+  final int? maxLines;
+  final TextAlign textAlign;
+  final bool readOnly;
 
   _State _parse(String value) {
     try {
@@ -75,8 +113,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       final message = validator?.call(object);
       if (message != null) return _Invalid(message);
       return _Valid(object, "Valid $name: $value");
-    } on FormatException catch (_) {
-      return _Invalid("Invalid $name: $value");
+    } on FormatException catch (e) {
+      final message = e.message.trim();
+      return _Invalid(message.isNotEmpty ? message : "Invalid $name: $value");
     }
   }
 
@@ -94,13 +133,38 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
     final formattedValue = deserialize?.call(value) ?? value.toString();
 
-    useFocusedChange(focus, ({required hasFocus}) {
-      if (!hasFocus) state.value = _initial;
+    useFocusedChange(
+      focus,
+      ({required hasFocus}) {
+        if (!hasFocus) {
+          state.value = _initial;
+          return;
+        }
 
-      if (hasFocus && keepValidVisibleWhileFocused && state.value == _initial) {
-        _updateState(formattedValue, state);
-      }
-    });
+        if (hasFocus &&
+            keepValidVisibleWhileFocused &&
+            state.value == _initial) {
+          _updateState(formattedValue, state);
+        }
+      },
+      [formattedValue],
+    );
+
+    final baseDecoration = decoration ?? const InputDecoration();
+    final effectiveDecoration = baseDecoration.copyWith(
+      prefixIcon: baseDecoration.prefixIcon ??
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icones(
+              icon,
+              size: 18,
+              color: state.value is _Invalid ? Colors.redAccent : null,
+            ),
+          ),
+      hintText: baseDecoration.hintText ?? "Enter a $name",
+      errorText:
+          state.value.cast<_Invalid>()?.message ?? baseDecoration.errorText,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,26 +176,25 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           text: formattedValue,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
-          decoration: InputDecoration(
-            prefixIcon: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icones(
-                icon,
-                size: 18,
-                color: state.value is _Invalid ? Colors.redAccent : null,
-              ),
-            ),
-            hintText: "Enter a $name",
-            errorText: state.value.cast<_Invalid>()?.message,
-          ),
+          decoration: effectiveDecoration,
+          style: style,
+          maxLines: maxLines,
+          textAlign: textAlign,
+          readOnly: readOnly,
+          actions: actions,
+          textFieldActions: textFieldActions,
+          surroundingActions: surroundingActions,
           onChanged: (value) {
             final object = _updateState(value, state);
             if (object != null) onChanged?.call(object);
           },
-          onDone: (value) {
-            final object = _updateState(value, state);
-            if (object != null) onDone?.call(object);
-          },
+          onDone: keepErrorVisibleWhenUnfocused
+              ? (value) {
+                  final object = _updateState(value, state);
+                  if (object != null) onDone?.call(object);
+                }
+              : null,
+          onEditingComplete: onEditingComplete,
           onSubmitted: (value) {
             final object = _updateState(value, state);
             if (object != null) onSubmitted?.call(object);

@@ -38,7 +38,7 @@ final class InspectorSizeProvider
   }
 }
 
-String _$inspectorSizeHash() => r'5a82ffc5d956954ef6968a50cc10539cdb4b93d1';
+String _$inspectorSizeHash() => r'bdbec34c18631cd20a79204c6038b93ebb5d4a82';
 
 abstract class _$InspectorSize extends $Notifier<double> {
   double build();

@@ -12,6 +12,7 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/boolean_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/headers/list_header.dart";
+import "package:typewriter_panel/widgets/generic/components/depth_box.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 
 part "header.freezed.dart";
@@ -82,6 +83,7 @@ class FieldHeader extends HookConsumerWidget {
     required this.path,
     required this.dataBlueprint,
     required this.editorMode,
+    this.title,
     this.canExpand = false,
     this.defaultExpanded,
     super.key,
@@ -91,6 +93,8 @@ class FieldHeader extends HookConsumerWidget {
   final String path;
   final DataBlueprint dataBlueprint;
   final EditorMode editorMode;
+
+  final String? title;
 
   final bool canExpand;
   final bool? defaultExpanded;
@@ -112,27 +116,19 @@ class FieldHeader extends HookConsumerWidget {
         ? ref.watch(_actionsProvider(path, editorMode))
         : HeaderActions();
 
-    final name =
-        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Editor";
+    final name = title ??
+        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ??
+        "Editor";
 
     final expanded = useState(_defaultExpanded);
-    final depth = (parent?.depth ?? -1) + 1;
 
     return Header(
       key: ValueKey(path),
       path: path,
       expanded: expanded,
       canExpand: canExpand,
-      depth: depth,
-      child: Material(
-        color: canExpand
-            ? depth.isEven
-                ? Theme.of(context).colorScheme.surfaceContainerLowest
-                : Theme.of(context).colorScheme.surface
-            : Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-        ),
+      child: DepthBox(
+        enabled: canExpand,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,14 +223,12 @@ class Header extends InheritedWidget {
     required this.expanded,
     required this.canExpand,
     required super.child,
-    required this.depth,
     super.key,
   });
 
   final String path;
   final ValueNotifier<bool> expanded;
   final bool canExpand;
-  final int depth;
 
   @override
   bool updateShouldNotify(covariant Header oldWidget) => path != oldWidget.path;

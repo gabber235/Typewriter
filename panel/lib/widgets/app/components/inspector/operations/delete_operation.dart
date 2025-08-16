@@ -3,12 +3,12 @@ import "dart:async";
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
+import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
@@ -21,7 +21,7 @@ class DeleteSelectableOperation extends SelectableOperation {
 /// The delete operation exposed when every selected item provides a
 /// [DeleteSelectableOperation].
 class DeleteOperation extends Operation {
-  DeleteOperation();
+  const DeleteOperation();
 
   @override
   String get name => "Delete";
@@ -97,61 +97,34 @@ class DeleteOperationButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDeleting = useState(false);
-
-    Future<void> runDeletes() async {
-      if (isDeleting.value) return;
-      isDeleting.value = true;
-
-      await operation.executeOn(ref);
-
-      if (!context.mounted) return;
-      isDeleting.value = false;
-    }
-
-    void confirmAndDelete() => showConfirmationDialogue(
-          context: context,
-          title: "Delete ${selection.length} item(s)?",
-          content: "This action cannot be undone.",
-          confirmText: "Delete",
-          confirmColor: Theme.of(context).colorScheme.error,
-          onConfirm: runDeletes,
-        );
-
-    final buttonStyle = FilledButtonTheme.of(context).style;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: FilledButton.icon(
-        onPressed: isDeleting.value ? null : confirmAndDelete,
+      child: LoadingButton.filledIcon(
+        onPressed: () {
+          showConfirmationDialogue(
+            context: context,
+            title: "Delete ${selection.length} item(s)?",
+            content: "This action cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: Theme.of(context).colorScheme.error,
+            onConfirmColor: Theme.of(context).colorScheme.onError,
+            onConfirm: () async {
+              await operation.executeOn(ref);
+            },
+          );
+        },
         style: FilledButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.onError,
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
-        icon: isDeleting.value
-            ? SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(
-                    buttonStyle?.foregroundColor
-                        ?.resolve({WidgetState.disabled}),
-                  ),
-                ),
-              )
-            : Icon(
-                Icons.delete_outline,
-                size: 16,
-              ),
+        icon: const Icon(
+          Icons.delete_outline,
+          size: 16,
+        ),
         label: Row(
           children: [
             Text(
-              isDeleting.value
-                  ? "Deleting..."
-                  : selection.length > 1
-                      ? "Delete (${selection.length})"
-                      : "Delete",
+              selection.length > 1 ? "Delete (${selection.length})" : "Delete",
             ),
             if (operation.shortcutActivators.isEmpty) ...[
               const SizedBox(width: 8),

@@ -1,5 +1,5 @@
 ---
-description: 
+description:
 globs: *.dart
 alwaysApply: false
 ---
@@ -10,3 +10,18 @@ alwaysApply: false
 - Do not use the `labelText` property on text fields. Use only `hintText` for placeholder text.
 - When editing a file with code generation, always run `dart run build_runner build -d` afterwards.
 - Always use absolute imports, NEVER USE RELATIVE IMPORTS!
+
+- Widgetbook utilities:
+  - In stories and use-cases, wrap content with `FakeApp` (widgetbook/lib/widgetbook_utils.dart). Supply provider overrides via its `overrides` parameter. Do not build ad-hoc `MaterialApp`/`ProviderScope` stacks in stories.
+  - `FakeApp` already applies `AppRequiredWidgets`, `Responsive`, app-wide shortcuts (`TypewriterPanel.typewriterShortcuts`), and scroll behavior. Avoid duplicating these wrappers.
+
+- Test utilities:
+  - In widget tests, use `testApp(...)` and `WidgetTester.pumpTestApp(...)` (test/test_utils.dart) instead of hand-rolled scaffolds.
+  - Use `WidgetTester.captureScreenshot(...)` for PNG captures during tests; keep outputs under "test_screenshots".
+  - Reuse provider mocks from the testkit package: import `package:typewriter_testkit/typewriter_testkit.dart` and use the provided overrides helpers (e.g., `appearanceProviderOverrides(...)`, `authProviderOverrides(...)`, `booksProviderOverrides(...)`, `manualsProviderOverrides(...)`, `modulesProviderOverrides(...)`, `organizationsProviderOverrides(...)`).
+  - Call `setupMocks()` (test/test_utils.dart) in your test main or setUpAll to register mocktail fallback values when needed.
+
+- Import exceptions (narrowly scoped):
+  - The rule to always use package imports still applies everywhere.
+  - Widgetbook and Testkit exception: importing `package:riverpod/src/framework.dart` is permitted strictly to reference `Override` in the Widgetbook workspace and within the `typewriter_testkit` package (mocks). In those locations, include the ignore annotations `// ignore: depend_on_referenced_packages, implementation_imports` on that import line. Do not use implementation imports in app/lib code, and do not re-export them.
+  - Tests may use `dart:io` APIs when needed for local file outputs (e.g., screenshots). Keep such usage confined to the test code paths.
