@@ -10,13 +10,11 @@ runs:
   using: "composite"
   steps:
       - name: Test extension
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: :${{ inputs.extension }}:test --scan
-          build-root-directory: ./extensions
-      - name: Build Adapter
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: :${{ inputs.extension }}:buildRelease --scan
-          build-root-directory: ./extensions
+        working-directory: ./extensions
+        run: ./gradlew :${{ inputs.extension }}:test --scan --stacktrace --warning-mode all
+        shell: bash
 
+      - name: Build Extension
+        working-directory: ./extensions
+        run: ./gradlew :${{ inputs.extension }}:buildRelease --scan --stacktrace --warning-mode all
+        shell: bash

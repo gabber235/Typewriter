@@ -10,7 +10,9 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout 🛎️
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # Generate the sponsors
       - name: Generate Sponsors 💖

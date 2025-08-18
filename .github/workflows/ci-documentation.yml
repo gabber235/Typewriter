@@ -1,4 +1,4 @@
-name: Test Documentation Build
+name: CI Documentation
 
 on:
   pull_request:
@@ -8,12 +8,12 @@ on:
 
 jobs:
   test:
-    name: Test Documentation Build
+    name: Build Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: sudo apt update && sudo apt install libvips-dev -y
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: npm

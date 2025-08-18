@@ -1,8 +1,11 @@
 name: Build Beta Jars and Publish
 
-on: 
+on:
   workflow_dispatch:
-  
+
+permissions:
+  contents: write
+
 jobs:
   build-publish-development:
     runs-on: ubuntu-latest
@@ -10,12 +13,23 @@ jobs:
       group: build-publish-beta
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Java 
-        uses: actions/setup-java@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: false
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
+          cache-cleanup: always
+
       - name: Get version
         id: vars
         run: |
@@ -24,37 +38,43 @@ jobs:
           full_version="${version}-beta-${run_number}"
           echo $full_version > version.txt
           echo "version=$full_version" >> $GITHUB_OUTPUT
+
       - name: Build Engine
         uses: ./.github/actions/build-engine
+
 #  ----------------------------------------------------------------------------------------------------
       - name: Test Extensions
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test --scan
-          build-root-directory: ./extensions
+        working-directory: ./extensions
+        run: ./gradlew test --scan
+
 #  ----------------------------------------------------------------------------------------------------
       - name: Publish Engine to Beta Maven Repository
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publishAllPublicationsToTypewriterBetaRepository -PTypewriterBetaUsername=${{ secrets.MAVEN_USERNAME }} -PTypewriterBetaPassword=${{ secrets.MAVEN_PASSWORD }} --scan
-          build-root-directory: ./engine
+        working-directory: ./engine
+        env:
+          ORG_GRADLE_PROJECT_TypewriterBetaUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
+
       - name: Publish All Extensions to Beta Maven Repository
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publishAllPublicationsToTypewriterBetaRepository -PTypewriterBetaUsername=${{ secrets.MAVEN_USERNAME }} -PTypewriterBetaPassword=${{ secrets.MAVEN_PASSWORD }} --scan
-          build-root-directory: ./extensions
+        working-directory: ./extensions
+        env:
+          ORG_GRADLE_PROJECT_TypewriterBetaUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
+
       - name: Publish Module-Plugin to Beta Maven Repository
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publishAllPublicationsToTypewriterBetaRepository -PTypewriterBetaUsername=${{ secrets.MAVEN_USERNAME }} -PTypewriterBetaPassword=${{ secrets.MAVEN_PASSWORD }} --scan
-          build-root-directory: ./module-plugin
+        working-directory: ./module-plugin
+        env:
+          ORG_GRADLE_PROJECT_TypewriterBetaUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
+
 #  ----------------------------------------------------------------------------------------------------
       # Has to be after the publish, because it needs to delete the slim jars and only keep the shadowed jars for the modrinth upload
       - name: Build Extensions
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: buildRelease --scan
-          build-root-directory: ./extensions
+        working-directory: ./extensions
+        run: ./gradlew buildRelease --scan
+
 #  ----------------------------------------------------------------------------------------------------
       - name: Publish Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
@@ -77,13 +97,12 @@ jobs:
             packetevents(required)
 
       - name: Publish Hangar
-        uses: gradle/gradle-build-action@v2
+        working-directory: ./engine
         continue-on-error: true
         env:
           HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
-        with:
-          arguments: engine-paper:publishPluginPublicationToHangar --scan
-          build-root-directory: ./engine
+        run: ./gradlew engine-paper:publishPluginPublicationToHangar --scan
+
       - name: Add Tag
         uses: mathieudutour/github-tag-action@v6.2
         continue-on-error: true
@@ -92,6 +111,7 @@ jobs:
           default_bump: false
           custom_tag: "${{ steps.vars.outputs.version }}"
           release_branches: develop
+
       - name: Notify Discord
         uses: sarisia/actions-status-discord@v1
         with:
@@ -102,6 +122,7 @@ jobs:
             I have published a beta build of Typewriter.
             Version: ${{ steps.vars.outputs.version }}
             [Download](https://modrinth.com/plugin/typewriter/version/${{ steps.publish.outputs.modrinth-version }})
+
       - name: Notify Winston
         uses: fjogeleit/http-request-action@v1
         with:
@@ -109,4 +130,3 @@ jobs:
           method: 'GET'
           timeout: 60000
           customHeaders: '{"X-Signature": "${{ secrets.WINSTON_SIGNATURE }}"}'
-

@@ -8,21 +8,35 @@ on:
         type: string
         description: The name of the extension to build
 
+permissions:
+  contents: read
+
 jobs:
   build-adapter:
     name: Build ${{ inputs.extension }} Extension
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Java 
-        uses: actions/setup-java@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: false
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
+
       - name: Build Adapter
         uses: ./.github/actions/build-extension
         with:
           extension: ${{ inputs.extension }}
+
       - name: Upload Extension
         uses: actions/upload-artifact@v4
         with:

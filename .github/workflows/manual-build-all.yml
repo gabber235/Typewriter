@@ -1,7 +1,7 @@
-name: Build Jars on Request
+name: Manual Build Jars
 
 on: [workflow_dispatch]
-  
+
 jobs:
   build-engine:
     name: Build Typewriter Engine
