@@ -21,7 +21,9 @@ import com.typewritermc.entity.entries.data.minecraft.living.applyAgeableData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.tameable.applyTameableData
 import com.typewritermc.entity.entries.data.minecraft.living.wolf.BeggingProperty
+import com.typewritermc.entity.entries.data.minecraft.living.wolf.WolfVariantProperty
 import com.typewritermc.entity.entries.data.minecraft.living.wolf.applyBeggingData
+import com.typewritermc.entity.entries.data.minecraft.living.wolf.applyWolfVariantData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
@@ -65,6 +67,7 @@ class WolfInstance(
 private class WolfEntity(player: Player) : WrapperFakeEntity(EntityTypes.WOLF, player) {
     override fun applyProperty(property: EntityProperty) {
         when (property) {
+            is WolfVariantProperty -> applyWolfVariantData(entity, property)
             is BeggingProperty -> applyBeggingData(entity, property)
             is DyeColorProperty -> applyDyeColorData(entity, property)
             is AgeableProperty -> applyAgeableData(entity, property)
