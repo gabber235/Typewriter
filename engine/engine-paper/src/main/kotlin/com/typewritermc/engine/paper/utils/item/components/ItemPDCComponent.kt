@@ -14,7 +14,7 @@ import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("persistent_data_container", Colors.PURPLE, "fa6-solid:database")
 class ItemPDCComponent(
-    @Default("\"minecraft\"")
+    @Default("\"typewriter\"")
     val namespace: Var<String> = ConstVar("typewriter"),
     @Default("\"custom_data\"")
     val key: Var<String> = ConstVar("custom_data"),
