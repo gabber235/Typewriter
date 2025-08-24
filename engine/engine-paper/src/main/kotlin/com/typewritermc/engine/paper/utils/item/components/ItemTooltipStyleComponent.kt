@@ -1,7 +1,8 @@
 package com.typewritermc.engine.paper.utils.item.components
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
@@ -16,7 +17,7 @@ class ItemTooltipStyleComponent(
     val namespace: Var<String> = ConstVar("minecraft"),
     @Default("\"default\"")
     val key: Var<String> = ConstVar("default"),
-): ItemComponent {
+) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta ->
             val namespaceValue = namespace.get(player) ?: return@editMeta
@@ -25,6 +26,7 @@ class ItemTooltipStyleComponent(
             meta.tooltipStyle = namespacedKey
         }
     }
+
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
         val expectedNamespace = namespace.get(player) ?: return false

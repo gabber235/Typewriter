@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack
 class ItemCustomModelDataComponent(
     @InnerMin(Min(0))
     @Default("0")
+
     val customModelData: Var<Int> = ConstVar(0),
 ) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {

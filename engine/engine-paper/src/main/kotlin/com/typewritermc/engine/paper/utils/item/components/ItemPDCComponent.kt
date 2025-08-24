@@ -20,6 +20,7 @@ class ItemPDCComponent(
     val key: Var<String> = ConstVar("custom_data"),
     val value: Var<String> = ConstVar(""),
 ) : ItemComponent {
+
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta ->
             val namespaceValue = namespace.get(player) ?: return@editMeta

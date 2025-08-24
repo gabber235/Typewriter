@@ -22,7 +22,6 @@ class ItemJukeboxPlayableComponent(
             val jukeboxComponent = meta.jukeboxPlayable
 
             jukeboxComponent.songKey = soundKey
-
             meta.setJukeboxPlayable(jukeboxComponent)
         }
     }
