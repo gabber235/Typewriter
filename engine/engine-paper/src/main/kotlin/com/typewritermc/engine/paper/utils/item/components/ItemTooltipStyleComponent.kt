@@ -20,17 +20,18 @@ class ItemTooltipStyleComponent(
 ) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta ->
-            val namespaceValue = namespace.get(player) ?: return@editMeta
-            val keyValue = key.get(player) ?: return@editMeta
+            val namespaceValue = namespace.get(player, interactionContext) ?: return@editMeta
+            val keyValue = key.get(player, interactionContext) ?: return@editMeta
             val namespacedKey = NamespacedKey(namespaceValue, keyValue)
+            if (meta.tooltipStyle == namespacedKey) return@editMeta
             meta.tooltipStyle = namespacedKey
         }
     }
 
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
-        val expectedNamespace = namespace.get(player) ?: return false
-        val expectedKey = key.get(player) ?: return false
+        val expectedNamespace = namespace.get(player, interactionContext) ?: return false
+        val expectedKey = key.get(player, interactionContext) ?: return false
         val actualStyle = item.itemMeta?.tooltipStyle
         val expectedNamespacedKey = NamespacedKey(expectedNamespace, expectedKey)
         return actualStyle == expectedNamespacedKey

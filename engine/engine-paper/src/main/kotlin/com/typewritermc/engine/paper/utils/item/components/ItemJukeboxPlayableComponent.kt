@@ -17,18 +17,27 @@ class ItemJukeboxPlayableComponent(
 ) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta ->
-            val soundKey = sound.get(player, interactionContext)?.soundId?.namespacedKey ?: return@editMeta
+            val resolvedSound = sound.get(player, interactionContext)
+            if (resolvedSound == null || resolvedSound == Sound.EMPTY) {
+                meta.setJukeboxPlayable(null)
+                return@editMeta
+            }
 
+            val soundKey = resolvedSound.soundId.namespacedKey ?: return@editMeta
             val jukeboxComponent = meta.jukeboxPlayable
-
             jukeboxComponent.songKey = soundKey
             meta.setJukeboxPlayable(jukeboxComponent)
         }
     }
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
-        val expectedSoundKey = sound.get(player, interactionContext)?.soundId?.namespacedKey ?: return false
+        val expectedSound = sound.get(player, interactionContext)
         val actualComponent = item.itemMeta?.jukeboxPlayable
-        return actualComponent?.songKey == expectedSoundKey
+
+        if (expectedSound == null || expectedSound == Sound.EMPTY) {
+            return actualComponent == null
+        }
+
+        return actualComponent?.songKey == expectedSound.soundId.namespacedKey
     }
 }

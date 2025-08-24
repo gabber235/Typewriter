@@ -23,13 +23,13 @@ class ItemPDCComponent(
 
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta ->
-            val namespaceValue = namespace.get(player) ?: return@editMeta
-            val keyValue = key.get(player) ?: return@editMeta
-            val valueValue = value.get(player) ?: return@editMeta
+            val namespaceValue = namespace.get(player, interactionContext) ?: return@editMeta
+            val keyValue = key.get(player, interactionContext) ?: return@editMeta
+            val valueValue = value.get(player, interactionContext) ?: return@editMeta
 
             val namespacedKey = NamespacedKey(namespaceValue, keyValue)
 
-            if (valueValue.isEmpty()) {
+            if (valueValue.isBlank()) {
                 meta.persistentDataContainer.remove(namespacedKey)
             } else {
                 meta.persistentDataContainer.set(namespacedKey, PersistentDataType.STRING, valueValue)
@@ -38,14 +38,14 @@ class ItemPDCComponent(
     }
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
-        val expectedNamespace = namespace.get(player) ?: return false
-        val expectedKey = key.get(player) ?: return false
-        val expectedValue = value.get(player) ?: return false
+        val expectedNamespace = namespace.get(player, interactionContext) ?: return false
+        val expectedKey = key.get(player, interactionContext) ?: return false
+        val expectedValue = value.get(player, interactionContext) ?: return false
 
         val namespacedKey = NamespacedKey(expectedNamespace, expectedKey)
         val actualValue = item.itemMeta?.persistentDataContainer?.get(namespacedKey, PersistentDataType.STRING)
 
-        return if (expectedValue.isEmpty()) {
+        return if (expectedValue.isBlank()) {
             actualValue == null
         } else {
             actualValue == expectedValue
