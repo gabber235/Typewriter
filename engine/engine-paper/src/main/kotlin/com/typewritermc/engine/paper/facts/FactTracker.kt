@@ -124,7 +124,7 @@ fun Player.listenForFacts(
     facts: List<Ref<ReadableFactEntry>>,
     listener: FactUpdateEvent
 ): FactListenerSubscription {
-    val watcher = factTracker ?: throw IllegalStateException("Player is not in an quest")
+    val watcher = factTracker ?: throw IllegalStateException("Player session has not been initialized yet")
     return watcher.addListener(facts, listener)
 }
 
