@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.utils.item.components
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
 import com.typewritermc.core.extension.annotations.Colored
@@ -11,6 +12,7 @@ import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.plainText
+import com.typewritermc.engine.paper.utils.serverVersion
 import com.typewritermc.engine.paper.utils.stripped
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -30,6 +32,12 @@ class ItemNameComponent(
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
         val name = name.get(player) ?: return false
-        return item.effectiveName().plainText() == name.parsePlaceholders(player).stripped()
+
+
+        return if (serverVersion.isNewerThan(ServerVersion.V_1_21_3)) {
+            item.effectiveName().plainText() == name.parsePlaceholders(player).stripped()
+        } else {
+            item.displayName().plainText() == name.parsePlaceholders(player).stripped()
+        }
     }
 }
