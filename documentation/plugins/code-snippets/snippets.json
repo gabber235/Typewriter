@@ -93,7 +93,7 @@
   },
   "dialogue_triggers": {
     "file": "src/main/kotlin/com/typewritermc/example/TriggerExample.kt",
-    "content": "    // Next dialogue should be triggered or the current dialogue should complete its typing animation.\n    DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, context())\n\n    // Forces the next dialogue to be triggered, even if the animation hasn't finished.\n    DialogueTrigger.FORCE_NEXT.triggerFor(player, context())"
+    "content": "    // Next dialogue should be triggered or the current dialogue should complete its typing animation.\n    DialogueTrigger.NEXT_OR_SKIP_ANIMATION.triggerFor(player, context())\n\n    // Forces the next dialogue to be triggered, even if the animation hasn't finished.\n    DialogueTrigger.FORCE_NEXT.triggerFor(player, context())"
   },
   "temporal_triggers": {
     "file": "src/main/kotlin/com/typewritermc/example/TriggerExample.kt",
@@ -137,11 +137,11 @@
   },
   "basic_interaction": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/interaction/ExampleInteraction.kt",
-    "content": "class ExampleInteraction(\n    val player: Player,\n    override val context: InteractionContext,\n    override val priority: Int,\n    val eventTriggers: List<EventTrigger>\n) : Interaction {\n    override suspend fun initialize(): Result<Unit> {\n        if (Random.nextBoolean()) {\n            // Failing during initialization makes it so that the interaction will be stopped.\n            return failure(\"Failed to initialize\")\n        }\n\n        // Setup your interaction state\n        player.sendMessage(\"Starting interaction!\")\n\n        return ok(Unit)\n    }\n\n    override suspend fun tick(deltaTime: Duration) {\n        // Update your interaction state\n        if (shouldEnd()) {\n            // Trigger the stop event when done\n            ExampleStopTrigger.triggerFor(player, context)\n        }\n    }\n\n    override suspend fun teardown(force: Boolean) {\n        // Cleanup your interaction state\n        player.sendMessage(\"Ending interaction!\")\n    }\n\n    private fun shouldEnd(): Boolean = false // Your end condition\n}"
+    "content": "class ExampleInteraction(\n    val player: Player,\n    override val context: InteractionContext,\n    override val priority: Int,\n    val eventTriggers: List<EventTrigger>\n) : Interaction {\n    override suspend fun initialize(): Result<Unit> {\n        if (Random.nextBoolean()) {\n            // Failing during initialization makes it so that the interaction will be stopped.\n            return failure(\"Failed to initialize\")\n        }\n\n        // Setup your interaction state\n        player.sendMessage(\"Starting interaction!\")\n\n        return ok(Unit)\n    }\n\n    override suspend fun tick(deltaTime: Duration) {\n        // Update your interaction state\n        if (shouldEnd()) {\n            // Trigger the stop event when done\n            ExampleStopTrigger.triggerFor(player, context)\n        }\n    }\n\n    override suspend fun teardown() {\n        // Cleanup your interaction state\n        player.sendMessage(\"Ending interaction!\")\n    }\n\n    private fun shouldEnd(): Boolean = false // Your end condition\n}"
   },
   "interaction_trigger_handler": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/interaction/ExampleInteraction.kt",
-    "content": "@Singleton // This registers the handler to Typewriter\nclass ExampleTriggerHandler : TriggerHandler {\n    override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {\n        // Handle stopping the interaction\n        if (ExampleStopTrigger in event && currentInteraction is ExampleInteraction) {\n            return TriggerContinuation.Multi(\n                TriggerContinuation.EndInteraction,\n                TriggerContinuation.Append(Event(event.player, currentInteraction.context, currentInteraction.eventTriggers)),\n            )\n        }\n\n        // Handle starting the interaction\n        return tryStartExampleInteraction(event)\n    }\n\n    private fun tryStartExampleInteraction(\n        event: Event\n    ): TriggerContinuation {\n        // Find all start triggers in the event\n        val triggers = event.triggers\n            .filterIsInstance<ExampleStartTrigger>()\n\n        if (triggers.isEmpty()) return TriggerContinuation.Nothing\n\n        // Use the highest priority trigger\n        val trigger = triggers.maxBy { it.priority }\n\n        // Start the interaction\n        return TriggerContinuation.StartInteraction(\n            ExampleInteraction(\n                event.player,\n                event.context,\n                trigger.priority,\n                trigger.eventTriggers\n            )\n        )\n    }\n}"
+    "content": "@Singleton // This registers the handler to Typewriter\nclass ExampleTriggerHandler : TriggerHandler {\n    override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {\n        // Handle stopping the interaction\n        if (ExampleStopTrigger in event && currentInteraction is ExampleInteraction) {\n            return TriggerContinuation.Multi(\n                TriggerContinuation.EndInteraction,\n                TriggerContinuation.Append(\n                    Event(\n                        event.player,\n                        currentInteraction.context,\n                        currentInteraction.eventTriggers\n                    )\n                ),\n            )\n        }\n\n        // Handle starting the interaction\n        return tryStartExampleInteraction(event)\n    }\n\n    private fun tryStartExampleInteraction(\n        event: Event\n    ): TriggerContinuation {\n        // Find all start triggers in the event\n        val triggers = event.triggers\n            .filterIsInstance<ExampleStartTrigger>()\n\n        if (triggers.isEmpty()) return TriggerContinuation.Nothing\n\n        // Use the highest priority trigger\n        val trigger = triggers.maxBy { it.priority }\n\n        // Start the interaction\n        return TriggerContinuation.StartInteraction(\n            ExampleInteraction(\n                event.player,\n                event.context,\n                trigger.priority,\n                trigger.eventTriggers\n            )\n        )\n    }\n}"
   },
   "interaction_entry": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/interaction/ExampleInteraction.kt",
@@ -225,7 +225,15 @@
   },
   "artifact_access": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleArtifactEntry.kt",
-    "content": "suspend fun accessArtifactData(ref: Ref<out ArtifactEntry>) {\n    val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)\n    val entry = ref.get() ?: return\n    val content: String? = assetManager.fetchAsset(entry)\n    // Do something with the content\n}"
+    "content": "suspend fun accessArtifactData(ref: Ref<out ArtifactEntry>) {\n    val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)\n    val entry = ref.get() ?: return\n    val stringContent: String? = assetManager.fetchStringAsset(entry)\n    // Do something with the string content\n}"
+  },
+  "artifact_binary_access": {
+    "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleArtifactEntry.kt",
+    "content": "suspend fun accessBinaryArtifactData(ref: Ref<out ArtifactEntry>) {\n    val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)\n    val entry = ref.get() ?: return\n    val binaryContent: ByteArray? = assetManager.fetchBinaryAsset(entry)\n    // Do something with the binary content\n}"
+  },
+  "artifact_helper_methods": {
+    "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleArtifactEntry.kt",
+    "content": "suspend fun accessArtifactDataUsingHelpers(ref: Ref<out ArtifactEntry>) {\n    val entry = ref.get() ?: return\n    \n    // Check if artifact has data\n    if (entry.hasData()) {\n        // Access string data using helper method\n        val stringContent: String? = entry.stringData()\n        \n        // Access binary data using helper method\n        val binaryContent: ByteArray? = entry.binaryData()\n        \n        // Store string data\n        entry.stringData(\"Updated artifact content\")\n        \n        // Store binary data\n        entry.binaryData(byteArrayOf(1, 2, 3, 4, 5))\n    }\n}"
   },
   "asset_entry": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleAssetEntry.kt",
@@ -233,7 +241,15 @@
   },
   "asset_access": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleAssetEntry.kt",
-    "content": "suspend fun accessAssetData(ref: Ref<out AssetEntry>) {\n    val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)\n    val entry = ref.get() ?: return\n    val content: String? = assetManager.fetchAsset(entry)\n    // Do something with the content\n}"
+    "content": "suspend fun accessAssetData(ref: Ref<out AssetEntry>) {\n    val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)\n    val entry = ref.get() ?: return\n    val stringContent: String? = assetManager.fetchStringAsset(entry)\n    // Do something with the string content\n}"
+  },
+  "asset_binary_access": {
+    "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleAssetEntry.kt",
+    "content": "suspend fun accessBinaryAssetData(ref: Ref<out AssetEntry>) {\n    val assetManager = KoinJavaComponent.get<AssetManager>(AssetManager::class.java)\n    val entry = ref.get() ?: return\n    val binaryContent: ByteArray? = assetManager.fetchBinaryAsset(entry)\n    // Do something with the binary content\n}"
+  },
+  "asset_helper_methods": {
+    "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleAssetEntry.kt",
+    "content": "suspend fun accessAssetDataUsingHelpers(ref: Ref<out AssetEntry>) {\n    val entry = ref.get() ?: return\n    \n    // Check if asset has data\n    if (entry.hasData()) {\n        // Access string data using helper method\n        val stringContent: String? = entry.stringData()\n        \n        // Access binary data using helper method\n        val binaryContent: ByteArray? = entry.binaryData()\n        \n        // Store string data\n        entry.stringData(\"Updated content\")\n        \n        // Store binary data\n        entry.binaryData(byteArrayOf(1, 2, 3, 4, 5))\n    }\n}"
   },
   "sound_id_entry": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleSoundIdEntry.kt",
@@ -245,7 +261,7 @@
   },
   "speaker_entry": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleSpeakerEntry.kt",
-    "content": "@Entry(\"example_speaker\", \"An example speaker entry.\", Colors.BLUE, \"ic:round-spatial-audio-off\")\nclass ExampleSpeakerEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    override val displayName: Var<String> = ConstVar(\"\"),\n    override val sound: Sound = Sound.EMPTY,\n) : SpeakerEntry"
+    "content": "@Entry(\"example_speaker\", \"An example speaker entry.\", Colors.BLUE, \"ic:round-spatial-audio-off\")\nclass ExampleSpeakerEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    override val displayName: Var<String> = ConstVar(\"\"),\n    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),\n) : SpeakerEntry"
   },
   "variable_entry": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/static/ExampleVariableEntry.kt",
@@ -297,6 +313,14 @@
   },
   "event_entry_with_context_keys": {
     "file": "src/main/kotlin/com/typewritermc/example/entries/trigger/ExampleEventEntry.kt",
-    "content": "@Entry(\"example_event_with_context_keys\", \"An example event entry with context keys.\", Colors.YELLOW, \"material-symbols:bigtop-updates\")\n// This tells Typewriter that this entry exposes some context\n// highlight-next-line\n@ContextKeys(ExampleContextKeys::class)\nclass ExampleEventEntryWithContextKeys(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),\n) : EventEntry\n\n// highlight-start\nenum class ExampleContextKeys(override val klass: KClass<*>) : EntryContextKey {\n    // The two `String::class` have to be the same.\n    // The @KeyType is for the panel to know\n    @KeyType(String::class)\n    // The type here is for casting during runtime\n    TEXT(String::class),\n\n    @KeyType(Int::class)\n    NUMBER(Int::class),\n\n    // More complex types are also allowed.\n    @KeyType(Position::class)\n    POSITION(Position::class)\n}\n// highlight-end\n\n@EntryListener(ExampleEventEntryWithContextKeys::class)\nfun onEventAddContext(event: SomeBukkitEvent, query: Query<ExampleEventEntryWithContextKeys>) {\n    val entries = query.find()\n    // highlight-start\n    entries.triggerAllFor(event.player) {\n        // Make sure these values are drawn from the event.\n        // You MUST supply all the context keys.\n        ExampleContextKeys.TEXT withValue \"Hello World\"\n        ExampleContextKeys.NUMBER withValue 42\n        ExampleContextKeys.POSITION withValue Position.ORIGIN\n    }\n    // highlight-end\n}"
+    "content": "@Entry(\n    \"example_event_with_context_keys\",\n    \"An example event entry with context keys.\",\n    Colors.YELLOW,\n    \"material-symbols:bigtop-updates\"\n)\n// This tells Typewriter that this entry exposes some context\n// highlight-next-line\n@ContextKeys(ExampleContextKeys::class)\nclass ExampleEventEntryWithContextKeys(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),\n) : EventEntry\n\n// highlight-start\nenum class ExampleContextKeys(override val klass: KClass<*>) : EntryContextKey {\n    // The two `String::class` have to be the same.\n    // The @KeyType is for the panel to know\n    @KeyType(String::class)\n    // The type here is for casting during runtime\n    TEXT(String::class),\n\n    @KeyType(Int::class)\n    NUMBER(Int::class),\n\n    // More complex types are also allowed.\n    @KeyType(Position::class)\n    POSITION(Position::class)\n}\n// highlight-end\n\n@EntryListener(ExampleEventEntryWithContextKeys::class)\nfun onEventAddContext(event: SomeBukkitEvent, query: Query<ExampleEventEntryWithContextKeys>) {\n    val entries = query.find()\n    // highlight-start\n    entries.triggerAllFor(event.player) {\n        // Make sure these values are drawn from the event.\n        // You MUST supply all the context keys.\n        ExampleContextKeys.TEXT withValue \"Hello World\"\n        ExampleContextKeys.NUMBER withValue 42\n        ExampleContextKeys.POSITION withValue Position.ORIGIN\n    }\n    // highlight-end\n}"
+  },
+  "cancelable_event_entry": {
+    "file": "src/main/kotlin/com/typewritermc/example/entries/trigger/ExampleEventEntry.kt",
+    "content": "@Entry(\"example_cancelable_event\", \"An example cancelable event.\", Colors.YELLOW, \"material-symbols:block\")\nclass ExampleCancelableEventEntry(\n    override val id: String = \"\",\n    override val name: String = \"\",\n    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),\n    // highlight-start\n    override val cancel: Var<Boolean> = ConstVar(false),\n) : CancelableEventEntry\n// highlight-end"
+  },
+  "cancelable_event_listener": {
+    "file": "src/main/kotlin/com/typewritermc/example/entries/trigger/ExampleEventEntry.kt",
+    "content": "@EntryListener(ExampleCancelableEventEntry::class)\nfun onCancelableEvent(event: SomeBukkitEvent, query: Query<ExampleCancelableEventEntry>) {\n    val entries = query.find().toList()\n    entries.triggerAllFor(event.player, context())\n\n    // highlight-start\n    if (entries.shouldCancel(event.player)) {\n        event.isCancelled = true\n    }\n    // highlight-end\n}"
   }
 }

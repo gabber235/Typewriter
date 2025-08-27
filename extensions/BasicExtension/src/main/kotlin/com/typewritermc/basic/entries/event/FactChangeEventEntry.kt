@@ -11,6 +11,8 @@ import com.typewritermc.core.extension.annotations.KeyType
 import com.typewritermc.core.extension.annotations.Singleton
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.core.utils.UntickedAsync
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.CriteriaOperator
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
@@ -22,6 +24,8 @@ import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.utils.server
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -30,6 +34,7 @@ import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.seconds
 
 @Entry(
     "fact_change_event",
@@ -81,7 +86,10 @@ class FactEventWatcher : Initializable, Listener {
 
     override suspend fun initialize() {
         facts = Query.find<FactChangeEventEntry>().map { it.fact }.distinct().toList()
-        server.onlinePlayers.forEach { it.watch() }
+        Dispatchers.UntickedAsync.launch {
+            delay(1.seconds)
+            server.onlinePlayers.forEach { it.watch() }
+        }
     }
 
     fun Player.watch() {
