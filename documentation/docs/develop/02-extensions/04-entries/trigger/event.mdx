@@ -17,7 +17,14 @@ An optional `Query` parameter can be added to easily fetch all the different eve
 ## Entry Context Variables
 Sometimes you want to pass some information to the context so that subsequent entries can use it.
 
+<CodeSnippet tag="entry_context_keys" json={require("../../../snippets.json")} />
+<CodeSnippet tag="global_context_key" json={require("../../../snippets.json")} />
+
 <CodeSnippet tag="event_entry_with_context_keys" json={require("../../../snippets.json")} />
+
+Event entries are often the starting point for interaction context, capturing initial data from player actions and making it available to subsequent entries in the sequence.
+
+For more information about working with interaction context, see the [Interaction Context](../../05-interactions/context.mdx) guide.
 
 ## CancelableEventEntry
 Sometimes you may want the underlying Bukkit event to be cancelled after triggering your entries.

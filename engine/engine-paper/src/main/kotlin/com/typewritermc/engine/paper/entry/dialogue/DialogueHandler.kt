@@ -45,10 +45,10 @@ class DialogueHandler : TriggerHandler {
         finish()
 
         val triggers = this.eventTriggers
-        if (triggers.isEmpty()) {
-            return TriggerContinuation.EndInteraction
-        }
-        return TriggerContinuation.Append(Event(event.player, event.context, triggers))
+        return TriggerContinuation.Multi(
+            TriggerContinuation.Append(Event(event.player, event.context, triggers)),
+            TriggerContinuation.EndInteraction,
+        )
     }
 
     /**

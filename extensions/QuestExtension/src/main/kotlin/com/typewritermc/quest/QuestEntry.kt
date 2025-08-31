@@ -10,6 +10,7 @@ import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
+import com.typewritermc.engine.paper.facts.FactUpdateContext
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
@@ -116,8 +117,8 @@ class ObjectiveAudienceFilter(
         super.onPlayerAdd(player)
     }
 
-    private fun onFactChange(player: Player, fact: Ref<ReadableFactEntry>) {
-        player.refresh()
+    private fun onFactChange(context: FactUpdateContext) {
+        context.player.refresh()
     }
 
     override fun onPlayerRemove(player: Player) {

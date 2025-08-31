@@ -138,13 +138,22 @@ inline fun <reified E : Entry> E.withContext(builder: EntryContextBuilder<E>): I
 }
 
 class EntryInteractionContextBuilder<E : Entry>(val ref: Ref<E>, val entry: E) {
-    private val data = mutableMapOf<EntryContextKey, Any>()
+    private val entryContextKeys = mutableMapOf<EntryContextKey, Any>()
+    private val contextKeys = mutableMapOf<InteractionContextKey<*>, Any>()
 
     fun <T : Any> put(key: EntryContextKey, value: T) {
-        data[key] = value
+        entryContextKeys[key] = value
+    }
+
+    fun <T : Any> put(key: InteractionContextKey<T>, value: T) {
+        contextKeys[key] = value
     }
 
     infix fun <T : Any> EntryContextKey.withValue(value: T) {
+        put(this, value)
+    }
+
+    infix fun <T : Any> InteractionContextKey<T>.withValue(value: T) {
         put(this, value)
     }
 
@@ -152,8 +161,12 @@ class EntryInteractionContextBuilder<E : Entry>(val ref: Ref<E>, val entry: E) {
         put(this, value)
     }
 
+    operator fun <T: Any> InteractionContextKey<T>.plusAssign(value: T) {
+        put(this, value)
+    }
+
     fun build(): InteractionContext {
-        return InteractionContext(data.mapKeys { (key, _) -> EntryInteractionContextKey<Any>(ref, key) })
+        return InteractionContext(entryContextKeys.mapKeys { (key, _) -> EntryInteractionContextKey<Any>(ref, key) })
     }
 }
 

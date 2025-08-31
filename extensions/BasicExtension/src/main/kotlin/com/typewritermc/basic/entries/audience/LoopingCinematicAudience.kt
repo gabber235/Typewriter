@@ -108,7 +108,7 @@ private class CinematicDisplay(
 ) {
     private var startTime: Instant? = null
     val frame: Int
-        get() = Duration.between(startTime, Instant.now()).toTicks().toInt()
+        get() = if (startTime != null) Duration.between(startTime, Instant.now()).toTicks().toInt() else 0
 
     val isFinished: Boolean
         get() = actions.all { it canFinish frame }

@@ -268,8 +268,23 @@ private class JavaLockInteractionBoundHandler(
             setupEntity(to)
             return
         }
-
         val target = to.withY { it + positionYCorrection }.toProperty()
+
+        /// If the distance is too big, we make a jump.
+        if (from.distanceSquared(target) > MAX_DISTANCE_SQUARED) {
+            val newEntity = createEntity()
+            newEntity.spawn(target.toPacketLocation())
+            newEntity.addViewer(player.uniqueId)
+
+            player.teleportAsync(target.toBukkitLocation()).await()
+            player.spectateEntity(newEntity)
+
+            entity.despawn()
+            entity.remove()
+            entity = newEntity
+            return
+        }
+
         entity.rotateHead(target.yaw, target.pitch)
         entity.teleport(target.toPacketLocation())
 

@@ -183,3 +183,27 @@ interaction.teardown(force = true)
 interaction.teardown()
 ```
 
+## FactTracker Listener Changes
+
+The FactTracker listener callback signature has been updated to provide access to old and new fact values.
+
+### Updated Listener Usage
+
+```kotlin showLineNumbers
+// highlight-red-start
+player.listenForFacts(listOf(factRef)) { player, factRef ->
+    // Handle fact change
+    player.refresh()
+}
+// highlight-red-end
+
+// highlight-green-start
+player.listenForFacts(listOf(factRef)) {
+    // Access player, oldValue, newValue properties
+    this.player.refresh()
+}
+// highlight-green-end
+```
+
+The listener now receives a context with `player`, `ref`, `oldValue`, and `newValue` properties instead of separate parameters.
+

@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.utils
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion
 import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
 import net.kyori.adventure.text.*
 import net.kyori.adventure.text.format.NamedTextColor
@@ -14,35 +15,46 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 
-private val mm = MiniMessage.builder()
-    .tags(
-        TagResolver.builder()
-            .resolvers(
-                StandardTags.decorations(),
-                StandardTags.color(),
-                StandardTags.hoverEvent(),
-                StandardTags.clickEvent(),
-                StandardTags.keybind(),
-                StandardTags.translatable(),
-                StandardTags.translatableFallback(),
-                StandardTags.insertion(),
-                StandardTags.font(),
-                StandardTags.gradient(),
-                StandardTags.rainbow(),
-                StandardTags.transition(),
-                StandardTags.reset(),
+private val mm: MiniMessage by lazy {
+    val resolvers = mutableListOf<TagResolver>(
+        StandardTags.decorations(),
+        StandardTags.color(),
+        StandardTags.hoverEvent(),
+        StandardTags.clickEvent(),
+        StandardTags.keybind(),
+        StandardTags.translatable(),
+        StandardTags.translatableFallback(),
+        StandardTags.insertion(),
+        StandardTags.font(),
+        StandardTags.gradient(),
+        StandardTags.rainbow(),
+        StandardTags.transition(),
+        StandardTags.reset(),
 //                StandardTags.newline(), // Disable because breaks most formatting
-                StandardTags.selector(),
-                StandardTags.score(),
-                StandardTags.nbt(),
+        StandardTags.selector(),
+        StandardTags.score(),
+        StandardTags.nbt(),
+    )
+
+    if (serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {
+        resolvers.addAll(
+            listOf(
                 StandardTags.pride(),
                 StandardTags.shadowColor(),
             )
-            .tag("confirmation_key") { _, _ -> Tag.preProcessParsed(confirmationKey.keybind) }
-            .resolver(Placeholder.parsed("line", "<#ECFFF8><bold>│</bold></#ECFFF8><white>"))
-            .build()
-    )
-    .build()
+        )
+    }
+
+    MiniMessage.builder()
+        .tags(
+            TagResolver.builder()
+                .resolvers(resolvers)
+                .tag("confirmation_key") { _, _ -> Tag.preProcessParsed(confirmationKey.keybind) }
+                .resolver(Placeholder.parsed("line", "<#ECFFF8><bold>│</bold></#ECFFF8><white>"))
+                .build()
+        )
+        .build()
+}
 
 fun Component.asMini() = mm.serialize(this)
 

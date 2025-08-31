@@ -5,9 +5,13 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.Criteria
-import com.typewritermc.engine.paper.entry.entries.*
+import com.typewritermc.engine.paper.entry.entries.AudienceEntry
+import com.typewritermc.engine.paper.entry.entries.AudienceFilter
+import com.typewritermc.engine.paper.entry.entries.AudienceFilterEntry
+import com.typewritermc.engine.paper.entry.entries.Invertible
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
+import com.typewritermc.engine.paper.facts.FactUpdateContext
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.utils.server
 import org.bukkit.entity.Player
@@ -50,8 +54,8 @@ class CriteriaAudienceFilter(
         super.onPlayerAdd(player)
     }
 
-    private fun onFactChange(player: Player, fact: Ref<ReadableFactEntry>) {
-        player.refresh()
+    private fun onFactChange(context: FactUpdateContext) {
+        context.player.refresh()
     }
 
     override fun onPlayerRemove(player: Player) {
