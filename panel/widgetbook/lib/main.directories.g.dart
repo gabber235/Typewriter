@@ -11,6 +11,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
+import 'package:widgetbook_workspace/stories/app/components/graph/graph.stories.dart'
+    as _widgetbook_workspace_stories_app_components_graph_graph_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/boolean_editor.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_editors_boolean_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/editors.stories.dart'
@@ -233,6 +235,52 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_components_sidebar_stories
                           .sidebarUseCase,
                 ),
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'graph',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'Graph',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Complex Flow',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_graph_stories
+                                .complexFlowGraphUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Edge Orientation Test',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_graph_stories
+                                .edgeOrientationTestUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Large Grid',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_graph_stories
+                                .largeGridGraphUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Nested Groups',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_graph_stories
+                                .nestedGroupsGraphUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Rich Content Nodes',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_graph_stories
+                                .richContentGraphUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Simple Graph',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_graph_stories
+                                .simpleGraphUseCase,
+                      ),
+                    ],
+                  )
+                ],
               ),
               _widgetbook.WidgetbookFolder(
                 name: 'inspector',

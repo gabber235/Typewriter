@@ -164,8 +164,8 @@ class Manuals extends _$Manuals {
   }
 
   Future<void> create() async {
-      // TODO: Implement create
-      await Future.delayed(const Duration(seconds: 1));
+    // TODO: Implement create
+    await Future.delayed(const Duration(seconds: 1));
   }
 
   Future<void> upsertManual(Manual manual) async {
@@ -198,7 +198,6 @@ class Manuals extends _$Manuals {
     // TODO: Implement deleteManual
     await Future.delayed(const Duration(seconds: 1));
   }
-
 }
 
 /// Filtered manuals by (case-insensitive) query against name.
