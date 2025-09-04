@@ -6,7 +6,7 @@ The `DialogueEntry` is used to define a type of dialogue. When a `DialogueEntry`
 Multiple `DialogueMessenger`'s can be associated with a single `DialogueEntry` and the `DialogueMessenger` that is used is determined by the `DialogueMessenger`'s `MessengerFilter`.
 
 :::info
-There can always be at most one `DialogueEntry` active for a player. 
+There can always be at most one `DialogueEntry` active for a player.
 This is automatically handled by Typewriter.
 :::
 
@@ -17,7 +17,7 @@ To define the messenger that will be used to display the dialogue to the player,
 <CodeSnippet tag="dialogue_messenger" json={require("../../../snippets.json")} />
 
 ### Lifecycle
-The `state` of the messenger determines what happens to the messenger. 
+The `state` of the messenger determines what happens to the messenger.
 - `MessengerState.FINISHED` - The dialogue is finished and the next dialogue in the chain will be triggered.
 - `MessengerState.CANCELLED` - The dialogue is cancelled and dialogue chain is stopped, even if there are more dialogues in the chain.
 - `MessengerState.RUNNING` - The dialogue is still running and will continue to run until the state is changed.
@@ -35,3 +35,19 @@ There are some additional lifecycle methods that can be overridden.
 - `init` - Called when the messenger is initialized. Will be called before the first `tick` call.
 - `dispose` - Called when the messenger is disposed. By default this will unregister any listeners that were registered by the messenger.
 - `end` - Normally this does not need to be overwritten. Only if you do not want to resend the chat history for some reason.
+
+## Working with Interaction Context
+
+Dialogue entries have unique access to the interaction context, allowing them to both capture user input and make conditional decisions about what to display.
+
+### Capturing User Input
+
+Dialogue entries are commonly used to capture player input and store it in the interaction context
+
+The `DialogueMessenger` has access to the interaction context through the `context` parameter, allowing you to both read from and modify context within your dialogue implementations.
+
+<CodeSnippet tag="entry_context_keys" json={require("../../../snippets.json")} />
+<CodeSnippet tag="global_context_key" json={require("../../../snippets.json")} />
+<CodeSnippet tag="dialogue_context_input" json={require("../../../snippets.json")} />
+
+For more detailed information about interaction context, see the [Interaction Context](../../05-interactions/context.mdx) guide.

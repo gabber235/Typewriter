@@ -18,3 +18,15 @@ Typewriter will automatically trigger the next entries in the chain after the `e
 Sometimes you want to have a little more control over when the next triggers are triggered, or what triggers are triggered.
 
 <CodeSnippet tag="action_entry_manual" json={require("../../../snippets.json")} />
+
+## Working with Interaction Context
+
+Action entries can both read from and modify the interaction context, making them powerful tools for data manipulation and conditional logic.
+
+Action entries can access data stored in the interaction context by previous entries or add/update values in the interaction context for use by subsequent entries:
+
+<CodeSnippet tag="entry_context_keys" json={require("../../../snippets.json")} />
+<CodeSnippet tag="global_context_key" json={require("../../../snippets.json")} />
+<CodeSnippet tag="action_context_basic" json={require("../../../snippets.json")} />
+
+For more detailed information about interaction context, see the [Interaction Context](../../05-interactions/context.mdx) guide.
