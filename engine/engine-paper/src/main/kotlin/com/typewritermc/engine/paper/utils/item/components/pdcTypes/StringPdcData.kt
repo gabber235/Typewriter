@@ -9,7 +9,11 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("persistent_data_string", Colors.PURPLE, "fa6-solid:database")
-data class StringPdcData(val value: String) : PdcDataType {
+data class StringPdcData(
+
+    val value: String = ""
+
+) : PdcDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack, key: NamespacedKey) {
         item.editMeta { meta ->
             if (value.isBlank()) {
@@ -20,7 +24,12 @@ data class StringPdcData(val value: String) : PdcDataType {
         }
     }
 
-    override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack, key: NamespacedKey): Boolean {
+    override fun matches(
+        player: Player?,
+        interactionContext: InteractionContext?,
+        item: ItemStack,
+        key: NamespacedKey
+    ): Boolean {
         val actual = item.itemMeta?.persistentDataContainer?.get(key, PersistentDataType.STRING)
         return if (value.isBlank()) {
             actual.isNullOrBlank()

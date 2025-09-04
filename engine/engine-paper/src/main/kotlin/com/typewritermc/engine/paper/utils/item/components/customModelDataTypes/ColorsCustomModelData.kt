@@ -11,7 +11,11 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("color_array", Colors.GREEN, "fa6-solid:shapes")
-data class ColorsCustomModelData(val value: List<Color>) : CustomModelDataType {
+data class ColorsCustomModelData(
+
+    val value: List<Color> = emptyList()
+
+) : CustomModelDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         if (!serverVersion.isNewerThan(ServerVersion.V_1_21_3)) {
             logger.warning("${this::class.simpleName} is only supported in versions higher than 1.21.3")

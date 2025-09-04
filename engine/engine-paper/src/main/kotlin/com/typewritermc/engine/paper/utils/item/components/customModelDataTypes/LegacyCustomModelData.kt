@@ -7,7 +7,11 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("legacy_int", Colors.GREEN, "fa6-solid:shapes")
-data class LegacyCustomModelData(val value: Int) : CustomModelDataType {
+data class LegacyCustomModelData(
+
+    val value: Int = 0
+
+) : CustomModelDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta -> meta.setCustomModelData(value) }
     }
