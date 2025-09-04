@@ -256,7 +256,7 @@ class ChatHistory {
             }
 
             is BlockingStatus.PartialBlocking -> {
-                messages.reversed().take(status.newMessages).forEach { it.send(player) }
+                messages.toList().takeLast(status.newMessages).forEach { it.send(player) }
             }
         }
         blockingState = BlockingStatus.PartialBlocking(0)
