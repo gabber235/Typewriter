@@ -10,41 +10,38 @@ import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-@AlgebraicTypeInfo("tooltip_style", Colors.CYAN, "fa6-solid:palette")
-class ItemTooltipStyleComponent(
-
-    val styleKey: Var<String> = ConstVar("minecraft:diamond"),
+@AlgebraicTypeInfo("item_model", Colors.BLUE, "fa6-solid:layer-group")
+class ItemModelComponent(
+    val modelKey: Var<String> = ConstVar("")
 ) : ItemComponent {
 
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.editMeta { meta ->
-            val raw = styleKey.get(player, interactionContext)?.trim().orEmpty()
+            val raw = modelKey.get(player, interactionContext)?.trim().orEmpty()
             if (raw.isEmpty()) {
-                meta.tooltipStyle = null
+                meta.itemModel = null
                 return@editMeta
             }
 
             val key = NamespacedKey.fromString(raw)
             if (key == null) {
-                meta.tooltipStyle = null
+                meta.itemModel = null
                 return@editMeta
             }
 
-            if (meta.tooltipStyle != key) {
-                meta.tooltipStyle = key
-            }
+            meta.itemModel = key
         }
     }
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
-        val raw = styleKey.get(player, interactionContext)?.trim().orEmpty()
-        val actual = item.itemMeta?.tooltipStyle
+        val expectedRaw = modelKey.get(player, interactionContext)?.trim().orEmpty()
+        val actual = item.itemMeta?.itemModel
 
-        if (raw.isEmpty()) {
+        if (expectedRaw.isEmpty()) {
             return actual == null
         }
 
-        val expected = NamespacedKey.fromString(raw) ?: return actual == null
+        val expected = NamespacedKey.fromString(expectedRaw) ?: return actual == null
         return actual == expected
     }
 }
