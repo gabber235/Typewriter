@@ -3,6 +3,7 @@ package com.typewritermc.engine.paper.utils.item.components.pdcTypes
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
 import com.typewritermc.core.extension.annotations.Max
+import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.core.interaction.InteractionContext
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -11,7 +12,7 @@ import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("byte", Colors.PURPLE, "fa6-solid:database")
 data class BytePdcData(
-    @Max(255)
+    @Min(0) @Max(255)
     val value: Int = 0
 ) : PdcDataType {
 

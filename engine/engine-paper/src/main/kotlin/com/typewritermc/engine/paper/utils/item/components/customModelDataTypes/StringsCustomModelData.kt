@@ -16,8 +16,8 @@ data class StringsCustomModelData(
 
 ) : CustomModelDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
-        if (!serverVersion.isNewerThan(ServerVersion.V_1_21_3)) {
-            logger.warning("${this::class.simpleName} is only supported in versions higher than 1.21.3")
+        if (!serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {
+            logger.warning("${this::class.simpleName} is only supported in versions 1.21.4 and above")
             return
         }
         item.editMeta { meta ->
@@ -29,8 +29,8 @@ data class StringsCustomModelData(
     }
 
     override fun matches(player: Player?, interactionContext: InteractionContext?, item: ItemStack): Boolean {
-        if (!serverVersion.isNewerThan(ServerVersion.V_1_21_3)) {
-            logger.warning("${this::class.simpleName} is only supported in versions higher than 1.21.3")
+        if (!serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {
+            logger.warning("${this::class.simpleName} is only supported in versions 1.21.4 and above")
             return false
         }
         val meta = item.itemMeta ?: return false

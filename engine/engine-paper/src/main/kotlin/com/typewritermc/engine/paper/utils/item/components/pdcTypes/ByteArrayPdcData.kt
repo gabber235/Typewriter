@@ -3,7 +3,9 @@ package com.typewritermc.engine.paper.utils.item.components.pdcTypes
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
 import com.typewritermc.core.extension.annotations.InnerMax
+import com.typewritermc.core.extension.annotations.InnerMin
 import com.typewritermc.core.extension.annotations.Max
+import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.core.interaction.InteractionContext
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -13,7 +15,7 @@ import org.bukkit.persistence.PersistentDataType
 @AlgebraicTypeInfo("byte_array", Colors.PURPLE, "fa6-solid:database")
 data class ByteArrayPdcData(
 
-    @InnerMax(Max(255))
+    @InnerMin(Min(0))@InnerMax(Max(255))
     val value: List<Int> = emptyList()
 
 ) : PdcDataType {

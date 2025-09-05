@@ -11,16 +11,19 @@ import org.bukkit.persistence.PersistentDataType
 @AlgebraicTypeInfo("long_array", Colors.PURPLE, "fa6-solid:database")
 data class LongArrayPdcData(
 
-    @InnerMin(Min(Long.MIN_VALUE.toInt()))
-    @InnerMax(Max(Long.MAX_VALUE.toInt()))
-    val value: List<Int> = emptyList()
+    val value: List<Long> = emptyList()
 
 ) : PdcDataType {
 
     private fun toLongArray(): LongArray =
-        value.map { it.toLong() }.toLongArray()
+        value.toLongArray()
 
-    override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack, key: NamespacedKey) {
+    override fun apply(
+        player: Player?,
+        interactionContext: InteractionContext?,
+        item: ItemStack,
+        key: NamespacedKey
+    ) {
         item.editMeta { meta ->
             meta.persistentDataContainer.set(key, PersistentDataType.LONG_ARRAY, toLongArray())
         }
