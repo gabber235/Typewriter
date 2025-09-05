@@ -14,10 +14,8 @@ import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("byte_array", Colors.PURPLE, "fa6-solid:database")
 data class ByteArrayPdcData(
-
     @InnerMin(Min(0))@InnerMax(Max(255))
     val value: List<Int> = emptyList()
-
 ) : PdcDataType {
 
     private fun toByteArray(): ByteArray =
@@ -40,13 +38,4 @@ data class ByteArrayPdcData(
         return actual.contentEquals(toByteArray())
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ByteArrayPdcData
-        return value == other.value
-    }
-
-    override fun hashCode(): Int = value.hashCode()
 }

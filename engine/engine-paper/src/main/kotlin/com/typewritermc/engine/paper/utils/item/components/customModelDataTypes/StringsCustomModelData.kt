@@ -11,9 +11,7 @@ import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("string_array", Colors.GREEN, "fa6-solid:shapes")
 data class StringsCustomModelData(
-
     val value: List<String> = emptyList()
-
 ) : CustomModelDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         if (!serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {

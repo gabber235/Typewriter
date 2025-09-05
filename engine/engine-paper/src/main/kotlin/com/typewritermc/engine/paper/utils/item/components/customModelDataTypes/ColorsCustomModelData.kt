@@ -12,9 +12,7 @@ import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("color_array", Colors.GREEN, "fa6-solid:shapes")
 data class ColorsCustomModelData(
-
     val value: List<Color> = emptyList()
-
 ) : CustomModelDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         if (!serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {

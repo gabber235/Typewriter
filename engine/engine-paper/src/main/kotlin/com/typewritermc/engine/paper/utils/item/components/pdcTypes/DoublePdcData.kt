@@ -10,9 +10,7 @@ import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("double", Colors.PURPLE, "fa6-solid:database")
 data class DoublePdcData(
-
     val value: Double = 0.0
-
 ) : PdcDataType {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack, key: NamespacedKey) {
         item.editMeta { meta ->

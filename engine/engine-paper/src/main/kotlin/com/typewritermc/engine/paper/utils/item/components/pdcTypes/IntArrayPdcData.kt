@@ -10,9 +10,7 @@ import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("int_array", Colors.PURPLE, "fa6-solid:database")
 data class IntArrayPdcData(
-
     val value: List<Int> = emptyList()
-
 ) : PdcDataType {
 
     private fun toIntArray(): IntArray = value.toIntArray()
@@ -34,13 +32,4 @@ data class IntArrayPdcData(
         return actual.contentEquals(toIntArray())
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as IntArrayPdcData
-        return value == other.value
-    }
-
-    override fun hashCode(): Int = value.hashCode()
 }

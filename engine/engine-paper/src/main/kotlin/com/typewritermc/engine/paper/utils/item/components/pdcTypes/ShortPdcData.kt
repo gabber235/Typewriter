@@ -11,10 +11,7 @@ import org.bukkit.persistence.PersistentDataType
 
 @AlgebraicTypeInfo("short", Colors.PURPLE, "fa6-solid:database")
 data class ShortPdcData(
-
-
     val value: Short = 0
-
 ) : PdcDataType {
 
     override fun apply(
@@ -38,13 +35,7 @@ data class ShortPdcData(
         return container.get(key, PersistentDataType.SHORT) == value
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as ShortPdcData
-        return value == other.value
-    }
 
-    override fun hashCode(): Int = value.hashCode()
+
 }
