@@ -32,8 +32,8 @@ class BlockPlaceEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val location: Optional<Var<Position>> = Optional.empty(),
-    @MaterialProperties(BLOCK)
-    val block: Material = Material.STONE,
+    @MaterialProperties(MaterialProperty.BLOCK)
+    val block: Optional<Material> = Optional.empty(),
 ) : EventEntry
 
 enum class BlockPlaceContextKeys(override val klass: KClass<*>) : EntryContextKey {
@@ -52,7 +52,8 @@ fun onPlaceBlock(event: BlockPlaceEvent, query: Query<BlockPlaceEventEntry>) {
         // Check if the player clicked on the correct location
         if (!entry.location.map { it.get(player).toBlockPosition() == position.toBlockPosition() }.orElse(true)) return@findWhere false
 
-        entry.block == event.block.type
+        // Check if block type is correct
+        entry.block.map { it == event.block.type }.orElse(true)
     }.startDialogueWithOrNextDialogue(player) {
         BlockPlaceContextKeys.BLOCK_POSITION += position.toBlockPosition()
         BlockPlaceContextKeys.CENTER_POSITION += position.mid()
