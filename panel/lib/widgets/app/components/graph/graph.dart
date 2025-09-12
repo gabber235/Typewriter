@@ -7,6 +7,7 @@ import "package:flutter/rendering.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
 import "package:typewriter_panel/utils/rect.dart";
+import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
 import "package:vector_math/vector_math_64.dart" hide Colors;
 
 enum EdgeSide {
@@ -88,6 +89,22 @@ class GraphData {
         return element;
       }
       return element.copyWith(x: element.x + dx, y: element.y + dy);
+    }).toList();
+    return copyWith(
+      elements: newElements,
+    );
+  }
+
+  GraphData resizeChild({
+    (GraphIdentifier, int, int)? resize,
+  }) {
+    if (resize == null) return this;
+    final (id, width, height) = resize;
+    final newElements = elements.map((element) {
+      if (element.id != id) {
+        return element;
+      }
+      return element.copyWith(width: width, height: height);
     }).toList();
     return copyWith(
       elements: newElements,
@@ -270,13 +287,19 @@ class GraphDrag extends InheritedWidget {
   }
 }
 
+typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
+
 class Graph extends HookWidget {
   const Graph({
     required this.data,
+    this.onElementsDragged,
+    this.onElementResize,
     super.key,
   });
 
   final GraphData data;
+  final void Function(List<(GraphElement, int, int)>)? onElementsDragged;
+  final GraphResizeCallback? onElementResize;
 
   Offset center(Size size) {
     final target = data.elements
@@ -310,6 +333,8 @@ class Graph extends HookWidget {
           final dragOffset = useState<Offset?>(null);
           final draggingInsideGraph = useState<bool>(false);
 
+          final resizing = useState<(GraphIdentifier, int, int)?>(null);
+
           return InteractiveViewer.builder(
             boundaryMargin: const EdgeInsets.all(double.infinity),
             alignment: Alignment.center,
@@ -318,24 +343,59 @@ class Graph extends HookWidget {
               final rect = _quadToRect(viewport);
               return _GraphWithDragTarget(
                 viewport: rect,
+                enableDragTarget: onElementsDragged != null,
                 graph: GraphDrag(
                   draggingInsideGraph: draggingInsideGraph,
                   child: _Graph(
                     key: graphGlobalKey,
                     viewport: rect,
-                    data: data.offsetChildren(
-                      offset: dragOffset.value ?? Offset.zero,
-                      ids: draggingIds.value,
-                    ),
+                    data: data
+                        .offsetChildren(
+                          offset: dragOffset.value ?? Offset.zero,
+                          ids: draggingIds.value,
+                        )
+                        .resizeChild(resize: resizing.value),
+                    onElementResizeStart: onElementResize == null
+                        ? null
+                        : (id, width, height) {
+                            assert(
+                              width > 0 && height > 0,
+                              "Width and height must be greater than 0",
+                            );
+                            resizing.value = (id, width, height);
+                          },
+                    onElementResizeUpdate: onElementResize == null
+                        ? null
+                        : (id, width, height) {
+                            assert(
+                              width > 0 && height > 0,
+                              "Width and height must be greater than 0",
+                            );
+
+                            resizing.value = (id, width, height);
+                          },
+                    onElementResizeEnd: onElementResize == null
+                        ? null
+                        : (id, width, height) {
+                            assert(
+                              width > 0 && height > 0,
+                              "Width and height must be greater than 0",
+                            );
+
+                            resizing.value = null;
+                            onElementResize!.call(id, width, height);
+                          },
                   ),
                 ),
                 dragTarget: DragTarget<GraphDragData>(
                   onWillAcceptWithDetails: (details) {
                     final id = details.data.graphId;
                     final element = data.keyedElements[id];
-                    assert(element != null, "Element with id $id not found");
+                    if (element == null) {
+                      return false;
+                    }
                     final preRenderElement = _PreRenderElement.fromElement(
-                      element!,
+                      element,
                       data.cellSize,
                     );
                     dragStart.value = preRenderElement.position;
@@ -441,11 +501,13 @@ class _GraphWithDragTarget
     extends SlottedMultiChildRenderObjectWidget<_GraphSlot, RenderBox> {
   const _GraphWithDragTarget({
     required this.viewport,
+    required this.enableDragTarget,
     required this.graph,
     required this.dragTarget,
   });
 
   final Rect viewport;
+  final bool enableDragTarget;
   final Widget graph;
   final Widget dragTarget;
 
@@ -458,7 +520,7 @@ class _GraphWithDragTarget
       case _GraphSlot.graph:
         return graph;
       case _GraphSlot.dragTarget:
-        return dragTarget;
+        return enableDragTarget ? dragTarget : null;
     }
   }
 
@@ -466,7 +528,10 @@ class _GraphWithDragTarget
   SlottedContainerRenderObjectMixin<_GraphSlot, RenderBox> createRenderObject(
     BuildContext context,
   ) {
-    return _RenderGraphWithDragTarget(viewport: viewport);
+    return _RenderGraphWithDragTarget(
+      viewport: viewport,
+      enableDragTarget: enableDragTarget,
+    );
   }
 
   @override
@@ -474,7 +539,9 @@ class _GraphWithDragTarget
     BuildContext context,
     _RenderGraphWithDragTarget renderObject,
   ) {
-    renderObject.viewport = viewport;
+    renderObject
+      ..viewport = viewport
+      ..enableDragTarget = enableDragTarget;
   }
 }
 
@@ -508,13 +575,23 @@ class _RenderGraphWithDragTarget extends RenderBox
     with SlottedContainerRenderObjectMixin<_GraphSlot, RenderBox> {
   _RenderGraphWithDragTarget({
     required Rect viewport,
-  }) : _viewport = viewport;
+    required bool enableDragTarget,
+  })  : _viewport = viewport,
+        _enableDragTarget = enableDragTarget;
 
   Rect _viewport;
   Rect get viewport => _viewport;
   set viewport(Rect value) {
     if (_viewport == value) return;
     _viewport = value;
+    markNeedsLayout();
+  }
+
+  bool _enableDragTarget;
+  bool get enableDragTarget => _enableDragTarget;
+  set enableDragTarget(bool value) {
+    if (_enableDragTarget == value) return;
+    _enableDragTarget = value;
     markNeedsLayout();
   }
 
@@ -530,7 +607,7 @@ class _RenderGraphWithDragTarget extends RenderBox
       (graphChild.parentData! as BoxParentData).offset = Offset.zero;
     }
 
-    if (dragTargetChild != null) {
+    if (enableDragTarget && dragTargetChild != null) {
       dragTargetChild.layout(BoxConstraints.tight(viewport.size));
       (dragTargetChild.parentData! as BoxParentData).offset = viewport.topLeft;
     }
@@ -543,7 +620,7 @@ class _RenderGraphWithDragTarget extends RenderBox
     final graphChild = childForSlot(_GraphSlot.graph);
     final dragTargetChild = childForSlot(_GraphSlot.dragTarget);
 
-    if (dragTargetChild != null) {
+    if (enableDragTarget && dragTargetChild != null) {
       final childParentData = dragTargetChild.parentData! as BoxParentData;
       context.paintChild(dragTargetChild, childParentData.offset + offset);
     }
@@ -568,7 +645,7 @@ class _RenderGraphWithDragTarget extends RenderBox
     final dragTargetChild = childForSlot(_GraphSlot.dragTarget);
     final graphChild = childForSlot(_GraphSlot.graph);
 
-    if (dragTargetChild != null) {
+    if (enableDragTarget && dragTargetChild != null) {
       final childParentData = dragTargetChild.parentData! as BoxParentData;
       final isHit = result.addWithPaintOffset(
         offset: childParentData.offset,
@@ -611,11 +688,26 @@ class _Graph extends RenderObjectWidget {
   const _Graph({
     required this.viewport,
     required this.data,
+    this.onElementResizeStart,
+    this.onElementResizeUpdate,
+    this.onElementResizeEnd,
     super.key,
-  });
+  }) : assert(
+          (onElementResizeStart != null &&
+                  onElementResizeUpdate != null &&
+                  onElementResizeEnd != null) ||
+              (onElementResizeStart == null &&
+                  onElementResizeUpdate == null &&
+                  onElementResizeEnd == null),
+          "All resize callbacks must be provided or none at all.",
+        );
 
   final Rect viewport;
   final GraphData data;
+
+  final GraphResizeCallback? onElementResizeStart;
+  final GraphResizeCallback? onElementResizeUpdate;
+  final GraphResizeCallback? onElementResizeEnd;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -757,6 +849,24 @@ class _GraphElement extends RenderObjectElement {
     return newChild;
   }
 
+  Widget _createWidgetForElement(GraphElement element) {
+    final parent = widget as _Graph;
+    final child = element.builder(this);
+    if (parent.onElementResizeStart != null &&
+        parent.onElementResizeUpdate != null &&
+        parent.onElementResizeEnd != null) {
+      return ResizableElement(
+        element: element,
+        onResizeStart: parent.onElementResizeStart,
+        onResizeUpdate: parent.onElementResizeUpdate,
+        onResizeEnd: parent.onElementResizeEnd,
+        cellSize: parent.data.cellSize,
+        child: child,
+      );
+    }
+    return child;
+  }
+
   Iterable<GraphElement> _viewableChildren() {
     final widget = this.widget as _Graph;
 
@@ -772,7 +882,7 @@ class _GraphElement extends RenderObjectElement {
     super.mount(parent, newSlot);
     _children = {
       for (final element in _viewableChildren())
-        element.id: inflateWidget(element.builder(this), element.id),
+        element.id: inflateWidget(_createWidgetForElement(element), element.id),
     };
   }
 
@@ -789,7 +899,7 @@ class _GraphElement extends RenderObjectElement {
 
     for (final element in _viewableChildren()) {
       final slot = element.id;
-      final widget = element.builder(this);
+      final widget = _createWidgetForElement(element);
       final newWidgetKey = widget.key;
 
       final oldSlotChild = oldChildren[slot];

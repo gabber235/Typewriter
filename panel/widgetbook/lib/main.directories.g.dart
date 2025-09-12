@@ -13,6 +13,8 @@
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 import 'package:widgetbook_workspace/stories/app/components/graph/graph.stories.dart'
     as _widgetbook_workspace_stories_app_components_graph_graph_stories;
+import 'package:widgetbook_workspace/stories/app/components/graph/resizable_element.stories.dart'
+    as _widgetbook_workspace_stories_app_components_graph_resizable_element_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/boolean_editor.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_editors_boolean_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/editors.stories.dart'
@@ -279,7 +281,16 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 .simpleGraphUseCase,
                       ),
                     ],
-                  )
+                  ),
+                  _widgetbook.WidgetbookLeafComponent(
+                    name: 'ResizableElement',
+                    useCase: _widgetbook.WidgetbookUseCase(
+                      name: 'Default',
+                      builder:
+                          _widgetbook_workspace_stories_app_components_graph_resizable_element_stories
+                              .resizableElementDefault,
+                    ),
+                  ),
                 ],
               ),
               _widgetbook.WidgetbookFolder(
