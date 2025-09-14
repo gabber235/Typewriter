@@ -112,8 +112,8 @@ class SocketNotifier extends StateNotifier<Socket?> {
       return;
     }
 
-    var socketPort = (port == null || port == 0) ? (secure ? 443 : 80) : port;
-    var scheme = secure ? "wss" : "ws";
+    final int socketPort = (port == null || port == 0) ? (secure ? 443 : 80) : port!;
+    final scheme = secure ? 'wss' : 'ws';
     var url = "$scheme://$hostname:$socketPort";
     if (token != null) url += "?token=$token";
 
