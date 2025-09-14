@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/widgets/generic/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
 
 import "../../../test_utils.dart";
 

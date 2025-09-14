@@ -13,7 +13,7 @@ import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
-import "package:typewriter_panel/widgets/generic/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 

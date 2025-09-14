@@ -21,6 +21,7 @@ mixin _$ActionShortcut implements DiagnosticableTreeMixin {
   int get priority;
   Widget? get icon;
   ActionInvoke? get onInvoke;
+  bool get show;
   GlobalKey? get owner;
 
   /// Create a copy of ActionShortcut
@@ -42,6 +43,7 @@ mixin _$ActionShortcut implements DiagnosticableTreeMixin {
       ..add(DiagnosticsProperty('priority', priority))
       ..add(DiagnosticsProperty('icon', icon))
       ..add(DiagnosticsProperty('onInvoke', onInvoke))
+      ..add(DiagnosticsProperty('show', show))
       ..add(DiagnosticsProperty('owner', owner));
   }
 
@@ -61,6 +63,7 @@ mixin _$ActionShortcut implements DiagnosticableTreeMixin {
             (identical(other.icon, icon) || other.icon == icon) &&
             (identical(other.onInvoke, onInvoke) ||
                 other.onInvoke == onInvoke) &&
+            (identical(other.show, show) || other.show == show) &&
             (identical(other.owner, owner) || other.owner == owner));
   }
 
@@ -74,11 +77,12 @@ mixin _$ActionShortcut implements DiagnosticableTreeMixin {
       priority,
       icon,
       onInvoke,
+      show,
       owner);
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'ActionShortcut(id: $id, label: $label, description: $description, activators: $activators, priority: $priority, icon: $icon, onInvoke: $onInvoke, owner: $owner)';
+    return 'ActionShortcut(id: $id, label: $label, description: $description, activators: $activators, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, owner: $owner)';
   }
 }
 
@@ -96,6 +100,7 @@ abstract mixin class $ActionShortcutCopyWith<$Res> {
       int priority,
       Widget? icon,
       ActionInvoke? onInvoke,
+      bool show,
       GlobalKey? owner});
 }
 
@@ -119,6 +124,7 @@ class _$ActionShortcutCopyWithImpl<$Res>
     Object? priority = null,
     Object? icon = freezed,
     Object? onInvoke = freezed,
+    Object? show = null,
     Object? owner = freezed,
   }) {
     return _then(_self.copyWith(
@@ -150,6 +156,10 @@ class _$ActionShortcutCopyWithImpl<$Res>
           ? _self.onInvoke
           : onInvoke // ignore: cast_nullable_to_non_nullable
               as ActionInvoke?,
+      show: null == show
+          ? _self.show
+          : show // ignore: cast_nullable_to_non_nullable
+              as bool,
       owner: freezed == owner
           ? _self.owner
           : owner // ignore: cast_nullable_to_non_nullable
@@ -259,6 +269,7 @@ extension ActionShortcutPatterns on ActionShortcut {
             int priority,
             Widget? icon,
             ActionInvoke? onInvoke,
+            bool show,
             GlobalKey? owner)?
         $default, {
     required TResult orElse(),
@@ -274,6 +285,7 @@ extension ActionShortcutPatterns on ActionShortcut {
             _that.priority,
             _that.icon,
             _that.onInvoke,
+            _that.show,
             _that.owner);
       case _:
         return orElse();
@@ -303,6 +315,7 @@ extension ActionShortcutPatterns on ActionShortcut {
             int priority,
             Widget? icon,
             ActionInvoke? onInvoke,
+            bool show,
             GlobalKey? owner)
         $default,
   ) {
@@ -317,6 +330,7 @@ extension ActionShortcutPatterns on ActionShortcut {
             _that.priority,
             _that.icon,
             _that.onInvoke,
+            _that.show,
             _that.owner);
       case _:
         throw StateError('Unexpected subclass');
@@ -345,6 +359,7 @@ extension ActionShortcutPatterns on ActionShortcut {
             int priority,
             Widget? icon,
             ActionInvoke? onInvoke,
+            bool show,
             GlobalKey? owner)?
         $default,
   ) {
@@ -359,6 +374,7 @@ extension ActionShortcutPatterns on ActionShortcut {
             _that.priority,
             _that.icon,
             _that.onInvoke,
+            _that.show,
             _that.owner);
       case _:
         return null;
@@ -377,6 +393,7 @@ class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
       required this.priority,
       this.icon,
       this.onInvoke,
+      this.show = true,
       this.owner})
       : _activators = activators;
 
@@ -401,6 +418,9 @@ class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
   @override
   final ActionInvoke? onInvoke;
   @override
+  @JsonKey()
+  final bool show;
+  @override
   final GlobalKey? owner;
 
   /// Create a copy of ActionShortcut
@@ -422,6 +442,7 @@ class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
       ..add(DiagnosticsProperty('priority', priority))
       ..add(DiagnosticsProperty('icon', icon))
       ..add(DiagnosticsProperty('onInvoke', onInvoke))
+      ..add(DiagnosticsProperty('show', show))
       ..add(DiagnosticsProperty('owner', owner));
   }
 
@@ -441,6 +462,7 @@ class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
             (identical(other.icon, icon) || other.icon == icon) &&
             (identical(other.onInvoke, onInvoke) ||
                 other.onInvoke == onInvoke) &&
+            (identical(other.show, show) || other.show == show) &&
             (identical(other.owner, owner) || other.owner == owner));
   }
 
@@ -454,11 +476,12 @@ class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
       priority,
       icon,
       onInvoke,
+      show,
       owner);
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'ActionShortcut(id: $id, label: $label, description: $description, activators: $activators, priority: $priority, icon: $icon, onInvoke: $onInvoke, owner: $owner)';
+    return 'ActionShortcut(id: $id, label: $label, description: $description, activators: $activators, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, owner: $owner)';
   }
 }
 
@@ -478,6 +501,7 @@ abstract mixin class _$ActionShortcutCopyWith<$Res>
       int priority,
       Widget? icon,
       ActionInvoke? onInvoke,
+      bool show,
       GlobalKey? owner});
 }
 
@@ -501,6 +525,7 @@ class __$ActionShortcutCopyWithImpl<$Res>
     Object? priority = null,
     Object? icon = freezed,
     Object? onInvoke = freezed,
+    Object? show = null,
     Object? owner = freezed,
   }) {
     return _then(_ActionShortcut(
@@ -532,6 +557,10 @@ class __$ActionShortcutCopyWithImpl<$Res>
           ? _self.onInvoke
           : onInvoke // ignore: cast_nullable_to_non_nullable
               as ActionInvoke?,
+      show: null == show
+          ? _self.show
+          : show // ignore: cast_nullable_to_non_nullable
+              as bool,
       owner: freezed == owner
           ? _self.owner
           : owner // ignore: cast_nullable_to_non_nullable

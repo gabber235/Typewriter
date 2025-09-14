@@ -6,7 +6,7 @@ import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/generic/components/book.dart";
+import "package:typewriter_panel/widgets/app/components/book.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;

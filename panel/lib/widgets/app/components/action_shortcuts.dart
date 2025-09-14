@@ -29,6 +29,7 @@ abstract class ActionShortcut with _$ActionShortcut {
     required int priority,
     Widget? icon,
     ActionInvoke? onInvoke,
+    @Default(true) bool show,
     GlobalKey? owner,
   }) = _ActionShortcut;
 }
@@ -180,6 +181,7 @@ class ActionRow extends HookConsumerWidget {
       () {
         final filtered = actionsMap.values
             .where((a) => a.owner == null || a.owner!.currentContext != null)
+            .where((a) => a.show)
             .toList()
           ..sort((a, b) => a.priority.compareTo(b.priority));
         return filtered;

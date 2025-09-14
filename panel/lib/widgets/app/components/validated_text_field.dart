@@ -6,8 +6,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/ic.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
 import "package:typewriter_panel/utils/object.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
 /// The current state of the duration editor

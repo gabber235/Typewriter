@@ -1,8 +1,12 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
+import "package:typewriter_panel/logic/interaction_mode/modes/insert_mode.dart";
+import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
 import "package:typewriter_panel/main.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 
 typedef KeyEventBlocker = bool Function(BuildContext context, KeyEvent event);
@@ -10,7 +14,7 @@ typedef KeyEventBlocker = bool Function(BuildContext context, KeyEvent event);
 /// Container that unifies focus highlighting, surrounding focus behavior,
 /// action shortcuts, and key-event blocking for input-like widgets.
 /// Supply the inner input via [child] and its [inputFocusNode].
-class InputFieldContainer extends HookWidget {
+class InputFieldContainer extends HookConsumerWidget {
   const InputFieldContainer({
     required this.inputFocusNode,
     required this.child,
@@ -20,7 +24,6 @@ class InputFieldContainer extends HookWidget {
     this.borderRadius,
     this.surroundingFocusNode,
     this.onDismiss,
-    this.keyEventBlocker = defaultKeyEventBlocker,
     super.key,
   });
 
@@ -48,35 +51,8 @@ class InputFieldContainer extends HookWidget {
   /// Called when a dismiss intent is handled while the input is focused.
   final VoidCallback? onDismiss;
 
-  /// Custom key event blocker. When null, [defaultKeyEventBlocker] is used.
-  final KeyEventBlocker? keyEventBlocker;
-
-  /// Default key-event blocker for text-like inputs.
-  /// Returns true to block propagation for non-modifier keypresses so that
-  /// typing does not trigger global shortcuts. Allows Escape through when
-  /// [allowEscapeThrough] is true.
-  static bool defaultKeyEventBlocker(
-    BuildContext context,
-    KeyEvent event,
-  ) {
-    final hardware = HardwareKeyboard.instance;
-    final isControlDown =
-        hardware.isLogicalKeyPressed(LogicalKeyboardKey.controlLeft) ||
-            hardware.isLogicalKeyPressed(LogicalKeyboardKey.controlRight);
-    final isMetaDown =
-        hardware.isLogicalKeyPressed(LogicalKeyboardKey.metaLeft) ||
-            hardware.isLogicalKeyPressed(LogicalKeyboardKey.metaRight);
-    final isAltDown =
-        hardware.isLogicalKeyPressed(LogicalKeyboardKey.altLeft) ||
-            hardware.isLogicalKeyPressed(LogicalKeyboardKey.altRight);
-
-    return !isControlDown && !isMetaDown && !isAltDown;
-  }
-
-  List<ShortcutActivator> get _dismissActivators => shortcutsFor(DismissIntent);
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final surroundingNode = surroundingFocusNode ??
         useFocusNode(
           debugLabel: "SurroundingInputFieldContainer",
@@ -84,17 +60,30 @@ class InputFieldContainer extends HookWidget {
         );
 
     useListenable(surroundingNode);
+    useListenable(inputFocusNode);
 
     final focusType = useState(FocusType.none);
 
-    final dismiss = useCallback(
+    final id = useMemoized(() => uuid.v4());
+    final currentMode = ref.watch(currentInteractionModeProvider);
+
+    useEffect(
       () {
-        if (inputFocusNode.hasPrimaryFocus) {
-          surroundingNode.requestFocus();
-          onDismiss?.call();
+        if (currentMode is InsertMode && surroundingNode.hasPrimaryFocus) {
+          if (currentMode.id != id) {
+            ref
+                .read(currentInteractionModeProvider.notifier)
+                .setMode(InsertMode(id));
+          }
+          inputFocusNode.requestFocus();
         }
+
+        if (currentMode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
+          surroundingNode.requestFocus();
+        }
+        return null;
       },
-      [surroundingNode],
+      [currentMode],
     );
 
     return FocusHighlight(
@@ -116,15 +105,6 @@ class InputFieldContainer extends HookWidget {
             ...?surroundingActions,
           ],
           if (inputFocusNode.hasPrimaryFocus) ...[
-            ActionShortcut(
-              id: "dismiss_input",
-              label: "Dismiss Input",
-              description: "Dismiss the input field",
-              activators: [
-                const SingleActivator(LogicalKeyboardKey.escape),
-              ],
-              priority: 100,
-            ),
             ...?inputActions,
           ],
           if (surroundingNode.hasFocus) ...?actions,
@@ -134,17 +114,20 @@ class InputFieldContainer extends HookWidget {
             ActivateIntent: CallbackAction<ActivateIntent>(
               onInvoke: (intent) {
                 if (surroundingNode.hasPrimaryFocus) {
-                  inputFocusNode.requestFocus();
+                  ref
+                      .read(currentInteractionModeProvider.notifier)
+                      .setMode(InsertMode(id));
                 }
                 return null;
               },
             ),
-
-            /// Even though we have the onKeyEvent where we pre catch the dismiss intent, If somebody does `Actions.invoke(context, DismissIntent())`
-            /// we need to handle it here as well.
             DismissIntent: CallbackAction<DismissIntent>(
               onInvoke: (intent) {
-                dismiss();
+                if (inputFocusNode.hasPrimaryFocus) {
+                  ref
+                      .read(currentInteractionModeProvider.notifier)
+                      .setMode(NormalMode());
+                }
                 return null;
               },
             ),
@@ -155,29 +138,21 @@ class InputFieldContainer extends HookWidget {
             descendantsAreTraversable: false,
             onFocusChange: (_) {
               focusType.value = FocusHighlighting.onlyPrimary(surroundingNode);
-            },
-            onKeyEvent: (node, event) {
-              if (!inputFocusNode.hasPrimaryFocus) {
-                return KeyEventResult.ignored;
+
+              if (inputFocusNode.hasPrimaryFocus &&
+                  currentMode is! InsertMode) {
+                ref
+                    .read(currentInteractionModeProvider.notifier)
+                    .setMode(InsertMode(id));
               }
 
-              // We want to force the dismissal of the input field container when the user presses the escape key.
-              // Because we don't want it to dismiss something else but this. Like in the case of the dropdown
-              // where it dismisses the popup and only then it dismisses the input field container.
-              if (_dismissActivators.any(
-                (activator) =>
-                    // We can't use the activator.accepts method because it requires a `KeyDownEvent` and `event` is only `KeyUpEvent`
-                    activator.triggers?.toList().contains(event.logicalKey) ??
-                    false,
-              )) {
-                dismiss();
-                return KeyEventResult.handled;
+              if (currentMode is InsertMode &&
+                  currentMode.id == id &&
+                  !inputFocusNode.hasFocus) {
+                ref
+                    .read(currentInteractionModeProvider.notifier)
+                    .setMode(NormalMode());
               }
-
-              final shouldBlock = keyEventBlocker!(context, event);
-              return shouldBlock
-                  ? KeyEventResult.skipRemainingHandlers
-                  : KeyEventResult.ignored;
             },
             child: child,
           ),

@@ -15,7 +15,7 @@ import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
-import "package:typewriter_panel/widgets/generic/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:url_launcher/url_launcher.dart";
 
 class SidebarContent extends HookConsumerWidget {

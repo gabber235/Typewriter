@@ -1,72 +1,95 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/widgets/generic/components/dropdown.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
+import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-typedef DecoratedDropdownMenu<T> = Dropdown<T>;
-
-@widgetbook.UseCase(name: "Default", type: DecoratedDropdownMenu)
-Widget dropdownDefaultUseCase(BuildContext context) {
-  final isEnabled = context.knobs.boolean(label: "Enabled", initialValue: true);
-  final itemCount = context.knobs.object.dropdown(
-    label: "Items",
-    options: [3, 5, 10],
-    initialOption: 5,
+@widgetbook.UseCase(name: "Default", type: DecoratedTextField)
+Widget inputFieldUseCase(BuildContext context) {
+  final hint = context.knobs.string(
+    label: "Hint",
+    initialValue: "Enter text here",
   );
+  final isEnabled = context.knobs.boolean(label: "Enabled", initialValue: true);
 
-  List<DropdownMenuEntry<int>> buildEntries(int count) {
-    return List.generate(
-      count,
-      (i) => DropdownMenuEntry(value: i, label: "Item ${i + 1}"),
-    );
-  }
-
-  final entries = buildEntries(itemCount);
   return FakeApp(
-    child: Column(
-      spacing: 20,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < 3; i++)
-          HookBuilder(
-            builder: (context) {
-              final node = useFocusNode();
-              final state = useState<int?>(null);
-              return Column(
-                children: [
-                  Dropdown<int>(
-                    focusNode: node,
-                    enabled: isEnabled,
-                    selected: state.value,
-                    onSelected: (value) => state.value = value,
-                    dropdownMenuEntries: entries,
-                  ),
-                ],
-              );
-            },
-          ),
-      ],
+    child: HookBuilder(
+      builder: (context) {
+        final first = useFocusNode();
+        final second = useFocusNode();
+        final third = useFocusNode();
+        return Column(
+          spacing: 20,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ModeDisplayWidget(),
+            for (final node in [first, second, third]) ...[
+              DecoratedTextField(
+                focusNode: node,
+                decoration: InputDecoration(hintText: hint),
+                readOnly: !isEnabled,
+              ),
+            ],
+          ],
+        );
+      },
     ),
   );
 }
 
-@widgetbook.UseCase(name: "With Callbacks", type: DecoratedDropdownMenu)
-Widget dropdownWithCallbacksUseCase(BuildContext context) {
-  final itemCount = context.knobs.object.dropdown(
-    label: "Items",
-    options: [3, 5, 8],
-    initialOption: 5,
+@widgetbook.UseCase(name: "Error", type: DecoratedTextField)
+Widget inputFieldErrorUseCase(BuildContext context) {
+  final hint = context.knobs.string(
+    label: "Hint",
+    initialValue: "Enter text here",
+  );
+  final errorText = context.knobs.string(
+    label: "Error Text",
+    initialValue: "This field is required",
   );
 
-  List<DropdownMenuEntry<String>> buildEntries(int count) {
-    return List.generate(
-      count,
-      (i) =>
-          DropdownMenuEntry(value: "Value ${i + 1}", label: "Label ${i + 1}"),
-    );
-  }
+  return FakeApp(
+    child: DecoratedTextField(
+      focusNode: FocusNode(),
+      decoration: InputDecoration(hintText: hint, errorText: errorText),
+    ),
+  );
+}
+
+@widgetbook.UseCase(name: "With Prefix Icon", type: DecoratedTextField)
+Widget inputFieldWithPrefixIconUseCase(BuildContext context) {
+  final hint = context.knobs.string(
+    label: "Hint",
+    initialValue: "Enter text here",
+  );
+  final icon = context.knobs.object.dropdown(
+    label: "Icon",
+    options: const [
+      Icon(Icons.search),
+      Icon(Icons.person),
+      Icon(Icons.email),
+      Icon(Icons.lock),
+    ],
+    initialOption: const Icon(Icons.search),
+    labelBuilder: (option) => option.icon.toString(),
+  );
+
+  return FakeApp(
+    child: DecoratedTextField(
+      focusNode: FocusNode(),
+      decoration: InputDecoration(hintText: hint, prefixIcon: icon),
+    ),
+  );
+}
+
+@widgetbook.UseCase(name: "With Callbacks", type: DecoratedTextField)
+Widget inputFieldWithCallbacksUseCase(BuildContext context) {
+  final hint = context.knobs.string(
+    label: "Hint",
+    initialValue: "Enter text here",
+  );
 
   return FakeApp(
     child: HookBuilder(
@@ -82,27 +105,29 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
             color: color,
             icon: icon,
           );
-          final next = [...events.value, event];
-          events.value =
-              next.length > 10 ? next.sublist(next.length - 10) : next;
-        }
+          events.value = [...events.value, event];
 
-        final entries = buildEntries(itemCount);
+          // Keep only last 10 events
+          if (events.value.length > 10) {
+            events.value = events.value.sublist(events.value.length - 10);
+          }
+        }
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DecoratedDropdownMenu<String>(
+            DecoratedTextField(
               focusNode: focusNode,
-              dropdownMenuEntries: entries,
-              onSelected: (value) {
-                addEvent(
-                  "onSelected",
-                  value?.toString() ?? "",
-                  Colors.orange,
-                  Icons.check,
-                );
+              decoration: InputDecoration(hintText: hint),
+              onChanged: (value) {
+                addEvent("onChanged", value, Colors.blue, Icons.edit);
+              },
+              onDone: (value) {
+                addEvent("onDone", value, Colors.green, Icons.done);
+              },
+              onSubmitted: (value) {
+                addEvent("onSubmitted", value, Colors.orange, Icons.send);
               },
             ),
             const SizedBox(height: 16),
@@ -119,20 +144,20 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.timeline, size: 16),
+                      Icon(Icons.timeline, size: 16),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         "Event Log",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
-                      const Spacer(),
+                      Spacer(),
                       if (events.value.isNotEmpty)
                         TextButton(
                           onPressed: () => events.value = [],
-                          child: const Text("Clear"),
+                          child: Text("Clear"),
                         ),
                     ],
                   ),
@@ -141,7 +166,7 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
                     child: events.value.isEmpty
                         ? Center(
                             child: Text(
-                              "Interact with the dropdown to see callback events...",
+                              "Start typing to see callback events...",
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontStyle: FontStyle.italic,
@@ -155,7 +180,7 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
                               final event =
                                   events.value[events.value.length - 1 - index];
                               return TweenAnimationBuilder<double>(
-                                duration: const Duration(milliseconds: 300),
+                                duration: Duration(milliseconds: 300),
                                 tween: Tween(begin: 0.0, end: 1.0),
                                 builder: (context, value, child) {
                                   return Transform.scale(
@@ -163,10 +188,8 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
                                     child: Opacity(
                                       opacity: value,
                                       child: Container(
-                                        margin: const EdgeInsets.only(
-                                          bottom: 4,
-                                        ),
-                                        padding: const EdgeInsets.all(8),
+                                        margin: EdgeInsets.only(bottom: 4),
+                                        padding: EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: event.color.withValues(
                                             alpha: 0.1,
@@ -200,7 +223,7 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
                                             Expanded(
                                               child: Text(
                                                 '"${event.value}"',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 12,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
@@ -233,31 +256,6 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Preselected", type: DecoratedDropdownMenu)
-Widget dropdownPreselectedUseCase(BuildContext context) {
-  final options = const ["Alpha", "Beta", "Gamma", "Delta"];
-  final preselected = context.knobs.object.dropdown<String>(
-    label: "Initial Selection",
-    options: options,
-    initialOption: "Beta",
-    labelBuilder: (v) => v,
-  );
-  final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
-
-  final entries = options
-      .map((o) => DropdownMenuEntry<String>(value: o, label: o))
-      .toList();
-
-  return FakeApp(
-    child: DecoratedDropdownMenu<String>(
-      focusNode: FocusNode(),
-      enabled: enabled,
-      selected: preselected,
-      dropdownMenuEntries: entries,
-    ),
-  );
-}
-
 class CallbackEvent {
   CallbackEvent({
     required this.type,
@@ -274,7 +272,31 @@ class CallbackEvent {
 }
 
 String _formatTime(DateTime time) {
-  return "${time.hour.toString().padLeft(2, '0')}:"
-      "${time.minute.toString().padLeft(2, '0')}:"
-      "${time.second.toString().padLeft(2, '0')}";
+  return '${time.hour.toString().padLeft(2, '0')}:'
+      '${time.minute.toString().padLeft(2, '0')}:'
+      '${time.second.toString().padLeft(2, '0')}';
+}
+
+@widgetbook.UseCase(name: "Multiline", type: DecoratedTextField)
+Widget inputFieldMultilineUseCase(BuildContext context) {
+  final hint = context.knobs.string(
+    label: "Hint",
+    initialValue: "Enter text here",
+  );
+  final maxLines = context.knobs.object.dropdown(
+    label: "Max Lines",
+    options: [1, 2, 3, 4, 5],
+    initialOption: 3,
+  );
+
+  return FakeApp(
+    child: DecoratedTextField(
+      focusNode: FocusNode(),
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        hintText: hint,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      ),
+    ),
+  );
 }

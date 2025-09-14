@@ -16,7 +16,7 @@ import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/widget_state.dart";
 import "package:typewriter_panel/widgets/generic/components/admonition.dart";
-import "package:typewriter_panel/widgets/generic/components/dropdown.dart";
+import "package:typewriter_panel/widgets/app/components/dropdown.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/notification_bubble.dart";

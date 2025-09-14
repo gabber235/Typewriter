@@ -1,6 +1,7 @@
 import "dart:io" show Platform;
 import "dart:math";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -90,7 +91,7 @@ class ResizableElement extends HookConsumerWidget {
         },
         cursor: startData.value != null
             ? SystemMouseCursors.grabbing
-            : Platform.isMacOS
+            : !kIsWeb && Platform.isMacOS
                 ? SystemMouseCursors.grab
                 : SystemMouseCursors.resizeUpLeftDownRight,
         child: GestureDetector(

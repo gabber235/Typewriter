@@ -2,10 +2,11 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
-import "package:typewriter_panel/widgets/generic/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
 
 /// A customizable app bar for flexible layouts, always including the organization selector if available.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
@@ -59,7 +60,9 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
                           ),
                         );
                       },
-                    ),
+                    )
+                  else
+                    const ModeDisplayWidget(),
                 ],
               ),
             ),

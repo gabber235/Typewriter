@@ -5,7 +5,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 
 import "../../../test_utils.dart";
 

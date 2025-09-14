@@ -11,7 +11,7 @@ import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
-import "package:typewriter_panel/widgets/generic/components/book.dart";
+import "package:typewriter_panel/widgets/app/components/book.dart";
 
 part "books.g.dart";
 part "books.freezed.dart";

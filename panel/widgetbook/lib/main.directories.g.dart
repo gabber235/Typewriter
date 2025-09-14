@@ -33,6 +33,8 @@ import 'package:widgetbook_workspace/stories/app/components/inspector/editors/st
     as _widgetbook_workspace_stories_app_components_inspector_editors_string_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/operations/delete_operation.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories;
+import 'package:widgetbook_workspace/stories/app/components/interaction_mode/mode_display_chip.stories.dart'
+    as _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories;
 import 'package:widgetbook_workspace/stories/app/components/manuals/popups.stories.dart'
     as _widgetbook_workspace_stories_app_components_manuals_popups_stories;
 import 'package:widgetbook_workspace/stories/components/action_shortcuts.stories.dart'
@@ -447,6 +449,20 @@ final directories = <_widgetbook.WidgetbookNode>[
                       )
                     ],
                   ),
+                ],
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'interaction_mode',
+                children: [
+                  _widgetbook.WidgetbookLeafComponent(
+                    name: 'ModeDisplayChip',
+                    useCase: _widgetbook.WidgetbookUseCase(
+                      name: 'Default',
+                      builder:
+                          _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories
+                              .modeDisplayChipNormal,
+                    ),
+                  )
                 ],
               ),
               _widgetbook.WidgetbookFolder(

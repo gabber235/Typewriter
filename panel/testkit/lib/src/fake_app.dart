@@ -3,7 +3,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/main.dart";
-import "package:typewriter_panel/widgets/generic/components/app_required.dart";
+import "package:typewriter_panel/widgets/app/components/app_required.dart";
 
 /// Reusable shell for All Mock applications.
 class FakeApp extends StatelessWidget {

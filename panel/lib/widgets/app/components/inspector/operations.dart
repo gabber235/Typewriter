@@ -6,7 +6,7 @@ import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/manual_operations.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
 part "operations.g.dart";
@@ -147,8 +147,11 @@ class GlobalOperationShortcuts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final operations = ref.watch(availableOperationsProvider.select(
-        (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList(),),);
+    final operations = ref.watch(
+      availableOperationsProvider.select(
+        (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList(),
+      ),
+    );
 
     return ActionSet(
       shortcuts: [

@@ -13,10 +13,10 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/utils/fonts.dart";
-import "package:typewriter_panel/widgets/generic/components/app_required.dart";
-import "package:typewriter_panel/widgets/generic/components/nats_connection.dart";
-import "package:typewriter_panel/widgets/generic/components/panes.dart";
-import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
+import "package:typewriter_panel/widgets/app/components/app_required.dart";
+import "package:typewriter_panel/widgets/app/components/nats_connection.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 import "package:typewriter_panel/widgets/generic/screens/loading_screen.dart";
 import "package:uuid/uuid.dart";
@@ -68,15 +68,7 @@ class TypewriterPanel extends HookConsumerWidget {
         ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateIntent(),
 
-    // Focus Navigation
-    SingleActivator(LogicalKeyboardKey.keyH):
-        DirectionalFocusIntent(TraversalDirection.left),
-    SingleActivator(LogicalKeyboardKey.keyL):
-        DirectionalFocusIntent(TraversalDirection.right),
-    SingleActivator(LogicalKeyboardKey.keyJ):
-        DirectionalFocusIntent(TraversalDirection.down),
-    SingleActivator(LogicalKeyboardKey.keyK):
-        DirectionalFocusIntent(TraversalDirection.up),
+    // Focus Navigation (hjkl navigation moved to NormalMode)
     SingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
     SingleActivator(LogicalKeyboardKey.keyP, control: true):
         PreviousFocusIntent(),

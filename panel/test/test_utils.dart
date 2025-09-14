@@ -8,7 +8,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:test_screenshot/test_screenshot.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/generic/components/app_required.dart";
+import "package:typewriter_panel/widgets/app/components/app_required.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// Build a reusable test app with ProviderScope, ResponsiveBreakpoints, and MaterialApp.

@@ -10,7 +10,7 @@ import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/rect.dart";
 import "package:typewriter_panel/utils/render_box.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 
 part "panes.g.dart";

@@ -4,8 +4,8 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:pub_semver/pub_semver.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
 
 /// Version number segment filter abstraction used by the query parser and UI.
 sealed class VersionPartFilter {

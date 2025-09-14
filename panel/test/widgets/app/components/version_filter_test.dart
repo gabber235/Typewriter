@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:pub_semver/pub_semver.dart";
-import "package:typewriter_panel/widgets/generic/components/version_filter.dart";
+import "package:typewriter_panel/widgets/app/components/version_filter.dart";
 
 Version v(int epoch, int major, int minor, int patch) =>
     Version(epoch * 1000 + major, minor, patch);

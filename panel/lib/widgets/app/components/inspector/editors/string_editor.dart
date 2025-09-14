@@ -8,7 +8,7 @@ import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
-import "package:typewriter_panel/widgets/generic/components/formatted_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/formatted_text_field.dart";
 
 class StringEditor extends Editor {
   @override

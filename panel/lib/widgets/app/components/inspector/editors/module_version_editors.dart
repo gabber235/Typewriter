@@ -16,12 +16,12 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/header.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
-import "package:typewriter_panel/widgets/generic/components/version_filter.dart";
+import "package:typewriter_panel/widgets/app/components/version_filter.dart";
 
 /// Renders a flat, chronologically sorted list of ModuleVersion items.
 /// Uses a query-driven filter with contextual suggestions optimized

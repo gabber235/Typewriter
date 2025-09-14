@@ -3,7 +3,7 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
-import "package:typewriter_panel/widgets/generic/components/sign_out_button.dart";
+import "package:typewriter_panel/widgets/app/components/sign_out_button.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 import "package:typewriter_panel/widgets/generic/screens/loading_screen.dart";
 

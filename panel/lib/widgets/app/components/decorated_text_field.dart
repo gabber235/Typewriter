@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/input_field_container.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/input_field_container.dart";
 
 class DecoratedTextField extends HookWidget {
   const DecoratedTextField({

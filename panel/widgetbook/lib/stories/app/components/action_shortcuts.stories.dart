@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:typewriter_panel/widgets/generic/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -54,13 +54,15 @@ Widget actionRowUseCase(BuildContext context) {
         description: "Runs $label",
         activators: activators,
         priority: priority,
-        icon: Icon(switch (i % 5) {
-          0 => Icons.save_outlined,
-          1 => Icons.folder_open,
-          2 => Icons.copy,
-          3 => Icons.ios_share,
-          _ => Icons.flash_on,
-        },),
+        icon: Icon(
+          switch (i % 5) {
+            0 => Icons.save_outlined,
+            1 => Icons.folder_open,
+            2 => Icons.copy,
+            3 => Icons.ios_share,
+            _ => Icons.flash_on,
+          },
+        ),
         onInvoke: isAsync
             ? (ref) async {
                 await Future.delayed(asyncDelay);

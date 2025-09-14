@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
-import "package:typewriter_panel/widgets/generic/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;

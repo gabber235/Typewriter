@@ -6,7 +6,6 @@ import "package:typewriter_panel/logic/manuals/manuals.dart";
 import "package:typewriter_panel/logic/modules.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
-import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/map.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
@@ -174,8 +173,6 @@ class _ManualModuleReferenceEditorWidget extends HookConsumerWidget {
       builder: (value) {
         final reference = ManualModuleReference.fromJson(stringMap(value));
         final theme = Theme.of(context);
-
-        final color = reference.type.themedColor(context);
 
         return Container(
           decoration: BoxDecoration(

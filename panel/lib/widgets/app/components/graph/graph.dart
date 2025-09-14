@@ -3,11 +3,19 @@ import "dart:math";
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
-
+import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/icons/lucide.dart";
+import "package:iconify_flutter_plus/icons/mingcute.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
+import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
+import "package:typewriter_panel/logic/interaction_mode/modes/graph_modes.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/rect.dart";
 import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:vector_math/vector_math_64.dart" hide Colors;
 
 enum EdgeSide {
@@ -289,7 +297,7 @@ class GraphDrag extends InheritedWidget {
 
 typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 
-class Graph extends HookWidget {
+class Graph extends HookConsumerWidget {
   const Graph({
     required this.data,
     this.onElementsDragged,
@@ -298,7 +306,7 @@ class Graph extends HookWidget {
   });
 
   final GraphData data;
-  final void Function(List<(GraphElement, int, int)>)? onElementsDragged;
+  final void Function(List<(GraphIdentifier, int, int)>)? onElementsDragged;
   final GraphResizeCallback? onElementResize;
 
   Offset center(Size size) {
@@ -312,8 +320,17 @@ class Graph extends HookWidget {
     return center;
   }
 
+  (int, int) directionToDelta(TraversalDirection direction) {
+    return switch (direction) {
+      TraversalDirection.left => (-1, 0),
+      TraversalDirection.right => (1, 0),
+      TraversalDirection.up => (0, -1),
+      TraversalDirection.down => (0, 1),
+    };
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) => HookBuilder(
         builder: (context) {
@@ -335,123 +352,221 @@ class Graph extends HookWidget {
 
           final resizing = useState<(GraphIdentifier, int, int)?>(null);
 
-          return InteractiveViewer.builder(
-            boundaryMargin: const EdgeInsets.all(double.infinity),
-            alignment: Alignment.center,
-            transformationController: controller,
-            builder: (context, viewport) {
-              final rect = _quadToRect(viewport);
-              return _GraphWithDragTarget(
-                viewport: rect,
-                enableDragTarget: onElementsDragged != null,
-                graph: GraphDrag(
-                  draggingInsideGraph: draggingInsideGraph,
-                  child: _Graph(
-                    key: graphGlobalKey,
-                    viewport: rect,
-                    data: data
-                        .offsetChildren(
-                          offset: dragOffset.value ?? Offset.zero,
-                          ids: draggingIds.value,
-                        )
-                        .resizeChild(resize: resizing.value),
-                    onElementResizeStart: onElementResize == null
-                        ? null
-                        : (id, width, height) {
+          return ManagedActionSet(
+            shortcuts: [
+              if (onElementsDragged != null)
+                ActionShortcut(
+                  id: "graph_move_mode_activate",
+                  label: "Move Mode",
+                  description: "Go to Move Mode",
+                  activators: [
+                    SingleActivator(LogicalKeyboardKey.keyM),
+                  ],
+                  icon: Icones(Mingcute.move_fill),
+                  onInvoke: (ref) => ref
+                      .read(currentInteractionModeProvider.notifier)
+                      .setMode(GraphMoveMode()),
+                  priority: 10,
+                ),
+              if (onElementResize != null)
+                ActionShortcut(
+                  id: "graph_resize_mode_activate",
+                  label: "Resize Mode",
+                  description: "Go to Resize Mode",
+                  activators: [
+                    SingleActivator(LogicalKeyboardKey.keyR),
+                  ],
+                  icon: Icones(Lucide.move_diagonal_2),
+                  onInvoke: (ref) => ref
+                      .read(currentInteractionModeProvider.notifier)
+                      .setMode(GraphResizeMode()),
+                  priority: 10,
+                ),
+            ],
+            child: InteractiveViewer.builder(
+              boundaryMargin: const EdgeInsets.all(double.infinity),
+              alignment: Alignment.center,
+              transformationController: controller,
+              builder: (context, viewport) {
+                final rect = _quadToRect(viewport);
+                return _GraphWithDragTarget(
+                  viewport: rect,
+                  enableDragTarget: onElementsDragged != null,
+                  graph: GraphDrag(
+                    draggingInsideGraph: draggingInsideGraph,
+                    child: Actions(
+                      actions: {
+                        GraphMoveIntent: CallbackAction<GraphMoveIntent>(
+                          onInvoke: (intent) {
                             assert(
-                              width > 0 && height > 0,
-                              "Width and height must be greater than 0",
+                              onElementsDragged != null,
+                              "onElementsDragged must be provided",
                             );
-                            resizing.value = (id, width, height);
-                          },
-                    onElementResizeUpdate: onElementResize == null
-                        ? null
-                        : (id, width, height) {
-                            assert(
-                              width > 0 && height > 0,
-                              "Width and height must be greater than 0",
-                            );
+                            final direction = intent.direction;
+                            final (dx, dy) = directionToDelta(direction);
+                            final updated = ref
+                                .read(selectionProvider)
+                                .where(
+                                  (id) =>
+                                      data.keyedElements[
+                                          GraphIdentifier(id.id)] !=
+                                      null,
+                                )
+                                .map((id) => (GraphIdentifier(id.id), dx, dy))
+                                .toList();
 
-                            resizing.value = (id, width, height);
-                          },
-                    onElementResizeEnd: onElementResize == null
-                        ? null
-                        : (id, width, height) {
-                            assert(
-                              width > 0 && height > 0,
-                              "Width and height must be greater than 0",
-                            );
+                            onElementsDragged!(updated);
 
-                            resizing.value = null;
-                            onElementResize!.call(id, width, height);
+                            return null;
                           },
+                        ),
+                        GraphResizeIntent: CallbackAction<GraphResizeIntent>(
+                          onInvoke: (intent) {
+                            assert(
+                              onElementResize != null,
+                              "onElementResize must be provided",
+                            );
+                            final direction = intent.direction;
+                            final (dx, dy) = directionToDelta(direction);
+                            ref
+                                .read(selectionProvider)
+                                .map(
+                                  (id) => data
+                                      .keyedElements[GraphIdentifier(id.id)],
+                                )
+                                .nonNulls
+                                .map(
+                                  (element) => (
+                                    element,
+                                    max(element.width + dx, 1),
+                                    max(element.height + dy, 1)
+                                  ),
+                                )
+                                .forEach((e) {
+                              final (element, width, height) = e;
+                              onElementResize!(element.id, width, height);
+                            });
+
+                            return null;
+                          },
+                        ),
+                      },
+                      child: _Graph(
+                        key: graphGlobalKey,
+                        viewport: rect,
+                        data: data
+                            .offsetChildren(
+                              offset: dragOffset.value ?? Offset.zero,
+                              ids: draggingIds.value,
+                            )
+                            .resizeChild(resize: resizing.value),
+                        onElementResizeStart: onElementResize == null
+                            ? null
+                            : (id, width, height) {
+                                assert(
+                                  width > 0 && height > 0,
+                                  "Width and height must be greater than 0",
+                                );
+                                resizing.value = (id, width, height);
+                              },
+                        onElementResizeUpdate: onElementResize == null
+                            ? null
+                            : (id, width, height) {
+                                assert(
+                                  width > 0 && height > 0,
+                                  "Width and height must be greater than 0",
+                                );
+
+                                resizing.value = (id, width, height);
+                              },
+                        onElementResizeEnd: onElementResize == null
+                            ? null
+                            : (id, width, height) {
+                                assert(
+                                  width > 0 && height > 0,
+                                  "Width and height must be greater than 0",
+                                );
+
+                                resizing.value = null;
+                                onElementResize!.call(id, width, height);
+                              },
+                      ),
+                    ),
                   ),
-                ),
-                dragTarget: DragTarget<GraphDragData>(
-                  onWillAcceptWithDetails: (details) {
-                    final id = details.data.graphId;
-                    final element = data.keyedElements[id];
-                    if (element == null) {
-                      return false;
-                    }
-                    final preRenderElement = _PreRenderElement.fromElement(
-                      element,
-                      data.cellSize,
-                    );
-                    dragStart.value = preRenderElement.position;
+                  dragTarget: DragTarget<GraphDragData>(
+                    onWillAcceptWithDetails: (details) {
+                      final id = details.data.graphId;
+                      final element = data.keyedElements[id];
+                      if (element == null) {
+                        return false;
+                      }
+                      final preRenderElement = _PreRenderElement.fromElement(
+                        element,
+                        data.cellSize,
+                      );
+                      dragStart.value = preRenderElement.position;
 
-                    final renderBox = graphGlobalKey.currentContext
-                        ?.findRenderObject() as RenderBox?;
+                      final renderBox = graphGlobalKey.currentContext
+                          ?.findRenderObject() as RenderBox?;
 
-                    assert(
-                      renderBox != null,
-                      "Interactive viewer render box not found",
-                    );
+                      assert(
+                        renderBox != null,
+                        "Interactive viewer render box not found",
+                      );
 
-                    final offset = renderBox!.globalToLocal(details.offset);
+                      final offset = renderBox!.globalToLocal(details.offset);
 
-                    dragOffset.value = offset - dragStart.value!;
+                      dragOffset.value = offset - dragStart.value!;
 
-                    draggingIds.value = data.elements
-                        .where(
-                          (e) => e.inside(element),
-                        )
-                        .map((element) => element.id)
-                        .toList();
-                    draggingInsideGraph.value = true;
-                    return true;
-                  },
-                  onMove: (details) {
-                    final renderBox = graphGlobalKey.currentContext
-                        ?.findRenderObject() as RenderBox?;
+                      draggingIds.value = data.elements
+                          .where(
+                            (e) => e.inside(element),
+                          )
+                          .map((element) => element.id)
+                          .toList();
+                      draggingInsideGraph.value = true;
+                      return true;
+                    },
+                    onMove: (details) {
+                      final renderBox = graphGlobalKey.currentContext
+                          ?.findRenderObject() as RenderBox?;
 
-                    assert(
-                      renderBox != null,
-                      "Interactive viewer render box not found",
-                    );
+                      assert(
+                        renderBox != null,
+                        "Interactive viewer render box not found",
+                      );
 
-                    final offset = renderBox!.globalToLocal(details.offset);
+                      final offset = renderBox!.globalToLocal(details.offset);
 
-                    dragOffset.value = offset - dragStart.value!;
-                  },
-                  onLeave: (data) {
-                    draggingIds.value = [];
-                    dragStart.value = null;
-                    dragOffset.value = null;
-                    draggingInsideGraph.value = false;
-                  },
-                  onAcceptWithDetails: (details) {
-                    draggingIds.value = [];
-                    dragStart.value = null;
-                    dragOffset.value = null;
-                    draggingInsideGraph.value = false;
-                  },
-                  builder: (context, candidateData, rejectedData) {
-                    return const SizedBox.expand();
-                  },
-                ),
-              );
-            },
+                      dragOffset.value = offset - dragStart.value!;
+                    },
+                    onLeave: (data) {
+                      draggingIds.value = [];
+                      dragStart.value = null;
+                      dragOffset.value = null;
+                      draggingInsideGraph.value = false;
+                    },
+                    onAcceptWithDetails: (details) {
+                      final dx = (offset.dx / data.cellSize).round();
+                      final dy = (offset.dy / data.cellSize).round();
+
+                      final updatedElements =
+                          draggingIds.value.map((id) => (id, dx, dy)).toList();
+
+                      draggingIds.value = [];
+                      dragStart.value = null;
+                      dragOffset.value = null;
+                      draggingInsideGraph.value = false;
+
+                      onElementsDragged!(updatedElements);
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      return const SizedBox.expand();
+                    },
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
@@ -1413,4 +1528,24 @@ class _PreRenderEdge {
   bool connectsTo(GraphElement element) {
     return source.element == element || target.element == element;
   }
+}
+
+/// Intent for moving graph nodes in a specified direction.
+class GraphMoveIntent extends Intent {
+  const GraphMoveIntent({
+    required this.direction,
+  });
+
+  /// The direction in which to move the nodes.
+  final TraversalDirection direction;
+}
+
+/// Intent for resizing graph nodes.
+class GraphResizeIntent extends Intent {
+  const GraphResizeIntent({
+    required this.direction,
+  });
+
+  /// The direction in which to resize the nodes.
+  final TraversalDirection direction;
 }
