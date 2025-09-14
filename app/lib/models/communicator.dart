@@ -112,8 +112,9 @@ class SocketNotifier extends StateNotifier<Socket?> {
       return;
     }
 
-    var url = secure ? "wss://$hostname" : "ws://$hostname";
-    if (port != null) url += ":$port";
+    var socketPort = (port == null || port == 0) ? (secure ? 443 : 80) : port;
+    var scheme = secure ? "wss" : "ws";
+    var url = "$scheme://$hostname:$socketPort";
     if (token != null) url += "?token=$token";
 
     debugPrint("Initializing socket to $url");
