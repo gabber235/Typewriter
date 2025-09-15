@@ -512,7 +512,7 @@ Future<Manual?> showManualChangeModulesPopup(
   BuildContext context,
   String manualId,
 ) {
-  return showAdvancedDialogue<Manual>(
+  return showAdvancedDialog<Manual>(
     context: context,
     builder: (context) => ManualChangeModulesPopup(manualId: manualId),
   );

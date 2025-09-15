@@ -11,6 +11,10 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
+import 'package:widgetbook_workspace/stories/app/components/action_shortcuts.stories.dart'
+    as _widgetbook_workspace_stories_app_components_action_shortcuts_stories;
+import 'package:widgetbook_workspace/stories/app/components/book.stories.dart'
+    as _widgetbook_workspace_stories_app_components_book_stories;
 import 'package:widgetbook_workspace/stories/app/components/graph/graph.stories.dart'
     as _widgetbook_workspace_stories_app_components_graph_graph_stories;
 import 'package:widgetbook_workspace/stories/app/components/graph/resizable_element.stories.dart'
@@ -37,66 +41,66 @@ import 'package:widgetbook_workspace/stories/app/components/interaction_mode/mod
     as _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories;
 import 'package:widgetbook_workspace/stories/app/components/manuals/popups.stories.dart'
     as _widgetbook_workspace_stories_app_components_manuals_popups_stories;
-import 'package:widgetbook_workspace/stories/components/action_shortcuts.stories.dart'
-    as _widgetbook_workspace_stories_components_action_shortcuts_stories;
-import 'package:widgetbook_workspace/stories/components/auto_scroller.stories.dart'
-    as _widgetbook_workspace_stories_components_auto_scroller_stories;
-import 'package:widgetbook_workspace/stories/components/book.stories.dart'
-    as _widgetbook_workspace_stories_components_book_stories;
-import 'package:widgetbook_workspace/stories/components/color_swatch.dart'
-    as _widgetbook_workspace_stories_components_color_swatch;
-import 'package:widgetbook_workspace/stories/components/custom_appbar.stories.dart'
-    as _widgetbook_workspace_stories_components_custom_appbar_stories;
-import 'package:widgetbook_workspace/stories/components/decorated_text_field.stories.dart'
-    as _widgetbook_workspace_stories_components_decorated_text_field_stories;
-import 'package:widgetbook_workspace/stories/components/dropdown.stories.dart'
-    as _widgetbook_workspace_stories_components_dropdown_stories;
-import 'package:widgetbook_workspace/stories/components/labeled_divider.stories.dart'
-    as _widgetbook_workspace_stories_components_labeled_divider_stories;
-import 'package:widgetbook_workspace/stories/components/loading_indicator.stories.dart'
-    as _widgetbook_workspace_stories_components_loading_indicator_stories;
-import 'package:widgetbook_workspace/stories/components/organization_icon.stories.dart'
-    as _widgetbook_workspace_stories_components_organization_icon_stories;
-import 'package:widgetbook_workspace/stories/components/organization_selector.stories.dart'
-    as _widgetbook_workspace_stories_components_organization_selector_stories;
-import 'package:widgetbook_workspace/stories/components/page_heading.stories.dart'
-    as _widgetbook_workspace_stories_components_page_heading_stories;
-import 'package:widgetbook_workspace/stories/components/retry_indicator.stories.dart'
-    as _widgetbook_workspace_stories_components_retry_indicator_stories;
-import 'package:widgetbook_workspace/stories/components/section.stories.dart'
-    as _widgetbook_workspace_stories_components_section_stories;
-import 'package:widgetbook_workspace/stories/components/selectable.stories.dart'
-    as _widgetbook_workspace_stories_components_selectable_stories;
-import 'package:widgetbook_workspace/stories/components/shortcut_display.stories.dart'
-    as _widgetbook_workspace_stories_components_shortcut_display_stories;
-import 'package:widgetbook_workspace/stories/components/sidebar.stories.dart'
-    as _widgetbook_workspace_stories_components_sidebar_stories;
-import 'package:widgetbook_workspace/stories/components/tag.stories.dart'
-    as _widgetbook_workspace_stories_components_tag_stories;
-import 'package:widgetbook_workspace/stories/components/text_scroller.stories.dart'
-    as _widgetbook_workspace_stories_components_text_scroller_stories;
+import 'package:widgetbook_workspace/stories/app/components/organization_icon.stories.dart'
+    as _widgetbook_workspace_stories_app_components_organization_icon_stories;
+import 'package:widgetbook_workspace/stories/app/components/organization_selector.stories.dart'
+    as _widgetbook_workspace_stories_app_components_organization_selector_stories;
+import 'package:widgetbook_workspace/stories/app/components/selectable.stories.dart'
+    as _widgetbook_workspace_stories_app_components_selectable_stories;
+import 'package:widgetbook_workspace/stories/app/components/tag.stories.dart'
+    as _widgetbook_workspace_stories_app_components_tag_stories;
+import 'package:widgetbook_workspace/stories/generic/components/auto_scroller.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_auto_scroller_stories;
+import 'package:widgetbook_workspace/stories/generic/components/color_swatch.dart'
+    as _widgetbook_workspace_stories_generic_components_color_swatch;
+import 'package:widgetbook_workspace/stories/generic/components/decorated_text_field.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_decorated_text_field_stories;
+import 'package:widgetbook_workspace/stories/generic/components/drag_handle.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_drag_handle_stories;
+import 'package:widgetbook_workspace/stories/generic/components/dropdown.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_dropdown_stories;
 import 'package:widgetbook_workspace/stories/generic/components/elastic_switcher.stories.dart'
     as _widgetbook_workspace_stories_generic_components_elastic_switcher_stories;
+import 'package:widgetbook_workspace/stories/generic/components/empty_screen.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_empty_screen_stories;
 import 'package:widgetbook_workspace/stories/generic/components/floating_button.stories.dart'
     as _widgetbook_workspace_stories_generic_components_floating_button_stories;
 import 'package:widgetbook_workspace/stories/generic/components/grid_selectable_card.stories.dart'
     as _widgetbook_workspace_stories_generic_components_grid_selectable_card_stories;
+import 'package:widgetbook_workspace/stories/generic/components/labeled_divider.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_labeled_divider_stories;
 import 'package:widgetbook_workspace/stories/generic/components/loading_button.stories.dart'
     as _widgetbook_workspace_stories_generic_components_loading_button_stories;
+import 'package:widgetbook_workspace/stories/generic/components/loading_indicator.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_loading_indicator_stories;
 import 'package:widgetbook_workspace/stories/generic/components/notification_bubble.stories.dart'
     as _widgetbook_workspace_stories_generic_components_notification_bubble_stories;
+import 'package:widgetbook_workspace/stories/generic/components/page_heading.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_page_heading_stories;
+import 'package:widgetbook_workspace/stories/generic/components/retry_indicator.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_retry_indicator_stories;
+import 'package:widgetbook_workspace/stories/generic/components/section.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_section_stories;
+import 'package:widgetbook_workspace/stories/generic/components/shimmer.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_shimmer_stories;
+import 'package:widgetbook_workspace/stories/generic/components/shortcut_display.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_shortcut_display_stories;
+import 'package:widgetbook_workspace/stories/generic/components/text_scroller.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_text_scroller_stories;
 import 'package:widgetbook_workspace/stories/generic/components/type_link.stories.dart'
     as _widgetbook_workspace_stories_generic_components_type_link_stories;
 import 'package:widgetbook_workspace/stories/generic/components/version_filter_bar.stories.dart'
     as _widgetbook_workspace_stories_generic_components_version_filter_bar_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/library/route.dart'
-    as _widgetbook_workspace_stories_routes_organizations_library_route;
-import 'package:widgetbook_workspace/stories/routes/organizations/manuals/route.dart'
-    as _widgetbook_workspace_stories_routes_organizations_manuals_route;
-import 'package:widgetbook_workspace/stories/routes/organizations/modules/route.dart'
-    as _widgetbook_workspace_stories_routes_organizations_modules_route;
-import 'package:widgetbook_workspace/stories/routes/route.dart'
-    as _widgetbook_workspace_stories_routes_route;
+import 'package:widgetbook_workspace/stories/routes/organizations/book/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organizations_book_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organizations/library/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organizations_library_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organizations/manuals/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organizations_manuals_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organizations/modules/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organizations_modules_route_stories;
+import 'package:widgetbook_workspace/stories/routes/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_route_stories;
 import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
     as _widgetbook_workspace_stories_screens_error_screen_stories;
 
@@ -108,12 +112,27 @@ final directories = <_widgetbook.WidgetbookNode>[
         name: 'IndexPage',
         useCase: _widgetbook.WidgetbookUseCase(
           name: 'IndexPage',
-          builder: _widgetbook_workspace_stories_routes_route.indexPageUseCase,
+          builder: _widgetbook_workspace_stories_routes_route_stories
+              .indexPageUseCase,
         ),
       ),
       _widgetbook.WidgetbookFolder(
         name: 'organization',
         children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'book',
+            children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'BookPage',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'BookPage',
+                  builder:
+                      _widgetbook_workspace_stories_routes_organizations_book_route_stories
+                          .bookPageUseCase,
+                ),
+              )
+            ],
+          ),
           _widgetbook.WidgetbookFolder(
             name: 'library',
             children: [
@@ -122,7 +141,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'LibraryPage',
                   builder:
-                      _widgetbook_workspace_stories_routes_organizations_library_route
+                      _widgetbook_workspace_stories_routes_organizations_library_route_stories
                           .libraryPageUseCase,
                 ),
               )
@@ -136,7 +155,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'ManualsPage',
                   builder:
-                      _widgetbook_workspace_stories_routes_organizations_manuals_route
+                      _widgetbook_workspace_stories_routes_organizations_manuals_route_stories
                           .manualsPageUseCase,
                 ),
               )
@@ -150,7 +169,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'ModulesPage',
                   builder:
-                      _widgetbook_workspace_stories_routes_organizations_modules_route
+                      _widgetbook_workspace_stories_routes_organizations_modules_route_stories
                           .modulesPageUseCase,
                 ),
               )
@@ -164,27 +183,43 @@ final directories = <_widgetbook.WidgetbookNode>[
     name: 'stories',
     children: [
       _widgetbook.WidgetbookFolder(
-        name: 'components',
+        name: 'app',
         children: [
-          _widgetbook.WidgetbookLeafComponent(
-            name: 'ColorSwatchWidget',
-            useCase: _widgetbook.WidgetbookUseCase(
-              name: 'Default',
-              builder: _widgetbook_workspace_stories_components_color_swatch
-                  .colorSwatchUseCase,
-            ),
-          ),
-          _widgetbook.WidgetbookLeafComponent(
-            name: 'SelectableBox',
-            useCase: _widgetbook.WidgetbookUseCase(
-              name: 'Selectable Boxes',
-              builder:
-                  _widgetbook_workspace_stories_components_selectable_stories
-                      .selectableUseCase,
-            ),
-          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'components',
+            children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'SelectableBox',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Selectable Boxes',
+                  builder:
+                      _widgetbook_workspace_stories_app_components_selectable_stories
+                          .selectableUseCase,
+                ),
+              )
+            ],
+          )
         ],
-      )
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'generic',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'components',
+            children: [
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'ColorSwatchWidget',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_generic_components_color_swatch
+                          .colorSwatchUseCase,
+                ),
+              )
+            ],
+          )
+        ],
+      ),
     ],
   ),
   _widgetbook.WidgetbookFolder(
@@ -197,13 +232,80 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'components',
             children: [
               _widgetbook.WidgetbookLeafComponent(
-                name: 'CustomAppBar',
+                name: 'ActionRow',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
-                      _widgetbook_workspace_stories_components_custom_appbar_stories
-                          .customAppBarUseCase,
+                      _widgetbook_workspace_stories_app_components_action_shortcuts_stories
+                          .actionRowUseCase,
                 ),
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'BookWidget',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_app_components_book_stories
+                          .bookUseCase,
+                ),
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'DecoratedTextField',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_decorated_text_field_stories
+                            .inputFieldUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Error',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_decorated_text_field_stories
+                            .inputFieldErrorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Multiline',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_decorated_text_field_stories
+                            .inputFieldMultilineUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Callbacks',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_decorated_text_field_stories
+                            .inputFieldWithCallbacksUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Prefix Icon',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_decorated_text_field_stories
+                            .inputFieldWithPrefixIconUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'Dropdown',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_dropdown_stories
+                            .dropdownDefaultUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Preselected',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_dropdown_stories
+                            .dropdownPreselectedUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Callbacks',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_dropdown_stories
+                            .dropdownWithCallbacksUseCase,
+                  ),
+                ],
               ),
               _widgetbook.WidgetbookComponent(
                 name: 'OrganizationIcon',
@@ -211,13 +313,13 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'Default',
                     builder:
-                        _widgetbook_workspace_stories_components_organization_icon_stories
+                        _widgetbook_workspace_stories_app_components_organization_icon_stories
                             .organizationIconUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Placeholder',
                     builder:
-                        _widgetbook_workspace_stories_components_organization_icon_stories
+                        _widgetbook_workspace_stories_app_components_organization_icon_stories
                             .organizationIconPlaceholderUseCase,
                   ),
                 ],
@@ -227,18 +329,26 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'OrganizationSelector',
                   builder:
-                      _widgetbook_workspace_stories_components_organization_selector_stories
+                      _widgetbook_workspace_stories_app_components_organization_selector_stories
                           .organizationSelectorUseCase,
                 ),
               ),
-              _widgetbook.WidgetbookLeafComponent(
-                name: 'Sidebar',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Default',
-                  builder:
-                      _widgetbook_workspace_stories_components_sidebar_stories
-                          .sidebarUseCase,
-                ),
+              _widgetbook.WidgetbookComponent(
+                name: 'VersionFilterBar',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_version_filter_bar_stories
+                            .versionFilterBarDefaultUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Epoch + Large',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_version_filter_bar_stories
+                            .versionFilterBarEpochLargeUseCase,
+                  ),
+                ],
               ),
               _widgetbook.WidgetbookFolder(
                 name: 'graph',
@@ -499,86 +609,28 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'components',
             children: [
               _widgetbook.WidgetbookLeafComponent(
-                name: 'ActionRow',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Default',
-                  builder:
-                      _widgetbook_workspace_stories_components_action_shortcuts_stories
-                          .actionRowUseCase,
-                ),
-              ),
-              _widgetbook.WidgetbookLeafComponent(
                 name: 'AutoScroller',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
-                      _widgetbook_workspace_stories_components_auto_scroller_stories
+                      _widgetbook_workspace_stories_generic_components_auto_scroller_stories
                           .autoScrollerUseCase,
                 ),
               ),
-              _widgetbook.WidgetbookLeafComponent(
-                name: 'BookWidget',
-                useCase: _widgetbook.WidgetbookUseCase(
-                  name: 'Default',
-                  builder: _widgetbook_workspace_stories_components_book_stories
-                      .bookUseCase,
-                ),
-              ),
               _widgetbook.WidgetbookComponent(
-                name: 'DecoratedTextField',
+                name: 'DragHandle',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
+                    name: 'Horizontal',
                     builder:
-                        _widgetbook_workspace_stories_components_decorated_text_field_stories
-                            .inputFieldUseCase,
+                        _widgetbook_workspace_stories_generic_components_drag_handle_stories
+                            .dragHandleHorizontalUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
-                    name: 'Error',
+                    name: 'Vertical',
                     builder:
-                        _widgetbook_workspace_stories_components_decorated_text_field_stories
-                            .inputFieldErrorUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Multiline',
-                    builder:
-                        _widgetbook_workspace_stories_components_decorated_text_field_stories
-                            .inputFieldMultilineUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'With Callbacks',
-                    builder:
-                        _widgetbook_workspace_stories_components_decorated_text_field_stories
-                            .inputFieldWithCallbacksUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'With Prefix Icon',
-                    builder:
-                        _widgetbook_workspace_stories_components_decorated_text_field_stories
-                            .inputFieldWithPrefixIconUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'Dropdown',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
-                    builder:
-                        _widgetbook_workspace_stories_components_dropdown_stories
-                            .dropdownDefaultUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Preselected',
-                    builder:
-                        _widgetbook_workspace_stories_components_dropdown_stories
-                            .dropdownPreselectedUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'With Callbacks',
-                    builder:
-                        _widgetbook_workspace_stories_components_dropdown_stories
-                            .dropdownWithCallbacksUseCase,
+                        _widgetbook_workspace_stories_generic_components_drag_handle_stories
+                            .dragHandleVerticalUseCase,
                   ),
                 ],
               ),
@@ -589,6 +641,15 @@ final directories = <_widgetbook.WidgetbookNode>[
                   builder:
                       _widgetbook_workspace_stories_generic_components_elastic_switcher_stories
                           .elasticSwitcherToggle,
+                ),
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'EmptyScreen',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Default',
+                  builder:
+                      _widgetbook_workspace_stories_generic_components_empty_screen_stories
+                          .emptyScreenUseCase,
                 ),
               ),
               _widgetbook.WidgetbookComponent(
@@ -636,7 +697,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'LabeledDivider',
                   builder:
-                      _widgetbook_workspace_stories_components_labeled_divider_stories
+                      _widgetbook_workspace_stories_generic_components_labeled_divider_stories
                           .labeledDividerUseCase,
                 ),
               ),
@@ -722,7 +783,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
-                      _widgetbook_workspace_stories_components_loading_indicator_stories
+                      _widgetbook_workspace_stories_generic_components_loading_indicator_stories
                           .loadingIndicatorUseCase,
                 ),
               ),
@@ -754,7 +815,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'PageHeading',
                   builder:
-                      _widgetbook_workspace_stories_components_page_heading_stories
+                      _widgetbook_workspace_stories_generic_components_page_heading_stories
                           .pageHeadingUseCase,
                 ),
               ),
@@ -763,7 +824,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
-                      _widgetbook_workspace_stories_components_retry_indicator_stories
+                      _widgetbook_workspace_stories_generic_components_retry_indicator_stories
                           .retryIndicatorUseCase,
                 ),
               ),
@@ -772,9 +833,44 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
-                      _widgetbook_workspace_stories_components_section_stories
+                      _widgetbook_workspace_stories_generic_components_section_stories
                           .sectionUseCase,
                 ),
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'Shimmer',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Custom Shapes',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_shimmer_stories
+                            .shimmerCustomShapesUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Layout Example',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_shimmer_stories
+                            .shimmerLayoutUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Shape Borders',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_shimmer_stories
+                            .shimmerShapeBordersUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Shimmer Boxes',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_shimmer_stories
+                            .shimmerBoxUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Small Shapes List',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_shimmer_stories
+                            .shimmerSmallShapesListUseCase,
+                  ),
+                ],
               ),
               _widgetbook.WidgetbookComponent(
                 name: 'ShortcutDisplay',
@@ -782,13 +878,13 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'Rotating',
                     builder:
-                        _widgetbook_workspace_stories_components_shortcut_display_stories
+                        _widgetbook_workspace_stories_generic_components_shortcut_display_stories
                             .rotatingShortcutsUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Single',
                     builder:
-                        _widgetbook_workspace_stories_components_shortcut_display_stories
+                        _widgetbook_workspace_stories_generic_components_shortcut_display_stories
                             .singleShortcutDisplayUseCase,
                   ),
                 ],
@@ -797,8 +893,9 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'TagWidget',
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
-                  builder: _widgetbook_workspace_stories_components_tag_stories
-                      .tagUseCase,
+                  builder:
+                      _widgetbook_workspace_stories_app_components_tag_stories
+                          .tagUseCase,
                 ),
               ),
               _widgetbook.WidgetbookLeafComponent(
@@ -806,7 +903,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 useCase: _widgetbook.WidgetbookUseCase(
                   name: 'Default',
                   builder:
-                      _widgetbook_workspace_stories_components_text_scroller_stories
+                      _widgetbook_workspace_stories_generic_components_text_scroller_stories
                           .textScrollerUseCase,
                 ),
               ),
@@ -818,23 +915,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_generic_components_type_link_stories
                           .typeLinkDefaultUseCase,
                 ),
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'VersionFilterBar',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
-                    builder:
-                        _widgetbook_workspace_stories_generic_components_version_filter_bar_stories
-                            .versionFilterBarDefaultUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Epoch + Large',
-                    builder:
-                        _widgetbook_workspace_stories_generic_components_version_filter_bar_stories
-                            .versionFilterBarEpochLargeUseCase,
-                  ),
-                ],
               ),
             ],
           ),

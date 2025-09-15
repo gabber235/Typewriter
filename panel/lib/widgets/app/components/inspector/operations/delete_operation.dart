@@ -6,6 +6,7 @@ import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
@@ -30,11 +31,7 @@ class DeleteOperation extends Operation {
   String get description => "Delete selected items";
 
   @override
-  List<ShortcutActivator> get shortcutActivators => [
-        SingleActivator(LogicalKeyboardKey.keyD),
-        SingleActivator(LogicalKeyboardKey.delete),
-        SingleActivator(LogicalKeyboardKey.backspace),
-      ];
+  List<ShortcutActivator> get shortcutActivators => shortcutsFor(DeleteIntent);
 
   @override
   bool canExecuteOn(List<Selectable> selection) =>

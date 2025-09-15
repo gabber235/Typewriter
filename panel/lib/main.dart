@@ -68,7 +68,7 @@ class TypewriterPanel extends HookConsumerWidget {
         ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateIntent(),
 
-    // Focus Navigation (hjkl navigation moved to NormalMode)
+    // Focus Navigation
     SingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
     SingleActivator(LogicalKeyboardKey.keyP, control: true):
         PreviousFocusIntent(),
@@ -108,7 +108,21 @@ class TypewriterPanel extends HookConsumerWidget {
         NavigatePaneIntent(AxisDirection.down),
     SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
         NavigatePaneIntent(AxisDirection.up),
+
+    // Delete Intent
+    SingleActivator(LogicalKeyboardKey.keyD): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.backspace): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.delete): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.keyX): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.keyD, shift: true): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.backspace, shift: true): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.delete, shift: true): DeleteIntent(),
+    SingleActivator(LogicalKeyboardKey.keyX, shift: true): DeleteIntent(),
   };
+}
+
+class DeleteIntent extends Intent {
+  const DeleteIntent();
 }
 
 List<ShortcutActivator> shortcutsFor(Type intent) {

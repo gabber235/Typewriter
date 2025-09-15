@@ -3,11 +3,15 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 
 extension KnobsBuilderX on KnobsBuilder {
-  DisplayState displayState() => object.dropdown(
-        label: "Display State",
+  DisplayState displayState({
+    String label = "Display State",
+    DisplayState initialOption = DisplayState.fewItems,
+  }) =>
+      object.dropdown(
+        label: label,
         options: DisplayState.values,
         labelBuilder: (value) => value.name.formatted,
-        initialOption: DisplayState.fewItems,
+        initialOption: initialOption,
       );
 
   Outcome outcome() => object.segmented(

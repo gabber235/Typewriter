@@ -48,6 +48,60 @@ void main() {
         isA<NormalMode>(),
       );
     });
+
+    testWidgets("DismissIntent bubbles up to parent action handlers",
+        (tester) async {
+      final innerFocus = FocusNode(debugLabel: "inner");
+      var parentDismissReceived = false;
+
+      final widget = Actions(
+        actions: <Type, Action<Intent>>{
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (intent) {
+              parentDismissReceived = true;
+              return null;
+            },
+          ),
+        },
+        child: Dropdown<String>(
+          focusNode: innerFocus,
+          dropdownMenuEntries: const [
+            DropdownMenuEntry(value: "A", label: "A"),
+            DropdownMenuEntry(value: "B", label: "B"),
+          ],
+        ),
+      );
+
+      await tester.pumpTestApp(child: widget);
+
+      await tester.tap(find.byType(DropdownMenu<String>));
+      await tester.pump();
+      expect(innerFocus.hasPrimaryFocus, isTrue);
+
+      /// First we dismiss the dropdown menu.
+      var context = FocusManager.instance.primaryFocus!.context!;
+      Actions.invoke(context, const DismissIntent());
+      await tester.pump();
+
+      expect(parentDismissReceived, isFalse);
+      expect(innerFocus.hasPrimaryFocus, isTrue);
+
+      /// Then we dismiss the input field.
+      context = FocusManager.instance.primaryFocus!.context!;
+      Actions.invoke(context, const DismissIntent());
+      await tester.pump();
+
+      expect(parentDismissReceived, isFalse);
+      expect(innerFocus.hasPrimaryFocus, isFalse);
+
+      /// Dismissing while we are focusing the surrounding focus should bubble up to the parent action handlers.
+      context = FocusManager.instance.primaryFocus!.context!;
+      Actions.invoke(context, const DismissIntent());
+      await tester.pump();
+
+      expect(innerFocus.hasPrimaryFocus, isFalse);
+      expect(parentDismissReceived, isTrue);
+    });
   });
 
   group("Dropdown - callbacks", () {

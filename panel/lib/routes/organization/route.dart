@@ -1,10 +1,18 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
+import "package:iconify_flutter_plus/icons/icomoon_free.dart";
+import "package:iconify_flutter_plus/icons/material_symbols.dart";
+import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
-import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
+import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
+import "package:typewriter_panel/widgets/app/components/sidebar.dart";
+import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
 @RoutePage()
 class OrganizationPage extends HookConsumerWidget {
@@ -23,7 +31,7 @@ class OrganizationPage extends HookConsumerWidget {
   }
 }
 
-class OrganizationScaffold extends StatelessWidget {
+class OrganizationScaffold extends HookConsumerWidget {
   const OrganizationScaffold({
     required this.child,
     super.key,
@@ -32,12 +40,21 @@ class OrganizationScaffold extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: const CustomAppBar(),
+      appBar: CustomAppBar(
+        row: [
+          if (ref.watch(organizationIdProvider) != null)
+            const OrganizationSelector(),
+          const Spacer(),
+          if (!context.isMobile) const ModeDisplayWidget(),
+        ],
+        sidebar: const OrganizationSidebarContent(),
+      ),
       body: Row(
         children: [
-          if (!context.isMobile) Sidebar(),
+          if (!context.isMobile)
+            const Sidebar(child: OrganizationSidebarContent()),
           Expanded(
             child: Column(
               children: [
@@ -48,6 +65,40 @@ class OrganizationScaffold extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class OrganizationSidebarContent extends HookConsumerWidget {
+  const OrganizationSidebarContent({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final organizationId = ref.watch(organizationIdProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SidebarHeader(text: "Organization"),
+        if (organizationId != null) ...[
+          SidebarLink(
+            icon: Icones(IcomoonFree.books),
+            text: "Library",
+            route: OrganizationRoute(organizationId: organizationId),
+          ),
+          SidebarLink(
+            icon: Icones(Fa6Solid.boxes_stacked),
+            text: "Modules",
+            route: ModulesRoute(),
+          ),
+          SidebarLink(
+            icon: Icones(MaterialSymbols.menu_book),
+            text: "Manuals",
+            route: ManualsRoute(),
+          ),
+        ],
+        const Spacer(),
+        UserMenu(),
+      ],
     );
   }
 }

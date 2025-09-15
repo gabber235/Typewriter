@@ -8,6 +8,7 @@ import "package:typewriter_panel/widgets/app/components/input_field_container.da
 class DecoratedTextField extends HookWidget {
   const DecoratedTextField({
     required this.focusNode,
+    this.autofocus = false,
     this.controller,
     this.text,
     this.onChanged,
@@ -28,6 +29,9 @@ class DecoratedTextField extends HookWidget {
   }) : super();
   final TextEditingController? controller;
   final FocusNode focusNode;
+
+  /// Whether the text field should be focused when the widget is inserted into the tree.
+  final bool autofocus;
   final String? text;
 
   /// Called any time the text changes.
@@ -108,6 +112,7 @@ class DecoratedTextField extends HookWidget {
       surroundingActions: surroundingActions,
       child: TextField(
         focusNode: focusNode,
+        autofocus: autofocus,
         controller: controller,
         onEditingComplete:
             onEditingComplete ?? surroundingFocusNode.requestFocus,

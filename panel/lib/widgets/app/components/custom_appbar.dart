@@ -1,16 +1,14 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
-import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
-import "package:typewriter_panel/widgets/app/components/sidebar.dart";
-import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
 
 /// A customizable app bar for flexible layouts, always including the organization selector if available.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
   const CustomAppBar({
+    required this.row,
+    required this.sidebar,
     this.backgroundColor,
     this.height = 48.0,
     super.key,
@@ -18,6 +16,9 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
 
   final Color? backgroundColor;
   final double height;
+
+  final List<Widget> row;
+  final Widget sidebar;
 
   @override
   Size get preferredSize => Size.fromHeight(height);
@@ -43,9 +44,7 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 spacing: 8,
                 children: [
-                  if (ref.watch(organizationIdProvider) != null)
-                    const OrganizationSelector(),
-                  const Spacer(),
+                  ...row,
                   if (context.isMobile)
                     IconButton(
                       icon: const Icon(Icons.menu),
@@ -56,13 +55,11 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
                           backgroundColor: Colors.transparent,
                           builder: (ctx) => UncontrolledProviderScope(
                             container: ProviderScope.containerOf(context),
-                            child: const _MobileSidebarMenu(),
+                            child: _MobileSidebarMenu(child: sidebar),
                           ),
                         );
                       },
-                    )
-                  else
-                    const ModeDisplayWidget(),
+                    ),
                 ],
               ),
             ),
@@ -74,7 +71,9 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
 }
 
 class _MobileSidebarMenu extends StatelessWidget {
-  const _MobileSidebarMenu();
+  const _MobileSidebarMenu({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +90,7 @@ class _MobileSidebarMenu extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SidebarContent(),
+                child: child,
               ),
             ),
           ],

@@ -44,7 +44,7 @@ class FakeApp extends StatelessWidget {
         home: Scaffold(
           body: AppRequiredWidgets(
             child: Center(
-              child: Padding(padding: const EdgeInsets.all(20), child: child),
+              child: child,
             ),
           ),
         ),

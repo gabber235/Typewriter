@@ -3,6 +3,8 @@ import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/routes/auth/route.dart";
+import "package:typewriter_panel/routes/organization/book/page/route.dart";
+import "package:typewriter_panel/routes/organization/book/route.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
 import "package:typewriter_panel/routes/organization/manuals/route.dart";
 import "package:typewriter_panel/routes/organization/modules/route.dart";
@@ -52,6 +54,16 @@ class AppRouter extends RootStackRouter {
                 AutoRoute(
                   page: ManualsRoute.page,
                   path: "manuals",
+                ),
+                AutoRoute(
+                  page: BookRoute.page,
+                  path: "books/:bookId",
+                  children: [
+                    AutoRoute(
+                      page: RouteRoute.page,
+                      path: "page/:pageId",
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -4,7 +4,6 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:responsive_framework/responsive_framework.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
@@ -12,8 +11,8 @@ import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/object_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
-import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 
@@ -112,7 +111,7 @@ class MobileInspector extends HookConsumerWidget {
         controller,
         controller.isAttached,
         hasSelection,
-        ResponsiveBreakpoints.of(context).screenWidth,
+        MediaQuery.of(context).size.width,
       ],
     );
 
@@ -198,12 +197,36 @@ class DesktopInspector extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasSelection = ref.watch(hasSelectionProvider);
+    final previousSelection = usePrevious(hasSelection);
     final size = ref.watch(inspectorSizeProvider);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxSize = (screenWidth * kInspectorMaxFactor).floorToDouble() - 1.0;
+    final minSize = maxSize > kInspectorMinSize ? maxSize : kInspectorMinSize;
 
     return Row(
       children: [
         Expanded(child: child),
-        _DesktopDragHandle(),
+        if (hasSelection)
+          DragHandle(
+            axis: Axis.horizontal,
+            minSize: minSize,
+            maxSize: maxSize,
+            getSize: () => ref.read(inspectorSizeProvider),
+            onSizeChange: (v) =>
+                ref.read(inspectorSizeProvider.notifier).size(v),
+            sizeResolver: (s, d) => s - d,
+          )
+        else
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(
+              begin: previousSelection != null ? 16 : 3,
+              end: 3,
+            ),
+            duration: 750.ms,
+            curve: Curves.fastEaseInToSlowEaseOut,
+            builder: (context, width, _) => SizedBox(width: width),
+          ),
         Padding(
           padding: EdgeInsets.only(top: margin.top, bottom: margin.bottom),
           child: AnimatedPadding(
@@ -247,90 +270,6 @@ class DesktopInspector extends HookConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _DesktopDragHandle extends HookConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hasSelection = ref.watch(hasSelectionProvider);
-    final previousSelection = usePrevious(hasSelection);
-    if (!hasSelection) {
-      return TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: previousSelection != null ? 16 : 3, end: 3),
-        duration: 750.ms,
-        curve: Curves.fastEaseInToSlowEaseOut,
-        builder: (context, width, _) {
-          return SizedBox(width: width);
-        },
-      );
-    }
-    final hovering = useState(false);
-    final startSize = useState(0.0);
-    final startPosition = useState(Offset.zero);
-
-    final showHandle = useMemoized<bool>(() {
-      if (startSize.value > 0) return true;
-      return hovering.value;
-    }, [
-      startSize.value,
-      hovering.value,
-    ]);
-
-    return GestureDetector(
-      onHorizontalDragStart: (details) {
-        startSize.value = ref.read(inspectorSizeProvider);
-        startPosition.value = details.globalPosition;
-        ref
-            .read(cursorControllerProvider.notifier)
-            .cursor(SystemMouseCursors.resizeColumn);
-      },
-      onHorizontalDragUpdate: (details) {
-        final position = details.globalPosition;
-        final dx = position.dx - startPosition.value.dx;
-        final size = startSize.value - dx;
-
-        final screenWidth = ResponsiveBreakpoints.of(context).screenWidth;
-        final maxSize = (screenWidth * kInspectorMaxFactor).floor() - 1.0;
-
-        final newSize = min(maxSize, size);
-        ref.read(inspectorSizeProvider.notifier).size(newSize);
-      },
-      onHorizontalDragEnd: (details) {
-        startSize.value = 0.0;
-        startPosition.value = Offset.zero;
-        ref.read(cursorControllerProvider.notifier).reset();
-      },
-      child: MouseRegion(
-        cursor: SystemMouseCursors.resizeColumn,
-        onEnter: (_) => hovering.value = true,
-        onExit: (_) => hovering.value = false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(width: 16),
-                AnimatedContainer(
-                  duration: 200.ms,
-                  curve: Curves.easeOut,
-                  height:
-                      showHandle ? min(constraints.maxHeight * 0.9, 100) : 0,
-                  width: showHandle ? 3 : 0,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
     );
   }
 }

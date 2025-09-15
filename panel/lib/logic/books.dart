@@ -1,8 +1,9 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/logic/pages/pages.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
@@ -10,21 +11,47 @@ import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/tag.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/book.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 
-part "books.g.dart";
 part "books.freezed.dart";
+part "books.g.dart";
 
 @riverpod
 class Books extends _$Books {
   @override
   FutureOr<List<Book>> build() async {
     // TODO: implement build
-    return [];
+    throw UnimplementedError();
   }
 
   Future<void> updateBook(Book book) async {
+    throw UnimplementedError();
+  }
+
+  Future<String> createPage(
+    String bookId,
+    String name,
+    PageType type,
+    String chapter,
+    int priority,
+  ) async {
+    // TODO: Create page in API or database
+    throw UnimplementedError();
+  }
+
+  Future<void> deletePage(String pageId) async {
+    // TODO: Delete page from API or database
+    throw UnimplementedError();
+  }
+
+  /// Move all the pages from one chapter to another
+  Future<void> changePagesChapters(
+    String bookId,
+    String oldChapter,
+    String newChapter,
+  ) async {
+    /// TODO: Move pages from old chapter to new chapter
     throw UnimplementedError();
   }
 }
@@ -43,13 +70,16 @@ Future<List<Book>> filteredBooks(Ref ref, String query) async {
 }
 
 @riverpod
+String? bookId(Ref ref) {
+  final routeData = ref.watch(currentRouteDataProvider(BookRoute.name));
+  return routeData?.params.getString("bookId");
+}
+
+@riverpod
 Future<Book?> book(Ref ref, String id) async {
   final books = await ref.watch(booksProvider.future);
   return books.firstWhereOrNull((book) => book.id == id);
 }
-
-// ignore: prefer_mixin
-class BooksMock extends _$Books with Mock implements Books {}
 
 @freezed
 abstract class Book with _$Book {
@@ -64,8 +94,8 @@ abstract class Book with _$Book {
   factory Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
 }
 
-class BookSelector extends SelectableIdentifier {
-  BookSelector(this.id);
+class BookIdentifier extends SelectableIdentifier {
+  BookIdentifier(this.id);
 
   @override
   final String id;
@@ -91,14 +121,14 @@ class BookSelector extends SelectableIdentifier {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is BookSelector && other.id == id;
+    return other is BookIdentifier && other.id == id;
   }
 
   @override
   String toString() => "BookSelector(id: $id)";
 }
 
-class BookSelection extends Selectable<BookSelector> {
+class BookSelection extends Selectable<BookIdentifier> {
   BookSelection({
     required this.ref,
     required this.id,
@@ -106,7 +136,7 @@ class BookSelection extends Selectable<BookSelector> {
   }) : _data = DynamicData(book.toJson());
 
   @override
-  final BookSelector id;
+  final BookIdentifier id;
 
   final Book book;
 

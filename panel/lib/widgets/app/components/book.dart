@@ -41,7 +41,7 @@ class BookWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
-    final selectableId = BookSelector(id);
+    final selectableId = BookIdentifier(id);
 
     return Selector(
       selectableId: selectableId,

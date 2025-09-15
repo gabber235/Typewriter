@@ -8,17 +8,18 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:pub_semver/pub_semver.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/manuals/manuals.dart";
+import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/generic/components/admonition.dart";
 import "package:typewriter_panel/widgets/app/components/dropdown.dart";
+import "package:typewriter_panel/widgets/app/components/validated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/version_filter.dart";
+import "package:typewriter_panel/widgets/generic/components/admonition.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
-import "package:typewriter_panel/widgets/app/components/validated_text_field.dart";
-import "package:typewriter_panel/widgets/app/components/version_filter.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 part "platforms_popup.g.dart";
@@ -568,10 +569,7 @@ class _VersionRequirementEditor extends HookWidget {
                 id: "version_input_remove",
                 label: "Remove",
                 description: "Remove versions",
-                activators: [
-                  const SingleActivator(LogicalKeyboardKey.delete),
-                  const SingleActivator(LogicalKeyboardKey.backspace),
-                ],
+                activators: shortcutsFor(DeleteIntent),
                 priority: 1001,
                 onInvoke: (_) => tryRemove(),
               ),
@@ -681,7 +679,7 @@ Future<Manual?> showManualChangePlatformsPopup(
   BuildContext context,
   String manualId,
 ) {
-  return showAdvancedDialogue<Manual>(
+  return showAdvancedDialog<Manual>(
     context: context,
     builder: (context) => ManualChangePlatformsPopup(manualId: manualId),
   );

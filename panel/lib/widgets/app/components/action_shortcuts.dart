@@ -108,22 +108,9 @@ class ManagedActionSet extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final regKey = useGlobalKey(debugLabel: "ShortcutActionSet");
-    final callableShortcuts = useMemoized(
-      () => shortcuts
-          .where((s) => s.onInvoke != null && s.activators.isNotEmpty)
-          .toList(),
-      [shortcuts],
-    );
     final hasFocus = useState(false);
-    return CallbackShortcuts(
-      key: regKey,
-      bindings: {
-        if (hasFocus.value)
-          for (final action in callableShortcuts)
-            for (final activator in action.activators)
-              activator: () => action.onInvoke!.call(ref),
-      },
+    return RegisteredActionShortcuts(
+      shortcuts: hasFocus.value ? shortcuts : [],
       child: Focus(
         canRequestFocus: false,
         onFocusChange: (focus) => hasFocus.value = focus,
@@ -132,6 +119,36 @@ class ManagedActionSet extends HookConsumerWidget {
           child: child,
         ),
       ),
+    );
+  }
+}
+
+class RegisteredActionShortcuts extends HookConsumerWidget {
+  const RegisteredActionShortcuts({
+    required this.shortcuts,
+    required this.child,
+    super.key,
+  });
+  final List<ActionShortcut> shortcuts;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final regKey = useGlobalKey(debugLabel: "ShortcutActionSet");
+    final callableShortcuts = useMemoized(
+      () => shortcuts
+          .where((s) => s.onInvoke != null && s.activators.isNotEmpty)
+          .toList(),
+      [shortcuts],
+    );
+    return CallbackShortcuts(
+      key: regKey,
+      bindings: {
+        for (final action in callableShortcuts)
+          for (final activator in action.activators)
+            activator: () => action.onInvoke!.call(ref),
+      },
+      child: child,
     );
   }
 }
@@ -397,7 +414,9 @@ class _ActionShortcutButton extends HookConsumerWidget {
             try {
               await action.onInvoke!(ref);
             } finally {
-              loading.value = false;
+              if (context.mounted) {
+                loading.value = false;
+              }
             }
           },
           child: pill,

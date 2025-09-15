@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:pub_semver/pub_semver.dart";
+import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
@@ -369,10 +370,7 @@ class VersionFilterBar extends HookWidget {
                 id: "version_filter_unwind",
                 label: "Unwind",
                 description: "Unwind the filter",
-                activators: [
-                  const SingleActivator(LogicalKeyboardKey.delete),
-                  const SingleActivator(LogicalKeyboardKey.backspace),
-                ],
+                activators: shortcutsFor(DeleteIntent),
                 priority: 1001,
                 onInvoke: (_) => unwind(),
               ),

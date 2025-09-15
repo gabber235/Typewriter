@@ -4,12 +4,15 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 
 abstract class SelectableIdentifier {
+  const SelectableIdentifier();
   String get id;
 
   AsyncValue<Selectable> create(Ref ref);
 }
 
 abstract class Selectable<I extends SelectableIdentifier> {
+  const Selectable();
+
   I get id;
   String get name;
 

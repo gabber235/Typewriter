@@ -41,6 +41,63 @@ void main() {
         isA<NormalMode>(),
       );
     });
+
+    testWidgets("autofocus starts in insert mode", (tester) async {
+      final innerFocus = FocusNode(debugLabel: "inner");
+      final widget = DecoratedTextField(
+        focusNode: innerFocus,
+        autofocus: true,
+      );
+
+      await tester.pumpTestApp(child: widget);
+
+      expect(innerFocus.hasPrimaryFocus, isTrue);
+      expect(
+        tester.container().read(currentInteractionModeProvider),
+        isA<InsertMode>(),
+      );
+    });
+
+    testWidgets("DismissIntent bubbles up to parent action handlers",
+        (tester) async {
+      final innerFocus = FocusNode(debugLabel: "inner");
+      var parentDismissReceived = false;
+
+      final widget = Actions(
+        actions: {
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (intent) {
+              parentDismissReceived = true;
+              return null;
+            },
+          ),
+        },
+        child: DecoratedTextField(
+          focusNode: innerFocus,
+        ),
+      );
+
+      await tester.pumpTestApp(child: widget);
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      expect(innerFocus.hasPrimaryFocus, isTrue);
+
+      var context = FocusManager.instance.primaryFocus!.context!;
+      Actions.invoke(context, const DismissIntent());
+      await tester.pump();
+
+      expect(parentDismissReceived, isFalse);
+      expect(innerFocus.hasPrimaryFocus, isFalse);
+
+      /// Dismissing while we are focusing the surrounding focus should bubble up to the parent action handlers.
+      context = FocusManager.instance.primaryFocus!.context!;
+      Actions.invoke(context, const DismissIntent());
+      await tester.pump();
+
+      expect(innerFocus.hasPrimaryFocus, isFalse);
+      expect(parentDismissReceived, isTrue);
+    });
   });
 
   group("DecoratedTextField - callbacks & editing lifecycle", () {

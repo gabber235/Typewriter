@@ -55,3 +55,14 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
     return this == other;
   }
 }
+
+extension RefExtension on Ref {
+  Future<void> debounce(Duration duration) async {
+    var didDispose = false;
+    onDispose(() => didDispose = true);
+    await Future.delayed(duration);
+
+    /// Its safe to throw an exception as it will be caught by riverpod.
+    if (didDispose) throw Exception("Debounce was disposed");
+  }
+}

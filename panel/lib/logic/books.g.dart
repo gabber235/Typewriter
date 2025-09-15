@@ -54,7 +54,7 @@ final class BooksProvider extends $AsyncNotifierProvider<Books, List<Book>> {
   Books create() => Books();
 }
 
-String _$booksHash() => r'b3bd7e416d8bfcc60ea8071cb8d329e6afa1f356';
+String _$booksHash() => r'ab4607565c253580c0eba481db6823fce38ce5ba';
 
 abstract class _$Books extends $AsyncNotifier<List<Book>> {
   FutureOr<List<Book>> build();
@@ -144,6 +144,47 @@ final class FilteredBooksFamily extends $Family
   @override
   String toString() => r'filteredBooksProvider';
 }
+
+@ProviderFor(bookId)
+const bookIdProvider = BookIdProvider._();
+
+final class BookIdProvider
+    extends $FunctionalProvider<String?, String?, String?>
+    with $Provider<String?> {
+  const BookIdProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'bookIdProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$bookIdHash();
+
+  @$internal
+  @override
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String? create(Ref ref) {
+    return bookId(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$bookIdHash() => r'6e3d070d3c0676228273d60212a14e809f72bf9d';
 
 @ProviderFor(book)
 const bookProvider = BookFamily._();

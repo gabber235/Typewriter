@@ -13,8 +13,8 @@ import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode
 import "package:typewriter_panel/logic/interaction_mode/modes/graph_modes.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/rect.dart";
-import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:vector_math/vector_math_64.dart" hide Colors;
 

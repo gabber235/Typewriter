@@ -8,6 +8,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/global_mode_shortcut.dart";
 
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
@@ -149,13 +150,15 @@ Future<bool> showConfirmationDialogue({
   // If the user has its shift key pressed, we skip the confirmation dialogue.
   // But only if the delay is 0.
   final hasShiftDown = HardwareKeyboard.instance
-      .isLogicalKeyPressed(LogicalKeyboardKey.shiftLeft);
+          .isLogicalKeyPressed(LogicalKeyboardKey.shiftLeft) ||
+      HardwareKeyboard.instance
+          .isLogicalKeyPressed(LogicalKeyboardKey.shiftRight);
   if (hasShiftDown && delayConfirm.inSeconds == 0) {
     await onConfirm();
     return true;
   }
 
-  return await showAdvancedDialogue<bool>(
+  return await showAdvancedDialog<bool>(
         context: context,
         builder: (context) => ConfirmationDialogue(
           onConfirm: onConfirm,
@@ -177,7 +180,7 @@ Future<bool> showConfirmationDialogue({
       false;
 }
 
-Future<T?> showAdvancedDialogue<T>({
+Future<T?> showAdvancedDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool barrierDismissible = true,
@@ -196,11 +199,17 @@ Future<T?> showAdvancedDialogue<T>({
       context: context,
       builder: (ctx) => UncontrolledProviderScope(
         container: ProviderScope.containerOf(context),
-        child: Shortcuts(
-          shortcuts: TypewriterPanel.typewriterShortcuts,
-          child: Responsive(
-            child: builder(ctx),
-          ),
+        child: Consumer(
+          builder: (context, ref, child) {
+            return Shortcuts(
+              shortcuts: TypewriterPanel.typewriterShortcuts,
+              child: GlobalModeShortcut(
+                child: Responsive(
+                  child: builder(context),
+                ),
+              ),
+            );
+          },
         ),
       ),
       barrierDismissible: barrierDismissible,

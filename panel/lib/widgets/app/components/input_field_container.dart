@@ -121,16 +121,6 @@ class InputFieldContainer extends HookConsumerWidget {
                 return null;
               },
             ),
-            DismissIntent: CallbackAction<DismissIntent>(
-              onInvoke: (intent) {
-                if (inputFocusNode.hasPrimaryFocus) {
-                  ref
-                      .read(currentInteractionModeProvider.notifier)
-                      .setMode(NormalMode());
-                }
-                return null;
-              },
-            ),
           },
           child: Focus(
             focusNode: surroundingNode,
@@ -154,7 +144,21 @@ class InputFieldContainer extends HookConsumerWidget {
                     .setMode(NormalMode());
               }
             },
-            child: child,
+            child: Actions(
+              actions: {
+                DismissIntent: CallbackAction<DismissIntent>(
+                  onInvoke: (intent) {
+                    if (inputFocusNode.hasPrimaryFocus) {
+                      ref
+                          .read(currentInteractionModeProvider.notifier)
+                          .setMode(NormalMode());
+                    }
+                    return null;
+                  },
+                ),
+              },
+              child: child,
+            ),
           ),
         ),
       ),

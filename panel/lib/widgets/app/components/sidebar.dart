@@ -1,80 +1,91 @@
+import "dart:math";
+
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:iconify_flutter_plus/icons/icomoon_free.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/hooks/menu_controller.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
-import "package:typewriter_panel/logic/organization.dart";
-import "package:typewriter_panel/utils/context.dart";
+
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
-import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
+import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
+import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:url_launcher/url_launcher.dart";
 
-class SidebarContent extends HookConsumerWidget {
-  const SidebarContent({super.key});
+part "sidebar.g.dart";
 
+const double kSidebarMinSize = 150;
+const double kSidebarDefaultSize = 220;
+const double kSidebarMaxFactor = 1 / 3;
+
+@riverpod
+class SidebarSize extends _$SidebarSize {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final organizationId = ref.watch(organizationIdProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SidebarHeader(text: "Organization"),
-        if (organizationId != null) ...[
-          SidebarLink(
-            icon: Icones(IcomoonFree.books),
-            text: "Library",
-            route: OrganizationRoute(organizationId: organizationId),
-          ),
-          SidebarLink(
-            icon: Icones(Fa6Solid.boxes_stacked),
-            text: "Modules",
-            route: ModulesRoute(),
-          ),
-          SidebarLink(
-            icon: Icones(MaterialSymbols.menu_book),
-            text: "Manuals",
-            route: ManualsRoute(),
-          ),
-        ],
-        const Spacer(),
-        _UserMenu(),
-      ],
-    );
+  double build() {
+    return kSidebarDefaultSize;
+  }
+
+  void size(double size) {
+    state = max(size, kSidebarMinSize);
   }
 }
 
 class Sidebar extends HookConsumerWidget {
-  const Sidebar({super.key});
+  const Sidebar({
+    required this.child,
+    super.key,
+  });
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final width =
-        context.responsive(mobile: 64.0, tablet: 80.0, desktop: 180.0);
+    final size = ref.watch(sidebarSizeProvider);
+
+    final screenSize = MediaQuery.of(context).size;
+
+    final maxSize =
+        (screenSize.width * kSidebarMaxFactor).floorToDouble() - 1.0;
+    final minSize = kSidebarMinSize > maxSize ? maxSize : kSidebarMinSize;
+    final clamped = size.clamp(minSize, maxSize);
+
     return SizedBox(
-      width: width,
-      child: Pane(
-        id: "sidebar",
-        margin: EdgeInsets.only(left: 4, top: 4, bottom: 4),
-        borderRadius: BorderRadius.circular(8),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(8),
+      width: clamped,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Pane(
+              id: "sidebar",
+              margin: EdgeInsets.only(left: 4, top: 4, bottom: 4),
+              borderRadius: BorderRadius.circular(8),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: child,
+                ),
+              ),
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: const SidebarContent(),
+          DragHandle(
+            axis: Axis.horizontal,
+            minSize: kSidebarMinSize,
+            maxSize: maxSize,
+            getSize: () => ref.read(sidebarSizeProvider),
+            onSizeChange: (v) => ref.read(sidebarSizeProvider.notifier).size(v),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -143,7 +154,9 @@ class SidebarLink extends HookConsumerWidget {
                 child: icon,
               ),
               const SizedBox(width: 12),
-              Text(text, style: TextStyle(color: color, fontSize: 14)),
+              Flexible(
+                child: Text(text, style: TextStyle(color: color, fontSize: 14)),
+              ),
             ],
           ),
         ),
@@ -155,8 +168,8 @@ class SidebarLink extends HookConsumerWidget {
 const userIconUrl =
     "https://api.dicebear.com/9.x/bottts-neutral/avif?backgroundColor=00897b,00acc1,039be5,1e88e5,3949ab,43a047,5e35b1,7cb342,8e24aa,b6e3f4,c0aede,c0ca33,d1d4f9,d81b60,e53935,f4511e,fb8c00,fdd835,ffb300,ffd5dc,ffdfbf&eyes=eva,frame1,frame2,robocop,roundFrame01,roundFrame02,sensor,shade01&mouth=bite,diagram,smile01,smile02&backgroundType=gradientLinear";
 
-class _UserMenu extends HookConsumerWidget {
-  const _UserMenu();
+class UserMenu extends HookConsumerWidget {
+  const UserMenu({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

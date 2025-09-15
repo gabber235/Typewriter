@@ -7,6 +7,7 @@ import "package:typewriter_panel/widgets/generic/components/icones.dart";
 class FormattedTextField extends HookWidget {
   const FormattedTextField({
     required this.focusNode,
+    this.autofocus = false,
     this.controller,
     this.text,
     this.onChanged,
@@ -22,6 +23,7 @@ class FormattedTextField extends HookWidget {
   }) : super();
   final TextEditingController? controller;
   final FocusNode focusNode;
+  final bool autofocus;
   final String? text;
   final Function(String)? onChanged;
   final Function(String)? onDone;
@@ -38,6 +40,7 @@ class FormattedTextField extends HookWidget {
     return DecoratedTextField(
       controller: controller,
       focusNode: focusNode,
+      autofocus: autofocus,
       text: text,
       onChanged: onChanged,
       onDone: onDone,
