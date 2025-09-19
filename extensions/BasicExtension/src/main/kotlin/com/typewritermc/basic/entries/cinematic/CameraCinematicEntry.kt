@@ -7,10 +7,10 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPl
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPositionAndRotation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook
 import com.typewritermc.basic.entries.cinematic.DisplayCameraAction.Companion.BASE_INTERPOLATION
+import com.typewritermc.basic.entries.variables.PlayerPositionOverride
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
-import com.typewritermc.core.interaction.InteractionBoundState
-import com.typewritermc.core.interaction.InteractionBoundStateOverrideSubscription
+import com.typewritermc.core.interaction.*
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
@@ -19,10 +19,7 @@ import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
-import com.typewritermc.engine.paper.interaction.InterceptionBundle
-import com.typewritermc.engine.paper.interaction.cancel
-import com.typewritermc.engine.paper.interaction.interceptPackets
-import com.typewritermc.engine.paper.interaction.overrideBoundState
+import com.typewritermc.engine.paper.interaction.*
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
@@ -90,6 +87,7 @@ class CameraCinematicEntry(
         return CameraCinematicAction(
             player,
             this,
+            player.interactionContext ?: context()
         )
     }
 
@@ -124,7 +122,8 @@ data class PathPoint(
 class CameraCinematicAction(
     private val player: Player,
     private val entry: CameraCinematicEntry,
-) : CinematicAction {
+    context: InteractionContext,
+) : CinematicAction, ContextModifier(context) {
     private var previousSegment: CameraSegment? = null
     private lateinit var action: CameraAction
 
@@ -180,14 +179,23 @@ class CameraCinematicAction(
     }
 
     private suspend fun Player.setup() {
-        if (originalState == null) originalState = state(
-            LOCATION,
-            ALLOW_FLIGHT,
-            FLYING,
-            VISIBLE_PLAYERS,
-            SHOWING_PLAYER,
-            EffectStateProvider(INVISIBILITY)
-        )
+        // Because we are teleporting the player away,
+        // we don't want to quit the temporal interaction because we went out of bounds.
+        if (boundStateSubscription == null) {
+            boundStateSubscription = overrideBoundState(InteractionBoundState.IGNORING, priority = Int.MAX_VALUE)
+        }
+
+        if (originalState == null) {
+            originalState = state(
+                LOCATION,
+                ALLOW_FLIGHT,
+                FLYING,
+                VISIBLE_PLAYERS,
+                SHOWING_PLAYER,
+                EffectStateProvider(INVISIBILITY)
+            )
+            context[PlayerPositionOverride] = position
+        }
 
         Dispatchers.Sync.switchContext {
             allowFlight = true
@@ -250,14 +258,12 @@ class CameraCinematicAction(
             }
 
         }
-        // Because we are teleporting the player away,
-        // we don't want to quit the temporal interaction because we went out of bounds.
-        boundStateSubscription = overrideBoundState(InteractionBoundState.IGNORING, priority = Int.MAX_VALUE)
     }
 
     private suspend fun Player.teardown() {
         listener?.unregister()
         listener = null
+
         Dispatchers.Sync.switchContext {
             interceptor?.cancel()
             interceptor = null
@@ -271,6 +277,8 @@ class CameraCinematicAction(
                 restoreInventory()
             }
         }
+
+        context.clear(PlayerPositionOverride)
 
         // Do this after restoring the player's state.
         // To make sure the player is where they were before the bound got overridden.

@@ -86,6 +86,7 @@ class FactEventWatcher : Initializable, Listener {
 
     override suspend fun initialize() {
         facts = Query.find<FactChangeEventEntry>().map { it.fact }.distinct().toList()
+        if (facts.isEmpty()) return
         Dispatchers.UntickedAsync.launch {
             delay(1.seconds)
             server.onlinePlayers.forEach { it.watch() }
@@ -106,7 +107,10 @@ class FactEventWatcher : Initializable, Listener {
     }
 
     @EventHandler
-    fun onJoin(event: PlayerJoinEvent) = event.player.watch()
+    fun onJoin(event: PlayerJoinEvent) {
+        if (facts.isEmpty()) return
+        event.player.watch()
+    }
 
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
