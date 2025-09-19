@@ -34,7 +34,7 @@ class ItemNameComponent(
         val name = name.get(player) ?: return false
 
 
-        return if (serverVersion.isNewerThan(ServerVersion.V_1_21_3)) {
+        return if (serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {
             item.effectiveName().plainText() == name.parsePlaceholders(player).stripped()
         } else {
             item.displayName().plainText() == name.parsePlaceholders(player).stripped()
