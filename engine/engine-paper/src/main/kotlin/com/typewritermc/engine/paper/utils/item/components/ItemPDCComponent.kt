@@ -14,7 +14,6 @@ import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("persistent_data_container", Colors.PURPLE, "fa6-solid:database")
 class ItemPDCComponent(
-
     val dataKey: Var<String> = ConstVar("typewriter:custom_data"),
     val data: Var<PdcDataType> = ConstVar(StringPdcData("")),
 ) : ItemComponent {

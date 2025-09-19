@@ -12,7 +12,6 @@ import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("tooltip_style", Colors.CYAN, "fa6-solid:palette")
 class ItemTooltipStyleComponent(
-
     val styleKey: Var<String> = ConstVar("minecraft:diamond"),
 ) : ItemComponent {
 
