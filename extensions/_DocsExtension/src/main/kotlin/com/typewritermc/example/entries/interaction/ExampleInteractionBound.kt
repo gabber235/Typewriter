@@ -43,6 +43,17 @@ class ExampleBound(
         // Setup initial state
     }
 
+    override suspend fun transitionTo(bound: InteractionBound): Boolean {
+        // Called before this bound is replaced
+        // Return false to cancel the transition
+        return true
+    }
+
+    override suspend fun transitionFrom(bound: InteractionBound) {
+        // Called after becoming the new bound
+        // Use this to inherit state from the previous bound
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private fun onPlayerAction(event: SomeCancellablePlayerEvent) {
         if (event.player.uniqueId != player.uniqueId) return

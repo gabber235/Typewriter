@@ -2,7 +2,7 @@ import CodeSnippet from "@site/src/components/CodeSnippet";
 
 # Interaction Bound
 
-The InteractionBounds allows you to constrain the lifetime of an interactions to specific conditions, such as player location or actions. 
+The InteractionBounds allows you to constrain the lifetime of an interactions to specific conditions, such as player location or actions.
 For example, a player staying within range of an NPC during a conversation or while they are sitting on a bench.
 
 ## States and Behavior
@@ -23,6 +23,19 @@ Here's how to create a interaction bound:
 
 <CodeSnippet tag="interaction_bound" json={require("../../snippets.json")} />
 
+## Transition Methods
+
+The InteractionBound interface includes two methods for handling transitions between bounds:
+
+### `transitionTo(bound: InteractionBound): Boolean`
+Called on the current bound when the system wants to change to a new bound. If this method returns `false`, the transition is canceled and the current bound remains active. This allows bounds to:
+- Seamlessly transition to a new bound without interruption
+
+### `transitionFrom(bound: InteractionBound)`
+Called on the new bound before its `initialize()` method, with the previous bound as a parameter. This allows the new bound to:
+- Inherit state from the previous bound
+- Perform setup based on the previous bound's state
+
 ## Implementation Tips
 
 1. Always use `handleEvent()` for consistent state handling
@@ -32,7 +45,7 @@ Here's how to create a interaction bound:
 
 ## Example Flow
 
-Here's how a typical radius bound might work:
+Here's how a typical radius bound might work with transitions:
 
 ```
 1. Player starts interaction
@@ -43,5 +56,9 @@ Here's how a typical radius bound might work:
      - If BLOCKING: Cancel movement
      - If INTERRUPTING: End interaction
      - If IGNORING: Allow movement
-4. Interaction ends, bound tears down
+4. When switching bounds:
+   - Call transitionTo() on current bound
+   - If it returns false, keep current bound
+   - If true, call teardown on the old bound and transitionFrom() then initialize() on new bound
+5. Interaction ends, bound tears down
 ```

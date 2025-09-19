@@ -4,6 +4,7 @@ import com.typewritermc.basic.entries.variables.CoordinatePart.*
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.exceptions.ContextDataNotFoundException
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.interaction.GlobalContextKey
 import com.typewritermc.core.utils.point.Coordinate
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
@@ -39,7 +40,7 @@ class RelativePositionVariable(
         val data = context.getData<RelativePositionVariableData>()
             ?: throw ContextDataNotFoundException(context.klass, context.data)
 
-        val basePosition = player.position
+        val basePosition = context.interactionContext?.get(PlayerPositionOverride) ?: player.position
         val coordinate = data.coordinate.get(player, context.interactionContext)
 
         val position =
@@ -68,3 +69,5 @@ data class RelativePositionVariableData(
     @Help("Select which parts of the position will use absolute values")
     val absolute: List<CoordinatePart> = emptyList(),
 )
+
+object PlayerPositionOverride : GlobalContextKey<Position>(Position::class)

@@ -161,7 +161,7 @@ class EntryInteractionContextBuilder<E : Entry>(val ref: Ref<E>, val entry: E) {
         put(this, value)
     }
 
-    operator fun <T: Any> InteractionContextKey<T>.plusAssign(value: T) {
+    operator fun <T : Any> InteractionContextKey<T>.plusAssign(value: T) {
         put(this, value)
     }
 
@@ -173,13 +173,19 @@ class EntryInteractionContextBuilder<E : Entry>(val ref: Ref<E>, val entry: E) {
 open class ContextModifier(
     private val initialContext: InteractionContext,
 ) {
-    private val additionContext: MutableMap<InteractionContextKey<*>, Any> = mutableMapOf()
+    private val _additionContext: MutableMap<InteractionContextKey<*>, Any> = mutableMapOf()
     var context: InteractionContext = initialContext
         private set
 
+    val additionContext: InteractionContext get() = InteractionContext(_additionContext)
+
+    private fun invalidateContextCache() {
+        context = initialContext.combine(InteractionContext(_additionContext))
+    }
+
     operator fun <T : Any> set(key: InteractionContextKey<T>, value: T) {
-        additionContext[key] = value
-        context = initialContext.combine(InteractionContext(additionContext))
+        _additionContext[key] = value
+        invalidateContextCache()
     }
 
     operator fun <T : Any> set(ref: Ref<out Entry>, key: EntryContextKey, value: T) {
@@ -189,8 +195,8 @@ open class ContextModifier(
     operator fun <T : Any> set(entry: Entry, key: EntryContextKey, value: T) = set(entry.ref(), key, value)
 
     operator fun <T : Any> InteractionContext.set(key: InteractionContextKey<T>, value: T) {
-        additionContext[key] = value
-        context = initialContext.combine(InteractionContext(additionContext))
+        _additionContext[key] = value
+        invalidateContextCache()
     }
 
     operator fun <T : Any> InteractionContext.set(ref: Ref<out Entry>, key: EntryContextKey, value: T) {
@@ -199,4 +205,26 @@ open class ContextModifier(
 
     operator fun <T : Any> InteractionContext.set(entry: Entry, key: EntryContextKey, value: T) =
         set(entry.ref(), key, value)
+
+    fun clear() {
+        _additionContext.clear()
+        invalidateContextCache()
+    }
+
+    fun <T : Any> clear(key: InteractionContextKey<T>) {
+        _additionContext.remove(key)
+        invalidateContextCache()
+    }
+
+    fun <T : Any> clear(ref: Ref<out Entry>, key: EntryContextKey) = this.clear(EntryInteractionContextKey<T>(ref, key))
+
+    fun <T : Any> clear(entry: Entry, key: EntryContextKey) = clear<T>(entry.ref(), key)
+
+    fun <T : Any> InteractionContext.clear(key: InteractionContextKey<T>) = this@ContextModifier.clear<T>(key)
+
+    fun <T : Any> InteractionContext.clear(ref: Ref<out Entry>, key: EntryContextKey) =
+        this@ContextModifier.clear<T>(ref, key)
+
+    fun <T : Any> InteractionContext.clear(entry: Entry, key: EntryContextKey) =
+        this@ContextModifier.clear<T>(entry, key)
 }

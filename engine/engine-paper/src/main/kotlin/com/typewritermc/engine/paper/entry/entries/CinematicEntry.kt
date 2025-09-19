@@ -1,8 +1,8 @@
 package com.typewritermc.engine.paper.entry.entries
 
-import com.typewritermc.core.extension.annotations.Tags
-import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.entries.Entry
+import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.Criteria
 import org.bukkit.entity.Player
 
