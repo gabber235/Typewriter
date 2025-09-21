@@ -6,9 +6,9 @@ import "package:typewriter_panel/logic/interaction_mode/mode_shortcut.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display_chip.dart";
-import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 
 /// Graph manipulation mode for moving nodes.
 ///
@@ -22,10 +22,7 @@ class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
 
   @override
   Widget buildDisplay(BuildContext context) {
-    return const ModeDisplayChip(
-      label: "Move",
-      color: Colors.deepPurple,
-    );
+    return const ModeDisplayChip(label: "Move", color: Colors.deepPurple);
   }
 
   @override
@@ -49,10 +46,8 @@ class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
             id: "graph_move_${key.debugName?.snakeCase}",
             label: "Move Node ${direction.name.titleCase()}",
             description: "Move selected node ${direction.name.toLowerCase()}",
-            activators: [
-              SingleActivator(key),
-            ],
-            priority: 0,
+            activators: [SingleActivator(key)],
+            priority: 20,
             show: false,
             onInvoke: (ref) => _invokeGraphMoveIntent(direction),
           ),
@@ -74,7 +69,7 @@ class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
             LogicalKeyboardKey.keyL,
           ]),
         ],
-        priority: -1,
+        priority: 20,
       ),
       escapeToNormalAction(),
     ];
@@ -136,9 +131,7 @@ class GraphResizeMode extends InteractionMode with ModeDisplay, ModeShortcut {
             id: "graph_resize_${key.debugName?.snakeCase}",
             label: "Resize Node ${direction.name.titleCase()}",
             description: "Resize selected node ${direction.name.toLowerCase()}",
-            activators: [
-              SingleActivator(key),
-            ],
+            activators: [SingleActivator(key)],
             priority: 0,
             show: false,
             onInvoke: (ref) => _invokeGraphResizeIntent(direction),

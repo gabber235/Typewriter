@@ -2,7 +2,6 @@ import "dart:async";
 
 import "package:faker/faker.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:mocktail/mocktail.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/logic/books.dart";

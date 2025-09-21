@@ -6,24 +6,27 @@ part of 'list_editor.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(_listValueLength)
 const _listValueLengthProvider = _ListValueLengthFamily._();
 
 final class _ListValueLengthProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
-  const _ListValueLengthProvider._(
-      {required _ListValueLengthFamily super.from,
-      required String super.argument})
-      : super(
-          retry: null,
-          name: r'_listValueLengthProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const _ListValueLengthProvider._({
+    required _ListValueLengthFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'_listValueLengthProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
-  String debugGetCreateSourceHash() => _$listValueLengthHash();
+  String debugGetCreateSourceHash() => _$_listValueLengthHash();
 
   @override
   String toString() {
@@ -40,10 +43,7 @@ final class _ListValueLengthProvider extends $FunctionalProvider<int, int, int>
   @override
   int create(Ref ref) {
     final argument = this.argument as String;
-    return _listValueLength(
-      ref,
-      argument,
-    );
+    return _listValueLength(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -65,26 +65,22 @@ final class _ListValueLengthProvider extends $FunctionalProvider<int, int, int>
   }
 }
 
-String _$listValueLengthHash() => r'4bdfc95cdc6ccd08b67e737bd861f57e80b9a9bc';
+String _$_listValueLengthHash() => r'4bdfc95cdc6ccd08b67e737bd861f57e80b9a9bc';
 
 final class _ListValueLengthFamily extends $Family
     with $FunctionalFamilyOverride<int, String> {
   const _ListValueLengthFamily._()
-      : super(
-          retry: null,
-          name: r'_listValueLengthProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'_listValueLengthProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  _ListValueLengthProvider call(
-    String path,
-  ) =>
+  _ListValueLengthProvider call(String path) =>
       _ListValueLengthProvider._(argument: path, from: this);
 
   @override
   String toString() => r'_listValueLengthProvider';
 }
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

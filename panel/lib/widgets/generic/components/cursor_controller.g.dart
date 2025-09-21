@@ -6,21 +6,24 @@ part of 'cursor_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(CursorController)
 const cursorControllerProvider = CursorControllerProvider._();
 
 final class CursorControllerProvider
-    extends $NotifierProvider<CursorController, SystemMouseCursor> {
+    extends $NotifierProvider<CursorController, MouseCursor> {
   const CursorControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'cursorControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cursorControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$cursorControllerHash();
@@ -30,31 +33,31 @@ final class CursorControllerProvider
   CursorController create() => CursorController();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SystemMouseCursor value) {
+  Override overrideWithValue(MouseCursor value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SystemMouseCursor>(value),
+      providerOverride: $SyncValueProvider<MouseCursor>(value),
     );
   }
 }
 
-String _$cursorControllerHash() => r'aa98d03ba548eb36430d4f4e747ab4cad27d4241';
+String _$cursorControllerHash() => r'577c9578298737af12511c355955b665038646ea';
 
-abstract class _$CursorController extends $Notifier<SystemMouseCursor> {
-  SystemMouseCursor build();
+abstract class _$CursorController extends $Notifier<MouseCursor> {
+  MouseCursor build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<SystemMouseCursor, SystemMouseCursor>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<SystemMouseCursor, SystemMouseCursor>,
-        SystemMouseCursor,
-        Object?,
-        Object?>;
+    final ref = this.ref as $Ref<MouseCursor, MouseCursor>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<MouseCursor, MouseCursor>,
+              MouseCursor,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

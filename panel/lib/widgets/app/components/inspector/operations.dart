@@ -4,9 +4,10 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations/manual_operations.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/entry_operations.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/manual_operations.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
 part "operations.g.dart";
@@ -16,12 +17,19 @@ part "operations.g.dart";
 /// Keep ordering meaningful; it will be used for presentation where applicable.
 @riverpod
 List<Operation> operations(Ref ref) => [
-      const DeleteOperation(),
+  const DeleteOperation(),
 
-      /// Manual operations
-      const ManualChangePlatformTargetsOperation(),
-      const ManualChangeModulesOperation(),
-    ];
+  /// Entry operations
+  const EntryLinkWithOperation(),
+  const EntryLinkWithDuplicateOperation(),
+  const EntryDuplicateOperation(),
+  const EntryMoveToPageOperation(),
+  const EntryReplaceWithOperation(),
+
+  /// Manual operations
+  const ManualChangePlatformTargetsOperation(),
+  const ManualChangeModulesOperation(),
+];
 
 /// Defines a user-invokable action that can operate on the current selection
 /// in the inspector. Concrete implementations should be immutable and light-
@@ -113,8 +121,8 @@ extension SelectableOperationSelectionX on Iterable<Selectable> {
 
   /// Collects all operations of type [T] and matching them with their respective selectable.
   Iterable<(Selectable, T)>
-      collectOperationsWithSelectables<T extends SelectableOperation>() =>
-          expand((s) => s.operations.whereType<T>().map((o) => (s, o)));
+  collectOperationsWithSelectables<T extends SelectableOperation>() =>
+      expand((s) => s.operations.whereType<T>().map((o) => (s, o)));
 
   /// True when no selectable exposes an operation of type [T].
   bool noneHaveOperations<T extends SelectableOperation>() =>
@@ -138,10 +146,7 @@ List<Operation> availableOperations(Ref ref) {
 /// Global widget that registers keyboard shortcuts for currently available
 /// operations (based on current selection) and invokes them when triggered.
 class GlobalOperationShortcuts extends ConsumerWidget {
-  const GlobalOperationShortcuts({
-    required this.child,
-    super.key,
-  });
+  const GlobalOperationShortcuts({required this.child, super.key});
 
   final Widget child;
 

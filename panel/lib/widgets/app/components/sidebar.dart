@@ -2,6 +2,8 @@ import "dart:math";
 
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
@@ -13,6 +15,7 @@ import "package:typewriter_panel/logic/auth.dart";
 
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
@@ -20,6 +23,9 @@ import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:url_launcher/url_launcher.dart";
 
 part "sidebar.g.dart";
+
+const double kSidebarResizeSmallStep = 10;
+const double kSidebarResizeLargeStep = 50;
 
 const double kSidebarMinSize = 150;
 const double kSidebarDefaultSize = 220;
@@ -38,10 +44,7 @@ class SidebarSize extends _$SidebarSize {
 }
 
 class Sidebar extends HookConsumerWidget {
-  const Sidebar({
-    required this.child,
-    super.key,
-  });
+  const Sidebar({required this.child, super.key});
 
   final Widget child;
 
@@ -53,49 +56,118 @@ class Sidebar extends HookConsumerWidget {
 
     final maxSize =
         (screenSize.width * kSidebarMaxFactor).floorToDouble() - 1.0;
-    final minSize = kSidebarMinSize > maxSize ? maxSize : kSidebarMinSize;
-    final clamped = size.clamp(minSize, maxSize);
+    final minSize = min(kSidebarMinSize, maxSize);
 
-    return SizedBox(
-      width: clamped,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Pane(
-              id: "sidebar",
-              margin: EdgeInsets.only(left: 4, top: 4, bottom: 4),
-              borderRadius: BorderRadius.circular(8),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: child,
+    final effectiveSize = size.clamp(max<double>(0.0, minSize), maxSize);
+
+    final isDragging = useState(false);
+
+    return ManagedActionSet(
+      shortcuts: [
+        ActionShortcut(
+          id: "sidebar-shrink",
+          label: "Shrink Sidebar",
+          description: "Shrink the sidebar size",
+          activators: [
+            const SingleActivator(LogicalKeyboardKey.less),
+            const SingleActivator(LogicalKeyboardKey.less, shift: true),
+            const SingleActivator(LogicalKeyboardKey.comma),
+            const SingleActivator(LogicalKeyboardKey.comma, shift: true),
+          ],
+          priority: -1,
+          onInvoke: (ref) {
+            final step = HardwareKeyboard.instance.isShiftPressed
+                ? kSidebarResizeLargeStep
+                : kSidebarResizeSmallStep;
+            final newSize = (effectiveSize - step).clamp(
+              max<double>(0.0, minSize),
+              maxSize,
+            );
+            ref.read(sidebarSizeProvider.notifier).size(newSize);
+          },
+          show: false,
+        ),
+        ActionShortcut(
+          id: "sidebar-expand",
+          label: "Expand Sidebar",
+          description: "Expand the sidebar size",
+          activators: [
+            const SingleActivator(LogicalKeyboardKey.greater),
+            const SingleActivator(LogicalKeyboardKey.greater, shift: true),
+            const SingleActivator(LogicalKeyboardKey.period),
+            const SingleActivator(LogicalKeyboardKey.period, shift: true),
+          ],
+          priority: -1,
+          onInvoke: (ref) {
+            final step = HardwareKeyboard.instance.isShiftPressed
+                ? kSidebarResizeLargeStep
+                : kSidebarResizeSmallStep;
+            final newSize = (effectiveSize + step).clamp(
+              max<double>(0.0, minSize),
+              maxSize,
+            );
+            ref.read(sidebarSizeProvider.notifier).size(newSize);
+          },
+          show: false,
+        ),
+        ActionShortcut(
+          id: "sidebar-resize",
+          label: "Resize Sidebar",
+          description: "Resize the sidebar size",
+          activators: [
+            const SingleActivator(LogicalKeyboardKey.period),
+            const SingleActivator(LogicalKeyboardKey.comma),
+            const SingleActivator(LogicalKeyboardKey.greater),
+            const SingleActivator(LogicalKeyboardKey.less),
+          ],
+          priority: -1,
+        ),
+      ],
+      child: AnimatedContainer(
+        duration: isDragging.value ? 0.ms : 1000.ms,
+        curve: ElasticOutCurve(0.9),
+        width: effectiveSize,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Pane(
+                id: "sidebar",
+                margin: EdgeInsets.only(left: 4, top: 4, bottom: 4),
+                borderRadius: BorderRadius.circular(8),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: child,
+                  ),
                 ),
               ),
             ),
-          ),
-          DragHandle(
-            axis: Axis.horizontal,
-            minSize: kSidebarMinSize,
-            maxSize: maxSize,
-            getSize: () => ref.read(sidebarSizeProvider),
-            onSizeChange: (v) => ref.read(sidebarSizeProvider.notifier).size(v),
-          ),
-        ],
+            DragHandle(
+              axis: Axis.horizontal,
+              minSize: kSidebarMinSize,
+              maxSize: maxSize,
+              getSize: () => effectiveSize,
+              onSizeChange: (v) => ref
+                  .read(sidebarSizeProvider.notifier)
+                  .size(v.clamp(minSize, maxSize)),
+              onDragStart: () => isDragging.value = true,
+              onDragEnd: () => isDragging.value = false,
+              hitThickness: 8,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class SidebarHeader extends StatelessWidget {
-  const SidebarHeader({
-    required this.text,
-    super.key,
-  });
+  const SidebarHeader({required this.text, super.key});
   final String text;
 
   @override
@@ -127,8 +199,9 @@ class SidebarLink extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final focusNode =
-        useFocusNode(debugLabel: "SidebarLink-${text.snakeCase()}");
+    final focusNode = useFocusNode(
+      debugLabel: "SidebarLink-${text.snakeCase()}",
+    );
     final router = ref.watch(appRouterProvider);
     final selected = router.isRouteActive(route.routeName);
     final color = selected
@@ -142,8 +215,9 @@ class SidebarLink extends HookConsumerWidget {
             router.push(route);
           }
         },
-        hoverColor:
-            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+        hoverColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -252,10 +326,7 @@ class UserMenu extends HookConsumerWidget {
               onPressed: () async {
                 final url = Uri.parse("https://discord.gg/j5WWscvQkW");
                 if (await canLaunchUrl(url)) {
-                  await launchUrl(
-                    url,
-                    mode: LaunchMode.externalApplication,
-                  );
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
                 }
               },
             ),

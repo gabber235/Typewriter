@@ -6,21 +6,24 @@ part of 'selection.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(Selection)
 const selectionProvider = SelectionProvider._();
 
 final class SelectionProvider
     extends $NotifierProvider<Selection, List<SelectableIdentifier>> {
   const SelectionProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'selectionProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$selectionHash();
@@ -38,7 +41,7 @@ final class SelectionProvider
   }
 }
 
-String _$selectionHash() => r'5072d1c7c866e81cea89af9e2439ef0cbafd9e63';
+String _$selectionHash() => r'd645c1a9fdfbbd8d448744b7dfec3cdd70631878';
 
 abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   List<SelectableIdentifier> build();
@@ -46,13 +49,20 @@ abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref
-        as $Ref<List<SelectableIdentifier>, List<SelectableIdentifier>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<List<SelectableIdentifier>, List<SelectableIdentifier>>,
-        List<SelectableIdentifier>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<List<SelectableIdentifier>, List<SelectableIdentifier>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                List<SelectableIdentifier>,
+                List<SelectableIdentifier>
+              >,
+              List<SelectableIdentifier>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -63,15 +73,15 @@ const hasSelectionProvider = HasSelectionProvider._();
 final class HasSelectionProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
   const HasSelectionProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'hasSelectionProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'hasSelectionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$hasSelectionHash();
@@ -102,16 +112,16 @@ const isSelectedProvider = IsSelectedFamily._();
 
 final class IsSelectedProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
-  const IsSelectedProvider._(
-      {required IsSelectedFamily super.from,
-      required SelectableIdentifier super.argument})
-      : super(
-          retry: null,
-          name: r'isSelectedProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const IsSelectedProvider._({
+    required IsSelectedFamily super.from,
+    required SelectableIdentifier super.argument,
+  }) : super(
+         retry: null,
+         name: r'isSelectedProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$isSelectedHash();
@@ -131,10 +141,7 @@ final class IsSelectedProvider extends $FunctionalProvider<bool, bool, bool>
   @override
   bool create(Ref ref) {
     final argument = this.argument as SelectableIdentifier;
-    return isSelected(
-      ref,
-      argument,
-    );
+    return isSelected(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -161,17 +168,15 @@ String _$isSelectedHash() => r'12ed0fbd15b765b16a5b9e3afdb645cd81ea914d';
 final class IsSelectedFamily extends $Family
     with $FunctionalFamilyOverride<bool, SelectableIdentifier> {
   const IsSelectedFamily._()
-      : super(
-          retry: null,
-          name: r'isSelectedProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'isSelectedProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  IsSelectedProvider call(
-    SelectableIdentifier selectable,
-  ) =>
+  IsSelectedProvider call(SelectableIdentifier selectable) =>
       IsSelectedProvider._(argument: selectable, from: this);
 
   @override
@@ -182,17 +187,21 @@ final class IsSelectedFamily extends $Family
 const selectedProvider = SelectedProvider._();
 
 final class SelectedProvider
-    extends $NotifierProvider<Selected, AsyncValue<List<Selectable>>> {
+    extends
+        $NotifierProvider<
+          Selected,
+          AsyncValue<List<Selectable<SelectableIdentifier>>>
+        > {
   const SelectedProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'selectedProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$selectedHash();
@@ -202,29 +211,45 @@ final class SelectedProvider
   Selected create() => Selected();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<List<Selectable>> value) {
+  Override overrideWithValue(
+    AsyncValue<List<Selectable<SelectableIdentifier>>> value,
+  ) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<AsyncValue<List<Selectable>>>(value),
+      providerOverride:
+          $SyncValueProvider<
+            AsyncValue<List<Selectable<SelectableIdentifier>>>
+          >(value),
     );
   }
 }
 
-String _$selectedHash() => r'891f5372a052773631f1bca1e1c2505dfad04940';
+String _$selectedHash() => r'3a6ca4d4d5d1e59b3b04e2a41dec5bc5a9a9717c';
 
-abstract class _$Selected extends $Notifier<AsyncValue<List<Selectable>>> {
-  AsyncValue<List<Selectable>> build();
+abstract class _$Selected
+    extends $Notifier<AsyncValue<List<Selectable<SelectableIdentifier>>>> {
+  AsyncValue<List<Selectable<SelectableIdentifier>>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref
-        as $Ref<AsyncValue<List<Selectable>>, AsyncValue<List<Selectable>>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<Selectable>>, AsyncValue<List<Selectable>>>,
-        AsyncValue<List<Selectable>>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<Selectable<SelectableIdentifier>>>,
+              AsyncValue<List<Selectable<SelectableIdentifier>>>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<Selectable<SelectableIdentifier>>>,
+                AsyncValue<List<Selectable<SelectableIdentifier>>>
+              >,
+              AsyncValue<List<Selectable<SelectableIdentifier>>>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -235,15 +260,16 @@ const fieldValueProvider = FieldValueFamily._();
 final class FieldValueProvider
     extends $FunctionalProvider<SelectedValue, SelectedValue, SelectedValue>
     with $Provider<SelectedValue> {
-  const FieldValueProvider._(
-      {required FieldValueFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'fieldValueProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const FieldValueProvider._({
+    required FieldValueFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'fieldValueProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$fieldValueHash();
@@ -263,10 +289,7 @@ final class FieldValueProvider
   @override
   SelectedValue create(Ref ref) {
     final argument = this.argument as String;
-    return fieldValue(
-      ref,
-      argument,
-    );
+    return fieldValue(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -293,17 +316,15 @@ String _$fieldValueHash() => r'88e46cdafdbe694db5524d12915cdf9a9265ee29';
 final class FieldValueFamily extends $Family
     with $FunctionalFamilyOverride<SelectedValue, String> {
   const FieldValueFamily._()
-      : super(
-          retry: null,
-          name: r'fieldValueProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'fieldValueProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  FieldValueProvider call(
-    String path,
-  ) =>
+  FieldValueProvider call(String path) =>
       FieldValueProvider._(argument: path, from: this);
 
   @override
@@ -313,20 +334,24 @@ final class FieldValueFamily extends $Family
 @ProviderFor(selectedDataBlueprint)
 const selectedDataBlueprintProvider = SelectedDataBlueprintProvider._();
 
-final class SelectedDataBlueprintProvider extends $FunctionalProvider<
-    ObjectBlueprint?,
-    ObjectBlueprint?,
-    ObjectBlueprint?> with $Provider<ObjectBlueprint?> {
+final class SelectedDataBlueprintProvider
+    extends
+        $FunctionalProvider<
+          ObjectBlueprint?,
+          ObjectBlueprint?,
+          ObjectBlueprint?
+        >
+    with $Provider<ObjectBlueprint?> {
   const SelectedDataBlueprintProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'selectedDataBlueprintProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedDataBlueprintProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$selectedDataBlueprintHash();
@@ -360,15 +385,15 @@ final class SelectedHeaderProvider
     extends $FunctionalProvider<Widget?, Widget?, Widget?>
     with $Provider<Widget?> {
   const SelectedHeaderProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'selectedHeaderProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedHeaderProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$selectedHeaderHash();
@@ -393,6 +418,3 @@ final class SelectedHeaderProvider
 }
 
 String _$selectedHeaderHash() => r'b6c7dab8571eee08f6a293fa86978574533c145f';
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

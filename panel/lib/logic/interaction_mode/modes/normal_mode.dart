@@ -4,11 +4,14 @@ import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode
 import "package:typewriter_panel/logic/interaction_mode/interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/logic/interaction_mode/mode_shortcut.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display_chip.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display_chip.dart";
+import "package:typewriter_panel/widgets/app/components/selector.dart";
 
 /// The default interaction mode that serves as the baseline experience.
 ///
@@ -27,10 +30,9 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
       color: Theme.of(context).colorScheme.primary,
       backgroundColor: context.isDarkMode
           ? null
-          : Theme.of(context)
-              .colorScheme
-              .primaryContainer
-              .withValues(alpha: 0.5),
+          : Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.5),
     );
   }
 
@@ -54,9 +56,7 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
             id: "normal_move_${direction.name}_${key.debugName?.snakeCase}",
             label: "Move Focus ${direction.name.titleCase()}",
             description: "Move focus ${direction.name}",
-            activators: [
-              SingleActivator(key),
-            ],
+            activators: [SingleActivator(key)],
             priority: 0,
             show: false,
             onInvoke: (ref) => _moveFocus(direction),
@@ -85,6 +85,32 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
         ],
         priority: -1,
       ),
+
+      ActionShortcut(
+        id: "normal_unselect_selection",
+        label: "Unselect Selection",
+        description: "Unselect the currently selected item",
+        activators: shortcutsFor(DismissIntent),
+        priority: -1,
+        show: false,
+        onInvoke: (ref) {
+          final focused = SelectableScope.primaryFocusedId();
+          if (focused == null) {
+            ref.read(selectionProvider.notifier).clear();
+            return;
+          }
+
+          final selection = ref.read(selectionProvider);
+          if (selection.isEmpty) return;
+          if (selection.length == 1) {
+            ref.read(selectionProvider.notifier).clear();
+            return;
+          }
+          ref
+              .read(selectionProvider.notifier)
+              .select(focused, isMultiSelect: false);
+        },
+      ),
     ];
   }
 
@@ -92,10 +118,7 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
   void _moveFocus(TraversalDirection direction) {
     final currentFocus = FocusManager.instance.primaryFocus;
     if (currentFocus?.context != null) {
-      Actions.invoke(
-        currentFocus!.context!,
-        DirectionalFocusIntent(direction),
-      );
+      Actions.invoke(currentFocus!.context!, DirectionalFocusIntent(direction));
     }
   }
 }
@@ -122,9 +145,7 @@ ActionShortcut escapeToNormalAction() {
     id: "escape_to_normal",
     label: "Normal Mode",
     description: "Return to normal mode",
-    activators: [
-      const SingleActivator(LogicalKeyboardKey.escape),
-    ],
+    activators: [const SingleActivator(LogicalKeyboardKey.escape)],
     priority: 1000,
     onInvoke: (ref) {
       ref.read(currentInteractionModeProvider.notifier).setMode(NormalMode());

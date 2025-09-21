@@ -58,11 +58,13 @@ class TypewriterPanel extends HookConsumerWidget {
     );
   }
 
-  static Map<ShortcutActivator, Intent> typewriterShortcuts =
-      <ShortcutActivator, Intent>{
+  static Map<ShortcutActivator, Intent>
+  typewriterShortcuts = <ShortcutActivator, Intent>{
     // Default Shortcuts
     ...WidgetsApp.defaultShortcuts,
 
+    SingleActivator(LogicalKeyboardKey.keyV): ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.keyV, shift: true): ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
         ActivateIntent(),
@@ -92,14 +94,18 @@ class TypewriterPanel extends HookConsumerWidget {
     ),
 
     // Pane Navigation
-    SingleActivator(LogicalKeyboardKey.keyH, control: true):
-        NavigatePaneIntent(AxisDirection.left),
-    SingleActivator(LogicalKeyboardKey.keyL, control: true):
-        NavigatePaneIntent(AxisDirection.right),
-    SingleActivator(LogicalKeyboardKey.keyJ, control: true):
-        NavigatePaneIntent(AxisDirection.down),
-    SingleActivator(LogicalKeyboardKey.keyK, control: true):
-        NavigatePaneIntent(AxisDirection.up),
+    SingleActivator(LogicalKeyboardKey.keyH, control: true): NavigatePaneIntent(
+      AxisDirection.left,
+    ),
+    SingleActivator(LogicalKeyboardKey.keyL, control: true): NavigatePaneIntent(
+      AxisDirection.right,
+    ),
+    SingleActivator(LogicalKeyboardKey.keyJ, control: true): NavigatePaneIntent(
+      AxisDirection.down,
+    ),
+    SingleActivator(LogicalKeyboardKey.keyK, control: true): NavigatePaneIntent(
+      AxisDirection.up,
+    ),
     SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
         NavigatePaneIntent(AxisDirection.left),
     SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
@@ -141,48 +147,52 @@ ThemeData buildTheme(Brightness brightness) {
       brightness: brightness,
       error: Colors.redAccent,
       surface: isLight ? const Color(0xFFF5F5F5) : const Color(0xFF141218),
-      onSurfaceVariant:
-          isLight ? const Color(0xFF6c6d76) : const Color(0xFFC4C6D0),
-      surfaceContainerLowest:
-          isLight ? const Color(0xFFFFFFFF) : const Color(0xFF1F2123),
-      surfaceContainer:
-          isLight ? const Color(0xFFF3EDF7) : const Color(0xFF1f1d23),
+      onSurfaceVariant: isLight
+          ? const Color(0xFF6c6d76)
+          : const Color(0xFFC4C6D0),
+      surfaceContainerLowest: isLight
+          ? const Color(0xFFFFFFFF)
+          : const Color(0xFF1F2123),
+      surfaceContainer: isLight
+          ? const Color(0xFFF3EDF7)
+          : const Color(0xFF1f1d23),
     ),
   );
 
-  final textTheme =
-      baseTheme.textTheme.apply(fontFamily: "JetBrainsMono").copyWith(
-            labelLarge: TextStyle(
-              fontFamily: "JetBrainsMono",
-              color: baseTheme.colorScheme.onSurface,
-              fontSize: 14,
-              letterSpacing: 0.5,
-              fontVariations: [FontVariation("wght", 700)],
-            ),
-            labelMedium: TextStyle(
-              fontFamily: "JetBrainsMono",
-              color: baseTheme.colorScheme.onSurface,
-              fontSize: 13,
-              letterSpacing: 0.5,
-              fontVariations: [FontVariation("wght", 700)],
-            ),
-            labelSmall: TextStyle(
-              fontFamily: "JetBrainsMono",
-              color: baseTheme.colorScheme.onSurface,
-              fontSize: 12,
-              letterSpacing: 0.5,
-              fontVariations: [FontVariation("wght", 700)],
-            ),
-            bodySmall: TextStyle(
-              fontFamily: "JetBrainsMono",
-              color: isLight
-                  ? Colors.black.withValues(alpha: 0.6)
-                  : Colors.white.withValues(alpha: 0.6),
-              fontSize: 11,
-              letterSpacing: 0.2,
-              fontVariations: [FontVariation("wght", 300)],
-            ),
-          );
+  final textTheme = baseTheme.textTheme
+      .apply(fontFamily: "JetBrainsMono")
+      .copyWith(
+        labelLarge: TextStyle(
+          fontFamily: "JetBrainsMono",
+          color: baseTheme.colorScheme.onSurface,
+          fontSize: 14,
+          letterSpacing: 0.5,
+          fontVariations: [FontVariation("wght", 700)],
+        ),
+        labelMedium: TextStyle(
+          fontFamily: "JetBrainsMono",
+          color: baseTheme.colorScheme.onSurface,
+          fontSize: 13,
+          letterSpacing: 0.5,
+          fontVariations: [FontVariation("wght", 700)],
+        ),
+        labelSmall: TextStyle(
+          fontFamily: "JetBrainsMono",
+          color: baseTheme.colorScheme.onSurface,
+          fontSize: 12,
+          letterSpacing: 0.5,
+          fontVariations: [FontVariation("wght", 700)],
+        ),
+        bodySmall: TextStyle(
+          fontFamily: "JetBrainsMono",
+          color: isLight
+              ? Colors.black.withValues(alpha: 0.6)
+              : Colors.white.withValues(alpha: 0.6),
+          fontSize: 11,
+          letterSpacing: 0.2,
+          fontVariations: [FontVariation("wght", 300)],
+        ),
+      );
 
   final inputDecorationTheme = InputDecorationTheme(
     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -201,8 +211,9 @@ ThemeData buildTheme(Brightness brightness) {
       fontSize: 16,
       fontVariations: const [normalWeight],
     ),
-    prefixIconColor:
-        isLight ? const Color(0x99000000) : const Color(0x99FFFFFF),
+    prefixIconColor: isLight
+        ? const Color(0x99000000)
+        : const Color(0x99FFFFFF),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(color: Colors.redAccent.shade200, width: 2),
@@ -245,9 +256,7 @@ ThemeData buildTheme(Brightness brightness) {
       strokeCap: StrokeCap.round,
     ),
     listTileTheme: ListTileThemeData(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -279,9 +288,7 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: EdgeInsets.zero,
       ),
     ),
@@ -290,9 +297,7 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     menuButtonTheme: MenuButtonThemeData(
       style: MenuItemButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         iconSize: 16,
         textStyle: textTheme.bodySmall?.copyWith(fontSize: 12),
@@ -304,8 +309,9 @@ ThemeData buildTheme(Brightness brightness) {
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         elevation: WidgetStatePropertyAll(1),
-        visualDensity:
-            VisualDensity.defaultDensityForPlatform(defaultTargetPlatform),
+        visualDensity: VisualDensity.defaultDensityForPlatform(
+          defaultTargetPlatform,
+        ),
       ),
     ),
     dropdownMenuTheme: DropdownMenuThemeData(
@@ -360,8 +366,9 @@ class _EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (isAuthenticated, widget) =
-        require(ref.watch(isAuthenticatedProvider));
+    final (isAuthenticated, widget) = require(
+      ref.watch(isAuthenticatedProvider),
+    );
     if (widget != null) {
       return widget;
     }
@@ -425,8 +432,8 @@ class _Error extends HookConsumerWidget {
 class GlobalCustomScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+  };
 }

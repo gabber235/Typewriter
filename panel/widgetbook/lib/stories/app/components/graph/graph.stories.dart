@@ -66,6 +66,12 @@ Widget _node<D extends GraphDragData>(
 
           return Draggable(
             data: data,
+            onDragStarted: () {
+              // Because we initially start dragging over itself, we know that we are dragging inside the graph.
+              // And want to prevent the feedback from being shown.
+              // However the graph doesn't know that we are dragging on it yet.
+              graphDrag.draggingInsideGraph.value = true;
+            },
             feedback: HookBuilder(
               builder: (context) {
                 useListenable(graphDrag.draggingInsideGraph);
@@ -149,7 +155,7 @@ Widget simpleGraphUseCase(BuildContext context) {
       height: 400,
       child: Graph(
         onElementsDragged: (changes) {},
-        onElementResize: (id, width, height) {},
+        onElementsResize: (changes) {},
         data: data,
       ),
     ),
@@ -295,7 +301,7 @@ Widget complexFlowGraphUseCase(BuildContext context) {
       height: 600,
       child: Graph(
         onElementsDragged: (changes) {},
-        onElementResize: (id, width, height) {},
+        onElementsResize: (changes) {},
         data: data,
       ),
     ),
@@ -454,7 +460,7 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
   return FakeApp(
     child: Graph(
       onElementsDragged: (changes) {},
-      onElementResize: (id, width, height) {},
+      onElementsResize: (changes) {},
       data: data,
     ),
   );
@@ -647,7 +653,7 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
       height: 500,
       child: Graph(
         onElementsDragged: (changes) {},
-        onElementResize: (id, width, height) {},
+        onElementsResize: (changes) {},
         data: data,
       ),
     ),
@@ -834,7 +840,7 @@ Widget richContentGraphUseCase(BuildContext context) {
       height: 700,
       child: Graph(
         onElementsDragged: (changes) {},
-        onElementResize: (id, width, height) {},
+        onElementsResize: (changes) {},
         data: data,
       ),
     ),

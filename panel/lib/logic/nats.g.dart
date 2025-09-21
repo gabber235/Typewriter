@@ -6,20 +6,23 @@ part of 'nats.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(Nats)
 const natsProvider = NatsProvider._();
 
 final class NatsProvider extends $NotifierProvider<Nats, Client> {
   const NatsProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'natsProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'natsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$natsHash();
@@ -46,8 +49,14 @@ abstract class _$Nats extends $Notifier<Client> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<Client, Client>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<Client, Client>, Client, Object?, Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Client, Client>,
+              Client,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -57,15 +66,15 @@ const natsStatusProvider = NatsStatusProvider._();
 
 final class NatsStatusProvider extends $NotifierProvider<NatsStatus, Status> {
   const NatsStatusProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'natsStatusProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'natsStatusProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$natsStatusHash();
@@ -92,11 +101,14 @@ abstract class _$NatsStatus extends $Notifier<Status> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<Status, Status>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<Status, Status>, Status, Object?, Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Status, Status>,
+              Status,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

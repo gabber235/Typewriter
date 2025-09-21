@@ -1,4 +1,5 @@
 import "dart:math";
+
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -14,6 +15,7 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
+import "package:typewriter_panel/widgets/generic/components/outline_decorator.dart";
 import "package:typewriter_panel/widgets/generic/components/tag.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 
@@ -47,22 +49,23 @@ class BookWidget extends HookConsumerWidget {
       selectableId: selectableId,
       focusNode: focusNode,
       builder: (isSelected, isFocused, isHovered) {
-        return SizedBox(
-          width: bookWidth,
-          height: bookHeight,
-          child: _BookOutline(
-            show: isFocused,
-            color: color,
-            builder: () => _BookStack(
-              key: const ValueKey("content"),
-              color: color,
-              icon: icon,
-              title: title,
-              tags: tags,
-              isSelected: isSelected,
-            ),
-          ),
-        )
+        return OutlineDecorator(
+              show: isFocused,
+              outerColor: color,
+              innerColor: Theme.of(context).colorScheme.surface,
+              builder: (context) => SizedBox(
+                width: bookWidth,
+                height: bookHeight,
+                child: _BookStack(
+                  key: const ValueKey("content"),
+                  color: color,
+                  icon: icon,
+                  title: title,
+                  tags: tags,
+                  isSelected: isSelected,
+                ),
+              ),
+            )
             .animate(target: isHovered ? 1 : 0)
             .hoverScale(isHovered)
             .hoverRotate(isHovered);
@@ -107,10 +110,7 @@ class _BookStack extends StatelessWidget {
 }
 
 class _SpineLayers extends StatelessWidget {
-  const _SpineLayers({
-    required this.isSelected,
-    required this.color,
-  });
+  const _SpineLayers({required this.isSelected, required this.color});
 
   final bool isSelected;
   final Color color;
@@ -234,14 +234,27 @@ class _BookCover extends StatelessWidget {
       tween: Tween<double>(begin: 0, end: isSelected ? 1 : 0),
       builder: (context, t, child) {
         final scale = 1 - 0.1 * t;
-        final matrix = Matrix4(
-          1.0, 0.0, 0.0, 0.0, //
-          0.0, 1.0, 0.0, 0.0, //
-          0.0, 0.0, 1.0, 0.002 * t, //
-          0.0, 0.0, 0.0, 1.0,
-        )
-          ..rotateY(0.1 * pi * t)
-          ..scaleByDouble(scale, scale, 1, 1);
+        final matrix =
+            Matrix4(
+                1.0,
+                0.0,
+                0.0,
+                0.0, //
+                0.0,
+                1.0,
+                0.0,
+                0.0, //
+                0.0,
+                0.0,
+                1.0,
+                0.002 * t, //
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+              )
+              ..rotateY(0.1 * pi * t)
+              ..scaleByDouble(scale, scale, 1, 1);
         return Transform(
           alignment: Alignment.centerLeft,
           transform: matrix,
@@ -291,10 +304,7 @@ class _BookCover extends StatelessWidget {
                 _TopRow(icon: icon),
                 _TitleText(title: title),
                 if (tags.isNotEmpty)
-                  _TagsList(
-                    color: color,
-                    tags: tags,
-                  )
+                  _TagsList(color: color, tags: tags)
                 else
                   const SizedBox.shrink(),
               ],
@@ -323,10 +333,7 @@ class _TopRow extends StatelessWidget {
             child: icon,
           ),
         ),
-        const Icones(
-          HeroiconsSolid.bars_3_bottom_left,
-          color: Colors.white38,
-        ),
+        const Icones(HeroiconsSolid.bars_3_bottom_left, color: Colors.white38),
       ],
     );
   }
@@ -342,11 +349,7 @@ class _TitleText extends StatelessWidget {
       child: Text(
         title.formatted,
         style: TextStyle(
-          fontSize: context.responsive(
-            mobile: 12,
-            tablet: 14,
-            desktop: 16,
-          ),
+          fontSize: context.responsive(mobile: 12, tablet: 14, desktop: 16),
           fontVariations: [boldWeight],
           color: Colors.white,
         ),
@@ -356,10 +359,7 @@ class _TitleText extends StatelessWidget {
 }
 
 class _TagsList extends StatelessWidget {
-  const _TagsList({
-    required this.color,
-    required this.tags,
-  });
+  const _TagsList({required this.color, required this.tags});
 
   final Color color;
   final List<Tag> tags;
@@ -392,75 +392,11 @@ class _TagsList extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           itemBuilder: (context, index) {
             final tag = tags[index];
-            return TagWidget(
-              tag: tag,
-              isExpanded: false,
-              key: Key(tag.id),
-            );
+            return TagWidget(tag: tag, isExpanded: false, key: Key(tag.id));
           },
           separatorBuilder: (context, index) => const SizedBox(height: 5),
         ),
       ),
-    );
-  }
-}
-
-class _BookOutline extends HookWidget {
-  const _BookOutline({
-    required this.show,
-    required this.color,
-    required this.builder,
-  });
-
-  final bool show;
-  final Color color;
-  final Widget Function() builder;
-
-  @override
-  Widget build(BuildContext context) {
-    const outerThickness = 5.5;
-    const innerThickness = 2.5;
-    const gap = 0.5;
-
-    double scaleXFor(double thickness) => 1 + (2 * thickness) / bookWidth;
-    double scaleYFor(double thickness) => 1 + (2 * thickness) / bookHeight;
-
-    Widget outlineLayer({
-      required double thickness,
-      required Color outlineColor,
-    }) {
-      return TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 0, end: show ? 1 : 0),
-        duration: 100.ms,
-        curve: Curves.fastLinearToSlowEaseIn,
-        builder: (context, t, _) {
-          return Transform(
-            transform: Matrix4.translationValues(gap, gap, 0),
-            child: Transform.scale(
-              scaleX: scaleXFor(thickness * t),
-              scaleY: scaleYFor(thickness * t),
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(outlineColor, BlendMode.srcIn),
-                child: builder(),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
-    return Stack(
-      children: [
-        outlineLayer(
-          thickness: outerThickness,
-          outlineColor: color,
-        ),
-        outlineLayer(
-          thickness: innerThickness,
-          outlineColor: Theme.of(context).colorScheme.surface,
-        ),
-        builder(),
-      ],
     );
   }
 }

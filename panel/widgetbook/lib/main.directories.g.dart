@@ -15,6 +15,8 @@ import 'package:widgetbook_workspace/stories/app/components/action_shortcuts.sto
     as _widgetbook_workspace_stories_app_components_action_shortcuts_stories;
 import 'package:widgetbook_workspace/stories/app/components/book.stories.dart'
     as _widgetbook_workspace_stories_app_components_book_stories;
+import 'package:widgetbook_workspace/stories/app/components/entry.stories.dart'
+    as _widgetbook_workspace_stories_app_components_entry_stories;
 import 'package:widgetbook_workspace/stories/app/components/graph/graph.stories.dart'
     as _widgetbook_workspace_stories_app_components_graph_graph_stories;
 import 'package:widgetbook_workspace/stories/app/components/graph/resizable_element.stories.dart'
@@ -75,6 +77,8 @@ import 'package:widgetbook_workspace/stories/generic/components/loading_indicato
     as _widgetbook_workspace_stories_generic_components_loading_indicator_stories;
 import 'package:widgetbook_workspace/stories/generic/components/notification_bubble.stories.dart'
     as _widgetbook_workspace_stories_generic_components_notification_bubble_stories;
+import 'package:widgetbook_workspace/stories/generic/components/outline_decorator.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_outline_decorator_stories;
 import 'package:widgetbook_workspace/stories/generic/components/page_heading.stories.dart'
     as _widgetbook_workspace_stories_generic_components_page_heading_stories;
 import 'package:widgetbook_workspace/stories/generic/components/retry_indicator.stories.dart'
@@ -91,6 +95,8 @@ import 'package:widgetbook_workspace/stories/generic/components/type_link.storie
     as _widgetbook_workspace_stories_generic_components_type_link_stories;
 import 'package:widgetbook_workspace/stories/generic/components/version_filter_bar.stories.dart'
     as _widgetbook_workspace_stories_generic_components_version_filter_bar_stories;
+import 'package:widgetbook_workspace/stories/routes/organizations/book/page/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organizations_book_page_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/book/route.stories.dart'
     as _widgetbook_workspace_stories_routes_organizations_book_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/library/route.stories.dart'
@@ -130,7 +136,41 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook_workspace_stories_routes_organizations_book_route_stories
                           .bookPageUseCase,
                 ),
-              )
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'page',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PagePage',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Cinematic',
+                        builder:
+                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                                .pagePageCinematicUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Manifest',
+                        builder:
+                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                                .pagePageManifestUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Sequence',
+                        builder:
+                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                                .pagePageSequenceUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Static',
+                        builder:
+                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                                .pagePageStaticUseCase,
+                      ),
+                    ],
+                  )
+                ],
+              ),
             ],
           ),
           _widgetbook.WidgetbookFolder(
@@ -304,6 +344,47 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_generic_components_dropdown_stories
                             .dropdownWithCallbacksUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'EntryNode',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Definition Entry',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_entry_stories
+                            .entryNodeDefinitionUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Deprecated Definition Entry',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_entry_stories
+                            .entryNodeDeprecatedDefinitionUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Multiple Entries Grid',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_entry_stories
+                            .entryNodeMultipleEntriesUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'No Blueprint Entry',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_entry_stories
+                            .entryNodeNoBlueprintUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Nonexistent Entry',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_entry_stories
+                            .entryNodeNonexistentUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Reference Entry',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_entry_stories
+                            .entryNodeReferenceUseCase,
                   ),
                 ],
               ),
@@ -809,6 +890,15 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .notificationBubbleDotUseCase,
                   ),
                 ],
+              ),
+              _widgetbook.WidgetbookLeafComponent(
+                name: 'OutlineDecorator',
+                useCase: _widgetbook.WidgetbookUseCase(
+                  name: 'Showcase',
+                  builder:
+                      _widgetbook_workspace_stories_generic_components_outline_decorator_stories
+                          .outlineDecoratorShowcaseUseCase,
+                ),
               ),
               _widgetbook.WidgetbookLeafComponent(
                 name: 'PageHeading',

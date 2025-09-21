@@ -28,39 +28,35 @@ sealed class DataBlueprint with _$DataBlueprint {
   static DataBlueprint string({
     String? defaultValue,
     List<Modifier> modifiers = const [],
-  }) =>
-      PrimitiveBlueprint(
-        type: PrimitiveType.string,
-        internalDefaultValue: defaultValue,
-        modifiers: modifiers,
-      );
+  }) => PrimitiveBlueprint(
+    type: PrimitiveType.string,
+    internalDefaultValue: defaultValue,
+    modifiers: modifiers,
+  );
   static DataBlueprint integer({
     int? defaultValue,
     List<Modifier> modifiers = const [],
-  }) =>
-      PrimitiveBlueprint(
-        type: PrimitiveType.integer,
-        internalDefaultValue: defaultValue,
-        modifiers: modifiers,
-      );
+  }) => PrimitiveBlueprint(
+    type: PrimitiveType.integer,
+    internalDefaultValue: defaultValue,
+    modifiers: modifiers,
+  );
   static DataBlueprint decimal({
     double? defaultValue = 0.0,
     List<Modifier> modifiers = const [],
-  }) =>
-      PrimitiveBlueprint(
-        type: PrimitiveType.double,
-        internalDefaultValue: defaultValue,
-        modifiers: modifiers,
-      );
+  }) => PrimitiveBlueprint(
+    type: PrimitiveType.double,
+    internalDefaultValue: defaultValue,
+    modifiers: modifiers,
+  );
   static DataBlueprint boolean({
     bool? defaultValue,
     List<Modifier> modifiers = const [],
-  }) =>
-      PrimitiveBlueprint(
-        type: PrimitiveType.boolean,
-        internalDefaultValue: defaultValue,
-        modifiers: modifiers,
-      );
+  }) => PrimitiveBlueprint(
+    type: PrimitiveType.boolean,
+    internalDefaultValue: defaultValue,
+    modifiers: modifiers,
+  );
 
   /// Enum field type, such as a list of options.
   @FreezedUnionValue("enum")
@@ -164,9 +160,8 @@ sealed class DataBlueprint with _$DataBlueprint {
 @Freezed(unionKey: "kind")
 abstract class Modifier with _$Modifier {
   // Generic
-  const factory Modifier.readOnly({
-    @Default(true) bool recursive,
-  }) = ReadOnlyModifier;
+  const factory Modifier.readOnly({@Default(true) bool recursive}) =
+      ReadOnlyModifier;
 
   const factory Modifier.expanded() = ExpandedModifier;
 
@@ -181,10 +176,13 @@ abstract class Modifier with _$Modifier {
   const factory Modifier.max(num value) = MaxModifier;
   const factory Modifier.negative() = NegativeModifier;
 
-  const factory Modifier.custom({
-    required String name,
-    required dynamic data,
-  }) = CustomModifier;
+  // Entry Based
+  const factory Modifier.entryReference(String tag) = EntryReferenceModifier;
+  const factory Modifier.anyEntryReference(List<String> tags) =
+      AnyEntryReferenceModifier;
+
+  const factory Modifier.custom({required String name, required dynamic data}) =
+      CustomModifier;
 
   factory Modifier.fromJson(Map<String, dynamic> json) =>
       _$ModifierFromJson(json);
@@ -195,8 +193,7 @@ enum PrimitiveType {
   boolean(false),
   double(0.0),
   integer(0),
-  string(""),
-  ;
+  string("");
 
   /// A constructor that is used to create an instance of the [PrimitiveType] class.
   const PrimitiveType(this.defaultValue);
@@ -241,8 +238,9 @@ extension DataBlueprintExtension on DataBlueprint {
       ObjectBlueprint(:final fields, :final internalDefaultValue) =>
         _defaultObjectValue(fields, internalDefaultValue),
       AlgebraicBlueprint(:final cases) => _defaultAlgebraicValue(cases),
-      CustomBlueprint(:final internalDefaultValue) =>
-        _defaultCustomValue(internalDefaultValue),
+      CustomBlueprint(:final internalDefaultValue) => _defaultCustomValue(
+        internalDefaultValue,
+      ),
     };
   }
 
@@ -297,19 +295,12 @@ extension DataBlueprintExtension on DataBlueprint {
     return fields.map((key, value) => MapEntry(key, value.defaultValue()));
   }
 
-  dynamic _defaultAlgebraicValue(
-    Map<String, DataBlueprint> cases,
-  ) {
+  dynamic _defaultAlgebraicValue(Map<String, DataBlueprint> cases) {
     final first = cases.entries.first;
-    return {
-      "case": first.key,
-      "value": first.value.defaultValue(),
-    };
+    return {"case": first.key, "value": first.value.defaultValue()};
   }
 
-  dynamic _defaultCustomValue(
-    dynamic internalDefaultValue,
-  ) {
+  dynamic _defaultCustomValue(dynamic internalDefaultValue) {
     return internalDefaultValue;
   }
 
@@ -473,14 +464,16 @@ extension ObjectBlueprintList on List<ObjectBlueprint> {
   ObjectBlueprint? get overlap {
     if (isEmpty) return null;
     if (length == 1) return first;
-    final keys = map((blueprint) => blueprint.fields.keys.toSet())
-        .reduce((intersection, current) => intersection.intersection(current));
+    final keys = map(
+      (blueprint) => blueprint.fields.keys.toSet(),
+    ).reduce((intersection, current) => intersection.intersection(current));
     if (keys.isEmpty) return null;
 
     final fields = <String, DataBlueprint>{};
     for (final key in keys) {
-      final blueprints =
-          map((blueprint) => blueprint.fields[key]).nonNulls.toList();
+      final blueprints = map(
+        (blueprint) => blueprint.fields[key],
+      ).nonNulls.toList();
       final overlap = blueprints.overlap;
       if (overlap == null) continue;
       fields[key] = overlap;
@@ -494,14 +487,16 @@ extension AlgebraicBlueprintList on List<AlgebraicBlueprint> {
   AlgebraicBlueprint? get overlap {
     if (isEmpty) return null;
     if (length == 1) return first;
-    final keys = map((blueprint) => blueprint.cases.keys.toSet())
-        .reduce((intersection, current) => intersection.intersection(current));
+    final keys = map(
+      (blueprint) => blueprint.cases.keys.toSet(),
+    ).reduce((intersection, current) => intersection.intersection(current));
     if (keys.isEmpty) return null;
 
     final cases = <String, DataBlueprint>{};
     for (final key in keys) {
-      final blueprints =
-          map((blueprint) => blueprint.cases[key]).nonNulls.toList();
+      final blueprints = map(
+        (blueprint) => blueprint.cases[key],
+      ).nonNulls.toList();
       final overlap = blueprints.overlap;
       if (overlap == null) continue;
       cases[key] = overlap;

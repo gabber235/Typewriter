@@ -14,6 +14,8 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 export "appearance.mock.dart";
 export "auth.mock.dart";
 export "books.mock.dart";
+export "data_blueprint.mock.dart";
+export "entries.mock.dart";
 export "manuals.mock.dart";
 export "mock_utils.dart";
 export "modules.mock.dart";
@@ -55,7 +57,10 @@ void registerFallbackValues() {
         extension: "",
         dataBlueprint: ObjectBlueprint(fields: {}),
       ),
+      placement: const EntryPlacement(x: 0, y: 0, width: 4, height: 1),
       data: DynamicData({}),
+      inwardEdges: [],
+      outwardEdges: [],
     ),
   );
   registerFallbackValue(

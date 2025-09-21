@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
@@ -8,12 +7,12 @@ part "cursor_controller.g.dart";
 @riverpod
 class CursorController extends _$CursorController {
   @override
-  SystemMouseCursor build() {
+  MouseCursor build() {
     return SystemMouseCursors.basic;
   }
 
   // ignore: use_setters_to_change_properties
-  void cursor(SystemMouseCursor cursor) {
+  void cursor(MouseCursor cursor) {
     state = cursor;
   }
 
@@ -28,10 +27,7 @@ class CursorController extends _$CursorController {
 /// the cursor is consistent across the entire app, especially during
 /// drag operations where the mouse might move outside of specific regions.
 class GlobalCursorController extends ConsumerWidget {
-  const GlobalCursorController({
-    required this.child,
-    super.key,
-  });
+  const GlobalCursorController({required this.child, super.key});
 
   final Widget child;
 
@@ -39,9 +35,6 @@ class GlobalCursorController extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cursor = ref.watch(cursorControllerProvider);
 
-    return MouseRegion(
-      cursor: cursor,
-      child: child,
-    );
+    return MouseRegion(cursor: cursor, child: child);
   }
 }

@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:faker/faker.dart";
 import "package:flutter_animate/flutter_animate.dart";
 
@@ -6,17 +7,18 @@ import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
-import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
-import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
+
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/graph/entry_graph.dart";
+import "package:typewriter_testkit/src/mocks/graph_layout.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-Page generateRandomPage() {
+Page generateRandomPage([PageType? pageType]) {
   final pageTypes = PageType.values;
-  final type = pageTypes.randomOrNull()!;
+  final type = pageType ?? pageTypes.randomOrNull()!;
   final pageName = faker.lorem
       .words(faker.randomGenerator.integer(3, min: 1))
       .join("_")
@@ -27,7 +29,7 @@ Page generateRandomPage() {
     "example.test",
     "main",
     "main.side_quests",
-    "main.epilogue"
+    "main.epilogue",
   ];
 
   return Page(
@@ -38,37 +40,6 @@ Page generateRandomPage() {
     chapter: chapters.randomOrNull() ?? "",
     priority: faker.randomGenerator.integer(100, min: -10),
   );
-}
-
-EntryBlueprint generateRandomEntryBlueprint() {
-  final extensions = ["basic", "combat", "dialogue", "quest", "npc"];
-
-  return EntryBlueprint(
-    id: faker.guid.guid(),
-    name: faker.lorem.words(2).join(" ").formatted,
-    description: faker.lorem.sentence(),
-    extension: extensions.randomOrNull()!,
-    dataBlueprint: ObjectBlueprint(fields: {}),
-    color: safeColors.randomOrNull()!,
-    icon: "fa-solid:star",
-    tags: List.generate(
-      faker.randomGenerator.integer(3, min: 0),
-      (_) => faker.lorem.word(),
-    ),
-  );
-}
-
-EntryDefinition generateRandomEntryDefinition() {
-  return EntryDefinition(
-    id: faker.guid.guid(),
-    name: faker.lorem.words(2).join(" ").formatted,
-    blueprint: generateRandomEntryBlueprint(),
-    data: DynamicData({}),
-  );
-}
-
-EntryIdentifier generateRandomEntryIdentifier() {
-  return EntryIdentifier(faker.guid.guid());
 }
 
 class BookPagesMock extends BookPages {
@@ -85,22 +56,25 @@ class BookPagesMock extends BookPages {
     if (search.isEmpty) return pages;
 
     return pages
-        .where((page) =>
-            page.pageName.toLowerCase().contains(search.toLowerCase()) ||
-            page.chapter.toLowerCase().contains(search.toLowerCase()))
+        .where(
+          (page) =>
+              page.pageName.toLowerCase().contains(search.toLowerCase()) ||
+              page.chapter.toLowerCase().contains(search.toLowerCase()),
+        )
         .toList();
   }
 }
 
 class PagesMock extends Pages {
-  PagesMock({this.page});
+  PagesMock({this.page, this.pageType});
 
   final Page? page;
+  final PageType? pageType;
 
   @override
   Future<Page> build(String pageId) async {
     await Future<void>.delayed(50.ms);
-    return page ?? generateRandomPage().copyWith(id: pageId);
+    return page ?? generateRandomPage(pageType).copyWith(id: pageId);
   }
 
   @override
@@ -120,15 +94,57 @@ class PagesMock extends Pages {
 }
 
 class PageEntriesMock extends PageEntries {
-  PageEntriesMock({required this.displayState});
+  PageEntriesMock({required this.displayState, this.direction});
 
   final DisplayState displayState;
+  final GraphDirection? direction;
 
   @override
-  Future<List<String>> build(String pageId) async {
+  Future<List<PageEntry>> build(String pageId) async {
     await Future<void>.delayed(100.ms);
-    final entries = await displayState.generate(() => faker.guid.guid());
-    return entries;
+    final definitions =
+        await displayState.generate(generateRandomEntryDefinition);
+
+    final entries = generateDynamicGraphLayout(definitions, direction);
+
+    return entries.map((def) => PageEntry.definition(definition: def)).toList();
+  }
+
+  @override
+  Future<void> moveAll(List<(String, int, int)> changed) async {
+    final data = await future;
+    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
+    final newData = data.map((pageEntry) {
+      if (!map.containsKey(pageEntry.id)) return pageEntry;
+      final (x, y) = map[pageEntry.id]!;
+      return switch (pageEntry) {
+        DefinitionPageEntry() =>
+          pageEntry.copyWith.definition.placement(x: x, y: y),
+        NoBlueprintPageEntry() => pageEntry.copyWith.placement(x: x, y: y),
+        _ => pageEntry,
+      };
+    }).toList();
+
+    state = AsyncValue.data(newData);
+  }
+
+  @override
+  Future<void> resizeAll(List<(String, int, int)> changed) async {
+    final data = await future;
+    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
+    final newData = data.map((pageEntry) {
+      if (!map.containsKey(pageEntry.id)) return pageEntry;
+      final (width, height) = map[pageEntry.id]!;
+      return switch (pageEntry) {
+        DefinitionPageEntry() =>
+          pageEntry.copyWith.definition.placement(width: width, height: height),
+        NoBlueprintPageEntry() =>
+          pageEntry.copyWith.placement(width: width, height: height),
+        _ => pageEntry,
+      };
+    }).toList();
+
+    state = AsyncValue.data(newData);
   }
 }
 
@@ -139,8 +155,21 @@ class EntryMock extends Entry {
 
   @override
   Future<EntryDefinition?> build(String entryId) async {
-    await Future<void>.delayed(50.ms);
-    return definition ?? generateRandomEntryDefinition().copyWith(id: entryId);
+    await Future<void>.delayed(200.ms);
+    if (definition != null) return definition;
+
+    final currentPageId = ref.read(pageIdProvider);
+
+    final pageEntries =
+        await ref.read(pageEntriesProvider(currentPageId ?? "").future);
+
+    final pageEntry =
+        pageEntries.firstWhereOrNull((entry) => entry.id == entryId);
+
+    return switch (pageEntry) {
+      DefinitionPageEntry(:final definition) => definition,
+      _ => generateRandomEntryDefinition().copyWith(id: entryId),
+    };
   }
 
   @override
@@ -150,24 +179,8 @@ class EntryMock extends Entry {
 
   @override
   Future<void> moveToPage(String pageId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 200));
+    await Future<void>.delayed(200.ms);
   }
-}
-
-BookPagesMock createBookPagesMockForState(DisplayState state) {
-  return BookPagesMock(displayState: state);
-}
-
-PagesMock createPagesMock({Page? page}) {
-  return PagesMock(page: page);
-}
-
-PageEntriesMock createPageEntriesMockForState(DisplayState state) {
-  return PageEntriesMock(displayState: state);
-}
-
-EntryMock createEntryMock({EntryDefinition? definition}) {
-  return EntryMock(definition: definition);
 }
 
 List<Override> bookPagesProviderOverrides({
@@ -175,23 +188,26 @@ List<Override> bookPagesProviderOverrides({
 }) =>
     [
       bookPagesProvider.overrideWith(
-        () => createBookPagesMockForState(state),
+        () => BookPagesMock(displayState: state),
       ),
     ];
 
 List<Override> pagesProviderOverrides({
   Page? page,
+  PageType? pageType,
 }) =>
     [
-      pagesProvider.overrideWith(() => createPagesMock(page: page)),
+      pagesProvider
+          .overrideWith(() => PagesMock(page: page, pageType: pageType)),
     ];
 
 List<Override> pageEntriesProviderOverrides({
   DisplayState state = DisplayState.loading,
+  GraphDirection? direction,
 }) =>
     [
       pageEntriesProvider.overrideWith(
-        () => createPageEntriesMockForState(state),
+        () => PageEntriesMock(displayState: state, direction: direction),
       ),
     ];
 
@@ -199,7 +215,7 @@ List<Override> entryProviderOverrides({
   EntryDefinition? definition,
 }) =>
     [
-      entryProvider.overrideWith(() => createEntryMock(definition: definition)),
+      entryProvider.overrideWith(() => EntryMock(definition: definition)),
     ];
 
 List<Override> pageIdProviderOverrides({
@@ -214,21 +230,4 @@ List<Override> bookIdProviderOverrides({
 }) =>
     [
       bookIdProvider.overrideWith((ref) => bookId),
-    ];
-
-List<Override> allPagesProviderOverrides({
-  DisplayState pagesState = DisplayState.manyItems,
-  DisplayState entriesState = DisplayState.fewItems,
-  String? selectedPageId,
-  String? currentBookId,
-  Page? specificPage,
-  EntryDefinition? specificEntry,
-}) =>
-    [
-      ...bookPagesProviderOverrides(state: pagesState),
-      ...pagesProviderOverrides(page: specificPage),
-      ...pageEntriesProviderOverrides(state: entriesState),
-      ...entryProviderOverrides(definition: specificEntry),
-      ...pageIdProviderOverrides(pageId: selectedPageId),
-      ...bookIdProviderOverrides(bookId: currentBookId ?? "test-book-id"),
     ];

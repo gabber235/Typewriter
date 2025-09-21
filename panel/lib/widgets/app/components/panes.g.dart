@@ -6,21 +6,24 @@ part of 'panes.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(Panes)
 const panesProvider = PanesProvider._();
 
 final class PanesProvider
     extends $NotifierProvider<Panes, Map<String, PaneInfo>> {
   const PanesProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'panesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'panesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$panesHash();
@@ -47,14 +50,14 @@ abstract class _$Panes extends $Notifier<Map<String, PaneInfo>> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<Map<String, PaneInfo>, Map<String, PaneInfo>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<Map<String, PaneInfo>, Map<String, PaneInfo>>,
-        Map<String, PaneInfo>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<String, PaneInfo>, Map<String, PaneInfo>>,
+              Map<String, PaneInfo>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

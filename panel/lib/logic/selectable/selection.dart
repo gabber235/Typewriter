@@ -27,11 +27,12 @@ class Selection extends _$Selection {
     return true;
   }
 
-  void select(SelectableIdentifier selectable, {bool? isShiftPressed}) {
+  void select(SelectableIdentifier selectable, {bool? isMultiSelect}) {
     final selected = state.contains(selectable);
-    final shifting = isShiftPressed ?? HardwareKeyboard.instance.isShiftPressed;
+    final multiSelect =
+        isMultiSelect ?? HardwareKeyboard.instance.isShiftPressed;
 
-    state = switch ((selected, shifting)) {
+    state = switch ((selected, multiSelect)) {
       (true, true) => state.where((s) => s != selectable).toList(),
       (true, false) => state.length > 1 ? [selectable] : [],
       (false, true) => [...state, selectable],
@@ -75,7 +76,7 @@ bool isSelected(Ref ref, SelectableIdentifier selectable) {
 @riverpod
 class Selected extends _$Selected {
   @override
-  AsyncValue<List<Selectable>> build() {
+  AsyncValue<List<Selectable<SelectableIdentifier>>> build() {
     final ids = ref.watch(selectionProvider);
 
     final values = <Selectable>[];
@@ -91,8 +92,8 @@ class Selected extends _$Selected {
 
   @override
   bool updateShouldNotify(
-    AsyncValue<List<Selectable>> previous,
-    AsyncValue<List<Selectable>> next,
+    AsyncValue<List<Selectable<SelectableIdentifier>>> previous,
+    AsyncValue<List<Selectable<SelectableIdentifier>>> next,
   ) {
     // return true;
     return !previous.matches(next, listEquals);

@@ -49,19 +49,14 @@ part "route.g.dart";
 
 @RoutePage()
 class BookPage extends HookConsumerWidget {
-  const BookPage({
-    @PathParam("bookId") required this.bookId,
-    super.key,
-  });
+  const BookPage({@PathParam("bookId") required this.bookId, super.key});
 
   final String bookId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return BookScaffold(
-      child: AutoRouter(
-        placeholder: (context) => EmptyBookPage(),
-      ),
+      child: AutoRouter(placeholder: (context) => EmptyBookPage()),
     );
   }
 }
@@ -94,10 +89,7 @@ class EmptyBookPage extends StatelessWidget {
 }
 
 class BookScaffold extends HookConsumerWidget {
-  const BookScaffold({
-    required this.child,
-    super.key,
-  });
+  const BookScaffold({required this.child, super.key});
 
   final Widget child;
 
@@ -154,10 +146,7 @@ Future<List<Page>> _viewingPages(Ref ref) async {
 }
 
 class BookSidebarContent extends HookConsumerWidget {
-  const BookSidebarContent({
-    this.expanded = true,
-    super.key,
-  });
+  const BookSidebarContent({this.expanded = true, super.key});
 
   final bool expanded;
 
@@ -213,10 +202,7 @@ class BookSidebarContent extends HookConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _PagesTree(
-                          pages: data,
-                          expanded: expanded,
-                        ),
+                        _PagesTree(pages: data, expanded: expanded),
                         const SizedBox(height: 12),
                         if (expanded) const _AddPageButton(),
                       ],
@@ -224,9 +210,8 @@ class BookSidebarContent extends HookConsumerWidget {
                   ),
                 );
               },
-              loading: (_) => const LoadingPagesSidebar(),
+              loading: (_) => Expanded(child: const LoadingPagesSidebar()),
             ),
-            const Spacer(),
             UserMenu(),
           ],
         ),
@@ -244,37 +229,29 @@ class LoadingPagesSidebar extends StatelessWidget {
       spacing: 8,
       children: [
         for (var i = 0; i < 10; i++)
-          ShimmerBox.rectangle(
-            height: 35,
-            width: double.infinity,
-          ),
+          ShimmerBox.rectangle(height: 35, width: double.infinity),
       ],
     );
   }
 }
 
 class _PagesTree extends HookConsumerWidget {
-  const _PagesTree({
-    required this.expanded,
-    required this.pages,
-  });
+  const _PagesTree({required this.expanded, required this.pages});
 
   final bool expanded;
   final List<Page> pages;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tree =
-        useMemoized(() => createTreeNode(pages, (p) => p.chapter), [pages]);
+    final tree = useMemoized(() => createTreeNode(pages, (p) => p.chapter), [
+      pages,
+    ]);
     return _TreeChildren(children: tree.children, expanded: expanded);
   }
 }
 
 class _TreeChildren extends HookWidget {
-  const _TreeChildren({
-    required this.children,
-    required this.expanded,
-  });
+  const _TreeChildren({required this.children, required this.expanded});
 
   final List<TreeNode<Page>> children;
   final bool expanded;
@@ -307,10 +284,7 @@ class _TreeChildren extends HookWidget {
 }
 
 class _TreeItem extends HookWidget {
-  const _TreeItem({
-    required this.node,
-    required this.expanded,
-  });
+  const _TreeItem({required this.node, required this.expanded});
 
   final TreeNode<Page> node;
   final bool expanded;
@@ -318,26 +292,19 @@ class _TreeItem extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return switch (node) {
-      LeafTreeNode<Page>(:final value) when expanded => _PageTile(
-          page: value,
-        ),
-      LeafTreeNode<Page>(:final value) => _SmallPageTile(
-          page: value,
-        ),
+      LeafTreeNode<Page>(:final value) when expanded => _PageTile(page: value),
+      LeafTreeNode<Page>(:final value) => _SmallPageTile(page: value),
       InnerTreeNode<Page>() => _TreeCategory(
-          node: node as InnerTreeNode<Page>,
-          expanded: expanded,
-        ),
+        node: node as InnerTreeNode<Page>,
+        expanded: expanded,
+      ),
       _ => throw UnimplementedError(),
     };
   }
 }
 
 class _TreeCategory extends HookConsumerWidget {
-  const _TreeCategory({
-    required this.node,
-    required this.expanded,
-  });
+  const _TreeCategory({required this.node, required this.expanded});
 
   final InnerTreeNode<Page> node;
   final bool expanded;
@@ -371,8 +338,9 @@ class _TreeCategory extends HookConsumerWidget {
             ActionShortcut(
               id: "book_sidebar_chapter_toggle",
               label: isExpanded.value ? "Collapse" : "Expand",
-              description:
-                  isExpanded.value ? "Collapse chapter" : "Expand chapter",
+              description: isExpanded.value
+                  ? "Collapse chapter"
+                  : "Expand chapter",
               activators: shortcutsFor(ActivateIntent),
               priority: 1,
               onInvoke: (_) {
@@ -383,9 +351,7 @@ class _TreeCategory extends HookConsumerWidget {
               id: "book_sidebar_chapter_new_page",
               label: "New Page",
               description: "Create a new page",
-              activators: [
-                SingleActivator(LogicalKeyboardKey.keyN),
-              ],
+              activators: [SingleActivator(LogicalKeyboardKey.keyN)],
               priority: 2,
               onInvoke: (_) {
                 showAdvancedDialog(
@@ -398,9 +364,7 @@ class _TreeCategory extends HookConsumerWidget {
               id: "book_sidebar_chapter_rename",
               label: "Rename",
               description: "Rename the chapter",
-              activators: [
-                SingleActivator(LogicalKeyboardKey.keyR),
-              ],
+              activators: [SingleActivator(LogicalKeyboardKey.keyR)],
               priority: 3,
               onInvoke: (_) {
                 showAdvancedDialog(
@@ -455,7 +419,8 @@ class _TreeCategory extends HookConsumerWidget {
                         .changeChapter(node.path);
                   },
                   builder: (context, pageCandidates, pageRejected) {
-                    final isAccepting = chapterCandidates.isNotEmpty ||
+                    final isAccepting =
+                        chapterCandidates.isNotEmpty ||
                         pageCandidates.isNotEmpty;
                     final isRejecting =
                         chapterRejected.isNotEmpty || pageRejected.isNotEmpty;
@@ -470,8 +435,9 @@ class _TreeCategory extends HookConsumerWidget {
                                 width: 2,
                               )
                             : BorderSide.none,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                       ),
                       child: Draggable<ChapterDrag>(
                         data: ChapterDrag(chapter: chapter),
@@ -511,10 +477,9 @@ class _TreeCategory extends HookConsumerWidget {
               ? _TreeBarLayout(
                   barWidth: 3,
                   barMargin: EdgeInsets.only(left: expanded ? 14 : 10),
-                  barColor: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.2),
+                  barColor: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: Radius.circular(2),
                   child: _TreeChildren(
                     children: node.children,
@@ -540,9 +505,7 @@ class _TreeCategory extends HookConsumerWidget {
         children: [
           if (expanded) const SizedBox(width: 4),
           Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: expanded ? 4 : 0,
-            ),
+            padding: EdgeInsets.symmetric(vertical: expanded ? 4 : 0),
             child: Icones(
               isExpanded ? Fa6Solid.chevron_down : Fa6Solid.chevron_right,
               size: 11,
@@ -555,17 +518,17 @@ class _TreeCategory extends HookConsumerWidget {
               Expanded(
                 child: Text(
                   node.name.formatted,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: color),
                 ),
               )
             else
               Text(
                 node.name.formatted,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: color),
               ),
           ],
         ],
@@ -575,9 +538,7 @@ class _TreeCategory extends HookConsumerWidget {
 }
 
 class _PageTile extends HookConsumerWidget {
-  const _PageTile({
-    required this.page,
-  });
+  const _PageTile({required this.page});
   final Page page;
 
   String get pageId => page.id;
@@ -585,118 +546,106 @@ class _PageTile extends HookConsumerWidget {
   String get chapter => page.chapter;
 
   List<MenuItem> _contextMenuItems(WidgetRef ref) => [
-        MenuItem(
-          label: "Rename",
-          icon: Icones(Mingcute.pencil_fill),
-          onPressed: () => showAdvancedDialog(
-            context: ref.context,
-            builder: (_) => RenamePageDialogue(
-              pageId: pageId,
-              oldName: name,
-            ),
-          ),
+    MenuItem(
+      label: "Rename",
+      icon: Icones(Mingcute.pencil_fill),
+      onPressed: () => showAdvancedDialog(
+        context: ref.context,
+        builder: (_) => RenamePageDialogue(pageId: pageId, oldName: name),
+      ),
+    ),
+    MenuItem(
+      label: "Change Chapter",
+      icon: Icones(Ph.book_bookmark_fill),
+      onPressed: () => showAdvancedDialog(
+        context: ref.context,
+        builder: (_) => ChangeChapterDialogue(
+          title: "Change chapter of $name",
+          chapter: chapter,
+          onChapterChanged: (newChapter) async {
+            await ref
+                .read(pagesProvider(pageId).notifier)
+                .changeChapter(newChapter);
+          },
         ),
-        MenuItem(
-          label: "Change Chapter",
-          icon: Icones(Ph.book_bookmark_fill),
-          onPressed: () => showAdvancedDialog(
-            context: ref.context,
-            builder: (_) => ChangeChapterDialogue(
-              title: "Change chapter of $name",
-              chapter: chapter,
-              onChapterChanged: (newChapter) async {
-                await ref
-                    .read(pagesProvider(pageId).notifier)
-                    .changeChapter(newChapter);
-              },
-            ),
-          ),
+      ),
+    ),
+    MenuItem(
+      label: "Change Priority",
+      icon: Icones(MaterialSymbols.priority_high_rounded),
+      onPressed: () => showAdvancedDialog(
+        context: ref.context,
+        builder: (_) => ChangePagePriorityDialogue(
+          pageId: pageId,
+          pageName: name,
+          priority: page.priority,
         ),
-        MenuItem(
-          label: "Change Priority",
-          icon: Icones(MaterialSymbols.priority_high_rounded),
-          onPressed: () => showAdvancedDialog(
-            context: ref.context,
-            builder: (_) => ChangePagePriorityDialogue(
-              pageId: pageId,
-              pageName: name,
-              priority: page.priority,
-            ),
-          ),
-        ),
-        MenuItem.divider(),
-        MenuItem(
-          label: "Delete",
-          icon: Icones(MaterialSymbols.delete_forever_rounded),
-          color: Colors.redAccent,
-          onPressed: () => showPageDeletionDialogue(ref, pageId, name),
-        ),
-      ];
+      ),
+    ),
+    MenuItem.divider(),
+    MenuItem(
+      label: "Delete",
+      icon: Icones(MaterialSymbols.delete_forever_rounded),
+      color: Colors.redAccent,
+      onPressed: () => showPageDeletionDialogue(ref, pageId, name),
+    ),
+  ];
 
   List<ActionShortcut> _shortcuts(WidgetRef ref) => [
-        ActionShortcut(
-          id: "book_sidebar_page_rename",
-          label: "Rename",
-          description: "Rename the page",
-          activators: [
-            SingleActivator(LogicalKeyboardKey.keyR),
-          ],
-          priority: 1,
-          onInvoke: (_) => showAdvancedDialog(
-            context: ref.context,
-            builder: (_) => RenamePageDialogue(
-              pageId: pageId,
-              oldName: name,
-            ),
-          ),
+    ActionShortcut(
+      id: "book_sidebar_page_rename",
+      label: "Rename",
+      description: "Rename the page",
+      activators: [SingleActivator(LogicalKeyboardKey.keyR)],
+      priority: 1,
+      onInvoke: (_) => showAdvancedDialog(
+        context: ref.context,
+        builder: (_) => RenamePageDialogue(pageId: pageId, oldName: name),
+      ),
+    ),
+    ActionShortcut(
+      id: "book_sidebar_page_change_chapter",
+      label: "Change Chapter",
+      description: "Change the chapter of the page",
+      activators: [SingleActivator(LogicalKeyboardKey.keyC)],
+      priority: 1,
+      onInvoke: (_) => showAdvancedDialog(
+        context: ref.context,
+        builder: (_) => ChangeChapterDialogue(
+          title: "Change chapter of $name",
+          chapter: chapter,
+          onChapterChanged: (newChapter) async {
+            await ref
+                .read(pagesProvider(pageId).notifier)
+                .changeChapter(newChapter);
+          },
         ),
-        ActionShortcut(
-          id: "book_sidebar_page_change_chapter",
-          label: "Change Chapter",
-          description: "Change the chapter of the page",
-          activators: [
-            SingleActivator(LogicalKeyboardKey.keyC),
-          ],
-          priority: 1,
-          onInvoke: (_) => showAdvancedDialog(
-            context: ref.context,
-            builder: (_) => ChangeChapterDialogue(
-              title: "Change chapter of $name",
-              chapter: chapter,
-              onChapterChanged: (newChapter) async {
-                await ref
-                    .read(pagesProvider(pageId).notifier)
-                    .changeChapter(newChapter);
-              },
-            ),
-          ),
+      ),
+    ),
+    ActionShortcut(
+      id: "book_sidebar_page_change_priority",
+      label: "Change Priority",
+      description: "Change the priority of the page",
+      activators: [SingleActivator(LogicalKeyboardKey.keyP)],
+      priority: 1,
+      onInvoke: (_) => showAdvancedDialog(
+        context: ref.context,
+        builder: (_) => ChangePagePriorityDialogue(
+          pageId: pageId,
+          pageName: name,
+          priority: page.priority,
         ),
-        ActionShortcut(
-          id: "book_sidebar_page_change_priority",
-          label: "Change Priority",
-          description: "Change the priority of the page",
-          activators: [
-            SingleActivator(LogicalKeyboardKey.keyP),
-          ],
-          priority: 1,
-          onInvoke: (_) => showAdvancedDialog(
-            context: ref.context,
-            builder: (_) => ChangePagePriorityDialogue(
-              pageId: pageId,
-              pageName: name,
-              priority: page.priority,
-            ),
-          ),
-        ),
-        ActionShortcut(
-          id: "book_sidebar_page_delete",
-          label: "Delete",
-          description: "Delete the page",
-          activators: shortcutsFor(DeleteIntent),
-          priority: 1,
-          onInvoke: (_) => showPageDeletionDialogue(ref, pageId, name),
-        ),
-      ];
+      ),
+    ),
+    ActionShortcut(
+      id: "book_sidebar_page_delete",
+      label: "Delete",
+      description: "Delete the page",
+      activators: shortcutsFor(DeleteIntent),
+      priority: 1,
+      onInvoke: (_) => showPageDeletionDialogue(ref, pageId, name),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -709,26 +658,18 @@ class _PageTile extends HookConsumerWidget {
       child: Row(
         children: [
           const SizedBox(width: 4),
-          Icones(
-            page.type.icon,
-            size: 11,
-            color: color,
-          ),
+          Icones(page.type.icon, size: 11, color: color),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               page.pageName.formatted,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: color),
             ),
           ),
           const SizedBox(width: 8),
-          Icon(
-            Icons.chevron_right,
-            size: 16,
-            color: color,
-          ),
+          Icon(Icons.chevron_right, size: 16, color: color),
         ],
       ),
     );
@@ -808,9 +749,7 @@ class _PageTile extends HookConsumerWidget {
 }
 
 class _SmallPageTile extends HookConsumerWidget {
-  const _SmallPageTile({
-    required this.page,
-  });
+  const _SmallPageTile({required this.page});
 
   final Page page;
 
@@ -825,11 +764,7 @@ class _SmallPageTile extends HookConsumerWidget {
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Icones(
-          page.type.icon,
-          size: 11,
-          color: Colors.white,
-        ),
+        child: Icones(page.type.icon, size: 11, color: Colors.white),
       ),
     );
   }
@@ -851,25 +786,21 @@ class _AddPageButton extends HookConsumerWidget {
     final isFocused = useState(false);
     final isHovered = useState(false);
 
-    final color = Theme.of(context)
-        .colorScheme
-        .onSurface
-        .withValues(alpha: isFocused.value || isHovered.value ? 1 : 0.6);
+    final color = Theme.of(context).colorScheme.onSurface.withValues(
+      alpha: isFocused.value || isHovered.value ? 1 : 0.6,
+    );
 
     final animation = useAnimationController(duration: 200.ms);
     useListenable(animation);
 
-    useEffect(
-      () {
-        if (isFocused.value || isHovered.value) {
-          animation.forward();
-        } else {
-          animation.reverse();
-        }
-        return null;
-      },
-      [isFocused.value, isHovered.value],
-    );
+    useEffect(() {
+      if (isFocused.value || isHovered.value) {
+        animation.forward();
+      } else {
+        animation.reverse();
+      }
+      return null;
+    }, [isFocused.value, isHovered.value]);
 
     return DottedBorder(
       animation: animation,
@@ -904,11 +835,7 @@ class _AddPageButton extends HookConsumerWidget {
         child: Row(
           children: [
             const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                "Add page",
-              ),
-            ),
+            Expanded(child: Text("Add page")),
             const SizedBox(width: 8),
             Icon(Icons.add, size: 16),
           ],
@@ -962,10 +889,10 @@ class _RenderTreeBarLayout extends RenderBox
     required EdgeInsets barMargin,
     required Color barColor,
     required Radius borderRadius,
-  })  : _barWidth = barWidth,
-        _barMargin = barMargin,
-        _barColor = barColor,
-        _borderRadius = borderRadius;
+  }) : _barWidth = barWidth,
+       _barMargin = barMargin,
+       _barColor = barColor,
+       _borderRadius = borderRadius;
 
   double _barWidth;
   double get barWidth => _barWidth;
@@ -1019,13 +946,12 @@ class _RenderTreeBarLayout extends RenderBox
       parentUsesSize: true,
     );
 
-    (child!.parentData! as BoxParentData).offset =
-        Offset(barSpaceWidth, barMargin.top);
-
-    size = Size(
-      constraints.maxWidth,
-      child!.size.height,
+    (child!.parentData! as BoxParentData).offset = Offset(
+      barSpaceWidth,
+      barMargin.top,
     );
+
+    size = Size(constraints.maxWidth, child!.size.height);
     size = constraints.constrain(size);
   }
 
@@ -1045,10 +971,7 @@ class _RenderTreeBarLayout extends RenderBox
       size.height - barMargin.vertical,
     );
 
-    final rrect = RRect.fromRectAndRadius(
-      barRect,
-      borderRadius,
-    );
+    final rrect = RRect.fromRectAndRadius(barRect, borderRadius);
 
     context.canvas.drawRRect(rrect, paint);
 
@@ -1107,9 +1030,7 @@ class AddPageDialogue extends HookConsumerWidget {
 
   /// Validates the proposed name for a page.
   /// A name is invalid if it is empty.
-  String? _validateName(
-    String text,
-  ) {
+  String? _validateName(String text) {
     if (text.isEmpty) {
       return "Name cannot be empty";
     }
@@ -1271,9 +1192,7 @@ class RenamePageDialogue extends HookConsumerWidget {
 
   /// Validates the proposed name for a page.
   /// A name is invalid if it is empty or if it already exists.
-  String? _validateName(
-    String text,
-  ) {
+  String? _validateName(String text) {
     if (text.isEmpty) {
       return "Name cannot be empty";
     }
@@ -1407,11 +1326,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
         ),
         LoadingButton.filledIcon(
           controller: controller,
-          onPressed: () async => _changeChapter(
-            ref,
-            chapter.value,
-            changed,
-          ),
+          onPressed: () async => _changeChapter(ref, chapter.value, changed),
           label: const Text("Change"),
           icon: const Icones(Mingcute.pencil_fill),
           style: FilledButton.styleFrom(
@@ -1457,9 +1372,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
     final buttonController = useLoadingButtonController();
 
     return AlertDialog(
-      title: Text(
-        "Change priority of $pageName",
-      ),
+      title: Text("Change priority of $pageName"),
       content: FormattedTextField(
         controller: controller,
         focusNode: focusNode,
@@ -1467,9 +1380,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
         text: priority.toString(),
         hintText: "Priority",
         icon: MaterialSymbols.priority_high_rounded,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r"^-?\d*")),
-        ],
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"^-?\d*"))],
         onSubmitted: (value) async => buttonController.trigger(),
       ),
       actions: [
@@ -1483,11 +1394,8 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
         ),
         LoadingButton.filledIcon(
           controller: buttonController,
-          onPressed: () async => _changePriority(
-            ref,
-            int.parse(controller.text),
-            changed,
-          ),
+          onPressed: () async =>
+              _changePriority(ref, int.parse(controller.text), changed),
           label: const Text("Change"),
           icon: const Icones(Mingcute.pencil_fill),
           style: FilledButton.styleFrom(
@@ -1520,9 +1428,7 @@ Future<bool> showPageDeletionDialogue(
       if (!context.mounted) return;
       final bookId = ref.read(bookIdProvider);
       if (bookId != null) {
-        unawaited(
-          router.push(BookRoute(bookId: bookId)),
-        );
+        unawaited(router.push(BookRoute(bookId: bookId)));
       }
 
       final organizationId = ref.read(organizationIdProvider);
@@ -1538,17 +1444,13 @@ Future<bool> showPageDeletionDialogue(
 }
 
 class PageDrag {
-  const PageDrag({
-    required this.pageId,
-  });
+  const PageDrag({required this.pageId});
 
   final String pageId;
 }
 
 class ChapterDrag {
-  const ChapterDrag({
-    required this.chapter,
-  });
+  const ChapterDrag({required this.chapter});
 
   final String chapter;
 }

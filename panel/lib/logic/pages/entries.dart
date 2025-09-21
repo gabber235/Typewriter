@@ -1,4 +1,5 @@
 import "package:collection/collection.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
@@ -10,6 +11,7 @@ import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
@@ -20,8 +22,18 @@ part "entries.freezed.dart";
 @riverpod
 class PageEntries extends _$PageEntries {
   @override
-  Future<List<String>> build(String pageId) async {
-    // TODO: Fetch entries from the database or any other source
+  Future<List<PageEntry>> build(String pageId) async {
+    // TODO: Fetch entries for this page from the backend
+    throw UnimplementedError();
+  }
+
+  Future<void> moveAll(List<(String, int, int)> changed) async {
+    // TODO: Move all entries in the page
+    throw UnimplementedError();
+  }
+
+  Future<void> resizeAll(List<(String, int, int)> changed) async {
+    // TODO: Resize all entries in the page
     throw UnimplementedError();
   }
 }
@@ -30,19 +42,53 @@ class PageEntries extends _$PageEntries {
 class Entry extends _$Entry {
   @override
   Future<EntryDefinition?> build(String entryId) async {
-    // TODO: Fetch entry from the database or any other source
+    // TODO: Fetch entry from the backend
     throw UnimplementedError();
   }
 
-  /// Update a field value of the entry.
   Future<void> updateFieldValue(String path, dynamic value) async {
+    // TODO: Persist field changes for this entry
     throw UnimplementedError();
   }
 
-  /// Move the entry to a new page.
-  void moveToPage(String pageId) {
+  Future<void> moveToPage(String pageId) async {
+    // TODO: Move this entry to a different page
     throw UnimplementedError();
   }
+}
+
+/// Top-level union used by pages/graph/views to render entries.
+/// - definition: an entry fully defined on the current page
+/// - reference: a reference to an entry defined on a different page
+/// - nonexistent: a dangling reference (entry no longer exists)
+/// - noBlueprint: an entry without a blueprint (blueprint removed/missing)
+@Freezed(unionKey: "_kind")
+abstract class PageEntry with _$PageEntry {
+  const factory PageEntry.definition({required EntryDefinition definition}) =
+      DefinitionPageEntry;
+
+  const factory PageEntry.reference({
+    required String id,
+    required String name,
+    required EntryBlueprint blueprint,
+    required String pageId,
+    @Default([]) List<EntryMetadata> metadata,
+  }) = ReferencePageEntry;
+
+  const factory PageEntry.nonexistent({required String id}) =
+      NonexistentPageEntry;
+
+  const factory PageEntry.noBlueprint({
+    required String id,
+    required String name,
+    required EntryPlacement placement,
+    required List<EntryEdge> inwardEdges,
+    required List<EntryEdge> outwardEdges,
+    @Default([]) List<EntryMetadata> metadata,
+  }) = NoBlueprintPageEntry;
+
+  factory PageEntry.fromJson(Map<String, dynamic> json) =>
+      _$PageEntryFromJson(json);
 }
 
 @freezed
@@ -51,9 +97,28 @@ abstract class EntryDefinition with _$EntryDefinition {
     required String id,
     required String name,
     required EntryBlueprint blueprint,
+    required EntryPlacement placement,
     required DynamicData data,
-    @Default(DynamicData({})) DynamicData metadata,
+    required List<EntryEdge> inwardEdges,
+    required List<EntryEdge> outwardEdges,
+    @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
+
+  factory EntryDefinition.fromJson(Map<String, dynamic> json) =>
+      _$EntryDefinitionFromJson(json);
+}
+
+@freezed
+abstract class EntryPlacement with _$EntryPlacement {
+  const factory EntryPlacement({
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+  }) = _EntryPlacement;
+
+  factory EntryPlacement.fromJson(Map<String, dynamic> json) =>
+      _$EntryPlacementFromJson(json);
 }
 
 @freezed
@@ -71,7 +136,6 @@ abstract class EntryBlueprint with _$EntryBlueprint {
     @Default(null) DataBlueprint? variableDataBlueprint,
     @Default([]) List<ContextKey> contextKeys,
     @Default([]) List<EntryModifier> modifiers,
-    @Default(null) String? wikiUrl,
   }) = _EntryBlueprint;
 
   factory EntryBlueprint.fromJson(Map<String, dynamic> json) =>
@@ -94,12 +158,44 @@ abstract class ContextKey with _$ContextKey {
 abstract class EntryModifier with _$EntryModifier {
   const factory EntryModifier() = _EmptyModifier;
 
-  const factory EntryModifier.deprecated({
-    @Default("") String reason,
-  }) = DeprecatedModifier;
+  const factory EntryModifier.deprecated({@Default("") String reason}) =
+      DeprecatedModifier;
 
   factory EntryModifier.fromJson(Map<String, dynamic> json) =>
       _$EntryModifierFromJson(json);
+}
+
+@freezed
+abstract class EntryEdge with _$EntryEdge {
+  const factory EntryEdge({
+    required String id,
+    required String otherId,
+    required String path,
+  }) = _EntryEdge;
+
+  factory EntryEdge.fromJson(Map<String, dynamic> json) =>
+      _$EntryEdgeFromJson(json);
+}
+
+@Freezed(unionKey: "_kind")
+abstract class EntryMetadata with _$EntryMetadata {
+  const factory EntryMetadata.custom({
+    required String name,
+    required dynamic data,
+  }) = CustomEntryMetadata;
+
+  factory EntryMetadata.fromJson(Map<String, dynamic> json) =>
+      _$EntryMetadataFromJson(json);
+}
+
+extension PageEntryExtension on PageEntry {
+  String get id => switch (this) {
+    DefinitionPageEntry(:final definition) => definition.id,
+    ReferencePageEntry(:final id) => id,
+    NonexistentPageEntry(:final id) => id,
+    NoBlueprintPageEntry(:final id) => id,
+    _ => throw UnimplementedError(),
+  };
 }
 
 extension EntryBlueprintExt on EntryBlueprint {
@@ -109,7 +205,6 @@ extension EntryBlueprintExt on EntryBlueprint {
     final blueprints = genericConstraints;
     if (blueprints == null) return true;
     if (genericBlueprint == null) return false;
-    // If the blueprints is empty, all blueprints are allowed.
     if (blueprints.isEmpty) return true;
     for (final blueprint in blueprints) {
       if (blueprint.matches(genericBlueprint)) return true;
@@ -120,37 +215,25 @@ extension EntryBlueprintExt on EntryBlueprint {
   Map<String, List<M>> fieldsWithModifier<M extends Modifier>() =>
       _fieldsWithModifier<M>("", dataBlueprint);
 
-  /// Parse through the fields of this entry and return a list of all the fields that have the given modifier with [name].
   Map<String, List<M>> _fieldsWithModifier<M extends Modifier>(
     String path,
     DataBlueprint blueprint,
   ) {
-    final fields = {
+    final fields = <String, List<M>>{
       if (blueprint.hasModifier<M>())
         path: blueprint.getModifiers<M>().toList(),
     };
 
     if (blueprint is ObjectBlueprint) {
       for (final field in blueprint.fields.entries) {
-        fields.addAll(
-          _fieldsWithModifier(
-            path.join(field.key),
-            field.value,
-          ),
-        );
+        fields.addAll(_fieldsWithModifier(path.join(field.key), field.value));
       }
     } else if (blueprint is ListBlueprint) {
-      fields.addAll(
-        _fieldsWithModifier(path.join("*"), blueprint.type),
-      );
+      fields.addAll(_fieldsWithModifier(path.join("*"), blueprint.type));
     } else if (blueprint is MapBlueprint) {
       fields
-        ..addAll(
-          _fieldsWithModifier(path, blueprint.key),
-        )
-        ..addAll(
-          _fieldsWithModifier(path.join("*"), blueprint.value),
-        );
+        ..addAll(_fieldsWithModifier(path, blueprint.key))
+        ..addAll(_fieldsWithModifier(path.join("*"), blueprint.value));
     }
 
     return fields;
@@ -168,13 +251,13 @@ extension EntryBlueprintExt on EntryBlueprint {
         info = info.value;
       }
     }
-
     return info;
   }
 
   PageType get pageType {
-    final pageType =
-        PageType.values.firstWhereOrNull((type) => tags.contains(type.tag));
+    final pageType = PageType.values.firstWhereOrNull(
+      (type) => tags.contains(type.tag),
+    );
     if (pageType == null) {
       // TODO: Properly show this toast to a user.
       throw Exception(
@@ -185,11 +268,23 @@ extension EntryBlueprintExt on EntryBlueprint {
   }
 }
 
-class EntryIdentifier extends SelectableIdentifier {
+extension EntryPlacementExtension on EntryPlacement {
+  Offset get center {
+    return Offset(x + width / 2, y + height / 2);
+  }
+
+  double distanceSquaredTo(EntryPlacement other) {
+    return (center - other.center).distanceSquared;
+  }
+}
+
+class EntryIdentifier extends SelectableIdentifier
+    implements GraphIdentifier, GraphDragData {
   const EntryIdentifier(this.id);
 
   @override
   final String id;
+
   @override
   AsyncValue<Selectable<EntryIdentifier>> create(Ref ref) {
     final asyncEntry = ref.watch(entryProvider(id));
@@ -197,23 +292,19 @@ class EntryIdentifier extends SelectableIdentifier {
       if (value == null) {
         throw SelectableNotFoundException(this);
       }
-
-      return EntrySelection(
-        ref: ref,
-        id: this,
-        definition: value,
-      );
+      return EntrySelection(ref: ref, id: this, definition: value);
     });
   }
+
+  @override
+  GraphIdentifier get graphId => this;
 
   @override
   int get hashCode => id.hashCode;
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is EntryIdentifier && other.id == id;
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is EntryIdentifier && other.id == id);
 
   @override
   String toString() => "EntryIdentifier($id)";
@@ -261,10 +352,8 @@ class EntrySelection extends Selectable<EntryIdentifier> {
   int get hashCode => id.hashCode;
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is EntrySelection && other.id == id;
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is EntrySelection && other.id == id);
 
   @override
   String toString() => "EntrySelection($id)";

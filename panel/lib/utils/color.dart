@@ -15,12 +15,16 @@ final safeColors = <Color>[
 ];
 
 extension ColorExtension on Color {
-  Color on(BuildContext context) {
-    final brightness = Theme.brightnessOf(context);
+  Color on(BuildContext context) => onBrightness(Theme.brightnessOf(context));
+  Color onBrightness(Brightness brightness) {
     final schemeVariant = DynamicSchemeVariant.tonalSpot;
     final contrastLevel = 0.0;
-    final scheme =
-        _buildDynamicScheme(brightness, this, schemeVariant, contrastLevel);
+    final scheme = _buildDynamicScheme(
+      brightness,
+      this,
+      schemeVariant,
+      contrastLevel,
+    );
     return Color(MaterialDynamicColors.onPrimary.getArgb(scheme));
   }
 }
@@ -39,49 +43,49 @@ DynamicScheme _buildDynamicScheme(
   final sourceColor = Hct.fromInt(seedColor.toARGB32());
   return switch (schemeVariant) {
     DynamicSchemeVariant.tonalSpot => SchemeTonalSpot(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.fidelity => SchemeFidelity(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.content => SchemeContent(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.monochrome => SchemeMonochrome(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.neutral => SchemeNeutral(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.vibrant => SchemeVibrant(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.expressive => SchemeExpressive(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.rainbow => SchemeRainbow(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
     DynamicSchemeVariant.fruitSalad => SchemeFruitSalad(
-        sourceColorHct: sourceColor,
-        isDark: isDark,
-        contrastLevel: contrastLevel,
-      ),
+      sourceColorHct: sourceColor,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    ),
   };
 }

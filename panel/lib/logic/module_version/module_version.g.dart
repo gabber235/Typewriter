@@ -9,7 +9,8 @@ part of 'module_version.dart';
 _ModuleVersion _$ModuleVersionFromJson(Map<String, dynamic> json) =>
     _ModuleVersion(
       version: const SemverJsonConverter().fromJson(json['version']),
-      state: $enumDecodeNullable(_$ModuleVersionStateEnumMap, json['state']) ??
+      state:
+          $enumDecodeNullable(_$ModuleVersionStateEnumMap, json['state']) ??
           ModuleVersionState.developing,
     );
 

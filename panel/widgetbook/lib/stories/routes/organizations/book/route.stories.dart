@@ -8,25 +8,18 @@ import "package:widgetbook_workspace/widgetbook_utils.dart";
 
 @widgetbook.UseCase(name: "BookPage", type: BookPage)
 Widget bookPageUseCase(BuildContext context) {
-  final pagesState = context.knobs.displayState(label: "Pages State");
-  final entriesState = context.knobs.displayState(label: "Entries State");
-  final selectedPageId = context.knobs.stringOrNull(
-    label: "Selected Page ID",
-    initialValue: null,
-  );
-  final bookId = context.knobs.string(
-    label: "Book ID",
-    initialValue: "example-book-id",
+  final pagesState = context.knobs.displayState(
+    label: "Pages State",
+    initialOption: DisplayState.manyItems,
   );
 
   return FakeApp(
     overrides: [
-      ...allPagesProviderOverrides(
-        pagesState: pagesState,
-        entriesState: entriesState,
-        selectedPageId: selectedPageId,
-        currentBookId: bookId,
-      ),
+      ...entryProviderOverrides(),
+      ...bookPagesProviderOverrides(state: pagesState),
+      ...pagesProviderOverrides(),
+      ...pageIdProviderOverrides(pageId: "example-page-id"),
+      ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: pagesState),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(

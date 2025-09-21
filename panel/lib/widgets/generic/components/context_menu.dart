@@ -18,9 +18,9 @@ class ContextMenuRegion extends HookWidget {
     this.builder,
     super.key,
   }) : assert(
-          items.length > 0 || builder == null,
-          "You cannot have a builder with no items",
-        );
+         items.length > 0 || builder == null,
+         "You cannot have a builder with no items",
+       );
 
   final List<MenuItem> items;
   final bool enableGestures;
@@ -55,9 +55,9 @@ class ContextMenuRegion extends HookWidget {
 
     if (enableGestures) {
       return GestureDetector(
-        onSecondaryTapDown: onSecondaryTapDown(controller),
+        onSecondaryTapUp: onSecondaryTapUp(controller),
         onLongPressStart: onLongPressStart(controller),
-        onTapDown: onTapDown(controller),
+        onTapUp: onTapUp(controller),
         child: menu,
       );
     }
@@ -65,7 +65,7 @@ class ContextMenuRegion extends HookWidget {
     return menu;
   }
 
-  static void Function(TapDownDetails) onSecondaryTapDown(
+  static void Function(TapUpDetails) onSecondaryTapUp(
     MenuController controller,
   ) {
     return (details) {
@@ -81,9 +81,7 @@ class ContextMenuRegion extends HookWidget {
     };
   }
 
-  static void Function() onPress(
-    MenuController controller,
-  ) {
+  static void Function() onPress(MenuController controller) {
     return () {
       if (controller.isOpen) {
         controller.close();
@@ -93,9 +91,9 @@ class ContextMenuRegion extends HookWidget {
     };
   }
 
-  static void Function(TapDownDetails) onTapDown(
+  static void Function(TapUpDetails) onTapUp(
     MenuController controller, {
-    Function(TapDownDetails)? orElse,
+    Function(TapUpDetails)? orElse,
   }) {
     return (details) {
       if (controller.isOpen) {
@@ -114,8 +112,9 @@ class ContextMenuRegion extends HookWidget {
         case TargetPlatform.macOS:
           // Only open the menu on these platforms if the control button is down
           // when the tap occurs.
-          if (HardwareKeyboard.instance.logicalKeysPressed
-                  .contains(LogicalKeyboardKey.controlLeft) ||
+          if (HardwareKeyboard.instance.logicalKeysPressed.contains(
+                LogicalKeyboardKey.controlLeft,
+              ) ||
               HardwareKeyboard.instance.logicalKeysPressed.contains(
                 LogicalKeyboardKey.controlRight,
               )) {
@@ -141,96 +140,96 @@ class ContextMenuRegion extends HookWidget {
     );
     return switch (item) {
       final MenuItemSubmenu submenu => Padding(
-          padding: padding,
-          child: SubmenuButton(
-            leadingIcon: submenu.icon,
-            style: MenuItemButton.styleFrom(
-              foregroundColor: submenu.color,
-              iconColor: submenu.color,
-            ),
-            menuChildren: [
-              for (final (index, item) in submenu.items.indexed)
-                _buildMenuItem(
-                  context,
-                  item,
-                  isFirst: index == 0,
-                  isLast: index == submenu.items.length - 1,
-                ),
-            ],
-            child: Text(submenu.label),
+        padding: padding,
+        child: SubmenuButton(
+          leadingIcon: submenu.icon,
+          style: MenuItemButton.styleFrom(
+            foregroundColor: submenu.color,
+            iconColor: submenu.color,
           ),
+          menuChildren: [
+            for (final (index, item) in submenu.items.indexed)
+              _buildMenuItem(
+                context,
+                item,
+                isFirst: index == 0,
+                isLast: index == submenu.items.length - 1,
+              ),
+          ],
+          child: Text(submenu.label),
         ),
+      ),
       final MenuItemSection section => Padding(
-          padding: padding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (section.label != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                  child: DefaultTextStyle(
-                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                          color: section.color ??
-                              Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.6),
-                        ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (section.icon != null) ...[
-                          IconTheme(
-                            data: IconThemeData(
-                              size: 14,
-                              color: section.color ??
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.6),
-                            ),
-                            child: section.icon!,
+        padding: padding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (section.label != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                child: DefaultTextStyle(
+                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                    color:
+                        section.color ??
+                        Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (section.icon != null) ...[
+                        IconTheme(
+                          data: IconThemeData(
+                            size: 14,
+                            color:
+                                section.color ??
+                                Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
-                          const SizedBox(width: 4),
-                        ],
-                        Text(section.label!),
+                          child: section.icon!,
+                        ),
+                        const SizedBox(width: 4),
                       ],
-                    ),
+                      Text(section.label!),
+                    ],
                   ),
                 ),
-              for (final (index, item) in section.items.indexed)
-                _buildMenuItem(
-                  context,
-                  item,
-                  isFirst: index == 0,
-                  isLast: index == section.items.length - 1,
-                ),
-            ],
-          ),
+              ),
+            for (final (index, item) in section.items.indexed)
+              _buildMenuItem(
+                context,
+                item,
+                isFirst: index == 0,
+                isLast: index == section.items.length - 1,
+              ),
+          ],
         ),
+      ),
       MenuItemDivider() => Divider(
-          radius: BorderRadiusGeometry.circular(20),
-          indent: 4,
-          endIndent: 4,
-          height: 8,
-        ),
+        radius: BorderRadiusGeometry.circular(20),
+        indent: 4,
+        endIndent: 4,
+        height: 8,
+      ),
       final _MenuItem menuItem => Padding(
-          padding: padding,
-          child: MenuItemButton(
-            autofocus: isFirst,
-            leadingIcon: menuItem.icon,
-            onPressed: menuItem.onPressed,
-            style: MenuItemButton.styleFrom(
-              foregroundColor: menuItem.color,
-              iconColor: menuItem.color,
-              disabledIconColor: menuItem.color?.withValues(alpha: 0.6),
-              disabledForegroundColor: menuItem.color?.withValues(alpha: 0.6),
-              disabledMouseCursor: SystemMouseCursors.forbidden,
-            ),
-            child: Text(menuItem.label),
+        padding: padding,
+        child: MenuItemButton(
+          autofocus: isFirst,
+          leadingIcon: menuItem.icon,
+          onPressed: menuItem.onPressed,
+          style: MenuItemButton.styleFrom(
+            foregroundColor: menuItem.color,
+            iconColor: menuItem.color,
+            disabledIconColor: menuItem.color?.withValues(alpha: 0.6),
+            disabledForegroundColor: menuItem.color?.withValues(alpha: 0.6),
+            disabledMouseCursor: SystemMouseCursors.forbidden,
           ),
+          child: Text(menuItem.label),
         ),
+      ),
       MenuItem _ => const SizedBox.shrink(),
     };
   }

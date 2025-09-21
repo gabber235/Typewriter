@@ -7,27 +7,27 @@ part of 'pages.dart';
 // **************************************************************************
 
 _Page _$PageFromJson(Map<String, dynamic> json) => _Page(
-      id: json['id'] as String,
-      pageName: json['name'] as String,
-      type: $enumDecode(_$PageTypeEnumMap, json['type']),
-      color: const NullableColorConverter().fromJson(json['color'] as String?),
-      chapter: json['chapter'] as String? ?? "",
-      priority: (json['priority'] as num?)?.toInt() ?? 0,
-    );
+  id: json['id'] as String,
+  pageName: json['name'] as String,
+  type: $enumDecode(_$PageTypeEnumMap, json['type']),
+  color: const NullableColorConverter().fromJson(json['color'] as String?),
+  chapter: json['chapter'] as String? ?? "",
+  priority: (json['priority'] as num?)?.toInt() ?? 0,
+);
 
 Map<String, dynamic> _$PageToJson(_Page instance) => <String, dynamic>{
-      'id': instance.id,
-      'name': instance.pageName,
-      'type': _$PageTypeEnumMap[instance.type]!,
-      'color': const NullableColorConverter().toJson(instance.color),
-      'chapter': instance.chapter,
-      'priority': instance.priority,
-    };
+  'id': instance.id,
+  'name': instance.pageName,
+  'type': _$PageTypeEnumMap[instance.type]!,
+  'color': const NullableColorConverter().toJson(instance.color),
+  'chapter': instance.chapter,
+  'priority': instance.priority,
+};
 
 const _$PageTypeEnumMap = {
   PageType.sequence: 'sequence',
   PageType.static: 'static',
-  PageType.cinematic: 'cinematic',
+  PageType.scene: 'scene',
   PageType.manifest: 'manifest',
 };
 
@@ -35,25 +35,24 @@ const _$PageTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(BookPages)
 const bookPagesProvider = BookPagesFamily._();
 
 final class BookPagesProvider
     extends $AsyncNotifierProvider<BookPages, List<Page>> {
-  const BookPagesProvider._(
-      {required BookPagesFamily super.from,
-      required (
-        String,
-        String,
-      )
-          super.argument})
-      : super(
-          retry: null,
-          name: r'bookPagesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const BookPagesProvider._({
+    required BookPagesFamily super.from,
+    required (String, String) super.argument,
+  }) : super(
+         retry: null,
+         name: r'bookPagesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$bookPagesHash();
@@ -85,61 +84,47 @@ String _$bookPagesHash() => r'5998f1db0de7f77abfe0de8f7153eda10d281d43';
 final class BookPagesFamily extends $Family
     with
         $ClassFamilyOverride<
-            BookPages,
-            AsyncValue<List<Page>>,
-            List<Page>,
-            FutureOr<List<Page>>,
-            (
-              String,
-              String,
-            )> {
+          BookPages,
+          AsyncValue<List<Page>>,
+          List<Page>,
+          FutureOr<List<Page>>,
+          (String, String)
+        > {
   const BookPagesFamily._()
-      : super(
-          retry: null,
-          name: r'bookPagesProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'bookPagesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  BookPagesProvider call(
-    String bookId,
-    String search,
-  ) =>
-      BookPagesProvider._(argument: (
-        bookId,
-        search,
-      ), from: this);
+  BookPagesProvider call(String bookId, String search) =>
+      BookPagesProvider._(argument: (bookId, search), from: this);
 
   @override
   String toString() => r'bookPagesProvider';
 }
 
 abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
-  late final _$args = ref.$arg as (
-    String,
-    String,
-  );
+  late final _$args = ref.$arg as (String, String);
   String get bookId => _$args.$1;
   String get search => _$args.$2;
 
-  FutureOr<List<Page>> build(
-    String bookId,
-    String search,
-  );
+  FutureOr<List<Page>> build(String bookId, String search);
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(
-      _$args.$1,
-      _$args.$2,
-    );
+    final created = build(_$args.$1, _$args.$2);
     final ref = this.ref as $Ref<AsyncValue<List<Page>>, List<Page>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<Page>>, List<Page>>,
-        AsyncValue<List<Page>>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<Page>>, List<Page>>,
+              AsyncValue<List<Page>>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -148,15 +133,16 @@ abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
 const pagesProvider = PagesFamily._();
 
 final class PagesProvider extends $AsyncNotifierProvider<Pages, Page> {
-  const PagesProvider._(
-      {required PagesFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'pagesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const PagesProvider._({
+    required PagesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'pagesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$pagesHash();
@@ -187,20 +173,23 @@ String _$pagesHash() => r'745cc4d7dccd6a80501df39a14b35f203be981f6';
 
 final class PagesFamily extends $Family
     with
-        $ClassFamilyOverride<Pages, AsyncValue<Page>, Page, FutureOr<Page>,
-            String> {
+        $ClassFamilyOverride<
+          Pages,
+          AsyncValue<Page>,
+          Page,
+          FutureOr<Page>,
+          String
+        > {
   const PagesFamily._()
-      : super(
-          retry: null,
-          name: r'pagesProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'pagesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  PagesProvider call(
-    String pageId,
-  ) =>
+  PagesProvider call(String pageId) =>
       PagesProvider._(argument: pageId, from: this);
 
   @override
@@ -211,21 +200,20 @@ abstract class _$Pages extends $AsyncNotifier<Page> {
   late final _$args = ref.$arg as String;
   String get pageId => _$args;
 
-  FutureOr<Page> build(
-    String pageId,
-  );
+  FutureOr<Page> build(String pageId);
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(
-      _$args,
-    );
+    final created = build(_$args);
     final ref = this.ref as $Ref<AsyncValue<Page>, Page>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<Page>, Page>,
-        AsyncValue<Page>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<Page>, Page>,
+              AsyncValue<Page>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -237,15 +225,15 @@ final class PageIdProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
   const PageIdProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'pageIdProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pageIdProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$pageIdHash();
@@ -270,6 +258,3 @@ final class PageIdProvider
 }
 
 String _$pageIdHash() => r'6970b1c111fe430c608c6b1dbc7b3733c5c7798c';
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

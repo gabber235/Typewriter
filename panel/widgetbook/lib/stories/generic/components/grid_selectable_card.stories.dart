@@ -41,6 +41,7 @@ Widget gridSelectableCardDefaultUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
       child: Selector(
+        focusNode: FocusNode(),
         selectableId: TestSelectableIdentifier(
           id: "grid_selectable_card",
           color: baseColor,
@@ -87,6 +88,7 @@ Widget gridSelectableCardGridUseCase(BuildContext context) {
           children: List.generate(safeColors.length, (i) {
             final color = safeColors[i];
             return Selector(
+              focusNode: FocusNode(),
               selectableId: TestSelectableIdentifier(
                 id: "item_$i",
                 color: color,

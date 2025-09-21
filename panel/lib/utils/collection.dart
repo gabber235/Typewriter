@@ -45,6 +45,10 @@ extension ListX<T> on List<T> {
     }
     return result;
   }
+
+  Iterable<T> intersection(List<T> other) {
+    return where((e) => other.contains(e));
+  }
 }
 
 extension IterableX<T> on Iterable<T> {
@@ -60,4 +64,8 @@ extension IterableX<T> on Iterable<T> {
 
   /// Are all of a given type [T]. Returns false if the selection is empty.
   bool allAre<S extends T>() => isNotEmpty && every((t) => t is S);
+}
+
+extension EntryMapIterable<K, V> on Iterable<MapEntry<K, V>> {
+  Map<K, V> toMap() => Map.fromEntries(this);
 }

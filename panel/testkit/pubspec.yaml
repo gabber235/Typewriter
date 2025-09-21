@@ -20,6 +20,7 @@ dependencies:
   iconify_flutter_plus:
   logto_dart_sdk:
   pub_semver:
+  collection: ^1.19.1
 
 dev_dependencies:
   build_runner:

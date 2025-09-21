@@ -27,14 +27,13 @@ abstract class Page with _$Page {
 enum PageType {
   sequence("trigger", ["triggerable"], Fa6Solid.diagram_project, Colors.blue),
   static("static", [], Ph.push_pin_fill, Colors.deepPurple),
-  cinematic("cinematic", [], Fa6Solid.film, Colors.orange),
+  scene("scene", [], Fa6Solid.film, Colors.orange),
   manifest(
     "manifest",
     ["manifest", "audience"],
     IconParkSolid.chart_graph,
     Colors.green,
-  ),
-  ;
+  );
 
   const PageType(this.tag, this.linkingTags, this.icon, this.color);
 

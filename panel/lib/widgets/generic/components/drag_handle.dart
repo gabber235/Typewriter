@@ -2,6 +2,8 @@ import "dart:math" show min;
 
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 
 typedef SizeGetter = double Function();
 typedef SizeChanged = void Function(double size);
@@ -15,7 +17,7 @@ typedef SizeResolver = double Function(double startSize, double delta);
 /// - Customizable hit area thickness ([hitThickness]) and visible handle thickness ([handleThickness]).
 /// - Shows the handle bar on hover or while dragging. Set [showOnHover] to false to always show the bar.
 /// - Use [sizeResolver] to customize how drag delta maps to size changes (e.g., invert direction).
-class DragHandle extends HookWidget {
+class DragHandle extends HookConsumerWidget {
   const DragHandle({
     required this.axis,
     required this.getSize,
@@ -35,6 +37,8 @@ class DragHandle extends HookWidget {
     this.cursor,
     this.animationDuration = const Duration(milliseconds: 200),
     this.animationCurve = Curves.easeOut,
+    this.onDragStart,
+    this.onDragEnd,
   });
 
   /// The drag direction.
@@ -91,8 +95,14 @@ class DragHandle extends HookWidget {
   /// Animation curve for show/hide of the visible bar.
   final Curve animationCurve;
 
+  /// Optional callback when a drag starts.
+  final VoidCallback? onDragStart;
+
+  /// Optional callback when a drag stops.
+  final VoidCallback? onDragEnd;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (!enabled) return const SizedBox.shrink();
 
     final hovering = useState(false);
@@ -103,10 +113,18 @@ class DragHandle extends HookWidget {
     final showHandle =
         (showOnHover && (hovering.value || isDragging.value)) || !showOnHover;
 
+    final defaultCursor = axis == Axis.horizontal
+        ? SystemMouseCursors.resizeColumn
+        : SystemMouseCursors.resizeRow;
+
     void onStart(DragStartDetails details) {
       startSize.value = getSize();
       startPosition.value = details.globalPosition;
       isDragging.value = true;
+      onDragStart?.call();
+      ref
+          .read(cursorControllerProvider.notifier)
+          .cursor(cursor ?? defaultCursor);
     }
 
     void onUpdate(DragUpdateDetails details) {
@@ -132,11 +150,9 @@ class DragHandle extends HookWidget {
       startSize.value = 0.0;
       startPosition.value = Offset.zero;
       isDragging.value = false;
+      onDragEnd?.call();
+      ref.read(cursorControllerProvider.notifier).reset();
     }
-
-    final defaultCursor = axis == Axis.horizontal
-        ? SystemMouseCursors.resizeColumn
-        : SystemMouseCursors.resizeRow;
 
     final barColor =
         color ?? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3);

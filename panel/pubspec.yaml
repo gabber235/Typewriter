@@ -4,14 +4,14 @@ publish_to: "none"
 version: 1000.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.8.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  hooks_riverpod: ^3.0.0-dev.16
-  riverpod_annotation: ^3.0.0-dev.16
+  hooks_riverpod: ^3.0.0
+  riverpod_annotation: ^3.0.0
   flutter_hooks: ^0.21.2
   auto_route: ^10.0.0
   logto_dart_sdk: ^3.0.0
@@ -35,6 +35,7 @@ dependencies:
   pub_semver: ^2.2.0
   material_color_utilities:
   vector_math: ^2.2.0
+  flutter_svg: ^2.2.1
 
 dev_dependencies:
   flutter_test:

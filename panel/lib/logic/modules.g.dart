@@ -7,23 +7,24 @@ part of 'modules.dart';
 // **************************************************************************
 
 _Module _$ModuleFromJson(Map<String, dynamic> json) => _Module(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      type: $enumDecode(_$ModuleTypeEnumMap, json['type']),
-      shortDescription: json['shortDescription'] as String? ?? "",
-      versions: (json['versions'] as List<dynamic>?)
-              ?.map((e) => ModuleVersion.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <ModuleVersion>[],
-    );
+  id: json['id'] as String,
+  name: json['name'] as String,
+  type: $enumDecode(_$ModuleTypeEnumMap, json['type']),
+  shortDescription: json['shortDescription'] as String? ?? "",
+  versions:
+      (json['versions'] as List<dynamic>?)
+          ?.map((e) => ModuleVersion.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <ModuleVersion>[],
+);
 
 Map<String, dynamic> _$ModuleToJson(_Module instance) => <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'type': _$ModuleTypeEnumMap[instance.type]!,
-      'shortDescription': instance.shortDescription,
-      'versions': instance.versions.map((e) => e.toJson()).toList(),
-    };
+  'id': instance.id,
+  'name': instance.name,
+  'type': _$ModuleTypeEnumMap[instance.type]!,
+  'shortDescription': instance.shortDescription,
+  'versions': instance.versions.map((e) => e.toJson()).toList(),
+};
 
 const _$ModuleTypeEnumMap = {
   ModuleType.engine: 'engine',
@@ -34,7 +35,10 @@ const _$ModuleTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 /// Provides the list of available modules.
+
 @ProviderFor(Modules)
 const modulesProvider = ModulesProvider._();
 
@@ -43,15 +47,15 @@ final class ModulesProvider
     extends $AsyncNotifierProvider<Modules, List<Module>> {
   /// Provides the list of available modules.
   const ModulesProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'modulesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'modulesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$modulesHash();
@@ -63,6 +67,8 @@ final class ModulesProvider
 
 String _$modulesHash() => r'be8391aa51fe7287f7316612a3cbbce03b019f11';
 
+/// Provides the list of available modules.
+
 abstract class _$Modules extends $AsyncNotifier<List<Module>> {
   FutureOr<List<Module>> build();
   @$mustCallSuper
@@ -70,34 +76,44 @@ abstract class _$Modules extends $AsyncNotifier<List<Module>> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<Module>>, List<Module>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<Module>>, List<Module>>,
-        AsyncValue<List<Module>>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<Module>>, List<Module>>,
+              AsyncValue<List<Module>>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
 
 /// Filtered modules by (case-insensitive) query against name and tags (future).
+
 @ProviderFor(filteredModules)
 const filteredModulesProvider = FilteredModulesFamily._();
 
 /// Filtered modules by (case-insensitive) query against name and tags (future).
-final class FilteredModulesProvider extends $FunctionalProvider<
-        AsyncValue<List<Module>>, List<Module>, FutureOr<List<Module>>>
+
+final class FilteredModulesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Module>>,
+          List<Module>,
+          FutureOr<List<Module>>
+        >
     with $FutureModifier<List<Module>>, $FutureProvider<List<Module>> {
   /// Filtered modules by (case-insensitive) query against name and tags (future).
-  const FilteredModulesProvider._(
-      {required FilteredModulesFamily super.from,
-      required String super.argument})
-      : super(
-          retry: null,
-          name: r'filteredModulesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const FilteredModulesProvider._({
+    required FilteredModulesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'filteredModulesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$filteredModulesHash();
@@ -112,16 +128,13 @@ final class FilteredModulesProvider extends $FunctionalProvider<
   @$internal
   @override
   $FutureProviderElement<List<Module>> $createElement(
-          $ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Module>> create(Ref ref) {
     final argument = this.argument as String;
-    return filteredModules(
-      ref,
-      argument,
-    );
+    return filteredModules(ref, argument);
   }
 
   @override
@@ -138,21 +151,21 @@ final class FilteredModulesProvider extends $FunctionalProvider<
 String _$filteredModulesHash() => r'627cfd3343693f1126084e587b80a13568cf4066';
 
 /// Filtered modules by (case-insensitive) query against name and tags (future).
+
 final class FilteredModulesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Module>>, String> {
   const FilteredModulesFamily._()
-      : super(
-          retry: null,
-          name: r'filteredModulesProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'filteredModulesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   /// Filtered modules by (case-insensitive) query against name and tags (future).
-  FilteredModulesProvider call(
-    String query,
-  ) =>
+
+  FilteredModulesProvider call(String query) =>
       FilteredModulesProvider._(argument: query, from: this);
 
   @override
@@ -160,23 +173,26 @@ final class FilteredModulesFamily extends $Family
 }
 
 /// Fetch a single module by id.
+
 @ProviderFor(module)
 const moduleProvider = ModuleFamily._();
 
 /// Fetch a single module by id.
+
 final class ModuleProvider
     extends $FunctionalProvider<AsyncValue<Module?>, Module?, FutureOr<Module?>>
     with $FutureModifier<Module?>, $FutureProvider<Module?> {
   /// Fetch a single module by id.
-  const ModuleProvider._(
-      {required ModuleFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'moduleProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const ModuleProvider._({
+    required ModuleFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'moduleProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$moduleHash();
@@ -196,10 +212,7 @@ final class ModuleProvider
   @override
   FutureOr<Module?> create(Ref ref) {
     final argument = this.argument as String;
-    return module(
-      ref,
-      argument,
-    );
+    return module(ref, argument);
   }
 
   @override
@@ -216,25 +229,22 @@ final class ModuleProvider
 String _$moduleHash() => r'44b6ec4187fe26392f1c20585619eb180cb1c67d';
 
 /// Fetch a single module by id.
+
 final class ModuleFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Module?>, String> {
   const ModuleFamily._()
-      : super(
-          retry: null,
-          name: r'moduleProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'moduleProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   /// Fetch a single module by id.
-  ModuleProvider call(
-    String id,
-  ) =>
-      ModuleProvider._(argument: id, from: this);
+
+  ModuleProvider call(String id) => ModuleProvider._(argument: id, from: this);
 
   @override
   String toString() => r'moduleProvider';
 }
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

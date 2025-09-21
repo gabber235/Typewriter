@@ -52,6 +52,7 @@ class Nats extends _$Nats {
           jwt: _natsSentinelJwt,
           user: user.username ?? user.name ?? user.sub,
           pass: token,
+          // ignore: only_use_keep_alive_inside_keep_alive
           nkey: ref.watch(organizationIdProvider),
         ),
       ),
