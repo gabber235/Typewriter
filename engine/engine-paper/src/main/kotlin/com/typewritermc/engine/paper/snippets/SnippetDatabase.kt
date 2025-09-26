@@ -31,16 +31,7 @@ class SnippetDatabaseImpl : SnippetDatabase, KoinComponent {
         val cached = cache[path]
         if (cached != null) return cached
 
-        val value = ymlConfiguration.get(path)
-
-        if (value == null) {
-            ymlConfiguration.set(path, default)
-            if (comment.isNotBlank()) {
-                ymlConfiguration.setComments(path, comment.lines())
-            }
-            ymlConfiguration.save(file)
-            return default
-        }
+        val value = ymlConfiguration.get(path) ?: return default
 
         cache[path] = value
         return value
@@ -49,21 +40,20 @@ class SnippetDatabaseImpl : SnippetDatabase, KoinComponent {
     override fun <T : Any> getSnippet(path: String, klass: KClass<T>, default: T, comment: String): T {
         val value = get(path, default, comment)
 
-        val casted = klass.safeCast(value)
-
-        if (casted == null) {
-            ymlConfiguration.set(path, default)
-            if (comment.isNotBlank()) {
-                ymlConfiguration.setComments(path, comment.lines())
-            }
-            ymlConfiguration.save(file)
-            return default
-        }
+        val casted = klass.safeCast(value) ?: return default
 
         return casted
     }
 
     override fun registerSnippet(path: String, defaultValue: Any, comment: String) {
-        get(path, defaultValue, comment)
+        if (ymlConfiguration.contains(path)) return
+
+        ymlConfiguration.set(path, defaultValue)
+        if (comment.isNotBlank()) {
+            ymlConfiguration.setComments(path, comment.lines())
+        }
+        ymlConfiguration.save(file)
+
+        cache[path] = defaultValue
     }
 }

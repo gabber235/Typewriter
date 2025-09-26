@@ -84,6 +84,9 @@ enum class ModifierOperator {
     @SerializedName("+")
     ADD,
 
+    @SerializedName("-")
+    SUBTRACT,
+
     @SerializedName("*")
     MULTIPLY,
     ;

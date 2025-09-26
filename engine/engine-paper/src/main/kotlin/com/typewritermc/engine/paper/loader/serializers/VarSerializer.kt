@@ -39,8 +39,16 @@ class VarSerializer : DataSerializer<Var<*>> {
         val actualType = (typeOfT as? ParameterizedType)?.actualTypeArguments?.get(0)
             ?: throw IllegalArgumentException("Could not find actual type for Var")
 
-        if (actualType !is Class<*>) {
-            throw IllegalArgumentException("Actual type for Var must be a class but was ${actualType::class.qualifiedName}")
+        val clazz = when (actualType) {
+            is Class<*> -> actualType
+            is ParameterizedType -> {
+                when (val type = actualType.rawType) {
+                    is Class<*> -> type
+                    else -> throw IllegalArgumentException("Actual type for Var must be a class but was ${type::class.qualifiedName}")
+                }
+            }
+
+            else -> throw IllegalArgumentException("Actual type for Var must be a class but was ${type::class.qualifiedName}")
         }
 
 
@@ -57,6 +65,7 @@ class VarSerializer : DataSerializer<Var<*>> {
         val refId = obj.getAsJsonPrimitive("ref").asString
         val data = obj.get("data")
         val ref = Ref(refId, VariableEntry::class)
-        return BackedVar(ref, Generic(data), actualType.kotlin)
+
+        return BackedVar(ref, Generic(data), clazz.kotlin)
     }
 }

@@ -14,9 +14,7 @@ import com.typewritermc.engine.paper.facts.FactData
 import com.typewritermc.engine.paper.facts.FactId
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toKotlinDuration
 
 @Entry("timed_fact", "Saved for a specified duration, like 20 minutes", Colors.PURPLE, "bi:stopwatch-fill")
@@ -54,7 +52,7 @@ class TimedFactEntry(
                             return@supplyPlayer "now"
                         }
                         val difference =
-                            Duration.between(now ,expires).toKotlinDuration()
+                            Duration.between(now, expires).toKotlinDuration()
 
                         difference.formatCompact()
                     }

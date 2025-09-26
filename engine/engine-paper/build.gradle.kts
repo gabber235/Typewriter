@@ -160,9 +160,9 @@ paperPluginYaml {
     foliaSupported = false
 
     dependencies {
-        server("packetevents", load = PaperPluginYaml.Load.AFTER, required = true, joinClasspath = true)
-        server("PlaceholderAPI", load = PaperPluginYaml.Load.AFTER, required = false, joinClasspath = true)
-        server("floodgate", load = PaperPluginYaml.Load.AFTER, required = false, joinClasspath = true)
+        server("packetevents", load = PaperPluginYaml.Load.BEFORE, required = true, joinClasspath = true)
+        server("PlaceholderAPI", load = PaperPluginYaml.Load.BEFORE, required = false, joinClasspath = true)
+        server("floodgate", load = PaperPluginYaml.Load.BEFORE, required = false, joinClasspath = true)
     }
 
     loader = "com.typewritermc.engine.paper.TypewriterPaperLoader"
