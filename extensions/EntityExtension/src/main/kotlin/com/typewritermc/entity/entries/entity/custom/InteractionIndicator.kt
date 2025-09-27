@@ -41,7 +41,7 @@ class InteractionIndicatorDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     val definition: Ref<EntityDefinitionEntry> = emptyRef(),
     @OnlyTags("generic_entity_data", "display_data", "text_display_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),

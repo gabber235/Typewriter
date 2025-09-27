@@ -1,10 +1,10 @@
 package com.typewritermc.basic.entries.action
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
-import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
@@ -12,7 +12,6 @@ import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.utils.Sound
 import com.typewritermc.engine.paper.utils.playSound
-import org.bukkit.entity.Player
 
 @Entry("play_sound", "Play sound at player, or location", Colors.RED, "fa6-solid:volume-high")
 /**
@@ -31,6 +30,6 @@ class PlaySoundActionEntry(
     val sound: Var<Sound> = ConstVar(Sound.EMPTY),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        player.playSound(sound.get(player, context))
+        player.playSound(sound.get(player, context), context)
     }
 }

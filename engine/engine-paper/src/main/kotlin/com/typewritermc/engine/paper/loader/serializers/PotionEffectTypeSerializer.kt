@@ -11,15 +11,20 @@ import java.lang.reflect.Type
 class PotionEffectTypeSerializer : DataSerializer<PotionEffectType> {
     override val type: Type = PotionEffectType::class.java
 
-    override fun serialize(src: PotionEffectType?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        return JsonPrimitive(src?.name ?: "speed")
+    override fun serialize(src: PotionEffectType, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        @Suppress("DEPRECATION")
+        return JsonPrimitive(src.name)
     }
 
     override fun deserialize(
-        json: JsonElement?,
-        typeOfT: Type?,
-        context: JsonDeserializationContext?
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
     ): PotionEffectType {
-        return PotionEffectType.getByName(json?.asString ?: "speed") ?: PotionEffectType.SPEED
+        if (!json.isJsonPrimitive || !json.asJsonPrimitive.isString) {
+            return PotionEffectType.SPEED
+        }
+        @Suppress("DEPRECATION")
+        return PotionEffectType.getByName(json.asString) ?: PotionEffectType.SPEED
     }
 }

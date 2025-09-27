@@ -17,12 +17,7 @@ import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
 import com.typewritermc.entity.entries.data.minecraft.living.applyAgeableData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
-import com.typewritermc.entity.entries.data.minecraft.living.bee.AngryProperty
-import com.typewritermc.entity.entries.data.minecraft.living.bee.NectarProperty
-import com.typewritermc.entity.entries.data.minecraft.living.bee.StungProperty
-import com.typewritermc.entity.entries.data.minecraft.living.bee.applyBeeAngryData
-import com.typewritermc.entity.entries.data.minecraft.living.bee.applyBeeStungData
-import com.typewritermc.entity.entries.data.minecraft.living.bee.applyBeeNectarData
+import com.typewritermc.entity.entries.data.minecraft.living.bee.*
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
@@ -38,7 +33,7 @@ class BeeDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "ageable_data", "bee_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {

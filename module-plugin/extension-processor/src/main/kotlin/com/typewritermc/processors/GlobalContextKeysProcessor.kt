@@ -40,7 +40,7 @@ class GlobalContextKeysProcessor(
         return symbols
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     @OptIn(KspExperimental::class)
     private fun generateGlobalKeyBlueprint(clazz: KSClassDeclaration): JsonElement {
         logger.info("Generating global key blueprint for ${clazz.simpleName.asString()}")

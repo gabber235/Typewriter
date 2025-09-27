@@ -13,11 +13,12 @@ import kotlinx.serialization.json.JsonObject
 object ClosedRangeEditor : CustomEditor {
     override val id: String = "closedRange"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassIs ClosedRange::class
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         val argumentType = type.arguments.firstOrNull()?.type?.resolve()
             ?: throw IllegalStateException("Expected ClosedRange to have a single argument")
         val blueprint = DataBlueprint.blueprint(argumentType)
@@ -31,7 +32,7 @@ object ClosedRangeEditor : CustomEditor {
         )
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         val argumentType = type.arguments.firstOrNull()?.type?.resolve()
             ?: throw IllegalStateException("Expected ClosedRange to have a single argument")
         val blueprint = DataBlueprint.blueprint(argumentType)

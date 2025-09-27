@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 object GeneratedModifierComputer : DataModifierComputer<Generated> {
     override val annotationClass: KClass<Generated> = Generated::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Generated): Result<DataModifier> {
         // If the field is wrapped in a list or other container, we try if the inner type can be modified
         innerCompute(blueprint, annotation)?.let { return ok(it) }

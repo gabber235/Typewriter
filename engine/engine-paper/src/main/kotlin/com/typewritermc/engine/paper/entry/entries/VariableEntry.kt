@@ -57,7 +57,7 @@ fun <T : Any> Var<T>.get(player: Player?, interactionContext: InteractionContext
     contract {
         returns(null) implies (player == null)
     }
-    if (this is ConstVar<*>) return this.value as T
+    if (this is ConstVar<T>) return this.value
     if (player == null) return null
     return get(player, interactionContext)
 }
@@ -85,9 +85,9 @@ class BackedVar<T : Any>(
     }
 }
 
-class MappedVar<T : Any>(
-    private val variable: Var<T>,
-    private val mapper: (Player, T) -> T,
+class MappedVar<S : Any, T : Any>(
+    private val variable: Var<S>,
+    private val mapper: (Player, S) -> T,
 ) : Var<T> {
     override fun get(player: Player, interactionContext: InteractionContext?): T {
         return mapper(player, variable.get(player, interactionContext))
@@ -98,7 +98,7 @@ class MappedVar<T : Any>(
     }
 }
 
-fun <T : Any> Var<T>.map(mapper: (Player, T) -> T): Var<T> = MappedVar(this, mapper)
+fun <S : Any, T : Any> Var<S>.map(mapper: (Player, S) -> T): Var<T> = MappedVar(this, mapper)
 
 class ComputeVar<T : Any>(
     private val compute: (Player, InteractionContext?) -> T,

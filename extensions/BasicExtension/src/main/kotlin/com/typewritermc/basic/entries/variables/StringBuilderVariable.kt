@@ -23,13 +23,13 @@ private class StringBuilderVariable(
         val data = context.getData<StringBuilderVariableData>()
             ?: throw ContextDataNotFoundException(context.klass, context.data, id)
 
-        val text = data.text.parsePlaceholders(context.player)
+        val text = data.text
         val parts = data.parts + parts
 
         val replacedText = parts.fold(text) { text, part ->
             text.replace("<${part.key}>", part.value.get(context.player, context.interactionContext))
         }
-        return context.cast(replacedText)
+        return context.cast(replacedText.parsePlaceholders(context.player))
     }
 }
 

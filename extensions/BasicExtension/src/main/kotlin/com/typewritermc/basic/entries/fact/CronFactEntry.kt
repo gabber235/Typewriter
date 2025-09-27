@@ -53,7 +53,7 @@ class CronFactEntry(
                             return@supplyPlayer "now"
                         }
                         val difference =
-                            Duration.between(lastUpdate, now).toKotlinDuration()
+                            Duration.between(now, expires).toKotlinDuration()
 
                         difference.formatCompact()
                     }

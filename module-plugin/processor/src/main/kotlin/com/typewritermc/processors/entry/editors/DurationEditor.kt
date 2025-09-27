@@ -19,14 +19,19 @@ import java.time.Duration
 object DurationEditor : CustomEditor {
     override val id: String = "duration"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassIs Duration::class
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement = JsonPrimitive(1000)
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint = PrimitiveBlueprint(PrimitiveType.INTEGER)
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement = JsonPrimitive(1000)
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint =
+        PrimitiveBlueprint(PrimitiveType.INTEGER)
 
-    context(KSPLogger, Resolver) override fun validateDefault(type: KSType, default: JsonElement): Result<Unit> {
+    context(logger: KSPLogger, resolver: Resolver) override fun validateDefault(
+        type: KSType,
+        default: JsonElement
+    ): Result<Unit> {
         val result = super.validateDefault(type, default)
         if (result.isFailure) return result
         val duration = Duration.ofMillis(default.jsonPrimitive.long)

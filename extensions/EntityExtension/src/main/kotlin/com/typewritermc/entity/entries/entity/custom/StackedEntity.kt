@@ -1,9 +1,9 @@
 package com.typewritermc.entity.entries.entity.custom
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.entity.EntityState
 import com.typewritermc.engine.paper.entry.entity.FakeEntity
 import com.typewritermc.engine.paper.entry.entity.PositionProperty
@@ -33,7 +33,7 @@ class StackedEntityDefinition(
     val definitions: List<Ref<EntityDefinitionEntry>> = emptyList(),
 ) : EntityDefinitionEntry {
     override val displayName: Var<String> get() = definitions.firstOrNull()?.get()?.displayName ?: ConstVar("")
-    override val sound: Sound get() = definitions.firstOrNull()?.get()?.sound ?: Sound.EMPTY
+    override val sound: Var<Sound> get() = definitions.firstOrNull()?.get()?.sound ?: ConstVar(Sound.EMPTY)
     override val data: List<Ref<EntityData<*>>>
         get() = definitions.mapNotNull { it.get() }.flatMap { it.data }
 

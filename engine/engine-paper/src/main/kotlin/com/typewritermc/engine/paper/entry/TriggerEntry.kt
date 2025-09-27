@@ -1,17 +1,16 @@
 package com.typewritermc.engine.paper.entry
 
-import com.google.gson.annotations.SerializedName
 import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.EntryContextBuilder
 import com.typewritermc.core.interaction.InteractionBound
+import com.typewritermc.core.interaction.InteractionContext
+import com.typewritermc.core.interaction.withContext
 import com.typewritermc.engine.paper.entry.dialogue.DialogueTrigger
 import com.typewritermc.engine.paper.entry.entries.EntryTrigger
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
-import com.typewritermc.core.interaction.InteractionContext
-import com.typewritermc.core.interaction.withContext
 import com.typewritermc.engine.paper.interaction.PlayerSessionManager
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
@@ -77,7 +76,11 @@ fun <E : TriggerEntry> List<E>.triggerAllFor(player: Player, context: Interactio
 inline fun <reified E : TriggerEntry> List<E>.triggerAllFor(player: Player, builder: EntryContextBuilder<E>) {
     val triggers = this.flatMap { it.eventTriggers }
     if (triggers.isEmpty()) return
-    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, this.withContext(builder), triggers)
+    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(
+        player,
+        this.withContext(builder),
+        triggers
+    )
 }
 
 /**
@@ -115,7 +118,11 @@ inline fun <reified E : TriggerEntry> Sequence<E>.triggerAllFor(player: Player, 
     val entries = toList()
     val triggers = entries.flatMap { it.eventTriggers }
     if (triggers.isEmpty()) return
-    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, entries.withContext(builder), triggers)
+    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(
+        player,
+        entries.withContext(builder),
+        triggers
+    )
 }
 
 /**
@@ -152,7 +159,11 @@ fun <E : TriggerEntry> E.triggerAllFor(player: Player, context: InteractionConte
 inline fun <reified E : TriggerEntry> E.triggerAllFor(player: Player, builder: EntryContextBuilder<E>) {
     val triggers = this.eventTriggers
     if (triggers.isEmpty()) return
-    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, this.withContext(builder), triggers)
+    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(
+        player,
+        this.withContext(builder),
+        triggers
+    )
 }
 
 /**
@@ -188,10 +199,17 @@ fun List<Ref<out TriggerableEntry>>.triggerEntriesFor(player: Player, context: I
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-inline fun <reified E : TriggerableEntry> List<Ref<E>>.triggerEntriesFor(player: Player, builder: EntryContextBuilder<E>) {
+inline fun <reified E : TriggerableEntry> List<Ref<E>>.triggerEntriesFor(
+    player: Player,
+    builder: EntryContextBuilder<E>
+) {
     val triggers = eventTriggers
     if (triggers.isEmpty()) return
-    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, this.withContext(builder), triggers)
+    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(
+        player,
+        this.withContext(builder),
+        triggers
+    )
 }
 
 /**
@@ -227,11 +245,18 @@ fun Sequence<Ref<out TriggerableEntry>>.triggerEntriesFor(player: Player, contex
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-inline fun <reified E : TriggerableEntry> Sequence<Ref<E>>.triggerEntriesFor(player: Player, builder: EntryContextBuilder<E>) {
+inline fun <reified E : TriggerableEntry> Sequence<Ref<E>>.triggerEntriesFor(
+    player: Player,
+    builder: EntryContextBuilder<E>
+) {
     val entries = toList()
     val triggers = entries.eventTriggers
     if (triggers.isEmpty()) return
-    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, entries.withContext(builder), triggers)
+    get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(
+        player,
+        entries.withContext(builder),
+        triggers
+    )
 }
 
 /**
@@ -294,7 +319,8 @@ fun EventTrigger.triggerFor(player: Player, context: InteractionContext) = listO
  * trigger.forceTriggerFor(player, context())
  * ```
  */
-suspend fun EventTrigger.forceTriggerFor(player: Player, context: InteractionContext) = listOf(this).forceTriggerFor(player, context)
+suspend fun EventTrigger.forceTriggerFor(player: Player, context: InteractionContext) =
+    listOf(this).forceTriggerFor(player, context)
 
 /**
  * Trigger all triggers for a player.
@@ -395,7 +421,7 @@ fun <E : TriggerEntry> Sequence<E>.startDialogueWithOrTrigger(
  * ```
  */
 fun <E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(player: Player, context: InteractionContext) =
-    startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_COMPLETE, context)
+    startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_SKIP_ANIMATION, context)
 
 /**
  * If the player is not in a dialogue, trigger all triggers for all entries in a list.
@@ -414,9 +440,11 @@ fun <E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(player: Player, c
  * }
  * ```
  */
-inline fun <reified E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(player: Player, builder: EntryContextBuilder<E>) =
-    startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_COMPLETE, this.withContext(builder))
-
+inline fun <reified E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(
+    player: Player,
+    builder: EntryContextBuilder<E>
+) =
+    startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_SKIP_ANIMATION, this.withContext(builder))
 
 
 /**
@@ -435,7 +463,7 @@ inline fun <reified E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(pl
  * ```
  */
 fun <E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(player: Player, context: InteractionContext) =
-    toList().startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_COMPLETE, context)
+    toList().startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_SKIP_ANIMATION, context)
 
 /**
  * If the player is not in a dialogue, trigger all triggers for all entries in a sequence.
@@ -454,9 +482,12 @@ fun <E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(player: Playe
  * }
  * ```
  */
-inline fun <reified E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(player: Player, builder: EntryContextBuilder<E>) {
+inline fun <reified E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(
+    player: Player,
+    builder: EntryContextBuilder<E>
+) {
     val entries = toList()
-    entries.startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_COMPLETE, entries.withContext(builder))
+    entries.startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_SKIP_ANIMATION, entries.withContext(builder))
 }
 
 val Sequence<Ref<out TriggerableEntry>>.eventTriggers: Sequence<EventTrigger>

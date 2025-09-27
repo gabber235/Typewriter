@@ -13,15 +13,16 @@ import kotlinx.serialization.json.JsonElement
 object GlobalContextKeyEditor : CustomEditor {
     override val id: String = "globalContextKey"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassIs GlobalContextKey::class
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         return shape(type).default()
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         return DataBlueprint.PrimitiveBlueprint(PrimitiveType.STRING)
     }
 }

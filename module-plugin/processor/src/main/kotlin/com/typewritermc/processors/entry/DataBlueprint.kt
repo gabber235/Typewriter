@@ -7,8 +7,8 @@ import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
-import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.processors.format
@@ -28,17 +28,22 @@ val blueprintJson = Json {
 @Serializable
 sealed class DataBlueprint {
     companion object {
-        context(KSPLogger, Resolver)
+        context(logger: KSPLogger, resolver: Resolver)
         fun blueprint(type: KSType): DataBlueprint? {
-            CustomBlueprint.blueprint(type)?.let { return it }
-            PrimitiveBlueprint.blueprint(type)?.let { return it }
-            EnumBlueprint.blueprint(type)?.let { return it }
-            ListBlueprint.blueprint(type)?.let { return it }
-            MapBlueprint.blueprint(type)?.let { return it }
+            try {
+                CustomBlueprint.blueprint(type)?.let { return it }
+                PrimitiveBlueprint.blueprint(type)?.let { return it }
+                EnumBlueprint.blueprint(type)?.let { return it }
+                ListBlueprint.blueprint(type)?.let { return it }
+                MapBlueprint.blueprint(type)?.let { return it }
 
-            ObjectBlueprint.blueprint(type)?.let { return it }
-            AlgebraicBlueprint.blueprint(type)?.let { return it }
-            return null
+                ObjectBlueprint.blueprint(type)?.let { return it }
+                AlgebraicBlueprint.blueprint(type)?.let { return it }
+                return null
+            } catch (e: Exception) {
+//                logger.error("Failed to generate blueprint for $type:\n${e.message}", type.declaration)
+                throw FailedToGenerateBlueprintException(type.declaration as KSClassDeclaration, e)
+            }
         }
     }
 
@@ -52,7 +57,7 @@ sealed class DataBlueprint {
     @SerialName("primitive")
     data class PrimitiveBlueprint(val type: PrimitiveType) : DataBlueprint() {
         companion object {
-            context(KSPLogger)
+            context(logger: KSPLogger)
             fun blueprint(type: KSType): DataBlueprint? {
                 return when (type.declaration.qualifiedName?.asString()) {
                     "kotlin.Boolean" -> PrimitiveBlueprint(PrimitiveType.BOOLEAN)
@@ -91,7 +96,7 @@ sealed class DataBlueprint {
     @SerialName("enum")
     data class EnumBlueprint(val values: List<String>) : DataBlueprint() {
         companion object {
-            context(KSPLogger)
+            context(logger: KSPLogger)
             fun blueprint(type: KSType): DataBlueprint? {
                 // Check if it is an enum. And if so, get the values.
                 val clazz = type.declaration as? KSClassDeclaration ?: return null
@@ -129,7 +134,7 @@ sealed class DataBlueprint {
     @SerialName("list")
     data class ListBlueprint(val type: DataBlueprint) : DataBlueprint() {
         companion object {
-            context(KSPLogger, Resolver)
+            context(logger: KSPLogger, resolver: Resolver)
             fun blueprint(type: KSType): ListBlueprint? {
                 when (type.declaration.qualifiedName?.asString()) {
                     "kotlin.collections.List" -> {}
@@ -161,7 +166,7 @@ sealed class DataBlueprint {
     @SerialName("map")
     data class MapBlueprint(val key: DataBlueprint, val value: DataBlueprint) : DataBlueprint() {
         companion object {
-            context(KSPLogger, Resolver)
+            context(logger: KSPLogger, resolver: Resolver)
             fun blueprint(type: KSType): MapBlueprint? {
                 when (type.declaration.qualifiedName?.asString()) {
                     "kotlin.collections.Map" -> {}
@@ -178,7 +183,11 @@ sealed class DataBlueprint {
                     keyBlueprint is PrimitiveBlueprint && keyBlueprint.type == PrimitiveType.STRING -> {}
                     keyBlueprint is EnumBlueprint -> {}
                     keyBlueprint is CustomBlueprint && keyBlueprint.editor == "ref" -> {}
-                    else -> throw InvalidKeyTypeException(type, keyBlueprint, "Strings, enums, and entry references are supported")
+                    else -> throw InvalidKeyTypeException(
+                        type,
+                        keyBlueprint,
+                        "Strings, enums, and entry references are supported"
+                    )
                 }
 
                 val value = type.arguments.lastOrNull()?.type?.resolve() ?: return null
@@ -211,7 +220,7 @@ sealed class DataBlueprint {
     @SerialName("object")
     data class ObjectBlueprint(val fields: Map<String, DataBlueprint>) : DataBlueprint() {
         companion object {
-            context(KSPLogger, Resolver)
+            context(logger: KSPLogger, resolver: Resolver)
             @OptIn(KspExperimental::class)
             fun blueprint(type: KSType): ObjectBlueprint? {
                 val clazz = type.declaration as? KSClassDeclaration ?: return null
@@ -271,18 +280,20 @@ sealed class DataBlueprint {
     @SerialName("algebraic")
     data class AlgebraicBlueprint(val cases: Map<String, DataBlueprint>) : DataBlueprint() {
         companion object {
-            context(KSPLogger, Resolver)
+            context(logger: KSPLogger, resolver: Resolver)
             @OptIn(KspExperimental::class)
             fun blueprint(type: KSType): DataBlueprint? {
                 val clazz = type.declaration as? KSClassDeclaration ?: return null
                 if (clazz.classKind != ClassKind.INTERFACE) return null
                 val possibilities = clazz.getSealedSubclasses()
                     .associate {
-                        val annotation = it.getAnnotationsByType(AlgebraicTypeInfo::class).firstOrNull() ?: throw IllegalArgumentException("Could not find `@AlgebraicTypeInfo` annotation for ${it.fullName}")
+                        val annotation = it.getAnnotationsByType(AlgebraicTypeInfo::class).firstOrNull()
+                            ?: throw IllegalArgumentException("Could not find `@AlgebraicTypeInfo` annotation for ${it.fullName}")
                         val name = annotation.name
                         val color = annotation.color
                         val icon = annotation.icon
-                        val blueprint = DataBlueprint.blueprint(it.asStarProjectedType()) ?: throw IllegalArgumentException("Could not find blueprint for $name")
+                        val blueprint = DataBlueprint.blueprint(it.asStarProjectedType())
+                            ?: throw IllegalArgumentException("Could not find blueprint for $name")
 
                         blueprint.modifiers.add(DataModifier.Modifier("color", color))
                         blueprint.modifiers.add(DataModifier.Modifier("icon", icon))
@@ -295,9 +306,12 @@ sealed class DataBlueprint {
         }
 
         override fun validateDefault(default: JsonElement): Result<Unit> {
-            val json = default as? JsonObject ?: return failure("Default value for ${this::class.simpleName} should be an object!")
-            val case = json["case"] as? JsonPrimitive ?: return failure("Default value for ${this::class.simpleName} should have a case field!")
-            val blueprint = cases[case.content] ?: return failure("Default value for ${this::class.simpleName} has an invalid case '$case', possible values are ${cases.keys}")
+            val json = default as? JsonObject
+                ?: return failure("Default value for ${this::class.simpleName} should be an object!")
+            val case = json["case"] as? JsonPrimitive
+                ?: return failure("Default value for ${this::class.simpleName} should have a case field!")
+            val blueprint = cases[case.content]
+                ?: return failure("Default value for ${this::class.simpleName} has an invalid case '$case', possible values are ${cases.keys}")
             return blueprint.validateDefault(json["value"] ?: JsonNull)
         }
 
@@ -318,7 +332,7 @@ sealed class DataBlueprint {
         val validator: (JsonElement) -> Result<Unit> = { ok(Unit) }
     ) : DataBlueprint() {
         companion object {
-            context(KSPLogger, Resolver)
+            context(logger: KSPLogger, resolver: Resolver)
             fun blueprint(type: KSType): CustomBlueprint? {
                 val editor = customEditors.firstOrNull { it.accept(type) } ?: return null
                 return CustomBlueprint(editor.id, editor.shape(type)) {
@@ -337,14 +351,14 @@ sealed class DataBlueprint {
 }
 
 
-context(KSPLogger)
+context(logger: KSPLogger)
 @OptIn(KspExperimental::class)
 private fun KSPropertyDeclaration.defaultValue(): JsonElement? {
     val default = getAnnotationsByType(Default::class).firstOrNull() ?: return null
     try {
         return Json.parseToJsonElement(default.json)
     } catch (e: SerializationException) {
-        error("The default value for ${this.fullName} is not a valid JSON value, JSON: `$default`", this)
+        logger.error("The default value for ${this.fullName} is not a valid JSON value, JSON: `$default`", this)
         throw e
     }
 }
@@ -391,7 +405,7 @@ class CouldNotFindBlueprintException(property: String, parameter: KSType, locati
 class InvalidDefaultValueException(message: String) : Exception(message)
 
 class InvalidKeyTypeException(type: KSType, blueprint: DataBlueprint, supported: String) :
-        Exception("Invalid key type for map ${type.fullName}, supported types are $supported, but found $blueprint")
+    Exception("Invalid key type for map ${type.fullName}, supported types are $supported, but found $blueprint")
 
 class CouldNotBuildBlueprintException(className: String) :
     Exception("Could not build blueprint for class $className")

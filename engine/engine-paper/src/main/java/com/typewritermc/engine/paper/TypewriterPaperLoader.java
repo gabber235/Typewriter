@@ -23,8 +23,8 @@ public class TypewriterPaperLoader implements PluginLoader {
             getDefaultMavenCentralMirror()
         ).build();
 
-        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-stdlib:2.0.21", central);
-        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-reflect:2.0.21", central);
+        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-stdlib:2.2.10", central);
+        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-reflect:2.2.10", central);
         addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2",
             central);
         addDependency(classpathBuilder, "com.corundumstudio.socketio:netty-socketio:1.7.19",
@@ -53,6 +53,7 @@ public class TypewriterPaperLoader implements PluginLoader {
     }
 
     // Because we still want to support <1.21.6 versions, we just copy this from Paper's API.
+    // MavenLibraryResolver.MAVEN_CENTRAL_DEFAULT_MIRROR
     private static String getDefaultMavenCentralMirror() {
         String central = System.getenv("PAPER_DEFAULT_CENTRAL_REPOSITORY");
         if (central == null) {

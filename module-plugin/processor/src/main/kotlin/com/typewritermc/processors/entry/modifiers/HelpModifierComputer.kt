@@ -12,7 +12,7 @@ import kotlin.reflect.KClass
 object HelpModifierComputer : DataModifierComputer<Help> {
     override val annotationClass: KClass<Help> = Help::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Help): Result<DataModifier> {
         return ok(DataModifier.Modifier("help", annotation.text))
     }

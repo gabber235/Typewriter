@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.2.10"
     id("java-library")
     `maven-publish`
     id("io.github.goooler.shadow") version "8.1.7" apply false
@@ -45,9 +45,9 @@ subprojects {
         compileOnlyApi(kotlin("reflect"))
         compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
-        val kotestVersion = "5.9.1"
+        val kotestVersion = "6.0.0.M17"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-        testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
+        testImplementation("io.kotest:kotest-framework-engine:$kotestVersion")
         testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
         testImplementation("io.kotest:kotest-property:$kotestVersion")
         testImplementation("io.mockk:mockk:1.13.16")

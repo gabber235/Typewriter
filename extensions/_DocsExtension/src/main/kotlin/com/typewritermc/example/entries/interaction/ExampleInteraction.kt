@@ -50,7 +50,7 @@ class ExampleInteraction(
         }
     }
 
-    override suspend fun teardown(force: Boolean) {
+    override suspend fun teardown() {
         // Cleanup your interaction state
         player.sendMessage("Ending interaction!")
     }
@@ -82,7 +82,13 @@ class ExampleTriggerHandler : TriggerHandler {
         if (ExampleStopTrigger in event && currentInteraction is ExampleInteraction) {
             return TriggerContinuation.Multi(
                 TriggerContinuation.EndInteraction,
-                TriggerContinuation.Append(Event(event.player, currentInteraction.context, currentInteraction.eventTriggers)),
+                TriggerContinuation.Append(
+                    Event(
+                        event.player,
+                        currentInteraction.context,
+                        currentInteraction.eventTriggers
+                    )
+                ),
             )
         }
 

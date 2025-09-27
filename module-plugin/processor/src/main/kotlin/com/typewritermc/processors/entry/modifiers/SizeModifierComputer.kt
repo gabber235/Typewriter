@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
 object MinModifierComputer : DataModifierComputer<Min> {
     override val annotationClass: KClass<Min> = Min::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Min): Result<DataModifier> {
         return ok(DataModifier.Modifier("min", annotation.value))
     }
@@ -25,7 +25,7 @@ object MinModifierComputer : DataModifierComputer<Min> {
 object InnerMinModifierComputer : DataModifierComputer<InnerMin> {
     override val annotationClass: KClass<InnerMin> = InnerMin::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: InnerMin): Result<DataModifier> {
         when (blueprint) {
             is DataBlueprint.ListBlueprint, is DataBlueprint.ObjectBlueprint, is DataBlueprint.CustomBlueprint -> return ok(
@@ -52,7 +52,7 @@ object InnerMinModifierComputer : DataModifierComputer<InnerMin> {
 object MaxModifierComputer : DataModifierComputer<Max> {
     override val annotationClass: KClass<Max> = Max::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Max): Result<DataModifier> {
         return ok(DataModifier.Modifier("max", annotation.value))
     }
@@ -61,7 +61,7 @@ object MaxModifierComputer : DataModifierComputer<Max> {
 object InnerMaxModifierComputer : DataModifierComputer<InnerMax> {
     override val annotationClass: KClass<InnerMax> = InnerMax::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: InnerMax): Result<DataModifier> {
         when (blueprint) {
             is DataBlueprint.ListBlueprint, is DataBlueprint.ObjectBlueprint, is DataBlueprint.CustomBlueprint -> return ok(

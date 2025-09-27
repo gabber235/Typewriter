@@ -10,8 +10,8 @@ import com.typewritermc.engine.paper.interaction.TriggerHandler
 
 class DialogueHandler : TriggerHandler {
     override suspend fun trigger(event: Event, currentInteraction: Interaction?): TriggerContinuation {
-        if (DialogueTrigger.NEXT_OR_COMPLETE in event) {
-            if (currentInteraction.completeDialogue()) return TriggerContinuation.Nothing
+        if (DialogueTrigger.NEXT_OR_SKIP_ANIMATION in event) {
+            if (currentInteraction.completeDialogueAnimation()) return TriggerContinuation.Nothing
             return currentInteraction.triggerNextDialogue(event)
         }
         if (DialogueTrigger.FORCE_NEXT in event) {
@@ -23,13 +23,13 @@ class DialogueHandler : TriggerHandler {
 
 
     /**
-     * Check if the dialogue is complete, and if not, complete it.
-     * @return true if the dialogue got completed, false otherwise.
+     * Check if the dialogue animation is complete, and if not, complete it.
+     * @return true if the dialogue animation got completed, false otherwise.
      */
-    private fun Interaction?.completeDialogue(): Boolean {
+    private fun Interaction?.completeDialogueAnimation(): Boolean {
         if (this !is DialogueInteraction) return true
-        if (isCompleted) return false
-        isCompleted = true
+        if (animationComplete) return false
+        animationComplete = true
         return true
     }
 
@@ -42,11 +42,13 @@ class DialogueHandler : TriggerHandler {
         if (this !is DialogueInteraction) return TriggerContinuation.Nothing
         isActive = false
 
+        finish()
+
         val triggers = this.eventTriggers
-        if (triggers.isEmpty()) {
-            return TriggerContinuation.EndInteraction
-        }
-        return TriggerContinuation.Append(Event(event.player, event.context, triggers))
+        return TriggerContinuation.Multi(
+            TriggerContinuation.Append(Event(event.player, event.context, triggers)),
+            TriggerContinuation.EndInteraction,
+        )
     }
 
     /**
@@ -64,7 +66,13 @@ class DialogueHandler : TriggerHandler {
 
         if (nextDialogue != null) {
             if (this !is DialogueInteraction) {
-                return TriggerContinuation.StartInteraction(DialogueInteraction(event.player, event.context, nextDialogue))
+                return TriggerContinuation.StartInteraction(
+                    DialogueInteraction(
+                        event.player,
+                        event.context,
+                        nextDialogue
+                    )
+                )
             } else if (!isActive || nextDialogue.priority >= priority) {
                 this.next(nextDialogue, event.context)
                 return TriggerContinuation.KeepInteraction

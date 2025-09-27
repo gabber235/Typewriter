@@ -44,7 +44,7 @@ class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionCo
     private var typingDuration = Duration.ZERO
     private var playedTime = Duration.ZERO
 
-    override var isCompleted: Boolean
+    override var animationComplete: Boolean
         get() = playedTime >= typingDuration
         set(value) {
             playedTime = if (!value) Duration.ZERO

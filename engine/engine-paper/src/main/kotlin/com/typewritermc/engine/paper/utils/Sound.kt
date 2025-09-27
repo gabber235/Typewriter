@@ -5,15 +5,15 @@ import com.github.retrooper.packetevents.protocol.sound.StaticSound
 import com.github.retrooper.packetevents.resources.ResourceLocation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntitySoundEffect
 import com.typewritermc.core.entries.Query
-import com.typewritermc.core.extension.annotations.Default
-import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.SoundIdEntry
 import com.typewritermc.engine.paper.entry.entries.SoundSourceEntry
+import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.logger
-import net.kyori.adventure.audience.Audience
-import net.kyori.adventure.audience.ForwardingAudience
 import net.kyori.adventure.sound.SoundStop
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -26,11 +26,14 @@ data class Sound(
     @Help("Corresponds to the Minecraft sound category")
     val track: AdventureSound.Source = AdventureSound.Source.MASTER,
     @Help("A value of 1.0 is normal volume.")
+    @InnerMin(Min(0))
     @Default("1.0")
-    val volume: Float = 1.0f,
+    val volume: Var<Float> = ConstVar(1.0f),
     @Help("A value of 1.0 is normal pitch.")
+    @InnerMin(Min(0))
+    @InnerMax(Max(2))
     @Default("1.0")
-    val pitch: Float = 1.0f,
+    val pitch: Var<Float> = ConstVar(1.0f),
 ) {
     companion object {
         val EMPTY = Sound()
@@ -39,12 +42,12 @@ data class Sound(
     val soundStop: SoundStop?
         get() = soundId.namespacedKey?.let { SoundStop.named(it) }
 
-    fun play(audience: Audience) {
+    fun play(player: Player, context: InteractionContext?) {
         val key = this.soundId.namespacedKey ?: return
-        val sound = AdventureSound.sound(key, track, volume, pitch)
+        val sound = AdventureSound.sound(key, track, volume.get(player, context), pitch.get(player, context))
 
         when (soundSource) {
-            is SelfSoundSource -> audience.playSound(sound)
+            is SelfSoundSource -> player.playSound(sound)
             is EmitterSoundSource -> {
                 val entryId = soundSource.entryId
                 val entry = Query.findById<SoundSourceEntry>(entryId)
@@ -52,30 +55,29 @@ data class Sound(
                     logger.warning("Could not find sound source entry with id $entryId")
                     return
                 }
-                audience.viewers.forEach { viewer ->
-                    val emitter = entry.getEmitter(viewer)
-                    val packetSound = StaticSound(ResourceLocation(key.namespace, key.key), 16f)
-                    val category = SoundCategory.fromId(track.ordinal)
-                    WrapperPlayServerEntitySoundEffect(
-                        packetSound,
-                        category,
-                        emitter.entityId,
-                        volume,
-                        pitch
-                    ) sendPacketTo viewer
-                }
+
+                val emitter = entry.getEmitter(player)
+                val packetSound = StaticSound(ResourceLocation(key.namespace, key.key), 16f)
+                val category = SoundCategory.fromId(track.ordinal)
+                WrapperPlayServerEntitySoundEffect(
+                    packetSound,
+                    category,
+                    emitter.entityId,
+                    sound.volume(),
+                    sound.pitch(),
+                ) sendPacketTo player
             }
 
             is LocationSoundSource -> {
                 val location = soundSource.position
-                audience.playSound(sound, location.x, location.y, location.z)
+                player.playSound(sound, location.x, location.y, location.z)
             }
         }
     }
 }
 
-fun Audience.playSound(sound: Sound) = sound.play(this)
-fun Audience.stopSound(sound: Sound) = sound.soundStop?.let { this.stopSound(it) }
+fun Player.playSound(sound: Sound, context: InteractionContext?) = sound.play(this, context)
+fun Player.stopSound(sound: Sound) = sound.soundStop?.let { this.stopSound(it) }
 
 sealed interface SoundId {
     companion object {
@@ -107,10 +109,3 @@ data object SelfSoundSource : SoundSource
 class EmitterSoundSource(val entryId: String) : SoundSource
 
 class LocationSoundSource(val position: Position) : SoundSource
-
-val Audience.viewers: List<Player>
-    get() = when (this) {
-        is Player -> listOf(this)
-        is ForwardingAudience -> audiences().flatMap { it.viewers }
-        else -> throw IllegalArgumentException("Cannot get viewers from audience of type ${this::class.simpleName}")
-    }

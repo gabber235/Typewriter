@@ -95,6 +95,6 @@ fun Position.toBlockPosition(): Position {
     return Position(world, blockX.toDouble(), blockY.toDouble(), blockZ.toDouble(), 0f, 0f)
 }
 
-fun Position.formatted(format: String = "x: %.0f, y: %.0f, z: %.0f"): String {
+fun <PR> PR.formatted(format: String = "x: %.0f, y: %.0f, z: %.0f"): String where PR : Point<PR>, PR : Rotatable<PR> {
     return format.format(x, y, z, yaw, pitch)
 }

@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 object PlaceholderModifierComputer : DataModifierComputer<Placeholder> {
     override val annotationClass: KClass<Placeholder> = Placeholder::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Placeholder): Result<DataModifier> {
         // If the field is wrapped in a list or other container we try if the inner type can be modified
         innerCompute(blueprint, annotation)?.let { return ok(it) }

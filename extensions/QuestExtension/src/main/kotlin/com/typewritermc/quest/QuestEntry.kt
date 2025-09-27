@@ -6,12 +6,15 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
+import com.typewritermc.engine.paper.facts.FactUpdateContext
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.snippets.snippet
+import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
@@ -19,6 +22,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.roundToInt
 
 @Tags("quest")
 interface QuestEntry : AudienceFilterEntry, PlaceholderEntry {
@@ -116,8 +120,8 @@ class ObjectiveAudienceFilter(
         super.onPlayerAdd(player)
     }
 
-    private fun onFactChange(player: Player, fact: Ref<ReadableFactEntry>) {
-        player.refresh()
+    private fun onFactChange(context: FactUpdateContext) {
+        context.player.refresh()
     }
 
     override fun onPlayerRemove(player: Player) {
@@ -157,6 +161,27 @@ class ObjectiveAudienceFilter(
 
 interface LocatableObjective : ObjectiveEntry {
     fun positions(player: Player?): List<Position>
+
+    override fun parser(): PlaceholderParser = placeholderParser {
+        include(super.parser())
+
+        literal("distance") {
+            supplyPlayer { player ->
+                val playerPosition = player.position;
+                val positions = positions(player)
+                if (positions.isEmpty()) return@supplyPlayer null
+                val closestPosition =
+                    positions(player).maxBy { it.distanceSqrt(playerPosition) ?: Double.POSITIVE_INFINITY }
+
+                if (closestPosition.world != playerPosition.world) {
+                    return@supplyPlayer "∞ m"
+                }
+
+                val distance = player.position.distance(closestPosition).roundToInt()
+                "${distance}m"
+            }
+        }
+    }
 }
 
 

@@ -8,13 +8,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.typewritermc.processors.SharedJsonManager
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.moduleplugin.TypewriterExtensionConfiguration
-import com.typewritermc.processors.PartProcessor
-import com.typewritermc.processors.annotationClassValue
-import com.typewritermc.processors.fullName
-import com.typewritermc.processors.serializedName
+import com.typewritermc.processors.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -39,7 +35,7 @@ class EntryProcessor(
         return symbols.toList()
     }
 
-    context(Resolver)
+    context(resolver: Resolver)
     @OptIn(KspExperimental::class)
     private fun generateEntryBlueprint(clazz: KSClassDeclaration): JsonElement {
         logger.info("Generating entry blueprint for ${clazz.simpleName.asString()}")
@@ -77,7 +73,7 @@ class EntryProcessor(
             return clazzTags + superTags
         }
 
-    context(Resolver)
+    context(resolver: Resolver)
     private fun KSClassDeclaration.fieldBlueprints(): DataBlueprint {
         with(logger) {
             try {
@@ -89,7 +85,7 @@ class EntryProcessor(
         }
     }
 
-    context(Resolver)
+    context(resolver: Resolver)
     @OptIn(KspExperimental::class)
     private fun KSClassDeclaration.genericConstraints(fields: DataBlueprint): List<DataBlueprint>? {
         with(logger) {
@@ -122,7 +118,7 @@ class EntryProcessor(
     }
 
 
-    context(Resolver)
+    context(resolver: Resolver)
     @OptIn(KspExperimental::class)
     private fun KSClassDeclaration.variableDataBlueprint(): DataBlueprint? {
         with(logger) {
@@ -138,7 +134,7 @@ class EntryProcessor(
         }
     }
 
-    context(Resolver)
+    context(resolver: Resolver)
     @OptIn(KspExperimental::class)
     private fun KSClassDeclaration.contextKeys(): List<ContextKey> {
         with(logger) {
@@ -213,7 +209,6 @@ sealed interface EntryModifier {
 
 class IllegalClassTypeException(className: String) :
     Exception("Class $className does not have a qualified name. Entry classes must be full classes.")
-
 
 
 class ExpectedEnumException(className: String) :

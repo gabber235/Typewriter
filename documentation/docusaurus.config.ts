@@ -198,8 +198,8 @@ const config: Config = {
                 to: "/docs/home",
               },
               {
-                label: "Clickup",
-                href: "https://sharing.clickup.com/9015308602/l/h/6-901502296591-1/e32ea9f33a22632",
+                label: "Fibery",
+                href: "https://typewriter.fibery.io/@public/Development/Current-Tasks-84",
               },
               {
                 label: "Privacy Policy",

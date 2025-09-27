@@ -53,12 +53,12 @@ class SpinActivity(
 
     override fun initialize(context: ActivityContext) {
         startTime = Instant.now()
+        childActivity.initialize(context)
         startRotation = when (axis) {
             SpinAxis.YAW -> childActivity.currentPosition.yaw
             SpinAxis.PITCH -> childActivity.currentPosition.pitch
         }
         currentRotation = startRotation
-        childActivity.initialize(context)
     }
 
     override fun tick(context: ActivityContext): TickResult {
@@ -69,7 +69,7 @@ class SpinActivity(
         val progress = (elapsed.toMillis() % rotationDuration.toMillis()) / rotationDuration.toMillis().toFloat()
         val angle = progress * 360 * direction
 
-        currentRotation = when (axis) {
+        currentRotation = startRotation + when (axis) {
             SpinAxis.YAW -> {
                 ((angle + 180) % 360 + 360) % 360 - 180
             }

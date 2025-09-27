@@ -209,7 +209,7 @@ class PlayerSession(val player: Player) : KoinComponent {
     suspend fun teardown() {
         try {
             sessionTickingJob?.cancel()
-            scope?.teardown(force = true)
+            scope?.teardown()
             trackers.forEach { it.teardown() }
         } catch (t: Throwable) {
             logger.severe("Exception thrown while tearing down session for player '${player.name}'.")

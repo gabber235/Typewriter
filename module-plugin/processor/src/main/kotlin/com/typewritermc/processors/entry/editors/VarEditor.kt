@@ -12,11 +12,12 @@ import kotlinx.serialization.json.JsonElement
 object VarEditor : CustomEditor {
     override val id: String = "var"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type.whenClassNameIs("com.typewritermc.engine.paper.entry.entries.Var")
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         val argumentType = type.arguments.firstOrNull()?.type?.resolve()
             ?: throw IllegalStateException("Expected Optional to have a single argument")
         val blueprint = DataBlueprint.blueprint(argumentType)
@@ -24,7 +25,7 @@ object VarEditor : CustomEditor {
         return blueprint.default()
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         val argumentType = type.arguments.firstOrNull()?.type?.resolve()
             ?: throw IllegalStateException("Expected Optional to have a single argument")
         val blueprint = DataBlueprint.blueprint(argumentType)

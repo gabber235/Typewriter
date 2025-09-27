@@ -39,7 +39,7 @@ class QuestTracker(
         val facts = Query.find<QuestEntry>().flatMap { it.facts }.toList()
         factWatchSubscription = player.listenForFacts(
             facts,
-            listener = { _, ref ->
+            listener = {
                 Query.findWhere<QuestEntry> { quest ->
                     quest.facts.contains(ref)
                 }.forEach {

@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 object IgnoreContextKeyBlueprintModifierComputer : DataModifierComputer<IgnoreContextKeyBlueprint> {
     override val annotationClass: KClass<IgnoreContextKeyBlueprint> = IgnoreContextKeyBlueprint::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(
         blueprint: DataBlueprint,
         annotation: IgnoreContextKeyBlueprint

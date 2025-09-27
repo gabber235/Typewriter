@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 object IconModifierComputer : DataModifierComputer<Icon> {
     override val annotationClass: KClass<Icon> = Icon::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Icon): Result<DataModifier> {
         innerCompute(blueprint, annotation)?.let { return ok(it) }
         return ok(DataModifier.Modifier("icon", annotation.icon))

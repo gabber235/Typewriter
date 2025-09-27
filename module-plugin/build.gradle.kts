@@ -1,14 +1,14 @@
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.2.10"
     `java-gradle-plugin`
     id("com.gradle.plugin-publish") version "1.2.1"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
     kotlin("plugin.serialization") version "2.0.20" apply false
     `maven-publish`
 }
 
 group = "com.typewritermc.module-plugin"
-version = "1.3.0"
+version = "2.0.0"
 
 val engineVersion = file("../version.txt").readText().trim().substringBefore("-beta")
 
@@ -30,8 +30,8 @@ allprojects {
     dependencies {
         implementation(kotlin("stdlib"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-        implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.0.21-1.0.28")
-        implementation("com.google.devtools.ksp:symbol-processing-api:2.0.21-1.0.28")
+        implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.2.10-2.0.2")
+        implementation("com.google.devtools.ksp:symbol-processing-api:2.2.10-2.0.2")
 
         implementation("com.typewritermc:engine-core:$engineVersion")
 

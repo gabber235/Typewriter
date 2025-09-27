@@ -52,10 +52,10 @@ class DialogueInteraction(
     override val priority: Int
         get() = currentEntry.priority
 
-    var isCompleted: Boolean
-        get() = currentMessenger.isCompleted
+    var animationComplete: Boolean
+        get() = currentMessenger.animationComplete
         set(value) {
-            currentMessenger.isCompleted = value
+            currentMessenger.animationComplete = value
         }
 
     override suspend fun initialize(): Result<Unit> {
@@ -83,7 +83,7 @@ class DialogueInteraction(
 
         if (currentMessenger.state == MessengerState.FINISHED) {
             isActive = false
-            DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, currentMessenger.context)
+            DialogueTrigger.NEXT_OR_SKIP_ANIMATION.triggerFor(player, currentMessenger.context)
         } else if (currentMessenger.state == MessengerState.CANCELLED) {
             isActive = false
 
@@ -91,6 +91,10 @@ class DialogueInteraction(
         }
 
         currentMessenger.tick(TickContext(playTime, deltaTime))
+    }
+
+    fun finish() {
+        factDatabase.modify(player, currentMessenger.modifiers)
     }
 
     fun next(nextEntry: DialogueEntry, context: InteractionContext) {
@@ -115,10 +119,9 @@ class DialogueInteraction(
         }
         messenger.dispose()
 
-        factDatabase.modify(player, messenger.modifiers)
     }
 
-    override suspend fun teardown(force: Boolean) {
+    override suspend fun teardown() {
         isActive = false
         cleanupEntry(true)
         Dispatchers.UntickedAsync.launch {
@@ -149,13 +152,13 @@ val Player.speakersInDialogue: Set<Ref<SpeakerEntry>>
         return sequence.speakers
     }
 
-fun Player.playSpeakerSound(speaker: SpeakerEntry?) {
-    val sound = speaker?.sound ?: return
-    playSound(sound)
+fun Player.playSpeakerSound(speaker: SpeakerEntry?, context: InteractionContext? = this.interactionContext) {
+    val sound = speaker?.sound?.get(this, context) ?: return
+    playSound(sound, context)
 }
 
 enum class DialogueTrigger : EventTrigger {
-    NEXT_OR_COMPLETE,
+    NEXT_OR_SKIP_ANIMATION,
     FORCE_NEXT,
     ;
 

@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.2.10"
     id("io.github.goooler.shadow") version "8.1.8" apply false
     id("com.typewritermc.module-plugin") apply false
     `maven-publish`
@@ -45,7 +45,7 @@ subprojects {
     }
 
     if (!project.name.startsWith("_")) {
-        task<ShadowJar>("buildAndMove") {
+        tasks.register<ShadowJar>("buildAndMove") {
             from(tasks.named("shadowJar"))
             group = "build"
             description = "Builds the jar and moves it to the server folder"
@@ -55,7 +55,7 @@ subprojects {
             destinationDirectory = file("../../server/plugins/Typewriter/extensions")
         }
 
-        task<ShadowJar>("buildRelease") {
+        tasks.register<ShadowJar>("buildRelease") {
             from(tasks.named("shadowJar"))
             group = "build"
             description = "Builds the jar and renames it"

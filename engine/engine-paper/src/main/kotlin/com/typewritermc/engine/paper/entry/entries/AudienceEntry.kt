@@ -1,6 +1,5 @@
 package com.typewritermc.engine.paper.entry.entries
 
-import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
@@ -8,13 +7,12 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.plugin
-import lirand.api.extensions.events.unregister
 import com.typewritermc.engine.paper.utils.server
+import lirand.api.extensions.events.unregister
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.koin.java.KoinJavaComponent.get
 import java.util.*
-import java.util.concurrent.ConcurrentSkipListSet
 
 
 /**
@@ -133,7 +131,13 @@ abstract class AudienceFilter(
 
     abstract fun filter(player: Player): Boolean
 
-    fun Player.updateFilter(isFiltered: Boolean) {
+    /**
+     * Updates the filter for the player with the given value.
+     * If the audience is inverted, the [isFiltered] will not align with the return value
+     *
+     * @return If the player is in the audience or not
+     */
+    fun Player.updateFilter(isFiltered: Boolean): Boolean {
         val allow = !inverted == isFiltered && canConsider(this)
         if (allow) {
             if (filteredPlayers.add(uniqueId)) {
@@ -146,8 +150,18 @@ abstract class AudienceFilter(
                 get<AudienceManager>(AudienceManager::class.java).removePlayerFromChildren(this, ref)
             }
         }
+        return allow
     }
 
+    /**
+     * Refreshes the player's audience filter state.
+     *
+     * This method applies the logic defined by the `filter` function to determine the updated
+     * filter state of the player and then applies the result using `updateFilter`. The filter state
+     * defines whether a player should be included in or excluded from the audience.
+     *
+     * @return If the player is in the audience or not
+     */
     fun Player.refresh() = updateFilter(filter(this))
 
     override fun onPlayerAdd(player: Player) {

@@ -15,7 +15,7 @@ import kotlin.reflect.KClass
 object ContentEditorModifierComputer : DataModifierComputer<ContentEditor> {
     override val annotationClass: KClass<ContentEditor> = ContentEditor::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: ContentEditor): Result<DataModifier> {
         val contentMode = annotation.annotationClassValue { capturer }
         val className = contentMode.declaration.qualifiedName?.asString()

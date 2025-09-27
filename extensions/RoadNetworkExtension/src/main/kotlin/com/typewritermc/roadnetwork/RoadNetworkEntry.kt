@@ -85,7 +85,7 @@ data class RoadNode(
     val radius: Double,
 ) {
     val position: Position
-        @SuppressWarnings("deprecation")
+        @Suppress("DEPRECATION")
         get() = location
 
     override fun equals(other: Any?): Boolean {

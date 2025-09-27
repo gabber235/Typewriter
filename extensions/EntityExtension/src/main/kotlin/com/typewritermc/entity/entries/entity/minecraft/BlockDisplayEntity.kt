@@ -12,14 +12,12 @@ import com.typewritermc.engine.paper.entry.entity.FakeEntity
 import com.typewritermc.engine.paper.entry.entity.SimpleEntityDefinition
 import com.typewritermc.engine.paper.entry.entity.SimpleEntityInstance
 import com.typewritermc.engine.paper.entry.entries.*
-import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.utils.Sound
 import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.display.applyDisplayEntityData
 import com.typewritermc.entity.entries.data.minecraft.display.block.BlockProperty
 import com.typewritermc.entity.entries.data.minecraft.display.block.applyBlockData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
-import me.tofaa.entitylib.meta.display.BlockDisplayMeta
 import org.bukkit.entity.Player
 
 @Entry("block_display_definition", "A block display entity", Colors.ORANGE, "heroicons:cube-transparent-16-solid")
@@ -34,7 +32,7 @@ class BlockDisplayDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @OnlyTags("generic_entity_data", "display_data", "block_display_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {

@@ -55,8 +55,8 @@ class FactValueCappedAudienceFilter(
         updateFactValue(player)
         factListeners[player.uniqueId] = player.listenForFacts(
             listOf(fact)
-        ) { p, _ ->
-            updateFactValue(p)
+        ) {
+            updateFactValue(this.player)
             refreshCandidates()
         }
         super.onPlayerAdd(player)

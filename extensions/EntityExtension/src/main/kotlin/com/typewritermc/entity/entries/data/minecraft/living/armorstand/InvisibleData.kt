@@ -1,6 +1,7 @@
 package com.typewritermc.entity.entries.data.minecraft.living.armorstand
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entity.SinglePropertyCollectorSupplier
@@ -18,7 +19,8 @@ import kotlin.reflect.KClass
 class InvisibleData(
     override val id: String = "",
     override val name: String = "",
-    val invisible: Boolean = false,
+    @Default("true")
+    val invisible: Boolean = true,
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : GenericEntityData<InvisibleProperty> {
     override fun type(): KClass<InvisibleProperty> = InvisibleProperty::class

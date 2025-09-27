@@ -38,13 +38,14 @@ val inputPadding: String by snippet("dialogue.input.padding", "    ")
 val inputMinLength: Int by snippet("dialogue.input.minLength", 1)
 val inputMaxLineLength: Int by snippet("dialogue.input.maxLineLength", 40)
 
-class JavaInputDialogueDialogueMessenger<T : Any>(
+class JavaInputDialogueDialogueMessenger<IntermediateType : Any, ContextType : Any>(
     player: Player,
     context: InteractionContext,
     entry: InputDialogueEntry,
     private val key: EntryContextKey,
-    private val parser: (String) -> Result<T>,
-    private val triggers: (T?) -> List<EventTrigger>,
+    private val parser: (String) -> Result<IntermediateType>,
+    private val contextConverter: (IntermediateType) -> ContextType,
+    private val triggers: (IntermediateType?) -> List<EventTrigger>,
 ) :
     DialogueMessenger<InputDialogueEntry>(player, context, entry) {
 
@@ -54,13 +55,12 @@ class JavaInputDialogueDialogueMessenger<T : Any>(
     private var typingDuration = Duration.ZERO
     private var playedTime = Duration.ZERO
 
-    override val eventTriggers: List<EventTrigger>
-        get() {
-            val value = context.get<T>(entry, key)
-            return triggers(value)
-        }
+    private var provided: IntermediateType? = null
 
-    override var isCompleted: Boolean
+    override val eventTriggers: List<EventTrigger>
+        get() = triggers(provided)
+
+    override var animationComplete: Boolean
         // We don't want to be able to complete the dialogue if the player clicks on a npc.
         get() {
             if (!infoText.startsWith("<red>")) {
@@ -95,7 +95,8 @@ class JavaInputDialogueDialogueMessenger<T : Any>(
         }
 
         val value = result.getOrNull() ?: return
-        context[entry, key] = value
+        provided = value
+        context[entry, key] = contextConverter(value)
         state = MessengerState.FINISHED
     }
 

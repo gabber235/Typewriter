@@ -64,13 +64,20 @@ class VariableEditorFilter extends EditorFilter {
     final variableDataBlueprint = variableBlueprint.variableDataBlueprint;
     if (variableDataBlueprint == null) return actions;
 
+    final shape = customBlueprint.shape;
+    // If the shape is a generic, we want to make it transparent so it uses the parent generic.
+    final genericBlueprint =
+        shape is CustomBlueprint && shape.editor == "generic"
+            ? context.genericBlueprint
+            : customBlueprint.shape;
+
     final child = headerActionsFor(
       ref,
       path.join("data"),
       variableDataBlueprint,
       context.copyWith(
         parentBlueprint: dataBlueprint,
-        genericBlueprint: customBlueprint.shape,
+        genericBlueprint: genericBlueprint,
       ),
     );
 
@@ -132,78 +139,85 @@ class VariableEditor extends HookConsumerWidget {
     final variableDataBlueprint = variableBlueprint.variableDataBlueprint;
     final header = Header.maybeOf(context);
 
-    return Generic(
-      dataBlueprint: customBlueprint.shape,
-      child: FieldHeader(
-        path: path,
-        child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: DottedBorder(
-            color: Colors.green,
-            borderType: BorderType.RRect,
-            strokeWidth: 2,
-            dashPattern: const [5, 5],
-            radius: const Radius.circular(4),
-            child: Material(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Column(
-                  children: [
-                    ContextMenuRegion(
-                      builder: (context) => [
-                        ContextMenuTile.button(
-                          title: "Navigate to entry",
-                          icon: TWIcons.pencil,
-                          onTap: () {
-                            ref
-                                .read(inspectingEntryIdProvider.notifier)
-                                .navigateAndSelectEntry(
-                                  ref.passing,
-                                  variableEntryId,
-                                );
-                          },
-                        ),
-                      ],
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                ref
-                                    .read(inspectingEntryIdProvider.notifier)
-                                    .navigateAndSelectEntry(
-                                      ref.passing,
-                                      variableEntryId,
-                                    );
-                              },
-                              child: FakeEntryNode(entryId: variableEntryId),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (variableDataBlueprint != null) ...[
-                      const SizedBox(height: 8),
-                      Header(
-                        expanded: header?.expanded ?? ValueNotifier(true),
-                        canExpand: header?.canExpand ?? false,
-                        depth: header?.depth ?? 0,
-                        path: path.join("data"),
-                        child: FieldEditor(
-                          path: path.join("data"),
-                          dataBlueprint: variableDataBlueprint,
-                        ),
+    final child = FieldHeader(
+      path: path,
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: DottedBorder(
+          color: Colors.green,
+          borderType: BorderType.RRect,
+          strokeWidth: 2,
+          dashPattern: const [5, 5],
+          radius: const Radius.circular(4),
+          child: Material(
+            color: Colors.green.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Column(
+                children: [
+                  ContextMenuRegion(
+                    builder: (context) => [
+                      ContextMenuTile.button(
+                        title: "Navigate to entry",
+                        icon: TWIcons.pencil,
+                        onTap: () {
+                          ref
+                              .read(inspectingEntryIdProvider.notifier)
+                              .navigateAndSelectEntry(
+                                ref.passing,
+                                variableEntryId,
+                              );
+                        },
                       ),
                     ],
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              ref
+                                  .read(inspectingEntryIdProvider.notifier)
+                                  .navigateAndSelectEntry(
+                                    ref.passing,
+                                    variableEntryId,
+                                  );
+                            },
+                            child: FakeEntryNode(entryId: variableEntryId),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (variableDataBlueprint != null) ...[
+                    const SizedBox(height: 8),
+                    Header(
+                      expanded: header?.expanded ?? ValueNotifier(true),
+                      canExpand: header?.canExpand ?? false,
+                      depth: header?.depth ?? 0,
+                      path: path.join("data"),
+                      child: FieldEditor(
+                        path: path.join("data"),
+                        dataBlueprint: variableDataBlueprint,
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
         ),
       ),
+    );
+
+    final shape = customBlueprint.shape;
+    // If the shape is a generic, we want to make it transparent so it uses the parent generic.
+    if (shape is CustomBlueprint && shape.editor == "generic") {
+      return child;
+    }
+    return Generic(
+      dataBlueprint: customBlueprint.shape,
+      child: child,
     );
   }
 

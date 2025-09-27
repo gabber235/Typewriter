@@ -14,6 +14,7 @@ import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.interaction.acceptActionBarMessage
 import com.typewritermc.engine.paper.utils.asMini
 
 @Entry("action_bar_simple_message", "Send an action bar message to a player", Colors.RED, "bxs:message-square-detail")
@@ -36,6 +37,8 @@ class ActionBarSimpleMessageEntry(
     val message: Var<String> = ConstVar(""),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        player.sendActionBar(message.get(player, context).parsePlaceholders(player).asMini())
+        val msg = message.get(player, context).parsePlaceholders(player).asMini()
+        player.acceptActionBarMessage(msg)
+        player.sendActionBar(msg)
     }
 }

@@ -14,8 +14,12 @@ import kotlinx.serialization.json.JsonPrimitive
 object ColorEditor : CustomEditor {
     override val id: String = "color"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean = type whenClassNameIs "com.typewritermc.engine.paper.utils.Color"
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement = JsonPrimitive(0xFFFFFFFF)
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint = PrimitiveBlueprint(PrimitiveType.INTEGER)
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement =
+        JsonPrimitive(0xFFFFFFFF)
+
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint =
+        PrimitiveBlueprint(PrimitiveType.INTEGER)
 }

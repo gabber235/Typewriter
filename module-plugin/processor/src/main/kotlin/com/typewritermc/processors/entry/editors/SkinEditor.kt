@@ -16,11 +16,12 @@ import kotlinx.serialization.json.JsonPrimitive
 object SkinEditor : CustomEditor {
     override val id: String = "skin"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassNameIs "com.typewritermc.engine.paper.entry.entity.SkinProperty"
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         return JsonObject(
             mapOf(
                 "texture" to JsonPrimitive(""),
@@ -29,7 +30,7 @@ object SkinEditor : CustomEditor {
         )
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         return ObjectBlueprint(
             mapOf(
                 "texture" to PrimitiveBlueprint(PrimitiveType.STRING),

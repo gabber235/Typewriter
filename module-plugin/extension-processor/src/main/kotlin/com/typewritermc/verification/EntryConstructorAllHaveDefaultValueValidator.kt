@@ -30,7 +30,7 @@ class EntryConstructorAllHaveDefaultValueValidator(
         throw InvalidConstructorDefaultValuesException(invalidEntries)
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     private fun KSClassDeclaration.validateConstructor(): List<String> {
         val primaryConstructor = primaryConstructor
             ?: return listOf("${fullName}: No primary constructor")
@@ -57,7 +57,7 @@ class EntryConstructorAllHaveDefaultValueValidator(
         return errors
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     private fun KSType.shouldCheck(): List<KSType> {
         val blueprint = DataBlueprint.blueprint(this) ?: return emptyList()
 

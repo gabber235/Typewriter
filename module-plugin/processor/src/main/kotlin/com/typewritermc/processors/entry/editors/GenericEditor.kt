@@ -14,10 +14,13 @@ import kotlinx.serialization.json.JsonNull
 object GenericEditor : CustomEditor {
     override val id: String = "generic"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean = type whenClassIs Generic::class
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement = JsonNull
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement = JsonNull
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint = DataBlueprint.PrimitiveBlueprint(
-        PrimitiveType.STRING)
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint =
+        DataBlueprint.PrimitiveBlueprint(
+            PrimitiveType.STRING
+        )
 }

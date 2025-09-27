@@ -110,7 +110,7 @@ class FactDatabase : KoinComponent {
         modify(player) {
             modifiers.forEach { modifier ->
                 this[modifier.fact] = when (modifier.operator) {
-                    ModifierOperator.ADD -> {
+                    ModifierOperator.ADD, ModifierOperator.SUBTRACT -> {
                         val entry =
                             modifier.fact.get().logErrorIfNull("Could not find ${modifier.fact}") ?: return@forEach
 
@@ -120,7 +120,14 @@ class FactDatabase : KoinComponent {
                         }
 
                         val fact = entry.readForPlayersGroup(player)
-                        modifier.value.get(player, context) + fact.value
+                        val change =
+                            modifier.value.get(player, context)
+
+                        if (modifier.operator == ModifierOperator.ADD) {
+                            fact.value + change
+                        } else {
+                            fact.value - change
+                        }
                     }
 
                     ModifierOperator.MULTIPLY -> {

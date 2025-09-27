@@ -26,6 +26,10 @@ class EntryReferenceSerializer : DataSerializer<Ref<*>> {
     ): Ref<*> {
         val subType = (typeOfT as ParameterizedType).actualTypeArguments[0]
         val clazz = TypeToken.of(subType).rawType
+        if (!Entry::class.java.isAssignableFrom(clazz)) {
+            throw IllegalArgumentException("Type $clazz is not a valid Entry type")
+        }
+        @Suppress("UNCHECKED_CAST")
         val klass = clazz.kotlin as KClass<Entry>
 
         if (json?.isJsonNull == true) {

@@ -17,11 +17,12 @@ import kotlinx.serialization.json.JsonPrimitive
 object VectorEditor : CustomEditor {
     override val id: String = "vector"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassIs Vector::class
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         return JsonObject(
             mapOf(
                 "x" to JsonPrimitive(0.0),
@@ -31,7 +32,7 @@ object VectorEditor : CustomEditor {
         )
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         return ObjectBlueprint(
             mapOf(
                 "x" to PrimitiveBlueprint(PrimitiveType.DOUBLE),

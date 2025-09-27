@@ -27,7 +27,7 @@ open class DialogueMessenger<DE : DialogueEntry>(
     open var state: MessengerState = MessengerState.RUNNING
         protected set
 
-    open var isCompleted = true
+    open var animationComplete = true
 
     open fun init() {
         plugin.registerEvents(this)
@@ -51,10 +51,10 @@ open class DialogueMessenger<DE : DialogueEntry>(
         get() = entry.modifiers
 
     fun completeOrFinish() {
-        if (isCompleted) {
+        if (animationComplete) {
             state = MessengerState.FINISHED
         } else {
-            isCompleted = true
+            animationComplete = true
         }
     }
 }

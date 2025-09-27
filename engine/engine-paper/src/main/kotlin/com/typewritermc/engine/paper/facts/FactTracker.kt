@@ -1,13 +1,17 @@
 package com.typewritermc.engine.paper.facts
 
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.interaction.SessionTracker
 import com.typewritermc.engine.paper.entry.entries.ReadableFactEntry
 import com.typewritermc.engine.paper.interaction.PlayerSessionManager
-import com.typewritermc.core.interaction.SessionTracker
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+
+typealias FactUpdateEvent = FactUpdateContext.() -> Unit
+
+data class FactUpdateContext(val player: Player, val ref: Ref<ReadableFactEntry>, val oldValue: Int, val newValue: Int)
 
 class FactTracker(
     private val player: Player,
@@ -39,22 +43,22 @@ class FactTracker(
         val new = fact.readForPlayersGroup(player).value
         if (old != new) {
             factCache[ref] = new
-            notifyListeners(ref)
+            notifyListeners(ref, old, new)
         }
     }
 
-    private fun notifyListeners(ref: Ref<ReadableFactEntry>) {
+    private fun notifyListeners(ref: Ref<ReadableFactEntry>, oldValue: Int, newValue: Int) {
         listeners
             .values
             .filter { ref in it }
             .forEach { listener ->
-                listener.listener(player, ref)
+                listener.listener(FactUpdateContext(player, ref, oldValue, newValue))
             }
     }
 
     fun addListener(
         facts: List<Ref<ReadableFactEntry>>,
-        listener: (Player, Ref<ReadableFactEntry>) -> Unit
+        listener: FactUpdateEvent
     ): FactListenerSubscription {
         var id: UUID
         do {
@@ -85,7 +89,7 @@ class FactTracker(
         fun listenForFacts(
             player: Player,
             facts: List<Ref<ReadableFactEntry>>,
-            listener: (Player, Ref<ReadableFactEntry>) -> Unit
+            listener: FactUpdateEvent,
         ): FactListenerSubscription = player.listenForFacts(facts, listener)
 
         @JvmStatic
@@ -99,7 +103,7 @@ class FactTracker(
 private class FactListener(
     val id: UUID,
     val facts: List<Ref<ReadableFactEntry>>,
-    val listener: (Player, Ref<ReadableFactEntry>) -> Unit,
+    val listener: FactUpdateEvent,
 ) {
     operator fun contains(ref: Ref<ReadableFactEntry>) = ref in facts
 }
@@ -118,9 +122,9 @@ internal val Player.factTracker: FactTracker?
 
 fun Player.listenForFacts(
     facts: List<Ref<ReadableFactEntry>>,
-    listener: (Player, Ref<ReadableFactEntry>) -> Unit
+    listener: FactUpdateEvent
 ): FactListenerSubscription {
-    val watcher = factTracker ?: throw IllegalStateException("Player is not in an quest")
+    val watcher = factTracker ?: throw IllegalStateException("Player session has not been initialized yet")
     return watcher.addListener(facts, listener)
 }
 

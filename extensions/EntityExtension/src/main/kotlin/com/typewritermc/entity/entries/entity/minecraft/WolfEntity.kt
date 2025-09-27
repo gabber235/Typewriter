@@ -21,7 +21,9 @@ import com.typewritermc.entity.entries.data.minecraft.living.applyAgeableData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.tameable.applyTameableData
 import com.typewritermc.entity.entries.data.minecraft.living.wolf.BeggingProperty
+import com.typewritermc.entity.entries.data.minecraft.living.wolf.WolfVariantProperty
 import com.typewritermc.entity.entries.data.minecraft.living.wolf.applyBeggingData
+import com.typewritermc.entity.entries.data.minecraft.living.wolf.applyWolfVariantData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
@@ -37,7 +39,7 @@ class WolfDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "ageable_data", "tameable_data", "wolf_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
@@ -65,6 +67,7 @@ class WolfInstance(
 private class WolfEntity(player: Player) : WrapperFakeEntity(EntityTypes.WOLF, player) {
     override fun applyProperty(property: EntityProperty) {
         when (property) {
+            is WolfVariantProperty -> applyWolfVariantData(entity, property)
             is BeggingProperty -> applyBeggingData(entity, property)
             is DyeColorProperty -> applyDyeColorData(entity, property)
             is AgeableProperty -> applyAgeableData(entity, property)

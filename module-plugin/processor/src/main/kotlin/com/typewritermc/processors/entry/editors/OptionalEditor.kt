@@ -18,11 +18,12 @@ import java.util.*
 object OptionalEditor : CustomEditor {
     override val id: String = "optional"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassIs Optional::class
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         val argumentType = type.arguments.firstOrNull()?.type?.resolve()
             ?: throw IllegalStateException("Expected Optional to have a single argument")
         val blueprint = DataBlueprint.blueprint(argumentType)
@@ -35,7 +36,7 @@ object OptionalEditor : CustomEditor {
         )
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         val argumentType = type.arguments.firstOrNull()?.type?.resolve()
             ?: throw IllegalStateException("Expected Optional to have a single argument")
         val blueprint = DataBlueprint.blueprint(argumentType)

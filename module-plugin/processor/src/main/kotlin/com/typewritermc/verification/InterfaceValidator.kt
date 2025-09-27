@@ -1,9 +1,6 @@
 package com.typewritermc.verification
 
-import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
-import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.typewritermc.processors.fullName
@@ -11,6 +8,7 @@ import com.typewritermc.processors.isImplementingInterface
 import kotlin.reflect.KClass
 
 class InterfaceValidator<T : Annotation>(
+    private val logger: KSPLogger,
     private val annotationClass: KClass<T>,
     private val interfaceName: String
 ) : SymbolProcessor {
@@ -19,10 +17,12 @@ class InterfaceValidator<T : Annotation>(
         val invalidSymbols = symbols
             .filterIsInstance<KSClassDeclaration>()
             .mapNotNull { classDeclaration ->
-                if (!classDeclaration.isImplementingInterface(interfaceName)) {
-                    "${classDeclaration.fullName}: Does not implement $interfaceName"
-                } else {
-                    null
+                context(logger) {
+                    if (!classDeclaration.isImplementingInterface(interfaceName)) {
+                        "${classDeclaration.fullName}: Does not implement $interfaceName"
+                    } else {
+                        null
+                    }
                 }
             }
             .toList()
@@ -47,6 +47,6 @@ open class InterfaceValidatorProvider<T : Annotation>(
     private val interfaceName: String
 ) : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return InterfaceValidator(annotationClass, interfaceName)
+        return InterfaceValidator(environment.logger, annotationClass, interfaceName)
     }
 }

@@ -6,9 +6,7 @@ import com.typewritermc.core.extension.annotations.VariableData
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.Criteria
-import com.typewritermc.engine.paper.entry.entries.VarContext
-import com.typewritermc.engine.paper.entry.entries.VariableEntry
-import com.typewritermc.engine.paper.entry.entries.getData
+import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.matches
 
 @Entry(
@@ -39,7 +37,7 @@ class ConditionVariable(
 
         for (condition in allConditions) {
             if (condition.criteria.matches(context.player, context.interactionContext ?: context())) {
-                return condition.value.get(context.klass) ?: continue
+                return condition.value.get(context.player, context.interactionContext).get(context.klass) ?: continue
             }
         }
 
@@ -54,5 +52,5 @@ data class ConditionVariableData(
 
 data class Condition(
     val criteria: List<Criteria> = emptyList(),
-    val value: Generic = Generic.Empty,
+    val value: Var<Generic> = ConstVar(Generic.Empty),
 )

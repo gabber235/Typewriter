@@ -49,6 +49,17 @@ class RangedVariable(
                 return context.cast(value)
             }
 
+            Float::class -> {
+                val start = data.range.start.get(Float::class) ?: 0.0f
+                val end = data.range.endInclusive.get(Float::class) ?: 0.0f
+                val step = data.step.get(Float::class) ?: 1.0f
+
+                val numberOfSteps = (((end - start) / step) + 1).roundToInt()
+                val randomStep = Random.nextInt(numberOfSteps)
+                val value = start + randomStep * step
+                return context.cast(value)
+            }
+
             Duration::class -> {
                 val start = data.range.start.get(Duration::class) ?: Duration.ZERO
                 val end = data.range.endInclusive.get(Duration::class) ?: Duration.ZERO

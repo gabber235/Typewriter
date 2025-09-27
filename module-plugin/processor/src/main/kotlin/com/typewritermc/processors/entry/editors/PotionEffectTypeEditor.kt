@@ -14,10 +14,14 @@ import kotlinx.serialization.json.JsonPrimitive
 object PotionEffectTypeEditor : CustomEditor {
     override val id: String = "potionEffectType"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type.whenClassNameIs("org.bukkit.potion.PotionEffectType")
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement = JsonPrimitive("speed")
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint = PrimitiveBlueprint(PrimitiveType.STRING)
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement =
+        JsonPrimitive("speed")
+
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint =
+        PrimitiveBlueprint(PrimitiveType.STRING)
 }

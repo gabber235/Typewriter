@@ -35,7 +35,11 @@ import java.time.Instant
 import kotlin.math.abs
 
 
-private val lookBackDelay: Int by snippet("look_at_entity_interaction_bound.look_back_delay", 500, "The duration in Milliseconds the player can move their head before the bound forces them to look at teh entity.")
+private val lookBackDelay: Int by snippet(
+    "look_at_entity_interaction_bound.look_back_delay",
+    500,
+    "The duration in Milliseconds the player can move their head before the bound forces them to look at teh entity."
+)
 
 @Entry(
     "look_at_entity_interaction_bound",
@@ -55,7 +59,8 @@ class LookAtEntityInteractionBoundEntry(
     @Help("If left empty, the entity where they interacted with will be used.")
     val npc: Ref<EntityInstanceEntry> = emptyRef(),
 ) : InteractionBoundEntry {
-    override fun build(player: Player): InteractionBound = LookAtNpcInteractionBound(player, radius, npc, priority, interruptTriggers.eventTriggers)
+    override fun build(player: Player): InteractionBound =
+        LookAtNpcInteractionBound(player, radius, npc, priority, interruptTriggers.eventTriggers)
 }
 
 class LookAtNpcInteractionBound(
@@ -134,6 +139,7 @@ class LookAtNpcInteractionBound(
 
         val context = player.interactionContext ?: return
         val ref =
+            @Suppress("UNCHECKED_CAST")
             if (instanceEntryRef.isSet) instanceEntryRef
             else context[InteractingEntityInstance] as? Ref<out EntityInstanceEntry>
                 ?: return

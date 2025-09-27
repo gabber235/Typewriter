@@ -18,6 +18,7 @@ class ItemMaterialComponent(
     val material: Var<Material> = ConstVar(Material.AIR),
 ) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
+        @Suppress("DEPRECATION")
         item.type = material.get(player) ?: Material.STONE
     }
 

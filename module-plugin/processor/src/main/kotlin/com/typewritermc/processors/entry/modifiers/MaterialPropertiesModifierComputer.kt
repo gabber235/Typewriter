@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 object MaterialPropertiesModifierComputer : DataModifierComputer<MaterialProperties> {
     override val annotationClass: KClass<MaterialProperties> = MaterialProperties::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: MaterialProperties): Result<DataModifier> {
         // If the field is wrapped in a list or other container, we try if the inner type can be modified
         innerCompute(blueprint, annotation)?.let { return ok(it) }
@@ -25,8 +25,8 @@ object MaterialPropertiesModifierComputer : DataModifierComputer<MaterialPropert
 
         return ok(
             DataModifier.Modifier(
-            "material_properties",
-            annotation.properties.joinToString(";") { it.name.lowercase() }
-        ))
+                "material_properties",
+                annotation.properties.joinToString(";") { it.name.lowercase() }
+            ))
     }
 }

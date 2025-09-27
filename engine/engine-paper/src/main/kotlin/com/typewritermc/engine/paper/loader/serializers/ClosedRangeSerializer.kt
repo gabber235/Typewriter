@@ -42,6 +42,7 @@ class ClosedRangeSerializer : DataSerializer<ClosedRange<*>> {
         if (range != null) return range
 
         if (actualType is Class<*> && Comparable::class.java.isAssignableFrom(actualType)) {
+            @Suppress("UNCHECKED_CAST")
             return start as Comparable<Any>..end as Comparable<Any>
         }
 

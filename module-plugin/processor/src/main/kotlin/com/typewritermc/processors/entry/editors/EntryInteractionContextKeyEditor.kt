@@ -16,12 +16,14 @@ import kotlinx.serialization.json.JsonElement
 object EntryInteractionContextKeyEditor : CustomEditor {
     override val id: String = "entryInteractionContextKey"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean = type whenClassIs EntryInteractionContextKey::class
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement = shape(type).default()
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement =
+        shape(type).default()
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
-        val ref = getClassDeclarationByName<Ref<*>>()?.asStarProjectedType()
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
+        val ref = resolver.getClassDeclarationByName<Ref<*>>()?.asStarProjectedType()
             ?: throw CouldNotBuildBlueprintException("Could not find Ref")
         val refBlueprint =
             DataBlueprint.blueprint(ref) ?: throw CouldNotBuildBlueprintException("Could not find Ref blueprint")

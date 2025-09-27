@@ -19,14 +19,16 @@ private val inputTitle: String by snippet("dialogue.input.bedrock.title", "<bold
 private val inputContent: String by snippet("dialogue.input.bedrock.content", "<message>\n\n")
 private val inputField: String by snippet("dialogue.input.bedrock.field", "Value")
 
-class BedrockInputDialogueDialogueMessenger<T : Any>(
+class BedrockInputDialogueDialogueMessenger<IntermediateType : Any, ContextType : Any>(
     player: Player,
     context: InteractionContext,
     entry: InputDialogueEntry,
     private val key: EntryContextKey,
-    private val parser: (String) -> Result<T>,
-    private val triggers: (T?) -> List<EventTrigger>,
+    private val parser: (String) -> Result<IntermediateType>,
+    private val contextConverter: (IntermediateType) -> ContextType,
+    private val triggers: (IntermediateType?) -> List<EventTrigger>,
 ) : DialogueMessenger<InputDialogueEntry>(player, context, entry) {
+    private var provided: IntermediateType? = null
 
     override fun init() {
         super.init()
@@ -34,10 +36,7 @@ class BedrockInputDialogueDialogueMessenger<T : Any>(
     }
 
     override val eventTriggers: List<EventTrigger>
-        get() {
-            val value = context.get<T>(entry, key)
-            return triggers(value)
-        }
+        get() = triggers(provided)
 
     private fun sendForm() {
         org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
@@ -72,7 +71,8 @@ class BedrockInputDialogueDialogueMessenger<T : Any>(
                         return@validResultHandler
                     }
                     val data = value.getOrNull() ?: return@validResultHandler
-                    context[entry, key] = data
+                    provided = data
+                    context[entry, key] = contextConverter(data)
                     state = MessengerState.FINISHED
                 }
         )

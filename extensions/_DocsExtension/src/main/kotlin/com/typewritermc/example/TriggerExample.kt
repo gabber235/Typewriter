@@ -58,7 +58,7 @@ fun interactionTriggers(player: Player) {
 fun dialogueTriggers(player: Player) {
     //<code-block:dialogue_triggers>
     // Next dialogue should be triggered or the current dialogue should complete its typing animation.
-    DialogueTrigger.NEXT_OR_COMPLETE.triggerFor(player, context())
+    DialogueTrigger.NEXT_OR_SKIP_ANIMATION.triggerFor(player, context())
 
     // Forces the next dialogue to be triggered, even if the animation hasn't finished.
     DialogueTrigger.FORCE_NEXT.triggerFor(player, context())

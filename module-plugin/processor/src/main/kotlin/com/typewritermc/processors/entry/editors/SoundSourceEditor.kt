@@ -16,11 +16,12 @@ import kotlinx.serialization.json.JsonPrimitive
 object SoundSourceEditor : CustomEditor {
     override val id: String = "soundSource"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassNameIs "com.typewritermc.engine.paper.utils.SoundSource"
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         return JsonObject(
             mapOf(
                 "type" to JsonPrimitive("self"),
@@ -39,7 +40,7 @@ object SoundSourceEditor : CustomEditor {
         )
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         return ObjectBlueprint(
             mapOf(
                 "type" to PrimitiveBlueprint(PrimitiveType.STRING),

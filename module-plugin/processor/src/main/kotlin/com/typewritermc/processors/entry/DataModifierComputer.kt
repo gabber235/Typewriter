@@ -12,7 +12,7 @@ import kotlin.reflect.cast
 interface DataModifierComputer<A : Annotation> {
     val annotationClass: KClass<A>
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     @OptIn(KspExperimental::class)
     fun applyModifier(blueprint: DataBlueprint, property: KSPropertyDeclaration) {
         val annotation = property.getAnnotationsByType(annotationClass).firstOrNull() ?: return
@@ -20,17 +20,17 @@ interface DataModifierComputer<A : Annotation> {
         modifier.appendModifier(blueprint)
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun compute(blueprint: DataBlueprint, annotation: A): Result<DataModifier>
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun innerListCompute(blueprint: DataBlueprint, annotation: A): DataModifier? {
         if (blueprint !is DataBlueprint.ListBlueprint) return null
         val modifier = compute(blueprint.type, annotation).getOrNull() ?: return null
         return DataModifier.InnerModifier(modifier)
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun innerMapCompute(blueprint: DataBlueprint, annotation: A): DataModifier? {
         if (blueprint !is DataBlueprint.MapBlueprint) return null
         val keyModifier = compute(blueprint.key, annotation).onFailure { return null }.getOrNull()
@@ -40,7 +40,7 @@ interface DataModifierComputer<A : Annotation> {
         return DataModifier.InnerMapModifier(keyModifier, valueModifier)
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun innerObjectCompute(blueprint: DataBlueprint, annotation: A): DataModifier? {
         if (blueprint !is DataBlueprint.ObjectBlueprint) return null
         val modifiers = blueprint.fields.mapNotNull {
@@ -51,14 +51,14 @@ interface DataModifierComputer<A : Annotation> {
         return DataModifier.InnerObjectModifier(modifiers)
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun innerCustomCompute(blueprint: DataBlueprint, annotation: A): DataModifier? {
         if (blueprint !is DataBlueprint.CustomBlueprint) return null
         val modifier = superInnerCompute(blueprint.shape, annotation) ?: return null
         return DataModifier.InnerModifier(modifier)
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun innerCompute(blueprint: DataBlueprint, annotation: A): DataModifier? {
         return when (blueprint) {
             is DataBlueprint.ListBlueprint -> innerListCompute(blueprint, annotation)
@@ -68,9 +68,12 @@ interface DataModifierComputer<A : Annotation> {
         }
     }
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun superInnerCompute(blueprint: DataBlueprint, annotation: A): DataModifier? {
-        return innerCompute(blueprint, annotation) ?: innerObjectCompute(blueprint, annotation) ?: compute(blueprint, annotation).getOrNull()
+        return innerCompute(blueprint, annotation) ?: innerObjectCompute(blueprint, annotation) ?: compute(
+            blueprint,
+            annotation
+        ).getOrNull()
     }
 }
 
@@ -98,7 +101,7 @@ private val computers: List<DataModifierComputer<*>> = listOf(
     InnerMaxModifierComputer,
 )
 
-context(KSPLogger, Resolver)
+context(logger: KSPLogger, resolver: Resolver)
 fun applyModifiers(blueprint: DataBlueprint, property: KSPropertyDeclaration) {
     for (computer in computers) {
         computer.applyModifier(blueprint, property)

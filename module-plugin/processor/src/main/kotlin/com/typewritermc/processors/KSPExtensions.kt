@@ -54,16 +54,17 @@ infix fun KSDeclaration.isOrExtends(className: String): Boolean {
 
 infix fun KSType.isOrExtends(className: String): Boolean = declaration isOrExtends className
 
-context(Resolver)
+context(resolver: Resolver)
 @OptIn(KspExperimental::class)
 inline fun <reified T : Annotation> KSAnnotated.annotationClassValue(f: T.() -> KClass<*>) =
     getAnnotationsByType(T::class).first().annotationClassValue(f)
 
-context(Resolver)
+context(resolver: Resolver)
 @OptIn(KspExperimental::class)
 inline fun <reified T : Annotation> T.annotationClassValue(f: T.() -> KClass<*>): KSType = try {
     val klass = f()
-    val declaration = getKotlinClassByName(klass.qualifiedName!!) ?: throw ClassNotFoundException(klass.qualifiedName!!)
+    val declaration =
+        resolver.getKotlinClassByName(klass.qualifiedName!!) ?: throw ClassNotFoundException(klass.qualifiedName!!)
     declaration.asStarProjectedType()
 } catch (e: KSTypeNotPresentException) {
     e.ksType
@@ -78,6 +79,13 @@ fun List<KSValueParameter>.hasParameter(index: Int, className: String): Boolean 
 }
 
 fun KSClassDeclaration.isImplementingInterface(interfaceName: String): Boolean {
+    if (classKind == ClassKind.ENUM_ENTRY) {
+        val p = parent
+        if (p !is KSClassDeclaration) {
+            throw EnumEntryMissingParent(fullName)
+        }
+        return p.isImplementingInterface(interfaceName)
+    }
     return getAllSuperTypes().any { it.whenClassNameIs(interfaceName) }
 }
 
@@ -86,3 +94,6 @@ class EntryNotFoundException(what: String, who: String, entry: String) :
 
 class IllegalClassTypeException(className: String) :
     Exception("Class $className does not have a qualified name. Classes must be full classes.")
+
+class EnumEntryMissingParent(className: String) :
+    Exception("Enum entry $className does not have a parent class. This is likely a bug in the KSP processor. Please report this issue.")

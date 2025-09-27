@@ -51,14 +51,24 @@ class InteractionScope(
     }
 
     suspend fun swapBound(bound: InteractionBound) {
+        val transition = try {
+            this.bound.transitionTo(bound)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            true
+        }
+        if (!transition) {
+            return
+        }
         tryCatchSuspend { this.bound.teardown() }
+        tryCatchSuspend { bound.transitionFrom(this.bound) }
         this.bound = bound
         tryCatchSuspend { bound.initialize() }
     }
 
-    suspend fun teardown(force: Boolean = false) {
+    suspend fun teardown() {
         tryCatchSuspend { this.bound.teardown() }
-        tryCatchSuspend { interaction.teardown(force) }
+        tryCatchSuspend { interaction.teardown() }
     }
 
     suspend fun addBoundStateOverride(

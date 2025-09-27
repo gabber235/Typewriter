@@ -37,14 +37,14 @@ class EntryArgumentType<E : Entry>(
     val klass: KClass<E>,
 ) : CustomArgumentType.Converted<E, String> {
     override fun convert(nativeType: String): E {
-        return Query.findById<E>(klass, nativeType)
-            ?: Query.findByName<E>(klass, nativeType)
+        return Query.findById(klass, nativeType)
+            ?: Query.findByName(klass, nativeType)
             ?: throw SimpleCommandExceptionType(LiteralMessage("Could not find entry $nativeType")).create()
     }
 
     override fun getNativeType(): ArgumentType<String> = StringArgumentType.word()
 
-    override fun <S> listSuggestions(
+    override fun <S : Any> listSuggestions(
         context: CommandContext<S>,
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
@@ -76,7 +76,7 @@ class PageArgumentType(
 
     override fun getNativeType(): ArgumentType<String> = StringArgumentType.word()
 
-    override fun <S> listSuggestions(
+    override fun <S : Any> listSuggestions(
         context: CommandContext<S>,
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {

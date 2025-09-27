@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.utils
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion
 import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
 import net.kyori.adventure.text.*
 import net.kyori.adventure.text.format.NamedTextColor
@@ -14,33 +15,46 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 
-private val mm = MiniMessage.builder()
-    .tags(
-        TagResolver.builder()
-            .resolvers(
-                StandardTags.decorations(),
-                StandardTags.color(),
-                StandardTags.hoverEvent(),
-                StandardTags.clickEvent(),
-                StandardTags.keybind(),
-                StandardTags.translatable(),
-                StandardTags.translatableFallback(),
-                StandardTags.insertion(),
-                StandardTags.font(),
-                StandardTags.gradient(),
-                StandardTags.rainbow(),
-                StandardTags.transition(),
-                StandardTags.reset(),
+private val mm: MiniMessage by lazy {
+    val resolvers = mutableListOf<TagResolver>(
+        StandardTags.decorations(),
+        StandardTags.color(),
+        StandardTags.hoverEvent(),
+        StandardTags.clickEvent(),
+        StandardTags.keybind(),
+        StandardTags.translatable(),
+        StandardTags.translatableFallback(),
+        StandardTags.insertion(),
+        StandardTags.font(),
+        StandardTags.gradient(),
+        StandardTags.rainbow(),
+        StandardTags.transition(),
+        StandardTags.reset(),
 //                StandardTags.newline(), // Disable because breaks most formatting
-                StandardTags.selector(),
-                StandardTags.score(),
-                StandardTags.nbt(),
-            )
-            .tag("confirmation_key") { _, _ -> Tag.preProcessParsed(confirmationKey.keybind) }
-            .resolver(Placeholder.parsed("line", "<#ECFFF8><bold>│</bold></#ECFFF8><white>"))
-            .build()
+        StandardTags.selector(),
+        StandardTags.score(),
+        StandardTags.nbt(),
     )
-    .build()
+
+    if (serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_4)) {
+        resolvers.addAll(
+            listOf(
+                StandardTags.pride(),
+                StandardTags.shadowColor(),
+            )
+        )
+    }
+
+    MiniMessage.builder()
+        .tags(
+            TagResolver.builder()
+                .resolvers(resolvers)
+                .tag("confirmation_key") { _, _ -> Tag.preProcessParsed(confirmationKey.keybind) }
+                .resolver(Placeholder.parsed("line", "<#ECFFF8><bold>│</bold></#ECFFF8><white>"))
+                .build()
+        )
+        .build()
+}
 
 fun Component.asMini() = mm.serialize(this)
 
@@ -69,6 +83,7 @@ fun CommandSender.sendMiniWithResolvers(message: String, vararg resolvers: TagRe
 
 fun CommandSender.msg(message: String) = sendMini("<red><bold>Typewriter »<reset><white> $message")
 
+@Suppress("DEPRECATION")
 fun Component.plainText(): String = ChatColor.stripColor(PlainTextComponentSerializer.plainText().serialize(this)) ?: ""
 
 fun Component.legacy(): String = LegacyComponentSerializer.legacy('§').serialize(this)
@@ -140,7 +155,7 @@ private fun Component.splitText(runningText: RunningText, style: Style): Compone
 
     // If the text is longer than the remaining text, this is the last component.
     if (size > runningText.textRemaining) {
-        val newText = text.substring(0, runningText.textRemaining)
+        val newText = text.take(runningText.textRemaining)
         runningText.textRemaining = 0
         return this.content(newText).style(mergedStyle)
             .noChildren()

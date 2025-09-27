@@ -1,7 +1,10 @@
 package com.typewritermc.engine.paper.utils.item.components
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
+import com.typewritermc.core.extension.annotations.Default
+import com.typewritermc.core.extension.annotations.InnerMin
+import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
@@ -14,7 +17,7 @@ class ItemAmountComponent(
     @InnerMin(Min(0))
     @Default("1")
     val amount: Var<Int> = ConstVar(1),
-): ItemComponent {
+) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
         item.amount = amount.get(player, interactionContext) ?: 1
     }

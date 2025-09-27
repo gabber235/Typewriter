@@ -51,8 +51,54 @@ You can also configure the paths yourself. This can be done by opening the `Path
 * **Pitch**: The pitch of the camera.
 * **Yaw**: The yaw of the camera.
 
-**Duration**: The duration of the location to the next location in ticks. If not specified, the duration will be calculated based on the left-over duration.\
-For example, if you have a segment of *300* frames with 3 locations, and the 2nd location has a **duration** of *200* frames, the duration from the 1st to the 2nd location will be *100* ticks, and from the 2nd to the 3rd location, *200* ticks.
+**Duration**: The duration of the location to the next location in ticks. Understanding how this works is crucial for creating smooth cinematics.
+
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+
+<SplitLayout>
+<Section divider="right">
+
+### Understanding Duration
+
+The duration for a path point is the amount of **frames (ticks)** it will take from that point to the **next point**.
+
+Key principles:
+1. **Last point's duration is ignored** \
+-> there's no "next" point to move to
+2. **Sum of durations must equal segment duration** \
+-> all movement time must add up
+3. **Unspecified durations are auto-calculated** \
+-> remaining time is split evenly
+
+</Section>
+<Section divider="left">
+
+#### Example: 4 Points, 100 Frame Segment
+
+**Setup:**
+- **Point 1**: Duration unspecified
+- **Point 2**: Duration 50 frames  
+- **Point 3**: Duration unspecified
+- **Point 4**: Duration 10 frames \
+*(ignored - it's the last point)*
+
+**Result:**
+- **Point 1 → Point 2**: 25 frames \
+*(auto-calculated)*
+- **Point 2 → Point 3**: 50 frames \
+*(as specified)*
+- **Point 3 → Point 4**: 25 frames \
+*(auto-calculated)*
+
+*Auto-calculated durations:* \
+`(100 - 50) ÷ 2 = 25 frames each`
+
+</Section>
+</SplitLayout>
+
+:::tip[Pro Tip]
+With only 2 points, specifying duration is unnecessary since it must equal the total segment duration. Leave it unspecified for automatic calculation!
+:::
 
 Repeat this process to make more locations in the path.
 

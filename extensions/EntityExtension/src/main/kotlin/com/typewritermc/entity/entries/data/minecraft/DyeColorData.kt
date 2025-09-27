@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.typewritermc.entity.entries.data.minecraft
 
 import com.typewritermc.core.books.pages.Colors

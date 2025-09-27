@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 object SegmentModifierComputer : DataModifierComputer<Segments> {
     override val annotationClass: KClass<Segments> = Segments::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Segments): Result<DataModifier> {
         if (blueprint !is DataBlueprint.ListBlueprint) {
             return failure("Segment annotation can only be used on lists")

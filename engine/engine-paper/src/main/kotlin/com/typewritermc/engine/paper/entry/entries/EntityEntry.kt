@@ -7,6 +7,7 @@ import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.extension.annotations.Tags
+import com.typewritermc.core.utils.point.formatted
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.utils.Sound
@@ -21,7 +22,7 @@ interface SpeakerEntry : PlaceholderEntry {
     val displayName: Var<String>
 
     @Help("The sound that will be played when the entity speaks.")
-    val sound: Sound
+    val sound: Var<Sound>
 
     override fun parser(): PlaceholderParser = placeholderParser {
         supply { player -> displayName.get(player) }
@@ -84,11 +85,11 @@ interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry, SpeakerEn
                 ?: ""
         }
 
-    override val sound: Sound
-        get() = definition.get()?.sound ?: Sound.EMPTY
+    override val sound: Var<Sound>
+        get() = definition.get()?.sound ?: ConstVar(Sound.EMPTY)
 
     override fun getEmitter(player: Player): SoundEmitter {
-        val display = ref().findDisplay() as? AudienceEntityDisplay ?: return SoundEmitter(player.entityId)
+        val display = ref().findDisplay<AudienceEntityDisplay>() ?: return SoundEmitter(player.entityId)
         val entityId = display.entityId(player.uniqueId)
         return SoundEmitter(entityId)
     }
@@ -96,6 +97,20 @@ interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry, SpeakerEn
     override fun parser(): PlaceholderParser = placeholderParser {
         include(super<AudienceFilterEntry>.parser())
         include(super<SpeakerEntry>.parser())
+
+        literal("position") {
+            string("format") { format ->
+                supplyPlayer { player ->
+                    val position =
+                        ref().findDisplay<AudienceEntityDisplay>()?.property<PositionProperty>(player.uniqueId)
+                    position?.formatted(format()) ?: "Unknown Position"
+                }
+            }
+            supplyPlayer { player ->
+                val position = ref().findDisplay<AudienceEntityDisplay>()?.property<PositionProperty>(player.uniqueId)
+                position?.formatted() ?: "Unknown Position"
+            }
+        }
     }
 }
 
@@ -113,6 +128,7 @@ interface SharedEntityActivityEntry : EntityActivityEntry {
             SharedActivityContext::class,
             this
         )
+        @Suppress("UNCHECKED_CAST")
         return create(context, currentLocation) as EntityActivity<ActivityContext>
     }
 
@@ -130,6 +146,7 @@ interface IndividualEntityActivityEntry : EntityActivityEntry {
             IndividualActivityContext::class,
             this
         )
+        @Suppress("UNCHECKED_CAST")
         return create(context, currentLocation) as EntityActivity<ActivityContext>
     }
 
@@ -150,6 +167,7 @@ interface GenericEntityActivityEntry : SharedEntityActivityEntry, IndividualEnti
         context: SharedActivityContext,
         currentLocation: PositionProperty
     ): EntityActivity<SharedActivityContext> {
+        @Suppress("UNCHECKED_CAST")
         return create(context as ActivityContext, currentLocation) as EntityActivity<SharedActivityContext>
     }
 
@@ -157,6 +175,7 @@ interface GenericEntityActivityEntry : SharedEntityActivityEntry, IndividualEnti
         context: IndividualActivityContext,
         currentLocation: PositionProperty
     ): EntityActivity<IndividualActivityContext> {
+        @Suppress("UNCHECKED_CAST")
         return create(context as ActivityContext, currentLocation) as EntityActivity<IndividualActivityContext>
     }
 }

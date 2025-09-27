@@ -18,11 +18,12 @@ import kotlinx.serialization.json.JsonPrimitive
 object PositionEditor : CustomEditor {
     override val id: String = "position"
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun accept(type: KSType): Boolean {
         return type whenClassIs Position::class
     }
 
-    context(KSPLogger, Resolver) override fun default(type: KSType): JsonElement {
+    context(logger: KSPLogger, resolver: Resolver) override fun default(type: KSType): JsonElement {
         return JsonObject(
             mapOf(
                 "world" to JsonPrimitive(""),
@@ -35,7 +36,7 @@ object PositionEditor : CustomEditor {
         )
     }
 
-    context(KSPLogger, Resolver) override fun shape(type: KSType): DataBlueprint {
+    context(logger: KSPLogger, resolver: Resolver) override fun shape(type: KSType): DataBlueprint {
         return ObjectBlueprint(
             mapOf(
                 "world" to PrimitiveBlueprint(PrimitiveType.STRING),
@@ -48,6 +49,7 @@ object PositionEditor : CustomEditor {
         )
     }
 
+    context(logger: KSPLogger, resolver: Resolver)
     override fun modifiers(type: KSType): List<DataModifier> {
         // TODO: Use the actual ContentEditorModifierComputer
         return listOf(

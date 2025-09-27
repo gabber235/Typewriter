@@ -23,7 +23,7 @@ class ReferenceNpcEntry(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
-    override val sound: Sound = Sound.EMPTY,
+    override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @Help("The id of the NPC in the Citizens plugin.")
     val npcId: Int = 0,
 ) : SoundSourceEntry, SpeakerEntry, StaticEntry {

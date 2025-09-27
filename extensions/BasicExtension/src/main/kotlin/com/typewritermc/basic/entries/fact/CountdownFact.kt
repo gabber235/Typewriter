@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
     "countdown_fact",
     "A fact that counts down from the set value",
     Colors.PURPLE,
-    "material-symbols:person-pin"
+    "ph:clock-countdown-fill"
 )
 /**
  * The `Cooldown Fact` is a fact reflects the time since the last set value.

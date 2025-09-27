@@ -17,6 +17,7 @@ import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.eventTriggers
+import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.isFloodgate
 import org.bukkit.entity.Player
@@ -126,13 +127,15 @@ class FilterInputDialogueEntry(
 ) : InputDialogueEntry {
     override val triggers: List<Ref<TriggerableEntry>> get() = emptyList()
 
-    override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<*>? {
-        return messenger(player, context, this, FilterInputContextKeys.FILTER,
-            triggers = triggers@{ input ->
-                if (input == null) {
+    override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<*> {
+        return advancedMessenger<FilterResult, String>(
+            player, context, this, FilterInputContextKeys.FILTER,
+            contextConverter = { it.provided },
+            triggers = triggers@{ filterResult ->
+                if (filterResult == null) {
                     return@triggers incorrectTriggers.orElse(emptyList()).eventTriggers
                 }
-                val filter = filters.firstOrNull { input.matches(Regex(it.input)) }
+                val filter = filterResult.filter
                 if (filter != null) {
                     return@triggers filter.triggers.eventTriggers
                 }
@@ -140,12 +143,20 @@ class FilterInputDialogueEntry(
                 return@triggers incorrectTriggers.orElse(emptyList()).eventTriggers
             }
         ) parser@{ input ->
-            val filter = filters.firstOrNull { input.matches(Regex(it.input)) }
+            val filter = filters.firstOrNull {
+                input.matches(
+                    Regex(
+                        it.input.parsePlaceholders(
+                            player
+                        )
+                    )
+                )
+            }
             if (filter != null) {
-                return@parser ok(input)
+                return@parser ok(FilterResult(input, filter))
             }
             if (incorrectTriggers.isPresent) {
-                return@parser ok(input)
+                return@parser ok(FilterResult(input, null))
             }
             failure(filterInputNotMatchedMessage)
         }
@@ -154,6 +165,7 @@ class FilterInputDialogueEntry(
 
 class Filter(
     @Regex
+    @Placeholder
     val input: String = "",
     val triggers: List<Ref<TriggerableEntry>> = emptyList(),
 )
@@ -162,6 +174,11 @@ enum class FilterInputContextKeys(override val klass: KClass<*>) : EntryContextK
     @KeyType(String::class)
     FILTER(String::class),
 }
+
+class FilterResult(
+    val provided: String,
+    val filter: Filter?,
+)
 
 val doubleInputNotADoubleMessage: String by snippet(
     "dialogue.input.error.double.not_a_double",
@@ -211,9 +228,21 @@ private fun <T : Any> messenger(
     triggers: (T?) -> List<EventTrigger> = { entry.eventTriggers },
     parser: (String) -> Result<T>,
 ): DialogueMessenger<InputDialogueEntry> {
+    return advancedMessenger(player, context, entry, key, triggers, { it }, parser)
+}
+
+private fun <IntermediateType : Any, ContextType : Any> advancedMessenger(
+    player: Player,
+    context: InteractionContext,
+    entry: InputDialogueEntry,
+    key: EntryContextKey,
+    triggers: (IntermediateType?) -> List<EventTrigger> = { entry.eventTriggers },
+    contextConverter: (IntermediateType) -> ContextType,
+    parser: (String) -> Result<IntermediateType>,
+): DialogueMessenger<InputDialogueEntry> {
     return if (player.isFloodgate) {
-        BedrockInputDialogueDialogueMessenger(player, context, entry, key, parser, triggers)
+        BedrockInputDialogueDialogueMessenger(player, context, entry, key, parser, contextConverter, triggers)
     } else {
-        JavaInputDialogueDialogueMessenger(player, context, entry, key, parser, triggers)
+        JavaInputDialogueDialogueMessenger(player, context, entry, key, parser, contextConverter, triggers)
     }
 }

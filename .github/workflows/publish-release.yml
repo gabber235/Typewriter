@@ -1,0 +1,65 @@
+name: Build and Publish Release Jars
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-publish-release:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-publish-release
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: true
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
+          cache-cleanup: always
+
+      - name: Build Engine
+        uses: ./.github/actions/build-engine
+
+#  ----------------------------------------------------------------------------------------------------
+      - name: Build Extensions
+        working-directory: ./extensions
+        run: ./gradlew buildRelease --scan --no-daemon
+
+      - name: Upload Jars as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Typewriter-Releases
+          path: |
+            jars/engine/*.jar
+            jars/extensions/*.jar
+          retention-days: 1
+          if-no-files-found: error
+
+#  ----------------------------------------------------------------------------------------------------
+      - name: Publish Engine to Release Maven Repository
+        working-directory: ./engine
+        env:
+          ORG_GRADLE_PROJECT_TypewriterReleasesUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_TypewriterReleasesPassword: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToTypewriterReleasesRepository --scan --stacktrace --warning-mode all --no-daemon
+
+      - name: Publish All Extensions to Release Maven Repository
+        working-directory: ./extensions
+        env:
+          ORG_GRADLE_PROJECT_TypewriterReleasesUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_TypewriterReleasesPassword: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToTypewriterReleasesRepository --scan --stacktrace --warning-mode all --no-daemon
+#  ----------------------------------------------------------------------------------------------------

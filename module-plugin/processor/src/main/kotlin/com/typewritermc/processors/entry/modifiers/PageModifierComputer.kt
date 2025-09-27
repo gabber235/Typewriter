@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 object PageModifierComputer : DataModifierComputer<Page> {
     override val annotationClass: KClass<Page> = Page::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Page): Result<DataModifier> {
         innerCompute(blueprint, annotation)?.let { return ok(it) }
 

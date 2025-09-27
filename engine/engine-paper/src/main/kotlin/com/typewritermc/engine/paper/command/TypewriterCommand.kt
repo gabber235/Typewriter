@@ -94,6 +94,26 @@ private fun CommandTree.factsCommand() = literal("facts") {
         }
     }
 
+    literal("add") {
+        withPermission("typewriter.facts.add")
+        entry<WritableFactEntry>("fact") { fact ->
+            int("value") { value ->
+                executePlayerOrTarget { target ->
+                    val fact = fact()
+                    if (fact !is ReadableFactEntry) {
+                        sender.msg("This fact is not readable. Therefore we cannot add to it.")
+                        return@executePlayerOrTarget
+                    }
+
+                    val current = fact.readForPlayersGroup(target)
+                    val newValue = current.value + value()
+                    fact().write(target, newValue)
+                    sender.msg("Fact <blue>${fact().formattedName}</blue> set to $newValue for ${target.name}.")
+                }
+            }
+        }
+    }
+
     literal("reset") {
         withPermission("typewriter.facts.reset")
         executePlayerOrTarget { target ->

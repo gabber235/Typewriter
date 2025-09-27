@@ -81,6 +81,7 @@ fun List<Pair<PropertySupplier<*>, Int>>.toCollectors(): List<PropertyCollector<
                 error("${type.simpleName} needs to have a companion object that implements PropertyCollectorSupplier")
             }
 
+            @Suppress("UNCHECKED_CAST")
             val comp = companion as PropertyCollectorSupplier<in EntityProperty>
             comp.collector(typeSuppliers)
         }

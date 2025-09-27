@@ -9,6 +9,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
+import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.utils.Sound
 import java.time.Duration
 import kotlin.math.max
@@ -64,7 +65,7 @@ class AmbientSoundActivity(
             nextPlay = System.currentTimeMillis() + delay.random().toMillis()
             val sound = sounds.weightedRandom().sound
             context.viewers.forEach { viewer ->
-                sound.play(viewer)
+                sound.play(viewer, viewer.interactionContext)
             }
         }
         return super.tick(context)

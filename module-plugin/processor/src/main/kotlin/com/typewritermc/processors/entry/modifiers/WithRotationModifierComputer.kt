@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 object WithRotationModifierComputer : DataModifierComputer<WithRotation> {
     override val annotationClass: KClass<WithRotation> = WithRotation::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: WithRotation): Result<DataModifier> {
         innerCompute(blueprint, annotation)?.let { return ok(it) }
 

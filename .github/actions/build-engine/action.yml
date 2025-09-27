@@ -8,30 +8,34 @@ runs:
         uses: subosito/flutter-action@v2
         with:
           channel: "beta"
+          cache: true
+
       - name: Get Flutter dependencies
         run: flutter pub get
         shell: bash
         working-directory: ./app
+
       - name: Run Lint
         run: flutter analyze
         shell: bash
         working-directory: ./app
+
       - name: Run tests
         run: flutter test
         shell: bash
         working-directory: ./app
+
       - name: Build web app
         run: flutter build web --release
         shell: bash
         working-directory: ./app
-      - name: Test Paper Engine
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: engine-paper:test --scan
-          build-root-directory: ./engine
-      - name: Build Plugin
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: engine-paper:buildRelease --scan
-          build-root-directory: ./engine
 
+      - name: Test Paper Engine
+        working-directory: ./engine
+        run: ./gradlew engine-paper:test --stacktrace --warning-mode all
+        shell: bash
+
+      - name: Build Plugin
+        working-directory: ./engine
+        run: ./gradlew engine-paper:buildRelease --stacktrace --warning-mode all
+        shell: bash

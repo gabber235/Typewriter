@@ -11,6 +11,7 @@ import com.typewritermc.engine.paper.content.ContentHandler
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.action.ActionHandler
 import com.typewritermc.engine.paper.entry.dialogue.DialogueHandler
+import com.typewritermc.engine.paper.entry.dialogue.DialoguePlaceholders
 import com.typewritermc.engine.paper.entry.entity.EntityHandler
 import com.typewritermc.engine.paper.entry.temporal.TemporalHandler
 import com.typewritermc.engine.paper.entry.temporal.TemporalPlaceholders
@@ -120,6 +121,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             single { FactHandler() } bind TriggerHandler::class
             single { TemporalHandler() } bind TriggerHandler::class
 
+            single { DialoguePlaceholders() } bind PlaceholderHandler::class
             single { TemporalPlaceholders() } bind PlaceholderHandler::class
 
             factory<Gson>(named("dataSerializer")) { createDataSerializerGson(getAll()) }

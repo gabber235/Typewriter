@@ -54,7 +54,9 @@ class EntryListeners : KoinComponent, Reloadable {
         }
         activeEntryListeners.forEach {
             val method = it.method
-            val eventClass = findEventFromMethod(method).logErrorIfNull("Could not find bukkit event class for ${method.name}") ?: return@forEach
+            val eventClass =
+                findEventFromMethod(method).logErrorIfNull("Could not find bukkit event class for ${method.name}")
+                    ?: return@forEach
 
             listener.listen(plugin, eventClass, it.priority.toBukkitPriority(), it.ignoreCancelled) { event ->
                 onEvent(event, it, ParameterGenerator.getGenerators(method.parameters), method)
@@ -65,6 +67,7 @@ class EntryListeners : KoinComponent, Reloadable {
     }
 
     private fun findEventFromMethod(method: Method): KClass<out Event>? {
+        @Suppress("UNCHECKED_CAST")
         return method.parameters.firstNotNullOfOrNull { it.type.kotlin.takeIf { type -> type.isSubclassOf(Event::class) } } as? KClass<out Event>
     }
 
@@ -116,6 +119,10 @@ sealed interface ParameterGenerator {
         override fun generate(event: Event, entryListenerInfo: EntryListenerInfo): Any {
             val extensionLoader = get<ExtensionLoader>(ExtensionLoader::class.java)
             val entryClass = extensionLoader.loadClass(entryListenerInfo.entryClassName)
+            if (!Entry::class.java.isAssignableFrom(entryClass)) {
+                throw IllegalArgumentException("The entry class ${entryClass.name} is not a valid Entry")
+            }
+            @Suppress("UNCHECKED_CAST")
             val klass = entryClass.kotlin as KClass<out Entry>
             return Query(klass)
         }

@@ -10,25 +10,27 @@ interface CustomEditor {
     /// The name of the editor
     val id: String
 
+    context(logger: KSPLogger, resolver: Resolver)
     fun accept(type: KSType): Boolean
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun default(type: KSType): JsonElement
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun shape(type: KSType): DataBlueprint
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     fun validateDefault(type: KSType, default: JsonElement): Result<Unit> {
         return shape(type).validateDefault(default)
     }
 
+    context(logger: KSPLogger, resolver: Resolver)
     fun modifiers(type: KSType): List<DataModifier> {
         return emptyList()
     }
 }
 
-context(KSPLogger, Resolver)
+context(logger: KSPLogger, resolver: Resolver)
 fun <A : Annotation> DataModifierComputer<A>.computeModifier(annotation: A, type: KSType): DataModifier {
     return this.compute(DataBlueprint.blueprint(type)!!, annotation).getOrThrow()
 }

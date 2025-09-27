@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 object WithAlphaModifierComputer : DataModifierComputer<WithAlpha> {
     override val annotationClass: KClass<WithAlpha> = WithAlpha::class
 
-    context(KSPLogger, Resolver)
+    context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: WithAlpha): Result<DataModifier> {
         innerCompute(blueprint, annotation)?.let { return ok(it) }
 

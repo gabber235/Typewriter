@@ -129,7 +129,7 @@ class ContentInteraction(
         return mode != null
     }
 
-    override suspend fun teardown(force: Boolean) {
+    override suspend fun teardown() {
         unregister()
         Dispatchers.Sync.switchContext {
             cachedOriginalItems.forEach { (slot, item) ->

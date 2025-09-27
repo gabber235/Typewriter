@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture
  *
  * @param T The type of the result
  */
-abstract class ChainArgumentType<T> : CustomArgumentType<T, String> {
+abstract class ChainArgumentType<T : Any> : CustomArgumentType<T, String> {
     /**
      * The list of argument types to chain together.
      */
@@ -44,7 +44,7 @@ abstract class ChainArgumentType<T> : CustomArgumentType<T, String> {
             // If this is not the first argument, expect a space
             if (i > 0) {
                 if (!reader.canRead() || reader.read() != ' ') {
-                    throw IllegalArgumentException("Expected a space after argument ${i}")
+                    throw IllegalArgumentException("Expected a space after argument $i")
                 }
             }
 

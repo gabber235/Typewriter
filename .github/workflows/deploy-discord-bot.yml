@@ -12,11 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-discord-bot
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            discord_bot
+          sparse-checkout-cone-mode: true
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy Discord Bot
         working-directory: discord_bot
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-

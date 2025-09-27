@@ -36,7 +36,7 @@ class EntryListenerProcessor(
         return symbols.toList()
     }
 
-    context(Resolver)
+    context(resolver: Resolver)
     @OptIn(KspExperimental::class)
     private fun generateListenerBlueprint(function: KSFunctionDeclaration): JsonElement {
         logger.info("Generating entry listener blueprint for ${function.fullName}")
