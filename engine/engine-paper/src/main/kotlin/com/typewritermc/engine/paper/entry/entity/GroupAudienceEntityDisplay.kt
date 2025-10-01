@@ -97,7 +97,7 @@ class GroupAudienceEntityDisplay(
     override fun onPlayerRemove(player: Player) {
         super.onPlayerRemove(player)
         val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
-        // If no players are considered for this group, we can remove the activity manager
+        // When there is nobody that can view an entity, we no longer need to track its activity
         if (consideredPlayers.none { groupId == group.groupId(it) }) {
             activityManagers.remove(groupId)?.dispose(SharedActivityContext(instanceEntryRef, emptyList()))
             lastStates.remove(groupId)
