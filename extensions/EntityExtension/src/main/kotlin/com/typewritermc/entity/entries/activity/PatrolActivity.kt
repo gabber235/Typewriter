@@ -4,10 +4,11 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
+import com.typewritermc.engine.paper.utils.firstWalkableLocationBelow
 import com.typewritermc.roadnetwork.*
 import com.typewritermc.roadnetwork.gps.PointToPointGPS
 import org.koin.core.component.KoinComponent
@@ -60,7 +61,10 @@ class PatrolActivity(
         activity = NavigationActivity(
             PointToPointGPS(
                 roadNetwork,
-                { currentPosition.toPosition() }) {
+                {
+                    val position = currentPosition.toPosition()
+                    position.firstWalkableLocationBelow() ?: position
+                }) {
                 targetNode.position
             }, currentPosition
         )
@@ -77,7 +81,7 @@ class PatrolActivity(
         // Get the closest node to the start location
         val closestNode = network!!.nodes
             .filter { it.id in nodes }
-            .minByOrNull { it.position.distanceSqrt(currentPosition) ?: Double.MAX_VALUE }
+            .minByOrNull { it.position.distanceSquared(currentPosition) ?: Double.MAX_VALUE }
             ?: return
 
         val index = nodes.indexOf(closestNode.id)

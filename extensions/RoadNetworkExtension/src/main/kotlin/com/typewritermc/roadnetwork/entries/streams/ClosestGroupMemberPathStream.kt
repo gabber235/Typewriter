@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.GroupEntry
@@ -42,7 +43,7 @@ class ClosestGroupMemberPathStream(
             ?.asSequence()
             ?.filter { it != player }
             ?.filter { player.world == it.world }
-            ?.minByOrNull { it.position.distanceSquared(player.position) }
+            ?.minByOrNull { it.position.distanceSquared(player.position)!! }
             ?.position
             ?: player.position
     }

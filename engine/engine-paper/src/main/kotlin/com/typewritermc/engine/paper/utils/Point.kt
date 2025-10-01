@@ -39,10 +39,11 @@ fun <RWP> RWP.toBukkitLocation(): org.bukkit.Location where RWP : Point<RWP>, RW
 
 fun <RWP> RWP.firstWalkableLocationBelow(maxDepth: Int = 7): RWP? where RWP : Point<RWP>, RWP : Rotatable<RWP>, RWP : WorldHolder<RWP> {
     val location = toBukkitLocation()
-    var max = maxDepth
-    while (location.block.isPassable && max-- > 0) location.y--
-    if (max == 0) return null
-    return withY(location.y + 1)
+    repeat(maxDepth + 1) {
+        if (!location.block.isPassable) return withY(location.y + 1)
+        location.y--
+    }
+    return null
 }
 
 fun <RP> RP.toPacketLocation(): Location where RP : Point<RP>, RP : Rotatable<RP> {

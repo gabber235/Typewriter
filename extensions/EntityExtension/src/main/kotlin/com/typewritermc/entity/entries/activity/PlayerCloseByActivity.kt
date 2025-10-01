@@ -6,7 +6,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
@@ -92,7 +92,7 @@ class PlayerCloseByActivity(
         val closeByPlayers = context.viewers
             .filter { it.isLookable }
             .filter {
-                (it.location.toProperty().distanceSqrt(currentPosition)
+                (it.location.toProperty().distanceSquared(currentPosition)
                     ?: Double.MAX_VALUE) < deactivationRange * deactivationRange
             }
 
@@ -123,7 +123,7 @@ class PlayerCloseByActivity(
         var activated: Boolean = false,
     ) {
         fun update(location: PositionProperty): PlayerLocationTracker {
-            if ((this.location.distanceSqrt(location) ?: Double.MAX_VALUE) < 0.1) return this
+            if ((this.location.distanceSquared(location) ?: Double.MAX_VALUE) < 0.1) return this
             this.location = location
             lastSeen = Instant.now()
             return this
@@ -133,7 +133,7 @@ class PlayerCloseByActivity(
             entityPosition: PositionProperty,
             activationRange: Double,
         ): PlayerLocationTracker {
-            val distanceSq = location.distanceSqrt(entityPosition) ?: Double.MAX_VALUE
+            val distanceSq = location.distanceSquared(entityPosition) ?: Double.MAX_VALUE
             if (!activated && distanceSq < activationRange * activationRange) {
                 activated = true
             }

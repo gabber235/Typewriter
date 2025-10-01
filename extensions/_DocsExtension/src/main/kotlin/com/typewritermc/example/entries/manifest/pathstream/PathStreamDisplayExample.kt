@@ -86,9 +86,9 @@ class ExampleProducer(
         // Here is the logic for the calculatePathing, you can use any of the helper functions
         // as you like.
         val (start: Position, end: Position) = points() ?: return null
-        val edges: List<GPSEdge> = findEdges() ?: return null
+        val edges: List<GPSEdge> = findEdges()
         val visibleEdges: List<GPSEdge> = edges.filterVisible(start, end)
-        val paths: List<List<Position>> = findPaths(visibleEdges) ?: return null
+        val paths: List<List<Position>> = findPaths(visibleEdges)
 
         val line = paths.flatten()
         if (line.isEmpty()) return null

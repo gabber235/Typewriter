@@ -1,5 +1,6 @@
 package com.typewritermc.core.utils
 
+import kotlinx.coroutines.CancellationException
 import java.util.Locale.getDefault
 
 fun String.replaceAll(vararg pairs: Pair<String, String>): String {
@@ -30,7 +31,7 @@ fun tryCatch(error: (Exception) -> Unit = { it.printStackTrace() }, block: () ->
 suspend fun tryCatchSuspend(error: suspend (Exception) -> Unit = { it.printStackTrace() }, block: suspend () -> Unit) {
     try {
         block()
-    } catch (e: Throwable) {
+    } catch (_: CancellationException) {} catch (e: Throwable) {
         error(e)
     }
 }

@@ -29,7 +29,7 @@ class IndividualAudienceEntityDisplay(
     override fun filter(player: Player): Boolean {
         val activityManager = activityManagers[player.uniqueId] ?: return false
         val npcPosition = activityManager.position
-        val distance = npcPosition.distanceSqrt(player.location) ?: return false
+        val distance = npcPosition.distanceSquared(player.location) ?: return false
         val showRange = showRange.get(player)
         return distance <= showRange * showRange
     }

@@ -83,3 +83,46 @@ open class EntityState(
         return "EntityState(eyeHeight=$eyeHeight, speed=$speed)"
     }
 }
+
+/**
+ * Encapsulates the movement and interaction capabilities of an entity for which the pathfinding is being performed.
+ *
+ * @param height          The entity's height in blocks, used for vertical clearance checks.
+ * @param width           The entity's width in blocks, used for horizontal clearance checks.
+ * @param maxStepHeight   The maximum height in blocks the entity can step up without jumping.
+ * @param maxJumpHeight   The maximum height in blocks the entity can jump. This is measured
+ *                        from the surface of the starting block to the surface of the destination block.
+ * @param maxFallDistance The maximum vertical distance in blocks the entity will pathfind
+ *                        downwards in a single move.
+ * @param jumpStrength    The entity jump strength, used for jump velocity calculation
+ * @param canJump         Determines whether the entity can perform jumps.
+ * @param canInteract     Determines whether the entity can open interactable blocks like wooden
+ *                        doors, fence gates, and trapdoors.
+ * @param canSwim         Determines whether the entity can move through liquids.
+ * @param canClimb        Determines whether the entity can climb objects like ladders and vines.
+ */
+data class EntityPathingCapabilities(
+    val width: Double = 0.6,
+    val height: Double = 1.8,
+    val maxStepHeight: Double = 0.6,
+    val maxJumpHeight: Double = 1.25,
+    val maxFallDistance: Double = 2.1,
+    val jumpStrength: Double = 0.42,
+    val canJump: Boolean = true,
+    val canInteract: Boolean = false,
+    val canSwim: Boolean = false,
+    val canClimb: Boolean = false
+) {
+    companion object {
+        val DEFAULT = EntityPathingCapabilities()
+    }
+
+    init {
+        require(width > 0) { "Entity width must be positive, but was $width" }
+        require(height > 0) { "Entity height must be positive, but was $height" }
+        require(maxStepHeight >= 0) { "Max step height must be non-negative, but was $maxStepHeight" }
+        require(maxJumpHeight >= 0) { "Max jump height must be non-negative, but was $maxJumpHeight" }
+        require(maxFallDistance >= 0) { "Max fall distance must be non-negative, but was $maxFallDistance" }
+        require(jumpStrength >= 0) { "Entity jump strength must be non-negative, but was $jumpStrength" }
+    }
+}
