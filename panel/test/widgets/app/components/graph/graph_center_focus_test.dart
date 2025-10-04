@@ -2,7 +2,11 @@ import "dart:math";
 
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/logic/graph/graph_data.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_intents.dart";
 
 import "../../../../test_utils.dart";
 

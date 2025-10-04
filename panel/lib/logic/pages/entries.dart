@@ -4,6 +4,7 @@ import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -11,13 +12,13 @@ import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 
-part "entries.g.dart";
 part "entries.freezed.dart";
+part "entries.g.dart";
 
 @riverpod
 class PageEntries extends _$PageEntries {
@@ -279,7 +280,7 @@ extension EntryPlacementExtension on EntryPlacement {
 }
 
 class EntryIdentifier extends SelectableIdentifier
-    implements GraphIdentifier, GraphDragData {
+    implements GraphDragData, GraphIdentifier {
   const EntryIdentifier(this.id);
 
   @override

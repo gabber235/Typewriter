@@ -10,351 +10,26 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/ion.dart";
 import "package:iconify_flutter_plus/icons/lucide.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
+import "package:typewriter_panel/logic/graph/edge_side.dart";
+import "package:typewriter_panel/logic/graph/graph_data.dart";
+import "package:typewriter_panel/logic/graph/graph_edge.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/graph_modes.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/rect.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_intents.dart";
 import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:vector_math/vector_math_64.dart" hide Colors;
 
-/// The side of a node where an edge connects.
-///
-/// Used by routing logic to compute where a connection leaves or enters a node
-/// and to derive an initial axis and outward unit vector for drawing edges.
-enum EdgeSide {
-  /// Edge connects on the top border of a node.
-  top,
-
-  /// Edge connects on the bottom border of a node.
-  bottom,
-
-  /// Edge connects on the left border of a node.
-  left,
-
-  /// Edge connects on the right border of a node.
-  right;
-
-  /// Axis along which an edge should initially travel when leaving/entering
-  /// via this side. This keeps connectors predictable and visually detached
-  /// from node borders during orthogonal routing.
-  Axis get axis {
-    switch (this) {
-      case EdgeSide.left:
-      case EdgeSide.right:
-        return Axis.horizontal;
-      case EdgeSide.top:
-      case EdgeSide.bottom:
-        return Axis.vertical;
-    }
-  }
-
-  /// Outward unit vector pointing away from the node for this side.
-  /// Used to create the initial and terminal “stub” segments from/to a node
-  /// before the polyline bends.
-  Offset get unitVector {
-    switch (this) {
-      case EdgeSide.top:
-        return const Offset(0, -1);
-      case EdgeSide.bottom:
-        return const Offset(0, 1);
-      case EdgeSide.left:
-        return const Offset(-1, 0);
-      case EdgeSide.right:
-        return const Offset(1, 0);
-    }
-  }
-}
-
-/// Immutable snapshot of a graph.
-///
-/// Holds the grid cell size, the list of nodes (`GraphElement`) and edges
-/// (`GraphEdge`). It also provides indexed access to elements by `GraphIdentifier`
-/// and a precomputed adjacency map for efficient edge lookup during rendering.
-///
-/// Use this as the single source of truth for the visual graph. To reflect user
-/// interactions (drag/resize), prefer the provided helper methods which return
-/// a new instance via copy semantics.
-class GraphData {
-  GraphData({
-    required this.cellSize,
-    required this.elements,
-    required this.edges,
-  }) : keyedElements = Map.fromIterable(
-         elements,
-         key: (element) => element.id,
-       ) {
-    for (final edge in edges) {
-      (elementsConnectedEdges[edge.source] ??= <GraphEdge>[]).add(edge);
-      (elementsConnectedEdges[edge.target] ??= <GraphEdge>[]).add(edge);
-    }
-  }
-
-  /// Size of a single grid cell in logical pixels. All nodes are positioned and
-  /// sized in cell units and converted to pixels using this value.
-  final double cellSize;
-
-  /// All nodes in the graph. Coordinates are specified in grid cell units.
-  final List<GraphElement> elements;
-
-  /// All edges between nodes. Only edges with both endpoints present will be
-  /// painted; off-screen handling is managed internally.
-  final List<GraphEdge> edges;
-
-  /// Fast lookup for elements by identifier. Populated from [elements].
-  final Map<GraphIdentifier, GraphElement> keyedElements;
-
-  /// Adjacency mapping of element → edges touching it. Used by painter/layout
-  /// to efficiently add/remove edges as children enter/leave the viewport.
-  final Map<GraphIdentifier, List<GraphEdge>> elementsConnectedEdges = {};
-
-  /// Returns a new GraphData with the provided [ids] translated by [offset].
-  ///
-  /// - [offset] is in logical pixels; it will be snapped to the grid based on
-  ///   [cellSize].
-  /// - [ids] is the set of element identifiers to move.
-  GraphData offsetChildren({
-    required Offset offset,
-    required List<GraphIdentifier> ids,
-  }) {
-    if (offset == Offset.zero) return this;
-    if (ids.isEmpty) return this;
-
-    final dx = (offset.dx / cellSize).round();
-    final dy = (offset.dy / cellSize).round();
-
-    final newElements = elements.map((element) {
-      if (!ids.contains(element.id)) {
-        return element;
-      }
-      return element.copyWith(x: element.x + dx, y: element.y + dy);
-    }).toList();
-    return copyWith(elements: newElements);
-  }
-
-  /// Returns a new GraphData where a single element is resized.
-  ///
-  /// Supply a tuple of (id, width, height) in cell units. If [resize] is null,
-  /// the instance is returned unchanged.
-  GraphData resizeChild({(GraphIdentifier, int, int)? resize}) {
-    if (resize == null) return this;
-    final (id, width, height) = resize;
-    final newElements = elements.map((element) {
-      if (element.id != id) {
-        return element;
-      }
-      return element.copyWith(width: width, height: height);
-    }).toList();
-    return copyWith(elements: newElements);
-  }
-
-  /// Creates a modified copy of this GraphData.
-  GraphData copyWith({
-    double? cellSize,
-    List<GraphElement>? elements,
-    List<GraphEdge>? edges,
-  }) => GraphData(
-    cellSize: cellSize ?? this.cellSize,
-    elements: elements ?? this.elements,
-    edges: edges ?? this.edges,
-  );
-
-  @override
-  String toString() => "GraphData(elements: $elements, edges: $edges)";
-}
-
-/// A node in the graph laid out on a fixed grid.
-///
-/// Coordinates and size are expressed in grid cells. The [builder] produces the
-/// widget subtree for this node. The [priority] defines the paint order: lower
-/// values are painted first (appear below).
-class GraphElement implements Comparable<GraphElement> {
-  const GraphElement({
-    required this.id,
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    required this.builder,
-    this.priority = 0,
-  });
-  final GraphIdentifier id;
-  final int x;
-  final int y;
-  final int width;
-  final int height;
-
-  /// Relative z-order for painting; higher values are painted later (on top).
-  final int priority;
-
-  /// Factory that builds this element's widget. Receives the current context.
-  final WidgetBuilder builder;
-
-  /// Checks if this element is fully contained within another element.
-  bool inside(GraphElement other) {
-    return x >= other.x &&
-        x + width <= other.x + other.width &&
-        y >= other.y &&
-        y + height <= other.y + other.height;
-  }
-
-  GraphElement copyWith({
-    GraphIdentifier? id,
-    int? x,
-    int? y,
-    int? width,
-    int? height,
-    int? priority,
-    WidgetBuilder? builder,
-  }) => GraphElement(
-    id: id ?? this.id,
-    x: x ?? this.x,
-    y: y ?? this.y,
-    width: width ?? this.width,
-    height: height ?? this.height,
-    priority: priority ?? this.priority,
-    builder: builder ?? this.builder,
-  );
-
-  @override
-  String toString() =>
-      "GraphElement(id: $id, x: $x, y: $y, width: $width, height: $height, priority: $priority)";
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (runtimeType != other.runtimeType) return false;
-    return id == (other as GraphElement).id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  int compareTo(GraphElement other) {
-    return priority.compareTo(other.priority);
-  }
-}
-
-/// Stable identifier for nodes in the graph.
-///
-/// Wraps a string id to avoid accidental collisions and to type-safely key
-/// render/element maps.
-class GraphIdentifier {
-  const GraphIdentifier(this.id);
-  final String id;
-
-  @override
-  String toString() => id;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return id == (other as GraphIdentifier).id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-}
-
-/// Connection between two graph elements.
-///
-/// Edges reference their [source] and [target] identifiers and the side on
-/// which they connect to the node rectangle. The painter uses [sourceSide]
-/// and [targetSide] to place endpoints on the node perimeter.
-class GraphEdge {
-  const GraphEdge({
-    required this.id,
-    required this.source,
-    required this.target,
-    required this.color,
-    this.sourceSide = EdgeSide.right,
-    this.targetSide = EdgeSide.left,
-  });
-  final String id;
-  final GraphIdentifier source;
-  final GraphIdentifier target;
-  final Color color;
-  final EdgeSide sourceSide;
-  final EdgeSide targetSide;
-
-  bool connectsTo(GraphElement element) {
-    return source == element.id || target == element.id;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other.runtimeType != runtimeType) return false;
-    return other is GraphEdge &&
-        other.id == id &&
-        other.source == source &&
-        other.target == target &&
-        other.color == color &&
-        other.sourceSide == sourceSide &&
-        other.targetSide == targetSide;
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(id, source, target, color, sourceSide, targetSide);
-}
-
-/// Data carried during external drag-and-drop into the graph.
-///
-/// Implementations should provide a [graphId] that matches an element in the
-/// current [GraphData] to allow hit testing and snapping behavior.
-abstract class GraphDragData {
-  const GraphDragData();
-
-  GraphIdentifier get graphId;
-}
+typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 
 enum _GraphSlot { graph, dragTarget }
-
-/// Inherited scope for graph drag state.
-///
-/// Exposes whether a drag gesture is currently inside the graph, allowing
-/// children to adapt visuals or behavior during drag-and-drop operations.
-class GraphDrag extends InheritedWidget {
-  const GraphDrag({
-    required this.draggingInsideGraph,
-    required super.child,
-    super.key,
-  });
-
-  /// Notifier indicating if a drag is currently over the graph viewport.
-  final ValueNotifier<bool> draggingInsideGraph;
-
-  @override
-  bool updateShouldNotify(covariant GraphDrag oldWidget) {
-    return draggingInsideGraph != oldWidget.draggingInsideGraph;
-  }
-
-  /// Returns the nearest [GraphDrag] in the widget tree, or null if none found.
-  static GraphDrag? maybeOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<GraphDrag>();
-  }
-
-  /// Returns the nearest [GraphDrag] and asserts it exists.
-  static GraphDrag of(BuildContext context) {
-    final graphDrag = context.dependOnInheritedWidgetOfExactType<GraphDrag>();
-    assert(graphDrag != null, "GraphDrag was not a parent in the widget tree");
-    return graphDrag!;
-  }
-
-  /// Convenience to read the current drag-over state from the nearest scope.
-  static bool isDraggingInsideGraph(BuildContext context) {
-    return of(context).draggingInsideGraph.value;
-  }
-}
-
-/// Signature for element resize notifications.
-///
-/// Provides the element id and the new width/height in cell units.
-typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 
 class _CenterAnimListeners {
   const _CenterAnimListeners({
@@ -366,28 +41,6 @@ class _CenterAnimListeners {
   final void Function(AnimationStatus) statusListener;
 }
 
-/// Interactive, zoomable graph canvas with grid, nodes, and edges.
-///
-/// This widget renders a grid-aligned node graph with optional edges. It
-/// supports panning/zooming, keyboard-driven move/resize actions, focus-based
-/// centering, and drag-and-drop integration.
-///
-/// Typical usage:
-/// - Provide immutable [GraphData] describing nodes/edges and grid size
-/// - Optionally handle [onElementsDragged] to commit drag translations
-/// - Optionally handle [onElementsResize] to commit resize changes
-///
-/// The widget is optimized to only build children visible in the viewport and
-/// keeps edges in sync as nodes enter/leave view.
-/// Zoomable, pannable grid-aligned graph widget.
-///
-/// Renders [GraphData] as nodes and edges on a grid. Supports keyboard move
-/// and resize intents, focus-based centering, and drag-and-drop.
-/// DragTarget integration is achieved by composing with a slotted render
-/// object (_GraphWithDragTarget), allowing a full-viewport DragTarget to
-/// participate in hit-testing while the graph render box remains size 1 for
-/// stable InteractiveViewer transforms. This keeps panning/zooming precise and
-/// enables efficient virtualization of children to the visible viewport.
 class Graph extends HookConsumerWidget {
   const Graph({
     required this.data,
@@ -405,12 +58,6 @@ class Graph extends HookConsumerWidget {
   /// Called during resize interactions to commit the new size in cell units for one or more elements.
   final void Function(List<(GraphIdentifier, int, int)>)? onElementsResize;
 
-  /// Controls whether center focus operations are animated.
-  /// When true, centering will smoothly animate to the target position.
-  /// When false, centering will jump instantly to the target position.
-  ///
-  /// Note: Animation is automatically disabled for complex transformations
-  /// (e.g., when zoomed in/out) to avoid interpolation artifacts.
   static const bool kAnimateGraphTransforms = true;
   static const double kGraphMinScale = 0.6;
   static const double kGraphMaxScale = 2.5;
@@ -563,15 +210,6 @@ class Graph extends HookConsumerWidget {
   }
 
   @override
-  /// Build lifecycle
-  /// - Registers keyboard shortcuts (move, resize, center) via ManagedActionSet
-  /// - Uses InteractiveViewer.builder to provide an infinite, zoomable canvas
-  ///   and exposes the current viewport to child widgets
-  /// - Composes `_GraphWithDragTarget` so a full-viewport DragTarget can
-  ///   receive drag events while the graph render box stays at size 1
-  /// - Inflates only viewport-visible children for efficiency inside `_Graph`
-  /// - Translates keyboard and drag gestures into grid-aligned deltas and
-  ///   forwards them via [onElementsDragged] and [onElementsResize]
   Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) => HookBuilder(
@@ -1134,49 +772,6 @@ class Graph extends HookConsumerWidget {
   }
 }
 
-/// Slotted wrapper that enables full-viewport DragTarget hit testing for the graph.
-///
-/// What it is:
-/// - A small composition helper that co-locates two children in distinct slots:
-///   - `graph`: the `_Graph` render object that must remain size 1 for stable
-///     InteractiveViewer transforms and painting
-///   - `dragTarget`: a widget (typically `DragTarget`) laid out to cover the full
-///     visible viewport so drag-and-drop gestures can be hit-tested anywhere
-///
-/// Why/when you would use it:
-/// - The `_Graph` render box intentionally reports a size of 1 to keep scaling and
-///   panning exact with InteractiveViewer
-/// - Wrapping `_Graph` directly with a `DragTarget` would inherit the 1×1 size and
-///   make it effectively impossible to hit-test drags over the visible canvas
-/// - Use this widget whenever you need drag-and-drop across the entire viewport
-///   without altering the `_Graph` sizing and transform model
-///
-/// How it works:
-/// - Uses Flutter’s slotted multi-child pattern to host two independently laid out
-///   children
-/// - The associated `_RenderGraphWithDragTarget`:
-///   - Keeps its own size at 1×1 to preserve InteractiveViewer behavior
-///   - Lays out the `graph` child with unconstrained constraints at offset zero
-///   - Lays out the `dragTarget` child to exactly match the current viewport rect
-///   - Overrides hit testing to allow hits anywhere and delegate to children
-///
-/// Responsibilities:
-/// - Ensures correct geometry for both the graph and drag layer without disturbing
-///   transforms
-/// - Makes drag gestures work across the entire visible area
-/// - Keeps rendering predictable by not changing `_Graph`’s size or offsets
-///
-/// Usage:
-/// - Provide the current `viewport` in scene coordinates
-/// - Toggle `enableDragTarget` to mount/unmount the drag layer as needed
-/// - Pass the `_Graph` subtree to `graph` and the `DragTarget` subtree to `dragTarget`
-///
-/// Notes:
-/// - The `viewport` must be derived from InteractiveViewer (e.g., via quad-to-rect)
-/// - Avoid wrapping this widget in additional layout that constrains its size;
-///   it intentionally remains 1×1
-/// - Put all drag-related gesture logic in the `dragTarget` subtree; element-specific
-///   interactions still occur in the `_Graph` subtree
 class _GraphWithDragTarget
     extends SlottedMultiChildRenderObjectWidget<_GraphSlot, RenderBox> {
   const _GraphWithDragTarget({
@@ -1225,59 +820,6 @@ class _GraphWithDragTarget
   }
 }
 
-/// Render object for slotted graph + drag target composition.
-///
-/// Purpose:
-/// - Maintain a 1×1 render box to keep InteractiveViewer transforms stable
-/// - Provide a full-viewport drag layer for reliable drag-and-drop hit testing
-///   over the visible graph area
-///
-/// When/why to use:
-/// - Use when you need DragTarget coverage across the viewport without changing
-///   the graph’s sizing/transform model. Wrapping the graph directly with a
-///   DragTarget would inherit its 1×1 size and break hit testing.
-///
-/// Children and slots:
-/// - `_GraphSlot.graph`:
-///   - The graph render object
-///   - Laid out with unconstrained `BoxConstraints()`
-///   - Positioned at `Offset.zero`
-/// - `_GraphSlot.dragTarget`:
-///   - The drag layer (typically a `DragTarget`)
-///   - Laid out with `BoxConstraints.tight(viewport.size)`
-///   - Positioned at `viewport.topLeft`
-///   - Mounted only when `enableDragTarget` is true
-///
-/// Layout:
-/// - Layouts the graph child first with unconstrained constraints and places it
-///   at the origin. The graph’s own rendering logic handles its internal sizing
-///   while the parent remains 1×1.
-/// - If enabled, layouts the drag target to exactly match the current viewport
-///   rectangle so it can receive drags anywhere on screen.
-/// - Sets this render object’s size to `Size(1, 1)` to preserve transform math.
-///
-/// Painting:
-/// - Paints the drag target first (so it participates in hit testing above the
-///   canvas), then paints the graph child. This does not alter the graph’s
-///   coordinate system.
-///
-/// Hit testing:
-/// - Overrides `hitTest` to be permissive despite the 1×1 size and delegates to
-///   children via `hitTestChildren`.
-/// - Uses `addWithPaintOffset` so each child receives appropriately transformed
-///   positions for its own hit logic.
-/// - Ensures drag gestures are discoverable across the whole viewport, while
-///   element-specific interactions still work within the graph child.
-///
-/// Responsibilities and guarantees:
-/// - Does not change the graph’s transform or logical coordinates
-/// - Enables drag operations over the entire viewport without affecting layout
-/// - Keeps performance comparable to a simple two-child paint pass
-///
-/// Notes:
-/// - `enableDragTarget` toggles the drag layer; when false, only the graph is
-///   laid out/painted.
-/// - `viewport` must be kept in sync with the InteractiveViewer’s visible area.
 class _RenderGraphWithDragTarget extends RenderBox
     with SlottedContainerRenderObjectMixin<_GraphSlot, RenderBox> {
   _RenderGraphWithDragTarget({
@@ -1393,18 +935,6 @@ class _RenderGraphWithDragTarget extends RenderBox
   bool hitTestSelf(Offset position) => true;
 }
 
-/// RenderObjectWidget that binds [GraphData] to the custom render layer.
-///
-/// Responsibilities:
-/// - Provides [viewport] and grid [data.cellSize] to [_RenderGraph].
-/// - Keeps the render object updated when [data] or [viewport] change.
-/// - Supplies a specialized element ([_GraphElement]) that virtualizes children
-///   to the visible viewport and wires resize affordances when enabled.
-///
-/// Lifecycle:
-/// - [createRenderObject] constructs [_RenderGraph] with initial parameters.
-/// - [updateRenderObject] diffs inputs and updates the render object.
-/// - [createElement] returns [_GraphElement] to manage child widgets and slots.
 class _Graph extends RenderObjectWidget {
   const _Graph({
     required this.viewport,
@@ -1443,28 +973,12 @@ class _Graph extends RenderObjectWidget {
   }
 }
 
-/// Element that virtualizes graph children and manages keyed slots.
-///
-/// Responsibilities:
-/// - Inflates only children whose bounds intersect the current viewport.
-/// - Wraps nodes with [ResizableElement] when resize callbacks are provided
-///   by the parent [_Graph].
-/// - Maintains stable identity via [GraphIdentifier] slots and optional keys.
-/// - Coordinates with [_RenderGraph] by inserting/moving/removing render
-///   children using the element's slot as the key.
-///
-/// Update strategy:
-/// - Reuses elements by matching on key first, then on slot to minimize churn.
-/// - Deactivates children that scrolled out of view; re-inflates when returning.
-/// - Ensures edge bookkeeping in the render object stays consistent as nodes
-///   enter/leave view.
 class _GraphElement extends RenderObjectElement {
   _GraphElement(super.widget);
 
   @override
   _RenderGraph get renderObject => super.renderObject as _RenderGraph;
 
-  /// The current list of children of this element.
   @protected
   @visibleForTesting
   Iterable<Element> get children => _children.values;
@@ -1616,7 +1130,6 @@ class _GraphElement extends RenderObjectElement {
       final oldSlotChild = oldChildren[slot];
       final oldKeyChild = oldKeyedElements[newWidgetKey];
 
-      /// Reference is the [SlottedRenderObjectElement.update] method.
       final Element? fromElement;
       if (oldKeyChild != null) {
         fromElement = oldChildren.remove(oldKeyChild.slot! as GraphIdentifier);
@@ -1628,7 +1141,6 @@ class _GraphElement extends RenderObjectElement {
           "Invalid state where we coulnd't find the old keyed child. Something really went wrong.",
         );
 
-        // The only case we can't use `oldSlotChild` is when its widget has a key.
         fromElement = null;
       }
 
@@ -1680,25 +1192,6 @@ class _GraphElement extends RenderObjectElement {
   }
 }
 
-/// Custom RenderBox that renders the grid-aligned graph canvas.
-///
-/// Purpose:
-/// - Maintains a 1×1 parent size so InteractiveViewer transformations remain stable
-/// - Renders background grid dots, edges between nodes, and node widgets
-///
-/// Layout:
-/// - Lays out each mounted child to its pixel size derived from cell units
-/// - Positions children at their top-left offset based on grid coordinates
-/// - Keeps edge bookkeeping in sync; prunes forgotten edges in performLayout
-///
-/// Painting order:
-/// - _paintDots (grid) → _paintEdges (connections) → _paintElements (widgets)
-///   Elements are painted respecting their priority/z-order.
-///
-/// Hit testing:
-/// - Overrides hitTest to be permissive despite the 1×1 size and delegates to children
-/// - hitTestChildren uses addWithPaintOffset so children receive transformed positions
-/// - hitTestSelf always returns true to allow gesture routing within the scene
 class _RenderGraph extends RenderBox {
   _RenderGraph({
     required GraphData graph,
@@ -1748,8 +1241,6 @@ class _RenderGraph extends RenderBox {
 
   final List<GraphEdge> _edges = [];
 
-  /// To prevent O(n^2) when removing edges during the building phase, we store which ones need to be forgotten.
-  /// Then when we start layout, we can remove them all at once from the [_edges].
   final List<GraphEdge> _forgottenEdges = [];
 
   void _setChild(RenderBox? child, GraphIdentifier slot) {
@@ -1944,9 +1435,6 @@ class _RenderGraph extends RenderBox {
     }
   }
 
-  /// As our size is 1, the default implementation will never allow
-  /// any hits because it thinks its always outside of the bounds.
-  /// We override this to remove the size check and always hit test.
   @override
   bool hitTest(BoxHitTestResult result, {required Offset position}) {
     // ignore: prefer_asserts_with_message
@@ -2028,16 +1516,6 @@ class _RenderGraph extends RenderBox {
   }
 }
 
-/// Precomputed pixel-space geometry for a graph element.
-///
-/// Converts a grid-based [GraphElement] (expressed in cell units) into a pixel
-/// rectangle using the provided `cellSize`. Provides convenience accessors for
-/// position, size, center, and a quick on-screen test against a viewport.
-///
-/// Why/when to use:
-/// - During layout/painting to avoid repeated unit conversions
-/// - To determine visibility within the current viewport
-/// - To compute edge endpoints based on element bounds
 class _PreRenderElement {
   _PreRenderElement({required this.element, required this.bounds});
 
@@ -2085,17 +1563,7 @@ class _PreRenderElement {
   int get hashCode => element.hashCode;
 }
 
-/// Utilities for collections of pre-rendered elements.
-///
-/// Currently exposes a weighted center-of-mass calculation used by the graph
-/// to compute an initial centering offset. Larger elements influence the final
-/// center more than smaller ones.
 extension _PreRenderElementList on Iterable<_PreRenderElement> {
-  /// Returns the weighted center-of-mass of all elements in this iterable.
-  ///
-  /// - Returns `Offset.zero` when empty.
-  /// - Weight is proportional to element area (with a baseline of 1.0) so
-  ///   larger nodes contribute more to the final center.
   Offset get centerOffMass {
     if (isEmpty) return Offset.zero;
 
@@ -2119,15 +1587,6 @@ extension _PreRenderElementList on Iterable<_PreRenderElement> {
   }
 }
 
-/// Pre-rendered edge endpoints in pixel space.
-///
-/// Holds the source and target [_PreRenderElement] for a [GraphEdge] so
-/// painters can place connection endpoints on node perimeters without
-/// recomputing conversions from grid coordinates for each frame.
-///
-/// Why/when to use:
-/// - During edge painting to obtain pixel-space bounds and centers
-/// - To quickly skip edges when either endpoint is missing (off-screen or absent)
 class _PreRenderEdge {
   _PreRenderEdge({
     required this.edge,
@@ -2157,36 +1616,4 @@ class _PreRenderEdge {
   bool connectsTo(GraphElement element) {
     return source.element == element || target.element == element;
   }
-}
-
-/// Intent to move selected graph nodes by one grid cell along a direction.
-///
-/// Consumed by the Graph widget's Actions/Shortcuts (via ManagedActionSet)
-/// to translate the current selection on the grid. External code can dispatch
-/// this intent to drive keyboard-style nudging in orthogonal directions.
-class GraphMoveIntent extends Intent {
-  const GraphMoveIntent({required this.direction});
-
-  /// The direction in which to move the nodes.
-  final TraversalDirection direction;
-}
-
-/// Intent to resize selected graph nodes by one grid cell along a direction.
-///
-/// Consumed by the Graph widget's Actions/Shortcuts to commit size changes
-/// when resize handlers are provided. External code can dispatch this intent
-/// to grow or shrink nodes in orthogonal directions, minimum size enforced.
-class GraphResizeIntent extends Intent {
-  const GraphResizeIntent({required this.direction});
-
-  /// The direction in which to resize the nodes.
-  final TraversalDirection direction;
-}
-
-/// Intent to pan the viewport so the currently focused graph child is centered.
-///
-/// Consumed by the Graph widget's Actions handler. Useful for keyboard
-/// shortcuts that re-center the canvas on the active/focused element.
-class GraphCenterFocusedIntent extends Intent {
-  const GraphCenterFocusedIntent();
 }

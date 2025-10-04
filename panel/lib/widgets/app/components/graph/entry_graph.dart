@@ -1,5 +1,10 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/logic/graph/edge_side.dart";
+import "package:typewriter_panel/logic/graph/graph_data.dart";
+import "package:typewriter_panel/logic/graph/graph_edge.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
 

@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/utils/fonts.dart";
-import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 
 class GraphGroup extends StatelessWidget {
   const GraphGroup({
@@ -30,9 +30,11 @@ class GraphGroup extends StatelessWidget {
             painter: GraphGroupPainter(
               title: title,
               color: color,
-              backgroundColor:
-                  Theme.of(context).colorScheme.surfaceContainerLowest,
-              titleStyle: titleStyle ??
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerLowest,
+              titleStyle:
+                  titleStyle ??
                   Theme.of(context).textTheme.labelSmall!.copyWith(
                     fontSize: 11,
                     fontVariations: const [extraBoldWeight],
@@ -56,10 +58,7 @@ class GraphGroup extends StatelessWidget {
               useListenable(graphDrag.draggingInsideGraph);
               return graphDrag.draggingInsideGraph.value
                   ? SizedBox()
-                  : Opacity(
-                      opacity: 0.5,
-                      child: themes.wrap(child),
-                    );
+                  : Opacity(opacity: 0.5, child: themes.wrap(child));
             },
           ),
           child: child,
@@ -91,10 +90,7 @@ class GraphGroupPainter extends CustomPainter {
     final titleTextSpan = TextSpan(
       text: title,
       style: titleStyle.copyWith(
-        color: Color.alphaBlend(
-          color.withValues(alpha: 0.2),
-          backgroundColor,
-        ),
+        color: Color.alphaBlend(color.withValues(alpha: 0.2), backgroundColor),
       ),
     );
 
@@ -103,8 +99,10 @@ class GraphGroupPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: size.width - titlePadding.horizontal);
 
-    final titleOffset =
-        Offset(size.width / 2 - titlePainter.width / 2, titlePadding.top);
+    final titleOffset = Offset(
+      size.width / 2 - titlePainter.width / 2,
+      titlePadding.top,
+    );
 
     final titleHeight =
         titlePadding.vertical + titlePainter.height - strokeWidth;

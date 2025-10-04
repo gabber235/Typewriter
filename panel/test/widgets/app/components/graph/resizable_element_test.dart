@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
 
 import "../../../../test_utils.dart";
@@ -24,8 +25,10 @@ void main() {
         builder: (context) => SizedBox(),
       );
 
-      childSize =
-          Size(testElement.width * cellSize, testElement.height * cellSize);
+      childSize = Size(
+        testElement.width * cellSize,
+        testElement.height * cellSize,
+      );
     });
 
     testWidgets("renders child and adopts its size", (tester) async {
@@ -55,8 +58,9 @@ void main() {
       expect(resizableRenderBox.size, equals(childSize));
     });
 
-    testWidgets("positions gesture detector handle in bottom-right corner",
-        (tester) async {
+    testWidgets("positions gesture detector handle in bottom-right corner", (
+      tester,
+    ) async {
       await tester.pumpTestApp(
         child: ResizableElement(
           element: testElement,
@@ -99,8 +103,9 @@ void main() {
       );
     });
 
-    testWidgets("invokes callbacks when gesture detector is used",
-        (tester) async {
+    testWidgets("invokes callbacks when gesture detector is used", (
+      tester,
+    ) async {
       final resizeStartCalls = <(GraphIdentifier, int, int)>[];
       final resizeUpdateCalls = <(GraphIdentifier, int, int)>{};
       final resizeEndCalls = <(GraphIdentifier, int, int)>[];
@@ -198,10 +203,7 @@ void main() {
       }
 
       expect(resizeEndCalls, hasLength(1));
-      expect(
-        resizeEndCalls.first,
-        equals((testElementId, 1, 1)),
-      );
+      expect(resizeEndCalls.first, equals((testElementId, 1, 1)));
     });
 
     testWidgets("uses custom handle size when provided", (tester) async {

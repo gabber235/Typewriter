@@ -1,7 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/utils/color.dart";
-import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
 import "package:typewriter_panel/widgets/app/components/graph/resizable_element.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;

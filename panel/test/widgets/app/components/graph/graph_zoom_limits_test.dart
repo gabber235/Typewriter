@@ -1,6 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/logic/graph/graph_data.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
 
 import "../../../../test_utils.dart";
@@ -47,13 +50,6 @@ Future<void> _pumpGraphWithFocus(WidgetTester tester, FocusNode node) async {
   );
   node.requestFocus();
   await tester.pumpAndSettle();
-}
-
-Future<void> _pressKey(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(key);
-  await tester.pump();
-  await tester.sendKeyUpEvent(key);
-  await tester.pump();
 }
 
 void main() {

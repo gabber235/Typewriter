@@ -7,14 +7,11 @@ import "package:flutter/rendering.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/logic/graph/graph_element.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
 import "package:typewriter_panel/widgets/generic/components/cursor_controller.dart";
 
-import "graph.dart";
-
-enum _ResizableSlot {
-  child,
-  gestureDetector,
-}
+enum _ResizableSlot { child, gestureDetector }
 
 /// A widget that makes its child resizable by adding a gesture detector handle
 /// in the bottom-right corner.
@@ -92,8 +89,8 @@ class ResizableElement extends HookConsumerWidget {
         cursor: startData.value != null
             ? SystemMouseCursors.grabbing
             : !kIsWeb && Platform.isMacOS
-                ? SystemMouseCursors.grab
-                : SystemMouseCursors.resizeUpLeftDownRight,
+            ? SystemMouseCursors.grab
+            : SystemMouseCursors.resizeUpLeftDownRight,
         child: GestureDetector(
           onPanStart: onResizeStart != null
               ? (details) {
@@ -101,8 +98,11 @@ class ResizableElement extends HookConsumerWidget {
                       .read(cursorControllerProvider.notifier)
                       .cursor(SystemMouseCursors.grabbing);
                   animationController.forward();
-                  startData.value =
-                      (details.localPosition, element.width, element.height);
+                  startData.value = (
+                    details.localPosition,
+                    element.width,
+                    element.height,
+                  );
                   onResizeStart!(element.id, element.width, element.height);
                 }
               : null,
@@ -179,7 +179,7 @@ class _ResizableElementSlotted
 
   @override
   SlottedContainerRenderObjectMixin<_ResizableSlot, RenderBox>
-      createRenderObject(BuildContext context) {
+  createRenderObject(BuildContext context) {
     return _RenderResizableElement(
       handleSize: handleSize,
       animationProgress: animationProgress,
@@ -223,9 +223,9 @@ class _RenderResizableElement extends RenderBox
     required double handleSize,
     required double animationProgress,
     required Color outlineColor,
-  })  : _handleSize = handleSize,
-        _animationProgress = animationProgress,
-        _outlineColor = outlineColor;
+  }) : _handleSize = handleSize,
+       _animationProgress = animationProgress,
+       _outlineColor = outlineColor;
 
   double _handleSize;
   double get handleSize => _handleSize;
@@ -254,8 +254,9 @@ class _RenderResizableElement extends RenderBox
   @override
   void performLayout() {
     final childRenderBox = childForSlot(_ResizableSlot.child);
-    final gestureDetectorRenderBox =
-        childForSlot(_ResizableSlot.gestureDetector);
+    final gestureDetectorRenderBox = childForSlot(
+      _ResizableSlot.gestureDetector,
+    );
 
     if (childRenderBox == null) {
       size = constraints.smallest;
@@ -286,8 +287,9 @@ class _RenderResizableElement extends RenderBox
   @override
   void paint(PaintingContext context, Offset offset) {
     final childRenderBox = childForSlot(_ResizableSlot.child);
-    final gestureDetectorRenderBox =
-        childForSlot(_ResizableSlot.gestureDetector);
+    final gestureDetectorRenderBox = childForSlot(
+      _ResizableSlot.gestureDetector,
+    );
 
     if (childRenderBox != null) {
       final childParentData = childRenderBox.parentData! as BoxParentData;
@@ -321,7 +323,8 @@ class _RenderResizableElement extends RenderBox
 
     final padding = 2.0 * _animationProgress + 3.0;
 
-    final handleCenter = offset +
+    final handleCenter =
+        offset +
         handleOffset +
         Offset(handleSize / 2 + padding, handleSize / 2 + padding);
     final cornerRadius = 10.0;
@@ -367,8 +370,9 @@ class _RenderResizableElement extends RenderBox
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final childRenderBox = childForSlot(_ResizableSlot.child);
-    final gestureDetectorRenderBox =
-        childForSlot(_ResizableSlot.gestureDetector);
+    final gestureDetectorRenderBox = childForSlot(
+      _ResizableSlot.gestureDetector,
+    );
 
     if (gestureDetectorRenderBox != null) {
       final handleParentData =

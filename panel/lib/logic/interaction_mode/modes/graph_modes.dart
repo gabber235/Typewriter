@@ -7,7 +7,7 @@ import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_intents.dart";
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display_chip.dart";
 
 /// Graph manipulation mode for moving nodes.

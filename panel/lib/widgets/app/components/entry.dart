@@ -7,7 +7,7 @@ import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/utils/color.dart";
 
 import "package:typewriter_panel/widgets/app/components/graph/entry_graph.dart";
-import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
