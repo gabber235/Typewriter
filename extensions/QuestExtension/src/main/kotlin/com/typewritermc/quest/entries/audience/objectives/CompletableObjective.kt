@@ -1,4 +1,4 @@
-package com.typewritermc.quest.entries.audience
+package com.typewritermc.quest.entries.audience.objectives
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref

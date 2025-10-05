@@ -9,6 +9,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.descendants
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
+import com.typewritermc.quest.entries.audience.objectives.concrete.LocationObjectiveEntry
 import com.typewritermc.quest.trackedShowingObjectives
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.entries.MultiPathStreamDisplay
