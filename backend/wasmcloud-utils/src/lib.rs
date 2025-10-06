@@ -109,5 +109,124 @@ pub mod wasmcloud {
                 Err("No reply_to field in message, ignoring message".to_string())
             }
         }
+
+        /// Dispatch a message to one of multiple action handlers based on the <action> value in the subject.
+        ///
+        /// This function parses the subject using the provided template (which must include an <action> placeholder),
+        /// extracts the action value, and dispatches to the corresponding handler function.
+        ///
+        /// # Arguments
+        /// * `msg` - The incoming broker message
+        /// * `subject_template` - Subject template that includes `<action>` (e.g., "user.<user_id>.organization.<action>")
+        /// * `actions` - A slice of tuples containing (action_name, handler_function)
+        ///
+        /// # Returns
+        /// Returns `Ok(())` if the action was handled successfully, or an error if:
+        /// - The subject doesn't match the template
+        /// - The action is not found in the provided actions list
+        /// - The handler function returns an error
+        ///
+        /// # Example
+        /// ```rust,no_run
+        /// use wasmcloud_utils::wasmcloud::messaging::{dispatch_action, types::BrokerMessage};
+        ///
+        /// fn handle_list(msg: BrokerMessage, params: std::collections::HashMap<String, String>) -> Result<(), String> {
+        ///     // Handle list action
+        ///     Ok(())
+        /// }
+        ///
+        /// fn handle_create(msg: BrokerMessage, params: std::collections::HashMap<String, String>) -> Result<(), String> {
+        ///     // Handle create action
+        ///     Ok(())
+        /// }
+        ///
+        /// fn handle_message(msg: BrokerMessage) -> Result<(), String> {
+        ///     dispatch_action(
+        ///         msg,
+        ///         "user.<user_id>.organization.<action>",
+        ///         &[
+        ///             ("list", handle_list as fn(BrokerMessage, std::collections::HashMap<String, String>) -> Result<(), String>),
+        ///             ("create", handle_create as fn(BrokerMessage, std::collections::HashMap<String, String>) -> Result<(), String>),
+        ///         ],
+        ///     )
+        /// }
+        /// ```
+        pub fn dispatch_action(
+            msg: types::BrokerMessage,
+            subject_template: &str,
+            actions: &[(&str, fn(types::BrokerMessage, std::collections::HashMap<String, String>) -> Result<(), String>)],
+        ) -> Result<(), String> {
+            if !subject_template.contains("<action>") {
+                return Err(format!(
+                    "Subject template '{}' must contain '<action>' placeholder",
+                    subject_template
+                ));
+            }
+
+            let params = parse_subject(subject_template, &msg.subject)?;
+
+            let action = params.get("action").ok_or_else(|| {
+                format!(
+                    "Failed to extract action from subject '{}' using template '{}'",
+                    msg.subject, subject_template
+                )
+            })?;
+
+            for (action_name, handler) in actions {
+                if action_name == action {
+                    return handler(msg, params);
+                }
+            }
+
+            let valid_actions: Vec<&str> = actions.iter().map(|(name, _)| *name).collect();
+            Err(format!(
+                "Unknown action '{}' for subject '{}'. Valid actions are: {}",
+                action,
+                msg.subject,
+                valid_actions.join(", ")
+            ))
+        }
     }
+}
+
+/// Macro to simplify action dispatching by automatically generating the handler function type signatures.
+///
+/// # Example
+/// ```rust,no_run
+/// use wasmcloud_utils::dispatch_actions;
+/// use wasmcloud_utils::wasmcloud::messaging::types::BrokerMessage;
+/// use std::collections::HashMap;
+///
+/// fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
+///     // Handle list action
+///     Ok(())
+/// }
+///
+/// fn handle_create(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
+///     // Handle create action
+///     Ok(())
+/// }
+///
+/// fn handle_message(msg: BrokerMessage) -> Result<(), String> {
+///     dispatch_actions!(
+///         msg,
+///         "user.<user_id>.organization.<action>",
+///         "list" => handle_list,
+///         "create" => handle_create
+///     )
+/// }
+/// ```
+#[macro_export]
+macro_rules! dispatch_actions {
+    ($msg:expr, $template:expr, $($action_name:expr => $handler:expr),+ $(,)?) => {{
+        $crate::wasmcloud::messaging::dispatch_action(
+            $msg,
+            $template,
+            &[
+                $(
+                    ($action_name, $handler as fn($crate::wasmcloud::messaging::types::BrokerMessage, ::std::collections::HashMap<String, String>) -> Result<(), String>),
+                )+
+            ],
+        )
+    }};
 }

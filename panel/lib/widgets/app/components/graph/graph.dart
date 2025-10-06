@@ -18,6 +18,7 @@ import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/graph_modes.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/rect.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
@@ -1239,9 +1240,7 @@ class _RenderGraph extends RenderBox {
 
   Iterable<RenderBox> get children => _children.values;
 
-  final List<GraphEdge> _edges = [];
-
-  final List<GraphEdge> _forgottenEdges = [];
+  final Map<String, GraphEdge> _edges = {};
 
   void _setChild(RenderBox? child, GraphIdentifier slot) {
     final oldChild = _children[slot];
@@ -1253,23 +1252,23 @@ class _RenderGraph extends RenderBox {
       _children[slot] = child;
       adoptChild(child);
       final edges = graph.elementsConnectedEdges[slot];
-      final newEdges = edges?.where((edge) => _edges.none((e) => e == edge));
-      if (newEdges != null) {
+      if (edges != null) {
+        final newEdges = edges.map((edge) => MapEntry(edge.id, edge)).toMap();
         _edges.addAll(newEdges);
       }
     } else {
       final element = graph.keyedElements[slot];
       assert(element != null, "Element for slot $slot is null");
-      // We forget the edge if neither the source nor the target element is in the graph.
-      // If one of them is still visible, we want to keep the edge to show it connected but going offscreen.
-      _forgottenEdges.addAll(
-        _edges.where(
-          (edge) =>
-              edge.connectsTo(element!) &&
-              !_children.containsKey(edge.source) &&
-              !_children.containsKey(edge.target),
-        ),
-      );
+
+      graph.elementsConnectedEdges[slot]
+          ?.where(
+            (edge) =>
+                !_children.containsKey(edge.source) &&
+                !_children.containsKey(edge.target),
+          )
+          .forEach((edge) {
+            _edges.remove(edge.id);
+          });
     }
   }
 
@@ -1348,11 +1347,6 @@ class _RenderGraph extends RenderBox {
       _positionChild(child, preRenderElement.position);
     }
 
-    if (_forgottenEdges.isNotEmpty) {
-      _edges.retainWhere((edge) => !_forgottenEdges.contains(edge));
-      _forgottenEdges.clear();
-    }
-
     // The size has to be zero, otherwise the viewport will not be applied correctly and gets shifted when
     // the user zooms in or out.
     // We can still render anything we want, so it doesn't actually impact the layout or painting.
@@ -1393,7 +1387,7 @@ class _RenderGraph extends RenderBox {
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
-    for (final edge in _edges) {
+    for (final edge in _edges.values) {
       final preRenderEdge = _PreRenderEdge.fromEdge(edge, graph);
       if (preRenderEdge == null) continue;
       final _PreRenderEdge(source: source, target: target) = preRenderEdge;
