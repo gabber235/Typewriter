@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:localstorage/localstorage.dart";
-import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "appearance.g.dart";
@@ -39,6 +38,3 @@ class Appearance extends _$Appearance {
     state = mode;
   }
 }
-
-// ignore: prefer_mixin
-class AppearanceMock extends _$Appearance with Mock implements Appearance {}

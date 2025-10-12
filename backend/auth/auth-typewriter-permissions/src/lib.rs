@@ -9,10 +9,27 @@ wit_bindgen::generate!({
 use std::time::Duration;
 
 use anyhow::Result;
-use nats_jwt_rs::types::{Permission, Permissions, ResponsePermission};
+use nats_jwt_rs::types::{
+    Permission as NatsPermission, Permissions as NatsPermissions,
+    ResponsePermission as NatsResponsePermission,
+};
+use prost::Message;
 use serde::{Deserialize, Serialize};
 use wasmcloud_component::debug;
 use wasmcloud_utils::wasmcloud::messaging::{handler::Guest, reply, types};
+
+mod typewriter {
+    pub mod models {
+        pub mod v1 {
+            include!("generated/typewriter.models.v1.rs");
+        }
+    }
+    pub mod api {
+        pub mod v1 {
+            include!("generated/typewriter.api.v1.rs");
+        }
+    }
+}
 
 struct TypewriterPermissions;
 wasmcloud_utils::export!(TypewriterPermissions);
@@ -28,36 +45,32 @@ pub enum LogtoClaims {
         avatar: Option<String>,
     },
 }
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PermissionRequest {
-    organization_id: Option<String>,
-    jwt: jose::jwt::Claims<LogtoClaims>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PermissionResponse {
-    permissions: Permissions,
-    tags: Vec<String>,
-}
 
 impl Guest for TypewriterPermissions {
     fn handle_message(msg: types::BrokerMessage) -> Result<(), String> {
-        let request: PermissionRequest =
-            serde_cbor::from_slice(&msg.body).map_err(|e| e.to_string())?;
+        let request = typewriter::api::v1::PermissionRequest::decode(&msg.body[..])
+            .map_err(|e| format!("failed to decode request: {}", e))?;
 
-        let claims: jose::jwt::Claims<LogtoClaims> = request.jwt;
+        let claims: jose::jwt::Claims<LogtoClaims> =
+            serde_json::from_slice(&request.jwt_claims).map_err(|e| e.to_string())?;
+
         let organization_id = request.organization_id;
 
-        let (permissions, tags) = match claims.additional {
+        let (nats_permissions, tags) = match claims.additional {
             LogtoClaims::User { .. } => {
                 handle_user(claims, organization_id).map_err(|e| e.to_string())?
             }
         };
 
-        let repsponse = PermissionResponse { permissions, tags };
-        let response = serde_cbor::to_vec(&repsponse).map_err(|e| e.to_string())?;
+        let proto_permissions = (&nats_permissions).into();
 
-        reply(msg, response)?;
+        let response = typewriter::api::v1::PermissionResponse {
+            permissions: Some(proto_permissions),
+            tags,
+        };
+        let response_bytes = response.encode_to_vec();
+
+        reply(msg, response_bytes)?;
         Ok(())
     }
 }
@@ -73,7 +86,7 @@ struct User {
 fn handle_user(
     claims: jose::jwt::Claims<LogtoClaims>,
     organization_id: Option<String>,
-) -> Result<(Permissions, Vec<String>)> {
+) -> Result<(NatsPermissions, Vec<String>)> {
     let user_id = claims
         .subject
         .ok_or(anyhow::anyhow!("No subject in claims"))?;
@@ -127,16 +140,16 @@ fn handle_user(
     }
     // ######### END PERMISSIONS #########
 
-    let permissions = Permissions {
-        publish: Permission {
+    let permissions = NatsPermissions {
+        publish: NatsPermission {
             allow: allow_publish,
             deny: vec![],
         },
-        subscribe: Permission {
+        subscribe: NatsPermission {
             allow: allow_subscribe,
             deny: vec![],
         },
-        resp: Some(ResponsePermission {
+        resp: Some(NatsResponsePermission {
             max_messages: 1,
             ttl: Duration::from_secs(60),
         }),
@@ -150,4 +163,39 @@ fn handle_user(
     debug!("finished handling permissions request for user {}", name);
 
     Ok((permissions, tags))
+}
+
+impl From<&NatsPermissions> for typewriter::models::v1::Permissions {
+    fn from(nats_permissions: &NatsPermissions) -> Self {
+        use prost_types::Duration;
+
+        let publish = Some(typewriter::models::v1::Permission {
+            allow: nats_permissions.publish.allow.clone(),
+            deny: nats_permissions.publish.deny.clone(),
+        });
+
+        let subscribe = Some(typewriter::models::v1::Permission {
+            allow: nats_permissions.subscribe.allow.clone(),
+            deny: nats_permissions.subscribe.deny.clone(),
+        });
+
+        let resp = nats_permissions.resp.as_ref().map(|r| {
+            let total_seconds = r.ttl.as_secs();
+            let nanos = r.ttl.subsec_nanos();
+
+            typewriter::models::v1::ResponsePermission {
+                max_messages: r.max_messages as i32,
+                ttl: Some(Duration {
+                    seconds: total_seconds as i64,
+                    nanos: nanos as i32,
+                }),
+            }
+        });
+
+        typewriter::models::v1::Permissions {
+            publish,
+            subscribe,
+            resp,
+        }
+    }
 }

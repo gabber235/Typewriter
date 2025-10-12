@@ -394,7 +394,7 @@ packages:
     source: hosted
     version: "7.0.1"
   fixnum:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: fixnum
       sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
@@ -896,6 +896,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.3"
+  protobuf:
+    dependency: "direct main"
+    description:
+      name: protobuf
+      sha256: "826d6a306be26f29e5cd9faeb0c97aad5897270341dab6dbd7b8acd675937006"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.0"
+  protoc_plugin:
+    dependency: "direct dev"
+    description:
+      name: protoc_plugin
+      sha256: c3893590d5b81345dfd4daa25c1890092667983fd4374bb6671b2a9a481d8359
+      url: "https://pub.dev"
+    source: hosted
+    version: "23.0.0"
   pub_semver:
     dependency: "direct main"
     description:

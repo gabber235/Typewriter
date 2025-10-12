@@ -4,3 +4,6 @@ target/
 # Wash build artifacts
 build/
 
+# Generated proto files
+src/generated/
+

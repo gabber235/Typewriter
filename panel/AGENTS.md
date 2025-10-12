@@ -4,14 +4,17 @@ Project tech/context
 - Flutter + Dart
 - Riverpod (hooks + annotations) for state
 - auto_route for navigation
-- freezed + json_serializable for models
+- protobuf for domain models; freezed for UI state
+- Makefile for code generation (proto + build_runner)
 - Widgetbook workspace for component catalog (separate Flutter app under widgetbook/)
   - Use FakeApp (widgetbook/lib/widgetbook_utils.dart) as the standard shell for stories. It wraps MaterialApp, ProviderScope (supports overrides), AppRequiredWidgets, Responsive breakpoints, and propagates app-wide shortcuts/actions.
   - Prefer wrapping each @widgetbook.UseCase content with FakeApp for consistent theming, scroll behavior, and padding.
 
 Primary commands
-- Codegen (run whenever annotations or model schemas change):
-  - dart run build_runner build -d
+- Proto generation (run after adding/updating .proto files):
+  - make proto
+- Dart codegen (run after annotations change):
+  - make generate
   - If issues persist: dart run build_runner clean && dart run build_runner build -d
 - Analyze & lints:
   - dart analyze
@@ -21,7 +24,6 @@ Primary commands
     - testApp(child: ...) to wrap widgets with ProviderScope, Responsive, AppRequiredWidgets, and MaterialApp.
     - WidgetTesterAppX.pumpTestApp(...) and pumpUntil(...) extensions for common setups.
     - WidgetTesterScreenshotsX.captureScreenshot(name, directory: "test_screenshots") to export PNG screenshots.
-    - Call setupMocks() in test main() to register mocktail fallback values when needed.
     - Editor helpers (test/widgets/utils/editor_utils.dart): use WidgetTester.pumpEditor(...) to mount Inspector editors with blueprints and initial data.
 
 Project layout expectations
@@ -50,28 +52,31 @@ Global conventions
 - Widgetbook stories should wrap content with FakeApp when possible to inherit app theming, shortcuts, scroll behavior, and Responsive padding.
 - In widget tests, prefer testApp/pumpTestApp and captureScreenshot utilities over bespoke scaffolds.
 
-When to run codegen
+When to run proto generation
+- After adding/updating .proto files in ../proto/
+- Command: make proto
+
+When to run dart codegen
 - After adding/updating:
-  - @freezed models
   - @riverpod/@Riverpod providers
   - auto_route annotations
   - widgetbook @widgetbook.UseCase or @App changes
-- Commands:
-  - dart run build_runner build -d
-  - If issues persist: dart run build_runner clean && dart run build_runner build -d
+- Command: make generate
 
 Minimal checklists
 - New component: widget under widgets/... + story under widgetbook/lib/stories/... + regenerate widgetbook + run Widgetbook
-- New route: page under routes/... + add to router config + codegen
-- New model: freezed class + json helpers + part files + codegen
-- New provider: annotated provider + tests (if applicable) + codegen
+- New route: page under routes/... + add to router config + make generate
+- New domain model: add .proto file in ../proto/models/ + make proto (or use existing proto message)
+- New UI state class: freezed class (if needed for local component state) + make generate
+- New provider: annotated provider + tests (if applicable) + make generate
 
 Agent behavior
 - Preserve and follow the directory structure above; colocate by feature.
 - Prefer pure UI widgets that accept data via parameters. If a widget depends on providers, consider a pure UI variant for testing and stories.
 - Surface AsyncValue states (loading/error/data) explicitly in UI.
-- Decode/encode JSON in the provider layer; avoid passing Map<String, dynamic> to widgets when avoidable.
+- Use proto messages for domain models; decode from wire formats in the provider layer.
+- Add extension methods on proto messages (lib/logic/proto/extensions.dart or colocated) for domain logic, conversions, and computed properties.
 - For auth-required routes, ensure router guards are applied in configuration.
-- After route/provider/model changes, immediately run codegen and then analyze.
-- Keep examples and scaffolds idiomatic to this project’s patterns.
+- After route/provider/model changes, immediately run make generate and then analyze.
+- Keep examples and scaffolds idiomatic to this project's patterns.
 

@@ -566,7 +566,7 @@ PlatformConstraint _$PlatformConstraintFromJson(
 /// @nodoc
 mixin _$PlatformConstraint {
 
-@SemverListJsonConverter() List<Version> get versions;
+ List<String> get versions;
 /// Create a copy of PlatformConstraint
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -599,7 +599,7 @@ abstract mixin class $PlatformConstraintCopyWith<$Res>  {
   factory $PlatformConstraintCopyWith(PlatformConstraint value, $Res Function(PlatformConstraint) _then) = _$PlatformConstraintCopyWithImpl;
 @useResult
 $Res call({
-@SemverListJsonConverter() List<Version> versions
+ List<String> versions
 });
 
 
@@ -619,7 +619,7 @@ class _$PlatformConstraintCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? versions = null,}) {
   return _then(_self.copyWith(
 versions: null == versions ? _self.versions : versions // ignore: cast_nullable_to_non_nullable
-as List<Version>,
+as List<String>,
   ));
 }
 
@@ -701,7 +701,7 @@ return version(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function(@SemverListJsonConverter()  List<Version> versions)?  version,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<String> versions)?  version,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PlatformVersionConstraint() when version != null:
 return version(_that.versions);case _:
@@ -722,7 +722,7 @@ return version(_that.versions);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function(@SemverListJsonConverter()  List<Version> versions)  version,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<String> versions)  version,}) {final _that = this;
 switch (_that) {
 case PlatformVersionConstraint():
 return version(_that.versions);}
@@ -739,7 +739,7 @@ return version(_that.versions);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function(@SemverListJsonConverter()  List<Version> versions)?  version,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<String> versions)?  version,}) {final _that = this;
 switch (_that) {
 case PlatformVersionConstraint() when version != null:
 return version(_that.versions);case _:
@@ -754,11 +754,11 @@ return version(_that.versions);case _:
 @JsonSerializable()
 
 class PlatformVersionConstraint extends PlatformConstraint {
-  const PlatformVersionConstraint({@SemverListJsonConverter() required final  List<Version> versions}): _versions = versions,super._();
+  const PlatformVersionConstraint({required final  List<String> versions}): _versions = versions,super._();
   factory PlatformVersionConstraint.fromJson(Map<String, dynamic> json) => _$PlatformVersionConstraintFromJson(json);
 
- final  List<Version> _versions;
-@override@SemverListJsonConverter() List<Version> get versions {
+ final  List<String> _versions;
+@override List<String> get versions {
   if (_versions is EqualUnmodifiableListView) return _versions;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_versions);
@@ -798,7 +798,7 @@ abstract mixin class $PlatformVersionConstraintCopyWith<$Res> implements $Platfo
   factory $PlatformVersionConstraintCopyWith(PlatformVersionConstraint value, $Res Function(PlatformVersionConstraint) _then) = _$PlatformVersionConstraintCopyWithImpl;
 @override @useResult
 $Res call({
-@SemverListJsonConverter() List<Version> versions
+ List<String> versions
 });
 
 
@@ -818,7 +818,7 @@ class _$PlatformVersionConstraintCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? versions = null,}) {
   return _then(PlatformVersionConstraint(
 versions: null == versions ? _self._versions : versions // ignore: cast_nullable_to_non_nullable
-as List<Version>,
+as List<String>,
   ));
 }
 
@@ -1119,7 +1119,7 @@ $PlatformCopyWith<$Res> get platform {
 /// @nodoc
 mixin _$ManualModuleReference {
 
- String get moduleId; String get name;@SemverJsonConverter() Version get version; ModuleType get type; List<String> get dependencies; List<String> get dependents;
+ String get moduleId; String get name;@SemverJsonConverter() Version get version;@ModuleTypeConverter() ModuleType get type; List<String> get dependencies; List<String> get dependents;
 /// Create a copy of ManualModuleReference
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1152,7 +1152,7 @@ abstract mixin class $ManualModuleReferenceCopyWith<$Res>  {
   factory $ManualModuleReferenceCopyWith(ManualModuleReference value, $Res Function(ManualModuleReference) _then) = _$ManualModuleReferenceCopyWithImpl;
 @useResult
 $Res call({
- String moduleId, String name,@SemverJsonConverter() Version version, ModuleType type, List<String> dependencies, List<String> dependents
+ String moduleId, String name,@SemverJsonConverter() Version version,@ModuleTypeConverter() ModuleType type, List<String> dependencies, List<String> dependents
 });
 
 
@@ -1262,7 +1262,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String moduleId,  String name, @SemverJsonConverter()  Version version,  ModuleType type,  List<String> dependencies,  List<String> dependents)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String moduleId,  String name, @SemverJsonConverter()  Version version, @ModuleTypeConverter()  ModuleType type,  List<String> dependencies,  List<String> dependents)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ManualModuleReference() when $default != null:
 return $default(_that.moduleId,_that.name,_that.version,_that.type,_that.dependencies,_that.dependents);case _:
@@ -1283,7 +1283,7 @@ return $default(_that.moduleId,_that.name,_that.version,_that.type,_that.depende
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String moduleId,  String name, @SemverJsonConverter()  Version version,  ModuleType type,  List<String> dependencies,  List<String> dependents)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String moduleId,  String name, @SemverJsonConverter()  Version version, @ModuleTypeConverter()  ModuleType type,  List<String> dependencies,  List<String> dependents)  $default,) {final _that = this;
 switch (_that) {
 case _ManualModuleReference():
 return $default(_that.moduleId,_that.name,_that.version,_that.type,_that.dependencies,_that.dependents);case _:
@@ -1303,7 +1303,7 @@ return $default(_that.moduleId,_that.name,_that.version,_that.type,_that.depende
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String moduleId,  String name, @SemverJsonConverter()  Version version,  ModuleType type,  List<String> dependencies,  List<String> dependents)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String moduleId,  String name, @SemverJsonConverter()  Version version, @ModuleTypeConverter()  ModuleType type,  List<String> dependencies,  List<String> dependents)?  $default,) {final _that = this;
 switch (_that) {
 case _ManualModuleReference() when $default != null:
 return $default(_that.moduleId,_that.name,_that.version,_that.type,_that.dependencies,_that.dependents);case _:
@@ -1318,13 +1318,13 @@ return $default(_that.moduleId,_that.name,_that.version,_that.type,_that.depende
 @JsonSerializable()
 
 class _ManualModuleReference implements ManualModuleReference {
-  const _ManualModuleReference({required this.moduleId, required this.name, @SemverJsonConverter() required this.version, required this.type, final  List<String> dependencies = const <String>[], final  List<String> dependents = const <String>[]}): _dependencies = dependencies,_dependents = dependents;
+  const _ManualModuleReference({required this.moduleId, required this.name, @SemverJsonConverter() required this.version, @ModuleTypeConverter() required this.type, final  List<String> dependencies = const <String>[], final  List<String> dependents = const <String>[]}): _dependencies = dependencies,_dependents = dependents;
   factory _ManualModuleReference.fromJson(Map<String, dynamic> json) => _$ManualModuleReferenceFromJson(json);
 
 @override final  String moduleId;
 @override final  String name;
 @override@SemverJsonConverter() final  Version version;
-@override final  ModuleType type;
+@override@ModuleTypeConverter() final  ModuleType type;
  final  List<String> _dependencies;
 @override@JsonKey() List<String> get dependencies {
   if (_dependencies is EqualUnmodifiableListView) return _dependencies;
@@ -1373,7 +1373,7 @@ abstract mixin class _$ManualModuleReferenceCopyWith<$Res> implements $ManualMod
   factory _$ManualModuleReferenceCopyWith(_ManualModuleReference value, $Res Function(_ManualModuleReference) _then) = __$ManualModuleReferenceCopyWithImpl;
 @override @useResult
 $Res call({
- String moduleId, String name,@SemverJsonConverter() Version version, ModuleType type, List<String> dependencies, List<String> dependents
+ String moduleId, String name,@SemverJsonConverter() Version version,@ModuleTypeConverter() ModuleType type, List<String> dependencies, List<String> dependents
 });
 
 

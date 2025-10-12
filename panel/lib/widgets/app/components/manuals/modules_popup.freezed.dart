@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ManualModuleInformation implements DiagnosticableTreeMixin {
 
- String get moduleId; String get name; String get description; String get author; ModuleType get type;@SemverJsonConverter() Version get version;@SemverListJsonConverter() List<Version> get compatibleVersions; bool get canBeRemoved;
+ String get moduleId; String get name; String get description; String get author;@ModuleTypeConverter() ModuleType get type;@SemverJsonConverter() Version get version; List<String> get compatibleVersions; bool get canBeRemoved;
 /// Create a copy of ManualModuleInformation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -54,7 +54,7 @@ abstract mixin class $ManualModuleInformationCopyWith<$Res>  {
   factory $ManualModuleInformationCopyWith(ManualModuleInformation value, $Res Function(ManualModuleInformation) _then) = _$ManualModuleInformationCopyWithImpl;
 @useResult
 $Res call({
- String moduleId, String name, String description, String author, ModuleType type,@SemverJsonConverter() Version version,@SemverListJsonConverter() List<Version> compatibleVersions, bool canBeRemoved
+ String moduleId, String name, String description, String author,@ModuleTypeConverter() ModuleType type,@SemverJsonConverter() Version version, List<String> compatibleVersions, bool canBeRemoved
 });
 
 
@@ -80,7 +80,7 @@ as String,author: null == author ? _self.author : author // ignore: cast_nullabl
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as ModuleType,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as Version,compatibleVersions: null == compatibleVersions ? _self.compatibleVersions : compatibleVersions // ignore: cast_nullable_to_non_nullable
-as List<Version>,canBeRemoved: null == canBeRemoved ? _self.canBeRemoved : canBeRemoved // ignore: cast_nullable_to_non_nullable
+as List<String>,canBeRemoved: null == canBeRemoved ? _self.canBeRemoved : canBeRemoved // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -166,7 +166,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String moduleId,  String name,  String description,  String author,  ModuleType type, @SemverJsonConverter()  Version version, @SemverListJsonConverter()  List<Version> compatibleVersions,  bool canBeRemoved)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String moduleId,  String name,  String description,  String author, @ModuleTypeConverter()  ModuleType type, @SemverJsonConverter()  Version version,  List<String> compatibleVersions,  bool canBeRemoved)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ManualModuleInformation() when $default != null:
 return $default(_that.moduleId,_that.name,_that.description,_that.author,_that.type,_that.version,_that.compatibleVersions,_that.canBeRemoved);case _:
@@ -187,7 +187,7 @@ return $default(_that.moduleId,_that.name,_that.description,_that.author,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String moduleId,  String name,  String description,  String author,  ModuleType type, @SemverJsonConverter()  Version version, @SemverListJsonConverter()  List<Version> compatibleVersions,  bool canBeRemoved)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String moduleId,  String name,  String description,  String author, @ModuleTypeConverter()  ModuleType type, @SemverJsonConverter()  Version version,  List<String> compatibleVersions,  bool canBeRemoved)  $default,) {final _that = this;
 switch (_that) {
 case _ManualModuleInformation():
 return $default(_that.moduleId,_that.name,_that.description,_that.author,_that.type,_that.version,_that.compatibleVersions,_that.canBeRemoved);case _:
@@ -207,7 +207,7 @@ return $default(_that.moduleId,_that.name,_that.description,_that.author,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String moduleId,  String name,  String description,  String author,  ModuleType type, @SemverJsonConverter()  Version version, @SemverListJsonConverter()  List<Version> compatibleVersions,  bool canBeRemoved)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String moduleId,  String name,  String description,  String author, @ModuleTypeConverter()  ModuleType type, @SemverJsonConverter()  Version version,  List<String> compatibleVersions,  bool canBeRemoved)?  $default,) {final _that = this;
 switch (_that) {
 case _ManualModuleInformation() when $default != null:
 return $default(_that.moduleId,_that.name,_that.description,_that.author,_that.type,_that.version,_that.compatibleVersions,_that.canBeRemoved);case _:
@@ -222,17 +222,17 @@ return $default(_that.moduleId,_that.name,_that.description,_that.author,_that.t
 @JsonSerializable()
 
 class _ManualModuleInformation with DiagnosticableTreeMixin implements ManualModuleInformation {
-   _ManualModuleInformation({required this.moduleId, required this.name, required this.description, required this.author, required this.type, @SemverJsonConverter() required this.version, @SemverListJsonConverter() required final  List<Version> compatibleVersions, this.canBeRemoved = true}): assert(compatibleVersions.isNotEmpty, 'The module has no compatible versions.'),assert(compatibleVersions.contains(version), 'The module is not compatible with the current version.'),_compatibleVersions = compatibleVersions;
+   _ManualModuleInformation({required this.moduleId, required this.name, required this.description, required this.author, @ModuleTypeConverter() required this.type, @SemverJsonConverter() required this.version, required final  List<String> compatibleVersions, this.canBeRemoved = true}): assert(compatibleVersions.isNotEmpty, 'The module has no compatible versions.'),assert(compatibleVersions.contains(version.canonicalizedVersion), 'The module is not compatible with the current version.'),_compatibleVersions = compatibleVersions;
   factory _ManualModuleInformation.fromJson(Map<String, dynamic> json) => _$ManualModuleInformationFromJson(json);
 
 @override final  String moduleId;
 @override final  String name;
 @override final  String description;
 @override final  String author;
-@override final  ModuleType type;
+@override@ModuleTypeConverter() final  ModuleType type;
 @override@SemverJsonConverter() final  Version version;
- final  List<Version> _compatibleVersions;
-@override@SemverListJsonConverter() List<Version> get compatibleVersions {
+ final  List<String> _compatibleVersions;
+@override List<String> get compatibleVersions {
   if (_compatibleVersions is EqualUnmodifiableListView) return _compatibleVersions;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_compatibleVersions);
@@ -279,7 +279,7 @@ abstract mixin class _$ManualModuleInformationCopyWith<$Res> implements $ManualM
   factory _$ManualModuleInformationCopyWith(_ManualModuleInformation value, $Res Function(_ManualModuleInformation) _then) = __$ManualModuleInformationCopyWithImpl;
 @override @useResult
 $Res call({
- String moduleId, String name, String description, String author, ModuleType type,@SemverJsonConverter() Version version,@SemverListJsonConverter() List<Version> compatibleVersions, bool canBeRemoved
+ String moduleId, String name, String description, String author,@ModuleTypeConverter() ModuleType type,@SemverJsonConverter() Version version, List<String> compatibleVersions, bool canBeRemoved
 });
 
 
@@ -305,7 +305,7 @@ as String,author: null == author ? _self.author : author // ignore: cast_nullabl
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as ModuleType,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as Version,compatibleVersions: null == compatibleVersions ? _self._compatibleVersions : compatibleVersions // ignore: cast_nullable_to_non_nullable
-as List<Version>,canBeRemoved: null == canBeRemoved ? _self.canBeRemoved : canBeRemoved // ignore: cast_nullable_to_non_nullable
+as List<String>,canBeRemoved: null == canBeRemoved ? _self.canBeRemoved : canBeRemoved // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

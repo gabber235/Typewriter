@@ -25,17 +25,12 @@ class OrganizationPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return OrganizationScaffold(
-      child: AutoRouter(),
-    );
+    return OrganizationScaffold(child: AutoRouter());
   }
 }
 
 class OrganizationScaffold extends HookConsumerWidget {
-  const OrganizationScaffold({
-    required this.child,
-    super.key,
-  });
+  const OrganizationScaffold({required this.child, super.key});
 
   final Widget child;
 

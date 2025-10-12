@@ -13,16 +13,29 @@ use config::IssuerConfig;
 use jose::UntypedAdditionalProperties;
 use nats_jwt_rs::{
     authorization::{AuthRequest, AuthResponse},
-    types::Permissions,
+    types::Permissions as NatsPermissions,
     user::User,
     Claims,
 };
 use nkeys::KeyPair;
-use serde::{Deserialize, Serialize};
+use prost::Message;
 use wasi::config::runtime;
 use wasmcloud::secrets::*;
 use wasmcloud_component::{debug, info};
 use wasmcloud_utils::wasmcloud::messaging::{consumer, handler::Guest, reply, types};
+
+mod typewriter {
+    pub mod models {
+        pub mod v1 {
+            include!("generated/typewriter.models.v1.rs");
+        }
+    }
+    pub mod api {
+        pub mod v1 {
+            include!("generated/typewriter.api.v1.rs");
+        }
+    }
+}
 
 pub mod config;
 pub mod jwt;
@@ -178,7 +191,12 @@ fn create_user_claims(
 
     let response = request_permissions(&jwt, issuer.id.as_str(), organization_id)?;
 
-    claims.payload_mut().permissions.permissions = response.permissions;
+    let nats_permissions = response
+        .permissions
+        .as_ref()
+        .ok_or_else(|| anyhow!("Missing permissions in response"))?
+        .into();
+    claims.payload_mut().permissions.permissions = nats_permissions;
     if !response.tags.is_empty() {
         claims.payload_mut().generic_fields.tags = Some(response.tags);
     }
@@ -186,34 +204,79 @@ fn create_user_claims(
     Ok(claims)
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PermissionRequest {
-    organization_id: Option<String>,
-    jwt: jose::jwt::Claims<UntypedAdditionalProperties>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PermissionResponse {
-    permissions: Permissions,
-    tags: Vec<String>,
-}
-
 fn request_permissions(
     jwt: &jose::jwt::Claims<UntypedAdditionalProperties>,
     issuer_id: &str,
     organization_id: &Option<String>,
-) -> Result<PermissionResponse> {
+) -> Result<typewriter::api::v1::PermissionResponse> {
     let subject = format!("auth.permissions.{}", issuer_id);
 
-    let body = serde_cbor::to_vec(&PermissionRequest {
+    let jwt_bytes = serde_json::to_vec(jwt)?;
+
+    let request = typewriter::api::v1::PermissionRequest {
         organization_id: organization_id.clone(),
-        jwt: jwt.clone(),
-    })?;
+        jwt_claims: jwt_bytes,
+    };
+
+    let body = request.encode_to_vec();
 
     let response = consumer::request(subject.as_str(), &body, 1000).map_err(|e| anyhow!(e))?;
-    let response = serde_cbor::from_slice::<PermissionResponse>(&response.body)?;
+    let response = typewriter::api::v1::PermissionResponse::decode(&response.body[..])?;
 
     Ok(response)
+}
+
+impl From<&typewriter::models::v1::Permissions> for NatsPermissions {
+    fn from(proto_permissions: &typewriter::models::v1::Permissions) -> Self {
+        use nats_jwt_rs::types::{
+            Permission as NatsPermission, ResponsePermission as NatsResponsePermission,
+        };
+        use std::time::Duration;
+
+        let publish = NatsPermission {
+            allow: proto_permissions
+                .publish
+                .as_ref()
+                .map(|p| p.allow.clone())
+                .unwrap_or_default(),
+            deny: proto_permissions
+                .publish
+                .as_ref()
+                .map(|p| p.deny.clone())
+                .unwrap_or_default(),
+        };
+
+        let subscribe = NatsPermission {
+            allow: proto_permissions
+                .subscribe
+                .as_ref()
+                .map(|p| p.allow.clone())
+                .unwrap_or_default(),
+            deny: proto_permissions
+                .subscribe
+                .as_ref()
+                .map(|p| p.deny.clone())
+                .unwrap_or_default(),
+        };
+
+        let resp = proto_permissions
+            .resp
+            .as_ref()
+            .map(|r| NatsResponsePermission {
+                max_messages: r.max_messages as i64,
+                ttl: r
+                    .ttl
+                    .as_ref()
+                    .map(|d| Duration::from_secs(d.seconds as u64 + d.nanos as u64 / 1_000_000_000))
+                    .unwrap_or_default(),
+            });
+
+        NatsPermissions {
+            publish,
+            subscribe,
+            resp,
+        }
+    }
 }
 
 fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>> {

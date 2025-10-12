@@ -1,25 +1,41 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:mocktail/mocktail.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
+import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../../../test_utils.dart";
 import "../../../../utils/editor_utils.dart";
 
+class TestSelectableDataWithTracking extends TestSelectableData {
+  TestSelectableDataWithTracking(this.setCalls);
+
+  final List<String> setCalls;
+
+  @override
+  Map<String, DynamicData> build() {
+    return {};
+  }
+
+  @override
+  void set(String id, DynamicData data) {
+    setCalls.add("$id:${data.toJson()}");
+  }
+}
+
 void main() {
-  setupMocks();
   group("FieldValueEditor", () {
     testWidgets("Loading state shows skeleton and no input", (tester) async {
-      final data = TestSelectableDataMock();
-      when(() => data.set(any(), any())).thenReturn(null);
+      final setCalls = <String>[];
 
       await tester.pumpEditor(
         overrides: [
-          fieldValueProvider.overrideWith((_, __) => SelectedValue.loading()),
+          fieldValueProvider.overrideWith((_, _) => SelectedValue.loading()),
+          testSelectableDataProvider.overrideWith(
+            () => TestSelectableDataWithTracking(setCalls),
+          ),
         ],
         path: "test",
         child: FieldValueEditor(
@@ -31,12 +47,14 @@ void main() {
       );
 
       expect(find.text("Bob"), findsNothing);
-      verifyNever(() => data.set(any(), any()));
+      // pumpEditor calls set() during setup, so we expect one call
+      expect(setCalls.length, 1);
 
       await tester.tap(find.byType(FieldValueEditor));
 
       expect(find.text("Bob"), findsNothing);
-      verifyNever(() => data.set(any(), any()));
+      // Tapping should not trigger additional set() calls in loading state
+      expect(setCalls.length, 1);
     });
 
     testWidgets("Value state shows the value", (tester) async {
@@ -56,8 +74,9 @@ void main() {
       expect(find.text("Bob"), findsOneWidget);
     });
 
-    testWidgets("None state shows reset UI and clicking resets to default",
-        (tester) async {
+    testWidgets("None state shows reset UI and clicking resets to default", (
+      tester,
+    ) async {
       final dataBlueprint = DataBlueprint.string(defaultValue: "Bob");
       await tester.pumpEditor(
         overrides: [],
@@ -81,49 +100,53 @@ void main() {
       expect(find.text("Bob"), findsOneWidget);
     });
 
-    testWidgets("Conflict state shows reset UI and clicking resets to default",
-        (tester) async {
-      final path = "test";
-      final dataBlueprint = DataBlueprint.string(defaultValue: "Bob");
-      final objectBlueprint = ObjectBlueprint(
-        fields: {
-          path: dataBlueprint,
-        },
-      );
-      await tester.pumpEditor(
-        path: path,
-        child: FieldValueEditor(
+    testWidgets(
+      "Conflict state shows reset UI and clicking resets to default",
+      (tester) async {
+        final path = "test";
+        final dataBlueprint = DataBlueprint.string(defaultValue: "Bob");
+        final objectBlueprint = ObjectBlueprint(fields: {path: dataBlueprint});
+        await tester.pumpEditor(
           path: path,
-          dataBlueprint: dataBlueprint,
-          editorMode: EditorMode.interactiveInspector,
-          builder: (value) => Text(value.toString()),
-        ),
-      );
-
-      tester
-        ..selectSelectables([
-          TestSelectableIdentifier(id: "first", dataBlueprint: objectBlueprint),
-          TestSelectableIdentifier(
-            id: "second",
-            dataBlueprint: objectBlueprint,
+          child: FieldValueEditor(
+            path: path,
+            dataBlueprint: dataBlueprint,
+            editorMode: EditorMode.interactiveInspector,
+            builder: (value) => Text(value.toString()),
           ),
-        ])
-        ..setTestSelectableData(selectedId: "first", data: {"test": "Alice"})
-        ..setTestSelectableData(selectedId: "second", data: {"test": "Clare"});
+        );
 
-      await tester.pumpAndSettle();
+        tester
+          ..selectSelectables([
+            TestSelectableIdentifier(
+              id: "first",
+              dataBlueprint: objectBlueprint,
+            ),
+            TestSelectableIdentifier(
+              id: "second",
+              dataBlueprint: objectBlueprint,
+            ),
+          ])
+          ..setTestSelectableData(selectedId: "first", data: {"test": "Alice"})
+          ..setTestSelectableData(
+            selectedId: "second",
+            data: {"test": "Clare"},
+          );
 
-      expect(find.text("Alic"), findsNothing);
-      expect(find.text("Bob"), findsNothing);
-      expect(find.text("Clare"), findsNothing);
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(InkWell));
-      await tester.pumpAndSettle();
+        expect(find.text("Alic"), findsNothing);
+        expect(find.text("Bob"), findsNothing);
+        expect(find.text("Clare"), findsNothing);
 
-      expect(find.text("Alic"), findsNothing);
-      expect(find.text("Bob"), findsOneWidget);
-      expect(find.text("Clare"), findsNothing);
-    });
+        await tester.tap(find.byType(InkWell));
+        await tester.pumpAndSettle();
+
+        expect(find.text("Alic"), findsNothing);
+        expect(find.text("Bob"), findsOneWidget);
+        expect(find.text("Clare"), findsNothing);
+      },
+    );
 
     Future<void> runReadonlyNoneResetDisabled(
       WidgetTester tester, {
@@ -158,11 +181,7 @@ void main() {
       required EditorMode editorMode,
     }) async {
       final path = "test";
-      final objectBlueprint = ObjectBlueprint(
-        fields: {
-          path: dataBlueprint,
-        },
-      );
+      final objectBlueprint = ObjectBlueprint(fields: {path: dataBlueprint});
       await tester.pumpEditor(
         path: path,
         child: FieldValueEditor(
@@ -198,17 +217,16 @@ void main() {
       expect(find.text("Clare"), findsNothing);
     }
 
-    testWidgets(
-      "None state does not reset when editor is read-only (mode)",
-      (tester) async {
-        final dataBlueprint = DataBlueprint.string(defaultValue: "Bob");
-        await runReadonlyNoneResetDisabled(
-          tester,
-          dataBlueprint: dataBlueprint,
-          editorMode: EditorMode.readOnlyInspector,
-        );
-      },
-    );
+    testWidgets("None state does not reset when editor is read-only (mode)", (
+      tester,
+    ) async {
+      final dataBlueprint = DataBlueprint.string(defaultValue: "Bob");
+      await runReadonlyNoneResetDisabled(
+        tester,
+        dataBlueprint: dataBlueprint,
+        editorMode: EditorMode.readOnlyInspector,
+      );
+    });
 
     testWidgets(
       "None state does not reset when editor is read-only (modifier)",

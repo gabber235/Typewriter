@@ -29,7 +29,6 @@ import "../../../../test_utils.dart";
 ///   2) Verifying that taps can focus a child below the drag layer.
 ///   3) Ensuring no drag state changes when the drag layer is disabled.
 void main() {
-  setupMocks();
 
   group("Graph - drag target shell (layout & hit testing)", () {
     testWidgets("drag target covers the viewport and accepts drags anywhere", (

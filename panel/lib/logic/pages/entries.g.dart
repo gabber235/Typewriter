@@ -291,7 +291,7 @@ final class PageEntriesProvider
   }
 }
 
-String _$pageEntriesHash() => r'c544a53b072940f0824eac1e516b305f250e2f7f';
+String _$pageEntriesHash() => r'409a0267e73bf6ac7b72216319de66e95a2e93fa';
 
 final class PageEntriesFamily extends $Family
     with
@@ -381,7 +381,7 @@ final class EntryProvider
   }
 }
 
-String _$entryHash() => r'f651227f2ed46a5ed98bebb6abadf0209d0ce55a';
+String _$entryHash() => r'87002d25623d406347e71cb7e129993c0836b751';
 
 final class EntryFamily extends $Family
     with

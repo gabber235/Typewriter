@@ -1,5 +1,6 @@
 import "package:faker/faker.dart";
-import "package:typewriter_panel/logic/tag.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/number.dart";
@@ -18,7 +19,7 @@ Tag? generateRandomTag([double change = 1, double decrease = 0.6]) {
   return Tag(
     id: faker.guid.guid(),
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
-    color: safeColors.randomOrNull()!,
+    color: safeColors.randomElement().toProtoColor(),
     parents: parents,
   );
 }

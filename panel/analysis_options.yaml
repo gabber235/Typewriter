@@ -83,6 +83,9 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - "**/*.pb.dart"
+    - "**/*.pbenum.dart"
+    - "**/*.pbjson.dart"
   errors:
     invalid_annotation_target: ignore
     always_use_package_imports: error

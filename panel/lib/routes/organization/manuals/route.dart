@@ -6,13 +6,13 @@ import "package:responsive_framework/responsive_framework.dart";
 import "package:typewriter_panel/logic/manuals/manuals.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
-import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/floating_button.dart";
 import "package:typewriter_panel/widgets/generic/components/grid_selectable_card.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
-import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
 

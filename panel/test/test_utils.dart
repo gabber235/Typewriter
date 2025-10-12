@@ -74,10 +74,6 @@ extension WidgetTesterAppX on WidgetTester {
   }
 }
 
-void setupMocks() {
-  setUpAll(registerFallbackValues);
-}
-
 /// Screenshot utilities for widget tests.
 extension WidgetTesterScreenshotsX on WidgetTester {
   /// Captures a PNG screenshot to [directory]/[name].png.

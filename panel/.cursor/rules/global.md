@@ -64,7 +64,6 @@ Global conventions
 
 When to run codegen
 - After adding/updating:
-  - @freezed models
   - @riverpod/@Riverpod providers
   - auto_route annotations
   - widgetbook @widgetbook.UseCase or @App changes

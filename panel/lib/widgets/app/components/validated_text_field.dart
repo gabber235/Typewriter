@@ -135,26 +135,21 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
     final formattedValue = deserialize?.call(value) ?? value.toString();
 
-    useFocusedChange(
-      focus,
-      ({required hasFocus}) {
-        if (!hasFocus && !keepErrorVisibleWhenUnfocused) {
-          state.value = _initial;
-          return;
-        }
+    useFocusedChange(focus, ({required hasFocus}) {
+      if (!hasFocus && !keepErrorVisibleWhenUnfocused) {
+        state.value = _initial;
+        return;
+      }
 
-        if (hasFocus &&
-            keepValidVisibleWhileFocused &&
-            state.value == _initial) {
-          _updateState(formattedValue, state);
-        }
-      },
-      [formattedValue],
-    );
+      if (hasFocus && keepValidVisibleWhileFocused && state.value == _initial) {
+        _updateState(formattedValue, state);
+      }
+    }, [formattedValue]);
 
     final baseDecoration = decoration ?? const InputDecoration();
     final effectiveDecoration = baseDecoration.copyWith(
-      prefixIcon: baseDecoration.prefixIcon ??
+      prefixIcon:
+          baseDecoration.prefixIcon ??
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Icones(
@@ -231,38 +226,38 @@ class _StateText extends HookWidget {
   Widget build(BuildContext context) {
     if (state is! _Valid) return Container();
 
-    final child = Padding(
-      padding: const EdgeInsets.only(left: 8.0, top: 4.0),
-      child: Text(
-        value ?? state.cast<_Valid>()?.message ?? "",
-        style: Theme.of(context)
-            .textTheme
-            .bodySmall
-            ?.copyWith(color: Colors.green),
-      ),
-    )
-        .animate()
-        .moveY(begin: -4, duration: 300.ms, curve: Curves.easeInOut)
-        .fadeIn(duration: 300.ms, curve: Curves.easeInOut)
-        .then(delay: 300.ms)
-        .shimmer(duration: 1.5.seconds, curve: Curves.easeInOut)
-        .addEffects([
-      if (!keepValidVisible) ...[
-        ThenEffect(delay: 300.ms),
-        MoveEffect(
-          end: const Offset(0, -4),
-          duration: 300.ms,
-          curve: Curves.easeOut,
-        ),
-        FadeEffect(
-          begin: 1.0,
-          end: 0.0,
-          duration: 300.ms,
-          curve: Curves.easeOut,
-        ),
-        SwapEffect(builder: (_, __) => Container()),
-      ],
-    ]);
+    final child =
+        Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+              child: Text(
+                value ?? state.cast<_Valid>()?.message ?? "",
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.green),
+              ),
+            )
+            .animate()
+            .moveY(begin: -4, duration: 300.ms, curve: Curves.easeInOut)
+            .fadeIn(duration: 300.ms, curve: Curves.easeInOut)
+            .then(delay: 300.ms)
+            .shimmer(duration: 1.5.seconds, curve: Curves.easeInOut)
+            .addEffects([
+              if (!keepValidVisible) ...[
+                ThenEffect(delay: 300.ms),
+                MoveEffect(
+                  end: const Offset(0, -4),
+                  duration: 300.ms,
+                  curve: Curves.easeOut,
+                ),
+                FadeEffect(
+                  begin: 1.0,
+                  end: 0.0,
+                  duration: 300.ms,
+                  curve: Curves.easeOut,
+                ),
+                SwapEffect(builder: (_, _) => Container()),
+              ],
+            ]);
 
     if (!keepValidVisible) {
       return AnimatedSize(

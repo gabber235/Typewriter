@@ -6,22 +6,23 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/logic/module_version/module_version.dart";
+import "package:pub_semver/pub_semver.dart";
+import "package:typewriter_panel/generated/models/module.pb.dart";
 import "package:typewriter_panel/logic/modules.dart";
+import "package:typewriter_panel/logic/modules/module_version_extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/map.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/editors/field_editor.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/header.dart";
-import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
-
+import "package:typewriter_panel/widgets/app/components/version_filter.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
-import "package:typewriter_panel/widgets/app/components/version_filter.dart";
 
 /// Renders a flat, chronologically sorted list of ModuleVersion items.
 /// Uses a query-driven filter with contextual suggestions optimized
@@ -29,8 +30,8 @@ import "package:typewriter_panel/widgets/app/components/version_filter.dart";
 class ModuleVersionListEditor extends Editor {
   @override
   bool canEdit(DataBlueprint dataBlueprint) => dataBlueprint.matches(
-        DataBlueprint.list(type: DataBlueprint.moduleVersion()),
-      );
+    DataBlueprint.list(type: DataBlueprint.moduleVersion()),
+  );
 
   @override
   Widget build(String path, DataBlueprint dataBlueprint, EditorMode mode) {
@@ -43,15 +44,20 @@ class ModuleVersionListEditor extends Editor {
 
   @override
   (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
-      headerActions(
+  headerActions(
     Ref ref,
     String path,
     DataBlueprint dataBlueprint,
     HeaderContext context,
     EditorMode mode,
   ) {
-    final actions =
-        super.headerActions(ref, path, dataBlueprint, context, mode);
+    final actions = super.headerActions(
+      ref,
+      path,
+      dataBlueprint,
+      context,
+      mode,
+    );
     final listBlueprint = dataBlueprint as ListBlueprint;
     final raw = ref.watch(fieldValueProvider(path)).value(<dynamic>[]);
     final length = raw is List ? raw.length : 0;
@@ -77,13 +83,24 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
   final ListBlueprint listBlueprint;
   final EditorMode editorMode;
 
-  List<(int, ModuleVersion)> indexedModuleVersions(WidgetRef ref) {
+  List<(int, ModuleVersion, Version)> _indexedModuleVersionsWithParsed(
+    WidgetRef ref,
+  ) {
     final fieldValue = ref.watch(fieldValueProvider(path));
     final raw = fieldValue.value(<dynamic>[]) as List<dynamic>? ?? [];
-    final indexed = raw.indexed.map<(int, ModuleVersion)>((t) {
-      final mv = ModuleVersion.fromJson(stringMap(t.$2));
-      return (t.$1, mv);
-    }).sorted((a, b) => a.$2.compareTo(b.$2));
+    final indexed = raw.indexed
+        .map<(int, ModuleVersion, Version)?>((t) {
+          try {
+            final mv = ModuleVersion()..mergeFromJsonMap(stringMap(t.$2));
+            final parsedVersion = mv.toVersion();
+            return (t.$1, mv, parsedVersion);
+          } on Exception catch (e) {
+            debugPrint("Failed to parse version ${t.$2.version}: $e");
+            return null;
+          }
+        })
+        .nonNulls
+        .sorted((a, b) => a.$3.compareTo(b.$3));
     return indexed;
   }
 
@@ -91,15 +108,17 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = useState<VersionFilter>(const VersionFilter());
 
-    final indexed = indexedModuleVersions(ref);
+    final indexed = _indexedModuleVersionsWithParsed(ref);
     final itemBlueprint = listBlueprint.type;
 
-    final hasEpoch =
-        useMemoized(() => indexed.any((v) => v.$2.epoch != 0), [indexed]);
+    final hasEpoch = useMemoized(
+      () => indexed.any((v) => v.$3.major ~/ 1000 != 0),
+      [indexed],
+    );
 
     final filtered = indexed
-        .where((e) => filter.value.matches(e.$2.version))
-        .sorted((a, b) => b.$2.compareTo(a.$2));
+        .where((e) => filter.value.matches(e.$3))
+        .sorted((a, b) => b.$3.compareTo(a.$3));
 
     return FieldHeader(
       path: path,
@@ -110,7 +129,7 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           VersionFilterBar(
-            filtered: filtered.map((e) => e.$2.version).toList(),
+            filtered: filtered.map((e) => e.$3).toList(),
             filter: filter,
             hasEpoch: hasEpoch,
           ),
@@ -143,10 +162,7 @@ class _ModuleVersionListEditorWidget extends HookConsumerWidget {
     );
   }
 
-  Widget _buildVersionListItem(
-    int index,
-    DataBlueprint itemBlueprint,
-  ) {
+  Widget _buildVersionListItem(int index, DataBlueprint itemBlueprint) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: FieldEditor(
@@ -190,12 +206,15 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
     ModuleVersion mv,
     ModuleVersionState target,
   ) async {
-    final ids =
-        ref.read(selectedProvider).requireValue.map((s) => s.id.id).toList();
+    final ids = ref
+        .read(selectedProvider)
+        .requireValue
+        .map((s) => s.id.id)
+        .toList();
 
     await ref
         .read(modulesProvider.notifier)
-        .changeVersionState(ids, mv.version, target);
+        .changeVersionState(ids, Version.parse(mv.version), target);
   }
 
   @override
@@ -206,7 +225,7 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
       dataBlueprint: versionBlueprint,
       editorMode: editorMode,
       builder: (value) {
-        final mv = ModuleVersion.fromJson(stringMap(value));
+        final mv = ModuleVersion()..mergeFromJsonMap(value);
         final theme = Theme.of(context);
         final state = mv.state;
         final color = mv.state.color;
@@ -261,11 +280,12 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      mv.display,
+                      mv.version,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        decoration:
-                            state.isActive ? null : TextDecoration.lineThrough,
+                        decoration: state.isActive
+                            ? null
+                            : TextDecoration.lineThrough,
                         decorationStyle: TextDecorationStyle.wavy,
                         decorationThickness: 2.0,
                       ),
@@ -281,7 +301,7 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        state.name,
+                        state.displayName,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: color,
                           letterSpacing: 0.5,
@@ -315,7 +335,7 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
       message: "Publish",
       child: IconButton(
         icon: const Icones(Fa6Solid.rocket, size: 16),
-        color: ModuleVersionState.published.color,
+        color: ModuleVersionState.MODULE_VERSION_STATE_PUBLISHED.color,
         onPressed: () => _showPublishConfirmationDialogue(context, mv, ref),
       ),
     );
@@ -328,8 +348,8 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
   ) {
     return showConfirmationDialogue(
       context: context,
-      title: "Publish ${mv.display}?",
-      titleColor: ModuleVersionState.published.color,
+      title: "Publish ${mv.version}?",
+      titleColor: ModuleVersionState.MODULE_VERSION_STATE_PUBLISHED.color,
       body: SizedBox(
         width: min(MediaQuery.of(context).size.width * 0.8, 500),
         child: Text.rich(
@@ -341,7 +361,7 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
             children: [
               TextSpan(text: "Are you sure you want to publish "),
               TextSpan(
-                text: mv.display,
+                text: mv.version,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.primary,
@@ -374,13 +394,13 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
       ),
       confirmText: "Publish",
       confirmIcon: Fa6Solid.rocket,
-      confirmColor: ModuleVersionState.published.color,
+      confirmColor: ModuleVersionState.MODULE_VERSION_STATE_PUBLISHED.color,
       onConfirmColor: Colors.white,
       delayConfirm: confirmationDelay,
       onConfirm: () => _changeState(
         ref,
         mv,
-        ModuleVersionState.published,
+        ModuleVersionState.MODULE_VERSION_STATE_PUBLISHED,
       ),
     );
   }
@@ -394,7 +414,7 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
       message: "Yoink",
       child: IconButton(
         icon: const Icones(Fa6Solid.ban, size: 16),
-        color: ModuleVersionState.yoinked.color,
+        color: ModuleVersionState.MODULE_VERSION_STATE_YOINKED.color,
         onPressed: () => _showYoinkConfirmationDialogue(context, mv, ref),
       ),
     );
@@ -407,8 +427,8 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
   ) {
     return showConfirmationDialogue(
       context: context,
-      title: "Yoink ${mv.display}?",
-      titleColor: ModuleVersionState.yoinked.color,
+      title: "Yoink ${mv.version}?",
+      titleColor: ModuleVersionState.MODULE_VERSION_STATE_YOINKED.color,
       body: SizedBox(
         width: min(MediaQuery.of(context).size.width * 0.8, 500),
         child: Text.rich(
@@ -420,7 +440,7 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
             children: [
               TextSpan(text: "Are you sure you want to yoink "),
               TextSpan(
-                text: mv.display,
+                text: mv.version,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.primary,
@@ -453,13 +473,13 @@ class _ModuleVersionEditorWidget extends HookConsumerWidget {
       ),
       confirmText: "Yoink",
       confirmIcon: Fa6Solid.ban,
-      confirmColor: ModuleVersionState.yoinked.color,
+      confirmColor: ModuleVersionState.MODULE_VERSION_STATE_YOINKED.color,
       onConfirmColor: Colors.white,
       delayConfirm: confirmationDelay,
       onConfirm: () => _changeState(
         ref,
         mv,
-        ModuleVersionState.yoinked,
+        ModuleVersionState.MODULE_VERSION_STATE_YOINKED,
       ),
     );
   }

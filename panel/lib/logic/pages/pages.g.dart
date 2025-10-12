@@ -3,35 +3,6 @@
 part of 'pages.dart';
 
 // **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_Page _$PageFromJson(Map<String, dynamic> json) => _Page(
-  id: json['id'] as String,
-  pageName: json['name'] as String,
-  type: $enumDecode(_$PageTypeEnumMap, json['type']),
-  color: const NullableColorConverter().fromJson(json['color'] as String?),
-  chapter: json['chapter'] as String? ?? "",
-  priority: (json['priority'] as num?)?.toInt() ?? 0,
-);
-
-Map<String, dynamic> _$PageToJson(_Page instance) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.pageName,
-  'type': _$PageTypeEnumMap[instance.type]!,
-  'color': const NullableColorConverter().toJson(instance.color),
-  'chapter': instance.chapter,
-  'priority': instance.priority,
-};
-
-const _$PageTypeEnumMap = {
-  PageType.sequence: 'sequence',
-  PageType.static: 'static',
-  PageType.scene: 'scene',
-  PageType.manifest: 'manifest',
-};
-
-// **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
@@ -79,7 +50,7 @@ final class BookPagesProvider
   }
 }
 
-String _$bookPagesHash() => r'5998f1db0de7f77abfe0de8f7153eda10d281d43';
+String _$bookPagesHash() => r'422b81d9eef1fda6e63287c6343b301c44da6560';
 
 final class BookPagesFamily extends $Family
     with
@@ -169,7 +140,7 @@ final class PagesProvider extends $AsyncNotifierProvider<Pages, Page> {
   }
 }
 
-String _$pagesHash() => r'745cc4d7dccd6a80501df39a14b35f203be981f6';
+String _$pagesHash() => r'b4b9ff353cfb53b4865fc4593fe71d9c7cfe9288';
 
 final class PagesFamily extends $Family
     with

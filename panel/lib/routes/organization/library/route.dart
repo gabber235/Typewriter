@@ -99,7 +99,7 @@ class LibraryPage extends HookConsumerWidget {
                               id: book.id,
                               title: book.title,
                               icon: Icones(book.icon),
-                              color: book.color,
+                              color: book.flutterColor,
                               tags: book.tags,
                             );
                           },

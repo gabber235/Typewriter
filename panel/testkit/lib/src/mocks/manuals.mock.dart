@@ -4,8 +4,8 @@ import "package:faker/faker.dart";
 import "package:pub_semver/pub_semver.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
+import "package:typewriter_panel/generated/models/module.pbenum.dart";
 import "package:typewriter_panel/logic/manuals/manuals.dart";
-import "package:typewriter_panel/logic/modules.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/manuals/modules_popup.dart";
@@ -22,7 +22,8 @@ PlatformTarget generateRandomPlatformTarget() {
   return PlatformTarget(
     platform: paperPlatform,
     constraints: {
-      "minecraft_version": PlatformConstraint.version(versions: versions),
+      "minecraft_version": PlatformConstraint.version(
+          versions: versions.map((v) => v.canonicalizedVersion).toList()),
     },
   );
 }
@@ -160,18 +161,6 @@ class ManualsMock extends Manuals {
   }
 }
 
-ManualsMock createManualsMockForState(
-  DisplayState state, {
-  Outcome? modulesOutcome,
-  Outcome? platformsOutcome,
-}) {
-  return ManualsMock(
-    displayState: state,
-    modulesOutcome: modulesOutcome ?? Outcome.values.randomOrNull()!,
-    platformsOutcome: platformsOutcome ?? Outcome.values.randomOrNull()!,
-  );
-}
-
 /// Provider overrides for widgetbook use cases.
 List<Override> manualsProviderOverrides({
   DisplayState state = DisplayState.loading,
@@ -180,10 +169,10 @@ List<Override> manualsProviderOverrides({
 }) =>
     [
       manualsProvider.overrideWith(
-        () => createManualsMockForState(
-          state,
-          modulesOutcome: modulesOutcome,
-          platformsOutcome: platformsOutcome,
+        () => ManualsMock(
+          displayState: state,
+          modulesOutcome: modulesOutcome ?? Outcome.values.randomOrNull()!,
+          platformsOutcome: platformsOutcome ?? Outcome.values.randomOrNull()!,
         ),
       ),
     ];
@@ -205,7 +194,7 @@ ManualModuleInformation generateRandomManualModuleInfo(String moduleId) {
     author: faker.person.name(),
     type: ModuleType.values.randomOrNull()!,
     version: version,
-    compatibleVersions: versions,
+    compatibleVersions: versions.map((v) => v.canonicalizedVersion).toList(),
     canBeRemoved: faker.randomGenerator.boolean(),
   );
 }

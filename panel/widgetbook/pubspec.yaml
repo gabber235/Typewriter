@@ -18,7 +18,6 @@ dependencies:
   hooks_riverpod:
   riverpod_annotation:
   flutter_animate:
-  mocktail:
   faker:
   flutter_hooks:
   iconify_flutter_plus:

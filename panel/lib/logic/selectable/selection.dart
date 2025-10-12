@@ -2,7 +2,6 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
@@ -59,9 +58,6 @@ class Selection extends _$Selection {
     state = [];
   }
 }
-
-// ignore: prefer_mixin
-class SelectionMock extends _$Selection with Mock implements Selection {}
 
 @riverpod
 bool hasSelection(Ref ref) {

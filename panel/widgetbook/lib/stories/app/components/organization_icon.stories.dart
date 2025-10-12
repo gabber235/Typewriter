@@ -24,7 +24,7 @@ Widget organizationIconUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
       child: OrganizationIcon(
-        iconUrl: OrganizationData.generateIconUrl(seed),
+        iconUrl: generateOrganizationIconUrl(seed),
         size: size,
         borderRadius: borderRadius,
       ),

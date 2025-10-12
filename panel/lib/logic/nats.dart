@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
+import "package:protobuf/protobuf.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
@@ -76,5 +77,23 @@ class NatsStatus extends _$NatsStatus {
     });
     ref.onDispose(sub.cancel);
     return client.status;
+  }
+}
+
+/// Extension on Client to add protobuf request/response methods
+extension ClientProtoExtension on Client {
+  /// Send a protobuf request and receive a protobuf response
+  Future<TResponse> requestProto<
+    TRequest extends GeneratedMessage,
+    TResponse extends GeneratedMessage
+  >(
+    String subject,
+    TRequest request,
+    TResponse Function() responseBuilder,
+  ) async {
+    final requestBytes = request.writeToBuffer();
+    final response = await this.request(subject, requestBytes);
+
+    return responseBuilder()..mergeFromBuffer(response.data);
   }
 }

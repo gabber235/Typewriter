@@ -15,10 +15,12 @@ import "package:iconify_flutter_plus/icons/mingcute.dart";
 import "package:iconify_flutter_plus/icons/ph.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/hooks/loading_button_controller.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
+import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/color.dart";
@@ -136,7 +138,7 @@ class _PageSearch extends _$PageSearch {
 @riverpod
 Future<List<Page>> _viewingPages(Ref ref) async {
   final bookId = ref.watch(bookIdProvider);
-  if (bookId == null) return throw Exception("Not visiting a book (sub)route");
+  if (bookId == null) throw Exception("Not visiting a book (sub)route");
 
   final search = ref.watch(_pageSearchProvider);
 
@@ -261,7 +263,7 @@ class _TreeChildren extends HookWidget {
     final sorted = useMemoized(
       () => children.sorted((a, b) {
         if (a is LeafTreeNode<Page> && b is LeafTreeNode<Page>) {
-          return a.value.pageName.compareTo(b.value.pageName);
+          return a.value.name.compareTo(b.value.name);
         } else if (a is InnerTreeNode<Page> && b is InnerTreeNode<Page>) {
           return a.name.compareTo(b.name);
         } else if (a is LeafTreeNode<Page>) {
@@ -542,7 +544,7 @@ class _PageTile extends HookConsumerWidget {
   final Page page;
 
   String get pageId => page.id;
-  String get name => page.pageName;
+  String get name => page.name;
   String get chapter => page.chapter;
 
   List<MenuItem> _contextMenuItems(WidgetRef ref) => [
@@ -662,7 +664,7 @@ class _PageTile extends HookConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              page.pageName.formatted,
+              page.name.formatted,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: color),
@@ -1041,7 +1043,7 @@ class AddPageDialogue extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = useState("");
     final isNameValid = useState(false);
-    final type = useState(fixedType ?? PageType.sequence);
+    final type = useState(fixedType ?? PageType.PAGE_TYPE_SEQUENCE);
     final chapter = useState(this.chapter);
     final priority = useState(0);
 
@@ -1052,7 +1054,7 @@ class AddPageDialogue extends HookConsumerWidget {
     return AlertDialog(
       title: Text(
         fixedType != null
-            ? "Add a new ${fixedType!.tag} page"
+            ? "Add a new ${fixedType!.displayName} page"
             : "Add a new page",
       ),
       content: Column(
@@ -1091,7 +1093,7 @@ class AddPageDialogue extends HookConsumerWidget {
                 for (final type in PageType.values)
                   DropdownMenuEntry(
                     value: type,
-                    label: type.name.formatted,
+                    label: type.displayName.formatted,
                     leadingIcon: Icones(type.icon),
                   ),
               ],

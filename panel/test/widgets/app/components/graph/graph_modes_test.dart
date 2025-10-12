@@ -22,7 +22,6 @@ BuildContext _graphActionsContext(WidgetTester tester) {
 }
 
 void main() {
-  setupMocks();
 
   group("Graph move/resize intents", () {
     testWidgets("GraphMoveIntent moves selected single element", (
@@ -66,7 +65,7 @@ void main() {
           height: 600,
           child: Graph(
             data: data,
-            onElementsDragged: (changes) => movedCalls.add(changes),
+            onElementsDragged: movedCalls.add,
             onElementsResize: (_) {},
           ),
         ),
@@ -129,7 +128,7 @@ void main() {
           height: 600,
           child: Graph(
             data: data,
-            onElementsDragged: (changes) => movedCalls.add(changes),
+            onElementsDragged: movedCalls.add,
             onElementsResize: (_) {},
           ),
         ),
@@ -188,7 +187,7 @@ void main() {
           child: Graph(
             data: data,
             onElementsDragged: (_) {},
-            onElementsResize: (changes) => resizeCalls.add(changes),
+            onElementsResize: resizeCalls.add,
           ),
         ),
       );
@@ -251,7 +250,7 @@ void main() {
           child: Graph(
             data: data,
             onElementsDragged: (_) {},
-            onElementsResize: (changes) => resizeCalls.add(changes),
+            onElementsResize: resizeCalls.add,
           ),
         ),
       );

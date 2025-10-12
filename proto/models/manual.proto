@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+import "models/common.proto";
+import "models/module.proto";
+
+message Manual {
+  string id = 1;
+  string name = 2;
+  repeated PlatformTarget platforms = 3;
+  repeated ManualModuleReference modules = 4;
+  bool auto_update = 5;
+}
+
+message Platform {
+  string id = 1;
+  string display_name = 2;
+  Color color = 3;
+  repeated PlatformRequirement requirements = 4;
+}
+
+message PlatformRequirement {
+  string name = 1;
+  PlatformConstraintType type = 2;
+}
+
+enum PlatformConstraintType {
+  PLATFORM_CONSTRAINT_TYPE_VERSION = 0;
+}
+
+message PlatformConstraint {
+  oneof constraint {
+    VersionConstraint version = 1;
+  }
+}
+
+message VersionConstraint {
+  repeated Version versions = 1;
+}
+
+message PlatformTarget {
+  Platform platform = 1;
+  map<string, PlatformConstraint> constraints = 2;
+}
+
+message ManualModuleReference {
+  string module_id = 1;
+  string name = 2;
+  Version version = 3;
+  ModuleType type = 4;
+  repeated string dependencies = 5;
+  repeated string dependents = 6;
+}

@@ -1,22 +1,23 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart" hide Title;
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:mocktail/mocktail.dart";
+import "package:json_annotation/json_annotation.dart";
 import "package:pub_semver/pub_semver.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/logic/module_version/module_version.dart";
+import "package:typewriter_panel/generated/api/module.pb.dart";
+import "package:typewriter_panel/generated/models/module.pb.dart";
+import "package:typewriter_panel/logic/modules/module_type_extensions.dart";
+import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
-import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 import "package:typewriter_panel/widgets/generic/components/type_link.dart";
 
-part "modules.freezed.dart";
 part "modules.g.dart";
 
 /// Provides the list of available modules.
@@ -24,28 +25,96 @@ part "modules.g.dart";
 class Modules extends _$Modules {
   @override
   FutureOr<List<Module>> build() async {
-    // TODO: Load modules from backend.
-    return [];
+    final request = ListModulesRequest();
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto("modules.list", request, ListModulesResponse.new);
+
+    return response.modules;
   }
 
   Future<void> updateModule(Module module) async {
-    // TODO: Persist module updates.
-    final current = state.value ?? [];
-    final updated = [
-      for (final m in current)
-        if (m.id == module.id) module else m,
-      if (!current.any((m) => m.id == module.id)) module,
-    ];
-    state = AsyncData(updated);
+    state.ensureReady();
+
+    final currentState = state.value ?? [];
+    final optimisticState = currentState
+        .map((m) => m.id == module.id ? module : m)
+        .toList();
+    state = AsyncData(optimisticState);
+
+    try {
+      final request = UpdateModuleRequest()..module = module;
+      final response = await ref
+          .watch(natsProvider)
+          .requestProto("modules.update", request, UpdateModuleResponse.new);
+
+      if (response.hasError()) {
+        state = AsyncData(currentState);
+        throw Exception("Failed to update module: ${response.error.message}");
+      }
+
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncData(currentState);
+      rethrow;
+    }
   }
 
   Future<void> changeVersionState(
     List<String> moduleIds,
     Version version,
-    ModuleVersionState state,
-  ) {
-    // TODO: Publish module to backend.
-    return Future.value();
+    ModuleVersionState newState,
+  ) async {
+    state.ensureReady();
+
+    final currentState = state.value ?? [];
+    final optimisticState = currentState.map((module) {
+      if (!moduleIds.contains(module.id)) {
+        return module;
+      }
+      final clonedModule = module.deepCopy();
+
+      final updatedVersions = clonedModule.versions.map((v) {
+        if (v.version != version.canonicalizedVersion) {
+          return v;
+        }
+        final clonedVersion = v.deepCopy()..state = newState;
+        return clonedVersion;
+      }).toList();
+
+      clonedModule.versions.clear();
+      clonedModule.versions.addAll(updatedVersions);
+
+      return clonedModule;
+    }).toList();
+    state = AsyncData(optimisticState);
+
+    try {
+      final request = ChangeVersionStateRequest()
+        ..moduleIds.addAll(moduleIds)
+        ..version = version.canonicalizedVersion
+        ..state = newState;
+
+      final response = await ref
+          .watch(natsProvider)
+          .requestProto(
+            "modules.changeVersionState",
+            request,
+            ChangeVersionStateResponse.new,
+          );
+
+      if (response.hasError()) {
+        state = AsyncData(currentState);
+        throw Exception(
+          "Failed to change version state: ${response.error.message}",
+        );
+      }
+
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncData(currentState);
+      rethrow;
+    }
   }
 }
 
@@ -70,51 +139,32 @@ Future<Module?> module(Ref ref, String id) async {
 }
 
 // ignore: prefer_mixin
-class ModulesMock extends _$Modules with Mock implements Modules {}
 
-@freezed
-abstract class Module with _$Module {
-  const factory Module({
-    required String id,
-    required String name,
-    required ModuleType type,
-    @Default("") String shortDescription,
-    // TODO: dependencies: list of module ids this module depends on.
-    // @Default(<String>[]) List<String> dependencies,
-    @Default(<ModuleVersion>[]) List<ModuleVersion> versions,
-  }) = _Module;
+class ModuleTypeConverter extends JsonConverter<ModuleType, String> {
+  const ModuleTypeConverter();
 
-  factory Module.fromJson(Map<String, dynamic> json) => _$ModuleFromJson(json);
-}
+  @override
+  ModuleType fromJson(String json) {
+    switch (json) {
+      case "MODULE_TYPE_ENGINE":
+        return ModuleType.MODULE_TYPE_ENGINE;
+      case "MODULE_TYPE_EXTENSION":
+        return ModuleType.MODULE_TYPE_EXTENSION;
+      default:
+        throw FormatException("Unknown ModuleType: $json");
+    }
+  }
 
-@JsonEnum(fieldRename: FieldRename.snake)
-enum ModuleType {
-  engine(
-    "Engine",
-    Colors.blue,
-    "https://docs.typewritermc.com/develop",
-  ),
-  extension(
-    "Extension",
-    Colors.green,
-    "https://docs.typewritermc.com/develop/extensions",
-  ),
-  ;
-
-  const ModuleType(
-    this.displayName,
-    this.lightColor,
-    this.docsUrl, [
-    Color? darkColor,
-  ]) : darkColor = darkColor ?? lightColor;
-
-  final String displayName;
-  final Color lightColor;
-  final Color darkColor;
-  final String docsUrl;
-
-  Color themedColor(BuildContext context) {
-    return context.isDarkMode ? darkColor : lightColor;
+  @override
+  String toJson(ModuleType object) {
+    switch (object) {
+      case ModuleType.MODULE_TYPE_ENGINE:
+        return "MODULE_TYPE_ENGINE";
+      case ModuleType.MODULE_TYPE_EXTENSION:
+        return "MODULE_TYPE_EXTENSION";
+      default:
+        throw ArgumentError("Unknown ModuleType: $object");
+    }
   }
 }
 
@@ -132,11 +182,7 @@ class ModuleSelector extends SelectableIdentifier {
       if (value == null) {
         throw SelectableNotFoundException(this);
       }
-      return ModuleSelection(
-        ref: ref,
-        id: this,
-        module: value,
-      );
+      return ModuleSelection(ref: ref, id: this, module: value);
     });
   }
 
@@ -153,11 +199,8 @@ class ModuleSelector extends SelectableIdentifier {
 
 /// Selectable representation of a module for the inspector.
 class ModuleSelection extends Selectable<ModuleSelector> {
-  ModuleSelection({
-    required this.ref,
-    required this.id,
-    required this.module,
-  }) : _data = DynamicData(module.toJson());
+  ModuleSelection({required this.ref, required this.id, required this.module})
+    : _data = DynamicData(module.writeToJsonMap());
 
   @override
   final ModuleSelector id;
@@ -189,34 +232,34 @@ class ModuleSelection extends Selectable<ModuleSelector> {
 
   @override
   Widget? header() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Title(
-            title: module.name.formatted,
-            color: module.type.lightColor.withValues(alpha: 0.9),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 2,
-              direction: Axis.horizontal,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.start,
-              children: [
-                TypeLink(
-                  text: module.type.displayName,
-                  lightColor: module.type.lightColor,
-                  darkColor: module.type.darkColor,
-                  url: module.type.docsUrl,
-                ),
-                Identifier(id: module.id),
-              ],
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Title(
+        title: module.name.formatted,
+        color: module.type.lightColor.withValues(alpha: 0.9),
+      ),
+      const SizedBox(height: 8),
+      SizedBox(
+        width: double.infinity,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 2,
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          children: [
+            TypeLink(
+              text: module.type.displayName,
+              lightColor: module.type.lightColor,
+              darkColor: module.type.darkColor,
+              url: module.type.docsUrl,
             ),
-          ),
-        ],
-      );
+            Identifier(id: module.id),
+          ],
+        ),
+      ),
+    ],
+  );
 
   @override
   dynamic fieldValue(String path) => _data.get(path);
@@ -224,7 +267,7 @@ class ModuleSelection extends Selectable<ModuleSelector> {
   @override
   void setFieldValue(String path, dynamic value) {
     final newData = _data.copyWith(path, value);
-    final newModule = Module.fromJson(newData.toJson());
+    final newModule = Module()..mergeFromJsonMap(newData.toJson());
     ref.read(modulesProvider.notifier).updateModule(newModule);
   }
 

@@ -10,6 +10,11 @@ extension ListX<T> on List<T> {
     return elementAt(random.nextInt(length));
   }
 
+  T randomElement() {
+    if (isEmpty) throw Exception("List is empty");
+    return elementAt(random.nextInt(length));
+  }
+
   List<T> randomSubset(int count) {
     if (count <= 0 || count > length) return [];
     final indices = List.generate(length, (index) => index);

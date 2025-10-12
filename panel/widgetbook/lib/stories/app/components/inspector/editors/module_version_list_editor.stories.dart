@@ -14,9 +14,7 @@ Widget moduleVersionListEditorUseCase(BuildContext context) {
     initialValue: 10,
     description: "The number of versions generated",
   );
-  final data = generateSequentialModuleVersions(
-    versions,
-  ).map((version) => version.toJson()).toList();
+  final data = generateSequentialModuleVersions(versions);
 
   return EditorStory(
     dataBlueprint: ObjectBlueprint(

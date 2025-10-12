@@ -1,82 +1,151 @@
-import "package:flutter/material.dart" hide PageRoute;
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:iconify_flutter_plus/icons/icon_park_solid.dart";
-import "package:iconify_flutter_plus/icons/ph.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
-import "package:typewriter_panel/utils/color_converter.dart";
+import "package:typewriter_panel/generated/api/page.pb.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 
 part "pages.g.dart";
-part "pages.freezed.dart";
-
-@freezed
-abstract class Page with _$Page {
-  const factory Page({
-    required String id,
-    @JsonKey(name: "name") required String pageName,
-    required PageType type,
-    @NullableColorConverter() Color? color,
-    @Default("") String chapter,
-    @Default(0) int priority,
-  }) = _Page;
-
-  factory Page.fromJson(Map<String, dynamic> json) => _$PageFromJson(json);
-}
-
-enum PageType {
-  sequence("trigger", ["triggerable"], Fa6Solid.diagram_project, Colors.blue),
-  static("static", [], Ph.push_pin_fill, Colors.deepPurple),
-  scene("scene", [], Fa6Solid.film, Colors.orange),
-  manifest(
-    "manifest",
-    ["manifest", "audience"],
-    IconParkSolid.chart_graph,
-    Colors.green,
-  );
-
-  const PageType(this.tag, this.linkingTags, this.icon, this.color);
-
-  final String tag;
-  final List<String> linkingTags;
-  final String icon;
-  final Color color;
-
-  static PageType fromName(String name) {
-    return values.firstWhere((type) => name.startsWith(type.tag));
-  }
-}
 
 @riverpod
 class BookPages extends _$BookPages {
   @override
-  Future<List<Page>> build(String bookId, String search) async {
-    // TODO: Fetch book pages from API or database
-    throw UnimplementedError();
+  FutureOr<List<Page>> build(String bookId, String search) async {
+    final request = SearchPagesRequest()
+      ..bookId = bookId
+      ..search = search;
+
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto("pages.search", request, SearchPagesResponse.new);
+
+    if (response.hasError()) {
+      throw Exception("Failed to search pages: ${response.error.message}");
+    }
+
+    assert(
+      response.hasPages(),
+      "No pages were provided even though there was no error",
+    );
+
+    return response.pages.pages;
   }
 }
 
 @riverpod
 class Pages extends _$Pages {
   @override
-  Future<Page> build(String pageId) async {
-    // TODO: Fetch book pages from API or database
-    throw UnimplementedError();
+  FutureOr<Page> build(String pageId) async {
+    final request = GetPageRequest()..id = pageId;
+
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto("pages.get", request, GetPageResponse.new);
+
+    if (response.hasError()) {
+      throw Exception("Failed to get page: ${response.error.message}");
+    }
+
+    assert(
+      response.hasPage(),
+      "No page was provided even though there was no error",
+    );
+
+    return response.page;
   }
 
   Future<void> changeChapter(String chapter) async {
-    // TODO: Update chapter in API or database
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final currentPage = state.requireValue;
+
+    final optimisticUpdate = currentPage.deepCopy()..chapter = chapter;
+    state = AsyncData(optimisticUpdate);
+
+    try {
+      final request = ChangePageChapterRequest()
+        ..pageId = currentPage.id
+        ..chapter = chapter;
+
+      final response = await ref
+          .watch(natsProvider)
+          .requestProto(
+            "pages.change_chapter",
+            request,
+            ChangePageChapterResponse.new,
+          );
+
+      if (response.hasError()) {
+        throw Exception("Failed to change chapter: ${response.error.message}");
+      }
+
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncData(currentPage);
+      rethrow;
+    }
   }
 
   Future<void> changePriority(int priority) async {
-    // TODO: Update priority in API or database
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final currentPage = state.value;
+    if (currentPage == null) return;
+
+    final optimisticUpdate = currentPage.deepCopy()..priority = priority;
+    state = AsyncData(optimisticUpdate);
+
+    try {
+      final request = ChangePagePriorityRequest()
+        ..pageId = currentPage.id
+        ..priority = priority;
+
+      final response = await ref
+          .watch(natsProvider)
+          .requestProto(
+            "pages.change_priority",
+            request,
+            ChangePagePriorityResponse.new,
+          );
+
+      if (response.hasError()) {
+        throw Exception("Failed to change priority: ${response.error.message}");
+      }
+
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncData(currentPage);
+      rethrow;
+    }
   }
 
   Future<void> renamePage(String name) async {
-    /// TODO: Update page name in API or database
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final currentPage = state.value;
+    if (currentPage == null) return;
+
+    final optimisticUpdate = currentPage.deepCopy()..name = name;
+    state = AsyncData(optimisticUpdate);
+
+    try {
+      final request = RenamePageRequest()
+        ..pageId = currentPage.id
+        ..name = name;
+
+      final response = await ref
+          .watch(natsProvider)
+          .requestProto("pages.rename", request, RenamePageResponse.new);
+
+      if (response.hasError()) {
+        throw Exception("Failed to rename page: ${response.error.message}");
+      }
+
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncData(currentPage);
+      rethrow;
+    }
   }
 }
 

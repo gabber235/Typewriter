@@ -98,11 +98,7 @@ class GlobalActionsManager extends HookConsumerWidget {
 }
 
 class ManagedActionSet extends HookConsumerWidget {
-  const ManagedActionSet({
-    required this.shortcuts,
-    this.child,
-    super.key,
-  });
+  const ManagedActionSet({required this.shortcuts, this.child, super.key});
   final List<ActionShortcut> shortcuts;
   final Widget? child;
 
@@ -154,36 +150,23 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
 }
 
 class ActionSet extends HookConsumerWidget {
-  const ActionSet({
-    required this.shortcuts,
-    this.child,
-    super.key,
-  });
+  const ActionSet({required this.shortcuts, this.child, super.key});
   final List<ActionShortcut> shortcuts;
   final Widget? child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final regKey = useGlobalKey(debugLabel: "ActionSet");
-    useDelayedExecution(
-      () {
-        if (!context.mounted) return;
-        ref.read(actionShortcutsProvider.notifier).register(regKey, shortcuts);
-      },
-      [regKey, shortcuts],
-    );
-    return KeyedSubtree(
-      key: regKey,
-      child: child ?? const SizedBox.shrink(),
-    );
+    useDelayedExecution(() {
+      if (!context.mounted) return;
+      ref.read(actionShortcutsProvider.notifier).register(regKey, shortcuts);
+    }, [regKey, shortcuts]);
+    return KeyedSubtree(key: regKey, child: child ?? const SizedBox.shrink());
   }
 }
 
 class ActionRow extends HookConsumerWidget {
-  const ActionRow({
-    this.spacing = 0,
-    super.key,
-  });
+  const ActionRow({this.spacing = 0, super.key});
 
   final double spacing;
 
@@ -194,17 +177,15 @@ class ActionRow extends HookConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final actions = useMemoized(
-      () {
-        final filtered = actionsMap.values
-            .where((a) => a.owner == null || a.owner!.currentContext != null)
-            .where((a) => a.show)
-            .toList()
-          ..sort((a, b) => a.priority.compareTo(b.priority));
-        return filtered;
-      },
-      [actionsMap],
-    );
+    final actions = useMemoized(() {
+      final filtered =
+          actionsMap.values
+              .where((a) => a.owner == null || a.owner!.currentContext != null)
+              .where((a) => a.show)
+              .toList()
+            ..sort((a, b) => a.priority.compareTo(b.priority));
+      return filtered;
+    }, [actionsMap]);
 
     final ids = actions.map((a) => a.id).toList();
     final keysMap = useRef<Map<String, GlobalKey>>({});
@@ -271,16 +252,13 @@ class ActionRow extends HookConsumerWidget {
       child: LayoutBuilder(
         builder: (context, constraints) => HookBuilder(
           builder: (context) {
-            useEffect(
-              () {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!context.mounted) return;
-                  measureAndResolve(constraints);
-                });
-                return null;
-              },
-              [actionsMap, actions.length, constraints.maxWidth],
-            );
+            useEffect(() {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!context.mounted) return;
+                measureAndResolve(constraints);
+              });
+              return null;
+            }, [actionsMap, actions.length, constraints.maxWidth]);
 
             final visibleCount = visibleCountState.value;
 
@@ -317,9 +295,7 @@ class ActionRow extends HookConsumerWidget {
                     alignment: WrapAlignment.end,
                     children: [
                       for (final action in toShow)
-                        _ActionShortcutButton(
-                          action: action,
-                        ),
+                        _ActionShortcutButton(action: action),
                     ],
                   ),
                 ),
@@ -358,12 +334,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
           )
         else if (action.icon != null)
           action.icon!,
-        Flexible(
-          child: Text(
-            action.label,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        Flexible(child: Text(action.label, overflow: TextOverflow.ellipsis)),
         RotatingShortcuts(
           shortcuts: forceLargest && action.activators.isNotEmpty
               ? [action.activators.maxByOrNull((a) => a.length)!]
@@ -381,9 +352,9 @@ class _ActionShortcutButton extends HookConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: DefaultTextStyle(
           style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 12,
-              ),
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 12,
+          ),
           child: IconTheme(
             data: IconThemeData(
               size: 12,
@@ -396,10 +367,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
     );
 
     if (!hasInvoke) {
-      return Tooltip(
-        message: action.description,
-        child: pill,
-      );
+      return Tooltip(message: action.description, child: pill);
     }
 
     return Material(

@@ -13,11 +13,11 @@ _ManualModuleInformation _$ManualModuleInformationFromJson(
   name: json['name'] as String,
   description: json['description'] as String,
   author: json['author'] as String,
-  type: $enumDecode(_$ModuleTypeEnumMap, json['type']),
+  type: const ModuleTypeConverter().fromJson(json['type'] as String),
   version: const SemverJsonConverter().fromJson(json['version']),
-  compatibleVersions: const SemverListJsonConverter().fromJson(
-    json['compatibleVersions'] as List,
-  ),
+  compatibleVersions: (json['compatibleVersions'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
   canBeRemoved: json['canBeRemoved'] as bool? ?? true,
 );
 
@@ -28,17 +28,10 @@ Map<String, dynamic> _$ManualModuleInformationToJson(
   'name': instance.name,
   'description': instance.description,
   'author': instance.author,
-  'type': _$ModuleTypeEnumMap[instance.type]!,
+  'type': const ModuleTypeConverter().toJson(instance.type),
   'version': const SemverJsonConverter().toJson(instance.version),
-  'compatibleVersions': const SemverListJsonConverter().toJson(
-    instance.compatibleVersions,
-  ),
+  'compatibleVersions': instance.compatibleVersions,
   'canBeRemoved': instance.canBeRemoved,
-};
-
-const _$ModuleTypeEnumMap = {
-  ModuleType.engine: 'engine',
-  ModuleType.extension: 'extension',
 };
 
 // **************************************************************************

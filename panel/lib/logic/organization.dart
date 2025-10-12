@@ -1,13 +1,11 @@
-import "dart:convert";
-
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/generated/api/organization.pb.dart";
+import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 
-part "organization.freezed.dart";
 part "organization.g.dart";
 
 @riverpod
@@ -18,21 +16,17 @@ class Organizations extends _$Organizations {
     if (userId == null) {
       return [];
     }
-    final response = await ref.watch(natsProvider).requestString(
-      "user.$userIdProvider.organization.list",
-      "",
-      jsonDecoder: (data) {
-        final json = jsonDecode(data);
-        if (json! is List) {
-          throw Exception(
-            "Expected user.$userIdProvider.organization.list to return a list",
-          );
-        }
-        return (json as List).map((e) => OrganizationData.fromJson(e));
-      },
-    );
 
-    return response.data.toList(growable: false);
+    final request = ListOrganizationsRequest();
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto(
+          "user.$userId.organization.list",
+          request,
+          ListOrganizationsResponse.new,
+        );
+
+    return response.organizations.toList();
   }
 
   /// Creates a new organization and returns its ID
@@ -45,31 +39,40 @@ class Organizations extends _$Organizations {
     required String name,
     required String iconUrl,
   }) async {
-    final userId = await ref.watch(userIdProvider.future);
+    state.ensureReady();
+
+    final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
       throw Exception("User not found");
     }
-    final response = await ref.watch(natsProvider).requestString(
-      "user.$userId.organization.create",
-      jsonEncode({"name": name, "iconUrl": iconUrl}),
-      jsonDecoder: (data) {
-        return data;
-      },
-    );
-    final organisationId = response.data;
-    if (organisationId.isEmpty) {
-      return null;
+
+    final request = CreateOrganizationRequest()
+      ..name = name
+      ..iconUrl = iconUrl;
+
+    final response = await ref
+        .read(natsProvider)
+        .requestProto(
+          "user.$userId.organization.create",
+          request,
+          CreateOrganizationResponse.new,
+        );
+
+    if (response.hasError()) {
+      throw Exception(
+        "Failed to create organization: ${response.error.message}",
+      );
     }
-    return organisationId;
+
+    assert(
+      response.hasOrganization(),
+      "When creating an organization, we didn't have an error but also didn't receive an organization",
+    );
+
+    ref.invalidateSelf();
+    return response.organization.id;
   }
 }
-
-class OrganizationsMock extends _$Organizations
-    with
-        // ignore: prefer_mixin
-        Mock
-    implements
-        Organizations {}
 
 @riverpod
 String? organizationId(Ref ref) {
@@ -87,25 +90,7 @@ class Organization extends _$Organization {
   }
 }
 
-class OrganizationMock extends _$Organization
-    with
-        // ignore: prefer_mixin
-        Mock
-    implements
-        Organization {}
-
-@freezed
-abstract class OrganizationData with _$OrganizationData {
-  const factory OrganizationData({
-    required String name,
-    required String id,
-    String? iconUrl,
-  }) = _OrganizationData;
-
-  factory OrganizationData.fromJson(Map<String, dynamic> json) =>
-      _$OrganizationDataFromJson(json);
-
-  static String generateIconUrl(String seed) {
-    return "https://api.dicebear.com/9.x/shapes/avif?seed=$seed";
-  }
+/// Generates an icon URL for an organization using the provided seed
+String generateOrganizationIconUrl(String seed) {
+  return "https://api.dicebear.com/9.x/shapes/avif?seed=$seed";
 }

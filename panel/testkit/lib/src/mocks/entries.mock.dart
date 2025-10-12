@@ -1,6 +1,7 @@
 import "package:faker/faker.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
-import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/utils/color.dart";

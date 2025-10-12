@@ -4,13 +4,16 @@ import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/graph/graph_identifier.dart";
-import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
@@ -28,13 +31,64 @@ class PageEntries extends _$PageEntries {
     throw UnimplementedError();
   }
 
+  void optimisticMoveAll(List<(String, int, int)> changed) {
+    final data = state.requireValue;
+    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
+    final newData = data.map((pageEntry) {
+      if (!map.containsKey(pageEntry.id)) return pageEntry;
+      final (x, y) = map[pageEntry.id]!;
+      return switch (pageEntry) {
+        DefinitionPageEntry() => pageEntry.copyWith.definition.placement(
+          x: x,
+          y: y,
+        ),
+        NoBlueprintPageEntry() => pageEntry.copyWith.placement(x: x, y: y),
+        _ => pageEntry,
+      };
+    }).toList();
+
+    state = AsyncValue.data(newData);
+  }
+
+  void optimisticResizeAll(List<(String, int, int)> changed) {
+    final data = state.requireValue;
+    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
+    final newData = data.map((pageEntry) {
+      if (!map.containsKey(pageEntry.id)) return pageEntry;
+      final (width, height) = map[pageEntry.id]!;
+      return switch (pageEntry) {
+        DefinitionPageEntry() => pageEntry.copyWith.definition.placement(
+          width: width,
+          height: height,
+        ),
+        NoBlueprintPageEntry() => pageEntry.copyWith.placement(
+          width: width,
+          height: height,
+        ),
+        _ => pageEntry,
+      };
+    }).toList();
+
+    state = AsyncValue.data(newData);
+  }
+
   Future<void> moveAll(List<(String, int, int)> changed) async {
-    // TODO: Move all entries in the page
+    state.ensureReady();
+    optimisticMoveAll(changed);
+
+    // TODO: Add way to debounce request
+
+    // TODO: Make backend call to move all entries in the page
     throw UnimplementedError();
   }
 
   Future<void> resizeAll(List<(String, int, int)> changed) async {
-    // TODO: Resize all entries in the page
+    state.ensureReady();
+    optimisticResizeAll(changed);
+
+    // TODO: Add way to debounce request
+
+    // TODO: Make backend call to resize all entries in the page
     throw UnimplementedError();
   }
 }
@@ -48,12 +102,20 @@ class Entry extends _$Entry {
   }
 
   Future<void> updateFieldValue(String path, dynamic value) async {
-    // TODO: Persist field changes for this entry
+    state.ensureReady();
+
+    // TODO: Implement optimistic updates
+
+    // TODO: Make backend call to update field value for this entry
     throw UnimplementedError();
   }
 
   Future<void> moveToPage(String pageId) async {
-    // TODO: Move this entry to a different page
+    state.ensureReady();
+
+    // TODO: Implement optimistic updates
+
+    // TODO: Make backend call to move this entry to a different page
     throw UnimplementedError();
   }
 }

@@ -3,32 +3,6 @@
 part of 'books.dart';
 
 // **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_Book _$BookFromJson(Map<String, dynamic> json) => _Book(
-  id: json['id'] as String,
-  title: json['title'] as String,
-  icon: json['icon'] as String,
-  color: json['color'] == null
-      ? Colors.redAccent
-      : const ColorConverter().fromJson(json['color'] as String),
-  tags:
-      (json['tags'] as List<dynamic>?)
-          ?.map((e) => Tag.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
-);
-
-Map<String, dynamic> _$BookToJson(_Book instance) => <String, dynamic>{
-  'id': instance.id,
-  'title': instance.title,
-  'icon': instance.icon,
-  'color': const ColorConverter().toJson(instance.color),
-  'tags': instance.tags.map((e) => e.toJson()).toList(),
-};
-
-// **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
@@ -58,7 +32,7 @@ final class BooksProvider extends $AsyncNotifierProvider<Books, List<Book>> {
   Books create() => Books();
 }
 
-String _$booksHash() => r'ab4607565c253580c0eba481db6823fce38ce5ba';
+String _$booksHash() => r'30de05cf7fdefaba9193a28a828829f01bd906a4';
 
 abstract class _$Books extends $AsyncNotifier<List<Book>> {
   FutureOr<List<Book>> build();

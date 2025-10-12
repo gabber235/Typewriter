@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:mocktail/mocktail.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
@@ -11,17 +10,9 @@ Widget operationUseCase(
 ) {
   return FakeApp(
     overrides: [
-      selectionProvider.overrideWith(() {
-        final selection = SelectionMock();
-        when(
-          selection.build,
-        ).thenReturn(builders.map((b) => b(context)).toList());
-        when(() => selection.select(any())).thenAnswer((_) {});
-        when(() => selection.unselect(any())).thenAnswer((_) {});
-        when(() => selection.unselectAll(any())).thenAnswer((_) {});
-        when(selection.clear).thenAnswer((_) {});
-        return selection;
-      }),
+      selectionProvider.overrideWithBuild(
+        (ref, _) => builders.map((b) => b(context)).toList(),
+      ),
     ],
     child: Center(child: Operations()),
   );

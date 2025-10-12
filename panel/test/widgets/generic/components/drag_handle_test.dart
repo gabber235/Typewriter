@@ -5,7 +5,6 @@ import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "../../../test_utils.dart";
 
 void main() {
-  setupMocks();
 
   group("DragHandle", () {
     testWidgets(

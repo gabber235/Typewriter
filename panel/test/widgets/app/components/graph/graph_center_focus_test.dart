@@ -11,7 +11,6 @@ import "package:typewriter_panel/widgets/app/components/graph/graph_intents.dart
 import "../../../../test_utils.dart";
 
 void main() {
-  setupMocks();
 
   group("Graph - center focused child", () {
     testWidgets("centers the focused element at scale 1.0", (tester) async {

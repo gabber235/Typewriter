@@ -12,6 +12,13 @@ crate-type = ["cdylib"]
 wit-bindgen = "0.41"
 serde_cbor = "0.11"
 serde = { version = "1", features = ["derive"] }
-surrealdb-component = { version = "0", registry = "seamlezz" }
+surrealdb-component = { path = "../../providers/surrealdb/surrealdb-component" }
 wasmcloud-component = "0.2"
-wasmcloud-utils = { version = "1", registry = "seamlezz" }
+wasmcloud-utils = { path = "../../wasmcloud-utils" }
+prost = "0.13"
+prost-types = "0.13"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4"] }
+
+[build-dependencies]
+prost-build = "0.13"

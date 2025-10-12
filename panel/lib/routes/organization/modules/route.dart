@@ -3,16 +3,18 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_framework/responsive_framework.dart";
+import "package:typewriter_panel/generated/models/module.pb.dart";
 import "package:typewriter_panel/logic/modules.dart";
+import "package:typewriter_panel/logic/modules/module_type_extensions.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
-import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
+import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/floating_button.dart";
 import "package:typewriter_panel/widgets/generic/components/grid_selectable_card.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
-import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
 
@@ -26,16 +28,22 @@ class ModulesPage extends HookConsumerWidget {
     final searchQuery = useState("");
     final filtered = ref.watch(filteredModulesProvider(searchQuery.value));
 
-    final padding =
-        context.responsive(mobile: 16.0, tablet: 24.0, desktop: 32.0);
+    final padding = context.responsive(
+      mobile: 16.0,
+      tablet: 24.0,
+      desktop: 32.0,
+    );
 
     return Inspector(
       margin: EdgeInsets.only(top: 8, right: 8),
       child: Pane(
         id: "modules",
         borderRadius: BorderRadius.circular(12),
-        margin:
-            EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
+        margin: EdgeInsets.only(
+          top: 8,
+          left: 8,
+          right: context.isMobile ? 8 : 0,
+        ),
         child: Section(
           margin: EdgeInsets.zero,
           child: FloatingButton(
@@ -60,8 +68,9 @@ class ModulesPage extends HookConsumerWidget {
                     decoration: InputDecoration(
                       hintText: "Search modules...",
                       prefixIcon: const Icon(Icons.search),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                     ),
                     onChanged: (v) => searchQuery.value = v,
                   ),
@@ -124,7 +133,7 @@ class _ModuleCard extends HookConsumerWidget {
   final Module module;
 
   Color _baseColor(BuildContext context) {
-    return context.isDarkMode ? module.type.darkColor : module.type.lightColor;
+    return module.type.themedColor(context);
   }
 
   @override
@@ -147,7 +156,7 @@ class _ModuleCard extends HookConsumerWidget {
           isHovered: isHovered,
           width: _moduleCardWidth,
           height: _moduleCardHeight,
-          badgeLabel: module.type.name,
+          badgeLabel: module.type.displayName,
           badgeColor: base.withValues(alpha: 0.90),
           badgeOnColor: onBase,
           titleStyle: TextStyle(

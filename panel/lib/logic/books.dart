@@ -1,32 +1,59 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
-import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/generated/api/book.pb.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
-import "package:typewriter_panel/logic/tag.dart";
-import "package:typewriter_panel/utils/color_converter.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/book.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 
-part "books.freezed.dart";
 part "books.g.dart";
 
 @riverpod
 class Books extends _$Books {
   @override
   FutureOr<List<Book>> build() async {
-    // TODO: implement build
-    throw UnimplementedError();
+    final request = ListBooksRequest();
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto("books.list", request, ListBooksResponse.new);
+
+    return response.books;
   }
 
   Future<void> updateBook(Book book) async {
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final currentState = state.value ?? [];
+    final optimisticState = currentState
+        .map((b) => b.id == book.id ? book : b)
+        .toList();
+    state = AsyncData(optimisticState);
+
+    try {
+      final request = UpdateBookRequest()..book = book;
+      final response = await ref
+          .watch(natsProvider)
+          .requestProto("books.update", request, UpdateBookResponse.new);
+
+      if (response.hasError()) {
+        state = AsyncData(currentState);
+        throw Exception("Failed to update book: ${response.error.message}");
+      }
+
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncData(currentState);
+      rethrow;
+    }
   }
 
   Future<String> createPage(
@@ -36,13 +63,39 @@ class Books extends _$Books {
     String chapter,
     int priority,
   ) async {
-    // TODO: Create page in API or database
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final request = CreatePageRequest()
+      ..bookId = bookId
+      ..name = name
+      ..type = type
+      ..chapter = chapter
+      ..priority = priority;
+
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto("pages.create", request, CreatePageResponse.new);
+
+    if (response.hasPageId()) {
+      return response.pageId;
+    } else if (response.hasError()) {
+      throw Exception("Failed to create page: ${response.error.message}");
+    }
+
+    throw Exception("No page ID returned");
   }
 
   Future<void> deletePage(String pageId) async {
-    // TODO: Delete page from API or database
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final request = DeletePageRequest()..pageId = pageId;
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto("pages.delete", request, DeletePageResponse.new);
+
+    if (response.hasError()) {
+      throw Exception("Failed to delete page: ${response.error.message}");
+    }
   }
 
   /// Move all the pages from one chapter to another
@@ -51,8 +104,26 @@ class Books extends _$Books {
     String oldChapter,
     String newChapter,
   ) async {
-    /// TODO: Move pages from old chapter to new chapter
-    throw UnimplementedError();
+    state.ensureReady();
+
+    final request = ChangePagesChaptersRequest()
+      ..bookId = bookId
+      ..oldChapter = oldChapter
+      ..newChapter = newChapter;
+
+    final response = await ref
+        .watch(natsProvider)
+        .requestProto(
+          "pages.changeChapters",
+          request,
+          ChangePagesChaptersResponse.new,
+        );
+
+    if (response.hasError()) {
+      throw Exception(
+        "Failed to change page chapters: ${response.error.message}",
+      );
+    }
   }
 }
 
@@ -64,8 +135,9 @@ Future<List<Book>> filteredBooks(Ref ref, String query) async {
   final lowercaseQuery = query.toLowerCase();
   return books.where((book) {
     if (book.title.toLowerCase().contains(lowercaseQuery)) return true;
-    return book.tags
-        .any((tag) => tag.name.toLowerCase().contains(lowercaseQuery));
+    return book.tags.any(
+      (tag) => tag.name.toLowerCase().contains(lowercaseQuery),
+    );
   }).toList();
 }
 
@@ -81,17 +153,15 @@ Future<Book?> book(Ref ref, String id) async {
   return books.firstWhereOrNull((book) => book.id == id);
 }
 
-@freezed
-abstract class Book with _$Book {
-  const factory Book({
-    required String id,
-    required String title,
-    required String icon,
-    @ColorConverter() @Default(Colors.redAccent) Color color,
-    @Default([]) List<Tag> tags,
-  }) = _Book;
+/// Extension on Book proto to add utility methods
+extension BookExtension on Book {
+  /// Get the Flutter color from the proto color
+  Color get flutterColor => color.toFlutterColor();
 
-  factory Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
+  /// Create a new Book with updated color
+  Book withColor(Color newColor) {
+    return deepCopy()..color = newColor.toProtoColor();
+  }
 }
 
 class BookIdentifier extends SelectableIdentifier {
@@ -107,11 +177,7 @@ class BookIdentifier extends SelectableIdentifier {
       if (value == null) {
         throw SelectableNotFoundException(this);
       }
-      return BookSelection(
-        ref: ref,
-        id: this,
-        book: value,
-      );
+      return BookSelection(ref: ref, id: this, book: value);
     });
   }
 
@@ -129,11 +195,8 @@ class BookIdentifier extends SelectableIdentifier {
 }
 
 class BookSelection extends Selectable<BookIdentifier> {
-  BookSelection({
-    required this.ref,
-    required this.id,
-    required this.book,
-  }) : _data = DynamicData(book.toJson());
+  BookSelection({required this.ref, required this.id, required this.book})
+    : _data = DynamicData(book.writeToJsonMap());
 
   @override
   final BookIdentifier id;
@@ -166,10 +229,10 @@ class BookSelection extends Selectable<BookIdentifier> {
 
   @override
   Widget? header() => BookHeader(
-        id: book.id,
-        name: book.title.formatted,
-        color: book.color,
-      );
+    id: book.id,
+    name: book.title.formatted,
+    color: book.flutterColor,
+  );
 
   @override
   dynamic fieldValue(String path) => _data.get(path);
@@ -177,7 +240,7 @@ class BookSelection extends Selectable<BookIdentifier> {
   @override
   void setFieldValue(String path, dynamic value) {
     final newData = _data.copyWith(path, value);
-    final newBook = Book.fromJson(newData.toJson());
+    final newBook = Book()..mergeFromJsonMap(newData.toJson());
     ref.read(booksProvider.notifier).updateBook(newBook);
   }
 

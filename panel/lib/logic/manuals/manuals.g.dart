@@ -46,14 +46,14 @@ const _$PlatformConstraintTypeEnumMap = {
 PlatformVersionConstraint _$PlatformVersionConstraintFromJson(
   Map<String, dynamic> json,
 ) => PlatformVersionConstraint(
-  versions: const SemverListJsonConverter().fromJson(json['versions'] as List),
+  versions: (json['versions'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$PlatformVersionConstraintToJson(
   PlatformVersionConstraint instance,
-) => <String, dynamic>{
-  'versions': const SemverListJsonConverter().toJson(instance.versions),
-};
+) => <String, dynamic>{'versions': instance.versions};
 
 _PlatformTarget _$PlatformTargetFromJson(Map<String, dynamic> json) =>
     _PlatformTarget(
@@ -81,7 +81,7 @@ _ManualModuleReference _$ManualModuleReferenceFromJson(
   moduleId: json['moduleId'] as String,
   name: json['name'] as String,
   version: const SemverJsonConverter().fromJson(json['version']),
-  type: $enumDecode(_$ModuleTypeEnumMap, json['type']),
+  type: const ModuleTypeConverter().fromJson(json['type'] as String),
   dependencies:
       (json['dependencies'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -100,14 +100,9 @@ Map<String, dynamic> _$ManualModuleReferenceToJson(
   'moduleId': instance.moduleId,
   'name': instance.name,
   'version': const SemverJsonConverter().toJson(instance.version),
-  'type': _$ModuleTypeEnumMap[instance.type]!,
+  'type': const ModuleTypeConverter().toJson(instance.type),
   'dependencies': instance.dependencies,
   'dependents': instance.dependents,
-};
-
-const _$ModuleTypeEnumMap = {
-  ModuleType.engine: 'engine',
-  ModuleType.extension: 'extension',
 };
 
 _Manual _$ManualFromJson(Map<String, dynamic> json) => _Manual(
@@ -244,7 +239,7 @@ final class ManualsProvider
   Manuals create() => Manuals();
 }
 
-String _$manualsHash() => r'3dd95a7f771729b7fabff76b206003a003909b10';
+String _$manualsHash() => r'426f7e72c1b4bd5407b8642299c7c2d41d15c564';
 
 /// Provides the list of manuals for the active organization.
 

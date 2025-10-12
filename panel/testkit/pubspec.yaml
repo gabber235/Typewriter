@@ -14,15 +14,16 @@ dependencies:
   hooks_riverpod:
   riverpod_annotation:
   flutter_animate:
-  mocktail:
   faker:
   flutter_hooks:
   iconify_flutter_plus:
   logto_dart_sdk:
   pub_semver:
-  collection: ^1.19.1
+  collection: 
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   build_runner:
   custom_lint:
   flutter_lints:

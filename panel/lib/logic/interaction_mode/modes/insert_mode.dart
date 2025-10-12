@@ -4,8 +4,8 @@ import "package:typewriter_panel/logic/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/logic/interaction_mode/mode_shortcut.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
 import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display_chip.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display_chip.dart";
 
 /// Insert mode for text editing interactions.
 ///

@@ -74,15 +74,17 @@ class ManualChangePlatformsPopup extends HookConsumerWidget {
       submitting.value = true;
       final manual = manualAsync.value;
       if (manual == null) {
-        manualOperationResult.value =
-            ManualOperationResult.failure(reason: "Manual not found.");
+        manualOperationResult.value = ManualOperationResult.failure(
+          reason: "Manual not found.",
+        );
         submitting.value = false;
         return;
       }
       final proposed = proposedTargets.value;
       if (proposed == null) {
-        manualOperationResult.value =
-            ManualOperationResult.failure(reason: "No proposed targets.");
+        manualOperationResult.value = ManualOperationResult.failure(
+          reason: "No proposed targets.",
+        );
         submitting.value = false;
         return;
       }
@@ -95,8 +97,10 @@ class ManualChangePlatformsPopup extends HookConsumerWidget {
           Navigator.of(context).pop<Manual>(m);
         },
         failure: (reason, details) {
-          manualOperationResult.value =
-              ManualOperationResult.failure(reason: reason, details: details);
+          manualOperationResult.value = ManualOperationResult.failure(
+            reason: reason,
+            details: details,
+          );
           submitting.value = false;
         },
       );
@@ -148,12 +152,12 @@ class ManualChangePlatformsPopup extends HookConsumerWidget {
                         margin: EdgeInsets.zero,
                         child: Text(
                           "No platforms configured yet.",
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ),
                     Flexible(
@@ -216,8 +220,9 @@ class ManualChangePlatformsPopup extends HookConsumerWidget {
           alignment: WrapAlignment.end,
           children: [
             TextButton(
-              onPressed:
-                  submitting.value ? null : () => Navigator.of(context).pop(),
+              onPressed: submitting.value
+                  ? null
+                  : () => Navigator.of(context).pop(),
               child: const Text("Cancel"),
             ),
             LoadingButton.filled(
@@ -245,9 +250,7 @@ class _PlatformTargetEditor extends HookConsumerWidget {
   final VoidCallback onRemove;
 
   void updatePlatform(Platform platform) {
-    onChanged(
-      PlatformTarget.fromPlatform(platform),
-    );
+    onChanged(PlatformTarget.fromPlatform(platform));
   }
 
   @override
@@ -275,9 +278,7 @@ class _PlatformTargetEditor extends HookConsumerWidget {
                             value: platform,
                             label: platform.displayName,
                             labelWidget: Row(
-                              children: [
-                                Text(platform.displayName),
-                              ],
+                              children: [Text(platform.displayName)],
                             ),
                           ),
                       ],
@@ -331,18 +332,16 @@ class _RequirementEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final child = switch (requirement.type) {
       PlatformConstraintType.version => _VersionRequirementEditor(
-          requirement: requirement,
-          target: target,
-          onChanged: onChanged,
-        ),
+        requirement: requirement,
+        target: target,
+        onChanged: onChanged,
+      ),
     };
 
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(6.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -380,8 +379,9 @@ class _VersionRequirementEditor extends HookWidget {
     }
     final filter = _VersionGeneratorParser.parse(query: text);
     final predictedExpansion = filter.predictExpansion();
-    final existingCount =
-        countExisting ? _versionConstraint?.versions.length ?? 0 : 0;
+    final existingCount = countExisting
+        ? _versionConstraint?.versions.length ?? 0
+        : 0;
     if (predictedExpansion + existingCount > maxVersions) {
       throw FormatException(
         "You are only allowed to have $maxVersions versions (${predictedExpansion + existingCount}/100)",
@@ -397,29 +397,24 @@ class _VersionRequirementEditor extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final existing = _versionConstraint?.versions ?? <Version>[];
+    final existing =
+        _versionConstraint?.versions.map(Version.parse).toList() ?? <Version>[];
 
     final controller = useTextEditingController(text: "");
     final focus = useFocusNode();
 
     final filter = useState(const VersionFilter());
 
-    final hasEpoch = useMemoized(
-      () {
-        return existing.any((v) => v.major >= 1000);
-      },
-      [existing],
-    );
+    final hasEpoch = useMemoized(() {
+      return existing.any((v) => v.major >= 1000);
+    }, [existing]);
 
-    final filtered = useMemoized(
-      () {
-        final list = existing
-            .where((v) => filter.value.matches(v))
-            .sorted((a, b) => b.compareTo(a));
-        return list;
-      },
-      [existing, filter.value],
-    );
+    final filtered = useMemoized(() {
+      final list = existing
+          .where((v) => filter.value.matches(v))
+          .sorted((a, b) => b.compareTo(a));
+      return list;
+    }, [existing, filter.value]);
 
     void addVersions(List<Version> versions) {
       final map = <String, Version>{
@@ -431,27 +426,25 @@ class _VersionRequirementEditor extends HookWidget {
       final next = map.values.toList()..sort();
       final updatedConstraints = {
         ...target.constraints,
-        requirement.name: PlatformConstraint.version(versions: next),
+        requirement.name: PlatformConstraint.version(
+          versions: next.map((v) => v.canonicalizedVersion).toList(),
+        ),
       };
-      onChanged(
-        target.copyWith(constraints: updatedConstraints),
-      );
+      onChanged(target.copyWith(constraints: updatedConstraints));
     }
 
     void removeVersions(List<Version> versions) {
-      final toRemove = {
-        for (final v in versions) v.canonicalizedVersion,
-      };
+      final toRemove = {for (final v in versions) v.canonicalizedVersion};
       final next = [
         for (final v in existing)
           if (!toRemove.contains(v.canonicalizedVersion)) v,
       ]..sort();
-      final updatedConstraints = Map<String, PlatformConstraint>.from(
-        target.constraints,
-      )..[requirement.name] = PlatformConstraint.version(versions: next);
-      onChanged(
-        target.copyWith(constraints: updatedConstraints),
-      );
+      final updatedConstraints =
+          Map<String, PlatformConstraint>.from(target.constraints)
+            ..[requirement.name] = PlatformConstraint.version(
+              versions: next.map((v) => v.canonicalizedVersion).toList(),
+            );
+      onChanged(target.copyWith(constraints: updatedConstraints));
     }
 
     void tryAdd() {
@@ -484,9 +477,7 @@ class _VersionRequirementEditor extends HookWidget {
         onDeleted: () => removeVersions([version]),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4.0),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
       );
     }
 
@@ -496,10 +487,7 @@ class _VersionRequirementEditor extends HookWidget {
         SectionTitle(title: requirement.name.formatted),
         const SizedBox(height: 6),
         if (filtered.isEmpty)
-          Text(
-            "No versions yet.",
-            style: Theme.of(context).textTheme.bodySmall,
-          )
+          Text("No versions yet.", style: Theme.of(context).textTheme.bodySmall)
         else ...[
           VersionFilterBar(
             filtered: existing,
@@ -523,9 +511,7 @@ class _VersionRequirementEditor extends HookWidget {
                       child: Wrap(
                         spacing: 6,
                         runSpacing: 6,
-                        children: [
-                          for (final v in filtered) versionChip(v),
-                        ],
+                        children: [for (final v in filtered) versionChip(v)],
                       ),
                     )
                   : ConstrainedBox(
@@ -533,11 +519,11 @@ class _VersionRequirementEditor extends HookWidget {
                       child: GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 150,
-                          mainAxisSpacing: 6,
-                          crossAxisSpacing: 6,
-                          childAspectRatio: 3.5,
-                        ),
+                              maxCrossAxisExtent: 150,
+                              mainAxisSpacing: 6,
+                              crossAxisSpacing: 6,
+                              childAspectRatio: 3.5,
+                            ),
                         shrinkWrap: filtered.length < 50,
                         itemCount: filtered.length,
                         itemBuilder: (context, index) =>
@@ -617,9 +603,7 @@ class _VersionRequirementEditor extends HookWidget {
 
 // ignore: avoid_classes_with_only_static_members
 class _VersionGeneratorParser {
-  static VersionFilter parse({
-    required String query,
-  }) {
+  static VersionFilter parse({required String query}) {
     final q = query.trim();
     if (q.isEmpty) {
       throw FormatException("Input a valid version: major.minor.patch");
@@ -654,8 +638,10 @@ class _VersionGeneratorParser {
     if (trimmed == "*") throw FormatException("Wildcard '*' is not allowed");
 
     if (trimmed.contains("-")) {
-      final parts =
-          trimmed.split("-").map((e) => e.trim().asInt).toList(growable: false);
+      final parts = trimmed
+          .split("-")
+          .map((e) => e.trim().asInt)
+          .toList(growable: false);
       if (parts.length != 2) {
         throw FormatException(
           "Invalid range, '$trimmed', expected 2 parts: 'low-high'",

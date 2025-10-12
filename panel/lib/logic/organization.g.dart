@@ -3,24 +3,6 @@
 part of 'organization.dart';
 
 // **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_OrganizationData _$OrganizationDataFromJson(Map<String, dynamic> json) =>
-    _OrganizationData(
-      name: json['name'] as String,
-      id: json['id'] as String,
-      iconUrl: json['iconUrl'] as String?,
-    );
-
-Map<String, dynamic> _$OrganizationDataToJson(_OrganizationData instance) =>
-    <String, dynamic>{
-      'name': instance.name,
-      'id': instance.id,
-      'iconUrl': instance.iconUrl,
-    };
-
-// **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
@@ -51,7 +33,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'c7888d4baaf55f73c6535389e4a266080fc09619';
+String _$organizationsHash() => r'54d7057987d999793df9f65d1a34b21cd70db035';
 
 abstract class _$Organizations extends $AsyncNotifier<List<OrganizationData>> {
   FutureOr<List<OrganizationData>> build();

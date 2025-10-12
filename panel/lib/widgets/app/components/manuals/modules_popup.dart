@@ -9,14 +9,15 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:pub_semver/pub_semver.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/generated/models/module.pbenum.dart";
 import "package:typewriter_panel/logic/manuals/manuals.dart";
-import "package:typewriter_panel/logic/module_version/module_version.dart";
 import "package:typewriter_panel/logic/modules.dart";
-import "package:typewriter_panel/utils/color.dart";
+import "package:typewriter_panel/logic/modules/module_type_extensions.dart";
+import "package:typewriter_panel/logic/modules/semver_json_converter.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/widget_state.dart";
-import "package:typewriter_panel/widgets/generic/components/admonition.dart";
 import "package:typewriter_panel/widgets/app/components/dropdown.dart";
+import "package:typewriter_panel/widgets/generic/components/admonition.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/notification_bubble.dart";
@@ -41,8 +42,7 @@ class ProposedModules extends _$ProposedModules {
   bool updateShouldNotify(
     AsyncValue<List<ManualModuleReference>> previous,
     AsyncValue<List<ManualModuleReference>> next,
-  ) =>
-      !previous.matches(next, listEquals);
+  ) => !previous.matches(next, listEquals);
 
   void add(ManualModuleReference module) {
     if (!state.hasValue) return;
@@ -61,8 +61,9 @@ class ProposedModules extends _$ProposedModules {
 
   int _indexOf(String moduleId) {
     if (!state.hasValue) return -1;
-    return state.requireValue
-        .indexWhere((module) => module.moduleId == moduleId);
+    return state.requireValue.indexWhere(
+      (module) => module.moduleId == moduleId,
+    );
   }
 
   void updateVersion(String moduleId, Version version) {
@@ -113,7 +114,7 @@ abstract class ManualModuleInformation with _$ManualModuleInformation {
     "The module has no compatible versions.",
   )
   @Assert(
-    "compatibleVersions.contains(version)",
+    "compatibleVersions.contains(version.canonicalizedVersion)",
     "The module is not compatible with the current version.",
   )
   factory ManualModuleInformation({
@@ -121,9 +122,9 @@ abstract class ManualModuleInformation with _$ManualModuleInformation {
     required String name,
     required String description,
     required String author,
-    required ModuleType type,
+    @ModuleTypeConverter() required ModuleType type,
     @SemverJsonConverter() required Version version,
-    @SemverListJsonConverter() required List<Version> compatibleVersions,
+    required List<String> compatibleVersions,
     @Default(true) bool canBeRemoved,
   }) = _ManualModuleInformation;
 
@@ -149,11 +150,16 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
     final notifier = ref.read(proposedModulesProvider(manualId).notifier);
     modules
         .where(
-      (module) => module.version != module.compatibleVersions.last,
-    )
+          (module) =>
+              module.version.canonicalizedVersion !=
+              module.compatibleVersions.last,
+        )
         .forEach((module) {
-      notifier.updateVersion(module.moduleId, module.compatibleVersions.last);
-    });
+          notifier.updateVersion(
+            module.moduleId,
+            Version.parse(module.compatibleVersions.last),
+          );
+        });
   }
 
   @override
@@ -185,8 +191,10 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
           Navigator.of(context).pop<Manual>(m);
         },
         failure: (reason, details) {
-          manualOperationResult.value =
-              ManualOperationResult.failure(reason: reason, details: details);
+          manualOperationResult.value = ManualOperationResult.failure(
+            reason: reason,
+            details: details,
+          );
           submitting.value = false;
         },
       );
@@ -204,7 +212,9 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
         );
         final showCanUpdateAll = useMemoized(
           () => modules.any(
-            (module) => module.version != module.compatibleVersions.last,
+            (module) =>
+                module.version.canonicalizedVersion !=
+                module.compatibleVersions.last,
           ),
           [modules],
         );
@@ -233,9 +243,7 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
                     if (showCanUpdateAll)
                       TextButton(
                         onPressed: () => updateAll(ref, modules),
-                        child: Text(
-                          "Update All",
-                        ),
+                        child: Text("Update All"),
                       ),
                   ],
                 ),
@@ -246,9 +254,8 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
                     child: Text(
                       "No modules configured yet.",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 Flexible(
@@ -257,11 +264,14 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
                     child: CustomScrollView(
                       shrinkWrap: modules.length < 10,
                       slivers: [
-                        for (final (type, modules) in ModuleType.values
-                            .where((type) => groupedModules.containsKey(type))
-                            .map(
-                              (type) => (type, groupedModules[type]!),
-                            )) ...[
+                        for (final (type, modules)
+                            in ModuleType.values
+                                .where(
+                                  (type) => groupedModules.containsKey(type),
+                                )
+                                .map(
+                                  (type) => (type, groupedModules[type]!),
+                                )) ...[
                           SliverToBoxAdapter(
                             child: SectionTitle(title: type.displayName),
                           ),
@@ -344,9 +354,7 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
           title: Text("Loading $name"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-            ],
+            children: [CircularProgressIndicator()],
           ),
           actions: [
             TextButton(
@@ -361,10 +369,7 @@ class ManualChangeModulesPopup extends HookConsumerWidget {
 }
 
 class _ModuleEditor extends HookConsumerWidget {
-  const _ModuleEditor({
-    required this.manualId,
-    required this.module,
-  });
+  const _ModuleEditor({required this.manualId, required this.module});
 
   final String manualId;
   final ManualModuleInformation module;
@@ -400,7 +405,7 @@ class _ModuleEditor extends HookConsumerWidget {
                       module.type.themedColor(context),
                     ),
                     backgroundColor: WidgetStateProperty.all(
-                      module.type.themedColor(context).on(context),
+                      Theme.of(context).colorScheme.onSurface,
                     ),
                     padding: WidgetStateProperty.all(
                       EdgeInsets.symmetric(horizontal: 16),
@@ -424,16 +429,11 @@ class _ModuleEditor extends HookConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            module.name,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          Text(module.name, overflow: TextOverflow.ellipsis),
                           Text(
                             module.author,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -445,7 +445,9 @@ class _ModuleEditor extends HookConsumerWidget {
             ),
             const SizedBox(width: 8),
             NotificationBubble.custom(
-              show: module.compatibleVersions.last != module.version,
+              show:
+                  module.compatibleVersions.last !=
+                  module.version.canonicalizedVersion,
               overlap: 4,
               bubble: DecoratedBox(
                 decoration: BoxDecoration(
@@ -464,9 +466,9 @@ class _ModuleEditor extends HookConsumerWidget {
                 dropdownMenuEntries: [
                   for (final version in module.compatibleVersions)
                     DropdownMenuEntry(
-                      value: version,
-                      label: version.canonicalizedVersion,
-                      labelWidget: Text(version.canonicalizedVersion),
+                      value: Version.parse(version),
+                      label: version,
+                      labelWidget: Text(version),
                     ),
                 ],
                 onSelected: (version) {
@@ -475,15 +477,6 @@ class _ModuleEditor extends HookConsumerWidget {
                       .read(proposedModulesProvider(manualId).notifier)
                       .updateVersion(module.moduleId, version);
                 },
-                // inputDecorationTheme: InputDecorationTheme(
-                //   fillColor: Colors.red,
-                //   focusColor: Colors.blue,
-                //   hoverColor: Colors.green,
-                //   // border: OutlineInputBorder(
-                //   //   borderRadius: BorderRadius.circular(4),
-                //   //   borderSide: BorderSide.none,
-                //   // ),
-                // ),
               ),
             ),
             const SizedBox(width: 8),

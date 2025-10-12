@@ -6,18 +6,18 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/logic/pages/graph_direction.dart";
 
 import "package:typewriter_panel/utils/collection.dart";
-import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/graph/entry_graph.dart";
 import "package:typewriter_testkit/src/mocks/graph_layout.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 Page generateRandomPage([PageType? pageType]) {
-  final pageTypes = PageType.values;
+  final pageTypes = PageType.values.toList();
   final type = pageType ?? pageTypes.randomOrNull()!;
   final pageName = faker.lorem
       .words(faker.randomGenerator.integer(3, min: 1))
@@ -32,14 +32,12 @@ Page generateRandomPage([PageType? pageType]) {
     "main.epilogue",
   ];
 
-  return Page(
-    id: faker.guid.guid(),
-    pageName: pageName,
-    type: type,
-    color: safeColors.randomOrNull(),
-    chapter: chapters.randomOrNull() ?? "",
-    priority: faker.randomGenerator.integer(100, min: -10),
-  );
+  return Page()
+    ..id = faker.guid.guid()
+    ..name = pageName
+    ..type = type
+    ..chapter = chapters.randomOrNull() ?? ""
+    ..priority = faker.randomGenerator.integer(100, min: -10);
 }
 
 class BookPagesMock extends BookPages {
@@ -58,7 +56,7 @@ class BookPagesMock extends BookPages {
     return pages
         .where(
           (page) =>
-              page.pageName.toLowerCase().contains(search.toLowerCase()) ||
+              page.name.toLowerCase().contains(search.toLowerCase()) ||
               page.chapter.toLowerCase().contains(search.toLowerCase()),
         )
         .toList();
@@ -74,7 +72,9 @@ class PagesMock extends Pages {
   @override
   Future<Page> build(String pageId) async {
     await Future<void>.delayed(50.ms);
-    return page ?? generateRandomPage(pageType).copyWith(id: pageId);
+    if (page != null) return page!;
+    final randomPage = generateRandomPage(pageType);
+    return randomPage.deepCopy()..id = pageId;
   }
 
   @override
@@ -112,39 +112,14 @@ class PageEntriesMock extends PageEntries {
 
   @override
   Future<void> moveAll(List<(String, int, int)> changed) async {
-    final data = await future;
-    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
-    final newData = data.map((pageEntry) {
-      if (!map.containsKey(pageEntry.id)) return pageEntry;
-      final (x, y) = map[pageEntry.id]!;
-      return switch (pageEntry) {
-        DefinitionPageEntry() =>
-          pageEntry.copyWith.definition.placement(x: x, y: y),
-        NoBlueprintPageEntry() => pageEntry.copyWith.placement(x: x, y: y),
-        _ => pageEntry,
-      };
-    }).toList();
-
-    state = AsyncValue.data(newData);
+    state.ensureReady();
+    optimisticMoveAll(changed);
   }
 
   @override
   Future<void> resizeAll(List<(String, int, int)> changed) async {
-    final data = await future;
-    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
-    final newData = data.map((pageEntry) {
-      if (!map.containsKey(pageEntry.id)) return pageEntry;
-      final (width, height) = map[pageEntry.id]!;
-      return switch (pageEntry) {
-        DefinitionPageEntry() =>
-          pageEntry.copyWith.definition.placement(width: width, height: height),
-        NoBlueprintPageEntry() =>
-          pageEntry.copyWith.placement(width: width, height: height),
-        _ => pageEntry,
-      };
-    }).toList();
-
-    state = AsyncValue.data(newData);
+    state.ensureReady();
+    optimisticResizeAll(changed);
   }
 }
 

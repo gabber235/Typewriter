@@ -6,6 +6,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
@@ -79,14 +80,14 @@ class _OrganizationsSelector extends HookConsumerWidget {
         SizedBox(height: 16),
         if (organizations.length > 5) ...[
           TextFormField(
-            decoration: InputDecoration(
-              hintText: "Search Organization",
-              prefixIcon: Icon(Icons.search),
-            ),
-            onChanged: (query) {
-              searchQuery.value = query;
-            },
-          )
+                decoration: InputDecoration(
+                  hintText: "Search Organization",
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (query) {
+                  searchQuery.value = query;
+                },
+              )
               .animate()
               .fadeIn(duration: 300.ms, delay: 100.ms)
               .slideY(begin: 0.05, end: 0),
@@ -100,45 +101,48 @@ class _OrganizationsSelector extends HookConsumerWidget {
         else
           SizedBox(
             height: organizations.length >= 5 ? 200 : null,
-            child: ListView.builder(
-              shrinkWrap: organizations.length < 5,
-              itemCount: filteredOrganizations.length,
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index) {
-                final organization = filteredOrganizations[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        context.pushRoute(
-                          OrganizationRoute(organizationId: organization.id),
+            child:
+                ListView.builder(
+                      shrinkWrap: organizations.length < 5,
+                      itemCount: filteredOrganizations.length,
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (context, index) {
+                        final organization = filteredOrganizations[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Material(
+                            color: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                context.pushRoute(
+                                  OrganizationRoute(
+                                    organizationId: organization.id,
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: ListTile(
+                                leading: OrganizationIcon(
+                                  iconUrl: organization.iconUrl,
+                                  size: 40,
+                                ),
+                                title: Text(organization.name),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                ),
+                              ),
+                            ),
+                          ),
                         );
                       },
-                      borderRadius: BorderRadius.circular(8),
-                      child: ListTile(
-                        leading: OrganizationIcon(
-                          iconUrl: organization.iconUrl,
-                          size: 40,
-                        ),
-                        title: Text(organization.name),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            )
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 200.ms)
-                .slideY(begin: 0.05, end: 0),
+                    )
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: 200.ms)
+                    .slideY(begin: 0.05, end: 0),
           ),
       ],
     );
@@ -157,7 +161,7 @@ class _CreateOrganization extends HookConsumerWidget {
     final iconSeed = nameController.text.isNotEmpty
         ? nameController.text + randomSeed.value
         : randomSeed.value;
-    final iconUrl = OrganizationData.generateIconUrl(iconSeed);
+    final iconUrl = generateOrganizationIconUrl(iconSeed);
 
     return Form(
       key: formKey,
@@ -165,9 +169,9 @@ class _CreateOrganization extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Create organisation",
-            style: Theme.of(context).textTheme.headlineMedium,
-          )
+                "Create organization",
+                style: Theme.of(context).textTheme.headlineMedium,
+              )
               .animate()
               .fadeIn(duration: 300.ms, delay: 400.ms)
               .slideY(begin: 0.05, end: 0),
@@ -177,117 +181,110 @@ class _CreateOrganization extends HookConsumerWidget {
               .fadeIn(duration: 300.ms, delay: 500.ms)
               .slideY(begin: 0.05, end: 0),
           TextFormField(
-            controller: nameController,
-            inputFormatters: [
-              SnakeCaseInputFormatter(),
-            ],
-            decoration: InputDecoration(
-              hintText: "Enter organization name",
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Please enter an organization name.";
-              }
-              if (value.length < 3) {
-                return "Name must be at least 3 characters long.";
-              }
-              if (!RegExp("^[a-z0-9]").hasMatch(value)) {
-                return "Name must start with a lowercase letter or number.";
-              }
-              if (!RegExp(r"[a-z0-9]$").hasMatch(value)) {
-                return "Name must end with a lowercase letter or number.";
-              }
-              if (!RegExp("^[a-z0-9_]+").hasMatch(value)) {
-                return "Name can only contain lowercase letters, numbers, and underscores.";
-              }
-              if (!RegExp(r"^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$").hasMatch(value)) {
-                return "Name must be at least 2 characters, start and end with a letter or number, and only contain underscores in between.";
-              }
-              return null;
-            },
-          )
+                controller: nameController,
+                inputFormatters: [SnakeCaseInputFormatter()],
+                decoration: InputDecoration(
+                  hintText: "Enter organization name",
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter an organization name.";
+                  }
+                  if (value.length < 3) {
+                    return "Name must be at least 3 characters long.";
+                  }
+                  if (!RegExp("^[a-z0-9]").hasMatch(value)) {
+                    return "Name must start with a lowercase letter or number.";
+                  }
+                  if (!RegExp(r"[a-z0-9]$").hasMatch(value)) {
+                    return "Name must end with a lowercase letter or number.";
+                  }
+                  if (!RegExp(r"^[a-z0-9_]+$").hasMatch(value)) {
+                    return "Name can only contain lowercase letters, numbers, and underscores.";
+                  }
+                  if (!RegExp(
+                    r"^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$",
+                  ).hasMatch(value)) {
+                    return "Name must be at least 3 characters, start and end with a letter or number, and only contain underscores in between.";
+                  }
+                  return null;
+                },
+              )
               .animate()
               .fadeIn(duration: 300.ms, delay: 550.ms)
               .slideY(begin: 0.05, end: 0),
           SizedBox(height: 24),
           Material(
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                randomSeed.value = Random().nextInt(1000000).toString();
-              },
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    OrganizationIcon(
-                      iconUrl: iconUrl,
-                      size: 64,
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SectionTitle(title: "Icon"),
-                          SizedBox(height: 4),
-                          Text(
-                            "For now, generated and can be randomized again by clicking the icon.",
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    randomSeed.value = Random().nextInt(1000000).toString();
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        OrganizationIcon(iconUrl: iconUrl, size: 64),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionTitle(title: "Icon"),
+                              SizedBox(height: 4),
+                              Text(
+                                "For now, generated and can be randomized again by clicking the icon.",
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          )
+              )
               .animate()
               .fadeIn(duration: 300.ms, delay: 650.ms)
               .slideY(begin: 0.05, end: 0),
           SizedBox(height: 32),
           SizedBox(
-            width: double.infinity,
-            child: LoadingButton.filled(
-              onPressed: () async {
-                if (formKey.currentState?.validate() != true) {
-                  return;
-                }
-                final navigator = ref.read(appRouterProvider);
-                final organizationId = await ref
-                    .read(organizationsProvider.notifier)
-                    .createOrganization(
-                      name: nameController.text,
-                      iconUrl: iconUrl,
+                width: double.infinity,
+                child: LoadingButton.filled(
+                  onPressed: () async {
+                    if (formKey.currentState?.validate() != true) {
+                      return;
+                    }
+                    final navigator = ref.read(appRouterProvider);
+                    final organizationId = await ref
+                        .read(organizationsProvider.notifier)
+                        .createOrganization(
+                          name: nameController.text,
+                          iconUrl: iconUrl,
+                        );
+                    if (organizationId == null) {
+                      if (!context.mounted) {
+                        return;
+                      }
+                      showErrorSnackBar(
+                        context,
+                        "Failed to create organization",
+                      );
+                      return;
+                    }
+                    await navigator.push(
+                      OrganizationRoute(organizationId: organizationId),
                     );
-                if (organizationId == null) {
-                  if (!context.mounted) {
-                    return;
-                  }
-                  showErrorSnackBar(
-                    context,
-                    "Failed to create organization",
-                  );
-                  return;
-                }
-                await navigator.push(
-                  OrganizationRoute(
-                    organizationId: organizationId,
-                  ),
-                );
-              },
-              child: Text("Create"),
-            ),
-          )
+                  },
+                  child: Text("Create"),
+                ),
+              )
               .animate()
               .fadeIn(duration: 300.ms, delay: 750.ms)
               .slideY(begin: 0.05, end: 0),

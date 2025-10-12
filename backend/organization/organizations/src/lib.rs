@@ -6,13 +6,26 @@ wit_bindgen::generate!({
     generate_all,
 });
 
-use std::collections::HashMap;
+use prost::Message;
 use serde_cbor::Value;
-use serde_json::json;
+use std::collections::HashMap;
 use surrealdb_component::query;
 use wasmcloud_component::info;
-use wasmcloud_utils::wasmcloud::messaging::{handler::Guest, reply, types::BrokerMessage};
 use wasmcloud_utils::dispatch_actions;
+use wasmcloud_utils::wasmcloud::messaging::{handler::Guest, reply, types::BrokerMessage};
+
+mod typewriter {
+    pub mod models {
+        pub mod v1 {
+            include!("generated/typewriter.models.v1.rs");
+        }
+    }
+    pub mod api {
+        pub mod v1 {
+            include!("generated/typewriter.api.v1.rs");
+        }
+    }
+}
 
 struct Organizations;
 wasmcloud_utils::export!(Organizations);
@@ -34,19 +47,30 @@ fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<()
         .get("user_id")
         .ok_or("failed to parse user_id from subject")?;
 
+    // Parse the request (should be empty for list)
+    let _request = typewriter::api::v1::ListOrganizationsRequest::decode(&msg.body[..])
+        .map_err(|e| format!("failed to decode request: {}", e))?;
+
     let result = query("SELECT ->member_of->organizations FROM type::thing('user', $user_id)")
         .bind("user_id", user_id)
         .execute()
         .map_err(|e| format!("failed to query organizations: {}", e))?;
 
-    let organizations: Vec<Value> = result
+    let organizations_data: Vec<Value> = result
         .take(0)
         .map_err(|e| format!("failed to take result: {}", e))?;
 
-    info!("organizations: {:?}", organizations);
-    // TODO properly parse the result
+    info!("organizations: {:?}", organizations_data);
 
-    reply(msg, vec![])
+    let organizations: Vec<typewriter::models::v1::Organization> = organizations_data
+        .into_iter()
+        .filter_map(|data| serde_cbor::value::from_value(data).ok())
+        .collect();
+
+    let response = typewriter::api::v1::ListOrganizationsResponse { organizations };
+
+    let response_bytes = response.encode_to_vec();
+    reply(msg, response_bytes)
 }
 
 /// Handle the 'create' action - create a new organization
@@ -55,21 +79,16 @@ fn handle_create(msg: BrokerMessage, params: HashMap<String, String>) -> Result<
         .get("user_id")
         .ok_or("failed to parse user_id from subject")?;
 
-    let body_str = String::from_utf8(msg.body.clone())
-        .map_err(|e| format!("failed to parse body as UTF-8: {}", e))?;
+    let request = typewriter::api::v1::CreateOrganizationRequest::decode(&msg.body[..])
+        .map_err(|e| format!("failed to decode request: {}", e))?;
 
-    let request: serde_json::Value = serde_json::from_str(&body_str)
-        .map_err(|e| format!("failed to parse JSON body: {}", e))?;
+    let name = request.name;
+    let icon_url = request.icon_url;
 
-    let name = request.get("name")
-        .and_then(|v| v.as_str())
-        .ok_or("missing or invalid 'name' field in request body")?;
-
-    let icon_url = request.get("iconUrl")
-        .and_then(|v| v.as_str())
-        .ok_or("missing or invalid 'iconUrl' field in request body")?;
-
-    info!("Creating organization '{}' for user '{}' with icon '{}'", name, user_id, icon_url);
+    info!(
+        "Creating organization '{}' for user '{}' with icon '{}'",
+        name, user_id, icon_url
+    );
 
     // Create the organization in the database
     // TODO: Implement the actual creation logic with SurrealDB
@@ -85,7 +104,22 @@ fn handle_create(msg: BrokerMessage, params: HashMap<String, String>) -> Result<
 
     info!("Created organization with id: {}", org_id);
 
-    // Return the organization ID
-    let response = json!(org_id).to_string();
-    reply(msg, response.into_bytes())
+    // Create the organization proto response
+    let organization = typewriter::models::v1::Organization {
+        id: org_id.clone(),
+        name,
+        icon_url,
+        member_ids: vec![user_id.clone()],
+        created_at: chrono::Utc::now().timestamp(),
+        updated_at: chrono::Utc::now().timestamp(),
+    };
+
+    let response = typewriter::api::v1::CreateOrganizationResponse {
+        result: Some(
+            typewriter::api::v1::create_organization_response::Result::Organization(organization),
+        ),
+    };
+
+    let response_bytes = response.encode_to_vec();
+    reply(msg, response_bytes)
 }

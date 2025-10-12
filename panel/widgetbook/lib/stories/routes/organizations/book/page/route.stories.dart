@@ -1,8 +1,8 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/routes/organization/book/page/route.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
-import "package:typewriter_panel/widgets/app/components/graph/entry_graph.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -45,20 +45,20 @@ Widget _buildPagePageUseCase(BuildContext context, PageType pageType) {
 
 @widgetbook.UseCase(name: "Sequence", type: PagePage)
 Widget pagePageSequenceUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.sequence);
+  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_SEQUENCE);
 }
 
 @widgetbook.UseCase(name: "Static", type: PagePage)
 Widget pagePageStaticUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.static);
+  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_STATIC);
 }
 
 @widgetbook.UseCase(name: "Cinematic", type: PagePage)
 Widget pagePageCinematicUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.scene);
+  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_SCENE);
 }
 
 @widgetbook.UseCase(name: "Manifest", type: PagePage)
 Widget pagePageManifestUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.manifest);
+  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_MANIFEST);
 }

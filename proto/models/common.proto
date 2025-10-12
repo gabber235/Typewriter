@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+message Color {
+  uint32 value = 1;
+}
+
+message Version {
+  string value = 1;
+}
+
+message Error {
+  string code = 1;
+  string message = 2;
+  repeated string details = 3;
+}

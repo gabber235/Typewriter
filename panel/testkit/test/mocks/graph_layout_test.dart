@@ -4,7 +4,7 @@ import 'package:typewriter_panel/logic/pages/entries.dart';
 import 'package:typewriter_panel/logic/selectable/data_blueprint.dart';
 import 'package:typewriter_panel/logic/selectable/dynamic_data.dart';
 import 'package:typewriter_panel/utils/color.dart';
-import 'package:typewriter_panel/widgets/app/components/graph/entry_graph.dart';
+import 'package:typewriter_panel/logic/pages/graph_direction.dart';
 import 'package:typewriter_testkit/src/mocks/graph_layout.dart';
 
 EntryDefinition createTestEntry() {

@@ -1,37 +1,52 @@
+import "dart:async";
+
 import "package:faker/faker.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:mocktail/mocktail.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
+import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 OrganizationData generateRandomOrganization() {
-  return OrganizationData(
-    id: faker.guid.guid(),
-    name: faker.lorem
+  return OrganizationData()
+    ..id = faker.guid.guid()
+    ..name = faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")
-        .snakeCase(),
-    iconUrl: OrganizationData.generateIconUrl(faker.guid.guid()),
-  );
+        .snakeCase()
+    ..iconUrl = generateOrganizationIconUrl(faker.guid.guid());
 }
 
-OrganizationsMock createOrganizationsMockForState(
-  DisplayState state,
-) {
-  final organizations = OrganizationsMock();
-  when(organizations.build).thenAnswer(
-    (_) => state.generate(generateRandomOrganization),
-  );
-  when(
-    () => organizations.createOrganization(
-      name: any(named: "name"),
-      iconUrl: any(named: "iconUrl"),
-    ),
-  ).thenAnswer((_) => Future.delayed(Duration(milliseconds: 100), () => null));
-  return organizations;
+class OrganizationsMock extends Organizations {
+  OrganizationsMock({required this.displayState});
+
+  final DisplayState displayState;
+
+  @override
+  Future<List<OrganizationData>> build() async {
+    return displayState.generate(generateRandomOrganization);
+  }
+
+  @override
+  Future<String?> createOrganization({
+    required String name,
+    required String iconUrl,
+  }) async {
+    await Future.delayed(Duration(milliseconds: 100));
+    return null;
+  }
+}
+
+class OrganizationProviderMock extends Organization {
+  OrganizationProviderMock({required this.organization});
+
+  final OrganizationData organization;
+
+  @override
+  Future<OrganizationData?> build() async {
+    return organization;
+  }
 }
 
 List<Override> organizationsProviderOverrides({
@@ -39,23 +54,18 @@ List<Override> organizationsProviderOverrides({
 }) =>
     [
       organizationsProvider.overrideWith(
-        () => createOrganizationsMockForState(state),
+        () => OrganizationsMock(displayState: state),
       ),
     ];
-
-OrganizationMock createOrganizationMock(OrganizationData organization) {
-  final mock = OrganizationMock();
-  when(mock.build).thenAnswer((_) => Future.value(organization));
-  return mock;
-}
 
 List<Override> organizationProviderOverrides({
   OrganizationData? organization,
 }) =>
     [
       organizationProvider.overrideWith(
-        () => createOrganizationMock(
-            organization ?? generateRandomOrganization(),),
+        () => OrganizationProviderMock(
+          organization: organization ?? generateRandomOrganization(),
+        ),
       ),
       organizationIdProvider.overrideWith(
         (ref) => ref

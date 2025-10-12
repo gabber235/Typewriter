@@ -2,7 +2,8 @@
 import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:pub_semver/pub_semver.dart";
-import "package:typewriter_panel/logic/module_version/module_version.dart";
+import "package:typewriter_panel/generated/models/module.pb.dart";
+import "package:typewriter_panel/logic/modules/module_version_extensions.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/string.dart";
 
@@ -110,7 +111,8 @@ sealed class DataBlueprint with _$DataBlueprint {
     ModuleVersion? version,
     List<Modifier> modifiers = const [],
   }) {
-    final mv = version ?? ModuleVersion(version: Version.none);
+    final mv =
+        version ?? ModuleVersion(version: Version.none.canonicalizedVersion);
     return CustomBlueprint(
       editor: "module_version",
       shape: DataBlueprint.object(
@@ -124,7 +126,7 @@ sealed class DataBlueprint with _$DataBlueprint {
           ),
         },
       ),
-      internalDefaultValue: mv.toJson(),
+      internalDefaultValue: mv.writeToJsonMap(),
       modifiers: modifiers,
     );
   }

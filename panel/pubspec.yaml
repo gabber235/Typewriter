@@ -24,7 +24,6 @@ dependencies:
   iconify_flutter_plus: ^1.0.4
   responsive_framework: ^1.5.1
   flutter_animate: ^4.5.2
-  mocktail: ^1.0.4
   dart_casing: ^3.0.1
   okcolor: ^1.1.0
   url_launcher: ^6.3.1
@@ -36,6 +35,8 @@ dependencies:
   material_color_utilities:
   vector_math: ^2.2.0
   flutter_svg: ^2.2.1
+  protobuf: ^5.0.0
+  fixnum: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +53,7 @@ dev_dependencies:
   test_screenshot:
   typewriter_testkit:
     path: testkit
+  protoc_plugin: ^23.0.0
 
 icons_launcher:
   image_path: "assets/typewriter_app_icon.png"

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+import "google/protobuf/duration.proto";
+
+message Permission {
+  repeated string allow = 1;
+  repeated string deny = 2;
+}
+
+message ResponsePermission {
+  int32 max_messages = 1;
+  google.protobuf.Duration ttl = 2;
+}
+
+message Permissions {
+  Permission publish = 1;
+  Permission subscribe = 2;
+  ResponsePermission resp = 3;
+}

@@ -3,35 +3,6 @@
 part of 'modules.dart';
 
 // **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_Module _$ModuleFromJson(Map<String, dynamic> json) => _Module(
-  id: json['id'] as String,
-  name: json['name'] as String,
-  type: $enumDecode(_$ModuleTypeEnumMap, json['type']),
-  shortDescription: json['shortDescription'] as String? ?? "",
-  versions:
-      (json['versions'] as List<dynamic>?)
-          ?.map((e) => ModuleVersion.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const <ModuleVersion>[],
-);
-
-Map<String, dynamic> _$ModuleToJson(_Module instance) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'type': _$ModuleTypeEnumMap[instance.type]!,
-  'shortDescription': instance.shortDescription,
-  'versions': instance.versions.map((e) => e.toJson()).toList(),
-};
-
-const _$ModuleTypeEnumMap = {
-  ModuleType.engine: 'engine',
-  ModuleType.extension: 'extension',
-};
-
-// **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
@@ -65,7 +36,7 @@ final class ModulesProvider
   Modules create() => Modules();
 }
 
-String _$modulesHash() => r'be8391aa51fe7287f7316612a3cbbce03b019f11';
+String _$modulesHash() => r'04d756168d8885883f25940508a287c28beaab03';
 
 /// Provides the list of available modules.
 

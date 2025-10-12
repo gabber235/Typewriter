@@ -4,34 +4,42 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../test_utils.dart";
 
-Widget _focusableChild(FocusNode node) =>
-    Focus(focusNode: node, child: const SizedBox.shrink());
-
 void main() {
-  setupMocks();
-
   group("Inspector shortcuts", () {
     testWidgets("period shrinks and comma expands (small step)", (
       tester,
     ) async {
-      final focusNode = FocusNode(debugLabel: "inspector_focus");
+      final testSelectable = TestSelectableIdentifier(id: "test-item");
 
       await tester.pumpTestApp(
         child: Center(
           child: SizedBox(
             width: 1600,
             height: 800,
-            child: DesktopInspector(child: _focusableChild(focusNode)),
+            child: DesktopInspector(child: const SizedBox.shrink()),
           ),
         ),
+        overrides: [
+          selectionProvider.overrideWithValue([testSelectable]),
+          operationsProvider.overrideWithValue([]),
+        ],
         settle: true,
       );
 
-      focusNode.requestFocus();
+      final focusScope = tester.widget<FocusScope>(
+        find.descendant(
+          of: find.byType(DesktopInspector),
+          matching: find.byType(FocusScope),
+        ),
+      );
+      focusScope.focusNode?.requestFocus();
       await tester.pumpAndSettle();
 
       final container = tester.container();
@@ -65,20 +73,30 @@ void main() {
     testWidgets("shift+period shrinks and shift+comma expands (large step)", (
       tester,
     ) async {
-      final focusNode = FocusNode(debugLabel: "inspector_focus");
+      final testSelectable = TestSelectableIdentifier(id: "test-item");
 
       await tester.pumpTestApp(
         child: Center(
           child: SizedBox(
             width: 1600,
             height: 800,
-            child: DesktopInspector(child: _focusableChild(focusNode)),
+            child: DesktopInspector(child: const SizedBox.shrink()),
           ),
         ),
+        overrides: [
+          selectionProvider.overrideWithValue([testSelectable]),
+          operationsProvider.overrideWithValue([]),
+        ],
         settle: true,
       );
 
-      focusNode.requestFocus();
+      final focusScope = tester.widget<FocusScope>(
+        find.descendant(
+          of: find.byType(DesktopInspector),
+          matching: find.byType(FocusScope),
+        ),
+      );
+      focusScope.focusNode?.requestFocus();
       await tester.pumpAndSettle();
 
       final container = tester.container();

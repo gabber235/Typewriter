@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package typewriter.api.v1;
+
+import "models/module.proto";
+import "models/common.proto";
+
+message ListModulesRequest {}
+
+message ListModulesResponse {
+  repeated typewriter.models.v1.Module modules = 1;
+}
+
+message GetModuleRequest {
+  string id = 1;
+}
+
+message GetModuleResponse {
+  oneof result {
+    typewriter.models.v1.Module module = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message UpdateModuleRequest {
+  typewriter.models.v1.Module module = 1;
+}
+
+message UpdateModuleResponse {
+  oneof result {
+    typewriter.models.v1.Module module = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ChangeVersionStateRequest {
+  repeated string module_ids = 1;
+  string version = 2;
+  typewriter.models.v1.ModuleVersionState state = 3;
+}
+
+message ChangeVersionStateResponse {
+  oneof result {
+    bool success = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+import "models/common.proto";
+
+message Book {
+  string id = 1;
+  string title = 2;
+  string icon = 3;
+  Color color = 4;
+  repeated Tag tags = 5;
+}
+
+message Tag {
+  string id = 1;
+  string name = 2;
+  Color color = 3;
+  repeated Tag parents = 4;
+}
+
+message Page {
+  string id = 1;
+  string book_id = 2;
+  string name = 3;
+  PageType type = 4;
+  string chapter = 5;
+  int32 priority = 6;
+}
+
+enum PageType {
+  PAGE_TYPE_SEQUENCE = 0;
+  PAGE_TYPE_STATIC = 1;
+  PAGE_TYPE_SCENE = 2;
+  PAGE_TYPE_MANIFEST = 3;
+}

@@ -28,9 +28,8 @@ void main() {
       await tester.pumpTestApp(
         child: AnimatedBuilder(
           animation: mode,
-          builder: (_, __) => ElasticSwitcher(
-            child: mode.value ? second : first,
-          ),
+          builder: (_, _) =>
+              ElasticSwitcher(child: mode.value ? second : first),
         ),
       );
 
@@ -76,9 +75,8 @@ void main() {
       await tester.pumpTestApp(
         child: AnimatedBuilder(
           animation: mode,
-          builder: (_, __) => ElasticSwitcher(
-            child: mode.value ? second : first,
-          ),
+          builder: (_, _) =>
+              ElasticSwitcher(child: mode.value ? second : first),
         ),
       );
 

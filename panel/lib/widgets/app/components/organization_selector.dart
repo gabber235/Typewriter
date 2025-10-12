@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
+import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -18,10 +19,8 @@ class OrganizationSelector extends HookConsumerWidget {
 
     return selectedOrganizationAsync(
       name: "selected organization",
-      builder: (selectedOrganization) => _SelectorButton(
-        selectedOrganization: selectedOrganization,
-        ref: ref,
-      ),
+      builder: (selectedOrganization) =>
+          _SelectorButton(selectedOrganization: selectedOrganization, ref: ref),
     );
   }
 }
@@ -40,9 +39,7 @@ class _SelectorButton extends HookWidget {
     final link = useRef(LayerLink());
 
     return Material(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: CompositedTransformTarget(
         link: link.value,
         child: InkWell(
@@ -109,9 +106,7 @@ class _SelectorButton extends HookWidget {
 }
 
 class _MobileOrganizationMenu extends StatelessWidget {
-  const _MobileOrganizationMenu({
-    required this.selectedOrganization,
-  });
+  const _MobileOrganizationMenu({required this.selectedOrganization});
 
   final OrganizationData? selectedOrganization;
 
@@ -204,9 +199,7 @@ class _OrganizationPopupRoute extends PopupRoute<void> {
 }
 
 class _OrganizationMenuContent extends HookConsumerWidget {
-  const _OrganizationMenuContent({
-    required this.selectedOrganization,
-  });
+  const _OrganizationMenuContent({required this.selectedOrganization});
 
   final OrganizationData? selectedOrganization;
 
@@ -226,9 +219,9 @@ class _OrganizationMenuContent extends HookConsumerWidget {
             builder: (organizations) {
               final filteredOrganizations = organizations.where((org) {
                 if (searchQuery.value.isEmpty) return true;
-                return org.name
-                    .toLowerCase()
-                    .contains(searchQuery.value.toLowerCase());
+                return org.name.toLowerCase().contains(
+                  searchQuery.value.toLowerCase(),
+                );
               }).toList();
 
               return Column(
@@ -241,9 +234,7 @@ class _OrganizationMenuContent extends HookConsumerWidget {
                     ),
                   ),
                   if (selectedOrganization != null)
-                    _OrganizationActions(
-                      organization: selectedOrganization!,
-                    ),
+                    _OrganizationActions(organization: selectedOrganization!),
                 ],
               );
             },
@@ -280,9 +271,7 @@ class _SearchField extends StatelessWidget {
 }
 
 class _OrganizationsList extends HookConsumerWidget {
-  const _OrganizationsList({
-    required this.organizations,
-  });
+  const _OrganizationsList({required this.organizations});
 
   final List<OrganizationData> organizations;
 
@@ -297,8 +286,8 @@ class _OrganizationsList extends HookConsumerWidget {
           child: Text(
             "ORGANIZATIONS",
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         Flexible(
@@ -312,24 +301,18 @@ class _OrganizationsList extends HookConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: ListTile(
                     dense: true,
-                    leading: OrganizationIcon(
-                      iconUrl: org.iconUrl,
-                      size: 32,
-                    ),
+                    leading: OrganizationIcon(iconUrl: org.iconUrl, size: 32),
                     title: Text(
                       org.name.formatted,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: 14,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 14),
                     ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                     onTap: () {
-                      ref.read(appRouterProvider).push(
-                            OrganizationRoute(organizationId: org.id),
-                          );
+                      ref
+                          .read(appRouterProvider)
+                          .push(OrganizationRoute(organizationId: org.id));
                       Navigator.of(context).pop();
                     },
                   ),
@@ -344,9 +327,7 @@ class _OrganizationsList extends HookConsumerWidget {
 }
 
 class _OrganizationActions extends HookConsumerWidget {
-  const _OrganizationActions({
-    required this.organization,
-  });
+  const _OrganizationActions({required this.organization});
 
   final OrganizationData organization;
 
@@ -360,9 +341,9 @@ class _OrganizationActions extends HookConsumerWidget {
           title: "Organization Settings",
           onTap: () {
             Navigator.of(context).pop();
-            ref.read(appRouterProvider).push(
-                  OrganizationRoute(organizationId: organization.id),
-                );
+            ref
+                .read(appRouterProvider)
+                .push(OrganizationRoute(organizationId: organization.id));
           },
         ),
         ActionItem(
@@ -370,9 +351,9 @@ class _OrganizationActions extends HookConsumerWidget {
           title: "Invite Users",
           onTap: () {
             Navigator.of(context).pop();
-            ref.read(appRouterProvider).push(
-                  OrganizationRoute(organizationId: organization.id),
-                );
+            ref
+                .read(appRouterProvider)
+                .push(OrganizationRoute(organizationId: organization.id));
           },
         ),
       ],
@@ -393,11 +374,7 @@ class ActionItem {
 }
 
 class ActionList extends StatelessWidget {
-  const ActionList({
-    required this.title,
-    required this.actions,
-    super.key,
-  });
+  const ActionList({required this.title, required this.actions, super.key});
 
   final String title;
   final List<ActionItem> actions;
@@ -412,8 +389,8 @@ class ActionList extends StatelessWidget {
           child: Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         ...actions.map(
@@ -422,14 +399,16 @@ class ActionList extends StatelessWidget {
             child: ListTile(
               dense: true,
               visualDensity: VisualDensity.compact,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 0,
+              ),
               leading: Icon(action.icon, size: 16),
               title: Text(
                 action.title,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 13,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 13),
               ),
               onTap: action.onTap,
             ),

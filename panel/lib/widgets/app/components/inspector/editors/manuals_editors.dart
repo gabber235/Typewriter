@@ -2,8 +2,9 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:pub_semver/pub_semver.dart";
+import "package:typewriter_panel/generated/models/module.pb.dart";
 import "package:typewriter_panel/logic/manuals/manuals.dart";
-import "package:typewriter_panel/logic/modules.dart";
+import "package:typewriter_panel/logic/modules/module_type_extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/map.dart";
@@ -62,10 +63,7 @@ class _ManualPlatformTargetEditorWidget extends HookConsumerWidget {
             children: [
               for (final MapEntry(key: name, value: constraint)
                   in target.constraints.entries)
-                _PlatformConstraintEditor(
-                  name: name,
-                  constraint: constraint,
-                ),
+                _PlatformConstraintEditor(name: name, constraint: constraint),
             ],
           ),
         );
@@ -93,7 +91,7 @@ class _PlatformConstraintEditor extends HookConsumerWidget {
         switch (constraint) {
           PlatformVersionConstraint(versions: final vs) =>
             _PlatformVersionConstraintEditor(
-              versions: vs,
+              versions: vs.map(Version.parse).toList(),
             ),
         },
       ],
@@ -102,9 +100,7 @@ class _PlatformConstraintEditor extends HookConsumerWidget {
 }
 
 class _PlatformVersionConstraintEditor extends HookConsumerWidget {
-  const _PlatformVersionConstraintEditor({
-    required this.versions,
-  });
+  const _PlatformVersionConstraintEditor({required this.versions});
 
   final List<Version> versions;
 
@@ -209,10 +205,8 @@ class _ManualModuleReferenceEditorWidget extends HookConsumerWidget {
 class ManualModulesListEditor extends Editor {
   @override
   bool canEdit(DataBlueprint dataBlueprint) => dataBlueprint.matches(
-        DataBlueprint.list(
-          type: DataBlueprint.manualModuleReference(),
-        ),
-      );
+    DataBlueprint.list(type: DataBlueprint.manualModuleReference()),
+  );
 
   @override
   Widget build(String path, DataBlueprint dataBlueprint, EditorMode mode) {
@@ -225,15 +219,20 @@ class ManualModulesListEditor extends Editor {
 
   @override
   (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
-      headerActions(
+  headerActions(
     Ref ref,
     String path,
     DataBlueprint dataBlueprint,
     HeaderContext context,
     EditorMode mode,
   ) {
-    final actions =
-        super.headerActions(ref, path, dataBlueprint, context, mode);
+    final actions = super.headerActions(
+      ref,
+      path,
+      dataBlueprint,
+      context,
+      mode,
+    );
 
     final listBlueprint = dataBlueprint as ListBlueprint;
 
@@ -315,10 +314,7 @@ class _ManualModulesListEditorWidget extends HookConsumerWidget {
                   ],
               ],
             )
-          : NoElements(
-              path: path,
-              onAdd: null,
-            ),
+          : NoElements(path: path, onAdd: null),
     );
   }
 }
@@ -344,10 +340,9 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              letterSpacing: 0.5,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: color, letterSpacing: 0.5),
       ),
     );
   }

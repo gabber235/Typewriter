@@ -9,7 +9,6 @@ import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "../../../../test_utils.dart";
 
 void main() {
-  setupMocks();
 
   group("Graph - drag and drop", () {
     testWidgets("accepts drag and commits snapped grid delta", (tester) async {

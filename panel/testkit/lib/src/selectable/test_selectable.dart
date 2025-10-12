@@ -2,7 +2,6 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:mocktail/mocktail.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -34,13 +33,6 @@ class TestSelectableData extends _$TestSelectableData {
     return !mapEquals(previous, next);
   }
 }
-
-class TestSelectableDataMock extends _$TestSelectableData
-    with
-        // ignore: prefer_mixin
-        Mock
-    implements
-        TestSelectableData {}
 
 @riverpod
 DynamicData? testData(Ref ref, String id) {

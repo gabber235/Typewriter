@@ -1,6 +1,8 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -34,9 +36,14 @@ class PagePage extends HookConsumerWidget {
             name: "page",
             builder: (page) {
               return switch (page.type) {
-                PageType.static || PageType.sequence || PageType.manifest =>
-                  EntryGraph(pageId: pageId, direction: page.type.direction!),
-                PageType.scene => Text("Scene"),
+                PageType.PAGE_TYPE_STATIC ||
+                PageType.PAGE_TYPE_SEQUENCE ||
+                PageType.PAGE_TYPE_MANIFEST => EntryGraph(
+                  pageId: pageId,
+                  direction: page.type.direction!,
+                ),
+                PageType.PAGE_TYPE_SCENE => Text("Scene"),
+                _ => Text("Unknown page type"),
               };
             },
           ),

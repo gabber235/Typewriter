@@ -4,9 +4,9 @@ import "package:faker/faker.dart";
 import "package:flutter_animate/flutter_animate.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/books.dart";
-import "package:typewriter_panel/logic/pages/pages.dart";
-import "package:typewriter_panel/logic/tag.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
@@ -24,13 +24,12 @@ Book generateRandomBook() {
   }
   final title =
       faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase();
-  return Book(
-    id: title,
-    title: title,
-    icon: icon,
-    color: safeColors.randomOrNull()!,
-    tags: tags,
-  );
+  return Book()
+    ..id = title
+    ..title = title
+    ..icon = icon
+    ..color = safeColors.randomElement().toProtoColor()
+    ..tags.addAll(tags);
 }
 
 class BooksMock extends Books {

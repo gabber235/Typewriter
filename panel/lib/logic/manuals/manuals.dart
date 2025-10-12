@@ -1,16 +1,19 @@
 import "dart:async";
+
 import "package:collection/collection.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:pub_semver/pub_semver.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/logic/module_version/module_version.dart";
+import "package:typewriter_panel/generated/models/module.pbenum.dart";
 import "package:typewriter_panel/logic/modules.dart";
+import "package:typewriter_panel/logic/modules/semver_json_converter.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
@@ -75,17 +78,16 @@ sealed class PlatformConstraint with _$PlatformConstraint {
   const PlatformConstraint._();
 
   /// Versions constraint: a list of explicit Versions. An item matches if it is contained in the list.
-  const factory PlatformConstraint.version({
-    @SemverListJsonConverter() required List<Version> versions,
-  }) = PlatformVersionConstraint;
+  const factory PlatformConstraint.version({required List<String> versions}) =
+      PlatformVersionConstraint;
 
   factory PlatformConstraint.fromJson(Map<String, dynamic> json) =>
       _$PlatformConstraintFromJson(json);
 
   String get display => switch (this) {
-        PlatformVersionConstraint(versions: final vs) =>
-          vs.isEmpty ? "any" : vs.map((v) => v.canonicalizedVersion).join(", "),
-      };
+    PlatformVersionConstraint(versions: final vs) =>
+      vs.isEmpty ? "any" : vs.join(", "),
+  };
 }
 
 /// A target platform and its constraints for the manual.
@@ -117,7 +119,7 @@ abstract class ManualModuleReference with _$ManualModuleReference {
     required String moduleId,
     required String name,
     @SemverJsonConverter() required Version version,
-    required ModuleType type,
+    @ModuleTypeConverter() required ModuleType type,
     @Default(<String>[]) List<String> dependencies,
     @Default(<String>[]) List<String> dependents,
   }) = _ManualModuleReference;
@@ -169,19 +171,22 @@ class Manuals extends _$Manuals {
   }
 
   Future<void> upsertManual(Manual manual) async {
-    final current = state.value ?? [];
-    final updated = [
-      for (final m in current)
-        if (m.id == manual.id) manual else m,
-      if (!current.any((m) => m.id == manual.id)) manual,
-    ];
-    state = AsyncData(updated);
+    state.ensureReady();
+
+    // TODO: Implement optimistic update
+
+    // TODO: Call backend to upsert manual.
+    throw UnimplementedError();
   }
 
   Future<ManualOperationResult> changePlatformTargets({
     required String manualId,
     required List<PlatformTarget> proposed,
   }) async {
+    state.ensureReady();
+
+    // TODO: Implement optimistic update
+
     // TODO: Call backend to validate and apply platform constraints.
     throw UnimplementedError();
   }
@@ -190,11 +195,19 @@ class Manuals extends _$Manuals {
     required String manualId,
     required List<ManualModuleReference> proposed,
   }) async {
+    state.ensureReady();
+
+    // TODO: Implement optimistic update
+
     // TODO: Call backend to validate and resolve dependencies for module set.
     throw UnimplementedError();
   }
 
   Future<void> deleteManual(String id) async {
+    state.ensureReady();
+
+    // TODO: Do optimistic update
+
     // TODO: Implement deleteManual
     await Future.delayed(const Duration(seconds: 1));
   }
@@ -247,11 +260,8 @@ class ManualSelector extends SelectableIdentifier {
 
 /// Selectable representation of a manual for the inspector.
 class ManualSelection extends Selectable<ManualSelector> {
-  ManualSelection({
-    required this.ref,
-    required this.id,
-    required this.manual,
-  }) : _data = DynamicData(manual.toJson());
+  ManualSelection({required this.ref, required this.id, required this.manual})
+    : _data = DynamicData(manual.toJson());
 
   @override
   final ManualSelector id;
@@ -278,10 +288,7 @@ class ManualSelection extends Selectable<ManualSelector> {
           type: DataBlueprint.manualModuleReference(
             modifiers: [Modifier.expanded()],
           ),
-          modifiers: [
-            Modifier.readOnly(recursive: true),
-            Modifier.expanded(),
-          ],
+          modifiers: [Modifier.readOnly(recursive: true), Modifier.expanded()],
         ),
         "autoUpdate": DataBlueprint.boolean(),
       },
@@ -293,13 +300,13 @@ class ManualSelection extends Selectable<ManualSelector> {
 
   @override
   Widget? header() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Title(title: manual.name, color: Colors.blue),
-          const SizedBox(height: 8),
-          Identifier(id: manual.id),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Title(title: manual.name, color: Colors.blue),
+      const SizedBox(height: 8),
+      Identifier(id: manual.id),
+    ],
+  );
 
   @override
   dynamic fieldValue(String path) => _data.get(path);

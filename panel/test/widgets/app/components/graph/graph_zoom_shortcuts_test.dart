@@ -31,7 +31,6 @@ Widget _focusBox(FocusNode focusNode) {
 }
 
 void main() {
-  setupMocks();
 
   GraphData dataWithFocusableChild(FocusNode node) {
     return GraphData(

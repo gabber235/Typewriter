@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/graph/graph_data.dart";
 import "package:typewriter_panel/logic/graph/graph_element.dart";
@@ -53,7 +52,6 @@ Future<void> _pumpGraphWithFocus(WidgetTester tester, FocusNode node) async {
 }
 
 void main() {
-  setupMocks();
 
   group("Graph zoom limits", () {
     testWidgets("InteractiveViewer min/max scale are configured and leading", (
@@ -87,7 +85,7 @@ void main() {
         pointer: 11,
       );
       await tester.pump();
-      const double step = 8.0;
+      const step = 8.0;
       for (var i = 0; i < 80; i++) {
         await g1.moveBy(const Offset(-step, 0));
         await g2.moveBy(const Offset(step, 0));
@@ -123,7 +121,7 @@ void main() {
         pointer: 21,
       );
       await tester.pump();
-      const double step = 8.0;
+      const step = 8.0;
       for (var i = 0; i < 80; i++) {
         await g1.moveBy(const Offset(step, 0));
         await g2.moveBy(const Offset(-step, 0));

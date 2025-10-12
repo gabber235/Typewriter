@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:typewriter_panel/logic/pages/entries.dart';
-import 'package:typewriter_panel/widgets/app/components/graph/entry_graph.dart';
+import 'package:typewriter_panel/logic/pages/graph_direction.dart';
 
 class Point<T> {
   final T x, y;

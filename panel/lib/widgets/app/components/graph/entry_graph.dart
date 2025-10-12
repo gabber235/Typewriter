@@ -1,12 +1,11 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/logic/graph/edge_side.dart";
 import "package:typewriter_panel/logic/graph/graph_data.dart";
 import "package:typewriter_panel/logic/graph/graph_edge.dart";
 import "package:typewriter_panel/logic/graph/graph_element.dart";
 import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
-import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/logic/pages/graph_direction.dart";
 
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -19,41 +18,6 @@ import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 
 const entryGraphCellSize = 50.0;
-
-/// Direction for graph layout flow
-enum GraphDirection {
-  leftToRight(EdgeSide.right, EdgeSide.left),
-  rightToLeft(EdgeSide.left, EdgeSide.right),
-  topToBottom(EdgeSide.bottom, EdgeSide.top),
-  bottomToTop(EdgeSide.top, EdgeSide.bottom);
-
-  const GraphDirection(this.sourceSide, this.targetSide);
-
-  final EdgeSide sourceSide;
-  final EdgeSide targetSide;
-
-  T main<T>(T width, T height) => switch (this) {
-    GraphDirection.leftToRight => width,
-    GraphDirection.rightToLeft => width,
-    GraphDirection.topToBottom => height,
-    GraphDirection.bottomToTop => height,
-  };
-  T cross<T>(T width, T height) => switch (this) {
-    GraphDirection.leftToRight => height,
-    GraphDirection.rightToLeft => height,
-    GraphDirection.topToBottom => width,
-    GraphDirection.bottomToTop => width,
-  };
-}
-
-extension PageTypeExtension on PageType {
-  GraphDirection? get direction => switch (this) {
-    PageType.static => GraphDirection.bottomToTop,
-    PageType.sequence => GraphDirection.leftToRight,
-    PageType.manifest => GraphDirection.topToBottom,
-    PageType.scene => null,
-  };
-}
 
 class EntryGraph extends HookConsumerWidget {
   const EntryGraph({
