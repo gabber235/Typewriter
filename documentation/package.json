@@ -28,7 +28,7 @@
     "@docusaurus/theme-mermaid": "3.8.1",
     "@docusaurus/theme-search-algolia": "3.8.1",
     "@floating-ui/react": "^0.27.16",
-    "@fontsource/jetbrains-mono": "5.2.5",
+    "@fontsource/jetbrains-mono": "5.2.8",
     "@iconify/react": "5.2.1",
     "@mdx-js/react": "3.1.0",
     "@rive-app/react-canvas": "^4.23.3",
