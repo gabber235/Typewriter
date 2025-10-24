@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.typewritermc.module-plugin"
-version = "2.0.0"
+version = "2.1.0"
 
 val engineVersion = file("../version.txt").readText().trim().substringBefore("-beta")
 

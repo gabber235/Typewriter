@@ -23,7 +23,10 @@ repositories {
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
     // EntityLib
-    maven("https://maven.evokegames.gg/snapshots")
+    maven {
+        name = "TypewriterMC"
+        url = uri("https://maven.typewritermc.com/beta")
+    }
 }
 
 dependencies {
@@ -34,7 +37,7 @@ dependencies {
 
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("me.tofaa.entitylib:spigot:+598d71f-SNAPSHOT")
+    api("me.tofaa.entitylib:spigot:+7ab1c39-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 

@@ -62,10 +62,10 @@ fun TypewriterModuleConfiguration.validate() {
 class TypewriterEngineConfiguration(
 )
 
-enum class ReleaseChannel(val url: String? = null) {
+enum class ReleaseChannel(val url: String) {
     RELEASE("https://maven.typewritermc.com/releases"),
     BETA("https://maven.typewritermc.com/beta"),
-    NONE
+    NONE("https://maven.typewritermc.com/beta")
 }
 
 private fun TypewriterEngineConfiguration.validate() {

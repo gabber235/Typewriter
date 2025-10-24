@@ -52,18 +52,13 @@ class TypewriterModulePlugin : Plugin<Project> {
         repositories.maven {
             it.setUrl("https://repo.codemc.io/repository/maven-snapshots/")
         }
-        // Add EntityLib repository
-        repositories.maven {
-            it.setUrl("https://maven.evokegames.gg/snapshots")
-        }
+
 
         // Configure dependencies for extensions
         extension.extension?.let { extension ->
             // Add Typewriter repository
-            extension.channel.url?.let { url ->
-                repositories.maven {
-                    it.setUrl(url)
-                }
+            repositories.maven {
+                it.setUrl(extension.channel.url)
             }
             val engineVersion = extension.engineVersion.substringBefore("-beta")
             // Add Typewriter core dependency
