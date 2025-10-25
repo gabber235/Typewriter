@@ -23,7 +23,7 @@ object BStatsMetrics {
         }
 
         metrics.addCustomChart(AdvancedPie("extensions") {
-            get<ExtensionLoader>(ExtensionLoader::class.java).extensions.associate { it.extension.name to 1 }.toMap()
+            get<ExtensionLoader>(ExtensionLoader::class.java).loadedExtensions.associate { it.info.name to 1 }.toMap()
         })
 
         metrics.addCustomChart(AdvancedPie("entries") {

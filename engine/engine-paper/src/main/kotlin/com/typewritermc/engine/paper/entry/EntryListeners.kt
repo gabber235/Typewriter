@@ -45,7 +45,7 @@ class EntryListeners : KoinComponent, Reloadable {
      * Registers all the entry listeners.
      */
     override suspend fun load() {
-        val entryListeners = extensionLoader.extensions.flatMap { it.entryListeners }
+        val entryListeners = extensionLoader.loadedExtensions.flatMap { it.entryListeners }
 
         val activeEventEntries = Query.find<EventEntry>().map { it::class }.distinct()
 
