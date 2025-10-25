@@ -5,6 +5,8 @@ import com.github.retrooper.packetevents.event.PacketListenerAbstract
 import com.github.retrooper.packetevents.event.PacketListenerPriority
 import com.github.retrooper.packetevents.event.PacketSendEvent
 import com.github.retrooper.packetevents.protocol.chat.message.ChatMessage_v1_19_3
+import com.github.retrooper.packetevents.protocol.nbt.NBTLimiter
+import com.github.retrooper.packetevents.protocol.nbt.codec.NBTCodec
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerChatMessage
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDisguisedChat
@@ -16,6 +18,7 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.plainText
 import com.typewritermc.engine.paper.utils.server
+import io.netty.buffer.ByteBuf
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TranslatableComponent
@@ -41,6 +44,8 @@ private val darkenLimit by snippet(
     "The amount of messages displayed in the chat history during a dialogue"
 )
 private val spacing by snippet("chat.spacing", 3, "The amount of padding between the dialogue and the chat history")
+
+private const val NBT_SIZE_LIMIT = 870_400 // ~850KB (out of 1MB limit)
 
 /**
  * Token-based registry to prevent duplicate message processing during chat history resends.
@@ -99,13 +104,14 @@ class ChatHistoryHandler :
 
     private val histories = mutableMapOf<UUID, ChatHistory>()
 
-    // When the serer sends a message to the player
+    // When the server sends a message to the player
     override fun onPacketSend(event: PacketSendEvent?) {
         try {
             if (event == null) return
             val message = findMessage(event) ?: return
             val component = message.message
             val history = getHistory(event.user.uuid)
+
             if (component is TextComponent && component.content().startsWith("no-index")) {
                 history.allowedMessageThrough()
                 return
@@ -116,7 +122,8 @@ class ChatHistoryHandler :
             }
 
             if (component.shouldSaveMessage()) {
-                history.addMessage(message)
+                val nbtSize = measurePacketNBTSize(event)
+                history.addMessage(message.withEstimatedSize(nbtSize))
             }
 
             if (history.shouldBlockMessage()) {
@@ -124,6 +131,39 @@ class ChatHistoryHandler :
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+
+    // NBTLimiter is marked @NonExtendable, but we need an anonymous
+    // implementation to count bytes. Kotlin doesn't support anonymous
+    // classes without implementing the interface directly.
+    @Suppress("NonExtendableApiUsage")
+    private fun measurePacketNBTSize(event: PacketSendEvent): Int {
+        var totalBytes = 0
+        val measuringLimiter = object : NBTLimiter {
+            override fun increment(amount: Int) {
+                totalBytes += amount
+            }
+
+            override fun checkReadability(length: Int) {}
+            override fun enterDepth() {}
+            override fun exitDepth() {}
+        }
+
+        try {
+            val buffer = event.byteBuf as ByteBuf
+            buffer.markReaderIndex()
+            NBTCodec.readNBTFromBuffer(buffer, event.serverVersion, measuringLimiter)
+
+            return totalBytes
+        } catch (_: Exception) {
+            return 0
+        } finally {
+            try {
+                (event.byteBuf as ByteBuf).resetReaderIndex()
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -214,6 +254,8 @@ class ChatHistory {
 
     fun shouldBlockMessage(): Boolean = blocking
 
+    // Because addMessage is internal and is called after findMessage,
+    // it's never the case that we will get an oversized message
     internal fun addMessage(message: Message) {
         message.onAddedToHistory(blocking)
         if (blocking) {
@@ -242,17 +284,7 @@ class ChatHistory {
     fun resendMessages(player: Player, clear: Boolean = true) {
         when (val status = blockingState) {
             is BlockingStatus.FullBlocking -> {
-                var msg: Message = Message.TextMessage(Component.text(clearMessage()))
-                for (message in messages) {
-                    if (message.canMerge) {
-                        msg = msg.merge(message)
-                        continue
-                    }
-                    msg.send(player)
-                    message.send(player)
-                    msg = Message.Empty
-                }
-                msg.send(player)
+                resendMessagesWithSizeCheck(player, clear)
             }
 
             is BlockingStatus.PartialBlocking -> {
@@ -260,6 +292,40 @@ class ChatHistory {
             }
         }
         blockingState = BlockingStatus.PartialBlocking(0)
+    }
+
+    private fun resendMessagesWithSizeCheck(player: Player, clear: Boolean) {
+        var currentBatch = if (clear) {
+            Message.TextMessage(Component.text(clearMessage()))
+        } else {
+            Message.Empty
+        }
+
+        var currentSize = currentBatch.estimatedNBTSize
+
+        for (message in messages) {
+            if (message.canMerge) {
+                val messageSize = message.estimatedNBTSize
+
+                if (currentSize + messageSize > NBT_SIZE_LIMIT) {
+                    currentBatch.send(player)
+                    currentBatch = message
+                    currentSize = messageSize
+                } else {
+                    currentBatch = currentBatch.merge(message)
+                    currentSize += messageSize
+                }
+            } else {
+                currentBatch.send(player)
+                message.send(player)
+                currentBatch = Message.Empty
+                currentSize = 0
+            }
+        }
+
+        if (currentBatch != Message.Empty) {
+            currentBatch.send(player)
+        }
     }
 
     fun composeDarkMessage(message: Component, clear: Boolean = true): Component {
@@ -273,6 +339,10 @@ class ChatHistory {
         return msg.append(message)
     }
 
+    @Deprecated(
+        "If you use this method, report it on the Discord server; otherwise, it will be removed in future releases!",
+        level = DeprecationLevel.ERROR
+    )
     fun composeEmptyMessage(message: Component, clear: Boolean = true): Component {
         // Start with "no-index" to prevent the server from adding the message to the history
         var msg = Component.text("no-index")
@@ -300,13 +370,19 @@ internal interface Message : KoinComponent {
     val darkenMessage: Component
     val canMerge: Boolean
     val canDelete: Boolean
+    val estimatedNBTSize: Int
 
     fun send(player: Player)
+
+    fun withEstimatedSize(size: Int): Message
 
     fun merge(other: Message): Message {
         require(canMerge) { "Cannot merge messages that cannot be merged." }
         require(other.canMerge) { "Cannot merge with another message that cannot be merged." }
-        return TextMessage(message.append(Component.text("\n")).append(other.message))
+        return TextMessage(
+            message.append(Component.text("\n")).append(other.message),
+            estimatedNBTSize + other.estimatedNBTSize
+        )
     }
 
     fun onAddedToHistory(isBlocking: Boolean) {}
@@ -316,12 +392,18 @@ internal interface Message : KoinComponent {
         override val darkenMessage: Component = Component.empty()
         override val canMerge: Boolean = true
         override val canDelete: Boolean = true
+        override val estimatedNBTSize: Int = 0
 
         override fun send(player: Player) {
         }
+
+        override fun withEstimatedSize(size: Int): Message = this
     }
 
-    data class TextMessage(override val message: Component) : Message {
+    data class TextMessage(
+        override val message: Component,
+        override val estimatedNBTSize: Int = 0
+    ) : Message {
         private val resendTokenRegistry: ResendTokenRegistry by inject()
         override val canMerge: Boolean = true
         override val canDelete: Boolean = true
@@ -334,11 +416,14 @@ internal interface Message : KoinComponent {
             resendTokenRegistry.issue(player.uniqueId, message)
             player.sendMessage(message)
         }
+
+        override fun withEstimatedSize(size: Int): Message = copy(estimatedNBTSize = size)
     }
 
     data class PlayerMessage(
         override val message: Component,
-        var packet: WrapperPlayServerChatMessage?
+        var packet: WrapperPlayServerChatMessage?,
+        override val estimatedNBTSize: Int = 0
     ) : Message {
         private val resendTokenRegistry: ResendTokenRegistry by inject()
         override val canMerge: Boolean = packet == null
@@ -363,5 +448,7 @@ internal interface Message : KoinComponent {
                 player.sendMessage(message)
             }
         }
+
+        override fun withEstimatedSize(size: Int): Message = copy(estimatedNBTSize = size)
     }
 }
