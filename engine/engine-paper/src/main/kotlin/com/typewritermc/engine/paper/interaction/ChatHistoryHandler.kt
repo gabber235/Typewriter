@@ -255,7 +255,9 @@ class ChatHistory {
     fun shouldBlockMessage(): Boolean = blocking
 
     // Because addMessage is internal and is called after findMessage,
-    // it's never the case that we will get an oversized message
+    // individual messages passed here will not exceed NBT_SIZE_LIMIT.
+    // However, when messages are merged into batches elsewhere, those batches might exceed the limit,
+    // which is why batching logic exists outside this function.
     internal fun addMessage(message: Message) {
         message.onAddedToHistory(blocking)
         if (blocking) {
