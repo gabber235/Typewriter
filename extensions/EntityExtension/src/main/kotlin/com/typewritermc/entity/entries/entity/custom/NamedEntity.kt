@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.entries.ref
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.entity.*
@@ -18,7 +19,7 @@ import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstrain
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
 import com.typewritermc.entity.entries.data.minecraft.display.text.BackgroundColorProperty
 import com.typewritermc.entity.entries.entity.minecraft.TextDisplayEntity
-import me.tofaa.entitylib.meta.display.AbstractDisplayMeta
+import me.tofaa.entitylib.meta.display.AbstractDisplayMeta.BillboardConstraints
 import org.bukkit.entity.Player
 
 
@@ -49,6 +50,8 @@ class NamedEntityDefinition(
     override val id: String = "",
     override val name: String = "",
     val baseEntity: Ref<EntityDefinitionEntry> = emptyRef(),
+    @Default("\"CENTER\"")
+    val billboardConstraint: BillboardConstraints = BillboardConstraints.CENTER,
 ) : SimpleEntityDefinition {
     override val displayName: Var<String> get() = baseEntity.get()?.displayName ?: ConstVar("")
     override val sound: Var<Sound> get() = baseEntity.get()?.sound ?: ConstVar(Sound.EMPTY)
@@ -57,7 +60,7 @@ class NamedEntityDefinition(
     override fun create(player: Player): FakeEntity {
         val entity = baseEntity.get()?.create(player)
             ?: throw IllegalStateException("A base entity must be specified for entry $name ($id)")
-        return NamedEntity(player, displayName, entity, ref())
+        return NamedEntity(player, displayName, entity, ref(), billboardConstraint)
     }
 }
 
@@ -66,6 +69,7 @@ class NamedEntity(
     private var displayName: Var<String>,
     private val baseEntity: FakeEntity,
     definition: Ref<out EntityDefinitionEntry>,
+    billboardConstraint: BillboardConstraints = BillboardConstraints.CENTER,
 ) : FakeEntity(player) {
     private val hologram = TextDisplayEntity(player)
     private val indicatorEntity = InteractionIndicatorEntity(player, definition)
@@ -81,12 +85,12 @@ class NamedEntity(
         hologram.consumeProperties(
             LinesProperty(hologramText),
             TranslationProperty(Vector(y = namePlateOffset)),
-            BillboardConstraintProperty(AbstractDisplayMeta.BillboardConstraints.CENTER),
+            BillboardConstraintProperty(billboardConstraint),
             BackgroundColorProperty(Color.fromHex(namePlateColor))
         )
         indicatorEntity.consumeProperties(
             TranslationProperty(calculateIndicatorOffset(hologramText)),
-            BillboardConstraintProperty(AbstractDisplayMeta.BillboardConstraints.CENTER),
+            BillboardConstraintProperty(billboardConstraint),
             BackgroundColorProperty(Color.fromHex(namePlateColor))
         )
     }

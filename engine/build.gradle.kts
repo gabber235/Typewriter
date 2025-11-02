@@ -3,7 +3,7 @@ plugins {
     kotlin("jvm") version "2.2.10"
     id("java-library")
     `maven-publish`
-    id("io.github.goooler.shadow") version "8.1.7" apply false
+    id("io.github.goooler.shadow") version "8.1.8" apply false
 }
 
 group = "com.typewritermc"
@@ -38,14 +38,14 @@ subprojects {
     version = rootProject.version
 
     dependencies {
-        api("io.insert-koin:koin-core:4.0.4")
-        compileOnly("com.google.code.gson:gson:2.13.1")
+        api("io.insert-koin:koin-core:4.1.1")
+        compileOnly("com.google.code.gson:gson:2.13.2")
 
         compileOnlyApi(kotlin("stdlib"))
         compileOnlyApi(kotlin("reflect"))
         compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
-        val kotestVersion = "6.0.0.M17"
+        val kotestVersion = "6.0.4"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
         testImplementation("io.kotest:kotest-framework-engine:$kotestVersion")
         testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")

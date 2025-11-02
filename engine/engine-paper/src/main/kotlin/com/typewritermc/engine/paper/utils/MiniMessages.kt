@@ -45,6 +45,10 @@ private val mm: MiniMessage by lazy {
         )
     }
 
+    if (serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_9)) {
+        resolvers.addAll(listOf(StandardTags.sequentialHead(), StandardTags.sprite()))
+    }
+
     MiniMessage.builder()
         .tags(
             TagResolver.builder()

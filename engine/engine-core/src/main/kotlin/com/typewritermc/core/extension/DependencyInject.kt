@@ -25,7 +25,6 @@ import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.binds
 import org.koin.dsl.module
-import java.util.logging.Logger
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotations
@@ -40,7 +39,7 @@ class DependencyInject : KoinComponent, Reloadable {
 
     override suspend fun load() {
         module = module {
-            extensionLoader.extensions.flatMap { it.dependencyInjections }
+            extensionLoader.loadedExtensions.flatMap { it.dependencyInjections }
                 .map { it to extensionLoader.loadClass(it.className) }
                 .forEach { (blueprint, clazz) ->
                     when (blueprint) {

@@ -42,12 +42,12 @@ jobs:
       - name: Build Engine
         uses: ./.github/actions/build-engine
 
-#  ----------------------------------------------------------------------------------------------------
+      #  ----------------------------------------------------------------------------------------------------
       - name: Test Extensions
         working-directory: ./extensions
         run: ./gradlew test --scan
 
-#  ----------------------------------------------------------------------------------------------------
+      #  ----------------------------------------------------------------------------------------------------
       - name: Publish Engine to Beta Maven Repository
         working-directory: ./engine
         env:
@@ -69,13 +69,13 @@ jobs:
           ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
         run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
 
-#  ----------------------------------------------------------------------------------------------------
+      #  ----------------------------------------------------------------------------------------------------
       # Has to be after the publish, because it needs to delete the slim jars and only keep the shadowed jars for the modrinth upload
       - name: Build Extensions
         working-directory: ./extensions
         run: ./gradlew buildRelease --scan
 
-#  ----------------------------------------------------------------------------------------------------
+      #  ----------------------------------------------------------------------------------------------------
       - name: Publish Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
         id: publish
@@ -92,10 +92,11 @@ jobs:
           loaders: |
             paper
           game-versions: |
-            [1.21.3, 1.21.8]
+            [1.21.3, 1.21.10]
           dependencies: |
             packetevents(required)
-
+            placeholderapi(recommended)
+            geyser(optional)
       - name: Publish Hangar
         working-directory: ./engine
         continue-on-error: true
@@ -126,7 +127,7 @@ jobs:
       - name: Notify Winston
         uses: fjogeleit/http-request-action@v1
         with:
-          url: 'https://winston-discord-bot.fly.dev/publishbeta'
-          method: 'GET'
+          url: "https://winston-discord-bot.fly.dev/publishbeta"
+          method: "GET"
           timeout: 60000
           customHeaders: '{"X-Signature": "${{ secrets.WINSTON_SIGNATURE }}"}'

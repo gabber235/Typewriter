@@ -23,18 +23,21 @@ repositories {
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
     // EntityLib
-    maven("https://maven.evokegames.gg/snapshots")
+    maven {
+        name = "TypewriterMC"
+        url = uri("https://maven.typewritermc.com/external")
+    }
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnlyApi("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("me.tofaa.entitylib:spigot:+598d71f-SNAPSHOT")
+    api("me.tofaa.entitylib:spigot:+0e5324e-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 
@@ -44,18 +47,18 @@ dependencies {
     compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
     compileOnlyApi("org.bstats:bstats-bukkit:3.1.0")
 
-    val adventureVersion = "4.22.0"
+    val adventureVersion = "4.25.0"
     compileOnlyApi("net.kyori:adventure-api:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-minimessage:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-plain:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.9.4")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.9.4")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.10.0")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.10.0")
 
     compileOnly("me.clip:placeholderapi:2.11.6")
-    compileOnlyApi("org.geysermc.geyser:api:2.8.2-SNAPSHOT")
+    compileOnlyApi("org.geysermc.geyser:api:2.8.3-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
 
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.46.3")

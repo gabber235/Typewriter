@@ -54,8 +54,9 @@ class TypewriterModulePlugin : Plugin<Project> {
         }
         // Add EntityLib repository
         repositories.maven {
-            it.setUrl("https://maven.evokegames.gg/snapshots")
+            it.setUrl("https://maven.typewritermc.com/external/")
         }
+
 
         // Configure dependencies for extensions
         extension.extension?.let { extension ->

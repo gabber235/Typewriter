@@ -14,7 +14,11 @@ import com.typewritermc.core.books.pages.PageType
 import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Page
 import com.typewritermc.core.entries.Query
+import com.typewritermc.loader.Extension
+import com.typewritermc.loader.ExtensionLoader
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 
@@ -94,6 +98,69 @@ class PageArgumentType(
         }.forEach {
             builder.suggest(it.name)
         }
+        return builder.buildFuture()
+    }
+}
+
+inline fun <S, reified E : Extension> DslCommandTree<S, *>.extension(
+    name: String,
+    noinline block: ArgumentBlock<S, E> = {},
+) = argument(name, ExtensionArgumentType(E::class), E::class, block)
+
+fun <S, E : Extension> DslCommandTree<S, *>.extension(
+    name: String,
+    klass: KClass<E>,
+    block: ArgumentBlock<S, E> = {},
+) = argument(name, ExtensionArgumentType(klass), klass, block)
+
+class ExtensionArgumentType<E : Extension>(
+    private val klass: KClass<E>,
+) : CustomArgumentType.Converted<E, String>, KoinComponent {
+    private val extensionLoader by inject<ExtensionLoader>()
+
+    override fun convert(nativeType: String): E {
+        val possibleExtensions = if (nativeType.contains(":")) {
+            extensionLoader.extensions.filter { it.info?.key.equals(nativeType, true) }
+        } else {
+            extensionLoader.extensions.filter { it.info?.name.equals(nativeType, true) }
+        }
+
+        if (possibleExtensions.isEmpty()) {
+            throw SimpleCommandExceptionType(LiteralMessage("Could not find extension '$nativeType'")).create()
+        }
+
+        val possibleTypedExtensions = possibleExtensions.filterIsInstance(klass.java)
+
+        if (possibleTypedExtensions.isEmpty()) {
+            throw SimpleCommandExceptionType(LiteralMessage("Could not find extension '$nativeType' of type ${klass.qualifiedName}")).create()
+        }
+
+        if (possibleTypedExtensions.size > 1) {
+            throw SimpleCommandExceptionType(LiteralMessage("Found multiple extensions '$nativeType', how the hell did you manage to do this?")).create()
+        }
+
+        return possibleTypedExtensions.first()
+    }
+
+    override fun getNativeType(): ArgumentType<String> = StringArgumentType.greedyString()
+
+    override fun <S : Any> listSuggestions(
+        context: CommandContext<S>,
+        builder: SuggestionsBuilder
+    ): CompletableFuture<Suggestions> {
+        val input = builder.remaining
+        extensionLoader.extensions.filter { extension ->
+            extension.info?.let { info ->
+                listOf(
+                    info.name,
+                    info.namespace,
+                    "${info.namespace}:${info.name}"
+                ).any { it.startsWith(input) }
+            } ?: false
+        }.forEach {
+            builder.suggest("${it.info!!.namespace}:${it.info!!.name}")
+        }
+
         return builder.buildFuture()
     }
 }
