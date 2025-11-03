@@ -12,7 +12,8 @@ part of 'auth.dart';
 @ProviderFor(Auth)
 const authProvider = AuthProvider._();
 
-final class AuthProvider extends $NotifierProvider<Auth, LogtoClient> {
+final class AuthProvider
+    extends $AsyncNotifierProvider<Auth, OidcUserManager?> {
   const AuthProvider._()
     : super(
         from: null,
@@ -30,30 +31,23 @@ final class AuthProvider extends $NotifierProvider<Auth, LogtoClient> {
   @$internal
   @override
   Auth create() => Auth();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(LogtoClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<LogtoClient>(value),
-    );
-  }
 }
 
-String _$authHash() => r'7f02474a574ae333e6ce19dbf1c0d2abb102829d';
+String _$authHash() => r'96a2e1be8d0b85245fa34ea23307fc2a4ad1e015';
 
-abstract class _$Auth extends $Notifier<LogtoClient> {
-  LogtoClient build();
+abstract class _$Auth extends $AsyncNotifier<OidcUserManager?> {
+  FutureOr<OidcUserManager?> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<LogtoClient, LogtoClient>;
+    final ref =
+        this.ref as $Ref<AsyncValue<OidcUserManager?>, OidcUserManager?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<LogtoClient, LogtoClient>,
-              LogtoClient,
+              AnyNotifier<AsyncValue<OidcUserManager?>, OidcUserManager?>,
+              AsyncValue<OidcUserManager?>,
               Object?,
               Object?
             >;
@@ -92,7 +86,7 @@ final class IsAuthenticatedProvider
   }
 }
 
-String _$isAuthenticatedHash() => r'a122de67d3dbd6bae712235e8a57c8ff7399edf8';
+String _$isAuthenticatedHash() => r'01f00b31ef3086bf1de4f7f7c4bdc8967f4fa199';
 
 @ProviderFor(userId)
 const userIdProvider = UserIdProvider._();
@@ -164,21 +158,15 @@ final class AccessTokenProvider
   }
 }
 
-String _$accessTokenHash() => r'9c7cde866e768bda04a70eafbbe8ab76408843ac';
+String _$accessTokenHash() => r'2e8a4fc614c401c2dbb3bee3fc6fb6444afcd016';
 
 @ProviderFor(authUserInfo)
 const authUserInfoProvider = AuthUserInfoProvider._();
 
 final class AuthUserInfoProvider
     extends
-        $FunctionalProvider<
-          AsyncValue<LogtoUserInfoResponse>,
-          LogtoUserInfoResponse,
-          FutureOr<LogtoUserInfoResponse>
-        >
-    with
-        $FutureModifier<LogtoUserInfoResponse>,
-        $FutureProvider<LogtoUserInfoResponse> {
+        $FunctionalProvider<AsyncValue<UserInfo>, UserInfo, FutureOr<UserInfo>>
+    with $FutureModifier<UserInfo>, $FutureProvider<UserInfo> {
   const AuthUserInfoProvider._()
     : super(
         from: null,
@@ -195,14 +183,13 @@ final class AuthUserInfoProvider
 
   @$internal
   @override
-  $FutureProviderElement<LogtoUserInfoResponse> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<UserInfo> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
 
   @override
-  FutureOr<LogtoUserInfoResponse> create(Ref ref) {
+  FutureOr<UserInfo> create(Ref ref) {
     return authUserInfo(ref);
   }
 }
 
-String _$authUserInfoHash() => r'6ecf0b44884d7ef0a2a26b013e8c964714e9f24d';
+String _$authUserInfoHash() => r'0414a3fbc9fe16a14ce417ba35a43fa2a7fc5d56';

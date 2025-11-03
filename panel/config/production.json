@@ -3,9 +3,12 @@
   "NATS_DESKTOP_URL": "tls://nats.typewritermc.com:4222",
   "NATS_SENTINEL_JWT": "eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJqdGkiOiJUWVFNSVhCUUJNSEhOUzdWTU1RRk1OSlhBVENWS1RJRUJGTlVEQzRWNVpQUTY2NVgzMkRBIiwiaWF0IjoxNzQ1NzI4NjQ4LCJpc3MiOiJBQlU2SFRaTEpETUU3TFBHU0xBVkdNSjJXS0Y1TUlOQzZKTlRIR0JLMlFKRzJRNjVKUkU0VEFOUSIsIm5hbWUiOiJzZW50aW5lbCIsInN1YiI6IlVDRkpZSVozVkdNSzVJSElJUldPNlJIRU9ISVhJVE1QNEhZNERHSEJTMk8yRkU0SUI2TlM2RjNLIiwibmF0cyI6eyJwdWIiOnsiZGVueSI6WyJcdTAwM2UiXX0sInN1YiI6eyJkZW55IjpbIlx1MDAzZSJdfSwic3VicyI6LTEsImRhdGEiOi0xLCJwYXlsb2FkIjotMSwiaXNzdWVyX2FjY291bnQiOiJBQ05BWVZJQVZNQ0FVU0c1NUg2WUhXT0dRVlUzQUhNRVoyNFBYNVVPMkEyNkYzTUZBSVFSM0dGSyIsInR5cGUiOiJ1c2VyIiwidmVyc2lvbiI6Mn19.QYjsUBqshe5G7FNuDGg1ouxevrJ3sHAqJj0G8VCeVUhJLH3tl2v6nuS8UtICuz5g-BlId2Tg_wAjumQW5tHFAA",
   "NATS_SENTINEL_SEED": "SUAG6J2O4ULGEZBKLVFQIDHFIZWR5PVEAROIQTE5VISCE3VCMFI2AHS25U",
-  "AUTH_ENDPOINT": "https://auth.typewritermc.com/",
-  "AUTH_APP_ID": "xqytbpo52htzlkhoh0wt3",
-  "PANEL_REDIRECT_URI": "https://panel.typewritermc.com/callback.html",
-  "PANEL_RESOURCE_URL": "https://panel.typewritermc.com",
+  "AUTH_ISSUER": "https://auth.typewritermc.com/",
+  "AUTH_CLIENT_ID": "typewriter-panel",
+  "AUTH_SCOPES": "openid profile email entitlements discord",
+  "AUTH_REDIRECT_URI": "https://panel.typewritermc.com/redirect.html",
+  "AUTH_POST_LOGOUT_REDIRECT_URI": "https://panel.typewritermc.com/redirect.html",
+  "AUTH_FRONT_CHANNEL_LOGOUT_URI": "https://panel.typewritermc.com/redirect.html",
+  "AUTH_DISCOVERY_DOCUMENT_URI": "https://auth.typewritermc.com/application/o/typewriter-panel/.well-known/openid-configuration",
   "DOCS_BASE_URL": "https://docs.typewritermc.com"
 }

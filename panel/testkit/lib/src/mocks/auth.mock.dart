@@ -1,19 +1,17 @@
-import "package:logto_dart_sdk/logto_client.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:hooks_riverpod/misc.dart" show Override;
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 
-final mockUserInfo = LogtoUserInfoResponse(
+final mockUserInfo = const UserInfo(
   sub: "1",
   name: "John Doe",
   email: "john.doe@example.com",
-  roles: ["admin"],
   picture: "$userIconUrl&seed=1",
   emailVerified: true,
 );
 
-List<Override> authProviderOverrides({LogtoUserInfoResponse? userInfo}) => [
+List<Override> authProviderOverrides({UserInfo? userInfo}) => [
       authUserInfoProvider.overrideWithValue(
         AsyncValue.data(userInfo ?? mockUserInfo),
       ),

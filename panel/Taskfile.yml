@@ -1,18 +1,18 @@
 version: "3"
 
+silent: true
+
 vars:
   VALID_PLATFORMS: ios android macos windows linux web
 
 tasks:
   default:
     desc: Show available tasks
-    silent: true
     cmds:
       - task --list
 
   configs:
     desc: List available config files
-    silent: true
     cmds:
       - |
         echo "Available config files:"
@@ -22,17 +22,14 @@ tasks:
           fi
         done
 
-  run:*:*:
-    desc: Run app for platform with config (e.g., task run:ios:local)
-    silent: true
-    vars:
-      PLATFORM: "{{index .MATCH 0}}"
-      CONFIG: "{{index .MATCH 1}}"
+  _run:
+    desc: Internal run task (use panel:run or widgetbook:run instead)
+    env:
+      APP: "{{.APP}}"
+      PLATFORM: "{{.PLATFORM}}"
+      CONFIG: "{{.CONFIG}}"
     cmds:
       - |
-        PLATFORM="{{.PLATFORM}}"
-        CONFIG="{{.CONFIG}}"
-        CONFIG_FILE="config/$CONFIG.json"
         VALID_PLATFORMS="{{.VALID_PLATFORMS}}"
 
         if ! echo "$VALID_PLATFORMS" | grep -qw "$PLATFORM"; then
@@ -40,41 +37,44 @@ tasks:
           exit 1
         fi
 
+        CONFIG_FILE="config/$CONFIG.json"
         if [ ! -f "$CONFIG_FILE" ]; then
           echo "Error: Config file $CONFIG_FILE not found" >&2
           exit 1
         fi
 
-        DART_DEFINES=$(jq -r 'to_entries | map("--dart-define=\(.key)=\(.value)") | join(" ")' "$CONFIG_FILE")
+        [ "$APP" = "widgetbook" ] && TARGET_FLAG="-t widgetbook/lib/main.dart" || TARGET_FLAG=""
 
+        DEVICE_FLAG="-d"
         if [ "$PLATFORM" = "web" ]; then
-          PANEL_REDIRECT_URI=$(jq -r '.PANEL_REDIRECT_URI // "http://localhost:2350/callback.html"' "$CONFIG_FILE")
-          PANEL_PORT=$(echo "$PANEL_REDIRECT_URI" | sed -n 's|.*://[^:]*:\([0-9]*\).*|\1|p')
-          if [ -z "$PANEL_PORT" ]; then
-            if echo "$PANEL_REDIRECT_URI" | grep -q "^https"; then
-              PANEL_PORT="443"
-            else
-              PANEL_PORT="80"
+          DEVICE_FLAG="-d chrome"
+          if [ "$APP" = "panel" ]; then
+            PANEL_REDIRECT_URI=$(jq -r '.PANEL_REDIRECT_URI // "http://localhost:2350/callback.html"' "$CONFIG_FILE")
+            PANEL_PORT=$(echo "$PANEL_REDIRECT_URI" | sed -n 's|.*://[^:]*:\([0-9]*\).*|\1|p')
+            if [ -z "$PANEL_PORT" ]; then
+              echo "$PANEL_REDIRECT_URI" | grep -q "^https" && PANEL_PORT="443" || PANEL_PORT="80"
             fi
+            DEVICE_FLAG="-d chrome --web-port=$PANEL_PORT"
           fi
-          FLUTTER_CMD="flutter run -d chrome --web-port=$PANEL_PORT"
         else
-          FLUTTER_CMD="flutter run -d $PLATFORM"
+          DEVICE_FLAG="-d $PLATFORM"
         fi
 
-        $FLUTTER_CMD $DART_DEFINES
+        FLUTTER_CMD="flutter run"
+        [ -n "$TARGET_FLAG" ] && FLUTTER_CMD="$FLUTTER_CMD $TARGET_FLAG"
+        FLUTTER_CMD="$FLUTTER_CMD $DEVICE_FLAG"
+        FLUTTER_CMD="$FLUTTER_CMD --dart-define-from-file=$CONFIG_FILE"
 
-  build:*:*:
-    desc: Build app for platform with config (e.g., task build:android:production)
-    silent: true
-    vars:
-      PLATFORM: "{{index .MATCH 0}}"
-      CONFIG: "{{index .MATCH 1}}"
+        $FLUTTER_CMD
+
+  _build:
+    desc: Internal build task (use panel:build or widgetbook:build instead)
+    env:
+      APP: "{{.APP}}"
+      PLATFORM: "{{.PLATFORM}}"
+      CONFIG: "{{.CONFIG}}"
     cmds:
       - |
-        PLATFORM="{{.PLATFORM}}"
-        CONFIG="{{.CONFIG}}"
-        CONFIG_FILE="config/$CONFIG.json"
         VALID_PLATFORMS="{{.VALID_PLATFORMS}}"
 
         if ! echo "$VALID_PLATFORMS" | grep -qw "$PLATFORM"; then
@@ -82,32 +82,158 @@ tasks:
           exit 1
         fi
 
+        CONFIG_FILE="config/$CONFIG.json"
         if [ ! -f "$CONFIG_FILE" ]; then
           echo "Error: Config file $CONFIG_FILE not found" >&2
           exit 1
         fi
 
-        DART_DEFINES=$(jq -r 'to_entries | map("--dart-define=\(.key)=\(.value)") | join(" ")' "$CONFIG_FILE")
+        [ "$APP" = "widgetbook" ] && TARGET_FLAG="-t widgetbook/lib/main.dart" || TARGET_FLAG=""
 
         case "$PLATFORM" in
-          ios)
-            FLUTTER_CMD="flutter build ios --release"
-            ;;
-          android)
-            FLUTTER_CMD="flutter build apk --release"
-            ;;
-          macos)
-            FLUTTER_CMD="flutter build macos --release"
-            ;;
-          windows)
-            FLUTTER_CMD="flutter build windows --release"
-            ;;
-          linux)
-            FLUTTER_CMD="flutter build linux --release"
-            ;;
-          web)
-            FLUTTER_CMD="flutter build web --release"
-            ;;
+          ios) BUILD_TYPE="ios" ;;
+          android) BUILD_TYPE="apk" ;;
+          macos) BUILD_TYPE="macos" ;;
+          windows) BUILD_TYPE="windows" ;;
+          linux) BUILD_TYPE="linux" ;;
+          web) BUILD_TYPE="web" ;;
         esac
 
-        $FLUTTER_CMD $DART_DEFINES
+        FLUTTER_CMD="flutter build $BUILD_TYPE"
+        [ -n "$TARGET_FLAG" ] && FLUTTER_CMD="$FLUTTER_CMD $TARGET_FLAG"
+        FLUTTER_CMD="$FLUTTER_CMD --release"
+        FLUTTER_CMD="$FLUTTER_CMD --dart-define-from-file=$CONFIG_FILE"
+
+        $FLUTTER_CMD
+
+  panel:run:*:*:
+    desc: Run panel app for platform with config (e.g., task panel:run:ios:local)
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - task: _run
+        vars:
+          APP: panel
+          PLATFORM: "{{.PLATFORM}}"
+          CONFIG: "{{.CONFIG}}"
+
+  panel:build:*:*:
+    desc: Build panel app for platform with config (e.g., task panel:build:android:production)
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - task: _build
+        vars:
+          APP: panel
+          PLATFORM: "{{.PLATFORM}}"
+          CONFIG: "{{.CONFIG}}"
+
+  widgetbook:run:*:*:
+    desc: Run widgetbook app for platform with config (e.g., task widgetbook:run:macos:local)
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - task: _run
+        vars:
+          APP: widgetbook
+          PLATFORM: "{{.PLATFORM}}"
+          CONFIG: "{{.CONFIG}}"
+
+  widgetbook:build:*:*:
+    desc: Build widgetbook app for platform with config (e.g., task widgetbook:build:web:local)
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - task: _build
+        vars:
+          APP: widgetbook
+          PLATFORM: "{{.PLATFORM}}"
+          CONFIG: "{{.CONFIG}}"
+
+  run:*:*:
+    desc: Run panel app for platform with config (e.g., task run:ios:local) - alias for panel:run
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - task: _run
+        vars:
+          APP: panel
+          PLATFORM: "{{.PLATFORM}}"
+          CONFIG: "{{.CONFIG}}"
+
+  build:*:*:
+    desc: Build panel app for platform with config (e.g., task build:android:production) - alias for panel:build
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - task: _build
+        vars:
+          APP: panel
+          PLATFORM: "{{.PLATFORM}}"
+          CONFIG: "{{.CONFIG}}"
+
+  proto:
+    desc: Generate Dart code from protobuf files
+    cmds:
+      - |
+        PROTOC="${PROTOC:-protoc}"
+        PROTOC_GEN_DART="${PROTOC_GEN_DART:-$(which protoc-gen-dart 2>/dev/null || find ~/.pub-cache/bin -name "protoc-gen-dart" 2>/dev/null | head -1 || echo "")}"
+        PROTO_INCLUDE="${PROTO_INCLUDE:-$(protoc --print_include_path 2>/dev/null || find /opt/homebrew/Cellar/protobuf -name "include" -type d 2>/dev/null | head -1 || echo "")}"
+
+        PROTO_FILES="$(find ../proto/models ../proto/api -name '*.proto' 2>/dev/null)"
+
+        if [ -z "$PROTOC_GEN_DART" ]; then
+          echo "Error: protoc-gen-dart not found. Please install it or set PROTOC_GEN_DART environment variable." >&2
+          exit 1
+        fi
+
+        if [ -z "$PROTO_INCLUDE" ]; then
+          echo "Error: Could not determine protobuf include path. Please set PROTO_INCLUDE environment variable." >&2
+          exit 1
+        fi
+
+        if [ -n "$PROTO_FILES" ]; then
+          echo "Generating Dart code from proto files: $PROTO_FILES"
+          $PROTOC --plugin=protoc-gen-dart="$PROTOC_GEN_DART" \
+            --dart_out=lib/generated \
+            --proto_path=../proto \
+            --proto_path="$PROTO_INCLUDE" \
+            $PROTO_FILES
+          echo "Generating Google protobuf standard types..."
+          $PROTOC --plugin=protoc-gen-dart="$PROTOC_GEN_DART" \
+            --dart_out=lib/generated \
+            --proto_path="$PROTO_INCLUDE" \
+            google/protobuf/duration.proto google/protobuf/timestamp.proto
+        else
+          echo "No proto files found in ../proto/models/ or ../proto/api/"
+        fi
+
+  generate:panel:
+    desc: Run Dart build runner for panel
+    cmds:
+      - dart run build_runner build -d
+
+  generate:widgetbook:
+    desc: Run Dart build runner for widgetbook
+    dir: widgetbook
+    cmds:
+      - dart run build_runner build -d
+
+  generate:testkit:
+    desc: Run Dart build runner for testkit
+    dir: testkit
+    cmds:
+      - dart run build_runner build -d
+
+  generate:
+    desc: Run Dart build runner for all projects (panel, widgetbook, testkit)
+    cmds:
+      - task: generate:panel
+      - task: generate:widgetbook
+      - task: generate:testkit

@@ -5,20 +5,24 @@
 import FlutterMacOS
 import Foundation
 
-import desktop_webview_window
-import flutter_secure_storage_macos
-import flutter_web_auth_2
+import flutter_appauth
+import oidc_macos
 import path_provider_foundation
 import rive_common
+import shared_preferences_foundation
+import simple_secure_storage_darwin
 import url_launcher_macos
+import webcrypto
 import window_to_front
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  DesktopWebviewWindowPlugin.register(with: registry.registrar(forPlugin: "DesktopWebviewWindowPlugin"))
-  FlutterSecureStoragePlugin.register(with: registry.registrar(forPlugin: "FlutterSecureStoragePlugin"))
-  FlutterWebAuth2Plugin.register(with: registry.registrar(forPlugin: "FlutterWebAuth2Plugin"))
+  FlutterAppauthPlugin.register(with: registry.registrar(forPlugin: "FlutterAppauthPlugin"))
+  OidcPlugin.register(with: registry.registrar(forPlugin: "OidcPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   RivePlugin.register(with: registry.registrar(forPlugin: "RivePlugin"))
+  SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
+  SimpleSecureStoragePlugin.register(with: registry.registrar(forPlugin: "SimpleSecureStoragePlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
+  WebcryptoPlugin.register(with: registry.registrar(forPlugin: "WebcryptoPlugin"))
   WindowToFrontPlugin.register(with: registry.registrar(forPlugin: "WindowToFrontPlugin"))
 }

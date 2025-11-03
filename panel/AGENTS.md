@@ -5,16 +5,16 @@ Project tech/context
 - Riverpod (hooks + annotations) for state
 - auto_route for navigation
 - protobuf for domain models; freezed for UI state
-- Makefile for code generation (proto + build_runner)
+- Taskfile.yml for code generation (proto + build_runner)
 - Widgetbook workspace for component catalog (separate Flutter app under widgetbook/)
   - Use FakeApp (widgetbook/lib/widgetbook_utils.dart) as the standard shell for stories. It wraps MaterialApp, ProviderScope (supports overrides), AppRequiredWidgets, Responsive breakpoints, and propagates app-wide shortcuts/actions.
   - Prefer wrapping each @widgetbook.UseCase content with FakeApp for consistent theming, scroll behavior, and padding.
 
 Primary commands
 - Proto generation (run after adding/updating .proto files):
-  - make proto
+  - task proto
 - Dart codegen (run after annotations change):
-  - make generate
+  - task generate
   - If issues persist: dart run build_runner clean && dart run build_runner build -d
 - Analyze & lints:
   - dart analyze
@@ -54,21 +54,21 @@ Global conventions
 
 When to run proto generation
 - After adding/updating .proto files in ../proto/
-- Command: make proto
+- Command: task proto
 
 When to run dart codegen
 - After adding/updating:
   - @riverpod/@Riverpod providers
   - auto_route annotations
   - widgetbook @widgetbook.UseCase or @App changes
-- Command: make generate
+- Command: task generate
 
 Minimal checklists
 - New component: widget under widgets/... + story under widgetbook/lib/stories/... + regenerate widgetbook + run Widgetbook
-- New route: page under routes/... + add to router config + make generate
-- New domain model: add .proto file in ../proto/models/ + make proto (or use existing proto message)
-- New UI state class: freezed class (if needed for local component state) + make generate
-- New provider: annotated provider + tests (if applicable) + make generate
+- New route: page under routes/... + add to router config + task generate
+- New domain model: add .proto file in ../proto/models/ + task proto (or use existing proto message)
+- New UI state class: freezed class (if needed for local component state) + task generate
+- New provider: annotated provider + tests (if applicable) + task generate
 
 Agent behavior
 - Preserve and follow the directory structure above; colocate by feature.
@@ -77,6 +77,6 @@ Agent behavior
 - Use proto messages for domain models; decode from wire formats in the provider layer.
 - Add extension methods on proto messages (lib/logic/proto/extensions.dart or colocated) for domain logic, conversions, and computed properties.
 - For auth-required routes, ensure router guards are applied in configuration.
-- After route/provider/model changes, immediately run make generate and then analyze.
+- After route/provider/model changes, immediately run task generate and then analyze.
 - Keep examples and scaffolds idiomatic to this project's patterns.
 

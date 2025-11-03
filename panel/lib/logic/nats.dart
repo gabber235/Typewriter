@@ -39,18 +39,21 @@ class Nats extends _$Nats {
       ..inboxPrefix = "_INBOX.${user.sub}";
 
     unawaited(
-      client.connect(
-        Uri.parse(url),
-        retry: true,
-        retryCount: 0,
-        connectOption: ConnectOption(
-          jwt: _natsSentinelJwt,
-          user: user.username ?? user.name ?? user.sub,
-          pass: token,
-          // ignore: only_use_keep_alive_inside_keep_alive
-          nkey: ref.watch(organizationIdProvider),
-        ),
-      ),
+      client
+          .connect(
+            Uri.parse(url),
+            connectOption: ConnectOption(
+              jwt: _natsSentinelJwt,
+              user: user.username ?? user.name ?? user.sub,
+              pass: token,
+              // ignore: only_use_keep_alive_inside_keep_alive
+              nkey: ref.watch(organizationIdProvider),
+            ),
+          )
+          .onError((error, stackTrace) {
+            debugPrint("nats: error connecting to $url: $error");
+            client.close();
+          }),
     );
 
     ref.onDispose(client.close);

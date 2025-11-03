@@ -3,10 +3,11 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  desktop_webview_window
-  flutter_secure_storage_windows
+  oidc_windows
   rive_common
+  simple_secure_storage_windows
   url_launcher_windows
+  webcrypto
   window_to_front
 )
 

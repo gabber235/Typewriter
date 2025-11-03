@@ -21,7 +21,9 @@ dependencies:
   faker:
   flutter_hooks:
   iconify_flutter_plus:
-  logto_dart_sdk:
+  oidc: ^0.13.0
+  oidc_default_store: ^0.5.0
+  oidc_core: ^0.15.0
   pub_semver:
   collection:
 

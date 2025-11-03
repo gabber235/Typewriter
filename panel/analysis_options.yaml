@@ -23,7 +23,7 @@ linter:
     combinators_ordering: true
     deprecated_consistency: true
     directives_ordering: true
-    do_not_use_environment: true
+    do_not_use_environment: false
     empty_catches: true
     eol_at_end_of_file: false
     implicit_call_tearoffs: true

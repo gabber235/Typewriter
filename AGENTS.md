@@ -5,7 +5,8 @@ Welcome to the **Typewriter** repository. This project is organised into several
 - `engine/` – the Kotlin engine powering the plugin.
 - `extensions/` – optional modules built on top of the engine.
 - `documentation/` – website and developer docs built with Docusaurus.
-- `app/` – the Flutter-based web UI.
+- `panel/` – the Flutter-based web UI.
+- `app/` – legacy Flutter UI (deprecated, migration only).
 - `module-plugin/` – Gradle plugin for building Typewriter modules.
 
 Each folder contains its own `AGENTS.md` with more details:
@@ -13,7 +14,8 @@ Each folder contains its own `AGENTS.md` with more details:
 - [documentation/AGENTS.md](documentation/AGENTS.md)
 - [engine/AGENTS.md](engine/AGENTS.md)
 - [extensions/AGENTS.md](extensions/AGENTS.md)
-- [app/AGENTS.md](app/AGENTS.md)
+- [panel/AGENTS.md](panel/AGENTS.md)
+- [app/AGENTS.md](app/AGENTS.md) (deprecated, migration only)
 - [module-plugin/AGENTS.md](module-plugin/AGENTS.md)
 
 ## General Guidelines

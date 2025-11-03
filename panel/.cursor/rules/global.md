@@ -6,14 +6,17 @@ Project tech/context
 - Flutter + Dart
 - Riverpod (hooks + annotations) for state
 - auto_route for navigation
-- freezed + json_serializable for models
+- protobuf for domain models; freezed for UI state
+- Taskfile.yml for code generation (proto + build_runner)
 - Widgetbook workspace for component catalog (separate Flutter app under widgetbook/)
   - Use FakeApp (widgetbook/lib/widgetbook_utils.dart) as the standard shell for stories. It wraps MaterialApp, ProviderScope (supports overrides), AppRequiredWidgets, Responsive breakpoints, and propagates app-wide shortcuts/actions.
   - Prefer wrapping each @widgetbook.UseCase content with FakeApp for consistent theming, scroll behavior, and padding.
 
 Primary commands
-- Codegen (run whenever annotations or model schemas change):
-  - dart run build_runner build -d
+- Proto generation (run after adding/updating .proto files):
+  - task proto
+- Dart codegen (run after annotations change):
+  - task generate
   - If issues persist: dart run build_runner clean && dart run build_runner build -d
 - Analyze & lints:
   - dart analyze
@@ -62,20 +65,23 @@ Global conventions
 - Widgetbook stories should wrap content with FakeApp when possible to inherit app theming, shortcuts, scroll behavior, and Responsive padding.
 - In widget tests, prefer testApp/pumpTestApp and captureScreenshot utilities over bespoke scaffolds.
 
-When to run codegen
+When to run proto generation
+- After adding/updating .proto files in ../proto/
+- Command: task proto
+
+When to run dart codegen
 - After adding/updating:
   - @riverpod/@Riverpod providers
   - auto_route annotations
   - widgetbook @widgetbook.UseCase or @App changes
-- Commands:
-  - dart run build_runner build -d
-  - If issues persist: dart run build_runner clean && dart run build_runner build -d
+- Command: task generate
 
 Minimal checklists
 - New component: widget under widgets/... + story under widgetbook/lib/stories/... + regenerate widgetbook + run Widgetbook
-- New route: page under routes/... + add to router config + codegen
-- New model: freezed class + json helpers + part files + codegen
-- New provider: annotated provider + tests (if applicable) + codegen
+- New route: page under routes/... + add to router config + task generate
+- New domain model: add .proto file in ../proto/models/ + task proto (or use existing proto message)
+- New UI state class: freezed class (if needed for local component state) + task generate
+- New provider: annotated provider + tests (if applicable) + task generate
 
 Agent behavior
 - Preserve and follow the directory structure above; colocate by feature.
@@ -83,6 +89,6 @@ Agent behavior
 - Surface AsyncValue states (loading/error/data) explicitly in UI.
 - Decode/encode JSON in the provider layer; avoid passing Map<String, dynamic> to widgets when avoidable.
 - For auth-required routes, ensure router guards are applied in configuration.
-- After route/provider/model changes, immediately run codegen and then analyze.
-- Keep examples and scaffolds idiomatic to this project’s patterns.
+- After route/provider/model changes, immediately run task generate and then analyze.
+- Keep examples and scaffolds idiomatic to this project's patterns.
 

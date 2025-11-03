@@ -142,8 +142,8 @@ class LoadingButton extends HookWidget {
     this.statesController,
     this.controller,
     super.key,
-  })  : variant = LoadingVariant.filled,
-        icon = null;
+  }) : variant = LoadingVariant.filled,
+       icon = null;
 
   const LoadingButton.filledIcon({
     required this.icon,
@@ -159,8 +159,8 @@ class LoadingButton extends HookWidget {
     this.statesController,
     this.controller,
     super.key,
-  })  : variant = LoadingVariant.filled,
-        child = label;
+  }) : variant = LoadingVariant.filled,
+       child = label;
 
   const LoadingButton.text({
     required this.child,
@@ -175,8 +175,8 @@ class LoadingButton extends HookWidget {
     this.statesController,
     this.controller,
     super.key,
-  })  : variant = LoadingVariant.text,
-        icon = null;
+  }) : variant = LoadingVariant.text,
+       icon = null;
 
   const LoadingButton.textIcon({
     required this.icon,
@@ -192,8 +192,8 @@ class LoadingButton extends HookWidget {
     this.statesController,
     this.controller,
     super.key,
-  })  : variant = LoadingVariant.text,
-        child = label;
+  }) : variant = LoadingVariant.text,
+       child = label;
 
   const LoadingButton.outlined({
     required this.child,
@@ -208,8 +208,8 @@ class LoadingButton extends HookWidget {
     this.statesController,
     this.controller,
     super.key,
-  })  : variant = LoadingVariant.outlined,
-        icon = null;
+  }) : variant = LoadingVariant.outlined,
+       icon = null;
 
   const LoadingButton.outlinedIcon({
     required this.icon,
@@ -225,8 +225,8 @@ class LoadingButton extends HookWidget {
     this.statesController,
     this.controller,
     super.key,
-  })  : variant = LoadingVariant.outlined,
-        child = label;
+  }) : variant = LoadingVariant.outlined,
+       child = label;
 
   final LoadingVariant variant;
 
@@ -251,25 +251,23 @@ class LoadingButton extends HookWidget {
 
     useListenable(effectiveController);
 
-    useEffect(
-      () {
-        effectiveController
-          .._onPressed = onPressed
-          .._onError = (error) {
-            if (context.mounted) {
-              final hasScaffold = ScaffoldMessenger.maybeOf(context) != null;
-              if (hasScaffold) {
-                showErrorSnackBar(context, error);
-              }
+    useEffect(() {
+      effectiveController
+        .._onPressed = onPressed
+        .._onError = (error) {
+          if (context.mounted) {
+            final hasScaffold = ScaffoldMessenger.maybeOf(context) != null;
+            if (hasScaffold) {
+              showErrorSnackBar(context, error);
             }
-          };
-        return null;
-      },
-      [onPressed],
-    );
+          }
+        };
+      return null;
+    }, [onPressed]);
 
-    final animation =
-        useForwardAnimation(play: effectiveController.lastError != null);
+    final animation = useForwardAnimation(
+      play: effectiveController.lastError != null,
+    );
 
     final themeStyle = switch (variant) {
       LoadingVariant.filled => FilledButtonTheme.of(context).style,
@@ -280,134 +278,130 @@ class LoadingButton extends HookWidget {
 
     final button = switch ((variant, icon)) {
       (LoadingVariant.filled, null) => FilledButton(
-          style: mergedStyle,
-          onPressed: effectiveController.canTrigger
-              ? effectiveController._handlePress
-              : null,
-          onLongPress: onLongPress,
-          onHover: onHover,
-          onFocusChange: onFocusChange,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          clipBehavior: clipBehavior,
-          statesController: statesController,
-          child: ElasticSwitcher(
-            child: effectiveController.isLoading
-                ? _Spinner(buttonStyle: mergedStyle)
-                : child,
-          ),
+        style: mergedStyle,
+        onPressed: effectiveController.canTrigger
+            ? effectiveController._handlePress
+            : null,
+        onLongPress: onLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        statesController: statesController,
+        child: ElasticSwitcher(
+          child: effectiveController.isLoading
+              ? _Spinner(buttonStyle: mergedStyle)
+              : child,
         ),
+      ),
       (LoadingVariant.filled, _) => FilledButton.icon(
-          style: mergedStyle,
-          onPressed: effectiveController.canTrigger
-              ? effectiveController._handlePress
-              : null,
-          onLongPress: onLongPress,
-          onHover: onHover,
-          onFocusChange: onFocusChange,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          clipBehavior: clipBehavior,
-          statesController: statesController,
-          icon: ElasticSwitcher(
-            child: effectiveController.isLoading
-                ? _Spinner(buttonStyle: mergedStyle)
-                : icon!,
-          ),
-          label: child,
+        style: mergedStyle,
+        onPressed: effectiveController.canTrigger
+            ? effectiveController._handlePress
+            : null,
+        onLongPress: onLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        statesController: statesController,
+        icon: ElasticSwitcher(
+          child: effectiveController.isLoading
+              ? _Spinner(buttonStyle: mergedStyle)
+              : icon!,
         ),
+        label: child,
+      ),
       (LoadingVariant.text, null) => TextButton(
-          style: mergedStyle,
-          onPressed: effectiveController.canTrigger
-              ? effectiveController._handlePress
-              : null,
-          onLongPress: onLongPress,
-          onHover: onHover,
-          onFocusChange: onFocusChange,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          clipBehavior: clipBehavior,
-          statesController: statesController,
-          child: ElasticSwitcher(
-            child: effectiveController.isLoading
-                ? _Spinner(buttonStyle: mergedStyle)
-                : child,
-          ),
+        style: mergedStyle,
+        onPressed: effectiveController.canTrigger
+            ? effectiveController._handlePress
+            : null,
+        onLongPress: onLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        statesController: statesController,
+        child: ElasticSwitcher(
+          child: effectiveController.isLoading
+              ? _Spinner(buttonStyle: mergedStyle)
+              : child,
         ),
+      ),
       (LoadingVariant.text, _) => TextButton.icon(
-          style: mergedStyle,
-          onPressed: effectiveController.canTrigger
-              ? effectiveController._handlePress
-              : null,
-          onLongPress: onLongPress,
-          onHover: onHover,
-          onFocusChange: onFocusChange,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          clipBehavior: clipBehavior,
-          statesController: statesController,
-          icon: ElasticSwitcher(
-            child: effectiveController.isLoading
-                ? _Spinner(buttonStyle: mergedStyle)
-                : icon!,
-          ),
-          label: child,
+        style: mergedStyle,
+        onPressed: effectiveController.canTrigger
+            ? effectiveController._handlePress
+            : null,
+        onLongPress: onLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        statesController: statesController,
+        icon: ElasticSwitcher(
+          child: effectiveController.isLoading
+              ? _Spinner(buttonStyle: mergedStyle)
+              : icon!,
         ),
+        label: child,
+      ),
       (LoadingVariant.outlined, null) => OutlinedButton(
-          style: mergedStyle,
-          onPressed: effectiveController.canTrigger
-              ? effectiveController._handlePress
-              : null,
-          onLongPress: onLongPress,
-          onHover: onHover,
-          onFocusChange: onFocusChange,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          clipBehavior: clipBehavior,
-          statesController: statesController,
-          child: ElasticSwitcher(
-            child: effectiveController.isLoading
-                ? _Spinner(buttonStyle: mergedStyle)
-                : child,
-          ),
+        style: mergedStyle,
+        onPressed: effectiveController.canTrigger
+            ? effectiveController._handlePress
+            : null,
+        onLongPress: onLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        statesController: statesController,
+        child: ElasticSwitcher(
+          child: effectiveController.isLoading
+              ? _Spinner(buttonStyle: mergedStyle)
+              : child,
         ),
+      ),
       (LoadingVariant.outlined, _) => OutlinedButton.icon(
-          style: mergedStyle,
-          onPressed: effectiveController.canTrigger
-              ? effectiveController._handlePress
-              : null,
-          onLongPress: onLongPress,
-          onHover: onHover,
-          onFocusChange: onFocusChange,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          clipBehavior: clipBehavior,
-          statesController: statesController,
-          icon: ElasticSwitcher(
-            child: effectiveController.isLoading
-                ? _Spinner(buttonStyle: mergedStyle)
-                : icon!,
-          ),
-          label: child,
+        style: mergedStyle,
+        onPressed: effectiveController.canTrigger
+            ? effectiveController._handlePress
+            : null,
+        onLongPress: onLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        statesController: statesController,
+        icon: ElasticSwitcher(
+          child: effectiveController.isLoading
+              ? _Spinner(buttonStyle: mergedStyle)
+              : icon!,
         ),
+        label: child,
+      ),
     };
 
-    final animated =
-        button.animate(controller: animation, autoPlay: false).shakeX();
+    final animated = button
+        .animate(controller: animation, autoPlay: false)
+        .shakeX();
 
     if (effectiveController.lastError == null) return animated;
 
-    return Tooltip(
-      message: effectiveController.lastError,
-      child: animated,
-    );
+    return Tooltip(message: effectiveController.lastError, child: animated);
   }
 }
 
 class _Spinner extends StatelessWidget {
-  const _Spinner({
-    required this.buttonStyle,
-  });
+  const _Spinner({required this.buttonStyle});
 
   final ButtonStyle? buttonStyle;
 
@@ -415,9 +409,10 @@ class _Spinner extends StatelessWidget {
   Widget build(BuildContext context) {
     final color =
         buttonStyle?.foregroundColor?.resolve({WidgetState.disabled}) ??
-            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);
 
-    final size = buttonStyle?.iconSize?.resolve({WidgetState.disabled}) ??
+    final size =
+        buttonStyle?.iconSize?.resolve({WidgetState.disabled}) ??
         buttonStyle?.iconSize?.resolve({});
 
     final indicator = CircularProgressIndicator(
@@ -425,9 +420,6 @@ class _Spinner extends StatelessWidget {
       valueColor: AlwaysStoppedAnimation(color),
     );
 
-    return SizedBox.square(
-      dimension: size,
-      child: indicator,
-    );
+    return SizedBox.square(dimension: size, child: indicator);
   }
 }

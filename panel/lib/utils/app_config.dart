@@ -5,7 +5,6 @@ class AppConfig {
 
   static const NatsConfig nats = NatsConfig._();
   static const AuthConfig auth = AuthConfig._();
-  static const PanelConfig panel = PanelConfig._();
   static const DocsConfig docs = DocsConfig._();
 }
 
@@ -39,28 +38,40 @@ class NatsConfig {
 class AuthConfig {
   const AuthConfig._();
 
-  String get endpoint => const String.fromEnvironment(
-    "AUTH_ENDPOINT",
+  String get issuer => const String.fromEnvironment(
+    "AUTH_ISSUER",
     defaultValue: "https://auth.typewritermc.com/",
   );
 
-  String get appId => const String.fromEnvironment(
-    "AUTH_APP_ID",
+  String get clientId => const String.fromEnvironment(
+    "AUTH_CLIENT_ID",
     defaultValue: "xqytbpo52htzlkhoh0wt3",
   );
-}
 
-class PanelConfig {
-  const PanelConfig._();
-
-  String get redirectUri => const String.fromEnvironment(
-    "PANEL_REDIRECT_URI",
-    defaultValue: "http://localhost:2350/callback.html",
+  String get scopes => const String.fromEnvironment(
+    "AUTH_SCOPES",
+    defaultValue: "openid profile email",
   );
 
-  String get resourceUrl => const String.fromEnvironment(
-    "PANEL_RESOURCE_URL",
-    defaultValue: "http://localhost:2350",
+  String get redirectUri => const String.fromEnvironment(
+    "AUTH_REDIRECT_URI",
+    defaultValue: "http://localhost:2350/redirect.html",
+  );
+
+  String get postLogoutRedirectUri => const String.fromEnvironment(
+    "AUTH_POST_LOGOUT_REDIRECT_URI",
+    defaultValue: "http://localhost:2350/redirect.html",
+  );
+
+  String get frontChannelLogoutUri => const String.fromEnvironment(
+    "AUTH_FRONT_CHANNEL_LOGOUT_URI",
+    defaultValue: "http://localhost:2350/redirect.html",
+  );
+
+  String get discoveryDocumentUri => const String.fromEnvironment(
+    "AUTH_DISCOVERY_DOCUMENT_URI",
+    defaultValue:
+        "https://auth.typewritermc.com/application/o/typewriter-panel/.well-known/openid-configuration",
   );
 }
 

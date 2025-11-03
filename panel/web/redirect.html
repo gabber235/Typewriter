@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+        const stateNamespace = 'state';
+        const stateResponseNamespace = 'response.state';
+        const requestNamespace = 'request';
+
+        const requestBroadcastChannel = 'oidc_flutter_web/request';
+        const redirectBroadcastChannel = 'oidc_flutter_web/redirect';
+
+
+        //if the OP isn't requesting logout, handle redirect.
+        if (!handleFrontChannelLogout()) {
+            handleRedirect();
+        }
+
+        function handleRedirect() {
+            // For supported browsers: https://caniuse.com/broadcastchannel
+            var bc = new BroadcastChannel(redirectBroadcastChannel);
+            bc.postMessage(window.location.toString());
+            bc.close();
+            //The rest of this function handles same page redirects
+            let dataSrc;
+            dataSrc = new URLSearchParams(window.location.search);
+            var state = dataSrc.get('state');
+            if (!state) {
+                if (window.location.hash) {
+                    dataSrc = new URLSearchParams(
+                        window.location.hash.substring(1)
+                    );
+                    state = dataSrc.get('state');
+                }
+            }
+            if (!state) {
+                return;
+            }
+            const stateDataRaw = getLocalStorage(stateNamespace, state);
+            if (!stateDataRaw) {
+                console.error('state not found, key: ' + state);
+                return;
+            }
+            setLocalStorage(stateResponseNamespace, state, window.location.toString());
+            //we call JSON.parse twice, since shared_preferences double encodes json strings for some reason.
+            const parsedStateString = JSON.parse(stateDataRaw);
+            if (!parsedStateString) {
+                console.error('parsed state is null');
+                return;
+            }
+            // Read the mode from the state.
+            const webLaunchMode = parsedStateString.options?.webLaunchMode;
+            if (!webLaunchMode) {
+                console.error('webLaunchMode not found in parsed state.');
+                return;
+            }
+            if (webLaunchMode != 'samePage') {
+                return;
+            }
+            const original_uri = parsedStateString.original_uri;
+            if (!original_uri) {
+                console.warn("it's preferred that original_uri is used when webLaunchMode is samePage.");
+                return;
+            }
+            window.location.assign(original_uri);
+        }
+
+        function handleFrontChannelLogout() {
+            const queryParams = new URLSearchParams(window.location.search);
+            if (queryParams.get('requestType') == 'front-channel-logout') {
+                // For supported browsers: https://caniuse.com/broadcastchannel
+                var bc = new BroadcastChannel(requestBroadcastChannel);
+                bc.postMessage(window.location.toString());
+                bc.close();
+                // this puts a marker for the flutter app that the user wants to logout.
+                //
+                // in the flutter app, if this marker exists, 
+                // we don't auth the cached user in `UserManager.init()`, and we clear the cached data.
+                setLocalStorage(requestNamespace, 'front-channel-logout', window.location.toString());
+                return true;
+            }
+            return false;
+        }
+
+        function getLocalStorage(namespace, key) {
+            const rawRes = localStorage.getItem('oidc.' + namespace + '.' + key);
+            if (!rawRes) {
+                return null;
+            }
+            return rawRes;
+        }
+        function setLocalStorage(namespace, key, value) {
+            const keysEntryKey = 'oidc.keys.' + namespace;
+            var keys = localStorage.getItem(keysEntryKey);
+            if (!keys) {
+                keys = "[]";
+            }
+            const parsedKeys = JSON.parse(keys);
+            if (!(parsedKeys instanceof Array)) {
+                console.error('parsedKeys is not an array.', parsedKeys);
+            }
+            parsedKeys.push(key);
+            localStorage.setItem(keysEntryKey, JSON.stringify(parsedKeys));
+            localStorage.setItem('oidc.' + namespace + '.' + key, value);
+        }
+    </script>
+</head>
+
+<body>
+    <p>Redirecting...</p>
+</body>
+
+</html>
