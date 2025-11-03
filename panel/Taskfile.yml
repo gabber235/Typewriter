@@ -1,0 +1,113 @@
+version: "3"
+
+vars:
+  VALID_PLATFORMS: ios android macos windows linux web
+
+tasks:
+  default:
+    desc: Show available tasks
+    silent: true
+    cmds:
+      - task --list
+
+  configs:
+    desc: List available config files
+    silent: true
+    cmds:
+      - |
+        echo "Available config files:"
+        for file in config/*.json; do
+          if [ -f "$file" ]; then
+            basename "$file" .json
+          fi
+        done
+
+  run:*:*:
+    desc: Run app for platform with config (e.g., task run:ios:local)
+    silent: true
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - |
+        PLATFORM="{{.PLATFORM}}"
+        CONFIG="{{.CONFIG}}"
+        CONFIG_FILE="config/$CONFIG.json"
+        VALID_PLATFORMS="{{.VALID_PLATFORMS}}"
+
+        if ! echo "$VALID_PLATFORMS" | grep -qw "$PLATFORM"; then
+          echo "Error: Invalid platform '$PLATFORM'. Valid platforms: $VALID_PLATFORMS" >&2
+          exit 1
+        fi
+
+        if [ ! -f "$CONFIG_FILE" ]; then
+          echo "Error: Config file $CONFIG_FILE not found" >&2
+          exit 1
+        fi
+
+        DART_DEFINES=$(jq -r 'to_entries | map("--dart-define=\(.key)=\(.value)") | join(" ")' "$CONFIG_FILE")
+
+        if [ "$PLATFORM" = "web" ]; then
+          PANEL_REDIRECT_URI=$(jq -r '.PANEL_REDIRECT_URI // "http://localhost:2350/callback.html"' "$CONFIG_FILE")
+          PANEL_PORT=$(echo "$PANEL_REDIRECT_URI" | sed -n 's|.*://[^:]*:\([0-9]*\).*|\1|p')
+          if [ -z "$PANEL_PORT" ]; then
+            if echo "$PANEL_REDIRECT_URI" | grep -q "^https"; then
+              PANEL_PORT="443"
+            else
+              PANEL_PORT="80"
+            fi
+          fi
+          FLUTTER_CMD="flutter run -d chrome --web-port=$PANEL_PORT"
+        else
+          FLUTTER_CMD="flutter run -d $PLATFORM"
+        fi
+
+        $FLUTTER_CMD $DART_DEFINES
+
+  build:*:*:
+    desc: Build app for platform with config (e.g., task build:android:production)
+    silent: true
+    vars:
+      PLATFORM: "{{index .MATCH 0}}"
+      CONFIG: "{{index .MATCH 1}}"
+    cmds:
+      - |
+        PLATFORM="{{.PLATFORM}}"
+        CONFIG="{{.CONFIG}}"
+        CONFIG_FILE="config/$CONFIG.json"
+        VALID_PLATFORMS="{{.VALID_PLATFORMS}}"
+
+        if ! echo "$VALID_PLATFORMS" | grep -qw "$PLATFORM"; then
+          echo "Error: Invalid platform '$PLATFORM'. Valid platforms: $VALID_PLATFORMS" >&2
+          exit 1
+        fi
+
+        if [ ! -f "$CONFIG_FILE" ]; then
+          echo "Error: Config file $CONFIG_FILE not found" >&2
+          exit 1
+        fi
+
+        DART_DEFINES=$(jq -r 'to_entries | map("--dart-define=\(.key)=\(.value)") | join(" ")' "$CONFIG_FILE")
+
+        case "$PLATFORM" in
+          ios)
+            FLUTTER_CMD="flutter build ios --release"
+            ;;
+          android)
+            FLUTTER_CMD="flutter build apk --release"
+            ;;
+          macos)
+            FLUTTER_CMD="flutter build macos --release"
+            ;;
+          windows)
+            FLUTTER_CMD="flutter build windows --release"
+            ;;
+          linux)
+            FLUTTER_CMD="flutter build linux --release"
+            ;;
+          web)
+            FLUTTER_CMD="flutter build web --release"
+            ;;
+        esac
+
+        $FLUTTER_CMD $DART_DEFINES

@@ -18,8 +18,9 @@ dependencies:
   flutter_hooks:
   iconify_flutter_plus:
   logto_dart_sdk:
+    git: https://github.com/gabber235/logto-io-dart.git
   pub_semver:
-  collection: 
+  collection:
 
 dev_dependencies:
   flutter_test:

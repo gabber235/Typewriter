@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/generated/models/module.pb.dart";
+import "package:typewriter_panel/utils/app_config.dart";
 import "package:typewriter_panel/utils/context.dart";
 
 extension ModuleTypeExtensions on ModuleType {
@@ -22,9 +23,8 @@ extension ModuleTypeExtensions on ModuleType {
 
   /// Documentation URL for this module type
   String get docsUrl => switch (this) {
-    ModuleType.MODULE_TYPE_ENGINE => "https://docs.typewritermc.com/develop",
-    ModuleType.MODULE_TYPE_EXTENSION =>
-      "https://docs.typewritermc.com/develop/extensions",
+    ModuleType.MODULE_TYPE_ENGINE => AppConfig.docs.engineDocsUrl,
+    ModuleType.MODULE_TYPE_EXTENSION => AppConfig.docs.extensionsDocsUrl,
     _ => "",
   };
 

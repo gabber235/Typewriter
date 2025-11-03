@@ -691,10 +691,11 @@ packages:
   logto_dart_sdk:
     dependency: "direct main"
     description:
-      name: logto_dart_sdk
-      sha256: "9be9eda4379cdefe0e8d7f91c4282b960c124eded3644f13ab90a39ed96c4050"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: da389111067d48af851e6446bca572ac8afb125d
+      url: "https://github.com/gabber235/logto-io-dart.git"
+    source: git
     version: "3.0.0"
   matcher:
     dependency: transitive
@@ -736,14 +737,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.5.0"
-  mocktail:
-    dependency: "direct main"
-    description:
-      name: mocktail
-      sha256: "890df3f9688106f25755f26b1c60589a92b3ab91a22b8b224947ad041bf172d8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.4"
   mutex:
     dependency: transitive
     description:

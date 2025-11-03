@@ -14,7 +14,8 @@ dependencies:
   riverpod_annotation: ^3.0.0
   flutter_hooks: ^0.21.2
   auto_route: ^10.0.0
-  logto_dart_sdk: ^3.0.0
+  logto_dart_sdk:
+    git: https://github.com/gabber235/logto-io-dart.git
   localstorage: ^6.0.0
   freezed_annotation:
   json_annotation:

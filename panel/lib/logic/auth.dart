@@ -1,6 +1,7 @@
 import "package:flutter/foundation.dart";
 import "package:logto_dart_sdk/logto_client.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/utils/app_config.dart";
 
 part "auth.g.dart";
 
@@ -9,8 +10,8 @@ class Auth extends _$Auth {
   @override
   LogtoClient build() {
     final config = LogtoConfig(
-      appId: "xqytbpo52htzlkhoh0wt3",
-      endpoint: "https://auth.typewritermc.com/",
+      appId: AppConfig.auth.appId,
+      endpoint: AppConfig.auth.endpoint,
     );
 
     return LogtoClient(config: config);
@@ -18,10 +19,7 @@ class Auth extends _$Auth {
 
   String _getRedirectUri() {
     if (kIsWeb) {
-      if (kDebugMode) {
-        return "http://localhost:2350/callback.html";
-      }
-      return "https://panel.typewritermc.com/callback.html";
+      return AppConfig.panel.redirectUri;
     }
     return "io.logto://callback";
   }
@@ -58,7 +56,7 @@ Future<String?> userId(Ref ref) async {
 Future<AccessToken?> accessToken(Ref ref) {
   return ref
       .watch(authProvider)
-      .getAccessToken(resource: "https://panel.typewritermc.com");
+      .getAccessToken(resource: AppConfig.panel.resourceUrl);
 }
 
 @Riverpod(keepAlive: true)
