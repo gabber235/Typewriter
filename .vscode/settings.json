@@ -1,3 +1,4 @@
 {
-    "java.autobuild.enabled": false
+    "java.autobuild.enabled": false,
+    "java.configuration.updateBuildConfiguration": "disabled"
 }
