@@ -23,8 +23,8 @@ import org.bukkit.entity.Player
 import java.util.Optional
 import kotlin.math.absoluteValue
 
-private val completedObjectiveDisplay by snippet(
-    "quest.countable_objective.completed",
+private val countableObjectiveDisplay by snippet(
+    "quest.objectives.countable.completed",
     "<green>✔</green> <gray><display></gray>"
 )
 
@@ -51,7 +51,7 @@ class CountableObjective(
     override fun display(player: Player?): String {
         val text = when {
             player == null -> inactiveObjectiveDisplay
-            count.get(player).absoluteValue == target.get(player).absoluteValue -> completedObjectiveDisplay
+            count.get(player).absoluteValue == target.get(player).absoluteValue -> countableObjectiveDisplay
             criteria.matches(player) -> showingObjectiveDisplay
             else -> inactiveObjectiveDisplay
         }

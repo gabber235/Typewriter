@@ -22,7 +22,7 @@ import org.bukkit.entity.Player
 import java.util.*
 
 private val completedObjectiveDisplay by snippet(
-    "quest.completable_objective.completed",
+    "quest.objectives.completable.completed",
     "<green>✔</green> <gray><display></gray>"
 )
 
