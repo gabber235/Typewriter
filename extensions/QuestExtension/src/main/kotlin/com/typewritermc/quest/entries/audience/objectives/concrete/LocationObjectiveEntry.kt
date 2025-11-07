@@ -17,8 +17,8 @@ import com.typewritermc.engine.paper.entry.literal
 import com.typewritermc.engine.paper.entry.placeholderParser
 import com.typewritermc.engine.paper.entry.string
 import com.typewritermc.engine.paper.entry.supply
-import com.typewritermc.quest.LocatableObjective
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.quest.entries.QuestEntry
 import org.bukkit.entity.Player
 import java.util.Optional
 

@@ -6,7 +6,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.core.entries.ref
 import com.typewritermc.quest.events.AsyncTrackedQuestUpdate
-import com.typewritermc.quest.trackedShowingObjectives
+import com.typewritermc.quest.entries.trackedShowingObjectives
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 

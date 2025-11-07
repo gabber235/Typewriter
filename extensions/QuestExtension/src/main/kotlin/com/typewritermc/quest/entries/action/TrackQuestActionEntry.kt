@@ -9,9 +9,8 @@ import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.trackQuest
-import org.bukkit.entity.Player
 
 @Entry("track_quest", "Start tracking a quest for a player", Colors.RED, "material-symbols:bookmark")
 /**

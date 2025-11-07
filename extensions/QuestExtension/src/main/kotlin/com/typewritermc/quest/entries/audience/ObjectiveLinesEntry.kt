@@ -6,7 +6,7 @@ import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.engine.paper.entry.entries.LinesEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
-import com.typewritermc.quest.trackedShowingObjectives
+import com.typewritermc.quest.entries.trackedShowingObjectives
 import org.bukkit.entity.Player
 import java.util.*
 

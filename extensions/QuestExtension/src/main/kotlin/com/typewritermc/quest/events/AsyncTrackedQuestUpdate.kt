@@ -1,7 +1,7 @@
 package com.typewritermc.quest.events
 
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.QuestEntry
 import org.bukkit.entity.Player
 import org.bukkit.event.HandlerList
 import org.bukkit.event.player.PlayerEvent

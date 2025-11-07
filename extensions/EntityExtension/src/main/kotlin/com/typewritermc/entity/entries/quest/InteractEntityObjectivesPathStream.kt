@@ -13,7 +13,7 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
 import com.typewritermc.engine.paper.entry.findDisplay
 import com.typewritermc.engine.paper.utils.position
-import com.typewritermc.quest.trackedShowingObjectives
+import com.typewritermc.quest.entries.trackedShowingObjectives
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.entries.MultiPathStreamDisplay
 import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry

@@ -14,10 +14,10 @@ import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
-import com.typewritermc.quest.ObjectiveEntry
-import com.typewritermc.quest.QuestEntry
-import com.typewritermc.quest.inactiveObjectiveDisplay
-import com.typewritermc.quest.showingObjectiveDisplay
+import com.typewritermc.quest.entries.ObjectiveEntry
+import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.inactiveObjectiveDisplay
+import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
 import java.util.*
 
