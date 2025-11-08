@@ -21,7 +21,7 @@ import java.util.*
 
 @Entry("break_block_objective", "A break block objective definition", Colors.BLUE_VIOLET, "mdi:pickaxe")
 /**
- * The `Break Block Objective` entry is a task that the player can complete by breaking a specific amount of blocks.
+ * The `BreakBlockObjective` entry is a task that the player can complete by breaking a specific amount of blocks.
  *
  * ## How could this be used?
  * This could be used to create objectives where players need to break certain blocks.

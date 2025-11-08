@@ -19,9 +19,14 @@ import org.bukkit.Material
 import org.bukkit.event.block.BlockPlaceEvent
 import java.util.*
 
-@Entry("place_block_objective", "A place block objective definition", Colors.BLUE_VIOLET, "mdi:pickaxe")
+@Entry(
+    "place_block_objective",
+    "A place block objective definition",
+    Colors.BLUE_VIOLET,
+    "material-symbols:add-box-outline"
+)
 /**
- * The `Place Block Objective` entry is a task that the player can complete by placing a specific amount of blocks.
+ * The `PlaceBlockObjective` entry is a task that the player can complete by placing a specific amount of blocks.
  *
  * ## How could this be used?
  * This could be used to create objectives where players need to place certain blocks.
