@@ -34,15 +34,12 @@ interface CachableFactObjective : ObjectiveEntry {
     @Placeholder
     override val display: Var<String>
 
-    @Help("The fact that is being updated with the value towards the target.")
-    val value: Ref<CachableFactEntry>
+    val progressTracking: CacheableFactObjectiveProgressTracking
 
-    @Help("The target value to reach for completion.")
-    val target: Var<Int>
 
     fun changeFact(player: Player, amount: Int = 0) {
-        val current = value.get()?.readForPlayersGroup(player)?.value ?: 0
-        value.get()?.write(player, current + amount)
+        val current = progressTracking.value.get()?.readForPlayersGroup(player)?.value ?: 0
+        progressTracking.value.get()?.write(player, current + amount)
     }
 
     override fun parser(): PlaceholderParser = placeholderParser {
@@ -50,13 +47,13 @@ interface CachableFactObjective : ObjectiveEntry {
 
         literal("value") {
             supplyPlayer { player ->
-                value.get()?.readForPlayersGroup(player)?.value?.toString() ?: "0"
+                progressTracking.value.get()?.readForPlayersGroup(player)?.value?.toString() ?: "0"
             }
         }
 
         literal("target") {
             supplyPlayer { player ->
-                target.get(player).toString()
+                progressTracking.target.get(player).toString()
             }
         }
     }
@@ -82,4 +79,18 @@ interface CachableFactObjective : ObjectiveEntry {
             .parsePlaceholders(player)
     }
 }
+
+data class CacheableFactObjectiveProgressTracking(
+    @Help("The fact that is being updated with the value towards the target.")
+    val value: Ref<CachableFactEntry> = emptyRef(),
+    @Help("The operator to use when comparing the fact value to the target value for completion.")
+    val operator: CriteriaOperator = CriteriaOperator.GREATER_THAN_OR_EQUAL,
+    @Help("The target value to reach for completion.")
+    @Negative
+    val target: Var<Int> = ConstVar(0),
+) {
+    fun isValid(fact: FactData?, player: Player, context: InteractionContext): Boolean {
+        val value = fact?.value ?: 0
+        return operator.isValid(value, this.target.get(player, context))
+    }
 }
