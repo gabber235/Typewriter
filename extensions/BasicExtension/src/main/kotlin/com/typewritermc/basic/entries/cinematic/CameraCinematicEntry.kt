@@ -82,6 +82,7 @@ class CameraCinematicEntry(
     @Segments(icon = "fa6-solid:video")
     @InnerMin(Min(10))
     val segments: List<CameraSegment> = emptyList(),
+    val advancedCameraSettings: AdvancedCameraSettings = AdvancedCameraSettings(),
 ) : PrimaryCinematicEntry {
     override fun create(player: Player): CinematicAction {
         return CameraCinematicAction(
@@ -105,6 +106,16 @@ data class CameraSegment(
     override val endFrame: Int = 0,
     val path: List<PathPoint> = emptyList(),
 ) : Segment
+
+/**
+ * Advanced settings for camera cinematics.
+ *
+ * @property restoreVelocity When true, restores the player's velocity to its pre-cinematic value
+ *                           after the cinematic finishes.
+ */
+data class AdvancedCameraSettings(
+    val restoreVelocity: Boolean = false
+)
 
 data class PathPoint(
     @WithRotation
@@ -187,12 +198,15 @@ class CameraCinematicAction(
 
         if (originalState == null) {
             originalState = state(
-                LOCATION,
-                ALLOW_FLIGHT,
-                FLYING,
-                VISIBLE_PLAYERS,
-                SHOWING_PLAYER,
-                EffectStateProvider(INVISIBILITY)
+                listOfNotNull(
+                    LOCATION,
+                    ALLOW_FLIGHT,
+                    FLYING,
+                    VISIBLE_PLAYERS,
+                    SHOWING_PLAYER,
+                    EffectStateProvider(INVISIBILITY),
+                    VELOCITY.takeIf { entry.advancedCameraSettings.restoreVelocity }
+                )
             )
             context[PlayerPositionOverride] = position
         }
