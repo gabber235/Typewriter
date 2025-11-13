@@ -1,6 +1,6 @@
 ---
 description: "Guided mode to add a new Minecraft entity (and its data) to the Entity Extension using EntityLib metas and Typewriter entry patterns."
-tools: ['codebase', 'usages', 'fetch', 'githubRepo', 'editFiles', 'search', 'websearch', 'changes']
+tools: ['edit/editFiles', 'search', 'usages', 'changes', 'fetch', 'githubRepo', 'ms-vscode.vscode-websearchforcopilot/websearch']
 ---
 
 ## purpose
