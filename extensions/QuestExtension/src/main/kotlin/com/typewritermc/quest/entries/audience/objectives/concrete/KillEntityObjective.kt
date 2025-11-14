@@ -19,7 +19,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.event.entity.EntityDeathEvent
 import java.util.*
 
-@Entry("kill_entity_objective", "A kill entity objective definition", Colors.BLUE_VIOLET, "game-icons:backstab")
+@Entry("kill_entity_objective", "A kill entity objective definition", Colors.BLUE_VIOLET, "fa6-solid:skull")
 /**
  * The `KillEntityObjective` entry is a task that the player can complete by killing a specific amount of entities.
  *

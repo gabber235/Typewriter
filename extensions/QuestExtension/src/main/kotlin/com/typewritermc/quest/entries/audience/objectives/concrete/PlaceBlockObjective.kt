@@ -23,7 +23,7 @@ import java.util.*
     "place_block_objective",
     "A place block objective definition",
     Colors.BLUE_VIOLET,
-    "material-symbols:add-box-outline"
+    "fluent:cube-add-20-filled"
 )
 /**
  * The `PlaceBlockObjective` entry is a task that the player can complete by placing a specific amount of blocks.
