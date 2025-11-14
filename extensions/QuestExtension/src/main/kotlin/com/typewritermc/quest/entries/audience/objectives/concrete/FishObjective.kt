@@ -19,7 +19,7 @@ import com.typewritermc.quest.entries.interfaces.CacheableFactObjectiveProgressT
 import org.bukkit.event.player.PlayerFishEvent
 import java.util.*
 
-@Entry("fish_objective", "A fish objective definition", Colors.BLUE_VIOLET, "mingcute:baby-fill")
+@Entry("fish_objective", "A fish objective definition", Colors.BLUE_VIOLET, "icon-park-outline:fishing")
 /**
  * The `FishObjective` entry is a task that the player can complete by fishing a specific amount of fish or item.
  *

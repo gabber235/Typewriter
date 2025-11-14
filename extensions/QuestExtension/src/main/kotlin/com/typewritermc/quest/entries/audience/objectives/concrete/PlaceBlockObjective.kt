@@ -59,5 +59,4 @@ class PlaceBlockObjective(
             changeFact(event.player, 1)
         }
     }
-
 }

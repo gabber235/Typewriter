@@ -55,5 +55,4 @@ class KillEntityObjective(
             changeFact(killer, 1)
         }
     }
-
 }

@@ -54,5 +54,4 @@ class BreakBlockObjective(
             changeFact(event.player, 1)
         }
     }
-
 }
