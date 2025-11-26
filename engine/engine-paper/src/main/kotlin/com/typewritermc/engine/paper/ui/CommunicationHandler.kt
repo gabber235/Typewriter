@@ -15,6 +15,7 @@ import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.logErrorIfNull
 import com.typewritermc.engine.paper.utils.optionalConfig
 import com.typewritermc.loader.ExtensionLoader
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -86,6 +87,8 @@ class CommunicationHandler : KoinComponent {
 
         server?.addEventListener("fetch", String::class.java, clientSynchronizer::handleFetchRequest)
         server?.addEventListener("createPage", String::class.java, clientSynchronizer::handleCreatePage)
+        server?.addEventListener("copyPage", String::class.java, clientSynchronizer::handleCopyPage)
+        server?.addEventListener("copyChapter", String::class.java, clientSynchronizer::handleCopyChapter)
         server?.addEventListener("renamePage", String::class.java, clientSynchronizer::handleRenamePage)
         server?.addEventListener("changePageValue", String::class.java, clientSynchronizer::handleChangePageValue)
         server?.addEventListener("deletePage", String::class.java, clientSynchronizer::handleDeletePage)
@@ -99,6 +102,11 @@ class CommunicationHandler : KoinComponent {
         )
         server?.addEventListener("reorderEntry", String::class.java, clientSynchronizer::handleReorderEntry)
         server?.addEventListener("deleteEntry", String::class.java, clientSynchronizer::handleDeleteEntry)
+        server?.addEventListener(
+            "updateEntryPosition",
+            String::class.java,
+            clientSynchronizer::handleEntryPositionUpdate
+        )
 
         server?.addEventListener("publish", String::class.java, clientSynchronizer::handlePublish)
 
@@ -108,6 +116,7 @@ class CommunicationHandler : KoinComponent {
         server?.addConnectListener { socket ->
             logger.info("Client connected: ${socket.remoteAddress}")
             socket.sendEvent("stagingState", stagingManager.stagingState.name.lowercase())
+            socket.sendEvent("serverInfo", Bukkit.getMinecraftVersion())
 
             val token = getSessionToken(socket.handshakeData)
             if (token != null) {
@@ -144,7 +153,9 @@ class CommunicationHandler : KoinComponent {
 
         val array = JsonArray()
         stagingManager.pages.forEach { (_, page) ->
-            array.add(page)
+            val augmented = page.deepCopy().asJsonObject
+            PageMetadataAugmentor.apply(augmented)
+            array.add(augmented)
         }
         server?.broadcastOperations?.sendEvent("updatePages", array.toString())
         server?.broadcastOperations?.sendEvent("updateExtensions", extensionJson.toString())

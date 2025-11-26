@@ -6,6 +6,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/materials.dart";
+import "package:typewriter/models/communicator.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/utils/passing_reference.dart";
@@ -37,8 +38,10 @@ List<MaterialProperty> materialProperties(
 
 @riverpod
 Fuzzy<CombinedMaterial> _fuzzyMaterials(Ref ref) {
+  final version = ref.watch(serverVersionProvider);
+  final available = availableMaterials(version);
   return Fuzzy(
-    materials.entries.toList(),
+    available.entries.toList(),
     options: FuzzyOptions(
       threshold: 0.2,
       keys: [
@@ -228,9 +231,12 @@ class MaterialEditor extends HookConsumerWidget {
         ? ref.watch(materialPropertiesProvider(propertiesModifier.data))
         : <MaterialProperty>[];
 
+    final version = ref.watch(serverVersionProvider);
+    final available = availableMaterials(version);
     final currentValue = value.isEmpty ? "air" : value.toLowerCase();
-    final currentMaterial = materials[currentValue];
+    final currentMaterial = available[currentValue] ?? materials[currentValue];
     final hasMaterial = currentMaterial != null;
+    final isAvailable = available.containsKey(currentValue);
 
     return InputField(
       child: InkWell(
@@ -242,9 +248,25 @@ class MaterialEditor extends HookConsumerWidget {
             children: [
               if (hasMaterial)
                 Expanded(
-                  child: MaterialItem(
-                    id: currentValue,
-                    material: currentMaterial,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      MaterialItem(
+                        id: currentValue,
+                        material: currentMaterial,
+                      ),
+                      if (!isAvailable)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            "Unavailable on ${version.toString()} servers",
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(color: Colors.orange),
+                          ),
+                        ),
+                    ],
                   ),
                 )
               else
