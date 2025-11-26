@@ -12,7 +12,9 @@ import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.matches
-import com.typewritermc.engine.paper.entry.temporal.TemporalState.*
+import com.typewritermc.engine.paper.entry.temporal.TemporalState.ENDING
+import com.typewritermc.engine.paper.entry.temporal.TemporalState.PLAYING
+import com.typewritermc.engine.paper.entry.temporal.TemporalState.STARTING
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.events.AsyncCinematicEndEvent
 import com.typewritermc.engine.paper.events.AsyncCinematicStartEvent

@@ -26,10 +26,17 @@ private class StringBuilderVariable(
         val text = data.text
         val parts = data.parts + parts
 
-        val replacedText = parts.fold(text) { text, part ->
-            text.replace("<${part.key}>", part.value.get(context.player, context.interactionContext))
-        }
-        return context.cast(replacedText.parsePlaceholders(context.player))
+        var previousText: String
+        var newText = text
+        var loop = 0
+        do {
+            previousText = newText
+            newText = parts.fold(newText) { text, part ->
+                text.replace("<${part.key}>", part.value.get(context.player, context.interactionContext))
+            }
+        } while (previousText != newText && ++loop < 20)
+
+        return context.cast(newText.parsePlaceholders(context.player))
     }
 }
 

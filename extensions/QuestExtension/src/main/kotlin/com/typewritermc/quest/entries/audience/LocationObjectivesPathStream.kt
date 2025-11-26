@@ -35,6 +35,7 @@ class LocationObjectivesPathStream(
     val display: Ref<PathStreamDisplayEntry> = emptyRef(),
     val road: Ref<RoadNetworkEntry> = emptyRef(),
 ) : AudienceEntry {
+    // As displays and references can't change (except between reloads) we can just cache all relevant ones here for quick access.
     private val objectiveDisplays: Map<Ref<LocationObjectiveEntry>, List<Ref<PathStreamDisplayEntry>>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {

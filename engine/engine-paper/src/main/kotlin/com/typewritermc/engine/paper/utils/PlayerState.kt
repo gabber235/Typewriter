@@ -11,6 +11,7 @@ import com.github.retrooper.packetevents.util.Dummy
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
+import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.plugin
@@ -45,6 +46,7 @@ enum class GenericPlayerStateProvider(private val store: Player.() -> Any, priva
         resetPlayerTime()
         WrapperPlayServerTimeUpdate(world.gameTime, playerTime).sendPacketTo(this)
     }),
+    VELOCITY({ velocity.toVector() }, { velocity = (it as Vector).toBukkitVector() }),
 
     // All Players that are visible to the player
     VISIBLE_PLAYERS({
@@ -122,6 +124,10 @@ fun Player.state(vararg keys: PlayerStateProvider): PlayerState = state(keys)
 
 @JvmName("stateArray")
 fun Player.state(keys: Array<out PlayerStateProvider>): PlayerState {
+    return PlayerState(keys.associateWith { it.store(this) })
+}
+
+fun Player.state(keys: List<PlayerStateProvider>): PlayerState {
     return PlayerState(keys.associateWith { it.store(this) })
 }
 
