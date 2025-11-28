@@ -87,8 +87,6 @@ class CommunicationHandler : KoinComponent {
 
         server?.addEventListener("fetch", String::class.java, clientSynchronizer::handleFetchRequest)
         server?.addEventListener("createPage", String::class.java, clientSynchronizer::handleCreatePage)
-        server?.addEventListener("copyPage", String::class.java, clientSynchronizer::handleCopyPage)
-        server?.addEventListener("copyChapter", String::class.java, clientSynchronizer::handleCopyChapter)
         server?.addEventListener("renamePage", String::class.java, clientSynchronizer::handleRenamePage)
         server?.addEventListener("changePageValue", String::class.java, clientSynchronizer::handleChangePageValue)
         server?.addEventListener("deletePage", String::class.java, clientSynchronizer::handleDeletePage)
@@ -102,11 +100,6 @@ class CommunicationHandler : KoinComponent {
         )
         server?.addEventListener("reorderEntry", String::class.java, clientSynchronizer::handleReorderEntry)
         server?.addEventListener("deleteEntry", String::class.java, clientSynchronizer::handleDeleteEntry)
-        server?.addEventListener(
-            "updateEntryPosition",
-            String::class.java,
-            clientSynchronizer::handleEntryPositionUpdate
-        )
 
         server?.addEventListener("publish", String::class.java, clientSynchronizer::handlePublish)
 
@@ -153,9 +146,7 @@ class CommunicationHandler : KoinComponent {
 
         val array = JsonArray()
         stagingManager.pages.forEach { (_, page) ->
-            val augmented = page.deepCopy().asJsonObject
-            PageMetadataAugmentor.apply(augmented)
-            array.add(augmented)
+        array.add(page)
         }
         server?.broadcastOperations?.sendEvent("updatePages", array.toString())
         server?.broadcastOperations?.sendEvent("updateExtensions", extensionJson.toString())
