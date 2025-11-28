@@ -179,6 +179,7 @@ class SocketNotifier extends StateNotifier<Socket?> {
           ref.read(serverVersionProvider.notifier).state =
               parsed ?? McVersion.latest;
         },
++      )
       ..on(
         "stagingState",
         (data) => ref.read(communicatorProvider).handleStagingState(data),
