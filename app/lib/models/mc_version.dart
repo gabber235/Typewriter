@@ -14,7 +14,7 @@ class McVersion implements Comparable<McVersion> {
   static McVersion? tryParse(String? source) {
     if (source == null || source.isEmpty) return null;
     final match =
-        RegExp(r'(\\d+)\\.(\\d+)(?:\\.(\\d+))?').firstMatch(source.trim());
+        RegExp(r'(\d+)\.(\d+)(?:\.(\d+))?').firstMatch(source.trim());
     if (match == null) return null;
     final major = int.parse(match.group(1)!);
     final minor = int.parse(match.group(2)!);
