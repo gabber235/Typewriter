@@ -34,7 +34,7 @@ class BookNotifier extends StateNotifier<Book> {
   set book(Book book) => state = book;
 
   @override
-  bool updateShouldNotify(Book old, Book current) => old != current;
+  bool updateShouldNotify(Book old, Book current) => true;
 
   /// Creates a new page.
   Future<Page> createPage(
