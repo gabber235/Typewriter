@@ -32,7 +32,7 @@ private val inventoryFullMessage by snippet(
 @Entry(
     "quest_item_audience",
     "Forces players to keep a quest item in their inventory",
-    Colors.GREEN,
+    Colors.MEDIUM_SEA_GREEN,
     "mdi:treasure-chest"
 )
 /**
