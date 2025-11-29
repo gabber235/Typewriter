@@ -78,7 +78,7 @@ class QuestItemAudienceDisplay(
                 val droppedItem = player.inventory.storageContents[firstNonEmptySlot]
                 if (droppedItem != null) {
                     player.world.dropItemNaturally(player.location, droppedItem)
-                    player.inventory.storageContents[firstNonEmptySlot] = questItem
+                    player.inventory.setItem(firstNonEmptySlot, questItem)
                     player.sendMessage(inventoryFullMessage.parsePlaceholders(player).asMini())
                 }
             }
@@ -132,7 +132,7 @@ class QuestItemAudienceDisplay(
         
         val currentItem = event.currentItem ?: return
         val cursorItem = event.cursor
-        
+
         // Prevent placing quest item from cursor into container
         if (clickedInventory.type != InventoryType.PLAYER && clickedInventory.type != InventoryType.CRAFTING) {
             if (cursorItem != null && !cursorItem.isEmpty && entry.item.get(player).isSameAs(player, cursorItem)) {
@@ -140,22 +140,12 @@ class QuestItemAudienceDisplay(
                 return
             }
         }
-        
+
         // Prevent moving quest item to non-player inventories (containers)
         if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER) {
             if (entry.item.get(player).isSameAs(player, currentItem)) {
                 // Check if player is trying to move item to container
                 if (event.click.isShiftClick) {
-                    event.isCancelled = true
-                }
-            }
-        }
-        
-        // Prevent moving quest item from player inventory to container
-        if (clickedInventory.type == InventoryType.PLAYER) {
-            if (entry.item.get(player).isSameAs(player, currentItem)) {
-                val topInventory = event.view.topInventory
-                if (topInventory.type != InventoryType.PLAYER && topInventory.type != InventoryType.CRAFTING) {
                     event.isCancelled = true
                 }
             }
@@ -173,13 +163,19 @@ class QuestItemAudienceDisplay(
         
         event.drops.removeAll(questItemStacks)
         
-        // Re-add the quest item when the player respawns
+       // Re-add the quest item when the player respawns
+        val playerId = event.entity.uniqueId
         server.scheduler.runTaskLater(plugin, Runnable {
+            val player = server.getPlayer(playerId) ?: return@Runnable
+            if (!contains(player)) return@Runnable
             questItemStacks.forEach { item ->
-                event.entity.inventory.addItem(item)
+                val leftOver = player.inventory.addItem(item)
+                if (leftOver.isNotEmpty()) {
+                    // Handle full inventory similar to onPlayerAdd
+                    player.world.dropItemNaturally(player.location, item)
+                }
             }
-        }, 1L)
-    }
+         }, 1L)
 
     override fun dispose() {
         super.dispose()
