@@ -69,28 +69,48 @@ class QuestItemAudienceDisplay(
     override fun onPlayerAdd(player: Player) {
         val entry = ref.get() ?: return
         val questItem = entry.item.get(player).build(player)
-        
-        val leftOver = player.inventory.addItem(questItem)
-        if (leftOver.isNotEmpty()) {
-            // Inventory is full, force placement by dropping the first non-empty slot item
-            val firstNonEmptySlot = player.inventory.storageContents.indexOfFirst { it != null && !it.isEmpty }
-            if (firstNonEmptySlot >= 0) {
-                val droppedItem = player.inventory.storageContents[firstNonEmptySlot]
-                if (droppedItem != null) {
-                    player.world.dropItemNaturally(player.location, droppedItem)
-                    player.inventory.setItem(firstNonEmptySlot, questItem)
-                    player.sendMessage(inventoryFullMessage.parsePlaceholders(player).asMini())
+
+        // Ensure we run on the main thread since we are modifying inventory and potentially dropping items
+        server.scheduler.runTask(plugin, Runnable {
+            // Try adding the item normally first
+            val leftOver = player.inventory.addItem(questItem.clone())
+            if (leftOver.isNotEmpty()) {
+                // Inventory is full. We need to make space.
+                // We'll look for the first slot in the main storage (0-35) that isn't empty (which should be all of them if full)
+                // and drop that item to place ours.
+                
+                // Iterate through storage slots to find a candidate to drop
+                var slotToSwap = -1
+                for (i in 0 until 36) {
+                    val item = player.inventory.getItem(i)
+                    if (item != null && !item.type.isAir) {
+                        slotToSwap = i
+                        break
+                    }
+                }
+
+                if (slotToSwap != -1) {
+                    val itemToDrop = player.inventory.getItem(slotToSwap)
+                    if (itemToDrop != null) {
+                        // Drop the existing item
+                        player.world.dropItemNaturally(player.location, itemToDrop)
+                        
+                        // Set our quest item in that slot
+                        player.inventory.setItem(slotToSwap, questItem)
+                        
+                        // Notify the player
+                        player.sendMessage(inventoryFullMessage.parsePlaceholders(player).asMini())
+                    }
                 }
             }
-        }
-        
-        playerItems[player.uniqueId] = questItem
+            playerItems[player.uniqueId] = questItem
+        })
     }
 
     override fun onPlayerRemove(player: Player) {
         val questItem = playerItems.remove(player.uniqueId) ?: return
         val entry = ref.get() ?: return
-        
+
         // Remove all instances of the quest item from the player's inventory
         player.inventory.contents.forEachIndexed { index, item ->
             if (item != null && entry.item.get(player).isSameAs(player, item)) {
@@ -150,6 +170,7 @@ class QuestItemAudienceDisplay(
                 }
             }
         }
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerDeath(event: PlayerDeathEvent) {
@@ -176,6 +197,7 @@ class QuestItemAudienceDisplay(
                 }
             }
          }, 1L)
+    }
 
     override fun dispose() {
         super.dispose()
