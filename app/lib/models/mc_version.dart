@@ -1,52 +1,39 @@
-class McVersion implements Comparable<McVersion> {
-  const McVersion(this.major, this.minor, this.patch);
+import "package:collection/collection.dart";
 
-  final int major;
-  final int minor;
-  final int patch;
+enum McVersion implements Comparable<McVersion> {
+  zero("0.0"),
+  v1_8("1.8"),
+  v1_9("1.9"),
+  v1_10("1.10"),
+  v1_11("1.11"),
+  v1_12("1.12"),
+  v1_13("1.13"),
+  v1_14("1.14"),
+  v1_15("1.15"),
+  v1_16("1.16"),
+  v1_17("1.17"),
+  v1_18("1.18"),
+  v1_19("1.19"),
+  v1_20("1.20"),
+  v1_21("1.21");
 
-  static const zero = McVersion(0, 0, 0);
-  static const latest = McVersion(1, 21, 10);
+  const McVersion(this.id);
+  final String id;
 
-  factory McVersion.parse(String source) =>
-      McVersion.tryParse(source) ?? latest;
+  static const latest = v1_21;
 
-  static McVersion? tryParse(String? source) {
-    if (source == null || source.isEmpty) return null;
-    final match =
-        RegExp(r'(\d+)\.(\d+)(?:\.(\d+))?').firstMatch(source.trim());
-    if (match == null) return null;
-    final major = int.parse(match.group(1)!);
-    final minor = int.parse(match.group(2)!);
-    final patch = int.parse(match.group(3) ?? '0');
-    return McVersion(major, minor, patch);
+  static McVersion? tryParse(String? id) {
+    if (id == null) return null;
+    return McVersion.values.firstWhereOrNull((e) => id.startsWith(e.id));
   }
 
   @override
   int compareTo(McVersion other) {
-    if (major != other.major) return major.compareTo(other.major);
-    if (minor != other.minor) return minor.compareTo(other.minor);
-    return patch.compareTo(other.patch);
+    return index.compareTo(other.index);
   }
 
-  bool operator <(McVersion other) => compareTo(other) < 0;
-
-  bool operator >(McVersion other) => compareTo(other) > 0;
-
-  bool operator <=(McVersion other) => compareTo(other) <= 0;
-
-  bool operator >=(McVersion other) => compareTo(other) >= 0;
-
-  @override
-  String toString() => '$major.$minor.$patch';
-
-  @override
-  int get hashCode => Object.hash(major, minor, patch);
-
-  @override
-  bool operator ==(Object other) =>
-      other is McVersion &&
-      other.major == major &&
-      other.minor == minor &&
-      other.patch == patch;
+  bool operator <(McVersion other) => index < other.index;
+  bool operator <=(McVersion other) => index <= other.index;
+  bool operator >(McVersion other) => index > other.index;
+  bool operator >=(McVersion other) => index >= other.index;
 }
