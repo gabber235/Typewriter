@@ -131,6 +131,15 @@ class QuestItemAudienceDisplay(
         }
         
         val currentItem = event.currentItem ?: return
+        val cursorItem = event.cursor
+        
+        // Prevent placing quest item from cursor into container
+        if (clickedInventory.type != InventoryType.PLAYER && clickedInventory.type != InventoryType.CRAFTING) {
+            if (cursorItem != null && !cursorItem.isEmpty && entry.item.get(player).isSameAs(player, cursorItem)) {
+                event.isCancelled = true
+                return
+            }
+        }
         
         // Prevent moving quest item to non-player inventories (containers)
         if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER) {
@@ -151,7 +160,6 @@ class QuestItemAudienceDisplay(
                 }
             }
         }
-    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerDeath(event: PlayerDeathEvent) {
