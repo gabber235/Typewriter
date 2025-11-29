@@ -37,9 +37,14 @@ List<MaterialProperty> materialProperties(
 }
 
 @riverpod
-Fuzzy<CombinedMaterial> _fuzzyMaterials(Ref ref) {
+Map<String, MinecraftMaterial> availableMaterialsMap(Ref ref) {
   final version = ref.watch(serverVersionProvider);
-  final available = availableMaterials(version);
+  return availableMaterials(version);
+}
+
+@riverpod
+Fuzzy<CombinedMaterial> _fuzzyMaterials(Ref ref) {
+  final available = ref.watch(availableMaterialsMapProvider);
   return Fuzzy(
     available.entries.toList(),
     options: FuzzyOptions(
@@ -231,12 +236,10 @@ class MaterialEditor extends HookConsumerWidget {
         ? ref.watch(materialPropertiesProvider(propertiesModifier.data))
         : <MaterialProperty>[];
 
-    final version = ref.watch(serverVersionProvider);
-    final available = availableMaterials(version);
+    final available = ref.watch(availableMaterialsMapProvider);
     final currentValue = value.isEmpty ? "air" : value.toLowerCase();
     final currentMaterial = available[currentValue] ?? materials[currentValue];
     final hasMaterial = currentMaterial != null;
-    final isAvailable = available.containsKey(currentValue);
 
     return InputField(
       child: InkWell(
@@ -248,25 +251,9 @@ class MaterialEditor extends HookConsumerWidget {
             children: [
               if (hasMaterial)
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      MaterialItem(
-                        id: currentValue,
-                        material: currentMaterial,
-                      ),
-                      if (!isAvailable)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            "Unavailable on ${version.toString()} servers",
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(color: Colors.orange),
-                          ),
-                        ),
-                    ],
+                  child: MaterialItem(
+                    id: currentValue,
+                    material: currentMaterial,
                   ),
                 )
               else
