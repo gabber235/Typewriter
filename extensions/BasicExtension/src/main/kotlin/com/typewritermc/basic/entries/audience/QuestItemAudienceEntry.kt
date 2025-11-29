@@ -24,6 +24,18 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+import org.bukkit.NamespacedKey
+import org.bukkit.persistence.PersistentDataType
+import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.player.PlayerInteractEntityEvent
+import org.bukkit.event.player.PlayerInteractAtEntityEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.entity.ItemFrame
+import org.bukkit.entity.ArmorStand
+import org.bukkit.event.block.Action
+import org.bukkit.inventory.EquipmentSlot
+
 private val inventoryFullMessage by snippet(
     "quest_item.inventory_full",
     "<yellow>Your inventory was full! An item has been dropped to make space for the quest item."
@@ -66,9 +78,35 @@ class QuestItemAudienceDisplay(
         server.pluginManager.registerEvents(this, plugin)
     }
 
+    private fun getNamespacedKey(): NamespacedKey {
+        return NamespacedKey(plugin, "quest_item_id")
+    }
+
+    private fun getUniqueInstanceKey(): NamespacedKey {
+        return NamespacedKey(plugin, "unique_instance")
+    }
+
+    private fun tagItem(item: ItemStack, entryId: String): ItemStack {
+        val meta = item.itemMeta ?: return item
+        meta.persistentDataContainer.set(getNamespacedKey(), PersistentDataType.STRING, entryId)
+        // Add a random UUID to ensure uniqueness and prevent stacking with other instances if needed
+        // or just to make it unique from vanilla items.
+        meta.persistentDataContainer.set(getUniqueInstanceKey(), PersistentDataType.STRING, UUID.randomUUID().toString())
+        item.itemMeta = meta
+        return item
+    }
+
+    private fun isQuestItem(item: ItemStack?, entryId: String): Boolean {
+        if (item == null || item.type.isAir) return false
+        val meta = item.itemMeta ?: return false
+        val storedId = meta.persistentDataContainer.get(getNamespacedKey(), PersistentDataType.STRING)
+        return storedId == entryId
+    }
+
     override fun onPlayerAdd(player: Player) {
         val entry = ref.get() ?: return
-        val questItem = entry.item.get(player).build(player)
+        val rawItem = entry.item.get(player).build(player)
+        val questItem = tagItem(rawItem, entry.id)
 
         // Ensure we run on the main thread since we are modifying inventory and potentially dropping items
         server.scheduler.runTask(plugin, Runnable {
@@ -113,7 +151,7 @@ class QuestItemAudienceDisplay(
 
         // Remove all instances of the quest item from the player's inventory
         player.inventory.contents.forEachIndexed { index, item ->
-            if (item != null && entry.item.get(player).isSameAs(player, item)) {
+            if (isQuestItem(item, entry.id)) {
                 player.inventory.setItem(index, null)
             }
         }
@@ -124,10 +162,12 @@ class QuestItemAudienceDisplay(
         val entry = ref.get() ?: return
         if (!contains(event.player)) return
         
-        if (entry.item.get(event.player).isSameAs(event.player, event.itemDrop.itemStack)) {
+        if (isQuestItem(event.itemDrop.itemStack, entry.id)) {
             event.isCancelled = true
         }
     }
+
+
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInventoryClick(event: InventoryClickEvent) {
@@ -135,27 +175,34 @@ class QuestItemAudienceDisplay(
         val entry = ref.get() ?: return
         if (!contains(player)) return
         
-        val clickedInventory = event.clickedInventory ?: return
+        // Handle clicking outside the inventory window (dropping)
+        if (event.clickedInventory == null) {
+            if (isQuestItem(event.cursor, entry.id)) {
+                event.isCancelled = true
+            }
+            return
+        }
         
+        val clickedInventory = event.clickedInventory!!
+
         // Block ANY interaction with crafting slots (slots 1-4 in CRAFTING inventory type)
         if (clickedInventory.type == InventoryType.CRAFTING && event.slot in 1..4) {
             val currentItem = event.currentItem
             val cursorItem = event.cursor
             
             // Check if the item being placed or already in the slot is the quest item
-            if ((currentItem != null && entry.item.get(player).isSameAs(player, currentItem)) ||
-                (cursorItem != null && entry.item.get(player).isSameAs(player, cursorItem))) {
+            if (isQuestItem(currentItem, entry.id) || isQuestItem(cursorItem, entry.id)) {
                 event.isCancelled = true
                 return
             }
         }
         
-        val currentItem = event.currentItem ?: return
+        val currentItem = event.currentItem
         val cursorItem = event.cursor
 
         // Prevent placing quest item from cursor into container
         if (clickedInventory.type != InventoryType.PLAYER && clickedInventory.type != InventoryType.CRAFTING) {
-            if (cursorItem != null && !cursorItem.isEmpty && entry.item.get(player).isSameAs(player, cursorItem)) {
+            if (isQuestItem(cursorItem, entry.id)) {
                 event.isCancelled = true
                 return
             }
@@ -163,11 +210,88 @@ class QuestItemAudienceDisplay(
 
         // Prevent moving quest item to non-player inventories (containers)
         if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER) {
-            if (entry.item.get(player).isSameAs(player, currentItem)) {
+            if (isQuestItem(currentItem, entry.id)) {
                 // Check if player is trying to move item to container
                 if (event.click.isShiftClick) {
                     event.isCancelled = true
                 }
+            }
+        }
+        
+        // Prevent shift-clicking Quest Items (prevents auto-equip and quick move)
+        if (event.click.isShiftClick && isQuestItem(currentItem, entry.id)) {
+            event.isCancelled = true
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onInventoryDrag(event: InventoryDragEvent) {
+        val player = event.whoClicked as? Player ?: return
+        val entry = ref.get() ?: return
+        if (!contains(player)) return
+
+        // If dragging the quest item
+        if (isQuestItem(event.oldCursor, entry.id)) {
+            // If the top inventory is a container (not player/crafting)
+            if (event.view.topInventory.type != InventoryType.PLAYER && event.view.topInventory.type != InventoryType.CRAFTING) {
+                // Check if any of the target slots are in the top inventory
+                val topSize = event.view.topInventory.size
+                if (event.rawSlots.any { it < topSize }) {
+                    event.isCancelled = true
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onBlockPlace(event: BlockPlaceEvent) {
+        val entry = ref.get() ?: return
+        if (!contains(event.player)) return
+
+        if (isQuestItem(event.itemInHand, entry.id)) {
+            event.isCancelled = true
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onInteractEntity(event: PlayerInteractEntityEvent) {
+        val entry = ref.get() ?: return
+        if (!contains(event.player)) return
+
+        if (event.rightClicked is ItemFrame || event.rightClicked is ArmorStand) {
+            val hand = event.hand
+            val item = if (hand == EquipmentSlot.HAND) event.player.inventory.itemInMainHand else event.player.inventory.itemInOffHand
+            
+            if (isQuestItem(item, entry.id)) {
+                event.isCancelled = true
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onInteractAtEntity(event: PlayerInteractAtEntityEvent) {
+        val entry = ref.get() ?: return
+        if (!contains(event.player)) return
+
+        if (event.rightClicked is ArmorStand) {
+            val hand = event.hand
+            val item = if (hand == EquipmentSlot.HAND) event.player.inventory.itemInMainHand else event.player.inventory.itemInOffHand
+            
+            if (isQuestItem(item, entry.id)) {
+                event.isCancelled = true
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerInteract(event: PlayerInteractEvent) {
+        val entry = ref.get() ?: return
+        if (!contains(event.player)) return
+        
+        if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
+            val item = event.item
+            if (isQuestItem(item, entry.id)) {
+                event.isCancelled = true
             }
         }
     }
@@ -179,7 +303,7 @@ class QuestItemAudienceDisplay(
         
         // Remove quest item from drops and keep it for the player
         val questItemStacks = event.drops.filter { item ->
-            entry.item.get(event.entity).isSameAs(event.entity, item)
+            isQuestItem(item, entry.id)
         }
         
         event.drops.removeAll(questItemStacks)
