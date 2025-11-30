@@ -1,16 +1,17 @@
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter/utils/icons.dart";
 import "package:typewriter/models/mc_version.dart";
+import "package:typewriter/utils/icons.dart";
 
 part "materials.freezed.dart";
 part "materials.g.dart";
 
-
 Map<String, MinecraftMaterial> availableMaterials(McVersion version) =>
     Map.fromEntries(
       materials.entries.where(
-        (entry) => entry.value.since == null || version.compareTo(entry.value.since!) >= 0,
+        (entry) =>
+            entry.value.since == null ||
+            version.compareTo(entry.value.since!) >= 0,
       ),
     );
 
@@ -7901,11 +7902,6 @@ const Map<String, MinecraftMaterial> materials = {
     name: "Recovery Compass",
     properties: [MaterialProperty.item],
     icon: "assets/materials/recovery_compass.png",
-  ),
-  "bundle": MinecraftMaterial(
-    name: "Bundle",
-    properties: [MaterialProperty.item],
-    icon: "assets/materials/bundle.png",
   ),
   "fishing_rod": MinecraftMaterial(
     name: "Fishing Rod",

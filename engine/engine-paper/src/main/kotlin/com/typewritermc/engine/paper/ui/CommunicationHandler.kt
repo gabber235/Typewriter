@@ -5,8 +5,6 @@ import com.corundumstudio.socketio.HandshakeData
 import com.corundumstudio.socketio.SocketIOClient
 import com.corundumstudio.socketio.SocketIOServer
 import com.google.gson.JsonArray
-import lirand.api.extensions.events.listen
-import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.engine.paper.entry.StagingManager
 import com.typewritermc.engine.paper.events.StagingChangeEvent
 import com.typewritermc.engine.paper.logger
@@ -14,14 +12,15 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.logErrorIfNull
 import com.typewritermc.engine.paper.utils.optionalConfig
+import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.loader.ExtensionLoader
+import lirand.api.extensions.events.listen
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
 import java.util.*
-import kotlin.collections.set
 
 
 class CommunicationHandler : KoinComponent {
@@ -146,7 +145,7 @@ class CommunicationHandler : KoinComponent {
 
         val array = JsonArray()
         stagingManager.pages.forEach { (_, page) ->
-        array.add(page)
+            array.add(page)
         }
         server?.broadcastOperations?.sendEvent("updatePages", array.toString())
         server?.broadcastOperations?.sendEvent("updateExtensions", extensionJson.toString())
