@@ -14,7 +14,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
-import org.bukkit.event.player.PlayerInteractEventhowe
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
 import org.bukkit.inventory.EquipmentSlot
@@ -50,8 +50,8 @@ enum class ConfirmationKey(val keybind: String) {
             SWAP_HANDS -> SwapHandsHandler(player, block)
             JUMP -> JumpHandler(player, block)
             SNEAK -> SneakHandler(player, block)
-            LEFT_CLICK -> LeftClickHandler(player, block)
-            RIGHT_CLICK -> RightClickHandler(player, block)
+            LEFT_CLICK -> ClickHandler(player, block, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK)
+            RIGHT_CLICK -> ClickHandler(player, block, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK)
         }.apply { initialize() }
     }
 
@@ -117,24 +117,14 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
     }
 }
 
-class LeftClickHandler(override val player: Player, override val block: () -> Unit) : ConfirmationKeyHandler {
+class ClickHandler(override val player: Player, override val block: () -> Unit, vararg val actions: Action) : ConfirmationKeyHandler {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun onInteract(event: PlayerInteractEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         if (event.hand != EquipmentSlot.HAND) return
-        if (event.action != Action.LEFT_CLICK_AIR && event.action != Action.LEFT_CLICK_BLOCK) return
+        if (event.action !in actions) return
         event.isCancelled = true
         block()
     }
 }
 
-class RightClickHandler(override val player: Player, override val block: () -> Unit) : ConfirmationKeyHandler {
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    fun onInteract(event: PlayerInteractEvent) {
-        if (event.player.uniqueId != player.uniqueId) return
-        if (event.hand != EquipmentSlot.HAND) return
-        if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) return
-        event.isCancelled = true
-        block()
-    }
-}
