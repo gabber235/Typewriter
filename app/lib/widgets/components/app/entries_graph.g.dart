@@ -6,7 +6,7 @@ part of 'entries_graph.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$graphableEntriesHash() => r'c6bd6ba93e2c2e3c07874b6762a1657826dd45b5';
+String _$graphableEntriesHash() => r'3dde1fe342473495999596e26f794b803e6c4a6a';
 
 /// See also [graphableEntries].
 @ProviderFor(graphableEntries)

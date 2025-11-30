@@ -11,6 +11,7 @@ import "package:typewriter/app_router.dart";
 import "package:typewriter/models/book.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/extension.dart";
+import "package:typewriter/models/mc_version.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/models/staging.dart";
 import "package:typewriter/models/writers.dart";
@@ -32,6 +33,9 @@ enum ConnectionState {
 
 final connectionStateProvider =
     StateProvider<ConnectionState>((ref) => ConnectionState.none);
+
+final serverVersionProvider =
+    StateProvider<McVersion>((ref) => McVersion.latest);
 
 final socketProvider = StateNotifierProvider<SocketNotifier, Socket?>(
   SocketNotifier.new,
@@ -157,6 +161,7 @@ class SocketNotifier extends StateNotifier<Socket?> {
         }
         if (_connectionState != ConnectionState.connected) return;
         _connectionState = ConnectionState.disconnected;
+        ref.read(serverVersionProvider.notifier).state = McVersion.latest;
         debugPrint("disconnected: $data");
         _startTimeoutTimer(socket);
       })
@@ -167,6 +172,14 @@ class SocketNotifier extends StateNotifier<Socket?> {
 
   Future<void> setup(Socket socket) async {
     socket
+      ..on(
+        "serverInfo",
+        (data) {
+          final parsed = McVersion.tryParse(data?.toString());
+          ref.read(serverVersionProvider.notifier).state =
+              parsed ?? McVersion.latest;
+        },
+      )
       ..on(
         "stagingState",
         (data) => ref.read(communicatorProvider).handleStagingState(data),

@@ -4134,7 +4134,7 @@ class _$EmptyModifierImpl
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty('type', 'EntryModifier'));
+    properties..add(DiagnosticsProperty('type', 'EntryModifier'));
   }
 
   @override

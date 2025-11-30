@@ -23,6 +23,7 @@ mixin _$MinecraftMaterial {
   String get name => throw _privateConstructorUsedError;
   List<MaterialProperty> get properties => throw _privateConstructorUsedError;
   String get icon => throw _privateConstructorUsedError;
+  McVersion? get since => throw _privateConstructorUsedError;
 
   /// Serializes this MinecraftMaterial to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -40,7 +41,11 @@ abstract class $MinecraftMaterialCopyWith<$Res> {
           MinecraftMaterial value, $Res Function(MinecraftMaterial) then) =
       _$MinecraftMaterialCopyWithImpl<$Res, MinecraftMaterial>;
   @useResult
-  $Res call({String name, List<MaterialProperty> properties, String icon});
+  $Res call(
+      {String name,
+      List<MaterialProperty> properties,
+      String icon,
+      McVersion? since});
 }
 
 /// @nodoc
@@ -61,6 +66,7 @@ class _$MinecraftMaterialCopyWithImpl<$Res, $Val extends MinecraftMaterial>
     Object? name = null,
     Object? properties = null,
     Object? icon = null,
+    Object? since = freezed,
   }) {
     return _then(_value.copyWith(
       name: null == name
@@ -75,6 +81,10 @@ class _$MinecraftMaterialCopyWithImpl<$Res, $Val extends MinecraftMaterial>
           ? _value.icon
           : icon // ignore: cast_nullable_to_non_nullable
               as String,
+      since: freezed == since
+          ? _value.since
+          : since // ignore: cast_nullable_to_non_nullable
+              as McVersion?,
     ) as $Val);
   }
 }
@@ -87,7 +97,11 @@ abstract class _$$MinecraftMaterialImplCopyWith<$Res>
       __$$MinecraftMaterialImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String name, List<MaterialProperty> properties, String icon});
+  $Res call(
+      {String name,
+      List<MaterialProperty> properties,
+      String icon,
+      McVersion? since});
 }
 
 /// @nodoc
@@ -106,6 +120,7 @@ class __$$MinecraftMaterialImplCopyWithImpl<$Res>
     Object? name = null,
     Object? properties = null,
     Object? icon = null,
+    Object? since = freezed,
   }) {
     return _then(_$MinecraftMaterialImpl(
       name: null == name
@@ -120,6 +135,10 @@ class __$$MinecraftMaterialImplCopyWithImpl<$Res>
           ? _value.icon
           : icon // ignore: cast_nullable_to_non_nullable
               as String,
+      since: freezed == since
+          ? _value.since
+          : since // ignore: cast_nullable_to_non_nullable
+              as McVersion?,
     ));
   }
 }
@@ -130,7 +149,8 @@ class _$MinecraftMaterialImpl implements _MinecraftMaterial {
   const _$MinecraftMaterialImpl(
       {required this.name,
       required final List<MaterialProperty> properties,
-      required this.icon})
+      required this.icon,
+      this.since})
       : _properties = properties;
 
   factory _$MinecraftMaterialImpl.fromJson(Map<String, dynamic> json) =>
@@ -148,10 +168,12 @@ class _$MinecraftMaterialImpl implements _MinecraftMaterial {
 
   @override
   final String icon;
+  @override
+  final McVersion? since;
 
   @override
   String toString() {
-    return 'MinecraftMaterial(name: $name, properties: $properties, icon: $icon)';
+    return 'MinecraftMaterial(name: $name, properties: $properties, icon: $icon, since: $since)';
   }
 
   @override
@@ -162,13 +184,14 @@ class _$MinecraftMaterialImpl implements _MinecraftMaterial {
             (identical(other.name, name) || other.name == name) &&
             const DeepCollectionEquality()
                 .equals(other._properties, _properties) &&
-            (identical(other.icon, icon) || other.icon == icon));
+            (identical(other.icon, icon) || other.icon == icon) &&
+            (identical(other.since, since) || other.since == since));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, name,
-      const DeepCollectionEquality().hash(_properties), icon);
+      const DeepCollectionEquality().hash(_properties), icon, since);
 
   /// Create a copy of MinecraftMaterial
   /// with the given fields replaced by the non-null parameter values.
@@ -191,7 +214,8 @@ abstract class _MinecraftMaterial implements MinecraftMaterial {
   const factory _MinecraftMaterial(
       {required final String name,
       required final List<MaterialProperty> properties,
-      required final String icon}) = _$MinecraftMaterialImpl;
+      required final String icon,
+      final McVersion? since}) = _$MinecraftMaterialImpl;
 
   factory _MinecraftMaterial.fromJson(Map<String, dynamic> json) =
       _$MinecraftMaterialImpl.fromJson;
@@ -202,6 +226,8 @@ abstract class _MinecraftMaterial implements MinecraftMaterial {
   List<MaterialProperty> get properties;
   @override
   String get icon;
+  @override
+  McVersion? get since;
 
   /// Create a copy of MinecraftMaterial
   /// with the given fields replaced by the non-null parameter values.
