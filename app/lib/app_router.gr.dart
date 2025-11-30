@@ -1,3 +1,4 @@
+// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -13,10 +14,7 @@ part of 'app_router.dart';
 /// [BookPage]
 class BookRoute extends PageRouteInfo<void> {
   const BookRoute({List<PageRouteInfo>? children})
-      : super(
-          BookRoute.name,
-          initialChildren: children,
-        );
+    : super(BookRoute.name, initialChildren: children);
 
   static const String name = 'BookRoute';
 
@@ -39,22 +37,22 @@ class ConnectRoute extends PageRouteInfo<ConnectRouteArgs> {
     Key? key,
     List<PageRouteInfo>? children,
   }) : super(
-          ConnectRoute.name,
-          args: ConnectRouteArgs(
-            hostname: hostname,
-            port: port,
-            token: token,
-            secure: secure,
-            key: key,
-          ),
-          rawQueryParams: {
-            'host': hostname,
-            'port': port,
-            'token': token,
-            'secure': secure,
-          },
-          initialChildren: children,
-        );
+         ConnectRoute.name,
+         args: ConnectRouteArgs(
+           hostname: hostname,
+           port: port,
+           token: token,
+           secure: secure,
+           key: key,
+         ),
+         rawQueryParams: {
+           'host': hostname,
+           'port': port,
+           'token': token,
+           'secure': secure,
+         },
+         initialChildren: children,
+       );
 
   static const String name = 'ConnectRoute';
 
@@ -63,21 +61,14 @@ class ConnectRoute extends PageRouteInfo<ConnectRouteArgs> {
     builder: (data) {
       final queryParams = data.queryParams;
       final args = data.argsAs<ConnectRouteArgs>(
-          orElse: () => ConnectRouteArgs(
-                hostname: queryParams.getString(
-                  'host',
-                  "",
-                ),
-                port: queryParams.optInt('port'),
-                token: queryParams.getString(
-                  'token',
-                  "",
-                ),
-                secure: queryParams.getBool(
-                  'secure',
-                  false,
-                ),
-              ));
+        orElse:
+            () => ConnectRouteArgs(
+              hostname: queryParams.getString('host', ""),
+              port: queryParams.optInt('port'),
+              token: queryParams.getString('token', ""),
+              secure: queryParams.getBool('secure', false),
+            ),
+      );
       return ConnectPage(
         hostname: args.hostname,
         port: args.port,
@@ -118,10 +109,7 @@ class ConnectRouteArgs {
 /// [EmptyPageEditor]
 class EmptyPageEditorRoute extends PageRouteInfo<void> {
   const EmptyPageEditorRoute({List<PageRouteInfo>? children})
-      : super(
-          EmptyPageEditorRoute.name,
-          initialChildren: children,
-        );
+    : super(EmptyPageEditorRoute.name, initialChildren: children);
 
   static const String name = 'EmptyPageEditorRoute';
 
@@ -137,10 +125,7 @@ class EmptyPageEditorRoute extends PageRouteInfo<void> {
 /// [ErrorConnectPage]
 class ErrorConnectRoute extends PageRouteInfo<void> {
   const ErrorConnectRoute({List<PageRouteInfo>? children})
-      : super(
-          ErrorConnectRoute.name,
-          initialChildren: children,
-        );
+    : super(ErrorConnectRoute.name, initialChildren: children);
 
   static const String name = 'ErrorConnectRoute';
 
@@ -156,10 +141,7 @@ class ErrorConnectRoute extends PageRouteInfo<void> {
 /// [HomePage]
 class HomeRoute extends PageRouteInfo<void> {
   const HomeRoute({List<PageRouteInfo>? children})
-      : super(
-          HomeRoute.name,
-          initialChildren: children,
-        );
+    : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
@@ -174,19 +156,13 @@ class HomeRoute extends PageRouteInfo<void> {
 /// generated route for
 /// [PageEditor]
 class PageEditorRoute extends PageRouteInfo<PageEditorRouteArgs> {
-  PageEditorRoute({
-    required String id,
-    Key? key,
-    List<PageRouteInfo>? children,
-  }) : super(
-          PageEditorRoute.name,
-          args: PageEditorRouteArgs(
-            id: id,
-            key: key,
-          ),
-          rawPathParams: {'id': id},
-          initialChildren: children,
-        );
+  PageEditorRoute({required String id, Key? key, List<PageRouteInfo>? children})
+    : super(
+        PageEditorRoute.name,
+        args: PageEditorRouteArgs(id: id, key: key),
+        rawPathParams: {'id': id},
+        initialChildren: children,
+      );
 
   static const String name = 'PageEditorRoute';
 
@@ -195,20 +171,15 @@ class PageEditorRoute extends PageRouteInfo<PageEditorRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<PageEditorRouteArgs>(
-          orElse: () => PageEditorRouteArgs(id: pathParams.getString('id')));
-      return PageEditor(
-        id: args.id,
-        key: args.key,
+        orElse: () => PageEditorRouteArgs(id: pathParams.getString('id')),
       );
+      return PageEditor(id: args.id, key: args.key);
     },
   );
 }
 
 class PageEditorRouteArgs {
-  const PageEditorRouteArgs({
-    required this.id,
-    this.key,
-  });
+  const PageEditorRouteArgs({required this.id, this.key});
 
   final String id;
 
@@ -224,10 +195,7 @@ class PageEditorRouteArgs {
 /// [PagesList]
 class PagesListRoute extends PageRouteInfo<void> {
   const PagesListRoute({List<PageRouteInfo>? children})
-      : super(
-          PagesListRoute.name,
-          initialChildren: children,
-        );
+    : super(PagesListRoute.name, initialChildren: children);
 
   static const String name = 'PagesListRoute';
 

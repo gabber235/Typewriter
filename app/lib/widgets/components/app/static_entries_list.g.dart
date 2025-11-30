@@ -6,7 +6,7 @@ part of 'static_entries_list.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$staticEntryIdsHash() => r'0cdc0873a058daa2450c0c1e1df5a4bb7360ea54';
+String _$staticEntryIdsHash() => r'03e1a0c256a7b1543b0f07a79172c87cddd8f1da';
 
 /// See also [_staticEntryIds].
 @ProviderFor(_staticEntryIds)

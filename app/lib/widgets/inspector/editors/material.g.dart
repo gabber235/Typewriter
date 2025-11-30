@@ -160,7 +160,27 @@ class _MaterialPropertiesProviderElement
   String get meta => (origin as MaterialPropertiesProvider).meta;
 }
 
-String _$fuzzyMaterialsHash() => r'b37a1dfd121ba671b25989280ff20c0c1bd9c1f8';
+String _$availableMaterialsMapHash() =>
+    r'9169cdc2fc7d6e4254311c037da9efe18abcb324';
+
+/// See also [availableMaterialsMap].
+@ProviderFor(availableMaterialsMap)
+final availableMaterialsMapProvider =
+    AutoDisposeProvider<Map<String, MinecraftMaterial>>.internal(
+  availableMaterialsMap,
+  name: r'availableMaterialsMapProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$availableMaterialsMapHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AvailableMaterialsMapRef
+    = AutoDisposeProviderRef<Map<String, MinecraftMaterial>>;
+String _$fuzzyMaterialsHash() => r'cc0018d4b841683bd6ff3e53cb094af4bb2af8ba';
 
 /// See also [_fuzzyMaterials].
 @ProviderFor(_fuzzyMaterials)

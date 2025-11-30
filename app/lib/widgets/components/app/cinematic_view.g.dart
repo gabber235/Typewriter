@@ -912,7 +912,7 @@ class _SegmentPathsProviderElement
   String get entryId => (origin as _SegmentPathsProvider).entryId;
 }
 
-String _$segmentsHash() => r'df9ff13dbbf42866bfb198f6062988d48da35ee6';
+String _$segmentsHash() => r'c228a3ac6d17dc7b8c2f81decdda340de56fe05e';
 
 /// See also [_segments].
 @ProviderFor(_segments)
