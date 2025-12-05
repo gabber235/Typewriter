@@ -1,0 +1,98 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import Player from "@site/src/components/Player";
+import StateFlow from '@site/src/components/StateFlow';
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+import EntryDisplay from "@site/src/components/EntryDisplay";
+
+# Kill Zombie Objective
+:::info[Before starting]
+It's best to first read [Questing](../index.mdx) before starting this tutorial.
+:::
+:::warning[NPC Interaction]
+This tutorial requires you to already have some knowledge of creating NPCs using the [Entity Extension](../../04-entity-extension/index.mdx) and [using them in a quest](./01-talk-objective.mdx)
+:::
+
+<SplitLayout>
+<Section divider='left'>
+## Quest Flow
+<StateFlow
+  nodes={[
+    {
+      id: 'not-started',
+      title: 'Not Started',
+      facts: ['Zombie Quest Fact = 0'],
+      className: 'bg-gray-100 dark:bg-zinc-600 ring-1 ring-[#1f2937] dark:ring-white',
+      description: 'Player hasn\'t started the quest yet',
+      icon: 'tabler:circle-dot',
+      transitions: [
+        { 
+          targetId: 'quest-received', 
+          label: 'Talk to NPC', 
+          icon: 'tabler:message-circle' 
+        }
+      ]
+    },
+    {
+      id: 'quest-received',
+      title: 'Quest Received',
+      facts: ['Zombie Quest Fact = 1', 'Kill Zombie Fact = 0'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-cyan-500 border-cyan-100 dark:border-cyan-800',
+      description: 'Player has received the quest from the NPC',
+      icon: 'tabler:message-circle',
+      transitions: [
+        { 
+          targetId: 'killing', 
+          label: 'Kill Zombies', 
+          icon: 'tabler:sword' 
+        }
+      ]
+    },
+    {
+      id: 'killing',
+      title: 'Killing Zombies',
+      facts: ['Zombie Quest Fact = 1', 'Kill Zombie Fact >= 2'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-[#4cb3d4] border-cyan-100 dark:border-cyan-800',
+      description: 'Player is killing zombies',
+      icon: 'tabler:sword',
+      transitions: [
+        { 
+          targetId: 'completed', 
+          label: 'Return to NPC', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      facts: ['Zombie Quest Fact = 2'],
+      className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
+      description: 'Player has completed the quest by killing 2 zombies',
+      icon: 'tabler:check-circle',
+      transitions: [
+        { 
+          targetId: 'not-started', 
+          label: 'Reset Quest', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    }
+  ]}
+/>
+</Section>
+<Section divider='right'>
+## Quest Setup
+This guide you will learn how to create:
+* Add a quest 
+* Add an objective where the player must kill 2 zombies to complete the quest.
+
+</Section>
+</SplitLayout>
+
+## Setting up the manifest page
+Retteket dit duurt nog effe
