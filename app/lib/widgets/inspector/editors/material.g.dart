@@ -160,7 +160,158 @@ class _MaterialPropertiesProviderElement
   String get meta => (origin as MaterialPropertiesProvider).meta;
 }
 
-String _$fuzzyMaterialsHash() => r'b37a1dfd121ba671b25989280ff20c0c1bd9c1f8';
+String _$availableMaterialsMapHash() =>
+    r'9169cdc2fc7d6e4254311c037da9efe18abcb324';
+
+/// See also [availableMaterialsMap].
+@ProviderFor(availableMaterialsMap)
+final availableMaterialsMapProvider =
+    AutoDisposeProvider<Map<String, MinecraftMaterial>>.internal(
+  availableMaterialsMap,
+  name: r'availableMaterialsMapProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$availableMaterialsMapHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AvailableMaterialsMapRef
+    = AutoDisposeProviderRef<Map<String, MinecraftMaterial>>;
+String _$isMaterialAvailableHash() =>
+    r'3f6983400f1c0cf8356a47cca4da6fbae874c615';
+
+/// See also [isMaterialAvailable].
+@ProviderFor(isMaterialAvailable)
+const isMaterialAvailableProvider = IsMaterialAvailableFamily();
+
+/// See also [isMaterialAvailable].
+class IsMaterialAvailableFamily extends Family<bool> {
+  /// See also [isMaterialAvailable].
+  const IsMaterialAvailableFamily();
+
+  /// See also [isMaterialAvailable].
+  IsMaterialAvailableProvider call(
+    String material,
+  ) {
+    return IsMaterialAvailableProvider(
+      material,
+    );
+  }
+
+  @override
+  IsMaterialAvailableProvider getProviderOverride(
+    covariant IsMaterialAvailableProvider provider,
+  ) {
+    return call(
+      provider.material,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'isMaterialAvailableProvider';
+}
+
+/// See also [isMaterialAvailable].
+class IsMaterialAvailableProvider extends AutoDisposeProvider<bool> {
+  /// See also [isMaterialAvailable].
+  IsMaterialAvailableProvider(
+    String material,
+  ) : this._internal(
+          (ref) => isMaterialAvailable(
+            ref as IsMaterialAvailableRef,
+            material,
+          ),
+          from: isMaterialAvailableProvider,
+          name: r'isMaterialAvailableProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$isMaterialAvailableHash,
+          dependencies: IsMaterialAvailableFamily._dependencies,
+          allTransitiveDependencies:
+              IsMaterialAvailableFamily._allTransitiveDependencies,
+          material: material,
+        );
+
+  IsMaterialAvailableProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.material,
+  }) : super.internal();
+
+  final String material;
+
+  @override
+  Override overrideWith(
+    bool Function(IsMaterialAvailableRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: IsMaterialAvailableProvider._internal(
+        (ref) => create(ref as IsMaterialAvailableRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        material: material,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeProviderElement<bool> createElement() {
+    return _IsMaterialAvailableProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is IsMaterialAvailableProvider && other.material == material;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, material.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin IsMaterialAvailableRef on AutoDisposeProviderRef<bool> {
+  /// The parameter `material` of this provider.
+  String get material;
+}
+
+class _IsMaterialAvailableProviderElement
+    extends AutoDisposeProviderElement<bool> with IsMaterialAvailableRef {
+  _IsMaterialAvailableProviderElement(super.provider);
+
+  @override
+  String get material => (origin as IsMaterialAvailableProvider).material;
+}
+
+String _$fuzzyMaterialsHash() => r'cc0018d4b841683bd6ff3e53cb094af4bb2af8ba';
 
 /// See also [_fuzzyMaterials].
 @ProviderFor(_fuzzyMaterials)

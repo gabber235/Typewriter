@@ -10,11 +10,11 @@ import com.typewritermc.core.utils.point.toBlockPosition
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CancelableEventEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.shouldCancel
 import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
+import com.typewritermc.engine.paper.utils.item.toItem
 import com.typewritermc.engine.paper.utils.toPosition
 import org.bukkit.Material
 import org.bukkit.event.block.BlockBreakEvent
@@ -52,7 +52,13 @@ enum class BlockBreakContextKeys(override val klass: KClass<*>) : EntryContextKe
     BLOCK_POSITION(Position::class),
 
     @KeyType(Position::class)
-    CENTER_POSITION(Position::class)
+    CENTER_POSITION(Position::class),
+
+    @KeyType(Item::class)
+    MAIN_HAND_ITEM(Item::class),
+
+    @KeyType(Item::class)
+    OFF_HAND_ITEM(Item::class),
 }
 
 @EntryListener(BlockBreakEventEntry::class, ignoreCancelled = true)
@@ -73,6 +79,8 @@ fun onBlockBreak(event: BlockBreakEvent, query: Query<BlockBreakEventEntry>) {
         BlockBreakContextKeys.TYPE += event.block.type
         BlockBreakContextKeys.BLOCK_POSITION += position.toBlockPosition()
         BlockBreakContextKeys.CENTER_POSITION += position.mid()
+        BlockBreakContextKeys.MAIN_HAND_ITEM += player.inventory.itemInMainHand.toItem()
+        BlockBreakContextKeys.OFF_HAND_ITEM += player.inventory.itemInOffHand.toItem()
     }
     if (entries.shouldCancel(player)) event.isCancelled = true
 }

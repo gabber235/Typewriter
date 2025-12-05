@@ -10,7 +10,6 @@ import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.server
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import lirand.api.extensions.server.registerEvents
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -102,7 +101,7 @@ class PlayerSessionManager : Listener, KoinComponent {
     // When a player leaves the server, we need to end the session.
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerQuit(event: PlayerQuitEvent) {
-        runBlocking { // Maybe make Dispatchers.Unconfined
+        Dispatchers.Unconfined.launch {
             sessions.remove(event.player.uniqueId)?.teardown()
         }
     }

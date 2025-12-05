@@ -390,7 +390,7 @@ sealed interface Extension {
 sealed class FailureReason(val message: String) {
     /** Extension built for a different engine version with incompatible APIs. */
     class VersionMismatch(expected: String, found: String) :
-        FailureReason("version mismatch, expected $expected found $found")
+        FailureReason("version mismatch, typewriter version is $expected but extension was made for $found")
 
     /** Extension targets a different platform. */
     data object NotPaperExtension :

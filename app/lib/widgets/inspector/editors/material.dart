@@ -4,6 +4,7 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/materials.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -36,9 +37,22 @@ List<MaterialProperty> materialProperties(
 }
 
 @riverpod
+Map<String, MinecraftMaterial> availableMaterialsMap(Ref ref) {
+  final version = ref.watch(serverVersionProvider);
+  return availableMaterials(version);
+}
+
+@riverpod
+bool isMaterialAvailable(Ref ref, String material) {
+  final available = ref.watch(availableMaterialsMapProvider);
+  return available.containsKey(material);
+}
+
+@riverpod
 Fuzzy<CombinedMaterial> _fuzzyMaterials(Ref ref) {
+  final available = ref.watch(availableMaterialsMapProvider);
   return Fuzzy(
-    materials.entries.toList(),
+    available.entries.toList(),
     options: FuzzyOptions(
       threshold: 0.2,
       keys: [
@@ -231,6 +245,7 @@ class MaterialEditor extends HookConsumerWidget {
     final currentValue = value.isEmpty ? "air" : value.toLowerCase();
     final currentMaterial = materials[currentValue];
     final hasMaterial = currentMaterial != null;
+    final isAvailable = ref.watch(isMaterialAvailableProvider(currentValue));
 
     return InputField(
       child: InkWell(
@@ -242,9 +257,14 @@ class MaterialEditor extends HookConsumerWidget {
             children: [
               if (hasMaterial)
                 Expanded(
-                  child: MaterialItem(
-                    id: currentValue,
-                    material: currentMaterial,
+                  child: Column(
+                    children: [
+                      MaterialItem(
+                        id: currentValue,
+                        material: currentMaterial,
+                        isAvailable: isAvailable,
+                      ),
+                    ],
                   ),
                 )
               else
@@ -268,14 +288,20 @@ class MaterialEditor extends HookConsumerWidget {
   }
 }
 
-class MaterialItem extends StatelessWidget {
-  const MaterialItem({required this.id, required this.material, super.key});
+class MaterialItem extends ConsumerWidget {
+  const MaterialItem({
+    required this.id,
+    required this.material,
+    this.isAvailable = true,
+    super.key,
+  });
 
   final String id;
   final MinecraftMaterial material;
+  final bool isAvailable;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       leading: Padding(
         padding: const EdgeInsets.symmetric(vertical: 3.0),
@@ -288,9 +314,23 @@ class MaterialItem extends StatelessWidget {
         material.name,
         maxLines: 1,
       ),
-      subtitle: AutoSizeText(
-        "minecraft:$id",
-        maxLines: 1,
+      subtitle: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AutoSizeText(
+            "minecraft:$id",
+            maxLines: 1,
+          ),
+          if (!isAvailable)
+            Text(
+              "Unavailable on ${ref.watch(serverVersionProvider).name} servers",
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: Colors.orange),
+            ),
+        ],
       ),
     );
   }

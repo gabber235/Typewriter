@@ -11,11 +11,11 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CancelableEventEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.shouldCancel
 import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
+import com.typewritermc.engine.paper.utils.item.toItem
 import com.typewritermc.engine.paper.utils.toPosition
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -86,6 +86,12 @@ enum class HoldingHand(val main: Boolean, val off: Boolean) {
 enum class InteractBlockContextKeys(override val klass: KClass<*>) : EntryContextKey {
     @KeyType(Position::class)
     POSITION(Position::class),
+
+    @KeyType(Item::class)
+    MAIN_HAND_ITEM(Item::class),
+
+    @KeyType(Item::class)
+    OFF_HAND_ITEM(Item::class),
 }
 
 fun hasItemInHand(player: Player, hand: HoldingHand, item: Item): Boolean {
@@ -122,6 +128,8 @@ fun onInteractBlock(event: PlayerInteractEvent, query: Query<InteractBlockEventE
 
     entries.startDialogueWithOrNextDialogue(player) {
         InteractBlockContextKeys.POSITION += location.toPosition()
+        InteractBlockContextKeys.MAIN_HAND_ITEM += player.inventory.itemInMainHand.toItem()
+        InteractBlockContextKeys.OFF_HAND_ITEM += player.inventory.itemInOffHand.toItem()
     }
     if (entries.shouldCancel(player)) event.isCancelled = true
 }

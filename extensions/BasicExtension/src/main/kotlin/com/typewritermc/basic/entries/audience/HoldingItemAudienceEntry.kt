@@ -74,8 +74,12 @@ class HoldingItemAudienceFilter(
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    fun onPickupItem(event: PlayerPickItemEvent) = event.player.refresh()
+    fun onPickupItem(event: PlayerPickItemEvent) {
+        event.player.refresh()
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    fun onDropItem(event: PlayerDropItemEvent) = event.player.refresh()
+    fun onDropItem(event: PlayerDropItemEvent) {
+        event.player.refresh()
+    }
 }
