@@ -11,7 +11,6 @@ import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.CachableFactEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactData
 import com.typewritermc.engine.paper.snippets.snippet
@@ -20,7 +19,6 @@ import com.typewritermc.quest.entries.ObjectiveEntry
 import com.typewritermc.quest.entries.inactiveObjectiveDisplay
 import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
-import kotlin.math.absoluteValue
 
 val objectiveDisplay by snippet(
     "quest.objectives.cachable.completed",
@@ -59,23 +57,24 @@ interface CachableFactObjective : ObjectiveEntry {
     }
 
     override fun display(player: Player?): String {
+        if (player == null) {
+            return inactiveObjectiveDisplay
+        }
+        val value = progressTracking.value.get()?.readForPlayersGroup(player)?.value ?: 0
+        val target = progressTracking.target.get(player)
         val text = when {
-            player == null -> inactiveObjectiveDisplay
             progressTracking.operator.isValid(
-                progressTracking.value.get()?.readForPlayersGroup(player)?.value ?: 0,
-                progressTracking.target.get(player).absoluteValue
+                value,
+                target
             ) -> objectiveDisplay
 
             criteria.matches(player) -> showingObjectiveDisplay
             else -> inactiveObjectiveDisplay
         }
         return text
-            .replaceTagPlaceholders("display", display.get(player) ?: "")
-            .replaceTagPlaceholders(
-                "value",
-                progressTracking.value.get()?.readForPlayersGroup(player!!)?.value?.toString() ?: "0"
-            )
-            .replaceTagPlaceholders("target", progressTracking.target.get(player).toString())
+            .replaceTagPlaceholders("display", display.get(player))
+            .replaceTagPlaceholders("value", value.toString())
+            .replaceTagPlaceholders("target", target.toString())
             .parsePlaceholders(player)
     }
 }
