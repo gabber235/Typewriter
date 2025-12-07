@@ -91,7 +91,7 @@ class GridSelectableCard extends StatelessWidget {
   Color _backgroundColor() {
     if (isSelected) {
       if (isFocused) {
-        return baseColor.withValues(alpha: 0.80);
+        return baseColor.withValues(alpha: 0.70);
       }
       return baseColor;
     }
@@ -103,14 +103,9 @@ class GridSelectableCard extends StatelessWidget {
     final onBase =
         onBaseColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
 
-    final resolvedTitleStyle = (titleStyle ??
-            TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ))
-        .copyWith(
-      color: isSelected ? onBase : baseColor,
-    );
+    final resolvedTitleStyle =
+        (titleStyle ?? TextStyle(fontSize: 16, fontVariations: [.weight(600)]))
+            .copyWith(color: isSelected ? onBase : baseColor);
 
     return AnimatedContainer(
       duration: animationDuration,
@@ -119,15 +114,15 @@ class GridSelectableCard extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: _backgroundColor(),
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
+        borderRadius: .circular(borderRadius),
+        border: .all(
           width: 2,
           color: isFocused ? baseColor : Colors.transparent,
         ),
       ),
       padding: padding,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           if (badgeLabel != null)
             _Badge(
@@ -144,13 +139,10 @@ class GridSelectableCard extends StatelessWidget {
           Text(
             title,
             maxLines: 3,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
             style: resolvedTitleStyle,
           ),
-          if (footer != null) ...[
-            const SizedBox(height: 6),
-            footer!,
-          ],
+          if (footer != null) ...[const SizedBox(height: 6), footer!],
         ],
       ),
     ).animate(target: isHovered ? 1 : 0).hoverScale(isHovered);
@@ -173,10 +165,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 4,
-      ),
+      padding: const .symmetric(horizontal: 10, vertical: 4),
       decoration: ShapeDecoration(
         color: isSelected ? onColor : color,
         shape: const StadiumBorder(),
@@ -185,8 +174,8 @@ class _Badge extends StatelessWidget {
         label.toUpperCase(),
         style: TextStyle(
           fontSize: 11,
-          fontWeight: FontWeight.w700,
           letterSpacing: 0.7,
+          fontVariations: [.weight(700)],
           color: isSelected ? color : onColor,
         ),
       ),

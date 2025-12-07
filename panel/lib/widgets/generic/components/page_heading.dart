@@ -4,11 +4,7 @@ import "package:typewriter_panel/utils/fonts.dart";
 
 /// A prominent page heading with optional subtext for context.
 class PageHeading extends StatelessWidget {
-  const PageHeading({
-    required this.title,
-    this.subtext,
-    super.key,
-  });
+  const PageHeading({required this.title, this.subtext, super.key});
 
   final String title;
   final String? subtext;
@@ -16,11 +12,12 @@ class PageHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
+      mainAxisSize: .min,
       children: [
         Text(
           title,
-          textAlign: TextAlign.start,
+          textAlign: .start,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontVariations: const [boldWeight],
             letterSpacing: -1,
@@ -29,18 +26,18 @@ class PageHeading extends StatelessWidget {
         ),
         if (subtext != null && subtext!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 8.0),
+            padding: const .only(top: 8.0),
             child: Text(
               subtext!,
-              textAlign: TextAlign.start,
+              textAlign: .start,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: context.responsive(
-                      mobile: 12,
-                      tablet: 14,
-                      desktop: 16,
-                    ),
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: context.responsive(
+                  mobile: 12,
+                  tablet: 14,
+                  desktop: 16,
+                ),
+              ),
             ),
           ),
       ],
