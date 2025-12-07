@@ -4,7 +4,7 @@ publish_to: "none"
 version: 0.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.10.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -16,16 +16,11 @@ dependencies:
   typewriter_testkit:
     path: ../testkit
   hooks_riverpod:
-  riverpod_annotation:
   flutter_animate:
   faker:
   flutter_hooks:
   iconify_flutter_plus:
-  oidc: ^0.13.0
-  oidc_default_store: ^0.5.0
-  oidc_core: ^0.15.0
   pub_semver:
-  collection:
 
 dev_dependencies:
   flutter_test:
@@ -33,7 +28,6 @@ dev_dependencies:
   flutter_lints:
   widgetbook_generator:
   build_runner:
-  riverpod_generator:
   custom_lint:
   riverpod_lint:
 

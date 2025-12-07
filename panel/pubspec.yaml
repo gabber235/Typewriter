@@ -4,7 +4,7 @@ publish_to: "none"
 version: 1000.0.0+1
 
 environment:
-  sdk: ">=3.8.0 <4.0.0"
+  sdk: ">=3.10.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -17,7 +17,6 @@ dependencies:
   oidc: ^0.13.0
   oidc_default_store: ^0.5.0
   oidc_core: ^0.15.0
-  jose: ^0.3.5
   localstorage: ^6.0.0
   freezed_annotation:
   json_annotation:

@@ -4,7 +4,7 @@ publish_to: "none"
 version: 0.0.0
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.10.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -15,11 +15,6 @@ dependencies:
   riverpod_annotation:
   flutter_animate:
   faker:
-  flutter_hooks:
-  iconify_flutter_plus:
-  oidc: ^0.13.0
-  oidc_default_store: ^0.5.0
-  oidc_core: ^0.15.0
   pub_semver:
   collection:
 
