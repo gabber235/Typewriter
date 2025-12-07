@@ -49,8 +49,9 @@ class FishObjective(
             if (event.state != PlayerFishEvent.State.CAUGHT_FISH) return@listenToEvent
 
             if (caught.isPresent) {
+                val caughtItem = event.caught as? org.bukkit.entity.Item ?: return@listenToEvent
                 val expectedType = caught.get().get(event.player)
-                if (event.caught != expectedType) return@listenToEvent
+                if (!expectedType.isSameAs(event.player, caughtItem.itemStack)) return@listenToEvent
             }
 
             changeFact(event.player, 1)
