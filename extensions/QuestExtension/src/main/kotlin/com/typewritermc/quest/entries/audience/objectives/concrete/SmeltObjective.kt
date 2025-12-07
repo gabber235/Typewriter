@@ -39,8 +39,8 @@ class SmeltObjective(
     val result: Optional<Var<Material>> = Optional.empty(),
     @Help("Track the progress of the SmeltObjective using a fact and set its target value.")
     override val progressTracking: CacheableFactObjectiveProgressTracking = CacheableFactObjectiveProgressTracking(),
-    @Help("The display supports the <count> and <target> tags from the fact.")
-    override val display: Var<String> = ConstVar("<count>/<target>"),
+    @Help("The display supports the <value> and <target> tags from the fact.")
+    override val display: Var<String> = ConstVar("<value>/<target>"),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : CachableFactObjective {
 
