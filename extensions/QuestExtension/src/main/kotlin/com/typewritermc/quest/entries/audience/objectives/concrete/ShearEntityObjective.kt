@@ -19,7 +19,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.event.player.PlayerShearEntityEvent
 import java.util.*
 
-@Entry("shear_entity_objective", "A shear entity objective definition", Colors.BLUE_VIOLET, "fa6-solid:skull")
+@Entry("shear_entity_objective", "A shear entity objective definition", Colors.BLUE_VIOLET, "mdi:sheep")
 /**
  * The `ShearEntityObjective` entry is a task that the player can complete by shearing a specific amount of entities.
  *
