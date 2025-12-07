@@ -62,17 +62,13 @@ void main() {
         );
       }
 
-      await tester.pumpTestApp(
-        child: withAction(include: true),
-      );
+      await tester.pumpTestApp(child: withAction(include: true));
       await tester.pumpAndSettle();
       for (var i = 0; i < 2; i++) {
         expect(find.text("Action $i"), findsOneWidget);
       }
 
-      await tester.pumpTestApp(
-        child: withAction(include: false),
-      );
+      await tester.pumpTestApp(child: withAction(include: false));
       await tester.pump();
       await tester.pump();
 
@@ -96,8 +92,9 @@ void main() {
   });
 
   group("ActionShortcuts Async Execution", () {
-    testWidgets("shows loading spinner while async action runs",
-        (tester) async {
+    testWidgets("shows loading spinner while async action runs", (
+      tester,
+    ) async {
       final shortcut = testAction(
         2,
         onInvoke: (ref) async {
@@ -131,8 +128,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets("non-invokable action not clickable and no spinner",
-        (tester) async {
+    testWidgets("non-invokable action not clickable and no spinner", (
+      tester,
+    ) async {
       final shortcut = testAction(3);
 
       await tester.pumpTestApp(
@@ -153,12 +151,10 @@ void main() {
   });
 
   group("ActionShortcuts Overflow", () {
-    testWidgets("retains highest priority actions when width constrained",
-        (tester) async {
-      final shortcuts = List.generate(
-        5,
-        testAction,
-      );
+    testWidgets("retains highest priority actions when width constrained", (
+      tester,
+    ) async {
+      final shortcuts = List.generate(5, testAction);
 
       await tester.pumpTestApp(
         child: Column(
@@ -173,11 +169,11 @@ void main() {
         ),
       );
 
-      await tester.pump(); // first build (all offstage for measurement)
-      await tester.pump(); // measurement pass -> binary search applied
+      await tester.pump();
+      await tester.pump();
 
-      expect(find.text("Action 0"), findsNothing);
-      expect(find.text("Action 4"), findsOneWidget);
+      expect(find.text("Action 0").hitTestable(), findsNothing);
+      expect(find.text("Action 4").hitTestable(), findsOneWidget);
     });
   });
 }

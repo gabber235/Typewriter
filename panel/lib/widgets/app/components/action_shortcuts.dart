@@ -1,7 +1,6 @@
-import "dart:math";
-
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/rendering.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
@@ -9,9 +8,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/hooks/delayed_execution.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
-import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
 part "action_shortcuts.freezed.dart";
@@ -187,135 +184,161 @@ class ActionRow extends HookConsumerWidget {
       return filtered;
     }, [actionsMap]);
 
-    final ids = actions.map((a) => a.id).toList();
-    final keysMap = useRef<Map<String, GlobalKey>>({});
-    final widths = useRef<Map<String, double>>({});
-    final visibleCountState = useState<int?>(null);
-
-    for (final id in ids) {
-      keysMap.value.putIfAbsent(id, () => GlobalKey(debugLabel: "Action-$id"));
-    }
-    keysMap.value.removeWhere((id, _) => !ids.contains(id));
-
-    void measureAndResolve(BoxConstraints constraints) {
-      final maxWidth = constraints.maxWidth.isInfinite
-          ? MediaQuery.of(context).size.width - 10
-          : constraints.maxWidth - 10;
-
-      for (final id in ids) {
-        final key = keysMap.value[id]!;
-        final ctx = key.currentContext;
-        if (ctx == null) {
-          return;
-        }
-        final renderBox = ctx.findRenderObject() as RenderBox?;
-        if (renderBox == null || !renderBox.hasSize) {
-          return;
-        }
-        widths.value[id] = renderBox.size.width;
-      }
-
-      final orderedWidths = ids.map((id) => widths.value[id] ?? 0).toList();
-      // Binary search on how many actions we can show (highest priority preserved).
-      final n = orderedWidths.length;
-      var low = 1;
-      var high = n;
-      var best = 0;
-      double spacingSum(int count) => count <= 1 ? 0 : spacing * (count - 1);
-
-      bool fits(int count) {
-        if (count <= 0) return true;
-        // Show last count actions (highest priorities)
-        final start = n - count;
-        var total = spacingSum(count);
-        for (var i = start; i < n; i++) {
-          total += orderedWidths[i];
-          if (total > maxWidth) return false;
-        }
-        return total <= maxWidth;
-      }
-
-      while (low <= high) {
-        final mid = (low + high) >> 1;
-        if (fits(mid)) {
-          best = mid;
-          low = mid + 1;
-        } else {
-          high = mid - 1;
-        }
-      }
-      visibleCountState.value = best;
-    }
-
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) => HookBuilder(
-          builder: (context) {
-            useEffect(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!context.mounted) return;
-                measureAndResolve(constraints);
-              });
-              return null;
-            }, [actionsMap, actions.length, constraints.maxWidth]);
-
-            final visibleCount = visibleCountState.value;
-
-            final toShow = visibleCount != null
-                ? actions.sublist(max(0, actions.length - visibleCount))
-                : <ActionShortcut>[];
-
-            return Column(
-              children: [
-                // Always-present hidden full row for stable measurement
-                Offstage(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: spacing,
-                    children: [
-                      for (final action in actions)
-                        TickerMode(
-                          enabled: false,
-                          child: KeyedSubtree(
-                            key: keysMap.value[action.id],
-                            child: _ActionShortcutButton(
-                              action: action,
-                              forceLargest: true,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: Wrap(
-                    spacing: spacing,
-                    alignment: WrapAlignment.end,
-                    children: [
-                      for (final action in toShow)
-                        _ActionShortcutButton(action: action),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: _ActionRowLayout(
+        spacing: spacing,
+        children: [
+          for (final action in actions)
+            _ActionShortcutButton(key: ValueKey(action.id), action: action),
+        ],
       ),
     );
   }
 }
 
+class _ActionRowParentData extends ContainerBoxParentData<RenderBox> {
+  bool isVisible = false;
+}
+
+class _ActionRowLayout extends MultiChildRenderObjectWidget {
+  const _ActionRowLayout({required this.spacing, super.children});
+
+  final double spacing;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderActionRowLayout(spacing: spacing);
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderActionRowLayout renderObject,
+  ) {
+    renderObject.spacing = spacing;
+  }
+}
+
+class _RenderActionRowLayout extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _ActionRowParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _ActionRowParentData> {
+  _RenderActionRowLayout({required double spacing}) : _spacing = spacing;
+
+  double _spacing;
+  double get spacing => _spacing;
+  set spacing(double value) {
+    if (_spacing == value) return;
+    _spacing = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderObject child) {
+    if (child.parentData is! _ActionRowParentData) {
+      child.parentData = _ActionRowParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    final childConstraints = BoxConstraints();
+
+    final childSizes = <RenderBox, Size>{};
+    final children = <RenderBox>[];
+    var child = firstChild;
+    while (child != null) {
+      child.layout(childConstraints, parentUsesSize: true);
+      childSizes[child] = child.size;
+      children.add(child);
+      child = childAfter(child);
+    }
+
+    final maxWidth = constraints.maxWidth;
+
+    var visibleCount = 0;
+    var totalWidth = 0.0;
+    for (var i = children.length - 1; i >= 0; i--) {
+      final childSize = childSizes[children[i]]!;
+      final additionalWidth =
+          childSize.width + (visibleCount > 0 ? spacing : 0);
+      if (totalWidth + additionalWidth > maxWidth) break;
+      totalWidth += additionalWidth;
+      visibleCount++;
+    }
+
+    final startIndex = children.length - visibleCount;
+    var maxHeight = 0.0;
+
+    for (var i = 0; i < children.length; i++) {
+      final c = children[i];
+      final parentData = c.parentData! as _ActionRowParentData
+        ..isVisible = i >= startIndex;
+      if (parentData.isVisible) {
+        final childSize = childSizes[c]!;
+        if (childSize.height > maxHeight) {
+          maxHeight = childSize.height;
+        }
+      }
+    }
+
+    var xOffset = maxWidth - totalWidth;
+    for (var i = startIndex; i < children.length; i++) {
+      final c = children[i];
+      final parentData = c.parentData! as _ActionRowParentData;
+      final childSize = childSizes[c]!;
+      final yOffset = (maxHeight - childSize.height) / 2;
+      parentData.offset = Offset(xOffset, yOffset);
+      xOffset += childSize.width + spacing;
+    }
+
+    size = constraints.constrain(Size(maxWidth, maxHeight));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    var child = firstChild;
+    while (child != null) {
+      final parentData = child.parentData! as _ActionRowParentData;
+      if (parentData.isVisible) {
+        context.paintChild(child, parentData.offset + offset);
+      }
+      child = childAfter(child);
+    }
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    var child = lastChild;
+    while (child != null) {
+      final parentData = child.parentData! as _ActionRowParentData;
+      if (parentData.isVisible) {
+        final isHit = result.addWithPaintOffset(
+          offset: parentData.offset,
+          position: position,
+          hitTest: (result, transformed) {
+            return child!.hitTest(result, position: transformed);
+          },
+        );
+        if (isHit) return true;
+      }
+      child = childBefore(child);
+    }
+    return false;
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty("spacing", spacing));
+  }
+}
+
 class _ActionShortcutButton extends HookConsumerWidget {
-  const _ActionShortcutButton({
-    required this.action,
-    this.forceLargest = false,
-  });
+  const _ActionShortcutButton({required this.action, super.key});
 
   final ActionShortcut action;
-  final bool forceLargest;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -336,9 +359,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
           action.icon!,
         Flexible(child: Text(action.label, overflow: TextOverflow.ellipsis)),
         RotatingShortcuts(
-          shortcuts: forceLargest && action.activators.isNotEmpty
-              ? [action.activators.maxByOrNull((a) => a.length)!]
-              : action.activators,
+          shortcuts: action.activators,
           size: 9,
           interval: 5.seconds,
         ),
