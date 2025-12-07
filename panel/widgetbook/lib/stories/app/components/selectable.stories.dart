@@ -7,7 +7,9 @@ import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
+import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
@@ -36,8 +38,8 @@ class SelectableBox extends HookConsumerWidget {
           opacity: isHovered || isFocused
               ? 0.7
               : isSelected
-                  ? 1
-                  : 0.3,
+              ? 1
+              : 0.3,
           duration: const Duration(milliseconds: 200),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -70,8 +72,9 @@ class SelectableBox extends HookConsumerWidget {
                     selectable.id.formatted,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
@@ -107,25 +110,30 @@ class SelectableDemo extends HookConsumerWidget {
         dataBlueprint: blueprint,
         color: safeColors.randomOrNull()!,
         onDelete: () {
-          selectables.value =
-              selectables.value.where((s) => s.id != id).toList();
+          selectables.value = selectables.value
+              .where((s) => s.id != id)
+              .toList();
         },
       );
     }
 
-    useEffect(
-      () {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          selectables.value = List.generate(3, (index) => generate());
-        });
-        return null;
-      },
-      [],
-    );
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        selectables.value = List.generate(3, (index) => generate());
+      });
+      return null;
+    }, []);
 
     return Scaffold(
       body: Column(
         children: [
+          Padding(
+            padding: const .only(right: 16, top: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [ModeDisplayWidget()],
+            ),
+          ),
           Expanded(
             child: Inspector(
               margin: EdgeInsets.only(top: 8, right: 8),

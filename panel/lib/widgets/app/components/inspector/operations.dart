@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
+import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/string.dart";
@@ -152,15 +154,21 @@ class GlobalOperationShortcuts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.watch(currentInteractionModeProvider);
+
     final operations = ref.watch(
       availableOperationsProvider.select(
         (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList(),
       ),
     );
 
+    final activeOperations = currentMode is NormalMode
+        ? operations
+        : <Operation>[];
+
     return ActionSet(
       shortcuts: [
-        for (final op in operations)
+        for (final op in activeOperations)
           ActionShortcut(
             id: "operation_${op.name.snakeCase()}",
             label: op.name,
@@ -172,7 +180,7 @@ class GlobalOperationShortcuts extends ConsumerWidget {
       ],
       child: Shortcuts(
         shortcuts: {
-          for (final op in operations)
+          for (final op in activeOperations)
             for (final activator in op.shortcutActivators)
               activator: _OperationIntent(operation: op),
         },
