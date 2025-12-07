@@ -70,7 +70,7 @@ open class TextDisplayEntity(player: Player) : WrapperFakeEntity(
             is BackgroundColorProperty -> applyBackgroundColorData(entity, property)
             is TextOpacityProperty -> applyTextOpacityData(entity, property)
             is LineWidthProperty -> applyLineWidthData(entity, property)
-            is ShadowProperty -> applyShadowData(entity, property)
+            is TextShadowProperty -> applyShadowData(entity, property)
             is SeeThroughProperty -> applySeeThroughData(entity, property)
             else -> {}
         }

@@ -19,25 +19,25 @@ class TextShadowData(
     override val name: String = "",
     val shadow: Boolean = false,
     override val priorityOverride: Optional<Int> = Optional.empty(),
-) : TextDisplayEntityData<ShadowProperty> {
-    override fun type(): KClass<ShadowProperty> =
-        ShadowProperty::class
+) : TextDisplayEntityData<TextShadowProperty> {
+    override fun type(): KClass<TextShadowProperty> =
+        TextShadowProperty::class
 
-    override fun build(player: Player): ShadowProperty =
-        ShadowProperty(shadow)
+    override fun build(player: Player): TextShadowProperty =
+        TextShadowProperty(shadow)
 }
 
-data class ShadowProperty(val shadow: Boolean) : EntityProperty {
+data class TextShadowProperty(val shadow: Boolean) : EntityProperty {
     companion object :
-        SinglePropertyCollectorSupplier<ShadowProperty>(
-            ShadowProperty::class,
-            ShadowProperty(false)
+        SinglePropertyCollectorSupplier<TextShadowProperty>(
+            TextShadowProperty::class,
+            TextShadowProperty(false)
         )
 }
 
 fun applyShadowData(
     entity: WrapperEntity,
-    property: ShadowProperty
+    property: TextShadowProperty
 ) {
     entity.metas {
         meta<TextDisplayMeta> { isShadow = property.shadow }

@@ -17,7 +17,7 @@ import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstraintProperty
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
-import com.typewritermc.entity.entries.data.minecraft.display.text.BackgroundColorProperty
+import com.typewritermc.entity.entries.data.minecraft.display.text.*
 import com.typewritermc.entity.entries.entity.minecraft.TextDisplayEntity
 import me.tofaa.entitylib.meta.display.AbstractDisplayMeta.BillboardConstraints
 import org.bukkit.entity.Player
@@ -102,8 +102,19 @@ class NamedEntity(
                 is DisplayNameProperty -> {
                     displayName = property.displayName
                 }
+
+                is BackgroundColorProperty -> applyTextDisplayProperty(property)
+                is TextOpacityProperty -> applyTextDisplayProperty(property)
+                is LineWidthProperty -> applyTextDisplayProperty(property)
+                is TextShadowProperty -> applyTextDisplayProperty(property)
+                is SeeThroughProperty -> applyTextDisplayProperty(property)
             }
         }
+    }
+
+    private fun applyTextDisplayProperty(property: EntityProperty) {
+        hologram.consumeProperties(property)
+        indicatorEntity.consumeProperties(property)
     }
 
     override fun tick() {
