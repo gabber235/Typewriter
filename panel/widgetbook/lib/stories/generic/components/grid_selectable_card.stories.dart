@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/grid_selectable_card.dart";
@@ -87,22 +88,27 @@ Widget gridSelectableCardGridUseCase(BuildContext context) {
           runSpacing: 16,
           children: List.generate(safeColors.length, (i) {
             final color = safeColors[i];
-            return Selector(
-              focusNode: FocusNode(),
-              selectableId: TestSelectableIdentifier(
-                id: "item_$i",
-                color: color,
-              ),
-              builder: (isSelected, isFocused, isHovered) {
-                return GridSelectableCard(
-                  title: "Item ${i + 1}",
-                  baseColor: color,
-                  isSelected: isSelected,
-                  isFocused: isFocused,
-                  isHovered: isHovered,
-                  width: width,
-                  height: height,
-                  badgeLabel: i.isEven ? "EXTENSION" : "ENGINE",
+            return HookBuilder(
+              builder: (context) {
+                final focusNode = useFocusNode();
+                return Selector(
+                  focusNode: focusNode,
+                  selectableId: TestSelectableIdentifier(
+                    id: "item_$i",
+                    color: color,
+                  ),
+                  builder: (isSelected, isFocused, isHovered) {
+                    return GridSelectableCard(
+                      title: "Item ${i + 1}",
+                      baseColor: color,
+                      isSelected: isSelected,
+                      isFocused: isFocused,
+                      isHovered: isHovered,
+                      width: width,
+                      height: height,
+                      badgeLabel: i.isEven ? "EXTENSION" : "ENGINE",
+                    );
+                  },
                 );
               },
             );

@@ -15,9 +15,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 class SimpleDragData extends GraphDragData {
-  const SimpleDragData({
-    required this.graphId,
-  });
+  const SimpleDragData({required this.graphId});
 
   @override
   final GraphIdentifier graphId;
@@ -40,15 +38,12 @@ Widget _node<D extends GraphDragData>(
             width: constraints.maxWidth,
             height: constraints.maxHeight,
             decoration: BoxDecoration(
-              color: Color.alphaBlend(
+              color: .alphaBlend(
                 color.withValues(alpha: 0.2),
                 Theme.of(context).colorScheme.surfaceContainerLowest,
               ),
-              border: Border.all(
-                color: color,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(8),
+              border: .all(color: color, width: 2),
+              borderRadius: .circular(8),
             ),
             padding: EdgeInsets.all(padding),
             child: FittedBox(
@@ -83,10 +78,7 @@ Widget _node<D extends GraphDragData>(
                 useListenable(graphDrag.draggingInsideGraph);
                 return graphDrag.draggingInsideGraph.value
                     ? SizedBox()
-                    : Opacity(
-                        opacity: 0.5,
-                        child: themes.wrap(child),
-                      );
+                    : Opacity(opacity: 0.5, child: themes.wrap(child));
               },
             ),
             child: GestureDetector(
@@ -528,17 +520,10 @@ Widget largeGridGraphUseCase(BuildContext context) {
     }
   }
 
-  final data = GraphData(
-    cellSize: 25.0,
-    elements: elements,
-    edges: edges,
-  );
+  final data = GraphData(cellSize: 25.0, elements: elements, edges: edges);
 
   return FakeApp(
-    child: SizedBox(
-      height: 600,
-      child: Graph(data: data),
-    ),
+    child: SizedBox(height: 600, child: Graph(data: data)),
   );
 }
 

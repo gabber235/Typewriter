@@ -42,15 +42,16 @@ class EditorStories extends StatelessWidget {
         builder: (context, ref, child) {
           ref.watch(selectedProvider);
           return Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
-                child: Section(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: child,
+                child: Center(
+                  child: Section(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: child,
+                      ),
                     ),
                   ),
                 ),

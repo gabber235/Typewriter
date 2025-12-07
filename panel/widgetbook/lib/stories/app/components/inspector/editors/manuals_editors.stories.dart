@@ -32,12 +32,11 @@ Widget manualPlatformTargetListUseCase(BuildContext context) {
       fields: {
         "platforms": DataBlueprint.list(
           type: DataBlueprint.manualPlatformTarget(),
-          internalDefaultValue:
-              List.generate(10, (_) => generateRandomPlatformTarget().toJson()),
-          modifiers: [
-            Modifier.readOnly(recursive: true),
-            Modifier.expanded(),
-          ],
+          internalDefaultValue: List.generate(
+            10,
+            (_) => generateRandomPlatformTarget().toJson(),
+          ),
+          modifiers: [Modifier.readOnly(recursive: true), Modifier.expanded()],
         ),
       },
     ),
@@ -69,18 +68,12 @@ Widget manualModulesGroupedListUseCase(BuildContext context) {
   return EditorStory(
     dataBlueprint: ObjectBlueprint(
       fields: {
-        "modules": DataBlueprint.custom(
-          editor: "manual_modules",
-          shape: DataBlueprint.list(
-            type: DataBlueprint.manualModuleReference(),
-          ),
+        "modules": DataBlueprint.list(
+          type: DataBlueprint.manualModuleReference(),
           internalDefaultValue: generateRandomManualModuleRefs()
               .map((ref) => ref.toJson())
               .toList(),
-          modifiers: [
-            Modifier.readOnly(recursive: true),
-            Modifier.expanded(),
-          ],
+          modifiers: [Modifier.readOnly(recursive: true), Modifier.expanded()],
         ),
       },
     ),

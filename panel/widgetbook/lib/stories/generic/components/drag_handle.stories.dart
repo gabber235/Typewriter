@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
@@ -10,13 +11,17 @@ Widget _dragHandleUseCase(BuildContext context, Axis axis) {
   return FakeApp(
     child: HookBuilder(
       builder: (context) {
-        final enabled =
-            context.knobs.boolean(label: "Enabled", initialValue: true);
-        final showOnHover =
-            context.knobs.boolean(label: "Show on hover", initialValue: true);
+        final enabled = context.knobs.boolean(
+          label: "Enabled",
+          initialValue: true,
+        );
+        final showOnHover = context.knobs.boolean(
+          label: "Show on hover",
+          initialValue: true,
+        );
         final invert = context.knobs.boolean(
           label: "Invert delta",
-          initialValue: isHorizontal,
+          initialValue: true,
         );
         final hitThickness = context.knobs.double.slider(
           label: "Hit thickness",
@@ -67,99 +72,61 @@ Widget _dragHandleUseCase(BuildContext context, Axis axis) {
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final availableMax =
-                    isHorizontal ? constraints.maxWidth : constraints.maxHeight;
+                final availableMax = isHorizontal
+                    ? constraints.maxWidth
+                    : constraints.maxHeight;
                 final maxSize = availableMax * maxFactor;
 
                 return DecoratedBox(
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    borderRadius: .circular(12),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: isHorizontal
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerLow,
-                                  child: const Text("Content"),
-                                ),
-                              ),
-                              DragHandle(
-                                axis: axis,
-                                enabled: enabled,
-                                showOnHover: showOnHover,
-                                hitThickness: hitThickness,
-                                handleThickness: handleThickness,
-                                handleExtentFactor: handleExtentFactor,
-                                maxHandleExtent: maxHandleExtent,
-                                minSize: minSizeKnob,
-                                maxSize: maxSize,
-                                getSize: () => size.value,
-                                onSizeChange: (v) => size.value = v,
-                                sizeResolver:
-                                    invert ? (s, d) => s - d : (s, d) => s + d,
-                              ),
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                curve: Curves.easeOut,
-                                width: size.value.clamp(minSizeKnob, maxSize),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainer,
-                                child: const Center(
-                                  child: Text("Resizable panel"),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerLow,
-                                  child: const Text("Content"),
-                                ),
-                              ),
-                              DragHandle(
-                                axis: axis,
-                                enabled: enabled,
-                                showOnHover: showOnHover,
-                                hitThickness: hitThickness,
-                                handleThickness: handleThickness,
-                                handleExtentFactor: handleExtentFactor,
-                                maxHandleExtent: maxHandleExtent,
-                                minSize: minSizeKnob,
-                                maxSize: maxSize,
-                                getSize: () => size.value,
-                                onSizeChange: (v) => size.value = v,
-                                sizeResolver:
-                                    invert ? (s, d) => s - d : (s, d) => s + d,
-                              ),
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                curve: Curves.easeOut,
-                                height: size.value.clamp(minSizeKnob, maxSize),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainer,
-                                child: const Center(
-                                  child: Text("Resizable panel"),
-                                ),
-                              ),
-                            ],
+                    borderRadius: .circular(12),
+                    child: Flex(
+                      direction: isHorizontal ? .horizontal : .vertical,
+                      crossAxisAlignment: .stretch,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            alignment: .center,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerLow,
+                            child: const Text("Content"),
                           ),
+                        ),
+                        DragHandle(
+                          axis: axis,
+                          enabled: enabled,
+                          showOnHover: showOnHover,
+                          hitThickness: hitThickness,
+                          handleThickness: handleThickness,
+                          handleExtentFactor: handleExtentFactor,
+                          maxHandleExtent: maxHandleExtent,
+                          minSize: minSizeKnob,
+                          maxSize: maxSize,
+                          getSize: () => size.value,
+                          onSizeChange: (v) => size.value = v,
+                          sizeResolver: invert
+                              ? (s, d) => s - d
+                              : (s, d) => s + d,
+                        ),
+                        Container(
+                          width: isHorizontal
+                              ? size.value.clamp(minSizeKnob, maxSize)
+                              : null,
+                          height: isHorizontal
+                              ? null
+                              : size.value.clamp(minSizeKnob, maxSize),
+                          color: Theme.of(context).colorScheme.surfaceContainer,
+                          child: const Center(child: Text("Resizable panel")),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

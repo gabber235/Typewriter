@@ -40,68 +40,71 @@ Widget _storyScaffold({
       builder: (context) {
         final filter = useState(const VersionFilter());
         final filtered = useMemoized(
-          () => versions.where((v) => filter.value.matches(v)).toList()
-            ..sort((a, b) => b.compareTo(a)),
+          () =>
+              versions.where((v) => filter.value.matches(v)).toList()
+                ..sort((a, b) => b.compareTo(a)),
           [filter.value],
         );
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            VersionFilterBar(
-              filtered: filtered,
-              filter: filter,
-              hasEpoch: hasEpoch,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "Showing ${filtered.length} of ${versions.length} versions",
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxWidth = constraints.maxWidth;
-                  const tileWidth = 140.0;
-                  final crossAxisCount =
-                      (maxWidth / tileWidth).clamp(1, 8).floor();
-                  if (filtered.length <= 30) {
-                    return SingleChildScrollView(
-                      child: Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          for (final v in filtered)
-                            Chip(
-                              label: Text(v.canonicalizedVersion),
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                        ],
-                      ),
-                    );
-                  }
-                  return GridView.count(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: 6,
-                    crossAxisSpacing: 6,
-                    childAspectRatio: 3.5,
-                    children: [
-                      for (final v in filtered)
-                        Chip(
-                          label: Text(v.canonicalizedVersion),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                    ],
-                  );
-                },
+        return Padding(
+          padding: const .all(20.0),
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              VersionFilterBar(
+                filtered: filtered,
+                filter: filter,
+                hasEpoch: hasEpoch,
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                "Showing ${filtered.length} of ${versions.length} versions",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxWidth = constraints.maxWidth;
+                    const tileWidth = 140.0;
+                    final crossAxisCount = (maxWidth / tileWidth)
+                        .clamp(1, 8)
+                        .floor();
+                    if (filtered.length <= 30) {
+                      return SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final v in filtered)
+                              Chip(
+                                label: Text(v.canonicalizedVersion),
+                                materialTapTargetSize: .shrinkWrap,
+                                visualDensity: .compact,
+                              ),
+                          ],
+                        ),
+                      );
+                    }
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                      childAspectRatio: 3.5,
+                      children: [
+                        for (final v in filtered)
+                          Chip(
+                            label: Text(v.canonicalizedVersion),
+                            materialTapTargetSize: .shrinkWrap,
+                            visualDensity: .compact,
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
     ),
