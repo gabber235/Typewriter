@@ -15,15 +15,15 @@ const testSelectableDataProvider = TestSelectableDataProvider._();
 final class TestSelectableDataProvider
     extends $NotifierProvider<TestSelectableData, Map<String, DynamicData>> {
   const TestSelectableDataProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'testSelectableDataProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'testSelectableDataProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$testSelectableDataHash();
@@ -53,11 +53,14 @@ abstract class _$TestSelectableData
     final created = build();
     final ref =
         this.ref as $Ref<Map<String, DynamicData>, Map<String, DynamicData>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<Map<String, DynamicData>, Map<String, DynamicData>>,
-        Map<String, DynamicData>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<String, DynamicData>, Map<String, DynamicData>>,
+              Map<String, DynamicData>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -68,15 +71,16 @@ const testDataProvider = TestDataFamily._();
 final class TestDataProvider
     extends $FunctionalProvider<DynamicData?, DynamicData?, DynamicData?>
     with $Provider<DynamicData?> {
-  const TestDataProvider._(
-      {required TestDataFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'testDataProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  const TestDataProvider._({
+    required TestDataFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'testDataProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$testDataHash();
@@ -96,10 +100,7 @@ final class TestDataProvider
   @override
   DynamicData? create(Ref ref) {
     final argument = this.argument as String;
-    return testData(
-      ref,
-      argument,
-    );
+    return testData(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -126,17 +127,15 @@ String _$testDataHash() => r'da0cfaf005696101290c07062ae208fab95f1042';
 final class TestDataFamily extends $Family
     with $FunctionalFamilyOverride<DynamicData?, String> {
   const TestDataFamily._()
-      : super(
-          retry: null,
-          name: r'testDataProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'testDataProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  TestDataProvider call(
-    String id,
-  ) =>
+  TestDataProvider call(String id) =>
       TestDataProvider._(argument: id, from: this);
 
   @override
