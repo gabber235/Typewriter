@@ -26,8 +26,9 @@ class FieldEditor extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(editorsProvider);
 
-    final editor =
-        filters.firstWhereOrNull((filter) => filter.canEdit(dataBlueprint));
+    final editor = filters.firstWhereOrNull(
+      (filter) => filter.canEdit(dataBlueprint),
+    );
 
     if (editor == null) {
       return _NoEditorFound(path: path, dataBlueprint: dataBlueprint);
@@ -38,10 +39,7 @@ class FieldEditor extends HookConsumerWidget {
 }
 
 class _NoEditorFound extends StatelessWidget {
-  const _NoEditorFound({
-    required this.path,
-    required this.dataBlueprint,
-  });
+  const _NoEditorFound({required this.path, required this.dataBlueprint});
 
   final String path;
   final DataBlueprint dataBlueprint;
@@ -111,9 +109,10 @@ class _ConflictValueEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final errorColor = Theme.of(context).colorScheme.error;
     return Material(
       color: Theme.of(context).inputDecorationTheme.fillColor,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: .circular(8),
       child: InkWell(
         onTap: (editorMode, dataBlueprint).canEdit
             ? () {
@@ -122,24 +121,21 @@ class _ConflictValueEditor extends HookConsumerWidget {
                     .updateFieldValue(path, dataBlueprint.defaultValue());
               }
             : null,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: .circular(8),
+        splashColor: errorColor.withValues(alpha: 0.2),
+        highlightColor: errorColor.withValues(alpha: 0.1),
         child: Tooltip(
           message: "Click to reset field to default value",
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const .all(16),
             child: Row(
               children: [
-                Icones(
-                  Fa6Solid.xmark,
-                  size: 22,
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                Icones(Fa6Solid.xmark, size: 22, color: errorColor),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     "Field has different values",
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error),
+                    style: TextStyle(color: errorColor),
                   ),
                 ),
               ],
@@ -164,17 +160,18 @@ class _NoneValueEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final errorColor = Theme.of(context).colorScheme.error;
     return DottedBorder(
       options: RoundedRectDottedBorderOptions(
         dashPattern: [10, 8],
-        radius: Radius.circular(8),
+        radius: .circular(8),
         color: Theme.of(context).colorScheme.error,
         strokeCap: StrokeCap.round,
         strokeWidth: 2.0,
       ),
       child: Material(
         color: Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: .circular(8),
         child: InkWell(
           onTap: (editorMode, dataBlueprint).canEdit
               ? () {
@@ -183,25 +180,21 @@ class _NoneValueEditor extends HookConsumerWidget {
                       .updateFieldValue(path, dataBlueprint.defaultValue());
                 }
               : null,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: .circular(8),
+          splashColor: errorColor.withValues(alpha: 0.2),
+          highlightColor: errorColor.withValues(alpha: 0.1),
           child: Tooltip(
             message: "Click to reset field to default value",
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const .all(12),
               child: Row(
                 children: [
-                  Icones(
-                    Fa6Solid.xmark,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  Icones(Fa6Solid.xmark, size: 16, color: errorColor),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       "Field is missing",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      style: TextStyle(color: errorColor),
                     ),
                   ),
                 ],
