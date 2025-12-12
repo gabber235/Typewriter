@@ -114,7 +114,7 @@ class BookScaffold extends HookConsumerWidget {
             child: Column(
               children: [
                 Expanded(child: child),
-                // ActionRow(),
+                ActionRow(),
               ],
             ),
           ),

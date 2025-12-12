@@ -31,15 +31,11 @@ Widget _buildPagePageUseCase(BuildContext context, PageType pageType) {
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: pagesState),
       ...organizationProviderOverrides(),
-      ...organizationsProviderOverrides(
-        state: DisplayState.manyItems,
-      ),
+      ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],
-    child: BookScaffold(
-      child: PagePage(pageId: "example-page-id"),
-    ),
+    child: BookScaffold(child: PagePage(pageId: "example-page-id")),
   );
 }
 
@@ -53,8 +49,8 @@ Widget pagePageStaticUseCase(BuildContext context) {
   return _buildPagePageUseCase(context, PageType.PAGE_TYPE_STATIC);
 }
 
-@widgetbook.UseCase(name: "Cinematic", type: PagePage)
-Widget pagePageCinematicUseCase(BuildContext context) {
+@widgetbook.UseCase(name: "Scene", type: PagePage)
+Widget pagePageSceneUseCase(BuildContext context) {
   return _buildPagePageUseCase(context, PageType.PAGE_TYPE_SCENE);
 }
 
