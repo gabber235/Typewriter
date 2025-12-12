@@ -101,7 +101,6 @@ $RECYCLE.BIN/
 *.lnk
 
 .gradle
-build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -122,7 +121,6 @@ run/
 
 # Rust
 target/
-adapters/TeraCoreAdapter/
 
 # Flutter web resource
 /plugin/src/main/resources/web/
@@ -145,9 +143,6 @@ bin/
 /documentation/plugins/code-snippets/
 /.history/
 /documentation/.history/
-
-surrealdb
-nats
 docker/surrealdb
 docker/surrealdb/database.db
 docker/nats
