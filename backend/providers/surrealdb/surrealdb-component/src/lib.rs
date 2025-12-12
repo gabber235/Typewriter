@@ -91,7 +91,7 @@ impl<'a> Query<'a> {
     }
 }
 
-pub fn query(query_str: &str) -> Query {
+pub fn query(query_str: &str) -> Query<'_> {
     Query {
         query_str,
         params: Vec::new(),

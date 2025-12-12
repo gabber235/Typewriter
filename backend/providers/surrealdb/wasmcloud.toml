@@ -1,9 +1,0 @@
-name = "surrealdb-provider"
-language = "rust"
-type = "provider"
-
-[provider]
-vendor = "Seamlezz"
-
-[registry.push]
-url = "git.seamlezz.com"
