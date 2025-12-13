@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.ui
 
+import com.corundumstudio.socketio.AuthorizationResult
 import com.corundumstudio.socketio.Configuration
 import com.corundumstudio.socketio.HandshakeData
 import com.corundumstudio.socketio.SocketIOClient
@@ -79,6 +80,7 @@ class CommunicationHandler : KoinComponent {
         val config = Configuration().apply {
             hostname = "0.0.0.0"
             port = this@CommunicationHandler.webSocketPort
+            isWebsocketCompression = false // Disable compression to avoid Netty 4.1/4.2 conflict
             setAuthorizationListener(this@CommunicationHandler::authenticate)
         }
 
@@ -151,15 +153,17 @@ class CommunicationHandler : KoinComponent {
         server?.broadcastOperations?.sendEvent("updateExtensions", extensionJson.toString())
     }
 
-    private fun authenticate(data: HandshakeData): Boolean {
-        if (auth == "none") return true
+    private fun authenticate(data: HandshakeData): AuthorizationResult {
+        if (auth == "none") return AuthorizationResult.SUCCESSFUL_AUTHORIZATION
         if (auth == "session") {
             val token = getSessionToken(data)
-                .logErrorIfNull("${data.address} tried to connect to the socket without token!") ?: return false
-            val session = sessionTokens[token] ?: return false
-            return session.isValid
+                .logErrorIfNull("${data.address} tried to connect to the socket without token!") 
+                ?: return AuthorizationResult.FAILED_AUTHORIZATION
+            val session = sessionTokens[token] ?: return AuthorizationResult.FAILED_AUTHORIZATION
+            return if (session.isValid) AuthorizationResult.SUCCESSFUL_AUTHORIZATION 
+                   else AuthorizationResult.FAILED_AUTHORIZATION
         }
-        return false
+        return AuthorizationResult.FAILED_AUTHORIZATION
     }
 
     private fun getSessionToken(data: HandshakeData): UUID? {

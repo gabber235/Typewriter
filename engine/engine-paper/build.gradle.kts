@@ -30,12 +30,12 @@ repositories {
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnlyApi("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
-    compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
+    compileOnlyApi("com.corundumstudio.socketio:netty-socketio:2.0.13") // Upgraded for Netty 4.2 (Paper 1.21.11)
 
     api("me.tofaa.entitylib:spigot:+0e5324e-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
@@ -54,10 +54,10 @@ dependencies {
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.10.0")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.10.0")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.11.0")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.11.0")
 
-    compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnly("me.clip:placeholderapi:2.11.7")
     compileOnlyApi("org.geysermc.geyser:api:2.8.3-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
 
