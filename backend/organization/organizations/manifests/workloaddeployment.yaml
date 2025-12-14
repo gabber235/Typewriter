@@ -20,6 +20,8 @@ spec:
           interfaces:
             - handler
             - consumer
+          config:
+            subscriptions: user.*.organization.list
         - namespace: seamlezz
           package: surrealdb
           interfaces:
