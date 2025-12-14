@@ -1,2 +1,3 @@
-surrealdb = "../../wit"
+surrealdb = "/Users/thijs/Bestanden/wash/crates/wash-runtime/wit/deps/seamlezz-surrealdb-0.1.0"
 logging = "https://github.com/WebAssembly/wasi-logging/archive/d31c41d0d9eed81aabe02333d0025d42acf3fb75.tar.gz"
+http = "https://github.com/WebAssembly/wasi-http/archive/v0.2.2.tar.gz"

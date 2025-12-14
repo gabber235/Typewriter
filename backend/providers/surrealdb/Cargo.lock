@@ -461,6 +461,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "querystring"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9318ead08c799aad12a55a3e78b82e0b6167271ffd1f627b758891282f739187"
+
+[[package]]
 name = "quote"
 version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -611,6 +617,7 @@ name = "surrealdb-test-component"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "querystring",
  "serde",
  "surrealdb-component",
  "tracing",

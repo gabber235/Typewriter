@@ -1,15 +1,6 @@
-// pub(crate) mod bindings {
-//     use crate::SurrealDBTestComponent;
-//     wit_bindgen::generate!({ generate_all });
-//     export!(SurrealDBTestComponent);
-// }
+use std::collections::HashMap;
 
 use anyhow::Result;
-// use bindings::wasi::logging::logging::*;
-// use bindings::exports::{
-//     seamlezz::surrealdb_test::test::Guest,
-//     wasi::http::incoming_handler::{IncomingRequest, ResponseOutparam},
-// };
 use surrealdb_component::query;
 use tracing::instrument;
 use wasmcloud_component::{
@@ -26,51 +17,39 @@ pub struct SurrealDBTestComponentData {
     pub number: i32,
 }
 
-// impl Guest for SurrealDBTestComponent {
-//     fn call() -> String {
-//         let result = query("UPSERT test:test SET text = $txt, number = $number")
-//             .bind("txt", "Hello from SurrealDB testing component!")
-//             .bind("number", 42)
-//             .execute();
-//
-//         let result = match result {
-//             Ok(v) => v,
-//             Err(e) => return format!("Error: {:?}", e),
-//         };
-//
-//         let mut print = String::new();
-//         let data: Result<Option<SurrealDBTestComponentData>> = result.take(0);
-//         match data {
-//             Ok(Some(v)) => {
-//                 print.push_str(&format!("Result: {:?}\n", v));
-//             }
-//             Ok(None) => {
-//                 print.push_str("No result\n");
-//             }
-//             Err(e) => {
-//                 print.push_str(&format!("Error: {:?}\n", e));
-//             }
-//         }
-//         return print;
-//     }
-// }
-
 export!(SurrealDBTestComponent);
 
 impl http::Server for SurrealDBTestComponent {
-    #[instrument(skip(_request), fields(component = "SurrealDBTestComponent"))]
+    #[instrument(skip(request), fields(component = "SurrealDBTestComponent"))]
     fn handle(
-        _request: http::IncomingRequest,
+        request: http::IncomingRequest,
     ) -> http::Result<http::Response<impl http::OutgoingBody>> {
         tracing::info!("Handling request in SurrealDBTestComponent");
+
+        let q = request.uri().query().unwrap_or_default();
+        let params = querystring::querify(q)
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect::<HashMap<String, String>>();
+
+        let text = params
+            .get("text")
+            .unwrap_or(&"Hello from SurrealDB testing component!".to_string())
+            .to_string();
+
+        let number = params
+            .get("number")
+            .unwrap_or(&"69".to_string())
+            .parse::<i32>()
+            .unwrap_or(69);
 
         tracing::debug!("Executing SurrealDB query");
         let result = {
             let _span = tracing::info_span!("db_query", operation = "upsert", table = "test:test")
                 .entered();
             query("UPSERT test:test SET text = $txt, number = $number")
-                .bind("txt", "Hello from SurrealDB testing component!")
-                .bind("number", 42)
+                .bind("txt", text)
+                .bind("number", number)
                 .execute()
                 .map_err(|e| {
                     tracing::error!(error = ?e, "SurrealDB query execution failed");
@@ -103,13 +82,13 @@ impl http::Server for SurrealDBTestComponent {
         }
 
         tracing::info!("Building HTTP response");
-        Ok(http::Response::builder()
+        http::Response::builder()
             .status(200)
             .header("Content-Type", "text/plain")
             .body(print)
             .map_err(|e| {
                 tracing::error!(error = ?e, "Failed to build HTTP response");
                 ErrorCode::InternalError(Some(format!("{:?}", e)))
-            })?)
+            })
     }
 }
