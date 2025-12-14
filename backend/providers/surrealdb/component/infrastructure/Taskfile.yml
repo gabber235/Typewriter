@@ -1,0 +1,48 @@
+version: "3"
+
+silent: true
+
+vars:
+  ENV: '{{default "local" .ENV}}'
+
+tasks:
+  init:
+    desc: Initialize terraform
+    cmds:
+      - |
+        if [ "{{.ENV}}" = "production" ]; then
+          terraform init -upgrade -backend-config=backend-production.hcl
+        else
+          terraform init -upgrade
+        fi
+
+  plan:
+    desc: Plan terraform changes
+    deps:
+      - init
+    cmds:
+      - terraform plan -var-file=terraform.tfvars.{{.ENV}}
+
+  apply:
+    desc: Apply terraform changes
+    deps:
+      - init
+    cmds:
+      - terraform apply -var-file=terraform.tfvars.{{.ENV}} -auto-approve
+
+  destroy:
+    desc: Destroy terraform-managed resources
+    deps:
+      - init
+    cmds:
+      - terraform destroy -var-file=terraform.tfvars.{{.ENV}} -auto-approve
+
+  output:
+    desc: Show terraform outputs
+    cmds:
+      - terraform output
+
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
