@@ -1,0 +1,39 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: auth-callout
+  namespace: wasmcloud
+spec:
+  replicas: 1
+  template:
+    spec:
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: auth-callout
+          image: oci.seamlezz.test/wasmcloud/auth-callout:0.1.0
+          imagePullSecret:
+            name: harbor-registry-credentials
+      hostInterfaces:
+        - namespace: wasmcloud
+          package: messaging
+          interfaces:
+            - handler
+            - consumer
+        - namespace: wasi
+          package: http
+          interfaces:
+            - outgoing-handler
+        - namespace: wasi
+          package: config
+          interfaces:
+            - runtime
+        - namespace: wasi
+          package: logging
+          interfaces:
+            - logging
+        - namespace: wasmcloud
+          package: secrets
+          interfaces:
+            - store
+            - reveal

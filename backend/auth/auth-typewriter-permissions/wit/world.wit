@@ -1,6 +1,6 @@
-package wasmcloud:hello;
+package seamlezz:auth-typewriter-permissions@0.1.0;
 
-world hello {
+world auth-typewriter-permissions {
   import wasi:logging/logging@0.1.0-draft;
   import wasmcloud:messaging/consumer@0.2.0;
 

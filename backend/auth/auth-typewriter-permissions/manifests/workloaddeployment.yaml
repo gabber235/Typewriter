@@ -1,0 +1,30 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: auth-typewriter-permissions
+  namespace: wasmcloud
+spec:
+  replicas: 1
+  template:
+    spec:
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: auth-typewriter-permissions
+          image: oci.seamlezz.test/wasmcloud/auth-typewriter-permissions:0.1.0
+          imagePullSecret:
+            name: harbor-registry-credentials
+      hostInterfaces:
+        - namespace: wasmcloud
+          package: messaging
+          interfaces:
+            - handler
+            - consumer
+        - namespace: seamlezz
+          package: surrealdb
+          interfaces:
+            - call
+        - namespace: wasi
+          package: logging
+          interfaces:
+            - logging
