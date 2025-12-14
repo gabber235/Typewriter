@@ -84,8 +84,59 @@ tasks:
         wash oci push $INSECURE_FLAG "$IMAGE" "{{.WASM_PATH}}"
         echo "✅ Pushed $IMAGE"
 
+  terraform:init:
+    desc: Initialize terraform for the component
+    dir: "{{.USER_WORKING_DIR}}/infrastructure"
+    preconditions:
+      - sh: '[ -d "{{.USER_WORKING_DIR}}/infrastructure" ]'
+        msg: "No infrastructure directory found"
+    cmds:
+      - |
+        if [ "{{.ENV}}" = "production" ]; then
+          terraform init -upgrade -backend-config=backend-production.hcl
+        else
+          terraform init -upgrade
+        fi
+
+  terraform:apply:
+    desc: Apply terraform (deploy infrastructure + workload)
+    dir: "{{.USER_WORKING_DIR}}/infrastructure"
+    deps:
+      - terraform:init
+    cmds:
+      - terraform apply -var-file=terraform.tfvars.{{.ENV}} -auto-approve
+
+  terraform:destroy:
+    desc: Destroy terraform-managed resources
+    dir: "{{.USER_WORKING_DIR}}/infrastructure"
+    deps:
+      - terraform:init
+    cmds:
+      - terraform destroy -var-file=terraform.tfvars.{{.ENV}} -auto-approve
+
   deploy:
-    desc: Deploy the WorkloadDeployment manifest
+    desc: Deploy via terraform (preferred method)
+    dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - task: terraform:apply
+
+  undeploy:
+    desc: Undeploy via terraform
+    dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - task: terraform:destroy
+
+  dev:
+    desc: Build, push, and deploy in one step
+    dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - task: build
+      - task: push
+      - task: undeploy:kubectl
+      - task: deploy:kubectl
+
+  deploy:kubectl:
+    desc: Deploy using kubectl directly (legacy, for components without terraform)
     dir: "{{.USER_WORKING_DIR}}"
     vars:
       MANIFEST:
@@ -97,14 +148,15 @@ tasks:
       - kubectl apply -f {{.MANIFEST}}
       - echo "✅ Deployed workload"
 
-  dev:
-    desc: Build, push, and deploy in one step
+  undeploy:kubectl:
+    desc: Remove deployed workload using kubectl (legacy)
     dir: "{{.USER_WORKING_DIR}}"
+    vars:
+      MANIFEST:
+        sh: 'ls manifests/workloaddeployment.yaml 2>/dev/null || echo ""'
     cmds:
-      - task: build
-      - task: push
-      - task: undeploy
-      - task: deploy
+      - kubectl delete -f {{.MANIFEST}} --ignore-not-found
+      - echo "✅ Workload removed"
 
   clean:
     desc: Clean build artifacts
@@ -130,16 +182,6 @@ tasks:
         sh: 'grep -m1 "^  name:" manifests/workloaddeployment.yaml 2>/dev/null | sed "s/.*name: *//" || basename "$(pwd)"'
     cmds:
       - kubectl logs -n {{.WASMCLOUD_NAMESPACE}} -l wasmcloud.com/workload={{.WORKLOAD_NAME}} --tail=100 -f
-
-  undeploy:
-    desc: Remove the deployed workload
-    dir: "{{.USER_WORKING_DIR}}"
-    vars:
-      MANIFEST:
-        sh: 'ls manifests/workloaddeployment.yaml 2>/dev/null || echo ""'
-    cmds:
-      - kubectl delete -f {{.MANIFEST}} --ignore-not-found
-      - echo "✅ Workload removed"
 
   default:
     desc: Show available tasks
