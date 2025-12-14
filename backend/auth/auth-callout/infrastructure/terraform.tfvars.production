@@ -1,0 +1,6 @@
+kubernetes_context = "k3s-prod"
+
+openbao_address = "https://vault.seamlezz.com"
+
+authentik_issuer_url = "https://auth.typewritermc.com/application/o/typewriter-panel/"
+authentik_jwks_url   = "https://auth.typewritermc.com/application/o/typewriter-panel/jwks/"
