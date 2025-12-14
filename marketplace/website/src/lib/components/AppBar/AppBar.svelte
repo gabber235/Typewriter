@@ -59,7 +59,7 @@
 					</DropdownMenu.Group>
 					<DropdownMenu.Separator />
 					<DropdownMenu.Group>
-						<form method="post" action="/api/auth?/signOut" bind:this={logoutForm}>
+						<form method="post" action="/auth/signout" bind:this={logoutForm}>
 							<DropdownMenu.Item
 								class="text-red-500 data-[highlighted]:bg-red-100 data-[highlighted]:text-red-500 dark:data-[highlighted]:bg-red-500 dark:data-[highlighted]:text-white"
 								onclick={() => logoutForm?.requestSubmit()}
@@ -73,7 +73,7 @@
 			</DropdownMenu.Root>
 		{:else}
 			<div class="flex items-center space-x-4">
-				<form method="post" action="/api/auth?/signIn">
+				<form method="post" action="/auth/signin">
 					<Button type="submit" variant="ghost">Login</Button>
 					<Button type="submit">Sign up</Button>
 				</form>

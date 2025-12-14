@@ -5,8 +5,8 @@
 	import DevModeBanner from "$components/DevModeBanner/DevModeBanner.svelte";
 	import { ModeWatcher } from "mode-watcher";
 	let { children, data } = $props();
-	let avatarUrl = data.user?.picture ?? null; // Makes the types correct.
-	let fallbackAvatar = data.user?.username ?? null;
+	let avatarUrl = data.session?.user?.image ?? null;
+	let fallbackAvatar = data.session?.user?.username ?? data.session?.user?.name ?? null;
 </script>
 
 <ModeWatcher />

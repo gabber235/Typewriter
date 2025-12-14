@@ -55,7 +55,7 @@
     "vite": "^5.4.11"
   },
   "dependencies": {
-    "@logto/sveltekit": "^0.3.14",
+    "@auth/sveltekit": "^1.7.4",
     "@sveltejs/adapter-auto": "^4.0.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.9",

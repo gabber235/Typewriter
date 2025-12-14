@@ -1,16 +1,14 @@
-import type { LogtoClient, UserInfoResponse } from '@logto/sveltekit';
+import type { Session } from "@auth/sveltekit";
 
 declare global {
-    namespace App {
-        // interface Error {}
-        // interface PageData {}
-        // interface PageState {}
-        // interface Platform {}
-        interface Locals {
-            logtoClient: LogtoClient;
-            user?: UserInfoResponse;
-        }
-    }
+	namespace App {
+		interface Locals {
+			auth(): Promise<Session | null>;
+		}
+		interface PageData {
+			session: Session | null;
+		}
+	}
 }
 
-export { };
+export {};
