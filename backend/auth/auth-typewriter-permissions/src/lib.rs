@@ -35,15 +35,29 @@ struct TypewriterPermissions;
 wasmcloud_utils::export!(TypewriterPermissions);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(tag = "kind")]
-pub enum LogtoClaims {
-    #[serde(rename = "user")]
-    User {
-        name: String,
-        email: Option<String>,
-        phone: Option<String>,
-        avatar: Option<String>,
-    },
+pub struct DiscordData {
+    pub id: String,
+    pub username: String,
+    pub discriminator: Option<String>,
+    pub email: Option<String>,
+    pub avatar: Option<String>,
+    pub avatar_url: Option<String>,
+    #[serde(default)]
+    pub roles: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct AuthentikClaims {
+    pub name: Option<String>,
+    pub preferred_username: Option<String>,
+    pub email: Option<String>,
+    #[serde(default)]
+    pub email_verified: bool,
+    #[serde(default)]
+    pub groups: Vec<String>,
+    pub discord: Option<DiscordData>,
+    pub avatar: Option<String>,
+    pub avatar_url: Option<String>,
 }
 
 impl Guest for TypewriterPermissions {
@@ -51,16 +65,13 @@ impl Guest for TypewriterPermissions {
         let request = typewriter::api::v1::PermissionRequest::decode(&msg.body[..])
             .map_err(|e| format!("failed to decode request: {}", e))?;
 
-        let claims: jose::jwt::Claims<LogtoClaims> =
+        let claims: jose::jwt::Claims<AuthentikClaims> =
             serde_json::from_slice(&request.jwt_claims).map_err(|e| e.to_string())?;
 
         let organization_id = request.organization_id;
 
-        let (nats_permissions, tags) = match claims.additional {
-            LogtoClaims::User { .. } => {
-                handle_user(claims, organization_id).map_err(|e| e.to_string())?
-            }
-        };
+        let (nats_permissions, tags) =
+            handle_user(claims, organization_id).map_err(|e| e.to_string())?;
 
         let proto_permissions = (&nats_permissions).into();
 
@@ -79,24 +90,37 @@ impl Guest for TypewriterPermissions {
 struct User {
     name: String,
     email: Option<String>,
-    phone: Option<String>,
     avatar: Option<String>,
+    avatar_url: Option<String>,
 }
 
 fn handle_user(
-    claims: jose::jwt::Claims<LogtoClaims>,
+    claims: jose::jwt::Claims<AuthentikClaims>,
     organization_id: Option<String>,
 ) -> Result<(NatsPermissions, Vec<String>)> {
     let user_id = claims
         .subject
         .ok_or(anyhow::anyhow!("No subject in claims"))?;
 
-    let LogtoClaims::User {
-        name,
-        email,
-        phone,
-        avatar,
-    } = claims.additional;
+    let additional = claims.additional;
+
+    let name = additional
+        .name
+        .or_else(|| additional.discord.as_ref().map(|d| d.username.clone()))
+        .unwrap_or_else(|| "Unknown".to_string());
+
+    let email = additional
+        .email
+        .or_else(|| additional.discord.as_ref().and_then(|d| d.email.clone()));
+
+    let avatar = additional.avatar;
+
+    let avatar_url = additional.avatar_url.or_else(|| {
+        additional
+            .discord
+            .as_ref()
+            .and_then(|d| d.avatar_url.clone())
+    });
 
     debug!("handling user request for user {}", name);
 
@@ -105,16 +129,16 @@ fn handle_user(
         UPSERT type::thing('user',$uid) SET
             name = $name,
             email = $email,
-            phone = $phone,
             avatar = $avatar,
+            avatar_url = $avatar_url,
             last_login = time::now();
         ",
     )
     .bind("uid", &user_id)
     .bind("name", &name)
     .bind("email", &email)
-    .bind("phone", &phone)
     .bind("avatar", &avatar)
+    .bind("avatar_url", &avatar_url)
     .execute()
     .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -125,7 +149,6 @@ fn handle_user(
         debug!("error inserting user: {}", e);
         return Err(anyhow::anyhow!(e));
     }
-    // .map_err(|e| anyhow::anyhow!(e))?;
 
     debug!("made sure no errors occurred");
 

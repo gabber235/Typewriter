@@ -20,6 +20,8 @@ spec:
           interfaces:
             - handler
             - consumer
+          config:
+            subscriptions: auth.permissions.typewriter
         - namespace: seamlezz
           package: surrealdb
           interfaces:
