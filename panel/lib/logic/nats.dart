@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:io";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
@@ -16,6 +17,7 @@ part "nats.g.dart";
 // TODO: Remove when nats allows for the `default_sentinel` config option.
 final _natsSentinelJwt = AppConfig.nats.sentinelJwt;
 final _natsSentinelSeed = AppConfig.nats.sentinelSeed;
+final _natsAcceptBadCert = AppConfig.nats.acceptBadCert;
 
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
@@ -28,11 +30,13 @@ class Nats extends _$Nats {
 
     final user = ref.watch(authUserInfoProvider).requireValue;
 
-    final client = Client();
+    final client = Client()..acceptBadCert = _natsAcceptBadCert;
 
     final url = AppConfig.nats.url;
 
-    debugPrint("nats: connecting to $url");
+    debugPrint(
+      "nats: connecting to $url ${_natsAcceptBadCert ? "with bad cert" : ""}",
+    );
 
     client
       ..seed = _natsSentinelSeed
@@ -49,6 +53,7 @@ class Nats extends _$Nats {
               // ignore: only_use_keep_alive_inside_keep_alive
               nkey: ref.watch(organizationIdProvider),
             ),
+            securityContext: SecurityContext.defaultContext,
           )
           .onError((error, stackTrace) {
             debugPrint("nats: error connecting to $url: $error");

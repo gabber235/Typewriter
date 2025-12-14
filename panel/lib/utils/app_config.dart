@@ -32,6 +32,9 @@ class NatsConfig {
     defaultValue: "SUAG6J2O4ULGEZBKLVFQIDHFIZWR5PVEAROIQTE5VISCE3VCMFI2AHS25U",
   );
 
+  bool get acceptBadCert =>
+      const bool.fromEnvironment("NATS_ACCEPT_BAD_CERT", defaultValue: false);
+
   String get url => kIsWeb ? webUrl : desktopUrl;
 }
 
