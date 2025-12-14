@@ -4,11 +4,9 @@ fn main() {
         "../../../proto/models/organization.proto",
         "../../../proto/api/organization.proto",
     ];
-    
-    let mut config = prost_build::Config::new();
-    config.type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]");
-    config.out_dir("src/generated");
-    config
+
+    prost_build::Config::new()
+        .out_dir("src/generated")
         .compile_protos(&proto_files, &["../../../proto/"])
         .expect("Failed to compile proto files");
 }

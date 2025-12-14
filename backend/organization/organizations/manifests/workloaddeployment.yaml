@@ -1,0 +1,30 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: organizations
+  namespace: wasmcloud
+spec:
+  replicas: 1
+  template:
+    spec:
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: organizations
+          image: oci.seamlezz.test/wasmcloud/organizations:0.1.0
+          imagePullSecret:
+            name: harbor-registry-credentials
+      hostInterfaces:
+        - namespace: wasmcloud
+          package: messaging
+          interfaces:
+            - handler
+            - consumer
+        - namespace: seamlezz
+          package: surrealdb
+          interfaces:
+            - call
+        - namespace: wasi
+          package: logging
+          interfaces:
+            - logging
