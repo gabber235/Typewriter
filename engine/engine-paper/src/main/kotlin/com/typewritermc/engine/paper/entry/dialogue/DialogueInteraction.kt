@@ -83,7 +83,7 @@ class DialogueInteraction(
 
         if (currentMessenger.state == MessengerState.FINISHED) {
             isActive = false
-            DialogueTrigger.NEXT_OR_SKIP_ANIMATION.triggerFor(player, currentMessenger.context)
+            DialogueTrigger.FORCE_NEXT.triggerFor(player, currentMessenger.context)
         } else if (currentMessenger.state == MessengerState.CANCELLED) {
             isActive = false
 

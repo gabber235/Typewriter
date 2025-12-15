@@ -52,9 +52,17 @@ class JavaTimedDialogueDialogueMessenger(player: Player, context: InteractionCon
     private var totalDuration = Duration.ZERO
     private var playedTime = Duration.ZERO
 
+    private val canSkip: Boolean
+        get() = entry.allowSkip.get(player, context)
+
     override var animationComplete: Boolean
-        get() = playedTime >= typingDuration
+        get() {
+            // We want this to prevent skipping the timer when the users clicks on an npc (aka an external skip).
+            if (!canSkip) return state == MessengerState.FINISHED
+            return playedTime >= typingDuration
+        }
         set(value) {
+            if (!canSkip) return
             playedTime = if (!value) Duration.ZERO
             else typingDuration
         }
@@ -69,7 +77,7 @@ class JavaTimedDialogueDialogueMessenger(player: Player, context: InteractionCon
 
         confirmationKeyHandler = confirmationKey.handler(player) {
             if (state != MessengerState.RUNNING) return@handler
-            if (!entry.allowSkip.get(player, context)) return@handler
+            if (!canSkip) return@handler
             completeOrFinish()
         }
     }
