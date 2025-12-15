@@ -21,7 +21,7 @@ spec:
             - handler
             - consumer
           config:
-            subscriptions: user.*.organization.list
+            subscriptions: typewriter.in.user.*.organization.*
         - namespace: seamlezz
           package: surrealdb
           interfaces:
