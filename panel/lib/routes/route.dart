@@ -152,16 +152,74 @@ class _OrganizationsSelector extends HookConsumerWidget {
 class _CreateOrganization extends HookConsumerWidget {
   const _CreateOrganization();
 
+  // Helper to build the icon URL based on the current name and seed.
+  String _buildIconUrl(String name, String seed) {
+    final iconSeed = name.isNotEmpty ? name + seed : seed;
+    return generateOrganizationIconUrl(iconSeed);
+  }
+
+  // Validation logic extracted from the TextFormField.
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Please enter an organization name.";
+    }
+    if (value.length < 3) {
+      return "Name must be at least 3 characters long.";
+    }
+    if (!RegExp("^[a-z0-9]").hasMatch(value)) {
+      return "Name must start with a lowercase letter or number.";
+    }
+    if (!RegExp(r"[a-z0-9]$").hasMatch(value)) {
+      return "Name must end with a lowercase letter or number.";
+    }
+    if (!RegExp(r"^[a-z0-9_]+$").hasMatch(value)) {
+      return "Name can only contain lowercase letters, numbers, and underscores.";
+    }
+    if (!RegExp(r"^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$").hasMatch(value)) {
+      return "Name must be at least 3 characters, start and end with a letter or number, and only contain underscores in between.";
+    }
+    return null;
+  }
+
+  // Callback to randomize the icon seed.
+  void _randomizeSeed(ValueNotifier<String> seed) {
+    seed.value = Random().nextInt(1000000).toString();
+  }
+
+  // Handles the creation of the organization.
+  Future<void> _handleCreate({
+    required BuildContext context,
+    required WidgetRef ref,
+    required GlobalKey<FormState> formKey,
+    required TextEditingController nameController,
+    required String seed,
+  }) async {
+    if (formKey.currentState?.validate() != true) {
+      return;
+    }
+
+    final iconUrl = _buildIconUrl(nameController.text, seed);
+    final navigator = ref.read(appRouterProvider);
+    final organizationId = await ref
+        .read(organizationsProvider.notifier)
+        .createOrganization(name: nameController.text, iconUrl: iconUrl);
+
+    if (organizationId == null) {
+      if (!context.mounted) return;
+      showErrorSnackBar(context, "Failed to create organization");
+      return;
+    }
+
+    await navigator.push(OrganizationRoute(organizationId: organizationId));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nameController = useTextEditingController();
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final randomSeed = useState<String>(Random().nextInt(1000000).toString());
 
-    final iconSeed = nameController.text.isNotEmpty
-        ? nameController.text + randomSeed.value
-        : randomSeed.value;
-    final iconUrl = generateOrganizationIconUrl(iconSeed);
+    final iconUrl = _buildIconUrl(nameController.text, randomSeed.value);
 
     return Form(
       key: formKey,
@@ -186,29 +244,7 @@ class _CreateOrganization extends HookConsumerWidget {
                 decoration: InputDecoration(
                   hintText: "Enter organization name",
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter an organization name.";
-                  }
-                  if (value.length < 3) {
-                    return "Name must be at least 3 characters long.";
-                  }
-                  if (!RegExp("^[a-z0-9]").hasMatch(value)) {
-                    return "Name must start with a lowercase letter or number.";
-                  }
-                  if (!RegExp(r"[a-z0-9]$").hasMatch(value)) {
-                    return "Name must end with a lowercase letter or number.";
-                  }
-                  if (!RegExp(r"^[a-z0-9_]+$").hasMatch(value)) {
-                    return "Name can only contain lowercase letters, numbers, and underscores.";
-                  }
-                  if (!RegExp(
-                    r"^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$",
-                  ).hasMatch(value)) {
-                    return "Name must be at least 3 characters, start and end with a letter or number, and only contain underscores in between.";
-                  }
-                  return null;
-                },
+                validator: _validateName,
               )
               .animate()
               .fadeIn(duration: 300.ms, delay: 550.ms)
@@ -218,9 +254,7 @@ class _CreateOrganization extends HookConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    randomSeed.value = Random().nextInt(1000000).toString();
-                  },
+                  onTap: () => _randomizeSeed(randomSeed),
                   child: Padding(
                     padding: EdgeInsets.all(12),
                     child: Row(
@@ -257,31 +291,13 @@ class _CreateOrganization extends HookConsumerWidget {
           SizedBox(
                 width: double.infinity,
                 child: LoadingButton.filled(
-                  onPressed: () async {
-                    if (formKey.currentState?.validate() != true) {
-                      return;
-                    }
-                    final navigator = ref.read(appRouterProvider);
-                    final organizationId = await ref
-                        .read(organizationsProvider.notifier)
-                        .createOrganization(
-                          name: nameController.text,
-                          iconUrl: iconUrl,
-                        );
-                    if (organizationId == null) {
-                      if (!context.mounted) {
-                        return;
-                      }
-                      showErrorSnackBar(
-                        context,
-                        "Failed to create organization",
-                      );
-                      return;
-                    }
-                    await navigator.push(
-                      OrganizationRoute(organizationId: organizationId),
-                    );
-                  },
+                  onPressed: () => _handleCreate(
+                    context: context,
+                    ref: ref,
+                    formKey: formKey,
+                    nameController: nameController,
+                    seed: randomSeed.value,
+                  ),
                   child: Text("Create"),
                 ),
               )

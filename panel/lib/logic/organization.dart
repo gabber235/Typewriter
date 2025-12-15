@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/organization.pb.dart";
@@ -21,7 +22,7 @@ class Organizations extends _$Organizations {
     final response = await ref
         .watch(natsProvider)
         .requestProto(
-          "user.$userId.organization.list",
+          "cloud.out.user.$userId.organization.list",
           request,
           ListOrganizationsResponse.new,
         );
@@ -50,10 +51,12 @@ class Organizations extends _$Organizations {
       ..name = name
       ..iconUrl = iconUrl;
 
+    debugPrint("Creating organization with name: $name and iconUrl: $iconUrl");
+
     final response = await ref
         .read(natsProvider)
         .requestProto(
-          "user.$userId.organization.create",
+          "cloud.out.user.$userId.organization.create",
           request,
           CreateOrganizationResponse.new,
         );
@@ -68,6 +71,8 @@ class Organizations extends _$Organizations {
       response.hasOrganization(),
       "When creating an organization, we didn't have an error but also didn't receive an organization",
     );
+
+    debugPrint("Organization created with ID: ${response.organization.id}");
 
     ref.invalidateSelf();
     return response.organization.id;

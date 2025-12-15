@@ -35,7 +35,7 @@ class Nats extends _$Nats {
     final url = AppConfig.nats.url;
 
     debugPrint(
-      "nats: connecting to $url ${_natsAcceptBadCert ? "with bad cert" : ""}",
+      "nats: connecting to $url ${_natsAcceptBadCert ? "ignoring bad certificates" : ""}",
     );
 
     client
