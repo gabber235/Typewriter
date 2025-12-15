@@ -35,7 +35,7 @@ dependencies {
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
-    compileOnlyApi("com.corundumstudio.socketio:netty-socketio:2.0.13") // Upgraded for Netty 4.2 (Paper 1.21.11)
+    compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
     api("me.tofaa.entitylib:spigot:+0e5324e-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")

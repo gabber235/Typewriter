@@ -26,7 +26,7 @@ public class TypewriterPaperLoader implements PluginLoader {
         addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-reflect:2.2.10", central);
         addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2",
                 central);
-        addDependency(classpathBuilder, "com.corundumstudio.socketio:netty-socketio:2.0.13",
+        addDependency(classpathBuilder, "com.corundumstudio.socketio:netty-socketio:1.7.19",
                 central);
 
         addDependency(classpathBuilder,
@@ -42,7 +42,7 @@ public class TypewriterPaperLoader implements PluginLoader {
     }
 
     public void addDependency(PluginClasspathBuilder classpathBuilder, String artifact,
-            RemoteRepository... repositories) {
+                              RemoteRepository... repositories) {
         MavenLibraryResolver resolver = new MavenLibraryResolver();
         resolver.addDependency(new Dependency(new DefaultArtifact(artifact), "provided"));
         for (RemoteRepository repository : repositories) {
