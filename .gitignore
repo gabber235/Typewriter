@@ -147,3 +147,5 @@ docker/surrealdb
 docker/surrealdb/database.db
 docker/nats
 .env
+
+**.task/**
