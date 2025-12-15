@@ -81,11 +81,13 @@ class _TickerProviderHookState
   }
 
   void _updateTickers() {
-    if (_tickers != null) {
-      final muted = !_tickerModeNotifier!.value.enabled;
-      for (final ticker in _tickers!) {
-        ticker.muted = muted;
-      }
+    final notifier = _tickerModeNotifier;
+    final tickers = _tickers;
+    if (notifier == null || tickers == null) return;
+
+    final muted = !notifier.value.enabled;
+    for (final ticker in tickers) {
+      ticker.muted = muted;
     }
   }
 
