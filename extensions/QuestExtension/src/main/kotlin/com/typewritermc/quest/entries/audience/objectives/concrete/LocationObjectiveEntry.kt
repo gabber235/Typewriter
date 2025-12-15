@@ -6,21 +6,15 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.formatted
-import com.typewritermc.engine.paper.entry.Criteria
-import com.typewritermc.engine.paper.entry.PlaceholderParser
+import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.get
-import com.typewritermc.engine.paper.entry.include
-import com.typewritermc.engine.paper.entry.literal
-import com.typewritermc.engine.paper.entry.placeholderParser
-import com.typewritermc.engine.paper.entry.string
-import com.typewritermc.engine.paper.entry.supply
-import com.typewritermc.quest.entries.interfaces.LocatableObjective
 import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
 import org.bukkit.entity.Player
-import java.util.Optional
+import java.util.*
 
 @Entry("location_objective", "A location objective definition", Colors.BLUE_VIOLET, "streamline:target-solid")
 /**
@@ -46,7 +40,7 @@ class LocationObjectiveEntry(
     override val children: List<Ref<AudienceEntry>> = emptyList(),
     override val criteria: List<Criteria> = emptyList(),
     override val display: Var<String> = ConstVar(""),
-    val targetLocation: Var<Position> = ConstVar(Position.Companion.ORIGIN),
+    val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : LocatableObjective {
     override fun parser(): PlaceholderParser = placeholderParser {

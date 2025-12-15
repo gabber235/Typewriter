@@ -27,7 +27,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerEvent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.iterator
 import kotlin.reflect.KClass
 
 @Tags("quest")
@@ -110,10 +109,11 @@ class ObjectiveAudienceFilter(
     private val criteria: List<Criteria>,
 ) : AudienceFilter(objective) {
     private val factWatcherSubscriptions = ConcurrentHashMap<UUID, FactListenerSubscription>()
-    private val listenersCallbacks = mutableMapOf<KClass<Event>,(Event) -> Unit>()
+    private val listenersCallbacks = mutableMapOf<KClass<Event>, (Event) -> Unit>()
 
-    fun <E: Event> listenToEvent(klass: KClass <E>, callback: (E) -> Unit): ObjectiveAudienceFilter {
-        @Suppress("UNCHECKED_CAST")
+    // TODO: This should probably be moved later on to the AudienceDisplay.
+    fun <E : Event> listenToEvent(klass: KClass<E>, callback: (E) -> Unit): ObjectiveAudienceFilter {
+        @Suppress("UNCHECKED_CAST", "ReplacePutWithAssignment")
         listenersCallbacks.put(klass as KClass<Event>) { event ->
             if (event is PlayerEvent) {
                 val player = event.player

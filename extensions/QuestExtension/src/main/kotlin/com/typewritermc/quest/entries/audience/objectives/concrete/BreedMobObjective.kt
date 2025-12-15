@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.Criteria
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.ConstVar
@@ -37,9 +38,9 @@ class BreedMobObjective(
     val mob: Optional<Var<EntityType>> = Optional.empty(),
     @Help("Track the progress of the BreedMobObjective using a fact and set its target value.")
     override val progressTracking: CacheableFactObjectiveProgressTracking = CacheableFactObjectiveProgressTracking(),
-    @Help("The display supports the <value> and <target> tags from the fact.")
-    override val display: Var<String> = ConstVar("<value>/<target>"),
+    override val display: Var<String> = ConstVar(""),
     override val priorityOverride: Optional<Int> = Optional.empty(),
+    override val completionTriggers: List<TriggerableEntry>,
 ) : CachableFactObjective {
 
     override suspend fun display(): AudienceFilter {
@@ -54,7 +55,7 @@ class BreedMobObjective(
                 if (event.entity.type != expectedType) return@listenToEvent
             }
 
-            changeFact(player, 1)
+            incrementFact(player, 1)
         }
     }
 }

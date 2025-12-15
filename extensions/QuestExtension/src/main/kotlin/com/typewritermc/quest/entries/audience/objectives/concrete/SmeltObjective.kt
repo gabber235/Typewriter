@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.Criteria
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.ConstVar
@@ -39,8 +40,8 @@ class SmeltObjective(
     val result: Optional<Var<Material>> = Optional.empty(),
     @Help("Track the progress of the SmeltObjective using a fact and set its target value.")
     override val progressTracking: CacheableFactObjectiveProgressTracking = CacheableFactObjectiveProgressTracking(),
-    @Help("The display supports the <value> and <target> tags from the fact.")
-    override val display: Var<String> = ConstVar("<value>/<target>"),
+    override val display: Var<String> = ConstVar(""),
+    override val completionTriggers: List<TriggerableEntry> = emptyList(),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : CachableFactObjective {
 
@@ -61,7 +62,7 @@ class SmeltObjective(
             val expectedType = result.takeIf { it.isPresent }?.get()?.get(player)
             if (expectedType != null && item.type != expectedType) return@listenToEvent
 
-            changeFact(player, item.amount)
+            incrementFact(player, item.amount)
         }
     }
 }

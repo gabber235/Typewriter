@@ -3,6 +3,7 @@ package com.typewritermc.quest.entries.audience.objectives
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.Criteria
@@ -19,7 +20,7 @@ import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.entries.inactiveObjectiveDisplay
 import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
-import java.util.Optional
+import java.util.*
 import kotlin.math.absoluteValue
 
 private val countableObjectiveDisplay by snippet(
@@ -44,9 +45,10 @@ class CountableObjective(
     @Help("The target value to reach for completion.")
     val target: Var<Int> = ConstVar(0),
     @Help("The display supports the <count> and <target> tags from the fact.")
-    override val display: Var<String> = ConstVar("<count>/<target>"),
+    @Default("\"<count>/<target>\"")
+    override val display: Var<String> = ConstVar(""),
     override val priorityOverride: Optional<Int> = Optional.empty(),
-): ObjectiveEntry {
+) : ObjectiveEntry {
     override fun display(player: Player?): String {
         val text = when {
             player == null -> inactiveObjectiveDisplay

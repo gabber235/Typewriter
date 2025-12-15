@@ -20,7 +20,7 @@ interface LocatableObjective : ObjectiveEntry {
                 val objectivePositions = positions(player)
                 if (objectivePositions.isEmpty()) return@supplyPlayer null
                 val closestPosition =
-                    objectivePositions.maxBy { it.distanceSqrt(playerPosition) ?: Double.POSITIVE_INFINITY }
+                    objectivePositions.minBy { it.distanceSqrt(playerPosition) ?: Double.POSITIVE_INFINITY }
 
                 if (closestPosition.world != playerPosition.world) {
                     return@supplyPlayer "∞ m"
