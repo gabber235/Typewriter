@@ -159,7 +159,8 @@ fn handle_user(
     {
         allow_subscribe.push(format!("_INBOX.{}.>", &user_id));
 
-        allow_publish.push(format!("user.{}.organization.list", user_id));
+        allow_publish.push(format!("cloud.out.user.{}.organization.list", user_id));
+        allow_publish.push(format!("cloud.out.user.{}.organization.create", user_id));
     }
     // ######### END PERMISSIONS #########
 
