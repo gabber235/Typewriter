@@ -1,7 +1,11 @@
 wit_bindgen::generate!({ generate_all });
 
+mod types;
+
+pub use types::{Datetime, RecordId, RecordIdKey};
+
 use crate::seamlezz::surrealdb::call;
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_content::{Deserializer, Value};
@@ -10,14 +14,22 @@ pub trait SingleQueryResultExtractor: Sized {
     fn from_bytes(bytes: &[u8]) -> Result<Self>;
 }
 
+fn parse<D: DeserializeOwned>(bytes: &[u8]) -> Result<D> {
+    let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
+    let deserializer = Deserializer::new(value.clone()).coerce_numbers();
+    D::deserialize(deserializer).context(format!(
+        "Deserialization content error, could not parse {:?} into {}",
+        value,
+        std::any::type_name::<Vec<D>>()
+    ))
+}
+
 impl<D> SingleQueryResultExtractor for Vec<D>
 where
     D: DeserializeOwned,
 {
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
-        let deserializer = Deserializer::new(value).coerce_numbers();
-        Vec::<D>::deserialize(deserializer).context("Deserialization content error")
+        parse(bytes)
     }
 }
 
@@ -27,8 +39,12 @@ where
 {
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
         let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
-        let deserializer = Deserializer::new(value).coerce_numbers();
-        let items = Vec::<D>::deserialize(deserializer).context("Deserialization content error")?;
+        let deserializer = Deserializer::new(value.clone()).coerce_numbers();
+        let items = Vec::<D>::deserialize(deserializer).context(format!(
+            "Deserialization content error could not parse {:?} into Option<{}>",
+            value,
+            std::any::type_name::<D>()
+        ))?;
         Ok(items.into_iter().next())
     }
 }
@@ -41,6 +57,18 @@ impl QueryResultHolder {
     pub fn take<T: SingleQueryResultExtractor>(&self, index: usize) -> Result<T> {
         match self.results.get(index) {
             Some(Ok(bytes)) => T::from_bytes(bytes),
+            Some(Err(e)) => Err(anyhow!(
+                "Database query failed for statement {}: {}",
+                index,
+                e
+            )),
+            None => Err(anyhow!("Result index {} out of bounds", index)),
+        }
+    }
+
+    pub fn parse<D: DeserializeOwned>(&self, index: usize) -> Result<D> {
+        match self.results.get(index) {
+            Some(Ok(bytes)) => parse(bytes),
             Some(Err(e)) => Err(anyhow!(
                 "Database query failed for statement {}: {}",
                 index,
