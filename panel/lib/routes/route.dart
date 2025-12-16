@@ -11,6 +11,7 @@ import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
@@ -121,6 +122,11 @@ class _OrganizationsSelector extends HookConsumerWidget {
                                   OrganizationRoute(
                                     organizationId: organization.id,
                                   ),
+                                  onFailure: (error) {
+                                    debugPrint(
+                                      "Failed to navigate to organization route: $error",
+                                    );
+                                  },
                                 );
                               },
                               borderRadius: BorderRadius.circular(8),
@@ -129,7 +135,7 @@ class _OrganizationsSelector extends HookConsumerWidget {
                                   iconUrl: organization.iconUrl,
                                   size: 40,
                                 ),
-                                title: Text(organization.name),
+                                title: Text(organization.name.formatted),
                                 trailing: Icon(
                                   Icons.arrow_forward_ios,
                                   size: 14,

@@ -40,7 +40,7 @@ final class NatsProvider extends $NotifierProvider<Nats, Client> {
   }
 }
 
-String _$natsHash() => r'cd1803e51ac72dbdb3f596515f3d43b655c28d6c';
+String _$natsHash() => r'a0c82f439dc7ae4db7bfd3d3e35bdd4ed6675073';
 
 abstract class _$Nats extends $Notifier<Client> {
   Client build();

@@ -50,66 +50,55 @@ final class AppRouterProvider
 
 String _$appRouterHash() => r'babffb8e22cefce44520192b1132c6d68d9f20a5';
 
-/// Provides the current route data for the given [name].
+@ProviderFor(routeParam)
+const routeParamProvider = RouteParamFamily._();
 
-@ProviderFor(currentRouteData)
-const currentRouteDataProvider = CurrentRouteDataFamily._();
-
-/// Provides the current route data for the given [name].
-
-final class CurrentRouteDataProvider
-    extends
-        $FunctionalProvider<
-          RouteData<dynamic>?,
-          RouteData<dynamic>?,
-          RouteData<dynamic>?
-        >
-    with $Provider<RouteData<dynamic>?> {
-  /// Provides the current route data for the given [name].
-  const CurrentRouteDataProvider._({
-    required CurrentRouteDataFamily super.from,
+final class RouteParamProvider
+    extends $FunctionalProvider<String?, String?, String?>
+    with $Provider<String?> {
+  const RouteParamProvider._({
+    required RouteParamFamily super.from,
     required String super.argument,
   }) : super(
          retry: null,
-         name: r'currentRouteDataProvider',
-         isAutoDispose: false,
+         name: r'routeParamProvider',
+         isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$currentRouteDataHash();
+  String debugGetCreateSourceHash() => _$routeParamHash();
 
   @override
   String toString() {
-    return r'currentRouteDataProvider'
+    return r'routeParamProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  $ProviderElement<RouteData<dynamic>?> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  RouteData<dynamic>? create(Ref ref) {
+  String? create(Ref ref) {
     final argument = this.argument as String;
-    return currentRouteData(ref, argument);
+    return routeParam(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(RouteData<dynamic>? value) {
+  Override overrideWithValue(String? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<RouteData<dynamic>?>(value),
+      providerOverride: $SyncValueProvider<String?>(value),
     );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is CurrentRouteDataProvider && other.argument == argument;
+    return other is RouteParamProvider && other.argument == argument;
   }
 
   @override
@@ -118,26 +107,22 @@ final class CurrentRouteDataProvider
   }
 }
 
-String _$currentRouteDataHash() => r'96880f9b38b944f98b3aa12563542439e5021ae7';
+String _$routeParamHash() => r'9489070b7de3726c978b4fc1c975464af842be81';
 
-/// Provides the current route data for the given [name].
-
-final class CurrentRouteDataFamily extends $Family
-    with $FunctionalFamilyOverride<RouteData<dynamic>?, String> {
-  const CurrentRouteDataFamily._()
+final class RouteParamFamily extends $Family
+    with $FunctionalFamilyOverride<String?, String> {
+  const RouteParamFamily._()
     : super(
         retry: null,
-        name: r'currentRouteDataProvider',
+        name: r'routeParamProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: false,
+        isAutoDispose: true,
       );
 
-  /// Provides the current route data for the given [name].
-
-  CurrentRouteDataProvider call(String path) =>
-      CurrentRouteDataProvider._(argument: path, from: this);
+  RouteParamProvider call(String id) =>
+      RouteParamProvider._(argument: id, from: this);
 
   @override
-  String toString() => r'currentRouteDataProvider';
+  String toString() => r'routeParamProvider';
 }

@@ -25,6 +25,7 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -47,30 +48,33 @@ class ErrorScreen extends StatelessWidget {
               spacing: 8,
               children: [
                 Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize:
-                        context.responsive(mobile: 24, tablet: 32, desktop: 40),
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                )
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: context.responsive(
+                          mobile: 24,
+                          tablet: 32,
+                          desktop: 40,
+                        ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    )
                     .animate()
                     .fadeIn(duration: 300.ms, delay: 100.ms)
                     .slideY(begin: 0.1, end: 0),
                 Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: context.responsive(
-                      mobile: 14,
-                      tablet: 16,
-                      desktop: 20,
-                    ),
-                    color: Colors.grey,
-                  ),
-                )
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: context.responsive(
+                          mobile: 14,
+                          tablet: 16,
+                          desktop: 20,
+                        ),
+                        color: Colors.grey,
+                      ),
+                    )
                     .animate()
                     .fadeIn(duration: 300.ms, delay: 200.ms)
                     .slideY(begin: 0.1, end: 0),
@@ -106,29 +110,33 @@ class SmallErrorScreen extends ErrorScreen {
       spacing: 8,
       children: [
         Text(
-          title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: context.responsive(mobile: 14, tablet: 16, desktop: 18),
-            fontWeight: FontWeight.bold,
-            color: Colors.red,
-          ),
-        )
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: context.responsive(
+                  mobile: 14,
+                  tablet: 16,
+                  desktop: 18,
+                ),
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            )
             .animate()
             .fadeIn(duration: 300.ms, delay: 100.ms)
             .slideY(begin: 0.1, end: 0),
         Text(
-          message,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: context.responsive(
-              mobile: 10,
-              tablet: 12,
-              desktop: 14,
-            ),
-            color: Colors.grey,
-          ),
-        )
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: context.responsive(
+                  mobile: 10,
+                  tablet: 12,
+                  desktop: 14,
+                ),
+                color: Colors.grey,
+              ),
+            )
             .animate()
             .fadeIn(duration: 300.ms, delay: 200.ms)
             .slideY(begin: 0.1, end: 0),

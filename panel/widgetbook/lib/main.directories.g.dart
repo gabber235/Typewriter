@@ -146,16 +146,16 @@ final directories = <_widgetbook.WidgetbookNode>[
                     name: 'PagePage',
                     useCases: [
                       _widgetbook.WidgetbookUseCase(
-                        name: 'Cinematic',
-                        builder:
-                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
-                                .pagePageCinematicUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
                         name: 'Manifest',
                         builder:
                             _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
                                 .pagePageManifestUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Scene',
+                        builder:
+                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                                .pagePageSceneUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'Sequence',

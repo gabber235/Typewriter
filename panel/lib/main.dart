@@ -45,7 +45,16 @@ class TypewriterPanel extends HookConsumerWidget {
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: themeMode,
-          routerConfig: router.config(),
+          routerConfig: router.config(
+            navigatorObservers: () => [
+              InvalidatorNavigatorObserver(() async {
+                // We don't want to invalidate during the build phase, so we wait
+                await WidgetsBinding.instance.endOfFrame;
+                ref.invalidate(routeParamProvider);
+              }),
+              LoggerNavigatorObserver(),
+            ],
+          ),
           shortcuts: typewriterShortcuts,
           scrollBehavior: GlobalCustomScrollBehavior(),
           builder: (context, child) => Responsive(

@@ -151,6 +151,5 @@ class Pages extends _$Pages {
 
 @riverpod
 String? pageId(Ref ref) {
-  final routeData = ref.watch(currentRouteDataProvider(RouteRoute.name));
-  return routeData?.params.getString("pageId");
+  return ref.watch(routeParamProvider("pageId"));
 }

@@ -312,7 +312,7 @@ class _OrganizationsList extends HookConsumerWidget {
                     onTap: () {
                       ref
                           .read(appRouterProvider)
-                          .push(OrganizationRoute(organizationId: org.id));
+                          .replace(OrganizationRoute(organizationId: org.id));
                       Navigator.of(context).pop();
                     },
                   ),

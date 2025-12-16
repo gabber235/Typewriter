@@ -143,8 +143,7 @@ Future<List<Book>> filteredBooks(Ref ref, String query) async {
 
 @riverpod
 String? bookId(Ref ref) {
-  final routeData = ref.watch(currentRouteDataProvider(BookRoute.name));
-  return routeData?.params.getString("bookId");
+  return ref.watch(routeParamProvider("bookId"));
 }
 
 @riverpod

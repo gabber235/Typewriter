@@ -1,4 +1,5 @@
 import "package:auto_route/auto_route.dart";
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
@@ -25,51 +26,31 @@ class AppRouter extends RootStackRouter {
 
   @override
   List<AutoRoute> get routes => [
-        AutoRoute(
-          page: AuthRoute.page,
-          path: "/auth",
-          keepHistory: false,
-          maintainState: false,
-        ),
-        AutoRoute(
-          page: IndexRoute.page,
-          path: "/",
-          initial: true,
-          guards: [AuthGuard(ref)],
-          children: [
-            AutoRoute(
-              page: OrganizationRoute.page,
-              path: "organization/:organizationId",
-              children: [
-                RedirectRoute(path: "", redirectTo: LibraryRoute.name),
-                AutoRoute(
-                  page: LibraryRoute.page,
-                  path: "library",
-                  initial: true,
-                ),
-                AutoRoute(
-                  page: ModulesRoute.page,
-                  path: "modules",
-                ),
-                AutoRoute(
-                  page: ManualsRoute.page,
-                  path: "manuals",
-                ),
-                AutoRoute(
-                  page: BookRoute.page,
-                  path: "books/:bookId",
-                  children: [
-                    AutoRoute(
-                      page: RouteRoute.page,
-                      path: "page/:pageId",
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ];
+    AutoRoute(
+      page: AuthRoute.page,
+      path: "/auth",
+      keepHistory: false,
+      maintainState: false,
+    ),
+    AutoRoute(page: IndexRoute.page, path: "/", guards: [AuthGuard(ref)]),
+    AutoRoute(
+      page: OrganizationRoute.page,
+      path: "/organization/:organizationId",
+      guards: [AuthGuard(ref)],
+      children: [
+        // RedirectRoute(path: "", redirectTo: LibraryRoute.name),
+        AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
+        AutoRoute(page: ModulesRoute.page, path: "modules"),
+        AutoRoute(page: ManualsRoute.page, path: "manuals"),
+      ],
+    ),
+    AutoRoute(
+      page: BookRoute.page,
+      path: "/organization/:organizationId/books/:bookId",
+      guards: [AuthGuard(ref)],
+      children: [AutoRoute(page: RouteRoute.page, path: "page/:pageId")],
+    ),
+  ];
 }
 
 class AuthGuard extends AutoRouteGuard {
@@ -113,18 +94,67 @@ class InvalidatorNavigatorObserver extends NavigatorObserver {
   void didReplace({Route? newRoute, Route? oldRoute}) => invalidator();
 }
 
-/// Provides the current route data for the given [name].
-@Riverpod(keepAlive: true)
-RouteData? currentRouteData(Ref ref, String path) {
-  final router = ref.watch(appRouterProvider);
-  return _fetchCurrentRouteData(path, router);
+class LoggerNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    debugPrint(
+      "NavigatorObserver: didPop '${previousRoute?.display}' -> ${route.display}",
+    );
+    super.didPop(route, previousRoute);
+  }
+
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    debugPrint(
+      "NavigatorObserver: didPush '${previousRoute?.display}' -> ${route.display}",
+    );
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didRemove(Route route, Route? previousRoute) {
+    debugPrint(
+      "NavigatorObserver: didRemove '${previousRoute?.display}' -> ${route.display}",
+    );
+    super.didRemove(route, previousRoute);
+  }
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) {
+    debugPrint(
+      "NavigatorObserver: didReplace '${oldRoute?.display}' -> ${newRoute?.display}",
+    );
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+  }
 }
 
-/// Fetch a nested route from the current route.
-RouteData? _fetchCurrentRouteData(String name, RoutingController controller) {
-  if (controller.current.name == name) {
-    return controller.current;
+extension RouteExtensions on Route {
+  String get display {
+    final route = data;
+    if (route == null) return "null";
+    final params = route.params.rawMap.entries
+        .map((e) => "${e.key}: ${e.value}")
+        .join(", ");
+    return "${route.name}($params)";
   }
-  final child = controller.innerRouterOf(controller.current.name);
-  return child != null ? _fetchCurrentRouteData(name, child) : null;
+}
+
+@riverpod
+String? routeParam(Ref ref, String id) {
+  final router = ref.watch(appRouterProvider);
+  return _fetchRouteParam(id, router);
+}
+
+String? _fetchRouteParam(String id, RoutingController controller) {
+  final param = controller.routeData.params.optString(id);
+  if (param != null) {
+    return param;
+  }
+  for (final child in controller.childControllers) {
+    final childParam = _fetchRouteParam(id, child);
+    if (childParam != null) {
+      return childParam;
+    }
+  }
+  return null;
 }

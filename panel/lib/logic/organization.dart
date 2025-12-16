@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
@@ -81,17 +82,19 @@ class Organizations extends _$Organizations {
 
 @riverpod
 String? organizationId(Ref ref) {
-  final routeData = ref.watch(currentRouteDataProvider(OrganizationRoute.name));
-  return routeData?.params.getString("organizationId");
+  return ref.watch(routeParamProvider("organizationId"));
 }
 
 @riverpod
 class Organization extends _$Organization {
   @override
   Future<OrganizationData?> build() async {
-    final _ = ref.watch(organizationIdProvider);
-
-    return null;
+    final id = ref.watch(organizationIdProvider);
+    if (id == null) {
+      return null;
+    }
+    final organizations = await ref.watch(organizationsProvider.future);
+    return organizations.firstWhereOrNull((org) => org.id == id);
   }
 }
 
