@@ -49,7 +49,9 @@ DataBlueprint generateRandomDataBlueprint({
       return generateRandomMapBlueprint(depth: depth + 1, maxDepth: maxDepth);
     case "object":
       return generateRandomObjectBlueprint(
-          depth: depth + 1, maxDepth: maxDepth);
+        depth: depth + 1,
+        maxDepth: maxDepth,
+      );
     case "algebraic":
       return generateRandomAlgebraicBlueprint(
         depth: depth + 1,
@@ -68,29 +70,33 @@ PrimitiveBlueprint generateRandomPrimitiveBlueprint() {
   switch (pick) {
     case 0:
       return DataBlueprint.string(
-        defaultValue: faker.lorem
-            .words(faker.randomGenerator.integer(3, min: 1))
-            .join(" "),
-        modifiers: _randomStringModifiers(),
-      ) as PrimitiveBlueprint;
+            defaultValue: faker.lorem
+                .words(faker.randomGenerator.integer(3, min: 1))
+                .join(" "),
+            modifiers: _randomStringModifiers(),
+          )
+          as PrimitiveBlueprint;
     case 1:
       return DataBlueprint.integer(
-        defaultValue: faker.randomGenerator.integer(1000, min: -100),
-        modifiers: _randomNumberModifiers(),
-      ) as PrimitiveBlueprint;
+            defaultValue: faker.randomGenerator.integer(1000, min: -100),
+            modifiers: _randomNumberModifiers(),
+          )
+          as PrimitiveBlueprint;
     case 2:
       return DataBlueprint.decimal(
-        defaultValue: double.parse(
-          faker.randomGenerator.decimal(scale: 100).toStringAsFixed(2),
-        ),
-        modifiers: _randomNumberModifiers(),
-      ) as PrimitiveBlueprint;
+            defaultValue: double.parse(
+              faker.randomGenerator.decimal(scale: 100).toStringAsFixed(2),
+            ),
+            modifiers: _randomNumberModifiers(),
+          )
+          as PrimitiveBlueprint;
     case 3:
     default:
       return DataBlueprint.boolean(
-        defaultValue: faker.randomGenerator.boolean(),
-        modifiers: _randomBaseModifiers(),
-      ) as PrimitiveBlueprint;
+            defaultValue: faker.randomGenerator.boolean(),
+            modifiers: _randomBaseModifiers(),
+          )
+          as PrimitiveBlueprint;
   }
 }
 
@@ -105,22 +111,21 @@ EnumBlueprint generateRandomEnumBlueprint() {
   final defaultValue = values[faker.randomGenerator.integer(values.length)];
 
   return DataBlueprint.enumBlueprint(
-    values: values,
-    internalDefaultValue: defaultValue,
-    modifiers: _randomBaseModifiers(),
-  ) as EnumBlueprint;
+        values: values,
+        internalDefaultValue: defaultValue,
+        modifiers: _randomBaseModifiers(),
+      )
+      as EnumBlueprint;
 }
 
 /// Generate a random List blueprint.
 ListBlueprint generateRandomListBlueprint({int depth = 0, int maxDepth = 2}) {
-  final type = generateRandomDataBlueprint(
-    depth: depth,
-    maxDepth: maxDepth,
-  );
+  final type = generateRandomDataBlueprint(depth: depth, maxDepth: maxDepth);
   return DataBlueprint.list(
-    type: type,
-    modifiers: [..._randomBaseModifiers(), const ExpandedModifier()],
-  ) as ListBlueprint;
+        type: type,
+        modifiers: [..._randomBaseModifiers(), const ExpandedModifier()],
+      )
+      as ListBlueprint;
 }
 
 /// Generate a random Map blueprint.
@@ -132,16 +137,14 @@ MapBlueprint generateRandomMapBlueprint({int depth = 0, int maxDepth = 2}) {
     generateRandomEnumBlueprint(),
   ];
   final key = keyChoices[faker.randomGenerator.integer(keyChoices.length)];
-  final value = generateRandomDataBlueprint(
-    depth: depth,
-    maxDepth: maxDepth,
-  );
+  final value = generateRandomDataBlueprint(depth: depth, maxDepth: maxDepth);
 
   return DataBlueprint.map(
-    key: key,
-    value: value,
-    modifiers: [..._randomBaseModifiers(), const ExpandedModifier()],
-  ) as MapBlueprint;
+        key: key,
+        value: value,
+        modifiers: [..._randomBaseModifiers(), const ExpandedModifier()],
+      )
+      as MapBlueprint;
 }
 
 /// Generate a random Object blueprint with 1-5 fields.
@@ -153,16 +156,14 @@ ObjectBlueprint generateRandomObjectBlueprint({
   final count = faker.randomGenerator.integer(5, min: 1);
   while (fields.length < count) {
     final key = _randomFieldName();
-    fields[key] = generateRandomDataBlueprint(
-      depth: depth,
-      maxDepth: maxDepth,
-    );
+    fields[key] = generateRandomDataBlueprint(depth: depth, maxDepth: maxDepth);
   }
 
   return DataBlueprint.object(
-    fields: fields,
-    modifiers: [..._randomBaseModifiers(), const ExpandedModifier()],
-  ) as ObjectBlueprint;
+        fields: fields,
+        modifiers: [..._randomBaseModifiers(), const ExpandedModifier()],
+      )
+      as ObjectBlueprint;
 }
 
 /// Generate a random Algebraic blueprint with 2-4 cases.
@@ -174,25 +175,23 @@ AlgebraicBlueprint generateRandomAlgebraicBlueprint({
   final count = faker.randomGenerator.integer(4, min: 2);
   while (cases.length < count) {
     final name = _randomVariantName();
-    cases[name] = generateRandomDataBlueprint(
-      depth: depth,
-      maxDepth: maxDepth,
-    );
+    cases[name] = generateRandomDataBlueprint(depth: depth, maxDepth: maxDepth);
   }
   return DataBlueprint.algebraic(
-    cases: cases,
-    modifiers: _randomBaseModifiers(),
-  ) as AlgebraicBlueprint;
+        cases: cases,
+        modifiers: _randomBaseModifiers(),
+      )
+      as AlgebraicBlueprint;
 }
 
 /// Generate a random Custom blueprint from well-known editors.
 CustomBlueprint generateRandomCustomBlueprint() {
-  final choices = <CustomBlueprint>[
-    DataBlueprint.moduleVersion(),
-    DataBlueprint.manualPlatformTarget(),
-    DataBlueprint.manualModuleReference(),
-  ];
-  return choices[faker.randomGenerator.integer(choices.length)];
+  // Return a basic custom blueprint since no specialized custom editors remain
+  return DataBlueprint.custom(
+        editor: "custom_editor",
+        shape: DataBlueprint.object(fields: {}),
+      )
+      as CustomBlueprint;
 }
 
 List<Modifier> _randomBaseModifiers() {
@@ -201,10 +200,7 @@ List<Modifier> _randomBaseModifiers() {
   if (faker.randomGenerator.boolean()) mods.add(const ExpandedModifier());
   if (faker.randomGenerator.integer(10) == 0) {
     mods.add(
-      const CustomModifier(
-        name: "debug_hint",
-        data: {"note": "generated"},
-      ),
+      const CustomModifier(name: "debug_hint", data: {"note": "generated"}),
     );
   }
   return mods;

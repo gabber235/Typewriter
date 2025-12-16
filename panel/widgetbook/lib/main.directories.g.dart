@@ -27,12 +27,6 @@ import 'package:widgetbook_workspace/stories/app/components/inspector/editors/ed
     as _widgetbook_workspace_stories_app_components_inspector_editors_editors_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/list_editor.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_editors_list_editor_stories;
-import 'package:widgetbook_workspace/stories/app/components/inspector/editors/manuals_editors.stories.dart'
-    as _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories;
-import 'package:widgetbook_workspace/stories/app/components/inspector/editors/module_version_editor.stories.dart'
-    as _widgetbook_workspace_stories_app_components_inspector_editors_module_version_editor_stories;
-import 'package:widgetbook_workspace/stories/app/components/inspector/editors/module_version_list_editor.stories.dart'
-    as _widgetbook_workspace_stories_app_components_inspector_editors_module_version_list_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/number_editor.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_editors_number_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/string_editor.stories.dart'
@@ -41,8 +35,6 @@ import 'package:widgetbook_workspace/stories/app/components/inspector/operations
     as _widgetbook_workspace_stories_app_components_inspector_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/app/components/interaction_mode/mode_display_chip.stories.dart'
     as _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories;
-import 'package:widgetbook_workspace/stories/app/components/manuals/popups.stories.dart'
-    as _widgetbook_workspace_stories_app_components_manuals_popups_stories;
 import 'package:widgetbook_workspace/stories/app/components/organization_icon.stories.dart'
     as _widgetbook_workspace_stories_app_components_organization_icon_stories;
 import 'package:widgetbook_workspace/stories/app/components/organization_selector.stories.dart'
@@ -99,10 +91,6 @@ import 'package:widgetbook_workspace/stories/routes/organizations/book/route.sto
     as _widgetbook_workspace_stories_routes_organizations_book_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/library/route.stories.dart'
     as _widgetbook_workspace_stories_routes_organizations_library_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/manuals/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_manuals_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/modules/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_modules_route_stories;
 import 'package:widgetbook_workspace/stories/routes/route.stories.dart'
     as _widgetbook_workspace_stories_routes_route_stories;
 import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
@@ -186,38 +174,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_routes_organizations_library_route_stories
                             .libraryPageUseCase,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          _widgetbook.WidgetbookFolder(
-            name: 'manuals',
-            children: [
-              _widgetbook.WidgetbookComponent(
-                name: 'ManualsPage',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'ManualsPage',
-                    builder:
-                        _widgetbook_workspace_stories_routes_organizations_manuals_route_stories
-                            .manualsPageUseCase,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          _widgetbook.WidgetbookFolder(
-            name: 'modules',
-            children: [
-              _widgetbook.WidgetbookComponent(
-                name: 'ModulesPage',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'ModulesPage',
-                    builder:
-                        _widgetbook_workspace_stories_routes_organizations_modules_route_stories
-                            .modulesPageUseCase,
                   ),
                 ],
               ),
@@ -564,67 +520,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                         ],
                       ),
                       _widgetbook.WidgetbookComponent(
-                        name: 'ManualModuleReferenceEditor',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Module Reference (single)',
-                            builder:
-                                _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
-                                    .manualModuleReferenceSingleUseCase,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
-                        name: 'ManualModulesListEditor',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Modules (grouped list)',
-                            builder:
-                                _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
-                                    .manualModulesGroupedListUseCase,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
-                        name: 'ManualPlatformTargetEditor',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Platform Target (single)',
-                            builder:
-                                _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
-                                    .manualPlatformTargetSingleUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Platform Targets (list)',
-                            builder:
-                                _widgetbook_workspace_stories_app_components_inspector_editors_manuals_editors_stories
-                                    .manualPlatformTargetListUseCase,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
-                        name: 'ModuleVersionEditor',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Default',
-                            builder:
-                                _widgetbook_workspace_stories_app_components_inspector_editors_module_version_editor_stories
-                                    .moduleVersionEditorUseCase,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
-                        name: 'ModuleVersionListEditor',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Default',
-                            builder:
-                                _widgetbook_workspace_stories_app_components_inspector_editors_module_version_list_editor_stories
-                                    .moduleVersionListEditorUseCase,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
                         name: 'NumberEditor',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
@@ -689,33 +584,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                         builder:
                             _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories
                                 .modeDisplayChipNormal,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookFolder(
-                name: 'manuals',
-                children: [
-                  _widgetbook.WidgetbookComponent(
-                    name: 'ManualChangeModulesPopup',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Change Modules Popup',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_manuals_popups_stories
-                                .manualChangeModulesPopupUseCase,
-                      ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'ManualChangePlatformsPopup',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Change Platforms Popup',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_manuals_popups_stories
-                                .manualChangePlatformsPopupUseCase,
                       ),
                     ],
                   ),

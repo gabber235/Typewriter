@@ -59,7 +59,7 @@ final class OperationsProvider
   }
 }
 
-String _$operationsHash() => r'a4026c81aec8e435ef7cd95928807e5716bca2d8';
+String _$operationsHash() => r'5a93de0302f38a5bda7b48e4b57a09a906e76216';
 
 /// Computes the subset of registered [Operation]s that are currently
 /// executable for the active selection. Emits an empty list when there is

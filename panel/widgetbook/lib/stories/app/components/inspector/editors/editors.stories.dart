@@ -96,7 +96,7 @@ Widget loadingEditorUseCase(BuildContext context) {
   final editorMode = context.knobs.editorMode();
   return EditorStories(
     overrides: [
-      fieldValueProvider.overrideWith((_, __) => SelectedValue.loading()),
+      fieldValueProvider.overrideWith((_, _) => SelectedValue.loading()),
     ],
     child: FieldValueEditor(
       path: "",
@@ -112,7 +112,7 @@ Widget conflictValueEditorUseCase(BuildContext context) {
   final editorMode = context.knobs.editorMode();
   return EditorStories(
     overrides: [
-      fieldValueProvider.overrideWith((_, __) => SelectedValue.conflict()),
+      fieldValueProvider.overrideWith((_, _) => SelectedValue.conflict()),
     ],
     child: FieldValueEditor(
       path: "",

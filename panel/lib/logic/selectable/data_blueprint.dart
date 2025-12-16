@@ -1,11 +1,7 @@
 // ignore_for_file: sort_constructors_first
 import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:pub_semver/pub_semver.dart";
-import "package:typewriter_panel/generated/models/module.pb.dart";
-import "package:typewriter_panel/logic/modules/module_version_extensions.dart";
 import "package:typewriter_panel/main.dart";
-import "package:typewriter_panel/utils/string.dart";
 
 part "data_blueprint.freezed.dart";
 part "data_blueprint.g.dart";
@@ -105,56 +101,6 @@ sealed class DataBlueprint with _$DataBlueprint {
     @Default([]) List<Modifier> modifiers,
   }) = CustomBlueprint;
 
-  /// Module version blueprint (custom editor: "module_version").
-  /// Persists as a string semantic version (no epoch folding logic here) plus separate state.
-  static CustomBlueprint moduleVersion({
-    ModuleVersion? version,
-    List<Modifier> modifiers = const [],
-  }) {
-    final mv =
-        version ?? ModuleVersion(version: Version.none.canonicalizedVersion);
-    return CustomBlueprint(
-      editor: "module_version",
-      shape: DataBlueprint.object(
-        fields: {
-          "version": DataBlueprint.string(defaultValue: mv.canonical),
-          "state": DataBlueprint.enumBlueprint(
-            values: ModuleVersionState.values
-                .map((e) => e.name.snakeCase())
-                .toList(),
-            internalDefaultValue: mv.state.name.snakeCase(),
-          ),
-        },
-      ),
-      internalDefaultValue: mv.writeToJsonMap(),
-      modifiers: modifiers,
-    );
-  }
-
-  static CustomBlueprint manualPlatformTarget({
-    dynamic defaultValue,
-    List<Modifier> modifiers = const [],
-  }) {
-    return CustomBlueprint(
-      editor: "manual_platform_target",
-      shape: DataBlueprint.object(fields: {}),
-      internalDefaultValue: defaultValue,
-      modifiers: modifiers,
-    );
-  }
-
-  static CustomBlueprint manualModuleReference({
-    dynamic defaultValue,
-    List<Modifier> modifiers = const [],
-  }) {
-    return CustomBlueprint(
-      editor: "manual_module_reference",
-      shape: DataBlueprint.object(fields: {}),
-      internalDefaultValue: defaultValue,
-      modifiers: modifiers,
-    );
-  }
-
   factory DataBlueprint.fromJson(Map<String, dynamic> json) =>
       _$DataBlueprintFromJson(json);
 }
@@ -220,9 +166,7 @@ extension PrimitiveTypeExtension on PrimitiveType {
   }
 }
 
-final _customEditorCustomLayout = <CustomBlueprint>[
-  DataBlueprint.manualPlatformTarget(),
-];
+final _customEditorCustomLayout = <CustomBlueprint>[];
 
 /// Since freezed does not support methods on data models, we have to create a separate extension class.
 extension DataBlueprintExtension on DataBlueprint {

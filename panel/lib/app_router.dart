@@ -1,5 +1,4 @@
 import "package:auto_route/auto_route.dart";
-import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/auth.dart";
@@ -7,8 +6,6 @@ import "package:typewriter_panel/routes/auth/route.dart";
 import "package:typewriter_panel/routes/organization/book/page/route.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
-import "package:typewriter_panel/routes/organization/manuals/route.dart";
-import "package:typewriter_panel/routes/organization/modules/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_panel/routes/route.dart";
 
@@ -40,8 +37,6 @@ class AppRouter extends RootStackRouter {
       children: [
         // RedirectRoute(path: "", redirectTo: LibraryRoute.name),
         AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
-        AutoRoute(page: ModulesRoute.page, path: "modules"),
-        AutoRoute(page: ManualsRoute.page, path: "manuals"),
       ],
     ),
     AutoRoute(

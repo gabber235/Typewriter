@@ -7,7 +7,6 @@ import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
-import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";

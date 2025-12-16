@@ -476,6 +476,7 @@ class _AdaptiveEntryLayout
     this.suffix,
     this.padding = EdgeInsets.zero,
     this.compactPadding,
+    // ignore: unused_element_parameter
     this.minCenterWidth = 30.0,
   });
 

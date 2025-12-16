@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";

@@ -166,7 +166,7 @@ final class BookIdProvider
   }
 }
 
-String _$bookIdHash() => r'6e3d070d3c0676228273d60212a14e809f72bf9d';
+String _$bookIdHash() => r'd84a340bc2c2d1d02b27b5a7d4b8ea2abdb05918';
 
 @ProviderFor(book)
 const bookProvider = BookFamily._();

@@ -9,7 +9,6 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/entry_operations.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations/manual_operations.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
 part "operations.g.dart";
@@ -27,10 +26,6 @@ List<Operation> operations(Ref ref) => [
   const EntryDuplicateOperation(),
   const EntryMoveToPageOperation(),
   const EntryReplaceWithOperation(),
-
-  /// Manual operations
-  const ManualChangePlatformTargetsOperation(),
-  const ManualChangeModulesOperation(),
 ];
 
 /// Defines a user-invokable action that can operate on the current selection

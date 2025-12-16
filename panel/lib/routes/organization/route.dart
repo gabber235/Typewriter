@@ -1,9 +1,7 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/icomoon_free.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
@@ -79,16 +77,6 @@ class OrganizationSidebarContent extends HookConsumerWidget {
             icon: Icones(IcomoonFree.books),
             text: "Library",
             route: OrganizationRoute(organizationId: organizationId),
-          ),
-          SidebarLink(
-            icon: Icones(Fa6Solid.boxes_stacked),
-            text: "Modules",
-            route: ModulesRoute(),
-          ),
-          SidebarLink(
-            icon: Icones(MaterialSymbols.menu_book),
-            text: "Manuals",
-            route: ManualsRoute(),
           ),
         ],
         const Spacer(),

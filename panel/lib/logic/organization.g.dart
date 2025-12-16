@@ -98,7 +98,7 @@ final class OrganizationIdProvider
   }
 }
 
-String _$organizationIdHash() => r'013e2c6e1ab3e419defc8d87912ade098515dd7b';
+String _$organizationIdHash() => r'f6f5c4b016f460787d6e45f57e4728b708016496';
 
 @ProviderFor(Organization)
 const organizationProvider = OrganizationProvider._();
@@ -124,7 +124,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'16d1a8fecd7cc960ff26477428ab94789147f09d';
+String _$organizationHash() => r'0314f581e4a659c20d9bd418a631e07d1561c1e1';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();
