@@ -23,6 +23,7 @@ class InputFieldContainer extends HookConsumerWidget {
     this.surroundingActions,
     this.borderRadius,
     this.surroundingFocusNode,
+    this.onInputFocus,
     this.onDismiss,
     super.key,
   });
@@ -48,12 +49,16 @@ class InputFieldContainer extends HookConsumerWidget {
   /// Optional external surrounding focus node. If null, one will be created.
   final FocusNode? surroundingFocusNode;
 
+  /// Called when the input is focused.
+  final VoidCallback? onInputFocus;
+
   /// Called when a dismiss intent is handled while the input is focused.
   final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final surroundingNode = surroundingFocusNode ??
+    final surroundingNode =
+        surroundingFocusNode ??
         useFocusNode(
           debugLabel: "SurroundingInputFieldContainer",
           descendantsAreTraversable: false,
@@ -67,24 +72,26 @@ class InputFieldContainer extends HookConsumerWidget {
     final id = useMemoized(() => uuid.v4());
     final currentMode = ref.watch(currentInteractionModeProvider);
 
-    useEffect(
-      () {
-        if (currentMode is InsertMode && surroundingNode.hasPrimaryFocus) {
-          if (currentMode.id != id) {
-            ref
-                .read(currentInteractionModeProvider.notifier)
-                .setMode(InsertMode(id));
-          }
-          inputFocusNode.requestFocus();
+    useEffect(() {
+      if (currentMode is InsertMode && surroundingNode.hasPrimaryFocus) {
+        if (currentMode.id != id) {
+          ref
+              .read(currentInteractionModeProvider.notifier)
+              .setMode(InsertMode(id));
         }
+        inputFocusNode.requestFocus();
+      }
 
-        if (currentMode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
-          surroundingNode.requestFocus();
-        }
-        return null;
-      },
-      [currentMode],
-    );
+      if (currentMode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
+        surroundingNode.requestFocus();
+      }
+      return null;
+    }, [currentMode]);
+
+    useEffect(() {
+      if (inputFocusNode.hasPrimaryFocus) onInputFocus?.call();
+      return null;
+    }, [inputFocusNode.hasPrimaryFocus]);
 
     return FocusHighlight(
       type: focusType.value,
@@ -104,9 +111,7 @@ class InputFieldContainer extends HookConsumerWidget {
             ),
             ...?surroundingActions,
           ],
-          if (inputFocusNode.hasPrimaryFocus) ...[
-            ...?inputActions,
-          ],
+          if (inputFocusNode.hasPrimaryFocus) ...[...?inputActions],
           if (surroundingNode.hasFocus) ...?actions,
         ],
         child: Actions(

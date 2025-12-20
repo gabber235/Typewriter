@@ -13,9 +13,7 @@ void showSnackBar(
       dismissDirection: DismissDirection.down,
       showCloseIcon: true,
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
   );
 }
@@ -25,5 +23,13 @@ void showErrorSnackBar(BuildContext context, String message) {
     context,
     message: message,
     backgroundColor: Theme.of(context).colorScheme.error,
+  );
+}
+
+void showSuccessSnackBar(BuildContext context, String message) {
+  showSnackBar(
+    context,
+    message: message,
+    backgroundColor: Theme.of(context).colorScheme.primary,
   );
 }

@@ -61,6 +61,7 @@ pub fn handle_create(msg: BrokerMessage, params: HashMap<String, String>) -> Res
             organization = $org.id,
             deletable = false,
             assignable = true,
+            default_role = true,
             priority = 0;
 
         LET $user = type::thing('user', $user_id);

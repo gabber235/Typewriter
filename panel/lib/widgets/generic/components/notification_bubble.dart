@@ -1,9 +1,23 @@
 import "package:flutter/material.dart";
+import "package:flutter/rendering.dart";
 import "package:flutter_animate/flutter_animate.dart";
 
-/// Overlays a notification bubble anchored to a child widget.
-abstract class NotificationBubble extends StatelessWidget {
-  const NotificationBubble({super.key});
+/// Corners available for anchoring the bubble.
+enum NotificationBubbleAnchor { topLeft, topRight, bottomLeft, bottomRight }
+
+enum NotificationSlot { child, bubble }
+
+class NotificationBubble
+    extends SlottedMultiChildRenderObjectWidget<NotificationSlot, RenderBox> {
+  const NotificationBubble({
+    required this.child,
+    required this.bubbleBuilder,
+    this.anchor = NotificationBubbleAnchor.topRight,
+    this.overlap = 6.0,
+    this.show = true,
+    this.semanticsLabel,
+    super.key,
+  });
 
   /// Small circular indicator bubble.
   factory NotificationBubble.dot({
@@ -16,14 +30,21 @@ abstract class NotificationBubble extends StatelessWidget {
     bool show = true,
     Key? key,
   }) {
-    return _NotificationBubbleDot(
-      key: key,
-      anchor: anchor,
+    return NotificationBubble(
       overlap: overlap,
-      dotSize: dotSize,
-      color: color,
       semanticsLabel: semanticsLabel,
       show: show,
+      key: key,
+      bubbleBuilder: (context) {
+        final theme = Theme.of(context);
+        final c = color ?? theme.colorScheme.error;
+
+        return Container(
+          width: dotSize,
+          height: dotSize,
+          decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+        );
+      },
       child: child,
     );
   }
@@ -42,16 +63,40 @@ abstract class NotificationBubble extends StatelessWidget {
     bool show = true,
     Key? key,
   }) {
-    return _NotificationBubbleCount(
-      key: key,
-      count: count,
+    final effectiveShow = !(hideWhenZero && count == 0) && show;
+    return NotificationBubble(
+      bubbleBuilder: (context) {
+        final theme = Theme.of(context);
+        final color = backgroundColor ?? theme.colorScheme.error;
+        final onColor = foregroundColor ?? theme.colorScheme.onError;
+        final text = count > maxCount ? "$maxCount+" : count.toString();
+
+        return Container(
+          clipBehavior: Clip.none,
+          decoration: ShapeDecoration(
+            color: color,
+            shape: text.length > 2
+                ? const StadiumBorder()
+                : const CircleBorder(),
+          ),
+          padding: EdgeInsets.all(6),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: TextStyle(
+              color: onColor,
+              fontSize: 10,
+              fontVariations: const [FontVariation("wght", 700)],
+              letterSpacing: 0.7,
+            ),
+          ),
+        );
+      },
       anchor: anchor,
       overlap: overlap,
-      maxCount: maxCount,
-      backgroundColor: backgroundColor,
-      foregroundColor: foregroundColor,
       semanticsLabel: semanticsLabel,
-      show: !(hideWhenZero && count == 0) && show,
+      show: effectiveShow,
+      key: key,
       child: child,
     );
   }
@@ -66,208 +111,156 @@ abstract class NotificationBubble extends StatelessWidget {
     bool show = true,
     Key? key,
   }) {
-    return _NotificationBubbleCustom(
-      key: key,
-      bubble: bubble,
+    return NotificationBubble(
+      bubbleBuilder: (_) => bubble,
       anchor: anchor,
       overlap: overlap,
       semanticsLabel: semanticsLabel,
       show: show,
+      key: key,
       child: child,
     );
   }
-}
-
-/// Corners available for anchoring the bubble.
-enum NotificationBubbleAnchor {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}
-
-abstract class _NotificationBubbleBase extends NotificationBubble {
-  const _NotificationBubbleBase({
-    required this.child,
-    required this.anchor,
-    required this.overlap,
-    required this.show,
-    this.semanticsLabel,
-    super.key,
-  });
 
   final Widget child;
+  final WidgetBuilder bubbleBuilder;
   final NotificationBubbleAnchor anchor;
   final double overlap;
   final bool show;
   final String? semanticsLabel;
 
-  @protected
-  Widget buildBubble(BuildContext context);
+  @override
+  Iterable<NotificationSlot> get slots => NotificationSlot.values;
 
   @override
-  Widget build(BuildContext context) {
-    final bubble = buildBubble(context);
-    final offset = _offsetFor(anchor, overlap);
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        child,
-        Positioned.fill(
-          child: Align(
-            alignment: _alignmentFor(anchor),
-            child: Semantics(
-              label: semanticsLabel,
-              child: bubble,
-            )
+  Widget? childForSlot(NotificationSlot slot) {
+    switch (slot) {
+      case NotificationSlot.child:
+        return child;
+      case NotificationSlot.bubble:
+        return Builder(
+          builder: (context) {
+            return Semantics(
+                  label: semanticsLabel,
+                  child: bubbleBuilder(context),
+                )
                 .animate(target: show ? 1.0 : 0.0)
-                .move(
-                  curve: show ? ElasticOutCurve(0.5) : Curves.easeIn,
-                  duration: 750.ms,
-                  begin: show ? offset / 2 : offset,
-                  end: offset,
-                )
-                .scaleXY(
-                  begin: 0.7,
-                  end: 1.0,
-                )
+                .scaleXY(begin: 0.7, end: 1.0)
                 .fade(
                   duration: 200.ms,
                   delay: show ? 0.ms : 550.ms,
                   curve: Curves.easeInOut,
-                ),
-          ),
-        ),
-      ],
-    );
+                );
+          },
+        );
+    }
   }
-}
-
-class _NotificationBubbleDot extends _NotificationBubbleBase {
-  const _NotificationBubbleDot({
-    required super.child,
-    required super.anchor,
-    required super.overlap,
-    required this.dotSize,
-    required this.color,
-    required super.semanticsLabel,
-    required super.show,
-    super.key,
-  });
-
-  final double dotSize;
-  final Color? color;
 
   @override
-  Widget buildBubble(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = this.color ?? theme.colorScheme.error;
-
-    return Container(
-      width: dotSize,
-      height: dotSize,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
+  SlottedContainerRenderObjectMixin<NotificationSlot, RenderBox>
+  createRenderObject(BuildContext context) {
+    return NotificationBubbleRenderBox(anchor: anchor, overlap: overlap);
   }
-}
-
-class _NotificationBubbleCount extends _NotificationBubbleBase {
-  const _NotificationBubbleCount({
-    required super.child,
-    required super.anchor,
-    required super.overlap,
-    required this.count,
-    required this.maxCount,
-    required this.backgroundColor,
-    required this.foregroundColor,
-    required super.semanticsLabel,
-    required super.show,
-    super.key,
-  });
-
-  final int count;
-  final int maxCount;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
 
   @override
-  Widget buildBubble(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = backgroundColor ?? theme.colorScheme.error;
-    final onColor = foregroundColor ?? theme.colorScheme.onError;
-
-    final text = count > maxCount ? "$maxCount+" : count.toString();
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: 24,
-        minHeight: 24,
-      ),
-      child: Container(
-        clipBehavior: Clip.none,
-        decoration: ShapeDecoration(
-          color: color,
-          shape: StadiumBorder(),
-        ),
-        padding: EdgeInsets.all(4),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: onColor,
-            fontSize: 10,
-            fontVariations: [FontVariation("wght", 700)],
-            letterSpacing: 0.7,
-          ),
-        ),
-      ),
-    );
+  void updateRenderObject(
+    BuildContext context,
+    NotificationBubbleRenderBox renderObject,
+  ) {
+    renderObject
+      ..anchor = anchor
+      ..overlap = overlap;
   }
 }
 
-class _NotificationBubbleCustom extends _NotificationBubbleBase {
-  const _NotificationBubbleCustom({
-    required super.child,
-    required super.anchor,
-    required super.overlap,
-    required this.bubble,
-    required super.semanticsLabel,
-    required super.show,
-    super.key,
-  });
+class NotificationBubbleRenderBox extends RenderBox
+    with SlottedContainerRenderObjectMixin<NotificationSlot, RenderBox> {
+  NotificationBubbleRenderBox({
+    required NotificationBubbleAnchor anchor,
+    required double overlap,
+  }) : _anchor = anchor,
+       _overlap = overlap;
 
-  final Widget bubble;
+  NotificationBubbleAnchor _anchor;
+  NotificationBubbleAnchor get anchor => _anchor;
+  set anchor(NotificationBubbleAnchor value) {
+    if (anchor == value) return;
+    _anchor = value;
+    markNeedsLayout();
+  }
+
+  double _overlap;
+  double get overlap => _overlap;
+  set overlap(double value) {
+    if (overlap == value) return;
+    _overlap = value;
+    markNeedsLayout();
+  }
+
+  RenderBox? _child;
+  RenderBox? _bubble;
 
   @override
-  Widget buildBubble(BuildContext context) => bubble;
-}
+  void performLayout() {
+    _child = childForSlot(NotificationSlot.child);
+    _bubble = childForSlot(NotificationSlot.bubble);
 
-Alignment _alignmentFor(NotificationBubbleAnchor anchor) {
-  switch (anchor) {
-    case NotificationBubbleAnchor.topLeft:
-      return Alignment.topLeft;
-    case NotificationBubbleAnchor.topRight:
-      return Alignment.topRight;
-    case NotificationBubbleAnchor.bottomLeft:
-      return Alignment.bottomLeft;
-    case NotificationBubbleAnchor.bottomRight:
-      return Alignment.bottomRight;
+    if (_child == null) {
+      size = Size.zero;
+      return;
+    }
+
+    _child!.layout(constraints, parentUsesSize: true);
+    size = _child!.size;
+
+    if (_bubble == null) return;
+    _bubble!.layout(BoxConstraints(), parentUsesSize: true);
+    final alignment = _alignmentFor(anchor);
+    final slide = _offsetFor(anchor, overlap);
+
+    final offset = alignment.alongSize(size);
+
+    final bubbleSize = _bubble!.size;
+    final bubbleAlignment = Alignment(-alignment.x, -alignment.y);
+    final bubbleOffset = bubbleAlignment.alongSize(bubbleSize);
+
+    (_bubble!.parentData! as BoxParentData).offset =
+        offset - bubbleOffset - slide;
   }
-}
 
-Offset _offsetFor(NotificationBubbleAnchor anchor, double overlap) {
-  switch (anchor) {
-    case NotificationBubbleAnchor.topLeft:
-      return Offset(-overlap, -overlap);
-    case NotificationBubbleAnchor.topRight:
-      return Offset(overlap, -overlap);
-    case NotificationBubbleAnchor.bottomLeft:
-      return Offset(-overlap, overlap);
-    case NotificationBubbleAnchor.bottomRight:
-      return Offset(overlap, overlap);
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (_child == null) return;
+    context.paintChild(_child!, offset);
+
+    if (_bubble == null) return;
+    final bubbleOffset = (_bubble!.parentData! as BoxParentData).offset;
+    context.paintChild(_bubble!, offset + bubbleOffset);
+  }
+
+  Alignment _alignmentFor(NotificationBubbleAnchor anchor) {
+    switch (anchor) {
+      case NotificationBubbleAnchor.topLeft:
+        return Alignment.topLeft;
+      case NotificationBubbleAnchor.topRight:
+        return Alignment.topRight;
+      case NotificationBubbleAnchor.bottomLeft:
+        return Alignment.bottomLeft;
+      case NotificationBubbleAnchor.bottomRight:
+        return Alignment.bottomRight;
+    }
+  }
+
+  Offset _offsetFor(NotificationBubbleAnchor anchor, double overlap) {
+    switch (anchor) {
+      case NotificationBubbleAnchor.topLeft:
+        return Offset(-overlap, -overlap);
+      case NotificationBubbleAnchor.topRight:
+        return Offset(overlap, -overlap);
+      case NotificationBubbleAnchor.bottomLeft:
+        return Offset(-overlap, overlap);
+      case NotificationBubbleAnchor.bottomRight:
+        return Offset(overlap, overlap);
+    }
   }
 }

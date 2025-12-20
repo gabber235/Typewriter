@@ -17,8 +17,8 @@ FocusType _childPrimaryFocus(FocusNode node) {
   return node.hasPrimaryFocus
       ? FocusType.primaryFocus
       : node.hasFocus
-          ? FocusType.focus
-          : FocusType.none;
+      ? FocusType.focus
+      : FocusType.none;
 }
 
 enum FocusHighlighting {
@@ -124,18 +124,51 @@ class FocusHighlight extends HookWidget {
       curve: Curves.fastEaseInToSlowEaseOut,
       clipBehavior: Clip.none,
       decoration: BoxDecoration(
-        border: Border.all(
-          color: switch (type) {
-            FocusType.none => Colors.transparent,
-            FocusType.focus =>
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-            FocusType.primaryFocus => Colors.blue.withValues(alpha: 0.3),
-          },
-          width: size,
-        ),
+        border: Border.fromBorderSide(focusBorder(context, type, width: size)),
         borderRadius: borderRadius,
       ),
       child: child,
+    );
+  }
+
+  static WidgetStateBorderSide stateBorder(
+    BuildContext context, {
+    double width = 2.0,
+    Color? focusColor,
+  }) {
+    return WidgetStateBorderSide.resolveWith((states) {
+      if (states.contains(WidgetState.focused)) {
+        return focusBorder(
+          context,
+          FocusType.focus,
+          width: width,
+          focusColor: focusColor,
+        );
+      }
+      return focusBorder(
+        context,
+        FocusType.none,
+        width: width,
+        focusColor: focusColor,
+      );
+    });
+  }
+
+  static BorderSide focusBorder(
+    BuildContext context,
+    FocusType type, {
+    double width = 2.0,
+    Color? focusColor,
+  }) {
+    return BorderSide(
+      color: switch (type) {
+        FocusType.none => Colors.transparent,
+        FocusType.focus =>
+          focusColor?.withValues(alpha: 0.3) ??
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+        FocusType.primaryFocus => Colors.blue.withValues(alpha: 0.3),
+      },
+      width: width,
     );
   }
 }

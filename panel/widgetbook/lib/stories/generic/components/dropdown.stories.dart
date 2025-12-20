@@ -6,9 +6,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-typedef DecoratedDropdownMenu<T> = Dropdown<T>;
-
-@widgetbook.UseCase(name: "Default", type: DecoratedDropdownMenu)
+@widgetbook.UseCase(name: "Default", type: Dropdown)
 Widget dropdownDefaultUseCase(BuildContext context) {
   final isEnabled = context.knobs.boolean(label: "Enabled", initialValue: true);
   final itemCount = context.knobs.object.dropdown(
@@ -36,16 +34,12 @@ Widget dropdownDefaultUseCase(BuildContext context) {
             builder: (context) {
               final node = useFocusNode();
               final state = useState<int?>(null);
-              return Column(
-                children: [
-                  Dropdown<int>(
-                    focusNode: node,
-                    enabled: isEnabled,
-                    selected: state.value,
-                    onSelected: (value) => state.value = value,
-                    dropdownMenuEntries: entries,
-                  ),
-                ],
+              return Dropdown<int>(
+                focusNode: node,
+                enabled: isEnabled,
+                selected: state.value,
+                onSelected: (value) => state.value = value,
+                dropdownMenuEntries: entries,
               );
             },
           ),
@@ -54,7 +48,7 @@ Widget dropdownDefaultUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "With Callbacks", type: DecoratedDropdownMenu)
+@widgetbook.UseCase(name: "With Callbacks", type: Dropdown)
 Widget dropdownWithCallbacksUseCase(BuildContext context) {
   final itemCount = context.knobs.object.dropdown(
     label: "Items",
@@ -85,8 +79,9 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
             icon: icon,
           );
           final next = [...events.value, event];
-          events.value =
-              next.length > 10 ? next.sublist(next.length - 10) : next;
+          events.value = next.length > 10
+              ? next.sublist(next.length - 10)
+              : next;
         }
 
         final entries = buildEntries(itemCount);
@@ -95,7 +90,7 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DecoratedDropdownMenu<String>(
+            Dropdown<String>(
               focusNode: focusNode,
               dropdownMenuEntries: entries,
               onSelected: (value) {
@@ -235,7 +230,7 @@ Widget dropdownWithCallbacksUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Preselected", type: DecoratedDropdownMenu)
+@widgetbook.UseCase(name: "Preselected", type: Dropdown)
 Widget dropdownPreselectedUseCase(BuildContext context) {
   final options = const ["Alpha", "Beta", "Gamma", "Delta"];
   final preselected = context.knobs.object.dropdown<String>(
@@ -251,7 +246,7 @@ Widget dropdownPreselectedUseCase(BuildContext context) {
       .toList();
 
   return FakeApp(
-    child: DecoratedDropdownMenu<String>(
+    child: Dropdown<String>(
       focusNode: FocusNode(),
       enabled: enabled,
       selected: preselected,

@@ -1,0 +1,15 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "adapter": "Dart",
+    "device_id": "macos",
+    "label": "Debug Widgetbook on macOS",
+    "cwd": "${workspaceFolder}/widgetbook",
+    "type": "flutter",
+    "platform": "desktop",
+    "program": "widgetbook/lib/main.dart",
+  },
+]

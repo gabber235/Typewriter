@@ -17,9 +17,7 @@ import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dar
 
 @RoutePage()
 class LibraryPage extends HookConsumerWidget {
-  const LibraryPage({
-    super.key,
-  });
+  const LibraryPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,28 +25,25 @@ class LibraryPage extends HookConsumerWidget {
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
 
-    final padding =
-        context.responsive(mobile: 16.0, tablet: 24.0, desktop: 32.0);
-
     return Inspector(
       margin: EdgeInsets.only(top: 8, right: 8),
       child: Pane(
         id: "library",
         borderRadius: BorderRadius.circular(12),
-        margin:
-            EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
+        margin: EdgeInsets.only(
+          top: 8,
+          left: 8,
+          right: context.isMobile ? 8 : 0,
+        ),
         child: Section(
           margin: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(padding, padding, padding, 0),
-                child: const PageHeading(
-                  title: "Library",
-                  subtext:
-                      "Browse and search all your books. Discover, organize, and manage your collection with ease.",
-                ),
+              const PageHeading(
+                title: "Library",
+                subtext:
+                    "Browse and search all your books. Discover, organize, and manage your collection with ease.",
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),

@@ -39,8 +39,12 @@ DEFINE TABLE OVERWRITE role TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE name ON role TYPE string ASSERT string::matches($value, '^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$') PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE organization ON role TYPE record<organization> PERMISSIONS NONE;
+-- Can this role be deleted?
 DEFINE FIELD OVERWRITE deletable ON role TYPE bool DEFAULT true PERMISSIONS NONE;
+-- Can this role be assigned to users?
 DEFINE FIELD OVERWRITE assignable ON role TYPE bool DEFAULT true PERMISSIONS NONE;
+-- Is this the default role?
+DEFINE FIELD OVERWRITE default_role ON role TYPE bool DEFAULT false PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE priority ON role TYPE int DEFAULT 1 PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_at ON role TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
 

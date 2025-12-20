@@ -138,6 +138,22 @@ class LibraryRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [MembersPage]
+class MembersRoute extends PageRouteInfo<void> {
+  const MembersRoute({List<PageRouteInfo>? children})
+    : super(MembersRoute.name, initialChildren: children);
+
+  static const String name = 'MembersRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const MembersPage();
+    },
+  );
+}
+
+/// generated route for
 /// [OrganizationPage]
 class OrganizationRoute extends PageRouteInfo<OrganizationRouteArgs> {
   OrganizationRoute({

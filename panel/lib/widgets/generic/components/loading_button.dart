@@ -270,9 +270,41 @@ class LoadingButton extends HookWidget {
     );
 
     final themeStyle = switch (variant) {
-      LoadingVariant.filled => FilledButtonTheme.of(context).style,
+      LoadingVariant.filled => FilledButtonTheme.of(context).style?.copyWith(
+        side: WidgetStateBorderSide.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return BorderSide(
+              color:
+                  style?.foregroundColor?.resolve(states) ??
+                  FilledButtonTheme.of(
+                    context,
+                  ).style?.foregroundColor?.resolve(states) ??
+                  Theme.of(context).colorScheme.primary,
+              width: 3,
+            );
+          }
+          return BorderSide.none;
+        }),
+      ),
       LoadingVariant.text => TextButtonTheme.of(context).style,
-      LoadingVariant.outlined => OutlinedButtonTheme.of(context).style,
+      LoadingVariant.outlined =>
+        OutlinedButtonTheme.of(context).style?.copyWith(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            final baseColor =
+                style?.foregroundColor?.resolve(states) ??
+                OutlinedButtonTheme.of(
+                  context,
+                ).style?.foregroundColor?.resolve(states) ??
+                Theme.of(context).colorScheme.primary;
+            if (states.contains(WidgetState.focused)) {
+              return baseColor.withValues(alpha: 0.2);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return baseColor.withValues(alpha: 0.12);
+            }
+            return baseColor.withValues(alpha: 0.08);
+          }),
+        ),
     };
     final mergedStyle = style?.merge(themeStyle) ?? themeStyle;
 

@@ -6,6 +6,7 @@ import "package:typewriter_panel/routes/auth/route.dart";
 import "package:typewriter_panel/routes/organization/book/page/route.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
+import "package:typewriter_panel/routes/organization/members/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_panel/routes/route.dart";
 

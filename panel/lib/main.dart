@@ -12,6 +12,7 @@ import "package:responsive_framework/responsive_framework.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
+import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/widgets/app/components/app_required.dart";
 import "package:typewriter_panel/widgets/app/components/nats_connection.dart";
@@ -147,14 +148,29 @@ List<ShortcutActivator> shortcutsFor(Type intent) {
       .toList();
 }
 
+List<ShortcutActivator> shortcutsForIntent<I extends Intent>(
+  bool Function(I intent) predicate,
+) {
+  return TypewriterPanel.typewriterShortcuts.entries
+      .where((entry) => entry.value is I && predicate(entry.value as I))
+      .map((entry) => entry.key)
+      .toList();
+}
+
 ThemeData buildTheme(Brightness brightness) {
   final isLight = brightness == Brightness.light;
   final baseTheme = ThemeData(
     brightness: brightness,
     colorScheme: ColorScheme.fromSeed(
       seedColor: Color(0xFF009FFF),
-      brightness: brightness,
+      secondary: Colors.orange,
+      secondaryContainer: isLight
+          ? Colors.orangeAccent.shade100
+          : Colors.deepOrange.shade700,
+      onSecondaryContainer: Colors.deepOrange.shade700.onBrightness(brightness),
       error: Colors.redAccent,
+      onError: Colors.redAccent.onBrightness(brightness),
+      brightness: brightness,
       surface: isLight ? const Color(0xFFF5F5F5) : const Color(0xFF141218),
       onSurfaceVariant: isLight
           ? const Color(0xFF6c6d76)
@@ -337,6 +353,24 @@ ThemeData buildTheme(Brightness brightness) {
         maximumSize: WidgetStatePropertyAll<Size>(Size.infinite),
         visualDensity: VisualDensity.standard,
       ),
+    ),
+    chipTheme: ChipThemeData(
+      side: BorderSide(style: BorderStyle.none),
+      shape: StadiumBorder(),
+    ),
+    tabBarTheme: TabBarThemeData(
+      dividerColor: Colors.transparent,
+      indicatorSize: TabBarIndicatorSize.tab,
+      labelColor: baseTheme.colorScheme.onPrimaryContainer,
+      unselectedLabelColor: baseTheme.colorScheme.onSurfaceVariant,
+      indicator: ShapeDecoration(
+        color: baseTheme.colorScheme.surfaceContainerHighest,
+        shape: StadiumBorder(),
+      ),
+      indicatorAnimation: TabIndicatorAnimation.elastic,
+      splashBorderRadius: BorderRadius.circular(100),
+      splashFactory: InkSplash.splashFactory,
+      labelPadding: EdgeInsets.symmetric(horizontal: 8),
     ),
   );
 }

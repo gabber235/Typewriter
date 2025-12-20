@@ -7,7 +7,7 @@ import "package:typewriter_panel/widgets/app/components/input_field_container.da
 /// A decorated wrapper around Material's [DropdownMenu] that unifies focus
 /// highlighting, surrounding focus behavior, managed action shortcuts, and
 /// key-event blocking with [InputFieldContainer].
-class Dropdown<T> extends HookWidget {
+class Dropdown<T extends Object> extends HookWidget {
   const Dropdown({
     required this.focusNode,
     required this.dropdownMenuEntries,
@@ -71,24 +71,17 @@ class Dropdown<T> extends HookWidget {
     // When we are not focused, we want to update the controller with the latest.
     // Since other people may update the text and we want that reflected.
     // However, when we are focused, we don't want to update the controller as this causes the cursor to jump.
-    useEffect(
-      () {
-        if (!focusNode.hasFocus && currentLabel != null) {
-          controller.text = currentLabel;
-        }
-        return null;
-      },
-      [currentLabel],
-    );
-    useFocusedChange(
-      focusNode,
-      ({required hasFocus}) {
-        if (!hasFocus) {
-          controller.text = currentLabel ?? "";
-        }
-      },
-      [currentLabel],
-    );
+    useEffect(() {
+      if (!focusNode.hasFocus && currentLabel != null) {
+        controller.text = currentLabel;
+      }
+      return null;
+    }, [currentLabel]);
+    useFocusedChange(focusNode, ({required hasFocus}) {
+      if (!hasFocus) {
+        controller.text = currentLabel ?? "";
+      }
+    }, [currentLabel]);
     final surroundingFocusNode = useFocusNode(
       debugLabel: "Surrounding focus node",
       descendantsAreTraversable: false,
@@ -104,6 +97,7 @@ class Dropdown<T> extends HookWidget {
         focusNode: focusNode,
         controller: controller,
         enabled: enabled,
+        enableFilter: true,
         initialSelection: selected,
         onSelected: (value) {
           onSelected?.call(value);

@@ -79,4 +79,4 @@ Agent behavior
 - For auth-required routes, ensure router guards are applied in configuration.
 - After route/provider/model changes, immediately run task generate and then analyze.
 - Keep examples and scaffolds idiomatic to this project's patterns.
-
+- ALWAYS use dot notation for duration. So not `Duration(seconds: 2)` but `2.seconds`. Or `Duration(milliseconds: 200)` but `200.ms`
