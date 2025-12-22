@@ -5,6 +5,7 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/book.pb.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -26,7 +27,11 @@ class Books extends _$Books {
         .watch(natsProvider)
         .requestProto("books.list", request, ListBooksResponse.new);
 
-    return response.books;
+    if (response.hasError()) {
+      throw ApiException.fromProto(response.error);
+    }
+
+    return response.books.books.toList();
   }
 
   Future<void> updateBook(Book book) async {
@@ -46,7 +51,7 @@ class Books extends _$Books {
 
       if (response.hasError()) {
         state = AsyncData(currentState);
-        throw Exception("Failed to update book: ${response.error.message}");
+        throw ApiException.fromProto(response.error);
       }
 
       ref.invalidateSelf();
@@ -76,13 +81,14 @@ class Books extends _$Books {
         .watch(natsProvider)
         .requestProto("pages.create", request, CreatePageResponse.new);
 
-    if (response.hasPageId()) {
-      return response.pageId;
-    } else if (response.hasError()) {
-      throw Exception("Failed to create page: ${response.error.message}");
+    if (response.hasError()) {
+      throw ApiException.fromProto(response.error);
+    }
+    if (!response.hasPageId()) {
+      throw const ApiException(code: 500, message: "No page ID returned");
     }
 
-    throw Exception("No page ID returned");
+    return response.pageId;
   }
 
   Future<void> deletePage(String pageId) async {
@@ -94,7 +100,7 @@ class Books extends _$Books {
         .requestProto("pages.delete", request, DeletePageResponse.new);
 
     if (response.hasError()) {
-      throw Exception("Failed to delete page: ${response.error.message}");
+      throw ApiException.fromProto(response.error);
     }
   }
 
@@ -120,9 +126,7 @@ class Books extends _$Books {
         );
 
     if (response.hasError()) {
-      throw Exception(
-        "Failed to change page chapters: ${response.error.message}",
-      );
+      throw ApiException.fromProto(response.error);
     }
   }
 }

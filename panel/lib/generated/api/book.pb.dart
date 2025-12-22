@@ -8,14 +8,14 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../models/book.pb.dart' as $0;
-import '../models/common.pb.dart' as $1;
+import '../models/book.pb.dart' as $1;
+import '../models/common.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -52,20 +52,22 @@ class ListBooksRequest extends $pb.GeneratedMessage {
   static ListBooksRequest create() => ListBooksRequest._();
   @$core.override
   ListBooksRequest createEmptyInstance() => create();
-  static $pb.PbList<ListBooksRequest> createRepeated() =>
-      $pb.PbList<ListBooksRequest>();
   @$core.pragma('dart2js:noInline')
   static ListBooksRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ListBooksRequest>(create);
   static ListBooksRequest? _defaultInstance;
 }
 
+enum ListBooksResponse_Result { books, error, notSet }
+
 class ListBooksResponse extends $pb.GeneratedMessage {
   factory ListBooksResponse({
-    $core.Iterable<$0.Book>? books,
+    ListBooks? books,
+    $0.Error? error,
   }) {
     final result = create();
-    if (books != null) result.books.addAll(books);
+    if (books != null) result.books = books;
+    if (error != null) result.error = error;
     return result;
   }
 
@@ -78,13 +80,22 @@ class ListBooksResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, ListBooksResponse_Result>
+      _ListBooksResponse_ResultByTag = {
+    1: ListBooksResponse_Result.books,
+    2: ListBooksResponse_Result.error,
+    0: ListBooksResponse_Result.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ListBooksResponse',
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..pPM<$0.Book>(1, _omitFieldNames ? '' : 'books',
-        subBuilder: $0.Book.create)
+    ..oo(0, [1, 2])
+    ..aOM<ListBooks>(1, _omitFieldNames ? '' : 'books',
+        subBuilder: ListBooks.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -101,15 +112,89 @@ class ListBooksResponse extends $pb.GeneratedMessage {
   static ListBooksResponse create() => ListBooksResponse._();
   @$core.override
   ListBooksResponse createEmptyInstance() => create();
-  static $pb.PbList<ListBooksResponse> createRepeated() =>
-      $pb.PbList<ListBooksResponse>();
   @$core.pragma('dart2js:noInline')
   static ListBooksResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ListBooksResponse>(create);
   static ListBooksResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<$0.Book> get books => $_getList(0);
+  @$pb.TagNumber(2)
+  ListBooksResponse_Result whichResult() =>
+      _ListBooksResponse_ResultByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearResult() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  ListBooks get books => $_getN(0);
+  @$pb.TagNumber(1)
+  set books(ListBooks value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBooks() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBooks() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ListBooks ensureBooks() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $0.Error get error => $_getN(1);
+  @$pb.TagNumber(2)
+  set error($0.Error value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasError() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearError() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $0.Error ensureError() => $_ensure(1);
+}
+
+class ListBooks extends $pb.GeneratedMessage {
+  factory ListBooks({
+    $core.Iterable<$1.Book>? books,
+  }) {
+    final result = create();
+    if (books != null) result.books.addAll(books);
+    return result;
+  }
+
+  ListBooks._();
+
+  factory ListBooks.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListBooks.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListBooks',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..pPM<$1.Book>(1, _omitFieldNames ? '' : 'books',
+        subBuilder: $1.Book.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListBooks clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListBooks copyWith(void Function(ListBooks) updates) =>
+      super.copyWith((message) => updates(message as ListBooks)) as ListBooks;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListBooks create() => ListBooks._();
+  @$core.override
+  ListBooks createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListBooks getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListBooks>(create);
+  static ListBooks? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$1.Book> get books => $_getList(0);
 }
 
 class GetBookRequest extends $pb.GeneratedMessage {
@@ -152,8 +237,6 @@ class GetBookRequest extends $pb.GeneratedMessage {
   static GetBookRequest create() => GetBookRequest._();
   @$core.override
   GetBookRequest createEmptyInstance() => create();
-  static $pb.PbList<GetBookRequest> createRepeated() =>
-      $pb.PbList<GetBookRequest>();
   @$core.pragma('dart2js:noInline')
   static GetBookRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GetBookRequest>(create);
@@ -173,8 +256,8 @@ enum GetBookResponse_Result { book, error, notSet }
 
 class GetBookResponse extends $pb.GeneratedMessage {
   factory GetBookResponse({
-    $0.Book? book,
-    $1.Error? error,
+    $1.Book? book,
+    $0.Error? error,
   }) {
     final result = create();
     if (book != null) result.book = book;
@@ -203,9 +286,9 @@ class GetBookResponse extends $pb.GeneratedMessage {
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
     ..oo(0, [1, 2])
-    ..aOM<$0.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $0.Book.create)
-    ..aOM<$1.Error>(2, _omitFieldNames ? '' : 'error',
-        subBuilder: $1.Error.create)
+    ..aOM<$1.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $1.Book.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -222,8 +305,6 @@ class GetBookResponse extends $pb.GeneratedMessage {
   static GetBookResponse create() => GetBookResponse._();
   @$core.override
   GetBookResponse createEmptyInstance() => create();
-  static $pb.PbList<GetBookResponse> createRepeated() =>
-      $pb.PbList<GetBookResponse>();
   @$core.pragma('dart2js:noInline')
   static GetBookResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GetBookResponse>(create);
@@ -238,31 +319,31 @@ class GetBookResponse extends $pb.GeneratedMessage {
   void clearResult() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  $0.Book get book => $_getN(0);
+  $1.Book get book => $_getN(0);
   @$pb.TagNumber(1)
-  set book($0.Book value) => $_setField(1, value);
+  set book($1.Book value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasBook() => $_has(0);
   @$pb.TagNumber(1)
   void clearBook() => $_clearField(1);
   @$pb.TagNumber(1)
-  $0.Book ensureBook() => $_ensure(0);
+  $1.Book ensureBook() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $1.Error get error => $_getN(1);
+  $0.Error get error => $_getN(1);
   @$pb.TagNumber(2)
-  set error($1.Error value) => $_setField(2, value);
+  set error($0.Error value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasError() => $_has(1);
   @$pb.TagNumber(2)
   void clearError() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Error ensureError() => $_ensure(1);
+  $0.Error ensureError() => $_ensure(1);
 }
 
 class UpdateBookRequest extends $pb.GeneratedMessage {
   factory UpdateBookRequest({
-    $0.Book? book,
+    $1.Book? book,
   }) {
     final result = create();
     if (book != null) result.book = book;
@@ -283,7 +364,7 @@ class UpdateBookRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOM<$0.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $0.Book.create)
+    ..aOM<$1.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $1.Book.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -300,31 +381,29 @@ class UpdateBookRequest extends $pb.GeneratedMessage {
   static UpdateBookRequest create() => UpdateBookRequest._();
   @$core.override
   UpdateBookRequest createEmptyInstance() => create();
-  static $pb.PbList<UpdateBookRequest> createRepeated() =>
-      $pb.PbList<UpdateBookRequest>();
   @$core.pragma('dart2js:noInline')
   static UpdateBookRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdateBookRequest>(create);
   static UpdateBookRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.Book get book => $_getN(0);
+  $1.Book get book => $_getN(0);
   @$pb.TagNumber(1)
-  set book($0.Book value) => $_setField(1, value);
+  set book($1.Book value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasBook() => $_has(0);
   @$pb.TagNumber(1)
   void clearBook() => $_clearField(1);
   @$pb.TagNumber(1)
-  $0.Book ensureBook() => $_ensure(0);
+  $1.Book ensureBook() => $_ensure(0);
 }
 
 enum UpdateBookResponse_Result { book, error, notSet }
 
 class UpdateBookResponse extends $pb.GeneratedMessage {
   factory UpdateBookResponse({
-    $0.Book? book,
-    $1.Error? error,
+    $1.Book? book,
+    $0.Error? error,
   }) {
     final result = create();
     if (book != null) result.book = book;
@@ -353,9 +432,9 @@ class UpdateBookResponse extends $pb.GeneratedMessage {
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
     ..oo(0, [1, 2])
-    ..aOM<$0.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $0.Book.create)
-    ..aOM<$1.Error>(2, _omitFieldNames ? '' : 'error',
-        subBuilder: $1.Error.create)
+    ..aOM<$1.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $1.Book.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -372,8 +451,6 @@ class UpdateBookResponse extends $pb.GeneratedMessage {
   static UpdateBookResponse create() => UpdateBookResponse._();
   @$core.override
   UpdateBookResponse createEmptyInstance() => create();
-  static $pb.PbList<UpdateBookResponse> createRepeated() =>
-      $pb.PbList<UpdateBookResponse>();
   @$core.pragma('dart2js:noInline')
   static UpdateBookResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdateBookResponse>(create);
@@ -388,33 +465,33 @@ class UpdateBookResponse extends $pb.GeneratedMessage {
   void clearResult() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  $0.Book get book => $_getN(0);
+  $1.Book get book => $_getN(0);
   @$pb.TagNumber(1)
-  set book($0.Book value) => $_setField(1, value);
+  set book($1.Book value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasBook() => $_has(0);
   @$pb.TagNumber(1)
   void clearBook() => $_clearField(1);
   @$pb.TagNumber(1)
-  $0.Book ensureBook() => $_ensure(0);
+  $1.Book ensureBook() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $1.Error get error => $_getN(1);
+  $0.Error get error => $_getN(1);
   @$pb.TagNumber(2)
-  set error($1.Error value) => $_setField(2, value);
+  set error($0.Error value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasError() => $_has(1);
   @$pb.TagNumber(2)
   void clearError() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Error ensureError() => $_ensure(1);
+  $0.Error ensureError() => $_ensure(1);
 }
 
 class CreatePageRequest extends $pb.GeneratedMessage {
   factory CreatePageRequest({
     $core.String? bookId,
     $core.String? name,
-    $0.PageType? type,
+    $1.PageType? type,
     $core.String? chapter,
     $core.int? priority,
   }) {
@@ -443,8 +520,8 @@ class CreatePageRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'bookId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
-    ..aE<$0.PageType>(3, _omitFieldNames ? '' : 'type',
-        enumValues: $0.PageType.values)
+    ..aE<$1.PageType>(3, _omitFieldNames ? '' : 'type',
+        enumValues: $1.PageType.values)
     ..aOS(4, _omitFieldNames ? '' : 'chapter')
     ..aI(5, _omitFieldNames ? '' : 'priority')
     ..hasRequiredFields = false;
@@ -463,8 +540,6 @@ class CreatePageRequest extends $pb.GeneratedMessage {
   static CreatePageRequest create() => CreatePageRequest._();
   @$core.override
   CreatePageRequest createEmptyInstance() => create();
-  static $pb.PbList<CreatePageRequest> createRepeated() =>
-      $pb.PbList<CreatePageRequest>();
   @$core.pragma('dart2js:noInline')
   static CreatePageRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<CreatePageRequest>(create);
@@ -489,9 +564,9 @@ class CreatePageRequest extends $pb.GeneratedMessage {
   void clearName() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $0.PageType get type => $_getN(2);
+  $1.PageType get type => $_getN(2);
   @$pb.TagNumber(3)
-  set type($0.PageType value) => $_setField(3, value);
+  set type($1.PageType value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasType() => $_has(2);
   @$pb.TagNumber(3)
@@ -521,7 +596,7 @@ enum CreatePageResponse_Result { pageId, error, notSet }
 class CreatePageResponse extends $pb.GeneratedMessage {
   factory CreatePageResponse({
     $core.String? pageId,
-    $1.Error? error,
+    $0.Error? error,
   }) {
     final result = create();
     if (pageId != null) result.pageId = pageId;
@@ -551,8 +626,8 @@ class CreatePageResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOS(1, _omitFieldNames ? '' : 'pageId')
-    ..aOM<$1.Error>(2, _omitFieldNames ? '' : 'error',
-        subBuilder: $1.Error.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -569,8 +644,6 @@ class CreatePageResponse extends $pb.GeneratedMessage {
   static CreatePageResponse create() => CreatePageResponse._();
   @$core.override
   CreatePageResponse createEmptyInstance() => create();
-  static $pb.PbList<CreatePageResponse> createRepeated() =>
-      $pb.PbList<CreatePageResponse>();
   @$core.pragma('dart2js:noInline')
   static CreatePageResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<CreatePageResponse>(create);
@@ -594,15 +667,15 @@ class CreatePageResponse extends $pb.GeneratedMessage {
   void clearPageId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Error get error => $_getN(1);
+  $0.Error get error => $_getN(1);
   @$pb.TagNumber(2)
-  set error($1.Error value) => $_setField(2, value);
+  set error($0.Error value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasError() => $_has(1);
   @$pb.TagNumber(2)
   void clearError() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Error ensureError() => $_ensure(1);
+  $0.Error ensureError() => $_ensure(1);
 }
 
 class DeletePageRequest extends $pb.GeneratedMessage {
@@ -645,8 +718,6 @@ class DeletePageRequest extends $pb.GeneratedMessage {
   static DeletePageRequest create() => DeletePageRequest._();
   @$core.override
   DeletePageRequest createEmptyInstance() => create();
-  static $pb.PbList<DeletePageRequest> createRepeated() =>
-      $pb.PbList<DeletePageRequest>();
   @$core.pragma('dart2js:noInline')
   static DeletePageRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<DeletePageRequest>(create);
@@ -667,7 +738,7 @@ enum DeletePageResponse_Result { success, error, notSet }
 class DeletePageResponse extends $pb.GeneratedMessage {
   factory DeletePageResponse({
     $core.bool? success,
-    $1.Error? error,
+    $0.Error? error,
   }) {
     final result = create();
     if (success != null) result.success = success;
@@ -697,8 +768,8 @@ class DeletePageResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..aOM<$1.Error>(2, _omitFieldNames ? '' : 'error',
-        subBuilder: $1.Error.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -715,8 +786,6 @@ class DeletePageResponse extends $pb.GeneratedMessage {
   static DeletePageResponse create() => DeletePageResponse._();
   @$core.override
   DeletePageResponse createEmptyInstance() => create();
-  static $pb.PbList<DeletePageResponse> createRepeated() =>
-      $pb.PbList<DeletePageResponse>();
   @$core.pragma('dart2js:noInline')
   static DeletePageResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<DeletePageResponse>(create);
@@ -740,15 +809,15 @@ class DeletePageResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Error get error => $_getN(1);
+  $0.Error get error => $_getN(1);
   @$pb.TagNumber(2)
-  set error($1.Error value) => $_setField(2, value);
+  set error($0.Error value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasError() => $_has(1);
   @$pb.TagNumber(2)
   void clearError() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Error ensureError() => $_ensure(1);
+  $0.Error ensureError() => $_ensure(1);
 }
 
 class ChangePagesChaptersRequest extends $pb.GeneratedMessage {
@@ -799,8 +868,6 @@ class ChangePagesChaptersRequest extends $pb.GeneratedMessage {
   static ChangePagesChaptersRequest create() => ChangePagesChaptersRequest._();
   @$core.override
   ChangePagesChaptersRequest createEmptyInstance() => create();
-  static $pb.PbList<ChangePagesChaptersRequest> createRepeated() =>
-      $pb.PbList<ChangePagesChaptersRequest>();
   @$core.pragma('dart2js:noInline')
   static ChangePagesChaptersRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ChangePagesChaptersRequest>(create);
@@ -839,7 +906,7 @@ enum ChangePagesChaptersResponse_Result { success, error, notSet }
 class ChangePagesChaptersResponse extends $pb.GeneratedMessage {
   factory ChangePagesChaptersResponse({
     $core.bool? success,
-    $1.Error? error,
+    $0.Error? error,
   }) {
     final result = create();
     if (success != null) result.success = success;
@@ -869,8 +936,8 @@ class ChangePagesChaptersResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..aOM<$1.Error>(2, _omitFieldNames ? '' : 'error',
-        subBuilder: $1.Error.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -890,8 +957,6 @@ class ChangePagesChaptersResponse extends $pb.GeneratedMessage {
       ChangePagesChaptersResponse._();
   @$core.override
   ChangePagesChaptersResponse createEmptyInstance() => create();
-  static $pb.PbList<ChangePagesChaptersResponse> createRepeated() =>
-      $pb.PbList<ChangePagesChaptersResponse>();
   @$core.pragma('dart2js:noInline')
   static ChangePagesChaptersResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ChangePagesChaptersResponse>(create);
@@ -915,15 +980,15 @@ class ChangePagesChaptersResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Error get error => $_getN(1);
+  $0.Error get error => $_getN(1);
   @$pb.TagNumber(2)
-  set error($1.Error value) => $_setField(2, value);
+  set error($0.Error value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasError() => $_has(1);
   @$pb.TagNumber(2)
   void clearError() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Error ensureError() => $_ensure(1);
+  $0.Error ensureError() => $_ensure(1);
 }
 
 const $core.bool _omitFieldNames =

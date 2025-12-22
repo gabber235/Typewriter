@@ -9,6 +9,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:localstorage/localstorage.dart";
 import "package:responsive_framework/responsive_framework.dart";
+import "package:rive/rive.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
@@ -27,7 +28,7 @@ final random = Random();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initLocalStorage();
+  await Future.wait([initLocalStorage(), RiveNative.init()]);
 
   runApp(const ProviderScope(child: TypewriterPanel()));
 }
@@ -372,6 +373,11 @@ ThemeData buildTheme(Brightness brightness) {
       splashFactory: InkSplash.splashFactory,
       labelPadding: EdgeInsets.symmetric(horizontal: 8),
     ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: baseTheme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    ),
   );
 }
 
@@ -384,8 +390,8 @@ class Responsive extends StatelessWidget {
     return ResponsiveBreakpoints.builder(
       breakpoints: const [
         Breakpoint(start: 0, end: 450, name: MOBILE),
-        Breakpoint(start: 451, end: 800, name: TABLET),
-        Breakpoint(start: 801, end: 1920, name: DESKTOP),
+        Breakpoint(start: 451, end: 1000, name: TABLET),
+        Breakpoint(start: 1001, end: 1920, name: DESKTOP),
         Breakpoint(start: 1921, end: double.infinity, name: "4K"),
       ],
       child: child,

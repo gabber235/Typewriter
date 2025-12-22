@@ -2,10 +2,14 @@ import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
-import "package:typewriter_panel/generated/api/organization.pb.dart";
+import "package:typewriter_panel/generated/api/organization/member.pb.dart"
+    as member_api;
+import "package:typewriter_panel/generated/api/user/organization.pb.dart";
 import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/organization/members.dart";
+import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
 
@@ -29,7 +33,11 @@ class Organizations extends _$Organizations {
           ListOrganizationsResponse.new,
         );
 
-    return response.organizations.toList();
+    if (response.hasError()) {
+      throw ApiException.fromProto(response.error);
+    }
+
+    return response.organizations.organizations.toList();
   }
 
   /// Creates a new organization and returns its ID
@@ -46,7 +54,7 @@ class Organizations extends _$Organizations {
 
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
-      throw Exception("User not found");
+      throw ApiException.notAuthenticated();
     }
 
     final request = CreateOrganizationRequest()
@@ -64,9 +72,7 @@ class Organizations extends _$Organizations {
         );
 
     if (response.hasError()) {
-      throw Exception(
-        "Failed to create organization: ${response.error.message}",
-      );
+      throw ApiException.fromProto(response.error);
     }
 
     assert(
@@ -76,8 +82,11 @@ class Organizations extends _$Organizations {
 
     debugPrint("Organization created with ID: ${response.organization.id}");
 
-    ref.invalidateSelf();
-    return response.organization.id;
+    // Use response data to update state directly instead of invalidating
+    final newOrganization = response.organization;
+    state = AsyncValue.data([...state.value!, newOrganization]);
+
+    return newOrganization.id;
   }
 }
 
@@ -98,8 +107,40 @@ class Organization extends _$Organization {
     return organizations.firstWhereOrNull((org) => org.id == id);
   }
 
+  /// Generates an invite link (join code) for the current organization.
   Future<SecretFieldRevealed> generateInviteLink() async {
-    throw UnimplementedError();
+    final organizationId = ref.read(organizationIdProvider);
+    if (organizationId == null) {
+      throw ApiException.noOrganization();
+    }
+
+    final userId = await ref.read(userIdProvider.future);
+    if (userId == null) {
+      throw ApiException.notAuthenticated();
+    }
+
+    final request = member_api.GenerateJoinCodeRequest();
+
+    final response = await ref
+        .read(natsProvider)
+        .requestProto(
+          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.generate",
+          request,
+          member_api.GenerateJoinCodeResponse.new,
+        );
+
+    if (response.hasError()) {
+      throw ApiException.fromProto(response.error);
+    }
+
+    // Invalidate join codes provider so the new code appears in the list
+    ref.invalidate(organizationJoinCodesProvider);
+
+    final joinCode = response.joinCode;
+    return SecretFieldRevealed(
+      value: joinCode.code,
+      expiresAt: joinCode.expiresAt.toDateTime(),
+    );
   }
 }
 

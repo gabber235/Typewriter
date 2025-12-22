@@ -23,6 +23,8 @@ Widget indexPageWithOrgsUseCase(BuildContext context) {
     overrides: [
       ...organizationsProviderOverrides(state: orgsState),
       ...userJoinRequestsProviderOverrides(state: joinRequestsState),
+      ...authProviderOverrides(),
+      ...appearanceProviderOverrides(),
     ],
     child: IndexPage(),
   );

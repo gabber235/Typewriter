@@ -72,13 +72,22 @@ class CountdownBadge extends HookWidget {
   String _formatDuration(Duration duration) {
     if (duration <= Duration.zero) return "0:00";
 
-    final hours = duration.inHours;
+    final days = duration.inDays;
+    final hours = duration.inHours.remainder(24);
     final minutes = duration.inMinutes.remainder(60);
     final seconds = duration.inSeconds.remainder(60);
 
-    if (hours > 0) {
-      return "$hours:${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
+    if (days > 0) {
+      final hourStr = hours.toString().padLeft(2, "0");
+      final minuteStr = minutes.toString().padLeft(2, "0");
+      final secondStr = seconds.toString().padLeft(2, "0");
+      return "$days days $hourStr:$minuteStr:$secondStr";
     }
+
+    if (duration.inHours > 0) {
+      return "${duration.inHours}:${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
+    }
+
     return "$minutes:${seconds.toString().padLeft(2, "0")}";
   }
 }

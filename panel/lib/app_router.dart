@@ -38,6 +38,7 @@ class AppRouter extends RootStackRouter {
       children: [
         // RedirectRoute(path: "", redirectTo: LibraryRoute.name),
         AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
+        AutoRoute(page: MembersRoute.page, path: "members"),
       ],
     ),
     AutoRoute(

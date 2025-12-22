@@ -39,6 +39,8 @@ DEFINE TABLE OVERWRITE role TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE name ON role TYPE string ASSERT string::matches($value, '^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$') PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE organization ON role TYPE record<organization> PERMISSIONS NONE;
+-- Color stored as ARGB uint32 (default: neutral gray 0xFF9E9E9E = 4288585374)
+DEFINE FIELD OVERWRITE color ON role TYPE int DEFAULT 4288585374 ASSERT $value >= 0 && $value <= 4294967295 PERMISSIONS NONE;
 -- Can this role be deleted?
 DEFINE FIELD OVERWRITE deletable ON role TYPE bool DEFAULT true PERMISSIONS NONE;
 -- Can this role be assigned to users?
@@ -62,3 +64,27 @@ DEFINE FIELD OVERWRITE email ON user TYPE option<string> ASSERT string::is::emai
 DEFINE FIELD OVERWRITE created_at ON user TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE last_login ON user TYPE datetime DEFAULT time::now() PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE name ON user TYPE option<string> PERMISSIONS NONE;
+
+-- ------------------------------
+-- TABLE: requests_to_join (graph: user->requests_to_join->organization)
+-- ------------------------------
+
+DEFINE TABLE OVERWRITE requests_to_join TYPE RELATION IN user OUT organization ENFORCED SCHEMAFULL PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE in ON requests_to_join TYPE record<user> PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE out ON requests_to_join TYPE record<organization> PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE requested_at ON requests_to_join TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
+-- Default expiration is 7 days from now
+DEFINE FIELD OVERWRITE expires_at ON requests_to_join TYPE datetime DEFAULT time::now() + 7d PERMISSIONS NONE;
+
+-- ------------------------------
+-- TABLE: join_code
+-- ------------------------------
+
+DEFINE TABLE OVERWRITE join_code TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE organization ON join_code TYPE record<organization> PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE created_at ON join_code TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
+-- Default expiration is 7 days from now
+DEFINE FIELD OVERWRITE expires_at ON join_code TYPE datetime DEFAULT time::now() + 7d PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE created_by ON join_code TYPE record<user> PERMISSIONS NONE;

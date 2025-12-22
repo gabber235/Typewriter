@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -62,8 +62,6 @@ class PermissionRequest extends $pb.GeneratedMessage {
   static PermissionRequest create() => PermissionRequest._();
   @$core.override
   PermissionRequest createEmptyInstance() => create();
-  static $pb.PbList<PermissionRequest> createRepeated() =>
-      $pb.PbList<PermissionRequest>();
   @$core.pragma('dart2js:noInline')
   static PermissionRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PermissionRequest>(create);
@@ -132,8 +130,6 @@ class PermissionResponse extends $pb.GeneratedMessage {
   static PermissionResponse create() => PermissionResponse._();
   @$core.override
   PermissionResponse createEmptyInstance() => create();
-  static $pb.PbList<PermissionResponse> createRepeated() =>
-      $pb.PbList<PermissionResponse>();
   @$core.pragma('dart2js:noInline')
   static PermissionResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PermissionResponse>(create);

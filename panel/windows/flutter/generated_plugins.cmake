@@ -4,7 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   oidc_windows
-  rive_common
+  rive_native
   simple_secure_storage_windows
   url_launcher_windows
   webcrypto

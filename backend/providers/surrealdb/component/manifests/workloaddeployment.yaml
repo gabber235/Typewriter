@@ -1,7 +1,7 @@
 apiVersion: runtime.wasmcloud.dev/v1alpha1
 kind: WorkloadDeployment
 metadata:
-  name: surrealdb-test-component
+  name: providers-surrealdb-component
   namespace: wasmcloud
 spec:
   replicas: 1
@@ -10,8 +10,8 @@ spec:
       hostSelector:
         hostgroup: default
       components:
-        - name: surrealdb-test-component
-          image: oci.seamlezz.test/wasmcloud/component:0.1.0
+        - name: providers-surrealdb-component
+          image: oci.seamlezz.test/wasmcloud/providers-surrealdb-component:0.1.0
           imagePullSecret:
             name: harbor-registry-credentials
       hostInterfaces:

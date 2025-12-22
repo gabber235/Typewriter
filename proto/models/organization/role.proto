@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+// Role represents a role that can be assigned to organization members.
+// Roles define permissions and access levels within the organization.
+message Role {
+  // Unique identifier for the role
+  string id = 1;
+
+  // Display name of the role (e.g., "Admin", "Editor", "Viewer")
+  string name = 2;
+
+  // Color for the role in ARGB format
+  uint32 color = 3;
+
+  // Whether this is the default role assigned to new members
+  bool default_role = 4;
+
+  // Whether this role can be assigned by administrators
+  bool assignable = 5;
+
+  // Whether this role can be deleted by administrators
+  bool deletable = 6;
+}

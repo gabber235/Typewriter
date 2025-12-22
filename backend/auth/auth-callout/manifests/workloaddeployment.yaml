@@ -1,7 +1,7 @@
 apiVersion: runtime.wasmcloud.dev/v1alpha1
 kind: WorkloadDeployment
 metadata:
-  name: auth-callout
+  name: auth-auth-callout
   namespace: wasmcloud
 spec:
   replicas: 1
@@ -10,8 +10,8 @@ spec:
       hostSelector:
         hostgroup: default
       components:
-        - name: auth-callout
-          image: oci.seamlezz.test/wasmcloud/auth-callout:0.1.0
+        - name: auth-auth-callout
+          image: oci.seamlezz.test/wasmcloud/auth-auth-callout:0.1.0
           imagePullSecret:
             name: harbor-registry-credentials
           localResources:

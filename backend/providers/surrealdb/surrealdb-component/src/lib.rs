@@ -17,11 +17,13 @@ pub trait SingleQueryResultExtractor: Sized {
 fn parse<D: DeserializeOwned>(bytes: &[u8]) -> Result<D> {
     let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
     let deserializer = Deserializer::new(value.clone()).coerce_numbers();
-    D::deserialize(deserializer).context(format!(
-        "Deserialization content error, could not parse {:?} into {}",
-        value,
-        std::any::type_name::<Vec<D>>()
-    ))
+    D::deserialize(deserializer).with_context(|| {
+        format!(
+            "Deserialization content error, could not parse {} into {}",
+            serde_json::to_string(&value).unwrap_or_else(|_| format!("{:?}", value)),
+            std::any::type_name::<D>()
+        )
+    })
 }
 
 impl<D> SingleQueryResultExtractor for Vec<D>
@@ -40,11 +42,13 @@ where
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
         let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
         let deserializer = Deserializer::new(value.clone()).coerce_numbers();
-        let items = Vec::<D>::deserialize(deserializer).context(format!(
-            "Deserialization content error could not parse {:?} into Option<{}>",
-            value,
-            std::any::type_name::<D>()
-        ))?;
+        let items = Vec::<D>::deserialize(deserializer).with_context(|| {
+            format!(
+                "Deserialization content error could not parse {} into Option<{}>",
+                serde_json::to_string(&value).unwrap_or_else(|_| format!("{:?}", value)),
+                std::any::type_name::<D>()
+            )
+        })?;
         Ok(items.into_iter().next())
     }
 }
@@ -66,6 +70,18 @@ impl QueryResultHolder {
         }
     }
 
+    pub fn take_result<T: SingleQueryResultExtractor>(
+        &self,
+        index: usize,
+    ) -> Result<std::result::Result<T, String>> {
+        if let Some(e) = self.find_user_error() {
+            Ok(Err(e))
+        } else {
+            let result = self.take::<T>(index)?;
+            Ok(Ok(result))
+        }
+    }
+
     pub fn parse<D: DeserializeOwned>(&self, index: usize) -> Result<D> {
         match self.results.get(index) {
             Some(Ok(bytes)) => parse(bytes),
@@ -76,6 +92,33 @@ impl QueryResultHolder {
             )),
             None => Err(anyhow!("Result index {} out of bounds", index)),
         }
+    }
+
+    pub fn parse_result<D: DeserializeOwned>(
+        &self,
+        index: usize,
+    ) -> Result<std::result::Result<D, String>> {
+        if let Some(e) = self.find_user_error() {
+            Ok(Err(e))
+        } else {
+            let result = self.parse::<D>(index)?;
+            Ok(Ok(result))
+        }
+    }
+
+    fn find_user_error(&self) -> Option<String> {
+        let Some(Err(e)) = self.results.iter().find(|r| {
+            r.as_ref()
+                .is_err_and(|e| e.starts_with("An error occurred: "))
+        }) else {
+            return None;
+        };
+
+        Some(
+            e.strip_prefix("An error occurred: ")
+                .unwrap_or(e)
+                .to_string(),
+        )
     }
 
     pub fn len(&self) -> usize {

@@ -32,6 +32,27 @@ impl From<Datetime> for DateTime<Utc> {
     }
 }
 
+impl From<DateTime<Utc>> for Datetime {
+    fn from(dt: DateTime<Utc>) -> Self {
+        Datetime(dt)
+    }
+}
+
+impl From<Datetime> for prost_types::Timestamp {
+    fn from(value: Datetime) -> Self {
+        prost_types::Timestamp {
+            seconds: value.timestamp(),
+            nanos: value.timestamp_subsec_nanos() as i32,
+        }
+    }
+}
+
+impl From<Datetime> for Option<prost_types::Timestamp> {
+    fn from(value: Datetime) -> Self {
+        Some(value.into())
+    }
+}
+
 impl<'de> Deserialize<'de> for Datetime {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

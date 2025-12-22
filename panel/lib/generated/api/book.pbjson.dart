@@ -8,7 +8,8 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -30,6 +31,40 @@ const ListBooksResponse$json = {
     {
       '1': 'books',
       '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.api.v1.ListBooks',
+      '9': 0,
+      '10': 'books'
+    },
+    {
+      '1': 'error',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Error',
+      '9': 0,
+      '10': 'error'
+    },
+  ],
+  '8': [
+    {'1': 'result'},
+  ],
+};
+
+/// Descriptor for `ListBooksResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listBooksResponseDescriptor = $convert.base64Decode(
+    'ChFMaXN0Qm9va3NSZXNwb25zZRI0CgVib29rcxgBIAEoCzIcLnR5cGV3cml0ZXIuYXBpLnYxLk'
+    'xpc3RCb29rc0gAUgVib29rcxIzCgVlcnJvchgCIAEoCzIbLnR5cGV3cml0ZXIubW9kZWxzLnYx'
+    'LkVycm9ySABSBWVycm9yQggKBnJlc3VsdA==');
+
+@$core.Deprecated('Use listBooksDescriptor instead')
+const ListBooks$json = {
+  '1': 'ListBooks',
+  '2': [
+    {
+      '1': 'books',
+      '3': 1,
       '4': 3,
       '5': 11,
       '6': '.typewriter.models.v1.Book',
@@ -38,10 +73,10 @@ const ListBooksResponse$json = {
   ],
 };
 
-/// Descriptor for `ListBooksResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List listBooksResponseDescriptor = $convert.base64Decode(
-    'ChFMaXN0Qm9va3NSZXNwb25zZRIwCgVib29rcxgBIAMoCzIaLnR5cGV3cml0ZXIubW9kZWxzLn'
-    'YxLkJvb2tSBWJvb2tz');
+/// Descriptor for `ListBooks`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listBooksDescriptor = $convert.base64Decode(
+    'CglMaXN0Qm9va3MSMAoFYm9va3MYASADKAsyGi50eXBld3JpdGVyLm1vZGVscy52MS5Cb29rUg'
+    'Vib29rcw==');
 
 @$core.Deprecated('Use getBookRequestDescriptor instead')
 const GetBookRequest$json = {

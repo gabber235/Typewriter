@@ -1,0 +1,22 @@
+[package]
+name = "user-organizations-component"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+prost = "0.13"
+prost-types = "0.13"
+serde = { version = "1", features = ["derive"] }
+serde_cbor = "0.11"
+surrealdb-component = { path = "../../providers/surrealdb/surrealdb-component" }
+uuid = { version = "1.0", features = ["v4"] }
+wasmcloud-component = "0.2"
+wasmcloud-utils = { path = "../../wasmcloud-utils" }
+wit-bindgen = "0.41"
+
+[build-dependencies]
+prost-build = "0.13"

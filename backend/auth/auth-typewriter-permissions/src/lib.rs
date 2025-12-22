@@ -81,8 +81,7 @@ impl Guest for TypewriterPermissions {
         };
         let response_bytes = response.encode_to_vec();
 
-        reply(msg, response_bytes)?;
-        Ok(())
+        reply(msg, response_bytes)
     }
 }
 
@@ -92,6 +91,80 @@ struct User {
     email: Option<String>,
     avatar: Option<String>,
     avatar_url: Option<String>,
+}
+
+/// Adds permissions for the user/organizations component
+fn add_user_organizations_permissions(user_id: &str, allow_publish: &mut Vec<String>) {
+    allow_publish.push(format!("cloud.out.user.{}.organization.list", user_id));
+    allow_publish.push(format!("cloud.out.user.{}.organization.create", user_id));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.join_requests.list",
+        user_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.join_requests.request",
+        user_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.join_requests.cancel",
+        user_id
+    ));
+}
+
+/// Adds permissions for the organization/roles component
+fn add_organization_roles_permissions(
+    user_id: &str,
+    org_id: &str,
+    allow_publish: &mut Vec<String>,
+) {
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.roles.list",
+        user_id, org_id
+    ));
+}
+
+/// Adds permissions for the organization/members component
+fn add_organization_members_permissions(
+    user_id: &str,
+    org_id: &str,
+    allow_publish: &mut Vec<String>,
+) {
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.list",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.update",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.remove",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_requests.list",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_requests.approve",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_requests.decline",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_codes.generate",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_codes.list",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_codes.revoke",
+        user_id, org_id
+    ));
 }
 
 fn handle_user(
@@ -159,8 +232,12 @@ fn handle_user(
     {
         allow_subscribe.push(format!("_INBOX.{}.>", &user_id));
 
-        allow_publish.push(format!("cloud.out.user.{}.organization.list", user_id));
-        allow_publish.push(format!("cloud.out.user.{}.organization.create", user_id));
+        add_user_organizations_permissions(&user_id, &mut allow_publish);
+
+        if let Some(ref org_id) = organization_id {
+            add_organization_roles_permissions(&user_id, org_id, &mut allow_publish);
+            add_organization_members_permissions(&user_id, org_id, &mut allow_publish);
+        }
     }
     // ######### END PERMISSIONS #########
 

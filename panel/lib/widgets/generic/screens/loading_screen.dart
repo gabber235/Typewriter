@@ -1,17 +1,18 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:rive/rive.dart";
+import "package:typewriter_panel/hooks/rive.dart";
+import "package:typewriter_panel/utils/rive.dart";
 import "package:typewriter_panel/widgets/generic/components/text_scroller.dart";
 
-class LoadingScreen extends StatelessWidget {
-  const LoadingScreen({
-    this.title = "Waiting for connection",
-    super.key,
-  });
+class LoadingScreen extends HookWidget {
+  const LoadingScreen({this.title = "Waiting for connection", super.key});
 
   final String title;
 
   @override
   Widget build(BuildContext context) {
+    final fileLoader = useRiveFileLoader.fromAsset("assets/tour.riv");
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -19,9 +20,12 @@ class LoadingScreen extends StatelessWidget {
           Spacer(),
           Expanded(
             flex: 8,
-            child: RiveAnimation.asset(
-              "assets/tour.riv",
-              stateMachines: ["state_machine"],
+            child: RiveWidgetBuilder(
+              fileLoader: fileLoader,
+              stateMachineSelector: StateMachineSelector.byName(
+                "state_machine",
+              ),
+              builder: (context, state) => state(),
             ),
           ),
           SizedBox(height: 24),

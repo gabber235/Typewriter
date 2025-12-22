@@ -2,7 +2,9 @@ import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
+import "package:typewriter_panel/hooks/rive.dart";
 import "package:typewriter_panel/logic/auth.dart";
+import "package:typewriter_panel/utils/rive.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 
 @RoutePage()
@@ -14,6 +16,7 @@ class AuthPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final fileLoader = useRiveFileLoader.fromAsset("assets/game_character.riv");
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -21,9 +24,12 @@ class AuthPage extends HookConsumerWidget {
           Spacer(),
           Expanded(
             flex: 2,
-            child: RiveAnimation.asset(
-              "assets/game_character.riv",
-              stateMachines: ["State Machine"],
+            child: RiveWidgetBuilder(
+              fileLoader: fileLoader,
+              stateMachineSelector: StateMachineSelector.byName(
+                "State Machine",
+              ),
+              builder: (context, state) => state(),
             ),
           ),
           Text(
@@ -37,8 +43,9 @@ class AuthPage extends HookConsumerWidget {
             onPressed: () async {
               await ref.read(authProvider.notifier).signIn();
               if (!context.mounted) return;
-              final isAuthenticated =
-                  await ref.read(isAuthenticatedProvider.future);
+              final isAuthenticated = await ref.read(
+                isAuthenticatedProvider.future,
+              );
               onResult(isAuthenticated);
             },
           ),

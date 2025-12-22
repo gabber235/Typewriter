@@ -178,8 +178,17 @@ tasks:
           PLATFORM: "{{.PLATFORM}}"
           CONFIG: "{{.CONFIG}}"
 
+  protoc_install:
+    internal: true
+    status:
+      - find ~/.pub-cache/bin -name "protoc-gen-dart"
+    cmds:
+      - dart pub global activate protoc_plugin
+
   proto:
     desc: Generate Dart code from protobuf files
+    deps:
+      - protoc_install
     cmds:
       - |
         PROTOC="${PROTOC:-protoc}"
@@ -205,11 +214,6 @@ tasks:
             --proto_path=../proto \
             --proto_path="$PROTO_INCLUDE" \
             $PROTO_FILES
-          echo "Generating Google protobuf standard types..."
-          $PROTOC --plugin=protoc-gen-dart="$PROTOC_GEN_DART" \
-            --dart_out=lib/generated \
-            --proto_path="$PROTO_INCLUDE" \
-            google/protobuf/duration.proto google/protobuf/timestamp.proto
         else
           echo "No proto files found in ../proto/models/ or ../proto/api/"
         fi

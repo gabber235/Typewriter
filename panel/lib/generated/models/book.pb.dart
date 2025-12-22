@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -73,7 +73,6 @@ class Book extends $pb.GeneratedMessage {
   static Book create() => Book._();
   @$core.override
   Book createEmptyInstance() => create();
-  static $pb.PbList<Book> createRepeated() => $pb.PbList<Book>();
   @$core.pragma('dart2js:noInline')
   static Book getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Book>(create);
@@ -170,7 +169,6 @@ class Tag extends $pb.GeneratedMessage {
   static Tag create() => Tag._();
   @$core.override
   Tag createEmptyInstance() => create();
-  static $pb.PbList<Tag> createRepeated() => $pb.PbList<Tag>();
   @$core.pragma('dart2js:noInline')
   static Tag getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Tag>(create);
@@ -264,7 +262,6 @@ class Page extends $pb.GeneratedMessage {
   static Page create() => Page._();
   @$core.override
   Page createEmptyInstance() => create();
-  static $pb.PbList<Page> createRepeated() => $pb.PbList<Page>();
   @$core.pragma('dart2js:noInline')
   static Page getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Page>(create);

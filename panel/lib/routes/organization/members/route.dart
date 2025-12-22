@@ -7,24 +7,31 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
+import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/async.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/organization/members/role_multiselect_chips.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/generic/components/blur_reveal.dart";
 import "package:typewriter_panel/widgets/generic/components/contentsize_tabbarview.dart";
 import "package:typewriter_panel/widgets/generic/components/countdown_badge.dart";
+import "package:typewriter_panel/widgets/generic/components/empty_state.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
+import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/multiselect_dropdown.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 @RoutePage()
 class MembersPage extends HookConsumerWidget {
@@ -32,10 +39,10 @@ class MembersPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tabController = useTabController(initialLength: 2);
+    final tabController = useTabController(initialLength: 3);
     final scrollController = useScrollController();
     final joinRequestCount = ref.watch(joinRequestCountProvider);
-    final theme = Theme.of(context);
+    final joinCodeCount = ref.watch(joinCodeCountProvider);
 
     final paddingAmount = context.responsive(
       mobile: 16.0,
@@ -56,35 +63,13 @@ class MembersPage extends HookConsumerWidget {
         child: SingleChildScrollView(
           controller: scrollController,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               PageHeading(
                 title: "Organization Members",
                 subtext:
                     "Manage who has access to your organization. Invite new members and approve requests.",
                 padding: EdgeInsets.all(paddingAmount),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                margin: EdgeInsets.symmetric(
-                  horizontal: paddingAmount,
-                  vertical: 8,
-                ),
-                padding: const EdgeInsets.all(16),
-                child: SecretField(
-                  title: "Invite Link",
-                  description:
-                      "Generate a unique link to invite new members to your organization. The link automatically expires for security reasons.",
-                  prefix: "https://panel.typewritermc.com/join/",
-                  onGenerate: () => ref
-                      .read(organizationProvider.notifier)
-                      .generateInviteLink(),
-                  generateButtonText: "Generate Link",
-                  regenerateButtonText: "New Link",
-                  copyButtonText: "Copy Link",
-                ),
               ),
               Padding(
                 padding: EdgeInsets.symmetric(
@@ -94,6 +79,7 @@ class MembersPage extends HookConsumerWidget {
                 child: _MembersTabBar(
                   controller: tabController,
                   joinRequestCount: joinRequestCount,
+                  joinCodeCount: joinCodeCount,
                 ),
               ),
               ContentSizeTabBarView(
@@ -106,6 +92,10 @@ class MembersPage extends HookConsumerWidget {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: paddingAmount),
                     child: _JoinRequestsTab(),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: paddingAmount),
+                    child: _JoinCodesTab(),
                   ),
                 ],
               ),
@@ -121,15 +111,19 @@ class _MembersTabBar extends HookWidget {
   const _MembersTabBar({
     required this.controller,
     required this.joinRequestCount,
+    required this.joinCodeCount,
   });
 
   final TabController controller;
   final int joinRequestCount;
+  final int joinCodeCount;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasFocus = useState(false);
+
+    final showCount = context.responsive(mobile: false, tablet: true);
 
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
@@ -152,7 +146,7 @@ class _MembersTabBar extends HookWidget {
                 TextSpan(
                   children: [
                     TextSpan(text: "Join Requests"),
-                    if (joinRequestCount > 0)
+                    if (joinRequestCount > 0 && showCount)
                       TextSpan(
                         text: " [$joinRequestCount]",
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -161,6 +155,24 @@ class _MembersTabBar extends HookWidget {
                       ),
                   ],
                 ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Tab(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: "Active Links"),
+                    if (joinCodeCount > 0 && showCount)
+                      TextSpan(
+                        text: " [$joinCodeCount]",
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ],
@@ -223,10 +235,23 @@ class _MembersTab extends HookConsumerWidget {
         const SizedBox(height: 12),
         membersAsync(
           name: "Members",
-          shrink: true,
           builder: (members) => context.isDesktop
               ? _MembersTable(members: members, selectedIds: selectedIds)
               : _MembersTabletList(members: members, selectedIds: selectedIds),
+          loading: (name) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LoadingIndicator(message: "Loading $name..."),
+            ),
+          ),
+          error: (title, message) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ErrorScreen.small(title: title, message: message),
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -282,7 +307,8 @@ class _BulkMemberActions extends HookConsumerWidget {
               for (final id in selectedIds) {
                 await ref
                     .read(organizationMembersProvider.notifier)
-                    .updateMemberRoles(id, bulkRoles.value);
+                    .updateMemberRoles(id, bulkRoles.value)
+                    .catchApiExceptionsAndDisplay(context);
               }
               bulkRoles.value = [];
               onClearSelection();
@@ -353,18 +379,10 @@ class _MembersTable extends HookConsumerWidget {
     final focusedRowIndex = useState(-1);
 
     if (members.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Text(
-            "No members yet. Invite someone to get started!",
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ),
+      return EmptyState(
+        title: "No members yet",
+        description: "Invite someone to get started!",
+        icon: MaterialSymbols.groups_2_rounded,
       );
     }
 
@@ -508,7 +526,9 @@ class _MembersTable extends HookConsumerWidget {
                   }
                 },
                 child: _SelectableAvatar(
-                  avatarUrl: member.avatarUrl,
+                  avatarUrl:
+                      member.avatarUrl.nullIfEmpty ??
+                      "$userIconUrl&seed=${member.id}",
                   isSelected: isSelected,
                   radius: 16,
                 ),
@@ -572,7 +592,8 @@ class _MembersTable extends HookConsumerWidget {
               onRolesChanged: (newRoles) {
                 ref
                     .read(organizationMembersProvider.notifier)
-                    .updateMemberRoles(member.id, newRoles);
+                    .updateMemberRoles(member.id, newRoles)
+                    .catchApiExceptionsAndDisplay(context);
               },
               placeholder: "Select roles",
             ),
@@ -595,21 +616,6 @@ class _RoleMultiselectDropdown extends HookConsumerWidget {
   final ValueChanged<List<MemberRole>> onRolesChanged;
   final String? placeholder;
 
-  void _onRolesChanged(
-    List<MemberRole> availableRoles,
-    List<MemberRole> newRoles,
-  ) {
-    if (newRoles.isEmpty) {
-      final defaultRoles = availableRoles
-          .where((role) => role.defaultRole)
-          .toList();
-      onRolesChanged(defaultRoles);
-      return;
-    }
-
-    onRolesChanged(newRoles);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rolesAsync = ref.watch(organizationRolesProvider);
@@ -629,17 +635,14 @@ class _RoleMultiselectDropdown extends HookConsumerWidget {
               ),
           ],
           selectedItems: selectedRoles,
-          onSelectionChanged: (newRoles) {
-            _onRolesChanged(availableRoles, newRoles);
-          },
+          onSelectionChanged: onRolesChanged,
           placeholder: placeholder,
           itemBuilder: (role) => SmallChip(
             label: role.name,
             color: role.color,
             onDelete: role.assignable
                 ? () {
-                    _onRolesChanged(
-                      availableRoles,
+                    onRolesChanged(
                       selectedRoles.where((r) => r.id != role.id).toList(),
                     );
                   }
@@ -734,18 +737,10 @@ class _MembersTabletList extends HookConsumerWidget {
     final theme = Theme.of(context);
 
     if (members.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Text(
-            "No members yet. Invite someone to get started!",
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ),
+      return const EmptyState(
+        icon: MaterialSymbols.groups_2_rounded,
+        title: "No members yet",
+        description: "Invite someone to get started!",
       );
     }
 
@@ -863,7 +858,9 @@ class _MemberTabletCard extends HookConsumerWidget {
                                 GestureDetector(
                                   onTap: () => onSelectionChanged(!isSelected),
                                   child: _SelectableAvatar(
-                                    avatarUrl: member.avatarUrl,
+                                    avatarUrl:
+                                        member.avatarUrl.nullIfEmpty ??
+                                        "$userIconUrl&seed=${member.id}",
                                     isSelected: isSelected,
                                     radius: 20,
                                   ),
@@ -938,23 +935,24 @@ class _MemberTabletCard extends HookConsumerWidget {
                                           ref
                                               .watch(organizationRolesProvider)
                                               .when(
-                                                data: (allRoles) =>
-                                                    RoleMultiselectChips(
-                                                      availableRoles: allRoles,
-                                                      selectedRoles:
-                                                          member.roles,
-                                                      onRolesChanged: (newRoles) {
-                                                        ref
-                                                            .read(
-                                                              organizationMembersProvider
-                                                                  .notifier,
-                                                            )
-                                                            .updateMemberRoles(
-                                                              member.id,
-                                                              newRoles,
-                                                            );
-                                                      },
-                                                    ),
+                                                data: (allRoles) => RoleMultiselectChips(
+                                                  availableRoles: allRoles,
+                                                  selectedRoles: member.roles,
+                                                  onRolesChanged: (newRoles) {
+                                                    ref
+                                                        .read(
+                                                          organizationMembersProvider
+                                                              .notifier,
+                                                        )
+                                                        .updateMemberRoles(
+                                                          member.id,
+                                                          newRoles,
+                                                        )
+                                                        .catchApiExceptionsAndDisplay(
+                                                          context,
+                                                        );
+                                                  },
+                                                ),
                                                 loading: () =>
                                                     const SizedBox.shrink(),
                                                 error: (_, _) =>
@@ -1043,6 +1041,20 @@ class _JoinRequestsTab extends HookConsumerWidget {
       name: "Join Requests",
       shrink: true,
       builder: (requests) => _JoinRequestsList(requests: requests),
+      loading: (name) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: LoadingIndicator(message: "Loading $name..."),
+        ),
+      ),
+      error: (title, message) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: ErrorScreen.small(title: title, message: message),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1058,34 +1070,10 @@ class _JoinRequestsList extends HookConsumerWidget {
     final theme = Theme.of(context);
 
     if (requests.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.inbox_outlined,
-                size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "No pending join requests",
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        icon: Fa6Solid.user_plus,
+        title: "No join requests",
+        description: "When members request to join, they will appear here.",
       );
     }
 
@@ -1499,7 +1487,9 @@ class _JoinRequestCard extends HookConsumerWidget {
     return Row(
       children: [
         _SelectableAvatar(
-          avatarUrl: request.userAvatarUrl,
+          avatarUrl:
+              request.userAvatarUrl.nullIfEmpty ??
+              "$userIconUrl&seed=${request.userId}",
           isSelected: isSelected,
           radius: 24,
         ),
@@ -1570,7 +1560,9 @@ class _JoinRequestCard extends HookConsumerWidget {
         Row(
           children: [
             _SelectableAvatar(
-              avatarUrl: request.userAvatarUrl,
+              avatarUrl:
+                  request.userAvatarUrl.nullIfEmpty ??
+                  "$userIconUrl&seed=${request.userId}",
               isSelected: isSelected,
               radius: 20,
             ),
@@ -1686,6 +1678,775 @@ class _SelectableAvatar extends StatelessWidget {
       child: isSelected
           ? Icon(Icons.check, color: Colors.white, size: radius)
           : null,
+    );
+  }
+}
+
+class _JoinCodesTab extends HookConsumerWidget {
+  const _JoinCodesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final codesAsync = ref.watch(organizationJoinCodesProvider);
+    final selectedCodes = useState<Set<String>>({});
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SecretField(
+              title: "Invite Link",
+              description:
+                  "Generate a unique link to invite new members to your organization. The link automatically expires for security reasons.",
+              prefix: "https://panel.typewritermc.com/join/",
+              onGenerate: () =>
+                  ref.read(organizationProvider.notifier).generateInviteLink(),
+              generateButtonText: "Generate Link",
+              regenerateButtonText: "New Link",
+              copyButtonText: "Copy Link",
+            ),
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 12,
+            children: [
+              Text("Active Links", style: theme.textTheme.titleMedium),
+              if (selectedCodes.value.isNotEmpty)
+                _BulkJoinCodeActions(
+                  selectedCount: selectedCodes.value.length,
+                  selectedCodes: selectedCodes.value,
+                  onClearSelection: () => selectedCodes.value = {},
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        codesAsync(
+          name: "Join Codes",
+          builder: (codes) => context.isDesktop
+              ? _JoinCodesTable(codes: codes, selectedCodes: selectedCodes)
+              : _JoinCodesCardList(codes: codes, selectedCodes: selectedCodes),
+          loading: (name) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LoadingIndicator(message: "Loading $name..."),
+            ),
+          ),
+          error: (title, message) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ErrorScreen.small(title: title, message: message),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BulkJoinCodeActions extends HookConsumerWidget {
+  const _BulkJoinCodeActions({
+    required this.selectedCount,
+    required this.selectedCodes,
+    required this.onClearSelection,
+  });
+
+  final int selectedCount;
+  final Set<String> selectedCodes;
+  final VoidCallback onClearSelection;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 8,
+      children: [
+        _SelectedChip(
+          selectedCount: selectedCount,
+          onClearSelection: onClearSelection,
+        ),
+        LoadingButton.outlinedIcon(
+          onPressed: () => _confirmBulkRevoke(context, ref),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: theme.colorScheme.error,
+            side: BorderSide(
+              color: theme.colorScheme.error.withValues(alpha: 0.5),
+            ),
+          ),
+          icon: const Icon(Icons.link_off, size: 18),
+          label: const Text("Revoke All"),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmBulkRevoke(BuildContext context, WidgetRef ref) async {
+    await showConfirmationDialogue(
+      context: context,
+      title: "Revoke $selectedCount link(s)?",
+      content:
+          "Are you sure you want to revoke these invite links? They will no longer work.",
+      confirmText: "Revoke All",
+      confirmIcon: Fa6Solid.link_slash,
+      onConfirm: () async {
+        for (final code in selectedCodes) {
+          await ref
+              .read(organizationJoinCodesProvider.notifier)
+              .revokeCode(code);
+        }
+        onClearSelection();
+      },
+    );
+  }
+}
+
+class _JoinCodesTable extends HookConsumerWidget {
+  const _JoinCodesTable({required this.codes, required this.selectedCodes});
+
+  final List<JoinCode> codes;
+  final ValueNotifier<Set<String>> selectedCodes;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final focusedRowIndex = useState(-1);
+
+    if (codes.isEmpty) {
+      return const EmptyState(
+        icon: MaterialSymbols.link_off_rounded,
+        title: "No active invite links",
+        description: "Generate an invite link above to get started!",
+      );
+    }
+
+    final allSelected =
+        codes.isNotEmpty && selectedCodes.value.length == codes.length;
+    final someSelected =
+        selectedCodes.value.isNotEmpty &&
+        selectedCodes.value.length < codes.length;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Table(
+        columnWidths: const {
+          0: FixedColumnWidth(48),
+          1: FlexColumnWidth(2),
+          2: IntrinsicColumnWidth(),
+          3: IntrinsicColumnWidth(),
+          4: FixedColumnWidth(80),
+        },
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        children: [
+          TableRow(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHigh,
+            ),
+            children: [
+              TableCell(
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  child: Checkbox(
+                    value: allSelected ? true : (someSelected ? null : false),
+                    tristate: true,
+                    onChanged: (value) {
+                      if (allSelected || someSelected) {
+                        selectedCodes.value = {};
+                      } else {
+                        selectedCodes.value = codes.map((c) => c.code).toSet();
+                      }
+                    },
+                  ),
+                ),
+              ),
+              TableCell(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    "Invite Link",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+              TableCell(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    "Created",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+              TableCell(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    "Expires",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+              const TableCell(child: SizedBox.shrink()),
+            ],
+          ),
+          for (final (index, code) in codes.indexed)
+            _buildCodeRow(
+              context,
+              ref,
+              code,
+              index,
+              selectedCodes.value.contains(code.code),
+              focusedRowIndex,
+              theme,
+            ),
+        ],
+      ),
+    );
+  }
+
+  TableRow _buildCodeRow(
+    BuildContext context,
+    WidgetRef ref,
+    JoinCode code,
+    int index,
+    bool isSelected,
+    ValueNotifier<int> focusedRowIndex,
+    ThemeData theme,
+  ) {
+    final isFocused = focusedRowIndex.value == index;
+    final fullUrl = "https://panel.typewritermc.com/join/${code.code}";
+
+    return TableRow(
+      key: ValueKey(code.code),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? theme.colorScheme.primaryContainer.withValues(
+                alpha: isFocused ? 0.24 : 0.12,
+              )
+            : isFocused
+            ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.12)
+            : Colors.transparent,
+      ),
+      children: [
+        TableCell(
+          verticalAlignment: TableCellVerticalAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Checkbox(
+              value: isSelected,
+              onChanged: (value) {
+                if (isSelected) {
+                  selectedCodes.value = selectedCodes.value
+                      .where((c) => c != code.code)
+                      .toSet();
+                } else {
+                  selectedCodes.value = {...selectedCodes.value, code.code};
+                }
+              },
+            ),
+          ),
+        ),
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: BlurReveal(
+                    blurSigma: 3,
+                    child: SelectableText(
+                      fullUrl,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 16),
+                  onPressed: () => _copyToClipboard(context, fullUrl),
+                  tooltip: "Copy link",
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+          ),
+        ),
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Text(
+              _formatDate(code.createdAt),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: CountdownBadge(
+              endDate: code.expiresAt,
+              onExpired: () => ref.invalidate(organizationJoinCodesProvider),
+            ),
+          ),
+        ),
+        TableCell(child: _JoinCodeRowActions(code: code)),
+      ],
+    );
+  }
+
+  void _copyToClipboard(BuildContext context, String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Link copied to clipboard"),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inDays == 0) {
+      return "Today";
+    } else if (diff.inDays == 1) {
+      return "Yesterday";
+    } else if (diff.inDays < 7) {
+      return "${diff.inDays} days ago";
+    } else {
+      return "${date.day}/${date.month}/${date.year}";
+    }
+  }
+}
+
+class _JoinCodeRowActions extends HookConsumerWidget {
+  const _JoinCodeRowActions({required this.code});
+
+  final JoinCode code;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isRevoking = useState(false);
+
+    if (isRevoking.value) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: IconButton(
+        icon: Icon(Icons.link_off, size: 20, color: theme.colorScheme.error),
+        onPressed: () => _confirmRevokeCode(context, ref, isRevoking),
+        tooltip: "Revoke link",
+      ),
+    );
+  }
+
+  Future<void> _confirmRevokeCode(
+    BuildContext context,
+    WidgetRef ref,
+    ValueNotifier<bool> isRevoking,
+  ) async {
+    await showConfirmationDialogue(
+      context: context,
+      title: "Revoke this invite link?",
+      content:
+          "Are you sure you want to revoke this link? It will no longer work for new members.",
+      confirmText: "Revoke",
+      confirmIcon: Fa6Solid.link_slash,
+      onConfirm: () async {
+        isRevoking.value = true;
+        await ref
+            .read(organizationJoinCodesProvider.notifier)
+            .revokeCode(code.code);
+      },
+    );
+  }
+}
+
+class _JoinCodesCardList extends HookConsumerWidget {
+  const _JoinCodesCardList({required this.codes, required this.selectedCodes});
+
+  final List<JoinCode> codes;
+  final ValueNotifier<Set<String>> selectedCodes;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    if (codes.isEmpty) {
+      return const EmptyState(
+        icon: MaterialSymbols.link_off_rounded,
+        title: "No active invite links",
+        description: "Generate an invite link above to get started!",
+      );
+    }
+
+    final allSelected =
+        codes.isNotEmpty && selectedCodes.value.length == codes.length;
+    final someSelected =
+        selectedCodes.value.isNotEmpty &&
+        selectedCodes.value.length < codes.length;
+
+    void handleSelectAll() {
+      if (allSelected || someSelected) {
+        selectedCodes.value = {};
+      } else {
+        selectedCodes.value = codes.map((c) => c.code).toSet();
+      }
+    }
+
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: handleSelectAll,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: allSelected ? true : (someSelected ? null : false),
+                  tristate: true,
+                  onChanged: (_) => handleSelectAll(),
+                ),
+                Text(
+                  "Select all",
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ),
+        ...codes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final code = entry.value;
+          return _JoinCodeCard(
+            key: ValueKey(code.code),
+            code: code,
+            index: index,
+            isSelected: selectedCodes.value.contains(code.code),
+            onSelectionChanged: (selected) {
+              if (selected) {
+                selectedCodes.value = {...selectedCodes.value, code.code};
+              } else {
+                selectedCodes.value = selectedCodes.value
+                    .where((c) => c != code.code)
+                    .toSet();
+              }
+            },
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _JoinCodeCard extends HookConsumerWidget {
+  const _JoinCodeCard({
+    required this.code,
+    required this.index,
+    required this.isSelected,
+    required this.onSelectionChanged,
+    super.key,
+  });
+
+  final JoinCode code;
+  final int index;
+  final bool isSelected;
+  final ValueChanged<bool> onSelectionChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isExpanded = useState(false);
+    final isRevoking = useState(false);
+    final fullUrl = "https://panel.typewritermc.com/join/${code.code}";
+
+    return AnimatedSize(
+      duration: 300.ms,
+      curve: Curves.easeInOut,
+      child: isRevoking.value
+          ? const SizedBox.shrink()
+          : Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: isSelected
+                        ? theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.3,
+                          )
+                        : theme.colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(8),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () => isExpanded.value = !isExpanded.value,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(8),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => onSelectionChanged(!isSelected),
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Colors.green
+                                          : theme.colorScheme.primaryContainer,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isSelected ? Icons.check : Icons.link,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : theme
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      BlurReveal(
+                                        blurSigma: 3,
+                                        child: Text(
+                                          fullUrl,
+                                          style: TextStyle(
+                                            fontFamily: "monospace",
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 13,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      CountdownBadge(
+                                        endDate: code.expiresAt,
+                                        onExpired: () => ref.invalidate(
+                                          organizationJoinCodesProvider,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  isExpanded.value
+                                      ? Icons.expand_less
+                                      : Icons.expand_more,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        AnimatedSize(
+                          duration: 300.ms,
+                          curve: Curves.easeInOut,
+                          alignment: Alignment.topCenter,
+                          child: isExpanded.value
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Divider(
+                                      height: 1,
+                                      color: theme.colorScheme.outlineVariant
+                                          .withValues(alpha: 0.3),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Created: ${_formatDate(code.createdAt)}",
+                                            style: TextStyle(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: OutlinedButton.icon(
+                                                  onPressed: () =>
+                                                      _copyToClipboard(
+                                                        context,
+                                                        fullUrl,
+                                                      ),
+                                                  icon: const Icon(
+                                                    Icons.copy,
+                                                    size: 18,
+                                                  ),
+                                                  label: const Text(
+                                                    "Copy Link",
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: OutlinedButton.icon(
+                                                  onPressed: () =>
+                                                      _confirmRevokeCode(
+                                                        context,
+                                                        ref,
+                                                        isRevoking,
+                                                      ),
+                                                  style:
+                                                      OutlinedButton.styleFrom(
+                                                        foregroundColor: theme
+                                                            .colorScheme
+                                                            .error,
+                                                        side: BorderSide(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .error
+                                                              .withValues(
+                                                                alpha: 0.5,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                  icon: const Icon(
+                                                    Icons.link_off,
+                                                    size: 18,
+                                                  ),
+                                                  label: const Text("Revoke"),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ).animate().fadeIn(duration: 200.ms)
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 300.ms, delay: (50 * index).ms)
+                .slideY(
+                  begin: 0.02,
+                  end: 0,
+                  duration: 300.ms,
+                  delay: (50 * index).ms,
+                ),
+    );
+  }
+
+  void _copyToClipboard(BuildContext context, String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Link copied to clipboard"),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inDays == 0) {
+      return "Today";
+    } else if (diff.inDays == 1) {
+      return "Yesterday";
+    } else if (diff.inDays < 7) {
+      return "${diff.inDays} days ago";
+    } else {
+      return "${date.day}/${date.month}/${date.year}";
+    }
+  }
+
+  Future<void> _confirmRevokeCode(
+    BuildContext context,
+    WidgetRef ref,
+    ValueNotifier<bool> isRevoking,
+  ) async {
+    await showConfirmationDialogue(
+      context: context,
+      title: "Revoke this invite link?",
+      content:
+          "Are you sure you want to revoke this link? It will no longer work for new members.",
+      confirmText: "Revoke",
+      confirmIcon: Fa6Solid.link_slash,
+      onConfirm: () async {
+        isRevoking.value = true;
+        onSelectionChanged(false);
+        await ref
+            .read(organizationJoinCodesProvider.notifier)
+            .revokeCode(code.code);
+      },
     );
   }
 }

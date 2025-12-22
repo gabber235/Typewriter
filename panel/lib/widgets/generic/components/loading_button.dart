@@ -29,14 +29,14 @@ class LoadingButtonController extends ChangeNotifier {
   void _setLoading(bool loading) {
     if (_isLoading != loading) {
       _isLoading = loading;
-      notifyListeners();
+      if (hasListeners) notifyListeners();
     }
   }
 
   void _setError(String? error) {
     if (_lastError != error) {
       _lastError = error;
-      notifyListeners();
+      if (hasListeners) notifyListeners();
       if (error != null && _onError != null) {
         _onError!(error);
       }

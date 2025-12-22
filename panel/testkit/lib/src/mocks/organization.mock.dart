@@ -42,21 +42,20 @@ class OrganizationsMock extends Organizations {
 }
 
 class OrganizationProviderMock extends Organization {
-  OrganizationProviderMock({required this.organization});
-
-  final OrganizationData organization;
+  OrganizationProviderMock();
 
   @override
   Future<OrganizationData?> build() async {
-    return organization;
+    final organizations = await ref.watch(organizationsProvider.future);
+    return organizations.firstOrNull;
   }
 
   @override
   Future<SecretFieldRevealed> generateInviteLink() async {
     await Future<void>.delayed(2500.ms);
     return SecretFieldRevealed(
-      value: "abc123xyz789",
-      expiresAt: DateTime.now().add(5.minutes),
+      value: "Roft9n2cgVEypNBanD23",
+      expiresAt: DateTime.now().add(7.days),
     );
   }
 }
@@ -69,14 +68,8 @@ List<Override> organizationsProviderOverrides({
   ),
 ];
 
-List<Override> organizationProviderOverrides({
-  OrganizationData? organization,
-}) => [
-  organizationProvider.overrideWith(
-    () => OrganizationProviderMock(
-      organization: organization ?? generateRandomOrganization(),
-    ),
-  ),
+List<Override> organizationProviderOverrides() => [
+  organizationProvider.overrideWith(() => OrganizationProviderMock()),
   organizationIdProvider.overrideWith(
     (ref) =>
         ref.watch(organizationProvider).whenData((value) => value?.id).value,
@@ -273,6 +266,49 @@ List<Override> organizationJoinRequestsProviderOverrides({
 }) => [
   organizationJoinRequestsProvider.overrideWith(
     () => OrganizationJoinRequestsMock(displayState: state),
+  ),
+];
+
+// ============================================================================
+// Join Code Mocks
+// ============================================================================
+
+JoinCode generateRandomJoinCode() {
+  final expiresAt = DateTime.now().add(
+    Duration(hours: faker.randomGenerator.integer(168, min: 1)),
+  );
+  return JoinCode(
+    code: generateCode(20),
+    createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
+    expiresAt: expiresAt,
+  );
+}
+
+class OrganizationJoinCodesMock extends OrganizationJoinCodes {
+  OrganizationJoinCodesMock({required this.displayState});
+
+  final DisplayState displayState;
+
+  @override
+  Future<List<JoinCode>> build() async {
+    return await displayState.generate(generateRandomJoinCode);
+  }
+
+  @override
+  Future<void> revokeCode(String codeId) async {
+    await Future.delayed(300.ms);
+    final codes = await future;
+
+    final updated = codes.where((c) => c.code != codeId).toList();
+    state = AsyncData(updated);
+  }
+}
+
+List<Override> organizationJoinCodesProviderOverrides({
+  DisplayState state = DisplayState.fewItems,
+}) => [
+  organizationJoinCodesProvider.overrideWith(
+    () => OrganizationJoinCodesMock(displayState: state),
   ),
 ];
 

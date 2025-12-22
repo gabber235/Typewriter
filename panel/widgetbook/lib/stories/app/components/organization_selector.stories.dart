@@ -10,10 +10,8 @@ Widget organizationSelectorUseCase(BuildContext context) {
   final displayState = context.knobs.displayState();
   return FakeApp(
     overrides: [
+      ...organizationsProviderOverrides(state: displayState),
       ...organizationProviderOverrides(),
-      ...organizationsProviderOverrides(
-        state: displayState,
-      ),
     ],
     child: Center(child: OrganizationSelector()),
   );

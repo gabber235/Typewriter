@@ -1,4 +1,5 @@
 import "package:dart_casing/dart_casing.dart";
+import "package:typewriter_panel/main.dart";
 
 extension StringX on String {
   String titleCase() {
@@ -37,4 +38,12 @@ extension StringX on String {
     }
     return this;
   }
+}
+
+String generateCode([int length = 20]) {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  return List.generate(
+    length,
+    (_) => chars[random.nextInt(chars.length)],
+  ).join();
 }

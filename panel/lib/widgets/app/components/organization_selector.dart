@@ -9,6 +9,7 @@ import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
+import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 
 class OrganizationSelector extends HookConsumerWidget {
   const OrganizationSelector({super.key});
@@ -21,6 +22,8 @@ class OrganizationSelector extends HookConsumerWidget {
       name: "selected organization",
       builder: (selectedOrganization) =>
           _SelectorButton(selectedOrganization: selectedOrganization, ref: ref),
+      loading: (_) => ShimmerBox.rectangle(width: 200, height: 40),
+      error: (title, error) => Text(error),
     );
   }
 }

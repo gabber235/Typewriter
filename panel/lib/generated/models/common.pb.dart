@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -55,7 +55,6 @@ class Color extends $pb.GeneratedMessage {
   static Color create() => Color._();
   @$core.override
   Color createEmptyInstance() => create();
-  static $pb.PbList<Color> createRepeated() => $pb.PbList<Color>();
   @$core.pragma('dart2js:noInline')
   static Color getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Color>(create);
@@ -110,7 +109,6 @@ class Version extends $pb.GeneratedMessage {
   static Version create() => Version._();
   @$core.override
   Version createEmptyInstance() => create();
-  static $pb.PbList<Version> createRepeated() => $pb.PbList<Version>();
   @$core.pragma('dart2js:noInline')
   static Version getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Version>(create);
@@ -128,7 +126,7 @@ class Version extends $pb.GeneratedMessage {
 
 class Error extends $pb.GeneratedMessage {
   factory Error({
-    $core.String? code,
+    $core.int? code,
     $core.String? message,
     $core.Iterable<$core.String>? details,
   }) {
@@ -153,7 +151,7 @@ class Error extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'code')
+    ..aI(1, _omitFieldNames ? '' : 'code', fieldType: $pb.PbFieldType.OU3)
     ..aOS(2, _omitFieldNames ? '' : 'message')
     ..pPS(3, _omitFieldNames ? '' : 'details')
     ..hasRequiredFields = false;
@@ -171,16 +169,15 @@ class Error extends $pb.GeneratedMessage {
   static Error create() => Error._();
   @$core.override
   Error createEmptyInstance() => create();
-  static $pb.PbList<Error> createRepeated() => $pb.PbList<Error>();
   @$core.pragma('dart2js:noInline')
   static Error getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Error>(create);
   static Error? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get code => $_getSZ(0);
+  $core.int get code => $_getIZ(0);
   @$pb.TagNumber(1)
-  set code($core.String value) => $_setString(0, value);
+  set code($core.int value) => $_setUnsignedInt32(0, value);
   @$pb.TagNumber(1)
   $core.bool hasCode() => $_has(0);
   @$pb.TagNumber(1)

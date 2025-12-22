@@ -1,7 +1,7 @@
 apiVersion: runtime.wasmcloud.dev/v1alpha1
 kind: WorkloadDeployment
 metadata:
-  name: auth-typewriter-permissions
+  name: auth-auth-typewriter-permissions
   namespace: wasmcloud
 spec:
   replicas: 1
@@ -10,8 +10,8 @@ spec:
       hostSelector:
         hostgroup: default
       components:
-        - name: auth-typewriter-permissions
-          image: oci.seamlezz.test/wasmcloud/auth-typewriter-permissions:0.1.0
+        - name: auth-auth-typewriter-permissions
+          image: oci.seamlezz.test/wasmcloud/auth-auth-typewriter-permissions:0.1.0
           imagePullSecret:
             name: harbor-registry-credentials
       hostInterfaces:

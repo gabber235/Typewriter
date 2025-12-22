@@ -7,12 +7,12 @@ final mockUserInfo = const UserInfo(
   sub: "1",
   name: "John Doe",
   email: "john.doe@example.com",
-  picture: "$userIconUrl&seed=1",
+  avatarUrl: "$userIconUrl&seed=1",
   emailVerified: true,
 );
 
 List<Override> authProviderOverrides({UserInfo? userInfo}) => [
-      authUserInfoProvider.overrideWithValue(
-        AsyncValue.data(userInfo ?? mockUserInfo),
-      ),
-    ];
+  authUserInfoProvider.overrideWithValue(
+    AsyncValue.data(userInfo ?? mockUserInfo),
+  ),
+];

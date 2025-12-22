@@ -1,9 +1,12 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:rive/rive.dart";
+import "package:typewriter_panel/hooks/rive.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/rive.dart";
 
-class ErrorScreen extends StatelessWidget {
+class ErrorScreen extends HookWidget {
   const ErrorScreen({
     required this.title,
     required this.message,
@@ -24,8 +27,8 @@ class ErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fileLoader = useRiveFileLoader.fromAsset("assets/robot_island.riv");
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -35,10 +38,11 @@ class ErrorScreen extends StatelessWidget {
             flex: 6,
             child: MouseRegion(
               cursor: SystemMouseCursors.zoomIn,
-              child: RiveAnimation.asset(
-                "assets/robot_island.riv",
-                stateMachines: ["Motion"],
-              ).animate().fadeIn(duration: 300.ms),
+              child: RiveWidgetBuilder(
+                fileLoader: fileLoader,
+                stateMachineSelector: StateMachineSelector.byName("Motion"),
+                builder: (context, state) => state(),
+              ),
             ),
           ),
           SizedBox(height: 24),

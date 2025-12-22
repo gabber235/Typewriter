@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+import "google/protobuf/timestamp.proto";
+import "models/organization/role.proto";
+
+// OrganizationMember represents a user who is a member of an organization.
+message OrganizationMember {
+  // Unique identifier for the member (the member_of relation ID)
+  string id = 1;
+
+  // Display name of the member
+  string name = 2;
+
+  // Email address of the member
+  string email = 3;
+
+  // URL to the member's avatar image
+  string avatar_url = 4;
+
+  // Roles assigned to this member
+  repeated Role roles = 5;
+
+  // Timestamp when the member joined the organization
+  google.protobuf.Timestamp joined_at = 6;
+}
+
+// JoinRequest represents a pending request from a user to join an organization.
+message JoinRequest {
+  // Unique identifier for the join request (the requests_to_join relation ID)
+  string id = 1;
+
+  // Unique identifier of the requesting user
+  string user_id = 2;
+
+  // Display name of the requesting user
+  string user_name = 3;
+
+  // Email address of the requesting user
+  string user_email = 4;
+
+  // URL to the requesting user's avatar image
+  string user_avatar_url = 5;
+
+  // Timestamp when the request was created
+  google.protobuf.Timestamp requested_at = 6;
+
+  // Timestamp when the request expires
+  google.protobuf.Timestamp expires_at = 7;
+}
+
+// UserJoinRequest represents a user's own pending request to join an organization.
+// This is from the user's perspective, showing which organizations they've requested to join.
+message UserJoinRequest {
+  // Unique identifier for the join request (the requests_to_join relation ID)
+  string id = 1;
+
+  // Organization ID the user is requesting to join
+  string organization_id = 2;
+
+  // Organization name
+  string organization_name = 3;
+
+  // Organization icon URL
+  string organization_icon_url = 4;
+
+  // Timestamp when the request was created
+  google.protobuf.Timestamp requested_at = 5;
+
+  // Timestamp when the request expires
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+// JoinCode represents a code that can be used to request to join an organization.
+message JoinCode {
+  // The code string (e.g., "abc123")
+  string code = 2;
+
+  // Timestamp when the code was created
+  google.protobuf.Timestamp created_at = 3;
+
+  // Timestamp when the code expires
+  google.protobuf.Timestamp expires_at = 4;
+}

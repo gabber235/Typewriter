@@ -3,6 +3,7 @@ syntax = "proto3";
 package typewriter.api.v1;
 
 import "models/auth.proto";
+import "models/common.proto";
 
 message PermissionRequest {
   optional string organization_id = 1;

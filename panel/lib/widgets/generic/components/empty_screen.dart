@@ -2,6 +2,8 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:rive/rive.dart";
+import "package:typewriter_panel/hooks/rive.dart";
+import "package:typewriter_panel/utils/rive.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
 class EmptyScreen extends HookConsumerWidget {
@@ -20,21 +22,25 @@ class EmptyScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final fileLoader = useRiveFileLoader.fromAsset("assets/cute_robot.riv");
     return Column(
       children: [
         if (!small) const Spacer(),
-        const Expanded(
+        Expanded(
           flex: 2,
-          child: RiveAnimation.asset(
-            "assets/cute_robot.riv",
-            stateMachines: ["Motion"],
+          child: RiveWidgetBuilder(
+            fileLoader: fileLoader,
+            stateMachineSelector: StateMachineSelector.byName("Motion"),
+            builder: (context, state) => state(),
           ),
         ),
         Text(
           title,
           textAlign: TextAlign.center,
-          style:
-              TextStyle(fontSize: small ? 20 : 25, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: small ? 20 : 25,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         SizedBox(height: small ? 12 : 24),
         if (buttonText != null)

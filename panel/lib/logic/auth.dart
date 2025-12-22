@@ -14,16 +14,38 @@ class UserInfo {
     this.name,
     this.username,
     this.email,
-    this.picture,
+    this.avatarUrl,
     this.emailVerified,
+    this.entitlements,
+    this.groups,
+    this.discord,
   });
 
   final String sub;
   final String? name;
   final String? username;
   final String? email;
-  final String? picture;
+  final String? avatarUrl;
   final bool? emailVerified;
+  final List<String>? entitlements;
+  final List<String>? groups;
+  final DiscordInfo? discord;
+}
+
+class DiscordInfo {
+  const DiscordInfo({
+    required this.id,
+    this.username,
+    this.avatarUrl,
+    this.email,
+    this.roles,
+  });
+
+  final String id;
+  final String? username;
+  final String? avatarUrl;
+  final String? email;
+  final List<String>? roles;
 }
 
 class AccessToken {
@@ -165,13 +187,41 @@ Future<UserInfo> authUserInfo(Ref ref) async {
   }
   final claims = user.claims;
 
+  DiscordInfo? discordInfo;
+  final discordClaims = claims["discord"];
+  if (discordClaims is Map<String, dynamic>) {
+    discordInfo = DiscordInfo(
+      id: discordClaims["id"] as String? ?? "",
+      username: discordClaims["username"] as String?,
+      avatarUrl: discordClaims["avatar_url"] as String?,
+      email: discordClaims["email"] as String?,
+      roles: discordClaims["roles"] is List
+          ? List<String>.from(discordClaims["roles"] as List)
+          : null,
+    );
+  }
+
+  final avatarUrl =
+      claims["avatar_url"] as String? ??
+      discordInfo?.avatarUrl ??
+      claims["picture"] as String?;
+
   return UserInfo(
     sub: claims.subject ?? "",
-    name: claims["name"] as String?,
+    name: claims["name"] as String? ?? claims["given_name"] as String?,
     username:
-        claims["preferred_username"] as String? ?? claims["name"] as String?,
+        claims["preferred_username"] as String? ??
+        claims["nickname"] as String? ??
+        claims["name"] as String?,
     email: claims["email"] as String?,
-    picture: claims["picture"] as String?,
+    avatarUrl: avatarUrl,
     emailVerified: claims["email_verified"] as bool?,
+    entitlements: claims["entitlements"] is List
+        ? List<String>.from(claims["entitlements"] as List)
+        : null,
+    groups: claims["groups"] is List
+        ? List<String>.from(claims["groups"] as List)
+        : null,
+    discord: discordInfo,
   );
 }

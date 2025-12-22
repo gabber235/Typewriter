@@ -33,7 +33,7 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'c31632fc128cc2cdf8374c13ff7cec18f0633521';
+String _$userJoinRequestsHash() => r'6a1e86efca5d3bc7dc53a604703fa79d67b76a41';
 
 abstract class _$UserJoinRequests
     extends $AsyncNotifier<List<UserJoinRequest>> {

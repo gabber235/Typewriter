@@ -8,13 +8,13 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
-
-import '../google/protobuf/duration.pb.dart' as $0;
+import 'package:protobuf/well_known_types/google/protobuf/duration.pb.dart'
+    as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -60,7 +60,6 @@ class Permission extends $pb.GeneratedMessage {
   static Permission create() => Permission._();
   @$core.override
   Permission createEmptyInstance() => create();
-  static $pb.PbList<Permission> createRepeated() => $pb.PbList<Permission>();
   @$core.pragma('dart2js:noInline')
   static Permission getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Permission>(create);
@@ -117,8 +116,6 @@ class ResponsePermission extends $pb.GeneratedMessage {
   static ResponsePermission create() => ResponsePermission._();
   @$core.override
   ResponsePermission createEmptyInstance() => create();
-  static $pb.PbList<ResponsePermission> createRepeated() =>
-      $pb.PbList<ResponsePermission>();
   @$core.pragma('dart2js:noInline')
   static ResponsePermission getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ResponsePermission>(create);
@@ -194,7 +191,6 @@ class Permissions extends $pb.GeneratedMessage {
   static Permissions create() => Permissions._();
   @$core.override
   Permissions createEmptyInstance() => create();
-  static $pb.PbList<Permissions> createRepeated() => $pb.PbList<Permissions>();
   @$core.pragma('dart2js:noInline')
   static Permissions getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Permissions>(create);

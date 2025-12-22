@@ -3,11 +3,12 @@ import "package:flutter/material.dart";
 void showSnackBar(
   BuildContext context, {
   required String message,
+  Color? color,
   Color? backgroundColor,
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message),
+      content: Text(message, style: TextStyle(color: color)),
       backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.floating,
       dismissDirection: DismissDirection.down,
@@ -19,17 +20,21 @@ void showSnackBar(
 }
 
 void showErrorSnackBar(BuildContext context, String message) {
+  final colorScheme = Theme.of(context).colorScheme;
   showSnackBar(
     context,
     message: message,
-    backgroundColor: Theme.of(context).colorScheme.error,
+    color: colorScheme.onError,
+    backgroundColor: colorScheme.error,
   );
 }
 
 void showSuccessSnackBar(BuildContext context, String message) {
+  final colorScheme = Theme.of(context).colorScheme;
   showSnackBar(
     context,
     message: message,
-    backgroundColor: Theme.of(context).colorScheme.primary,
+    color: colorScheme.onPrimary,
+    backgroundColor: colorScheme.primary,
   );
 }

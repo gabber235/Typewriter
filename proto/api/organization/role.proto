@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package typewriter.api.v1;
+
+import "models/common.proto";
+import "models/organization/role.proto";
+
+// ListRolesRequest requests all available roles in the organization.
+message ListRolesRequest {}
+
+// ListRolesResponse contains all available roles in the organization.
+message ListRolesResponse {
+  oneof result {
+    ListRoles roles = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListRoles {
+  repeated typewriter.models.v1.Role roles = 1;
+}

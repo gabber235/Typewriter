@@ -53,7 +53,6 @@ class Nats extends _$Nats {
               // ignore: only_use_keep_alive_inside_keep_alive
               nkey: ref.watch(organizationIdProvider),
             ),
-            securityContext: SecurityContext.defaultContext,
           )
           .onError((error, stackTrace) {
             debugPrint("nats: error connecting to $url: $error");

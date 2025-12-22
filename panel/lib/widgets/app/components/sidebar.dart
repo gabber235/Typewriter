@@ -212,7 +212,7 @@ class SidebarLink extends HookConsumerWidget {
         focusNode: focusNode,
         onTap: () {
           if (!selected) {
-            router.push(route);
+            context.pushRoute(route);
           }
         },
         hoverColor: Theme.of(
@@ -243,7 +243,100 @@ const userIconUrl =
     "https://api.dicebear.com/9.x/bottts-neutral/avif?backgroundColor=00897b,00acc1,039be5,1e88e5,3949ab,43a047,5e35b1,7cb342,8e24aa,b6e3f4,c0aede,c0ca33,d1d4f9,d81b60,e53935,f4511e,fb8c00,fdd835,ffb300,ffd5dc,ffdfbf&eyes=eva,frame1,frame2,robocop,roundFrame01,roundFrame02,sensor,shade01&mouth=bite,diagram,smile01,smile02&backgroundType=gradientLinear";
 
 class UserMenu extends HookConsumerWidget {
-  const UserMenu({super.key});
+  const UserMenu({this.compact = false, this.expand = true, super.key});
+
+  final bool compact;
+  final bool expand;
+
+  List<MenuItem> _buildMenuItems(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode currentThemeMode,
+  ) {
+    return [
+      const MenuItem(label: "Account", icon: Icones(MaterialSymbols.person)),
+      MenuItem.submenu(
+        label: "Appearance",
+        icon: Icones(MaterialSymbols.palette_outline),
+        items: [
+          MenuItem(
+            label: "System",
+            icon: currentThemeMode == ThemeMode.system
+                ? Icones(MaterialSymbols.check)
+                : Icones(MaterialSymbols.brightness_auto),
+            color: currentThemeMode == ThemeMode.system
+                ? Theme.of(context).colorScheme.primary
+                : null,
+            onPressed: currentThemeMode == ThemeMode.system
+                ? null
+                : () {
+                    ref
+                        .read(appearanceProvider.notifier)
+                        .mode(ThemeMode.system);
+                  },
+          ),
+          MenuItem(
+            label: "Light",
+            icon: currentThemeMode == ThemeMode.light
+                ? Icones(MaterialSymbols.check)
+                : Icones(MaterialSymbols.light_mode),
+            color: currentThemeMode == ThemeMode.light
+                ? Theme.of(context).colorScheme.primary
+                : null,
+            onPressed: currentThemeMode == ThemeMode.light
+                ? null
+                : () {
+                    ref.read(appearanceProvider.notifier).mode(ThemeMode.light);
+                  },
+          ),
+          MenuItem(
+            label: "Dark",
+            icon: currentThemeMode == ThemeMode.dark
+                ? Icones(MaterialSymbols.check)
+                : Icones(MaterialSymbols.dark_mode),
+            color: currentThemeMode == ThemeMode.dark
+                ? Theme.of(context).colorScheme.primary
+                : null,
+            onPressed: currentThemeMode == ThemeMode.dark
+                ? null
+                : () {
+                    ref.read(appearanceProvider.notifier).mode(ThemeMode.dark);
+                  },
+          ),
+        ],
+      ),
+      const MenuItem.divider(),
+      MenuItem(
+        label: "Help & Support",
+        icon: Icones(MaterialSymbols.help_outline),
+        onPressed: () async {
+          final url = Uri.parse("https://discord.gg/j5WWscvQkW");
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          }
+        },
+      ),
+      const MenuItem.divider(),
+      MenuItem(
+        label: "Logout",
+        icon: Icones(MaterialSymbols.logout),
+        color: Theme.of(context).colorScheme.error,
+        onPressed: () async {
+          final router = ref.read(appRouterProvider);
+          try {
+            await ref.read(authProvider.notifier).signOut();
+          } on Exception catch (e) {
+            debugPrint(e.toString());
+          }
+          ref
+            ..invalidate(isAuthenticatedProvider)
+            ..invalidate(accessTokenProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+          await router.reevaluateGuards();
+        },
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -257,99 +350,16 @@ class UserMenu extends HookConsumerWidget {
       name: "user info",
       builder: (user) {
         final name = user.name ?? user.username ?? user.sub;
-        final avatarUrl = user.picture ?? "$userIconUrl&seed=${user.sub}";
+        final avatarUrl = user.avatarUrl ?? "$userIconUrl&seed=${user.sub}";
+
+        final text = Text(
+          name,
+          style: Theme.of(context).textTheme.bodyMedium,
+          overflow: TextOverflow.ellipsis,
+        );
 
         return ContextMenuRegion(
-          items: [
-            const MenuItem(
-              label: "Account",
-              icon: Icones(MaterialSymbols.person),
-            ),
-            MenuItem.submenu(
-              label: "Appearance",
-              icon: Icones(MaterialSymbols.palette_outline),
-              items: [
-                MenuItem(
-                  label: "System",
-                  icon: currentThemeMode == ThemeMode.system
-                      ? Icones(MaterialSymbols.check)
-                      : Icones(MaterialSymbols.brightness_auto),
-                  color: currentThemeMode == ThemeMode.system
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                  onPressed: currentThemeMode == ThemeMode.system
-                      ? null
-                      : () {
-                          ref
-                              .read(appearanceProvider.notifier)
-                              .mode(ThemeMode.system);
-                        },
-                ),
-                MenuItem(
-                  label: "Light",
-                  icon: currentThemeMode == ThemeMode.light
-                      ? Icones(MaterialSymbols.check)
-                      : Icones(MaterialSymbols.light_mode),
-                  color: currentThemeMode == ThemeMode.light
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                  onPressed: currentThemeMode == ThemeMode.light
-                      ? null
-                      : () {
-                          ref
-                              .read(appearanceProvider.notifier)
-                              .mode(ThemeMode.light);
-                        },
-                ),
-                MenuItem(
-                  label: "Dark",
-                  icon: currentThemeMode == ThemeMode.dark
-                      ? Icones(MaterialSymbols.check)
-                      : Icones(MaterialSymbols.dark_mode),
-                  color: currentThemeMode == ThemeMode.dark
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                  onPressed: currentThemeMode == ThemeMode.dark
-                      ? null
-                      : () {
-                          ref
-                              .read(appearanceProvider.notifier)
-                              .mode(ThemeMode.dark);
-                        },
-                ),
-              ],
-            ),
-            const MenuItem.divider(),
-            MenuItem(
-              label: "Help & Support",
-              icon: Icones(MaterialSymbols.help_outline),
-              onPressed: () async {
-                final url = Uri.parse("https://discord.gg/j5WWscvQkW");
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url, mode: LaunchMode.externalApplication);
-                }
-              },
-            ),
-            const MenuItem.divider(),
-            MenuItem(
-              label: "Logout",
-              icon: Icones(MaterialSymbols.logout),
-              color: Theme.of(context).colorScheme.error,
-              onPressed: () async {
-                final router = ref.read(appRouterProvider);
-                try {
-                  await ref.read(authProvider.notifier).signOut();
-                } on Exception catch (e) {
-                  debugPrint(e.toString());
-                }
-                ref
-                  ..invalidate(isAuthenticatedProvider)
-                  ..invalidate(accessTokenProvider);
-                await Future.delayed(const Duration(milliseconds: 500));
-                await router.reevaluateGuards();
-              },
-            ),
-          ],
+          items: _buildMenuItems(context, ref, currentThemeMode),
           enableGestures: false,
           childFocusNode: focusNode,
           controller: controller,
@@ -359,21 +369,18 @@ class UserMenu extends HookConsumerWidget {
               borderRadius: BorderRadius.circular(8),
               focusNode: focusNode,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(compact ? 8 : 12),
                 child: Row(
+                  mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
                   children: [
                     CircleAvatar(
                       radius: 14,
                       backgroundImage: NetworkImage(avatarUrl),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                    if (!compact) ...[
+                      const SizedBox(width: 12),
+                      if (expand) Expanded(child: text) else text,
+                    ],
                   ],
                 ),
               ),

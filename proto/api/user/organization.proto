@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package typewriter.api.v1;
+
+import "models/organization.proto";
+import "models/organization/member.proto";
+import "models/common.proto";
+
+// =============================================================================
+// Organizations
+// =============================================================================
+
+message ListOrganizationsRequest {}
+
+message ListOrganizationsResponse {
+  oneof result {
+    ListOrganizations organizations = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListOrganizations {
+  repeated typewriter.models.v1.OrganizationData organizations = 1;
+}
+
+message CreateOrganizationRequest {
+  string name = 1;
+  string icon_url = 2;
+}
+
+message CreateOrganizationResponse {
+  oneof result {
+    typewriter.models.v1.OrganizationData organization = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// =============================================================================
+// User Join Requests (User side - requesting/canceling join requests)
+// =============================================================================
+
+// ListUserJoinRequestsRequest requests all pending join requests made by the user.
+message ListUserJoinRequestsRequest {}
+
+// ListUserJoinRequestsResponse contains all pending join requests made by the user.
+message ListUserJoinRequestsResponse {
+  oneof result {
+    ListUserJoinRequests requests = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListUserJoinRequests {
+  repeated typewriter.models.v1.UserJoinRequest requests = 1;
+}
+
+// RequestToJoinRequest creates a join request using a code.
+message RequestToJoinRequest {
+  // The join code (e.g., "abc123")
+  string code = 1;
+}
+
+// RequestToJoinResponse returns the created join request or an error.
+message RequestToJoinResponse {
+  oneof result {
+    typewriter.models.v1.UserJoinRequest request = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// CancelJoinRequestRequest cancels a pending join request.
+message CancelJoinRequestRequest {
+  // Unique identifier of the join request to cancel
+  string request_id = 1;
+}
+
+// CancelJoinRequestResponse indicates success or returns an error.
+message CancelJoinRequestResponse {
+  oneof result {
+    bool success = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+

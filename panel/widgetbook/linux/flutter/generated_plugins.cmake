@@ -4,7 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   oidc_linux
-  rive_common
+  rive_native
   simple_secure_storage_linux
   url_launcher_linux
   webcrypto

@@ -214,7 +214,7 @@ class _SecretFieldContent extends StatelessWidget {
     final canCopy = state is SecretFieldRevealed;
 
     return Wrap(
-      runAlignment: WrapAlignment.spaceBetween,
+      alignment: WrapAlignment.spaceBetween,
       runSpacing: 8,
       spacing: 8,
       children: [

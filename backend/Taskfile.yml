@@ -49,7 +49,7 @@ tasks:
       - build
     vars:
       COMPONENT_NAME:
-        sh: 'basename "$(pwd)"'
+        sh: 'pwd | sed "s|.*/backend/||" | tr "/" "-"'
       VERSION:
         sh: 'grep -m1 "^version" Cargo.toml | sed ''s/version = "\(.*\)"/\1/'''
       WASM_PATH:
@@ -126,6 +126,14 @@ tasks:
     cmds:
       - task: terraform:destroy
 
+  setup:
+    desc: Setup environment for development
+    dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - task: build
+      - task: push
+      - task: deploy
+
   dev:
     desc: Build, push, and deploy in one step
     dir: "{{.USER_WORKING_DIR}}"
@@ -162,7 +170,7 @@ tasks:
     desc: Clean build artifacts
     dir: "{{.USER_WORKING_DIR}}"
     cmds:
-      - rm -rf build/ target/
+      - rm -rf build/ target/ .task/
 
   status:
     desc: Check workload status

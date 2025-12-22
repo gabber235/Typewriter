@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -62,8 +62,6 @@ class SearchPagesRequest extends $pb.GeneratedMessage {
   static SearchPagesRequest create() => SearchPagesRequest._();
   @$core.override
   SearchPagesRequest createEmptyInstance() => create();
-  static $pb.PbList<SearchPagesRequest> createRepeated() =>
-      $pb.PbList<SearchPagesRequest>();
   @$core.pragma('dart2js:noInline')
   static SearchPagesRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<SearchPagesRequest>(create);
@@ -129,8 +127,6 @@ class SearchPagesResult extends $pb.GeneratedMessage {
   static SearchPagesResult create() => SearchPagesResult._();
   @$core.override
   SearchPagesResult createEmptyInstance() => create();
-  static $pb.PbList<SearchPagesResult> createRepeated() =>
-      $pb.PbList<SearchPagesResult>();
   @$core.pragma('dart2js:noInline')
   static SearchPagesResult getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<SearchPagesResult>(create);
@@ -194,8 +190,6 @@ class SearchPagesResponse extends $pb.GeneratedMessage {
   static SearchPagesResponse create() => SearchPagesResponse._();
   @$core.override
   SearchPagesResponse createEmptyInstance() => create();
-  static $pb.PbList<SearchPagesResponse> createRepeated() =>
-      $pb.PbList<SearchPagesResponse>();
   @$core.pragma('dart2js:noInline')
   static SearchPagesResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<SearchPagesResponse>(create);
@@ -272,8 +266,6 @@ class GetPageRequest extends $pb.GeneratedMessage {
   static GetPageRequest create() => GetPageRequest._();
   @$core.override
   GetPageRequest createEmptyInstance() => create();
-  static $pb.PbList<GetPageRequest> createRepeated() =>
-      $pb.PbList<GetPageRequest>();
   @$core.pragma('dart2js:noInline')
   static GetPageRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GetPageRequest>(create);
@@ -342,8 +334,6 @@ class GetPageResponse extends $pb.GeneratedMessage {
   static GetPageResponse create() => GetPageResponse._();
   @$core.override
   GetPageResponse createEmptyInstance() => create();
-  static $pb.PbList<GetPageResponse> createRepeated() =>
-      $pb.PbList<GetPageResponse>();
   @$core.pragma('dart2js:noInline')
   static GetPageResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GetPageResponse>(create);
@@ -420,8 +410,6 @@ class UpdatePageRequest extends $pb.GeneratedMessage {
   static UpdatePageRequest create() => UpdatePageRequest._();
   @$core.override
   UpdatePageRequest createEmptyInstance() => create();
-  static $pb.PbList<UpdatePageRequest> createRepeated() =>
-      $pb.PbList<UpdatePageRequest>();
   @$core.pragma('dart2js:noInline')
   static UpdatePageRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdatePageRequest>(create);
@@ -492,8 +480,6 @@ class UpdatePageResponse extends $pb.GeneratedMessage {
   static UpdatePageResponse create() => UpdatePageResponse._();
   @$core.override
   UpdatePageResponse createEmptyInstance() => create();
-  static $pb.PbList<UpdatePageResponse> createRepeated() =>
-      $pb.PbList<UpdatePageResponse>();
   @$core.pragma('dart2js:noInline')
   static UpdatePageResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdatePageResponse>(create);
@@ -574,8 +560,6 @@ class ChangePageChapterRequest extends $pb.GeneratedMessage {
   static ChangePageChapterRequest create() => ChangePageChapterRequest._();
   @$core.override
   ChangePageChapterRequest createEmptyInstance() => create();
-  static $pb.PbList<ChangePageChapterRequest> createRepeated() =>
-      $pb.PbList<ChangePageChapterRequest>();
   @$core.pragma('dart2js:noInline')
   static ChangePageChapterRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ChangePageChapterRequest>(create);
@@ -654,8 +638,6 @@ class ChangePageChapterResponse extends $pb.GeneratedMessage {
   static ChangePageChapterResponse create() => ChangePageChapterResponse._();
   @$core.override
   ChangePageChapterResponse createEmptyInstance() => create();
-  static $pb.PbList<ChangePageChapterResponse> createRepeated() =>
-      $pb.PbList<ChangePageChapterResponse>();
   @$core.pragma('dart2js:noInline')
   static ChangePageChapterResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ChangePageChapterResponse>(create);
@@ -734,8 +716,6 @@ class ChangePagePriorityRequest extends $pb.GeneratedMessage {
   static ChangePagePriorityRequest create() => ChangePagePriorityRequest._();
   @$core.override
   ChangePagePriorityRequest createEmptyInstance() => create();
-  static $pb.PbList<ChangePagePriorityRequest> createRepeated() =>
-      $pb.PbList<ChangePagePriorityRequest>();
   @$core.pragma('dart2js:noInline')
   static ChangePagePriorityRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ChangePagePriorityRequest>(create);
@@ -815,8 +795,6 @@ class ChangePagePriorityResponse extends $pb.GeneratedMessage {
   static ChangePagePriorityResponse create() => ChangePagePriorityResponse._();
   @$core.override
   ChangePagePriorityResponse createEmptyInstance() => create();
-  static $pb.PbList<ChangePagePriorityResponse> createRepeated() =>
-      $pb.PbList<ChangePagePriorityResponse>();
   @$core.pragma('dart2js:noInline')
   static ChangePagePriorityResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ChangePagePriorityResponse>(create);
@@ -894,8 +872,6 @@ class RenamePageRequest extends $pb.GeneratedMessage {
   static RenamePageRequest create() => RenamePageRequest._();
   @$core.override
   RenamePageRequest createEmptyInstance() => create();
-  static $pb.PbList<RenamePageRequest> createRepeated() =>
-      $pb.PbList<RenamePageRequest>();
   @$core.pragma('dart2js:noInline')
   static RenamePageRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<RenamePageRequest>(create);
@@ -973,8 +949,6 @@ class RenamePageResponse extends $pb.GeneratedMessage {
   static RenamePageResponse create() => RenamePageResponse._();
   @$core.override
   RenamePageResponse createEmptyInstance() => create();
-  static $pb.PbList<RenamePageResponse> createRepeated() =>
-      $pb.PbList<RenamePageResponse>();
   @$core.pragma('dart2js:noInline')
   static RenamePageResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<RenamePageResponse>(create);

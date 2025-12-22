@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package typewriter.api.v1;
+
+import "models/organization/member.proto";
+import "models/common.proto";
+
+// =============================================================================
+// Members
+// =============================================================================
+
+// ListMembersRequest requests all members in the organization.
+message ListMembersRequest {}
+
+// ListMembersResponse contains all members in the organization.
+message ListMembersResponse {
+  oneof result {
+    ListMembers members = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListMembers {
+  repeated typewriter.models.v1.OrganizationMember members = 1;
+}
+
+// UpdateMemberRolesRequest updates the roles assigned to a member.
+message UpdateMemberRolesRequest {
+  // Unique identifier of the member to update
+  string member_id = 1;
+
+  // List of role IDs to assign to the member
+  repeated string role_ids = 2;
+}
+
+// UpdateMemberRolesResponse returns the updated member or an error.
+message UpdateMemberRolesResponse {
+  oneof result {
+    typewriter.models.v1.OrganizationMember member = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// RemoveMemberRequest removes a member from the organization.
+message RemoveMemberRequest {
+  // Unique identifier of the member to remove
+  string member_id = 1;
+}
+
+// RemoveMemberResponse indicates success or returns an error.
+message RemoveMemberResponse {
+  oneof result {
+    bool success = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// =============================================================================
+// Join Requests (Organization side - viewing/approving/declining requests)
+// =============================================================================
+
+// ListJoinRequestsRequest requests all pending join requests to the organization.
+message ListJoinRequestsRequest {}
+
+// ListJoinRequestsResponse contains all pending join requests.
+message ListJoinRequestsResponse {
+  oneof result {
+    ListJoinRequests requests = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListJoinRequests {
+  repeated typewriter.models.v1.JoinRequest requests = 1;
+}
+
+// ApproveJoinRequestRequest approves a pending join request and assigns roles.
+message ApproveJoinRequestRequest {
+  // Unique identifier of the join request to approve
+  string request_id = 1;
+
+  // List of role IDs to assign to the new member
+  repeated string role_ids = 2;
+}
+
+// ApproveJoinRequestResponse returns the new member or an error.
+message ApproveJoinRequestResponse {
+  oneof result {
+    typewriter.models.v1.OrganizationMember member = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// DeclineJoinRequestRequest declines a pending join request.
+message DeclineJoinRequestRequest {
+  // Unique identifier of the join request to decline
+  string request_id = 1;
+}
+
+// DeclineJoinRequestResponse indicates success or returns an error.
+message DeclineJoinRequestResponse {
+  oneof result {
+    bool success = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// =============================================================================
+// Join Codes (Organization side - generating/managing codes)
+// =============================================================================
+
+// GenerateJoinCodeRequest generates a new join code for the organization.
+message GenerateJoinCodeRequest {}
+
+// GenerateJoinCodeResponse returns the generated join code or an error.
+message GenerateJoinCodeResponse {
+  oneof result {
+    typewriter.models.v1.JoinCode join_code = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// ListJoinCodesRequest requests all active join codes for the organization.
+message ListJoinCodesRequest {}
+
+// ListJoinCodesResponse contains all active join codes.
+message ListJoinCodesResponse {
+  oneof result {
+    ListJoinCodes join_codes = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListJoinCodes {
+  repeated typewriter.models.v1.JoinCode join_codes = 1;
+}
+
+// RevokeJoinCodeRequest revokes a join code.
+message RevokeJoinCodeRequest {
+  // Unique identifier of the join code to revoke
+  string code_id = 1;
+}
+
+// RevokeJoinCodeResponse indicates success or returns an error.
+message RevokeJoinCodeResponse {
+  oneof result {
+    bool success = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}

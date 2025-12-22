@@ -8,13 +8,14 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/models/organization.pb.dart";
-import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
+import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/generic/components/countdown_badge.dart";
 import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
@@ -28,44 +29,67 @@ class IndexPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final organizations = ref.watch(organizationsProvider);
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 600),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              child: organizations(
-                name: "organizations",
-                builder: (orgs) => Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (orgs.isNotEmpty) ...[
-                      _OrganizationsSelector(organizations: orgs),
-                      SizedBox(height: 24),
-                      LabeledDivider()
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 300.ms)
-                          .slideY(begin: 0.05, end: 0),
-                      SizedBox(height: 24),
-                    ],
-                    _JoinOrganization(hasExistingOrgs: orgs.isNotEmpty),
+
+    final content = Center(
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: organizations(
+              name: "organizations",
+              builder: (orgs) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (orgs.isNotEmpty) ...[
+                    _OrganizationsSelector(organizations: orgs),
                     SizedBox(height: 24),
                     LabeledDivider()
                         .animate()
-                        .fadeIn(
-                          duration: 300.ms,
-                          delay: orgs.isNotEmpty ? 600.ms : 300.ms,
-                        )
+                        .fadeIn(duration: 300.ms, delay: 300.ms)
                         .slideY(begin: 0.05, end: 0),
                     SizedBox(height: 24),
-                    _CreateOrganization(hasExistingOrgs: orgs.isNotEmpty),
                   ],
-                ),
+                  _JoinOrganization(hasExistingOrgs: orgs.isNotEmpty),
+                  SizedBox(height: 24),
+                  LabeledDivider()
+                      .animate()
+                      .fadeIn(
+                        duration: 300.ms,
+                        delay: orgs.isNotEmpty ? 600.ms : 300.ms,
+                      )
+                      .slideY(begin: 0.05, end: 0),
+                  SizedBox(height: 24),
+                  _CreateOrganization(hasExistingOrgs: orgs.isNotEmpty),
+                ],
               ),
             ),
           ),
         ),
+      ),
+    );
+
+    if (context.isMobile) {
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 56,
+          automaticallyImplyLeading: false,
+          title: const SizedBox.shrink(),
+          actions: [
+            const UserMenu(compact: true, expand: false),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: content,
+      );
+    }
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          content,
+          const Positioned(left: 8, bottom: 8, child: UserMenu(expand: false)),
+        ],
       ),
     );
   }
@@ -246,11 +270,6 @@ class _JoinOrganization extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = useTextEditingController();
     final formKey = useMemoized(GlobalKey<FormState>.new);
-    final refreshTrigger = useState(0);
-
-    useTimer(1.seconds, (_) {
-      refreshTrigger.value++;
-    });
 
     final joinRequests = ref.watch(userJoinRequestsProvider);
     final activeRequests = joinRequests.maybeWhen(
@@ -346,7 +365,7 @@ class _JoinOrganization extends HookConsumerWidget {
                   delay: Duration(milliseconds: baseDelay + 150),
                 )
                 .slideY(begin: 0.05, end: 0),
-          if (activeRequests.isNotEmpty) ...[
+          if (activeRequests.isNotEmpty || joinRequests.hasError) ...[
             SizedBox(height: 24),
             SectionTitle(title: "Pending requests")
                 .animate()
@@ -356,6 +375,21 @@ class _JoinOrganization extends HookConsumerWidget {
                 )
                 .slideY(begin: 0.05, end: 0),
             SizedBox(height: 8),
+            if (joinRequests.hasError) ...[
+              Text(
+                    joinRequests.error.toString(),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(
+                    duration: 300.ms,
+                    delay: Duration(milliseconds: baseDelay + 150),
+                  )
+                  .slideY(begin: 0.05, end: 0),
+              SizedBox(height: 8),
+            ],
             ...activeRequests.asMap().entries.map((entry) {
               final index = entry.key;
               final request = entry.value;

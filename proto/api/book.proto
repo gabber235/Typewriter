@@ -8,6 +8,13 @@ import "models/common.proto";
 message ListBooksRequest {}
 
 message ListBooksResponse {
+  oneof result {
+    ListBooks books = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message ListBooks {
   repeated typewriter.models.v1.Book books = 1;
 }
 

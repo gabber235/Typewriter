@@ -13,7 +13,7 @@ dependencies:
   hooks_riverpod: ^3.0.0
   riverpod_annotation: ^3.0.0
   flutter_hooks: ^0.21.2
-  auto_route: ^10.0.0
+  auto_route: ^11.0.0
   oidc: ^0.13.0
   oidc_default_store: ^0.5.0
   oidc_core: ^0.15.0
@@ -21,7 +21,7 @@ dependencies:
   freezed_annotation:
   json_annotation:
   dart_nats: ^0.6.5
-  rive: ^0.13.20
+  rive: ^0.14.0
   collection:
   iconify_flutter_plus: ^1.0.4
   responsive_framework: ^1.5.1
@@ -37,7 +37,7 @@ dependencies:
   material_color_utilities:
   vector_math: ^2.2.0
   flutter_svg: ^2.2.1
-  protobuf: ^5.0.0
+  protobuf: ^6.0.0
   fixnum: ^1.1.0
   expandable_page_view: ^1.2.0
 
@@ -56,7 +56,7 @@ dev_dependencies:
   test_screenshot:
   typewriter_testkit:
     path: testkit
-  protoc_plugin: ^23.0.0
+  protoc_plugin:
 
 icons_launcher:
   image_path: "assets/typewriter_app_icon.png"

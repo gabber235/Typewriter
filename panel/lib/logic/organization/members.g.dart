@@ -36,7 +36,7 @@ final class OrganizationRolesProvider
   OrganizationRoles create() => OrganizationRoles();
 }
 
-String _$organizationRolesHash() => r'7348a8a6afb01129e836abff6bed19c2164b6ec7';
+String _$organizationRolesHash() => r'9bfa8cb8f45a9f3f6e88a987291467d314f9ab96';
 
 /// Provider for the list of available roles in the current organization.
 
@@ -90,7 +90,7 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'e2d8c7abb90b9e72d56560a7bac88bb79c44aeea';
+    r'9be802bc57f4718fbb82547eaf8ef8e64b211bc2';
 
 /// Provider for the list of members in the current organization.
 
@@ -152,7 +152,7 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'fcf17401855f85ccbb49e386ca0ee7803cbe2edb';
+    r'0fdcff845070e6405a40c63f05534378fa855e31';
 
 /// Provider for the list of pending join requests to the current organization.
 
@@ -221,3 +221,100 @@ final class JoinRequestCountProvider extends $FunctionalProvider<int, int, int>
 }
 
 String _$joinRequestCountHash() => r'297dcfa4f5bd0b642bcc4f3b163ee3ac79fac7bd';
+
+/// Provider for the list of active join codes in the current organization.
+
+@ProviderFor(OrganizationJoinCodes)
+const organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
+
+/// Provider for the list of active join codes in the current organization.
+final class OrganizationJoinCodesProvider
+    extends $AsyncNotifierProvider<OrganizationJoinCodes, List<JoinCode>> {
+  /// Provider for the list of active join codes in the current organization.
+  const OrganizationJoinCodesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'organizationJoinCodesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$organizationJoinCodesHash();
+
+  @$internal
+  @override
+  OrganizationJoinCodes create() => OrganizationJoinCodes();
+}
+
+String _$organizationJoinCodesHash() =>
+    r'1191ddeede8add67b5828106007efac327abe1c5';
+
+/// Provider for the list of active join codes in the current organization.
+
+abstract class _$OrganizationJoinCodes extends $AsyncNotifier<List<JoinCode>> {
+  FutureOr<List<JoinCode>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<List<JoinCode>>, List<JoinCode>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<JoinCode>>, List<JoinCode>>,
+              AsyncValue<List<JoinCode>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+/// Provider for the count of active join codes.
+
+@ProviderFor(joinCodeCount)
+const joinCodeCountProvider = JoinCodeCountProvider._();
+
+/// Provider for the count of active join codes.
+
+final class JoinCodeCountProvider extends $FunctionalProvider<int, int, int>
+    with $Provider<int> {
+  /// Provider for the count of active join codes.
+  const JoinCodeCountProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'joinCodeCountProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$joinCodeCountHash();
+
+  @$internal
+  @override
+  $ProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  int create(Ref ref) {
+    return joinCodeCount(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$joinCodeCountHash() => r'422bf73b9b48b40efcf2dc1e9e2cf897eddbbfbc';
