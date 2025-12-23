@@ -12,6 +12,7 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import '../../models/common.pb.dart' as $0;
@@ -993,7 +994,17 @@ class DeclineJoinRequestResponse extends $pb.GeneratedMessage {
 
 /// GenerateJoinCodeRequest generates a new join code for the organization.
 class GenerateJoinCodeRequest extends $pb.GeneratedMessage {
-  factory GenerateJoinCodeRequest() => create();
+  factory GenerateJoinCodeRequest({
+    $core.bool? singleUse,
+    JoinCodeExpiration? expiration,
+    JoinCodeAutoAcceptConfig? autoAccept,
+  }) {
+    final result = create();
+    if (singleUse != null) result.singleUse = singleUse;
+    if (expiration != null) result.expiration = expiration;
+    if (autoAccept != null) result.autoAccept = autoAccept;
+    return result;
+  }
 
   GenerateJoinCodeRequest._();
 
@@ -1009,6 +1020,11 @@ class GenerateJoinCodeRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'singleUse')
+    ..aOM<JoinCodeExpiration>(2, _omitFieldNames ? '' : 'expiration',
+        subBuilder: JoinCodeExpiration.create)
+    ..aOM<JoinCodeAutoAcceptConfig>(3, _omitFieldNames ? '' : 'autoAccept',
+        subBuilder: JoinCodeAutoAcceptConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1030,6 +1046,179 @@ class GenerateJoinCodeRequest extends $pb.GeneratedMessage {
   static GenerateJoinCodeRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GenerateJoinCodeRequest>(create);
   static GenerateJoinCodeRequest? _defaultInstance;
+
+  /// Whether this code can only be used once (default: true)
+  @$pb.TagNumber(1)
+  $core.bool get singleUse => $_getBF(0);
+  @$pb.TagNumber(1)
+  set singleUse($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSingleUse() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSingleUse() => $_clearField(1);
+
+  /// Expiration configuration
+  @$pb.TagNumber(2)
+  JoinCodeExpiration get expiration => $_getN(1);
+  @$pb.TagNumber(2)
+  set expiration(JoinCodeExpiration value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasExpiration() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearExpiration() => $_clearField(2);
+  @$pb.TagNumber(2)
+  JoinCodeExpiration ensureExpiration() => $_ensure(1);
+
+  /// Auto-accept configuration (omit for manual approval)
+  @$pb.TagNumber(3)
+  JoinCodeAutoAcceptConfig get autoAccept => $_getN(2);
+  @$pb.TagNumber(3)
+  set autoAccept(JoinCodeAutoAcceptConfig value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAutoAccept() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAutoAccept() => $_clearField(3);
+  @$pb.TagNumber(3)
+  JoinCodeAutoAcceptConfig ensureAutoAccept() => $_ensure(2);
+}
+
+enum JoinCodeExpiration_Expiration { never, durationSeconds, notSet }
+
+/// JoinCodeExpiration specifies when the join code expires.
+class JoinCodeExpiration extends $pb.GeneratedMessage {
+  factory JoinCodeExpiration({
+    $core.bool? never,
+    $fixnum.Int64? durationSeconds,
+  }) {
+    final result = create();
+    if (never != null) result.never = never;
+    if (durationSeconds != null) result.durationSeconds = durationSeconds;
+    return result;
+  }
+
+  JoinCodeExpiration._();
+
+  factory JoinCodeExpiration.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory JoinCodeExpiration.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, JoinCodeExpiration_Expiration>
+      _JoinCodeExpiration_ExpirationByTag = {
+    1: JoinCodeExpiration_Expiration.never,
+    2: JoinCodeExpiration_Expiration.durationSeconds,
+    0: JoinCodeExpiration_Expiration.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'JoinCodeExpiration',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOB(1, _omitFieldNames ? '' : 'never')
+    ..aInt64(2, _omitFieldNames ? '' : 'durationSeconds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  JoinCodeExpiration clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  JoinCodeExpiration copyWith(void Function(JoinCodeExpiration) updates) =>
+      super.copyWith((message) => updates(message as JoinCodeExpiration))
+          as JoinCodeExpiration;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static JoinCodeExpiration create() => JoinCodeExpiration._();
+  @$core.override
+  JoinCodeExpiration createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static JoinCodeExpiration getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<JoinCodeExpiration>(create);
+  static JoinCodeExpiration? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  JoinCodeExpiration_Expiration whichExpiration() =>
+      _JoinCodeExpiration_ExpirationByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearExpiration() => $_clearField($_whichOneof(0));
+
+  /// Set to true for a code that never expires
+  @$pb.TagNumber(1)
+  $core.bool get never => $_getBF(0);
+  @$pb.TagNumber(1)
+  set never($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNever() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNever() => $_clearField(1);
+
+  /// Expires after this many seconds from creation
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get durationSeconds => $_getI64(1);
+  @$pb.TagNumber(2)
+  set durationSeconds($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDurationSeconds() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDurationSeconds() => $_clearField(2);
+}
+
+/// JoinCodeAutoAcceptConfig specifies auto-accept settings for code generation.
+class JoinCodeAutoAcceptConfig extends $pb.GeneratedMessage {
+  factory JoinCodeAutoAcceptConfig({
+    $core.Iterable<$core.String>? roleIds,
+  }) {
+    final result = create();
+    if (roleIds != null) result.roleIds.addAll(roleIds);
+    return result;
+  }
+
+  JoinCodeAutoAcceptConfig._();
+
+  factory JoinCodeAutoAcceptConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory JoinCodeAutoAcceptConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'JoinCodeAutoAcceptConfig',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..pPS(1, _omitFieldNames ? '' : 'roleIds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  JoinCodeAutoAcceptConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  JoinCodeAutoAcceptConfig copyWith(
+          void Function(JoinCodeAutoAcceptConfig) updates) =>
+      super.copyWith((message) => updates(message as JoinCodeAutoAcceptConfig))
+          as JoinCodeAutoAcceptConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static JoinCodeAutoAcceptConfig create() => JoinCodeAutoAcceptConfig._();
+  @$core.override
+  JoinCodeAutoAcceptConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static JoinCodeAutoAcceptConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<JoinCodeAutoAcceptConfig>(create);
+  static JoinCodeAutoAcceptConfig? _defaultInstance;
+
+  /// Role IDs to assign to auto-accepted users
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.String> get roleIds => $_getList(0);
 }
 
 enum GenerateJoinCodeResponse_Result { joinCode, error, notSet }

@@ -154,6 +154,15 @@ const JoinCode$json = {
       '6': '.google.protobuf.Timestamp',
       '10': 'expiresAt'
     },
+    {'1': 'single_use', '3': 5, '4': 1, '5': 8, '10': 'singleUse'},
+    {
+      '1': 'auto_accept',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.JoinCodeAutoAccept',
+      '10': 'autoAccept'
+    },
   ],
 };
 
@@ -161,4 +170,19 @@ const JoinCode$json = {
 final $typed_data.Uint8List joinCodeDescriptor = $convert.base64Decode(
     'CghKb2luQ29kZRISCgRjb2RlGAIgASgJUgRjb2RlEjkKCmNyZWF0ZWRfYXQYAyABKAsyGi5nb2'
     '9nbGUucHJvdG9idWYuVGltZXN0YW1wUgljcmVhdGVkQXQSOQoKZXhwaXJlc19hdBgEIAEoCzIa'
-    'Lmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBSCWV4cGlyZXNBdA==');
+    'Lmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBSCWV4cGlyZXNBdBIdCgpzaW5nbGVfdXNlGAUgAS'
+    'gIUglzaW5nbGVVc2USSQoLYXV0b19hY2NlcHQYBiABKAsyKC50eXBld3JpdGVyLm1vZGVscy52'
+    'MS5Kb2luQ29kZUF1dG9BY2NlcHRSCmF1dG9BY2NlcHQ=');
+
+@$core.Deprecated('Use joinCodeAutoAcceptDescriptor instead')
+const JoinCodeAutoAccept$json = {
+  '1': 'JoinCodeAutoAccept',
+  '2': [
+    {'1': 'role_ids', '3': 1, '4': 3, '5': 9, '10': 'roleIds'},
+  ],
+};
+
+/// Descriptor for `JoinCodeAutoAccept`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List joinCodeAutoAcceptDescriptor =
+    $convert.base64Decode(
+        'ChJKb2luQ29kZUF1dG9BY2NlcHQSGQoIcm9sZV9pZHMYASADKAlSB3JvbGVJZHM=');

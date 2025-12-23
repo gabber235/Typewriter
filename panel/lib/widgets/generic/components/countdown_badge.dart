@@ -13,18 +13,21 @@ class CountdownBadge extends HookWidget {
     super.key,
   });
 
-  final DateTime endDate;
+  final DateTime? endDate;
   final Duration urgentThreshold;
   final VoidCallback? onExpired;
 
   @override
   Widget build(BuildContext context) {
+    if (endDate == null) {
+      return const _NeverExpiresBadge();
+    }
     final colorScheme = Theme.of(context).colorScheme;
-    final remaining = useState(endDate.difference(DateTime.now()));
+    final remaining = useState(endDate!.difference(DateTime.now()));
     final isUrgent = remaining.value <= urgentThreshold;
 
     useTimer(1.seconds, (timer) {
-      final duration = endDate.difference(DateTime.now());
+      final duration = endDate!.difference(DateTime.now());
       if (duration.isNegative) {
         remaining.value = Duration.zero;
         timer.cancel();
@@ -89,5 +92,40 @@ class CountdownBadge extends HookWidget {
     }
 
     return "$minutes:${seconds.toString().padLeft(2, "0")}";
+  }
+}
+
+class _NeverExpiresBadge extends StatelessWidget {
+  const _NeverExpiresBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.all_inclusive_rounded,
+            size: 14,
+            color: colorScheme.onPrimaryContainer,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            "Never",
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.onPrimaryContainer,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

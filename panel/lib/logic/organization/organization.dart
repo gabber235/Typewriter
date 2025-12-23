@@ -1,4 +1,5 @@
 import "package:collection/collection.dart";
+import "package:fixnum/fixnum.dart";
 import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
@@ -8,6 +9,7 @@ import "package:typewriter_panel/generated/api/user/organization.pb.dart";
 import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/organization/members.dart";
 import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
@@ -108,7 +110,9 @@ class Organization extends _$Organization {
   }
 
   /// Generates an invite link (join code) for the current organization.
-  Future<SecretFieldRevealed> generateInviteLink() async {
+  Future<SecretFieldRevealed> generateInviteLink({
+    JoinCodeOptions options = const JoinCodeOptions(),
+  }) async {
     final organizationId = ref.read(organizationIdProvider);
     if (organizationId == null) {
       throw ApiException.noOrganization();
@@ -119,7 +123,24 @@ class Organization extends _$Organization {
       throw ApiException.notAuthenticated();
     }
 
-    final request = member_api.GenerateJoinCodeRequest();
+    final request = member_api.GenerateJoinCodeRequest()
+      ..singleUse = options.singleUse;
+
+    final expiration = member_api.JoinCodeExpiration();
+    switch (options.expiration) {
+      case JoinCodeExpirationNever():
+        expiration.never = true;
+      case JoinCodeExpirationDuration(:final duration):
+        expiration.durationSeconds = Int64(duration.inSeconds);
+    }
+    request.expiration = expiration;
+
+    if (options.autoAcceptRoleIds != null &&
+        options.autoAcceptRoleIds!.isNotEmpty) {
+      final autoAccept = member_api.JoinCodeAutoAcceptConfig()
+        ..roleIds.addAll(options.autoAcceptRoleIds!);
+      request.autoAccept = autoAccept;
+    }
 
     final response = await ref
         .read(natsProvider)
@@ -136,7 +157,9 @@ class Organization extends _$Organization {
     final joinCode = response.joinCode;
     return SecretFieldRevealed(
       value: joinCode.code,
-      expiresAt: joinCode.expiresAt.toDateTime(),
+      expiresAt: joinCode.hasExpiresAt()
+          ? joinCode.expiresAt.toDateTime()
+          : null,
     );
   }
 }

@@ -170,7 +170,7 @@ ThemeData buildTheme(Brightness brightness) {
           : Colors.deepOrange.shade700,
       onSecondaryContainer: Colors.deepOrange.shade700.onBrightness(brightness),
       error: Colors.redAccent,
-      onError: Colors.redAccent.onBrightness(brightness),
+      onError: Colors.black,
       brightness: brightness,
       surface: isLight ? const Color(0xFFF5F5F5) : const Color(0xFF141218),
       onSurfaceVariant: isLight

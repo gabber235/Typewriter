@@ -8,6 +8,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/hooks/timer.dart";
+import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/widgets/generic/components/countdown_badge.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
@@ -25,23 +26,35 @@ class SecretFieldLoading extends SecretFieldState {
 }
 
 class SecretFieldRevealed extends SecretFieldState {
-  const SecretFieldRevealed({required this.value, required this.expiresAt});
+  const SecretFieldRevealed({required this.value, this.expiresAt});
 
   final String value;
-  final DateTime expiresAt;
+  final DateTime? expiresAt;
 
-  Duration get remainingDuration {
-    final remaining = expiresAt.difference(DateTime.now());
+  Duration? get remainingDuration {
+    if (expiresAt == null) return null;
+    final remaining = expiresAt!.difference(DateTime.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
-  bool get isExpired => remainingDuration == Duration.zero;
+  bool get isExpired {
+    if (expiresAt == null) return false;
+    return remainingDuration == Duration.zero;
+  }
+
+  bool get neverExpires => expiresAt == null;
 }
 
 class SecretFieldExpired extends SecretFieldState {
   const SecretFieldExpired({required this.value});
 
   final String value;
+}
+
+class SecretFieldError extends SecretFieldState {
+  const SecretFieldError({required this.message});
+
+  final String message;
 }
 
 class SecretField extends HookWidget {
@@ -54,6 +67,8 @@ class SecretField extends HookWidget {
     this.regenerateButtonText = "Regenerate",
     this.copyButtonText = "Copy",
     this.expiredText = "Expired",
+    this.copiedSnackbarText = "Copied to clipboard",
+    this.errorSnackbarText = "Failed to generate",
     this.onCopied,
     this.onExpired,
     super.key,
@@ -67,6 +82,8 @@ class SecretField extends HookWidget {
   final String regenerateButtonText;
   final String copyButtonText;
   final String expiredText;
+  final String copiedSnackbarText;
+  final String errorSnackbarText;
   final VoidCallback? onCopied;
   final VoidCallback? onExpired;
 
@@ -77,6 +94,7 @@ class SecretField extends HookWidget {
     useTimer(1.seconds, (timer) {
       final currentState = state.value;
       if (currentState is! SecretFieldRevealed) return;
+      if (currentState.neverExpires) return;
 
       final remaining = currentState.remainingDuration;
 
@@ -93,8 +111,12 @@ class SecretField extends HookWidget {
         state.value = result.isExpired
             ? SecretFieldExpired(value: result.value)
             : result;
-      } on Exception {
-        state.value = const SecretFieldIdle();
+      } on Exception catch (e) {
+        final errorMessage = e.toString();
+        state.value = SecretFieldError(message: errorMessage);
+        if (context.mounted) {
+          showErrorSnackBar(context, "$errorSnackbarText: $errorMessage");
+        }
       }
     }
 
@@ -108,6 +130,9 @@ class SecretField extends HookWidget {
       final fullValue = prefix != null ? "$prefix$value" : value;
       await Clipboard.setData(ClipboardData(text: fullValue));
       onCopied?.call();
+      if (context.mounted) {
+        showSuccessSnackBar(context, copiedSnackbarText);
+      }
     }
 
     return Column(
@@ -205,12 +230,17 @@ class _SecretFieldContent extends StatelessWidget {
         prefix: prefix,
         value: value,
       ),
+      SecretFieldError() => _ConcealedDisplay(
+        prefix: prefix,
+        hasPrefix: hasPrefix,
+      ),
     };
   }
 
   Widget _buildActions(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isIdle = state is SecretFieldIdle;
+    final isError = state is SecretFieldError;
     final canCopy = state is SecretFieldRevealed;
 
     return Wrap(
@@ -285,8 +315,12 @@ class _SecretFieldContent extends StatelessWidget {
             LoadingButton.filledIcon(
               onPressed: onGenerate,
               icon: const Icones(MaterialSymbols.autorenew_rounded, size: 16),
-              label: Text(isIdle ? generateButtonText : regenerateButtonText),
+              label: Text(
+                isIdle || isError ? generateButtonText : regenerateButtonText,
+              ),
               style: FilledButton.styleFrom(
+                backgroundColor: isError ? colorScheme.error : null,
+                foregroundColor: isError ? colorScheme.onError : null,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,

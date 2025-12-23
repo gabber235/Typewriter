@@ -323,11 +323,70 @@ final $typed_data.Uint8List declineJoinRequestResponseDescriptor =
 @$core.Deprecated('Use generateJoinCodeRequestDescriptor instead')
 const GenerateJoinCodeRequest$json = {
   '1': 'GenerateJoinCodeRequest',
+  '2': [
+    {'1': 'single_use', '3': 1, '4': 1, '5': 8, '10': 'singleUse'},
+    {
+      '1': 'expiration',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.api.v1.JoinCodeExpiration',
+      '10': 'expiration'
+    },
+    {
+      '1': 'auto_accept',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.api.v1.JoinCodeAutoAcceptConfig',
+      '10': 'autoAccept'
+    },
+  ],
 };
 
 /// Descriptor for `GenerateJoinCodeRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List generateJoinCodeRequestDescriptor =
-    $convert.base64Decode('ChdHZW5lcmF0ZUpvaW5Db2RlUmVxdWVzdA==');
+final $typed_data.Uint8List generateJoinCodeRequestDescriptor = $convert.base64Decode(
+    'ChdHZW5lcmF0ZUpvaW5Db2RlUmVxdWVzdBIdCgpzaW5nbGVfdXNlGAEgASgIUglzaW5nbGVVc2'
+    'USRQoKZXhwaXJhdGlvbhgCIAEoCzIlLnR5cGV3cml0ZXIuYXBpLnYxLkpvaW5Db2RlRXhwaXJh'
+    'dGlvblIKZXhwaXJhdGlvbhJMCgthdXRvX2FjY2VwdBgDIAEoCzIrLnR5cGV3cml0ZXIuYXBpLn'
+    'YxLkpvaW5Db2RlQXV0b0FjY2VwdENvbmZpZ1IKYXV0b0FjY2VwdA==');
+
+@$core.Deprecated('Use joinCodeExpirationDescriptor instead')
+const JoinCodeExpiration$json = {
+  '1': 'JoinCodeExpiration',
+  '2': [
+    {'1': 'never', '3': 1, '4': 1, '5': 8, '9': 0, '10': 'never'},
+    {
+      '1': 'duration_seconds',
+      '3': 2,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'durationSeconds'
+    },
+  ],
+  '8': [
+    {'1': 'expiration'},
+  ],
+};
+
+/// Descriptor for `JoinCodeExpiration`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List joinCodeExpirationDescriptor = $convert.base64Decode(
+    'ChJKb2luQ29kZUV4cGlyYXRpb24SFgoFbmV2ZXIYASABKAhIAFIFbmV2ZXISKwoQZHVyYXRpb2'
+    '5fc2Vjb25kcxgCIAEoA0gAUg9kdXJhdGlvblNlY29uZHNCDAoKZXhwaXJhdGlvbg==');
+
+@$core.Deprecated('Use joinCodeAutoAcceptConfigDescriptor instead')
+const JoinCodeAutoAcceptConfig$json = {
+  '1': 'JoinCodeAutoAcceptConfig',
+  '2': [
+    {'1': 'role_ids', '3': 1, '4': 3, '5': 9, '10': 'roleIds'},
+  ],
+};
+
+/// Descriptor for `JoinCodeAutoAcceptConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List joinCodeAutoAcceptConfigDescriptor =
+    $convert.base64Decode(
+        'ChhKb2luQ29kZUF1dG9BY2NlcHRDb25maWcSGQoIcm9sZV9pZHMYASADKAlSB3JvbGVJZHM=');
 
 @$core.Deprecated('Use generateJoinCodeResponseDescriptor instead')
 const GenerateJoinCodeResponse$json = {

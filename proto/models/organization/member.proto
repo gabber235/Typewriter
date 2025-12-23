@@ -80,6 +80,18 @@ message JoinCode {
   // Timestamp when the code was created
   google.protobuf.Timestamp created_at = 3;
 
-  // Timestamp when the code expires
+  // Timestamp when the code expires (not set = never expires)
   google.protobuf.Timestamp expires_at = 4;
+
+  // Whether this code can only be used once (deleted after use)
+  bool single_use = 5;
+
+  // Auto-accept configuration (not set = manual approval required)
+  JoinCodeAutoAccept auto_accept = 6;
+}
+
+// JoinCodeAutoAccept contains the configuration for auto-accepting users.
+message JoinCodeAutoAccept {
+  // Role IDs to assign to auto-accepted users
+  repeated string role_ids = 1;
 }

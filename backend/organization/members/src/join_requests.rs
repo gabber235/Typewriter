@@ -4,7 +4,7 @@ use prost::Message;
 use surrealdb_component::query;
 use wasmcloud_component::{debug, info, trace};
 use wasmcloud_utils::{
-    error_response_bytes, internal_error_fn,
+    error_response_bytes, extract_param, internal_error_fn,
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
@@ -12,10 +12,7 @@ use crate::{refresh, typewriter, JoinRequestRecord, MemberWithRolesRecord};
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list (join_requests) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let _request = typewriter::api::v1::ListJoinRequestsRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;
@@ -65,10 +62,7 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
 
 pub fn handle_approve(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_approve (join_requests) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    trace!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let request = typewriter::api::v1::ApproveJoinRequestRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;
@@ -176,10 +170,7 @@ pub fn handle_approve(msg: BrokerMessage, params: HashMap<String, String>) -> Re
 
 pub fn handle_decline(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_decline (join_requests) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let request = typewriter::api::v1::DeclineJoinRequestRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;

@@ -40,6 +40,7 @@ dependencies:
   protobuf: ^6.0.0
   fixnum: ^1.1.0
   expandable_page_view: ^1.2.0
+  duration: ^4.0.3
 
 dev_dependencies:
   flutter_test:

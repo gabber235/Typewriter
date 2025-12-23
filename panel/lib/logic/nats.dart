@@ -122,7 +122,6 @@ extension RefNatsExtension on Ref {
 
     await for (final msg in sub.stream) {
       final response = responseBuilder()..mergeFromBuffer(msg.data);
-      print("Received response: $response for $listenSubject");
       yield response;
     }
   }

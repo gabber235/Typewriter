@@ -102,9 +102,14 @@ class UserJoinRequests extends _$UserJoinRequests {
       throw ApiException.fromProto(response.error);
     }
 
-    if (response.hasRequest()) {
-      final newRequest = _protoToUserJoinRequest(response.request);
-      state = AsyncValue.data([...state.requireValue, newRequest]);
+    if (response.hasSuccess()) {
+      final result = response.success;
+      if (result.hasRequest()) {
+        final newRequest = _protoToUserJoinRequest(result.request);
+        state = AsyncValue.data([...state.requireValue, newRequest]);
+      }
+      // If it's an auto-accepted member, we don't add to join requests
+      // The user is already a member of the organization
     }
   }
 

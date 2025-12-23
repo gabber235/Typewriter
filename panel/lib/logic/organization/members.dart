@@ -71,17 +71,52 @@ abstract class JoinCode with _$JoinCode {
   const factory JoinCode({
     required String code,
     required DateTime createdAt,
-    required DateTime expiresAt,
+    DateTime? expiresAt,
+    @Default(true) bool singleUse,
+    JoinCodeAutoAccept? autoAccept,
   }) = _JoinCode;
 
   const JoinCode._();
 
-  Duration get remainingDuration {
-    final remaining = expiresAt.difference(DateTime.now());
+  Duration? get remainingDuration {
+    if (expiresAt == null) return null;
+    final remaining = expiresAt!.difference(DateTime.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
-  bool get isExpired => remainingDuration == Duration.zero;
+  bool get isExpired {
+    if (expiresAt == null) return false;
+    return remainingDuration == Duration.zero;
+  }
+
+  bool get neverExpires => expiresAt == null;
+}
+
+/// Auto-accept configuration for a join code.
+@freezed
+abstract class JoinCodeAutoAccept with _$JoinCodeAutoAccept {
+  const factory JoinCodeAutoAccept({
+    required List<String> roleIds,
+  }) = _JoinCodeAutoAccept;
+}
+
+/// Expiration configuration for generating a join code.
+@freezed
+sealed class JoinCodeExpiration with _$JoinCodeExpiration {
+  const factory JoinCodeExpiration.never() = JoinCodeExpirationNever;
+  const factory JoinCodeExpiration.duration(Duration duration) =
+      JoinCodeExpirationDuration;
+}
+
+/// Options for generating a join code.
+@freezed
+abstract class JoinCodeOptions with _$JoinCodeOptions {
+  const factory JoinCodeOptions({
+    @Default(true) bool singleUse,
+    @Default(JoinCodeExpiration.duration(Duration(days: 7)))
+    JoinCodeExpiration expiration,
+    List<String>? autoAcceptRoleIds,
+  }) = _JoinCodeOptions;
 }
 
 /// Converts a proto Role to a dart MemberRole.
@@ -128,7 +163,11 @@ JoinCode _protoToJoinCode(member_models.JoinCode proto) {
   return JoinCode(
     code: proto.code,
     createdAt: proto.createdAt.toDateTime(),
-    expiresAt: proto.expiresAt.toDateTime(),
+    expiresAt: proto.hasExpiresAt() ? proto.expiresAt.toDateTime() : null,
+    singleUse: proto.singleUse,
+    autoAccept: proto.hasAutoAccept()
+        ? JoinCodeAutoAccept(roleIds: proto.autoAccept.roleIds.toList())
+        : null,
   );
 }
 

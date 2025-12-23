@@ -4,6 +4,7 @@ package typewriter.api.v1;
 
 import "models/organization.proto";
 import "models/organization/member.proto";
+import "models/organization/role.proto";
 import "models/common.proto";
 
 // =============================================================================
@@ -60,12 +61,34 @@ message RequestToJoinRequest {
   string code = 1;
 }
 
-// RequestToJoinResponse returns the created join request or an error.
+// RequestToJoinResponse returns either a pending request, auto-accepted membership, or an error.
 message RequestToJoinResponse {
   oneof result {
-    typewriter.models.v1.UserJoinRequest request = 1;
+    RequestToJoinResult success = 1;
     typewriter.models.v1.Error error = 2;
   }
+}
+
+// RequestToJoinResult contains either a pending request or immediate membership.
+message RequestToJoinResult {
+  oneof outcome {
+    // User has a pending request awaiting approval
+    typewriter.models.v1.UserJoinRequest request = 1;
+    // User was auto-accepted and is now a member
+    AutoAcceptedMember member = 2;
+  }
+}
+
+// AutoAcceptedMember represents immediate membership after using an auto-accept code.
+message AutoAcceptedMember {
+  // Organization ID the user joined
+  string organization_id = 1;
+  // Organization name
+  string organization_name = 2;
+  // Organization icon URL
+  string organization_icon_url = 3;
+  // Roles assigned to the user
+  repeated typewriter.models.v1.Role roles = 4;
 }
 
 // CancelJoinRequestRequest cancels a pending join request.

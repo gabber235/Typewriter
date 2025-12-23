@@ -482,3 +482,57 @@ macro_rules! dispatch_actions {
         )]
     };
 }
+
+/// Macro to extract a single parameter from the subject params HashMap.
+///
+/// Returns a reference to the parameter value as a string slice.
+/// The macro handles error checking internally and will return early if the parameter is not found.
+///
+/// # Example
+/// ```rust,no_run
+/// use wasmcloud_utils::extract_param;
+/// use std::collections::HashMap;
+///
+/// let mut params = HashMap::new();
+/// params.insert("user_id".to_string(), "123".to_string());
+///
+/// let user_id = extract_param!(params, user_id);
+/// ```
+#[macro_export]
+macro_rules! extract_param {
+    ($params:expr, $param_name:ident) => {
+        $params
+            .get(stringify!($param_name))
+            .map(|s| s.as_str())
+            .ok_or_else(|| format!("failed to parse {} from subject", stringify!($param_name)))?
+    };
+}
+
+/// Macro to extract multiple parameters from the subject params HashMap at once.
+///
+/// Returns a tuple of references to the parameter values as string slices,
+/// in the same order as specified.
+/// The macro handles error checking internally and will return early if any parameter is not found.
+///
+/// # Example
+/// ```rust,no_run
+/// use wasmcloud_utils::extract_params;
+/// use std::collections::HashMap;
+///
+/// let mut params = HashMap::new();
+/// params.insert("user_id".to_string(), "123".to_string());
+/// params.insert("org_id".to_string(), "456".to_string());
+///
+/// let (user_id, org_id) = extract_params!(params, user_id, org_id);
+/// ```
+#[macro_export]
+macro_rules! extract_params {
+    ($params:expr, $($param_name:ident),+ $(,)?) => {
+        ($(
+            $params
+                .get(stringify!($param_name))
+                .map(|s| s.as_str())
+                .ok_or_else(|| format!("failed to parse {} from subject", stringify!($param_name)))?
+        ),+)
+    };
+}

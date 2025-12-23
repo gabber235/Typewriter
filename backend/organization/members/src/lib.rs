@@ -109,9 +109,11 @@ impl Into<typewriter::models::v1::JoinRequest> for JoinRequestRecord {
 pub struct JoinCodeRecord {
     id: RecordId,
     created_at: Datetime,
-    expires_at: Datetime,
+    expires_at: Option<Datetime>,
     created_by: RecordId,
     organization: RecordId,
+    single_use: bool,
+    auto_accept_roles: Vec<RecordId>,
 }
 
 impl Into<typewriter::models::v1::JoinCode> for JoinCodeRecord {
@@ -119,7 +121,17 @@ impl Into<typewriter::models::v1::JoinCode> for JoinCodeRecord {
         typewriter::models::v1::JoinCode {
             code: self.id.id.to_string(),
             created_at: self.created_at.into(),
-            expires_at: self.expires_at.into(),
+            expires_at: self.expires_at.map(|dt| dt.into()),
+            single_use: self.single_use,
+            auto_accept: (!self.auto_accept_roles.is_empty()).then(|| {
+                typewriter::models::v1::JoinCodeAutoAccept {
+                    role_ids: self
+                        .auto_accept_roles
+                        .into_iter()
+                        .map(|r| r.id.to_string())
+                        .collect(),
+                }
+            }),
         }
     }
 }

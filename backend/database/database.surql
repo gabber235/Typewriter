@@ -85,6 +85,10 @@ DEFINE TABLE OVERWRITE join_code TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE organization ON join_code TYPE record<organization> PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_at ON join_code TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
--- Default expiration is 7 days from now
-DEFINE FIELD OVERWRITE expires_at ON join_code TYPE datetime DEFAULT time::now() + 7d PERMISSIONS NONE;
+-- Expiration: NONE means never expires
+DEFINE FIELD OVERWRITE expires_at ON join_code TYPE option<datetime> DEFAULT time::now() + 7d PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_by ON join_code TYPE record<user> PERMISSIONS NONE;
+-- Single-use flag: code is deleted when used
+DEFINE FIELD OVERWRITE single_use ON join_code TYPE bool DEFAULT true PERMISSIONS NONE;
+-- Auto-accept role IDs: empty array means manual approval required
+DEFINE FIELD OVERWRITE auto_accept_roles ON join_code TYPE array<record<role>> DEFAULT [] PERMISSIONS NONE;

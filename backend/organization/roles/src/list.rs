@@ -4,7 +4,7 @@ use prost::Message;
 use surrealdb_component::query;
 use wasmcloud_component::{debug, trace};
 use wasmcloud_utils::{
-    internal_error_fn,
+    extract_param, internal_error_fn,
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
@@ -19,10 +19,7 @@ internal_error_fn!(
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let _request = typewriter::api::v1::ListRolesRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;

@@ -4,7 +4,7 @@ use prost::Message;
 use surrealdb_component::query;
 use wasmcloud_component::{debug, info, trace};
 use wasmcloud_utils::{
-    error_response_bytes, internal_error_fn,
+    error_response_bytes, extract_param, internal_error_fn,
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
@@ -12,10 +12,7 @@ use crate::{refresh, typewriter, MemberWithRolesRecord};
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list (members) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let _request = typewriter::api::v1::ListMembersRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;
@@ -62,10 +59,7 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
 
 pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_update (members) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let request = typewriter::api::v1::UpdateMemberRolesRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;
@@ -91,6 +85,10 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
             $member.roles.filter(|$role| !$role.assignable),
             $requested_roles.filter(|$role| $role.assignable)
         );
+
+        IF array::is_empty($roles) {
+            THROW "A user must have at least one valid role";
+        };
 
         UPDATE $member.id SET
             roles = $roles;
@@ -148,10 +146,7 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
 
 pub fn handle_remove(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_remove (members) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
+    let org_id = extract_param!(params, org_id);
 
     let request = typewriter::api::v1::RemoveMemberRequest::decode(&msg.body[..])
         .map_err(|e| format!("failed to decode request: {}", e))?;

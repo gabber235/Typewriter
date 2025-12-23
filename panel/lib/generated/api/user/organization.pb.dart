@@ -17,6 +17,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 import '../../models/common.pb.dart' as $0;
 import '../../models/organization.pb.dart' as $1;
 import '../../models/organization/member.pb.dart' as $2;
+import '../../models/organization/role.pb.dart' as $3;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -605,16 +606,16 @@ class RequestToJoinRequest extends $pb.GeneratedMessage {
   void clearCode() => $_clearField(1);
 }
 
-enum RequestToJoinResponse_Result { request, error, notSet }
+enum RequestToJoinResponse_Result { success, error, notSet }
 
-/// RequestToJoinResponse returns the created join request or an error.
+/// RequestToJoinResponse returns either a pending request, auto-accepted membership, or an error.
 class RequestToJoinResponse extends $pb.GeneratedMessage {
   factory RequestToJoinResponse({
-    $2.UserJoinRequest? request,
+    RequestToJoinResult? success,
     $0.Error? error,
   }) {
     final result = create();
-    if (request != null) result.request = request;
+    if (success != null) result.success = success;
     if (error != null) result.error = error;
     return result;
   }
@@ -630,7 +631,7 @@ class RequestToJoinResponse extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, RequestToJoinResponse_Result>
       _RequestToJoinResponse_ResultByTag = {
-    1: RequestToJoinResponse_Result.request,
+    1: RequestToJoinResponse_Result.success,
     2: RequestToJoinResponse_Result.error,
     0: RequestToJoinResponse_Result.notSet
   };
@@ -640,8 +641,8 @@ class RequestToJoinResponse extends $pb.GeneratedMessage {
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
     ..oo(0, [1, 2])
-    ..aOM<$2.UserJoinRequest>(1, _omitFieldNames ? '' : 'request',
-        subBuilder: $2.UserJoinRequest.create)
+    ..aOM<RequestToJoinResult>(1, _omitFieldNames ? '' : 'success',
+        subBuilder: RequestToJoinResult.create)
     ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
         subBuilder: $0.Error.create)
     ..hasRequiredFields = false;
@@ -675,15 +676,15 @@ class RequestToJoinResponse extends $pb.GeneratedMessage {
   void clearResult() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  $2.UserJoinRequest get request => $_getN(0);
+  RequestToJoinResult get success => $_getN(0);
   @$pb.TagNumber(1)
-  set request($2.UserJoinRequest value) => $_setField(1, value);
+  set success(RequestToJoinResult value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasRequest() => $_has(0);
+  $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRequest() => $_clearField(1);
+  void clearSuccess() => $_clearField(1);
   @$pb.TagNumber(1)
-  $2.UserJoinRequest ensureRequest() => $_ensure(0);
+  RequestToJoinResult ensureSuccess() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $0.Error get error => $_getN(1);
@@ -695,6 +696,191 @@ class RequestToJoinResponse extends $pb.GeneratedMessage {
   void clearError() => $_clearField(2);
   @$pb.TagNumber(2)
   $0.Error ensureError() => $_ensure(1);
+}
+
+enum RequestToJoinResult_Outcome { request, member, notSet }
+
+/// RequestToJoinResult contains either a pending request or immediate membership.
+class RequestToJoinResult extends $pb.GeneratedMessage {
+  factory RequestToJoinResult({
+    $2.UserJoinRequest? request,
+    AutoAcceptedMember? member,
+  }) {
+    final result = create();
+    if (request != null) result.request = request;
+    if (member != null) result.member = member;
+    return result;
+  }
+
+  RequestToJoinResult._();
+
+  factory RequestToJoinResult.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RequestToJoinResult.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, RequestToJoinResult_Outcome>
+      _RequestToJoinResult_OutcomeByTag = {
+    1: RequestToJoinResult_Outcome.request,
+    2: RequestToJoinResult_Outcome.member,
+    0: RequestToJoinResult_Outcome.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RequestToJoinResult',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOM<$2.UserJoinRequest>(1, _omitFieldNames ? '' : 'request',
+        subBuilder: $2.UserJoinRequest.create)
+    ..aOM<AutoAcceptedMember>(2, _omitFieldNames ? '' : 'member',
+        subBuilder: AutoAcceptedMember.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestToJoinResult clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestToJoinResult copyWith(void Function(RequestToJoinResult) updates) =>
+      super.copyWith((message) => updates(message as RequestToJoinResult))
+          as RequestToJoinResult;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RequestToJoinResult create() => RequestToJoinResult._();
+  @$core.override
+  RequestToJoinResult createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RequestToJoinResult getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RequestToJoinResult>(create);
+  static RequestToJoinResult? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  RequestToJoinResult_Outcome whichOutcome() =>
+      _RequestToJoinResult_OutcomeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearOutcome() => $_clearField($_whichOneof(0));
+
+  /// User has a pending request awaiting approval
+  @$pb.TagNumber(1)
+  $2.UserJoinRequest get request => $_getN(0);
+  @$pb.TagNumber(1)
+  set request($2.UserJoinRequest value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRequest() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRequest() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $2.UserJoinRequest ensureRequest() => $_ensure(0);
+
+  /// User was auto-accepted and is now a member
+  @$pb.TagNumber(2)
+  AutoAcceptedMember get member => $_getN(1);
+  @$pb.TagNumber(2)
+  set member(AutoAcceptedMember value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMember() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMember() => $_clearField(2);
+  @$pb.TagNumber(2)
+  AutoAcceptedMember ensureMember() => $_ensure(1);
+}
+
+/// AutoAcceptedMember represents immediate membership after using an auto-accept code.
+class AutoAcceptedMember extends $pb.GeneratedMessage {
+  factory AutoAcceptedMember({
+    $core.String? organizationId,
+    $core.String? organizationName,
+    $core.String? organizationIconUrl,
+    $core.Iterable<$3.Role>? roles,
+  }) {
+    final result = create();
+    if (organizationId != null) result.organizationId = organizationId;
+    if (organizationName != null) result.organizationName = organizationName;
+    if (organizationIconUrl != null)
+      result.organizationIconUrl = organizationIconUrl;
+    if (roles != null) result.roles.addAll(roles);
+    return result;
+  }
+
+  AutoAcceptedMember._();
+
+  factory AutoAcceptedMember.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AutoAcceptedMember.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AutoAcceptedMember',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'organizationId')
+    ..aOS(2, _omitFieldNames ? '' : 'organizationName')
+    ..aOS(3, _omitFieldNames ? '' : 'organizationIconUrl')
+    ..pPM<$3.Role>(4, _omitFieldNames ? '' : 'roles',
+        subBuilder: $3.Role.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AutoAcceptedMember clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AutoAcceptedMember copyWith(void Function(AutoAcceptedMember) updates) =>
+      super.copyWith((message) => updates(message as AutoAcceptedMember))
+          as AutoAcceptedMember;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AutoAcceptedMember create() => AutoAcceptedMember._();
+  @$core.override
+  AutoAcceptedMember createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AutoAcceptedMember getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AutoAcceptedMember>(create);
+  static AutoAcceptedMember? _defaultInstance;
+
+  /// Organization ID the user joined
+  @$pb.TagNumber(1)
+  $core.String get organizationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set organizationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOrganizationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOrganizationId() => $_clearField(1);
+
+  /// Organization name
+  @$pb.TagNumber(2)
+  $core.String get organizationName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set organizationName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOrganizationName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOrganizationName() => $_clearField(2);
+
+  /// Organization icon URL
+  @$pb.TagNumber(3)
+  $core.String get organizationIconUrl => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set organizationIconUrl($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasOrganizationIconUrl() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOrganizationIconUrl() => $_clearField(3);
+
+  /// Roles assigned to the user
+  @$pb.TagNumber(4)
+  $pb.PbList<$3.Role> get roles => $_getList(3);
 }
 
 /// CancelJoinRequestRequest cancels a pending join request.

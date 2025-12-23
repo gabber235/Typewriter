@@ -2,11 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 
 class DepthContainer extends InheritedWidget {
-  const DepthContainer({
-    required this.depth,
-    required super.child,
-    super.key,
-  });
+  const DepthContainer({required this.depth, required super.child, super.key});
   final int depth;
   @override
   bool updateShouldNotify(covariant DepthContainer oldWidget) {
@@ -23,6 +19,7 @@ class DepthBox extends HookWidget {
     required this.child,
     this.enabled = true,
     this.shape,
+    this.depth,
     super.key,
   });
 
@@ -30,22 +27,22 @@ class DepthBox extends HookWidget {
   final Widget child;
 
   final ShapeBorder? shape;
+  final int? depth;
 
   @override
   Widget build(BuildContext context) {
     final parent = DepthContainer.maybeOf(context);
-    final depth = (parent?.depth ?? -1) + 1;
+    final depth = this.depth ?? (parent?.depth ?? -1) + 1;
 
     final widget = Material(
       color: enabled
           ? depth.isEven
-              ? Theme.of(context).colorScheme.surfaceContainerLowest
-              : Theme.of(context).colorScheme.surface
+                ? Theme.of(context).colorScheme.surfaceContainerLowest
+                : Theme.of(context).colorScheme.surface
           : Colors.transparent,
-      shape: shape ??
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
+      shape:
+          shape ??
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       child: child,
     );
 
@@ -53,9 +50,6 @@ class DepthBox extends HookWidget {
       return widget;
     }
 
-    return DepthContainer(
-      depth: depth,
-      child: widget,
-    );
+    return DepthContainer(depth: depth, child: widget);
   }
 }

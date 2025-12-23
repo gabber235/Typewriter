@@ -209,13 +209,13 @@ const RequestToJoinResponse$json = {
   '1': 'RequestToJoinResponse',
   '2': [
     {
-      '1': 'request',
+      '1': 'success',
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.typewriter.models.v1.UserJoinRequest',
+      '6': '.typewriter.api.v1.RequestToJoinResult',
       '9': 0,
-      '10': 'request'
+      '10': 'success'
     },
     {
       '1': 'error',
@@ -234,9 +234,80 @@ const RequestToJoinResponse$json = {
 
 /// Descriptor for `RequestToJoinResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List requestToJoinResponseDescriptor = $convert.base64Decode(
-    'ChVSZXF1ZXN0VG9Kb2luUmVzcG9uc2USQQoHcmVxdWVzdBgBIAEoCzIlLnR5cGV3cml0ZXIubW'
-    '9kZWxzLnYxLlVzZXJKb2luUmVxdWVzdEgAUgdyZXF1ZXN0EjMKBWVycm9yGAIgASgLMhsudHlw'
-    'ZXdyaXRlci5tb2RlbHMudjEuRXJyb3JIAFIFZXJyb3JCCAoGcmVzdWx0');
+    'ChVSZXF1ZXN0VG9Kb2luUmVzcG9uc2USQgoHc3VjY2VzcxgBIAEoCzImLnR5cGV3cml0ZXIuYX'
+    'BpLnYxLlJlcXVlc3RUb0pvaW5SZXN1bHRIAFIHc3VjY2VzcxIzCgVlcnJvchgCIAEoCzIbLnR5'
+    'cGV3cml0ZXIubW9kZWxzLnYxLkVycm9ySABSBWVycm9yQggKBnJlc3VsdA==');
+
+@$core.Deprecated('Use requestToJoinResultDescriptor instead')
+const RequestToJoinResult$json = {
+  '1': 'RequestToJoinResult',
+  '2': [
+    {
+      '1': 'request',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.UserJoinRequest',
+      '9': 0,
+      '10': 'request'
+    },
+    {
+      '1': 'member',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.api.v1.AutoAcceptedMember',
+      '9': 0,
+      '10': 'member'
+    },
+  ],
+  '8': [
+    {'1': 'outcome'},
+  ],
+};
+
+/// Descriptor for `RequestToJoinResult`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List requestToJoinResultDescriptor = $convert.base64Decode(
+    'ChNSZXF1ZXN0VG9Kb2luUmVzdWx0EkEKB3JlcXVlc3QYASABKAsyJS50eXBld3JpdGVyLm1vZG'
+    'Vscy52MS5Vc2VySm9pblJlcXVlc3RIAFIHcmVxdWVzdBI/CgZtZW1iZXIYAiABKAsyJS50eXBl'
+    'd3JpdGVyLmFwaS52MS5BdXRvQWNjZXB0ZWRNZW1iZXJIAFIGbWVtYmVyQgkKB291dGNvbWU=');
+
+@$core.Deprecated('Use autoAcceptedMemberDescriptor instead')
+const AutoAcceptedMember$json = {
+  '1': 'AutoAcceptedMember',
+  '2': [
+    {'1': 'organization_id', '3': 1, '4': 1, '5': 9, '10': 'organizationId'},
+    {
+      '1': 'organization_name',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '10': 'organizationName'
+    },
+    {
+      '1': 'organization_icon_url',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '10': 'organizationIconUrl'
+    },
+    {
+      '1': 'roles',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.typewriter.models.v1.Role',
+      '10': 'roles'
+    },
+  ],
+};
+
+/// Descriptor for `AutoAcceptedMember`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List autoAcceptedMemberDescriptor = $convert.base64Decode(
+    'ChJBdXRvQWNjZXB0ZWRNZW1iZXISJwoPb3JnYW5pemF0aW9uX2lkGAEgASgJUg5vcmdhbml6YX'
+    'Rpb25JZBIrChFvcmdhbml6YXRpb25fbmFtZRgCIAEoCVIQb3JnYW5pemF0aW9uTmFtZRIyChVv'
+    'cmdhbml6YXRpb25faWNvbl91cmwYAyABKAlSE29yZ2FuaXphdGlvbkljb25VcmwSMAoFcm9sZX'
+    'MYBCADKAsyGi50eXBld3JpdGVyLm1vZGVscy52MS5Sb2xlUgVyb2xlcw==');
 
 @$core.Deprecated('Use cancelJoinRequestRequestDescriptor instead')
 const CancelJoinRequestRequest$json = {

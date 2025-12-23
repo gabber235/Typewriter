@@ -110,7 +110,32 @@ message DeclineJoinRequestResponse {
 // =============================================================================
 
 // GenerateJoinCodeRequest generates a new join code for the organization.
-message GenerateJoinCodeRequest {}
+message GenerateJoinCodeRequest {
+  // Whether this code can only be used once (default: true)
+  bool single_use = 1;
+
+  // Expiration configuration
+  JoinCodeExpiration expiration = 2;
+
+  // Auto-accept configuration (omit for manual approval)
+  JoinCodeAutoAcceptConfig auto_accept = 3;
+}
+
+// JoinCodeExpiration specifies when the join code expires.
+message JoinCodeExpiration {
+  oneof expiration {
+    // Set to true for a code that never expires
+    bool never = 1;
+    // Expires after this many seconds from creation
+    int64 duration_seconds = 2;
+  }
+}
+
+// JoinCodeAutoAcceptConfig specifies auto-accept settings for code generation.
+message JoinCodeAutoAcceptConfig {
+  // Role IDs to assign to auto-accepted users
+  repeated string role_ids = 1;
+}
 
 // GenerateJoinCodeResponse returns the generated join code or an error.
 message GenerateJoinCodeResponse {
