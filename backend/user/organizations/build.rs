@@ -4,6 +4,7 @@ fn main() {
         "../../../proto/models/organization.proto",
         "../../../proto/models/organization/member.proto",
         "../../../proto/api/user/organization.proto",
+        "../../../proto/api/organization/member.proto",
     ];
 
     prost_build::Config::new()

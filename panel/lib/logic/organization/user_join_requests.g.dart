@@ -13,7 +13,7 @@ part of 'user_join_requests.dart';
 const userJoinRequestsProvider = UserJoinRequestsProvider._();
 
 final class UserJoinRequestsProvider
-    extends $AsyncNotifierProvider<UserJoinRequests, List<UserJoinRequest>> {
+    extends $StreamNotifierProvider<UserJoinRequests, List<UserJoinRequest>> {
   const UserJoinRequestsProvider._()
     : super(
         from: null,
@@ -33,11 +33,11 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'6a1e86efca5d3bc7dc53a604703fa79d67b76a41';
+String _$userJoinRequestsHash() => r'3379108b9f44f34b8a59ba951d39d70a98e3f275';
 
 abstract class _$UserJoinRequests
-    extends $AsyncNotifier<List<UserJoinRequest>> {
-  FutureOr<List<UserJoinRequest>> build();
+    extends $StreamNotifier<List<UserJoinRequest>> {
+  Stream<List<UserJoinRequest>> build();
   @$mustCallSuper
   @override
   void runBuild() {

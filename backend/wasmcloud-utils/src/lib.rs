@@ -22,6 +22,47 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_subject_optional_prefix_present() {
+        let template = "[typewriter.in.]user.<user_id>.organization.<action>";
+        let subject = "typewriter.in.user.abc.organization.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"abc".to_string()));
+        assert_eq!(result.get("action"), Some(&"list".to_string()));
+    }
+
+    #[test]
+    fn test_parse_subject_optional_prefix_absent() {
+        let template = "[typewriter.in.]user.<user_id>.organization.<action>";
+        let subject = "user.abc.organization.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"abc".to_string()));
+        assert_eq!(result.get("action"), Some(&"list".to_string()));
+    }
+
+    #[test]
+    fn test_parse_subject_multiple_optional_segments() {
+        let template = "[prefix.][middle.]user.<user_id>";
+        let subject_both = "prefix.middle.user.123";
+        let subject_first = "prefix.user.123";
+        let subject_second = "middle.user.123";
+        let subject_none = "user.123";
+
+        let result_both = parse_subject(template, subject_both).unwrap();
+        assert_eq!(result_both.get("user_id"), Some(&"123".to_string()));
+
+        let result_first = parse_subject(template, subject_first).unwrap();
+        assert_eq!(result_first.get("user_id"), Some(&"123".to_string()));
+
+        let result_second = parse_subject(template, subject_second).unwrap();
+        assert_eq!(result_second.get("user_id"), Some(&"123".to_string()));
+
+        let result_none = parse_subject(template, subject_none).unwrap();
+        assert_eq!(result_none.get("user_id"), Some(&"123".to_string()));
+    }
+
+    #[test]
     fn test_parse_subject_multi_segment_action() {
         // This test demonstrates the DESIRED behavior for nested actions
         let template = "user.<user_id>.organization.<action>";
@@ -125,8 +166,83 @@ pub mod wasmcloud {
         ///                         "user.123.organization.join_requests.list")
         ///                         .expect("Failed to parse subject");
         /// assert_eq!(m4.get("action"), Some(&"join_requests.list".to_string()));
+        ///
+        /// // Optional segments can be specified with []:
+        /// let m5 = parse_subject("[typewriter.in.]user.<user_id>.organization.<action>",
+        ///                         "typewriter.in.user.abc.organization.list")
+        ///                         .expect("Failed to parse subject");
+        /// assert_eq!(m5.get("user_id"), Some(&"abc".to_string()));
+        ///
+        /// let m6 = parse_subject("[typewriter.in.]user.<user_id>.organization.<action>",
+        ///                         "user.abc.organization.list")
+        ///                         .expect("Failed to parse subject");
+        /// assert_eq!(m6.get("user_id"), Some(&"abc".to_string()));
         /// ```
         pub fn parse_subject(
+            template: &str,
+            subject: &str,
+        ) -> Result<HashMap<String, String>, String> {
+            let expanded_templates = expand_optional_segments(template);
+
+            let mut last_error = String::new();
+            for expanded_template in &expanded_templates {
+                match parse_subject_inner(expanded_template, subject) {
+                    Ok(map) => return Ok(map),
+                    Err(e) => last_error = e,
+                }
+            }
+
+            Err(last_error)
+        }
+
+        fn expand_optional_segments(template: &str) -> Vec<String> {
+            let mut optional_segments: Vec<&str> = Vec::new();
+            let mut remaining = template;
+            let mut base_parts: Vec<&str> = Vec::new();
+
+            while let Some(start) = remaining.find('[') {
+                if start > 0 {
+                    base_parts.push(&remaining[..start]);
+                }
+                let end = remaining[start..].find(']').map(|e| start + e);
+                if let Some(end_idx) = end {
+                    optional_segments.push(&remaining[start + 1..end_idx]);
+                    remaining = &remaining[end_idx + 1..];
+                } else {
+                    break;
+                }
+            }
+            base_parts.push(remaining);
+
+            let num_optionals = optional_segments.len();
+            if num_optionals == 0 {
+                return vec![template.to_string()];
+            }
+
+            let mut results = Vec::new();
+            for mask in 0..(1 << num_optionals) {
+                let mut result = String::new();
+                let mut opt_idx = 0;
+                let mut remaining = template;
+
+                while let Some(start) = remaining.find('[') {
+                    result.push_str(&remaining[..start]);
+                    let end = remaining[start..].find(']').map(|e| start + e).unwrap();
+                    if (mask >> opt_idx) & 1 == 1 {
+                        result.push_str(&remaining[start + 1..end]);
+                    }
+                    opt_idx += 1;
+                    remaining = &remaining[end + 1..];
+                }
+                result.push_str(remaining);
+                results.push(result);
+            }
+
+            results.sort_by(|a, b| b.len().cmp(&a.len()));
+            results
+        }
+
+        fn parse_subject_inner(
             template: &str,
             subject: &str,
         ) -> Result<HashMap<String, String>, String> {
@@ -196,6 +312,19 @@ pub mod wasmcloud {
             } else {
                 Err("No reply_to field in message, ignoring message".to_string())
             }
+        }
+
+        /// Send a message with a specific reply_to
+        pub fn send(
+            subject: String,
+            reply_to: String,
+            data: impl Into<Vec<u8>>,
+        ) -> Result<(), String> {
+            consumer::publish(&types::BrokerMessage {
+                subject,
+                reply_to: Some(reply_to),
+                body: data.into(),
+            })
         }
 
         /// Dispatch a message to one of multiple action handlers based on the <action> value in the subject.

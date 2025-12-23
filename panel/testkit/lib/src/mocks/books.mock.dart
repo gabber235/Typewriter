@@ -37,8 +37,8 @@ class BooksMock extends Books {
   final DisplayState displayState;
 
   @override
-  FutureOr<List<Book>> build() async {
-    return displayState.generate(generateRandomBook);
+  Stream<List<Book>> build() async* {
+    yield await displayState.generate(generateRandomBook);
   }
 
   @override

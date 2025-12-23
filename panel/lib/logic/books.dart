@@ -21,17 +21,22 @@ part "books.g.dart";
 @riverpod
 class Books extends _$Books {
   @override
-  FutureOr<List<Book>> build() async {
+  Stream<List<Book>> build() async* {
     final request = ListBooksRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto("books.list", request, ListBooksResponse.new);
+    final stream = ref.requestProtoThenListen(
+      subject: "books.list",
+      listenSubject: "books.list",
+      request: request,
+      responseBuilder: ListBooksResponse.new,
+    );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.books.books.toList();
     }
-
-    return response.books.books.toList();
   }
 
   Future<void> updateBook(Book book) async {

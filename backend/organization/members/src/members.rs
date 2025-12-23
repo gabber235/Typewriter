@@ -8,7 +8,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
-use crate::{typewriter, MemberWithRolesRecord};
+use crate::{refresh, typewriter, MemberWithRolesRecord};
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list (members) invoked");
@@ -140,7 +140,10 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
     };
     trace!("Prepared UpdateMemberRolesResponse");
 
-    reply(msg, response.encode_to_vec())
+    reply(msg, response.encode_to_vec())?;
+
+    refresh::refresh_organization_members_list(org_id, params.get("user_id"))?;
+    Ok(())
 }
 
 pub fn handle_remove(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
@@ -175,7 +178,11 @@ pub fn handle_remove(msg: BrokerMessage, params: HashMap<String, String>) -> Res
     };
     trace!("Prepared RemoveMemberResponse");
 
-    reply(msg, response.encode_to_vec())
+    reply(msg, response.encode_to_vec())?;
+
+    refresh::refresh_organization_members_list(org_id, params.get("user_id"))?;
+    refresh::refresh_user_organization_list(&member_id)?;
+    Ok(())
 }
 
 internal_error_fn!(

@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:io";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
@@ -96,5 +95,35 @@ extension ClientProtoExtension on Client {
     final response = await this.request(subject, requestBytes);
 
     return responseBuilder()..mergeFromBuffer(response.data);
+  }
+}
+
+/// Extension on Ref to allow for listening to Nats topics while sending an initial request
+extension RefNatsExtension on Ref {
+  /// Send a protobuf request and receive a protobuf response while listening to a topic
+  Stream<TResponse> requestProtoThenListen<
+    TRequest extends GeneratedMessage,
+    TResponse extends GeneratedMessage
+  >({
+    required String subject,
+    required String listenSubject,
+    required TRequest request,
+    required TResponse Function() responseBuilder,
+  }) async* {
+    final status = watch(natsStatusProvider);
+    if (status != Status.connected) {
+      throw Exception("NATS is not connected");
+    }
+    final client = watch(natsProvider);
+    final sub = client.sub(listenSubject);
+    onDispose(() => client.unSub(sub));
+
+    await client.pub(subject, request.writeToBuffer(), replyTo: listenSubject);
+
+    await for (final msg in sub.stream) {
+      final response = responseBuilder()..mergeFromBuffer(msg.data);
+      print("Received response: $response for $listenSubject");
+      yield response;
+    }
   }
 }

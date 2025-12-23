@@ -6,7 +6,6 @@ import "package:typewriter_panel/generated/models/organization/member.pb.dart"
     as models;
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
-import "package:typewriter_panel/logic/organization/organization.dart";
 import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 
@@ -53,24 +52,28 @@ UserJoinRequest _protoToUserJoinRequest(models.UserJoinRequest proto) {
 @riverpod
 class UserJoinRequests extends _$UserJoinRequests {
   @override
-  Future<List<UserJoinRequest>> build() async {
+  Stream<List<UserJoinRequest>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) return [];
-
-    final request = api.ListUserJoinRequestsRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.join_requests.list",
-          request,
-          api.ListUserJoinRequestsResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    if (userId == null) {
+      yield [];
+      return;
     }
 
-    return response.requests.requests.map(_protoToUserJoinRequest).toList();
+    final request = api.ListUserJoinRequestsRequest();
+    final stream = ref.requestProtoThenListen(
+      subject: "cloud.out.user.$userId.organization.join_requests.list",
+      listenSubject: "cloud.in.user.$userId.organization.join_requests.list",
+      request: request,
+      responseBuilder: api.ListUserJoinRequestsResponse.new,
+    );
+
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.requests.requests.map(_protoToUserJoinRequest).toList();
+    }
   }
 
   /// Requests to join an organization using a join code or URL.
@@ -103,8 +106,6 @@ class UserJoinRequests extends _$UserJoinRequests {
       final newRequest = _protoToUserJoinRequest(response.request);
       state = AsyncValue.data([...state.requireValue, newRequest]);
     }
-
-    ref.invalidate(organizationsProvider);
   }
 
   /// Cancels a pending join request.
@@ -134,12 +135,12 @@ class UserJoinRequests extends _$UserJoinRequests {
 
       if (response.hasError()) {
         state = previousState;
-        ref.invalidate(userJoinRequestsProvider);
+        ref.invalidateSelf();
         throw ApiException.fromProto(response.error);
       }
     } catch (e) {
       state = previousState;
-      ref.invalidate(userJoinRequestsProvider);
+      ref.invalidateSelf();
       rethrow;
     }
   }

@@ -8,7 +8,6 @@ import "package:typewriter_panel/generated/api/user/organization.pb.dart";
 import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
-import "package:typewriter_panel/logic/organization/members.dart";
 import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
@@ -18,26 +17,28 @@ part "organization.g.dart";
 @riverpod
 class Organizations extends _$Organizations {
   @override
-  Future<List<OrganizationData>> build() async {
+  Stream<List<OrganizationData>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (userId == null) {
-      return [];
+      yield [];
+      return;
     }
 
     final request = ListOrganizationsRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.list",
-          request,
-          ListOrganizationsResponse.new,
-        );
+    final stream = ref.requestProtoThenListen(
+      subject: "cloud.out.user.$userId.organization.list",
+      listenSubject: "cloud.in.user.$userId.organization.list",
+      request: request,
+      responseBuilder: ListOrganizationsResponse.new,
+    );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.organizations.organizations.toList();
     }
-
-    return response.organizations.organizations.toList();
   }
 
   /// Creates a new organization and returns its ID
@@ -82,9 +83,8 @@ class Organizations extends _$Organizations {
 
     debugPrint("Organization created with ID: ${response.organization.id}");
 
-    // Use response data to update state directly instead of invalidating
     final newOrganization = response.organization;
-    state = AsyncValue.data([...state.value!, newOrganization]);
+    state = AsyncValue.data([...state.requireValue, newOrganization]);
 
     return newOrganization.id;
   }
@@ -133,9 +133,6 @@ class Organization extends _$Organization {
       throw ApiException.fromProto(response.error);
     }
 
-    // Invalidate join codes provider so the new code appears in the list
-    ref.invalidate(organizationJoinCodesProvider);
-
     final joinCode = response.joinCode;
     return SecretFieldRevealed(
       value: joinCode.code,
@@ -146,5 +143,5 @@ class Organization extends _$Organization {
 
 /// Generates an icon URL for an organization using the provided seed
 String generateOrganizationIconUrl(String seed) {
-  return "https://api.dicebear.com/9.x/shapes/avif?seed=$seed";
+  return "https://api.dicebear.com/9.x/shapes/webp?seed=$seed";
 }

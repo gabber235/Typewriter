@@ -27,8 +27,8 @@ class OrganizationsMock extends Organizations {
   final DisplayState displayState;
 
   @override
-  Future<List<OrganizationData>> build() async {
-    return displayState.generate(generateRandomOrganization);
+  Stream<List<OrganizationData>> build() async* {
+    yield await displayState.generate(generateRandomOrganization);
   }
 
   @override
@@ -135,7 +135,7 @@ OrganizationMember generateRandomMember({List<MemberRole>? availableRoles}) {
     name: faker.person.name(),
     email: faker.internet.email(),
     avatarUrl:
-        "https://api.dicebear.com/9.x/avataaars/avif?seed=${faker.guid.guid()}",
+        "https://api.dicebear.com/9.x/avataaars/webp?seed=${faker.guid.guid()}",
     roles: roles,
     joinedAt: faker.date.dateTime(minYear: 2020, maxYear: 2024),
   );
@@ -147,8 +147,8 @@ class OrganizationRolesMock extends OrganizationRoles {
   final List<MemberRole> roles;
 
   @override
-  Future<List<MemberRole>> build() async {
-    return roles;
+  Stream<List<MemberRole>> build() async* {
+    yield roles;
   }
 }
 
@@ -158,9 +158,9 @@ class OrganizationMembersMock extends OrganizationMembers {
   final DisplayState displayState;
 
   @override
-  Future<List<OrganizationMember>> build() async {
+  Stream<List<OrganizationMember>> build() async* {
     final availableRoles = await ref.watch(organizationRolesProvider.future);
-    return await displayState.generate(
+    yield await displayState.generate(
       () => generateRandomMember(availableRoles: availableRoles),
     );
   }
@@ -168,14 +168,14 @@ class OrganizationMembersMock extends OrganizationMembers {
   @override
   Future<void> updateMemberRoles(
     String memberId,
-    List<MemberRole> roles,
+    List<MemberRole> requestedRoles,
   ) async {
     final members = await future;
 
     state = AsyncData(
       members.map((member) {
         if (member.id == memberId) {
-          return member.copyWith(roles: roles);
+          return member.copyWith(roles: requestedRoles);
         }
         return member;
       }).toList(),
@@ -204,7 +204,7 @@ JoinRequest generateRandomJoinRequest() {
     userName: faker.person.name(),
     userEmail: faker.internet.email(),
     userAvatarUrl:
-        "https://api.dicebear.com/9.x/avataaars/avif?seed=${faker.guid.guid()}",
+        "https://api.dicebear.com/9.x/avataaars/webp?seed=${faker.guid.guid()}",
     requestedAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
   );
@@ -217,8 +217,8 @@ class OrganizationJoinRequestsMock extends OrganizationJoinRequests {
   final void Function(JoinRequest request, List<MemberRole> roles)? onApprove;
 
   @override
-  Future<List<JoinRequest>> build() async {
-    return await displayState.generate(generateRandomJoinRequest);
+  Stream<List<JoinRequest>> build() async* {
+    yield await displayState.generate(generateRandomJoinRequest);
   }
 
   @override
@@ -290,8 +290,8 @@ class OrganizationJoinCodesMock extends OrganizationJoinCodes {
   final DisplayState displayState;
 
   @override
-  Future<List<JoinCode>> build() async {
-    return await displayState.generate(generateRandomJoinCode);
+  Stream<List<JoinCode>> build() async* {
+    yield await displayState.generate(generateRandomJoinCode);
   }
 
   @override
@@ -339,8 +339,8 @@ class UserJoinRequestsMock extends UserJoinRequests {
   final DisplayState displayState;
 
   @override
-  Future<List<UserJoinRequest>> build() async {
-    return await displayState.generate(generateRandomUserJoinRequest);
+  Stream<List<UserJoinRequest>> build() async* {
+    yield await displayState.generate(generateRandomUserJoinRequest);
   }
 
   @override

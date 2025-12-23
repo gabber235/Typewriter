@@ -15,7 +15,7 @@ const organizationRolesProvider = OrganizationRolesProvider._();
 
 /// Provider for the list of available roles in the current organization.
 final class OrganizationRolesProvider
-    extends $AsyncNotifierProvider<OrganizationRoles, List<MemberRole>> {
+    extends $StreamNotifierProvider<OrganizationRoles, List<MemberRole>> {
   /// Provider for the list of available roles in the current organization.
   const OrganizationRolesProvider._()
     : super(
@@ -36,12 +36,12 @@ final class OrganizationRolesProvider
   OrganizationRoles create() => OrganizationRoles();
 }
 
-String _$organizationRolesHash() => r'9bfa8cb8f45a9f3f6e88a987291467d314f9ab96';
+String _$organizationRolesHash() => r'6b4da6ed48c8eded6b8316d6e2a8e74fd50adcb7';
 
 /// Provider for the list of available roles in the current organization.
 
-abstract class _$OrganizationRoles extends $AsyncNotifier<List<MemberRole>> {
-  FutureOr<List<MemberRole>> build();
+abstract class _$OrganizationRoles extends $StreamNotifier<List<MemberRole>> {
+  Stream<List<MemberRole>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -68,7 +68,7 @@ const organizationMembersProvider = OrganizationMembersProvider._();
 /// Provider for the list of members in the current organization.
 final class OrganizationMembersProvider
     extends
-        $AsyncNotifierProvider<OrganizationMembers, List<OrganizationMember>> {
+        $StreamNotifierProvider<OrganizationMembers, List<OrganizationMember>> {
   /// Provider for the list of members in the current organization.
   const OrganizationMembersProvider._()
     : super(
@@ -90,13 +90,13 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'9be802bc57f4718fbb82547eaf8ef8e64b211bc2';
+    r'5f067940e871adc76273cc03b1a5f8f515dc28f9';
 
 /// Provider for the list of members in the current organization.
 
 abstract class _$OrganizationMembers
-    extends $AsyncNotifier<List<OrganizationMember>> {
-  FutureOr<List<OrganizationMember>> build();
+    extends $StreamNotifier<List<OrganizationMember>> {
+  Stream<List<OrganizationMember>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -130,7 +130,7 @@ const organizationJoinRequestsProvider = OrganizationJoinRequestsProvider._();
 /// Provider for the list of pending join requests to the current organization.
 final class OrganizationJoinRequestsProvider
     extends
-        $AsyncNotifierProvider<OrganizationJoinRequests, List<JoinRequest>> {
+        $StreamNotifierProvider<OrganizationJoinRequests, List<JoinRequest>> {
   /// Provider for the list of pending join requests to the current organization.
   const OrganizationJoinRequestsProvider._()
     : super(
@@ -152,13 +152,13 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'0fdcff845070e6405a40c63f05534378fa855e31';
+    r'aba28201a19b91a353b282e9f951a654129278c9';
 
 /// Provider for the list of pending join requests to the current organization.
 
 abstract class _$OrganizationJoinRequests
-    extends $AsyncNotifier<List<JoinRequest>> {
-  FutureOr<List<JoinRequest>> build();
+    extends $StreamNotifier<List<JoinRequest>> {
+  Stream<List<JoinRequest>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -229,7 +229,7 @@ const organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
 
 /// Provider for the list of active join codes in the current organization.
 final class OrganizationJoinCodesProvider
-    extends $AsyncNotifierProvider<OrganizationJoinCodes, List<JoinCode>> {
+    extends $StreamNotifierProvider<OrganizationJoinCodes, List<JoinCode>> {
   /// Provider for the list of active join codes in the current organization.
   const OrganizationJoinCodesProvider._()
     : super(
@@ -251,12 +251,12 @@ final class OrganizationJoinCodesProvider
 }
 
 String _$organizationJoinCodesHash() =>
-    r'1191ddeede8add67b5828106007efac327abe1c5';
+    r'b241545cd1aafc3709dbd8a7af45128cee04b474';
 
 /// Provider for the list of active join codes in the current organization.
 
-abstract class _$OrganizationJoinCodes extends $AsyncNotifier<List<JoinCode>> {
-  FutureOr<List<JoinCode>> build();
+abstract class _$OrganizationJoinCodes extends $StreamNotifier<List<JoinCode>> {
+  Stream<List<JoinCode>> build();
   @$mustCallSuper
   @override
   void runBuild() {

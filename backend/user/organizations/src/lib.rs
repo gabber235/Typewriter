@@ -9,6 +9,7 @@ wit_bindgen::generate!({
 mod create;
 mod join_requests;
 mod list;
+mod refresh;
 
 use serde::{Deserialize, Serialize};
 use surrealdb_component::{Datetime, RecordId};

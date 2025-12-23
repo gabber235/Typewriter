@@ -13,7 +13,7 @@ part of 'organization.dart';
 const organizationsProvider = OrganizationsProvider._();
 
 final class OrganizationsProvider
-    extends $AsyncNotifierProvider<Organizations, List<OrganizationData>> {
+    extends $StreamNotifierProvider<Organizations, List<OrganizationData>> {
   const OrganizationsProvider._()
     : super(
         from: null,
@@ -33,10 +33,10 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'e022556ad31dfa3ca889e01e6817806baef6cafc';
+String _$organizationsHash() => r'e3247ebb73dbb0a3c1b3ceee6e140ec8620161a7';
 
-abstract class _$Organizations extends $AsyncNotifier<List<OrganizationData>> {
-  FutureOr<List<OrganizationData>> build();
+abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
+  Stream<List<OrganizationData>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -124,7 +124,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'fcc36b448ba88878c01e73f240568488675eb197';
+String _$organizationHash() => r'5f9e809214cf457a9d31cc63a2d7bf0329bf046a';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

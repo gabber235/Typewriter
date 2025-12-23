@@ -12,7 +12,7 @@ part of 'books.dart';
 @ProviderFor(Books)
 const booksProvider = BooksProvider._();
 
-final class BooksProvider extends $AsyncNotifierProvider<Books, List<Book>> {
+final class BooksProvider extends $StreamNotifierProvider<Books, List<Book>> {
   const BooksProvider._()
     : super(
         from: null,
@@ -32,10 +32,10 @@ final class BooksProvider extends $AsyncNotifierProvider<Books, List<Book>> {
   Books create() => Books();
 }
 
-String _$booksHash() => r'249ded7f6f2f0575ac9baf5ef8b892910542de50';
+String _$booksHash() => r'744083c673ebc702985637728c90a5ce96da2818';
 
-abstract class _$Books extends $AsyncNotifier<List<Book>> {
-  FutureOr<List<Book>> build();
+abstract class _$Books extends $StreamNotifier<List<Book>> {
+  Stream<List<Book>> build();
   @$mustCallSuper
   @override
   void runBuild() {

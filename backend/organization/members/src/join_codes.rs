@@ -8,54 +8,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
-use crate::{typewriter, JoinCodeRecord};
-
-pub fn handle_generate(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
-    debug!("handle_generate (join_codes) invoked");
-    let org_id = params
-        .get("org_id")
-        .ok_or("failed to parse org_id from subject")?;
-    debug!("Parsed org_id: {}", org_id);
-
-    let user_id = params
-        .get("user_id")
-        .ok_or("failed to parse user_id from subject")?;
-    debug!("Parsed user_id: {}", user_id);
-
-    let _request = typewriter::api::v1::GenerateJoinCodeRequest::decode(&msg.body[..])
-        .map_err(|e| format!("failed to decode request: {}", e))?;
-    trace!("Decoded GenerateJoinCodeRequest");
-
-    let result = query(
-        r#"
-        CREATE join_code SET
-            organization = type::thing('organization', $org_id),
-            created_by = type::thing('user', $user_id)
-        RETURN AFTER
-        "#,
-    )
-    .bind("org_id", org_id)
-    .bind("user_id", user_id)
-    .execute()
-    .map_err(|e| format!("failed to create join code: {}", e))?;
-    trace!("Create executed successfully");
-
-    let join_code_record: Option<JoinCodeRecord> = result
-        .take(0)
-        .map_err(|e| format!("failed to parse result: {}", e))?;
-
-    let join_code_record = join_code_record.ok_or("failed to create join code")?;
-    trace!("Created join code record: {:?}", join_code_record);
-
-    let join_code = join_code_record.into();
-
-    let response = typewriter::api::v1::GenerateJoinCodeResponse {
-        result: Some(typewriter::api::v1::generate_join_code_response::Result::JoinCode(join_code)),
-    };
-    trace!("Prepared GenerateJoinCodeResponse");
-
-    reply(msg, response.encode_to_vec())
-}
+use crate::{refresh, typewriter, JoinCodeRecord};
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list (join_codes) invoked");
@@ -104,6 +57,56 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
     reply(msg, response.encode_to_vec())
 }
 
+pub fn handle_generate(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
+    debug!("handle_generate (join_codes) invoked");
+    let org_id = params
+        .get("org_id")
+        .ok_or("failed to parse org_id from subject")?;
+    debug!("Parsed org_id: {}", org_id);
+
+    let user_id = params
+        .get("user_id")
+        .ok_or("failed to parse user_id from subject")?;
+    debug!("Parsed user_id: {}", user_id);
+
+    let _request = typewriter::api::v1::GenerateJoinCodeRequest::decode(&msg.body[..])
+        .map_err(|e| format!("failed to decode request: {}", e))?;
+    trace!("Decoded GenerateJoinCodeRequest");
+
+    let result = query(
+        r#"
+        CREATE join_code SET
+            organization = type::thing('organization', $org_id),
+            created_by = type::thing('user', $user_id)
+        RETURN AFTER
+        "#,
+    )
+    .bind("org_id", org_id)
+    .bind("user_id", user_id)
+    .execute()
+    .map_err(|e| format!("failed to create join code: {}", e))?;
+    trace!("Create executed successfully");
+
+    let join_code_record: Option<JoinCodeRecord> = result
+        .take(0)
+        .map_err(|e| format!("failed to parse result: {}", e))?;
+
+    let join_code_record = join_code_record.ok_or("failed to create join code")?;
+    trace!("Created join code record: {:?}", join_code_record);
+
+    let join_code = join_code_record.into();
+
+    let response = typewriter::api::v1::GenerateJoinCodeResponse {
+        result: Some(typewriter::api::v1::generate_join_code_response::Result::JoinCode(join_code)),
+    };
+    trace!("Prepared GenerateJoinCodeResponse");
+
+    reply(msg, response.encode_to_vec())?;
+
+    refresh::refresh_organization_members_join_codes_list(org_id, params.get("user_id"))?;
+    Ok(())
+}
+
 pub fn handle_revoke(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_revoke (join_codes) invoked");
     let org_id = params
@@ -130,7 +133,10 @@ pub fn handle_revoke(msg: BrokerMessage, params: HashMap<String, String>) -> Res
     };
     trace!("Prepared RevokeJoinCodeResponse");
 
-    reply(msg, response.encode_to_vec())
+    reply(msg, response.encode_to_vec())?;
+
+    refresh::refresh_organization_members_join_codes_list(org_id, params.get("user_id"))?;
+    Ok(())
 }
 
 internal_error_fn!(

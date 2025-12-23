@@ -5,10 +5,10 @@ use surrealdb_component::query;
 use wasmcloud_component::{debug, info, trace};
 use wasmcloud_utils::{
     error_response_bytes, internal_error_fn,
-    wasmcloud::messaging::{reply, types::BrokerMessage},
+    wasmcloud::messaging::{reply, send, types::BrokerMessage},
 };
 
-use crate::{typewriter, UserJoinRequestRecord};
+use crate::{refresh, typewriter, UserJoinRequestRecord};
 
 internal_error_fn!(
     internal_error_list,
@@ -46,7 +46,7 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
         r#"
         SELECT
             id,
-            out.*,
+            out.* as organization,
             requested_at,
             expires_at
         FROM requests_to_join
@@ -80,12 +80,7 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
     };
     trace!("Prepared ListUserJoinRequestsResponse");
 
-    let response_bytes = response.encode_to_vec();
-    debug!(
-        "Replying with ListUserJoinRequestsResponse ({} bytes)",
-        response_bytes.len()
-    );
-    reply(msg, response_bytes)
+    reply(msg, response.encode_to_vec())
 }
 
 pub fn handle_request(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
@@ -175,13 +170,22 @@ pub fn handle_request(msg: BrokerMessage, params: HashMap<String, String>) -> Re
     trace!("Created join request record: {:?}", request_record);
 
     let join_request = request_record.into_proto();
+    let org_id = join_request.organization_id.clone();
 
     let response = typewriter::api::v1::RequestToJoinResponse {
         result: Some(typewriter::api::v1::request_to_join_response::Result::Request(join_request)),
     };
     trace!("Prepared RequestToJoinResponse");
 
-    reply(msg, response.encode_to_vec())
+    reply(msg, response.encode_to_vec())?;
+
+    refresh::refresh_organization_members_list(&org_id, Some(user_id))?;
+    refresh::refresh_members_join_requests_list(&org_id, Some(user_id))?;
+    refresh::refresh_organization_members_join_codes_list(&org_id, Some(user_id))?;
+    refresh::refresh_user_organization_join_requests_list(user_id)?;
+    refresh::refresh_user_organization_list(user_id)?;
+
+    Ok(())
 }
 
 pub fn handle_cancel(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
@@ -200,10 +204,18 @@ pub fn handle_cancel(msg: BrokerMessage, params: HashMap<String, String>) -> Res
     info!("User '{}' canceling join request '{}'", user_id, request_id);
 
     // Delete the join request (only if it belongs to this user)
-    query(
+    let result = query(
         r#"
-        DELETE type::thing('requests_to_join', $request_id)
+        BEGIN TRANSACTION;
+
+        LET $request = SELECT id, out.* as organization, requested_at, expires_at FROM  type::thing('requests_to_join', $request_id)
         WHERE in = type::thing('user', $user_id)
+        FETCH out;
+
+        DELETE $request.id;
+
+        RETURN VALUE $request;
+        COMMIT TRANSACTION;
         "#,
     )
     .bind("request_id", &request_id)
@@ -217,10 +229,16 @@ pub fn handle_cancel(msg: BrokerMessage, params: HashMap<String, String>) -> Res
     };
     trace!("Prepared CancelJoinRequestResponse");
 
-    let response_bytes = response.encode_to_vec();
-    debug!(
-        "Replying with CancelJoinRequestResponse ({} bytes)",
-        response_bytes.len()
-    );
-    reply(msg, response_bytes)
+    reply(msg, response.encode_to_vec())?;
+
+    let join_request: UserJoinRequestRecord = result
+        .parse(0)
+        .map_err(|e| format!("failed to fetch join request: {}", e))?;
+
+    let org_id = join_request.organization.id.id;
+
+    refresh::refresh_members_join_requests_list(&org_id, Some(user_id))?;
+    refresh::refresh_user_organization_join_requests_list(user_id)?;
+
+    Ok(())
 }

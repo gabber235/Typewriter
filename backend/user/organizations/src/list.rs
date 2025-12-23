@@ -42,8 +42,6 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
     let organizations_data = organizations_data.unwrap_or_default();
     trace!("Fetched organizations data: {:?}", organizations_data);
 
-    info!("organizations: {:?}", organizations_data);
-
     let organizations: Vec<typewriter::models::v1::OrganizationData> = organizations_data
         .into_iter()
         .map(|record| record.into())

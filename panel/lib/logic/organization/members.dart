@@ -136,26 +136,34 @@ JoinCode _protoToJoinCode(member_models.JoinCode proto) {
 @riverpod
 class OrganizationRoles extends _$OrganizationRoles {
   @override
-  Future<List<MemberRole>> build() async {
+  Stream<List<MemberRole>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) return [];
+    if (userId == null) {
+      yield [];
+      return;
+    }
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return [];
-
-    final request = role_api.ListRolesRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.$organizationId.roles.list",
-          request,
-          role_api.ListRolesResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    if (organizationId == null) {
+      yield [];
+      return;
     }
 
-    return response.roles.roles.map(_protoToMemberRole).toList();
+    final request = role_api.ListRolesRequest();
+    final stream = ref.requestProtoThenListen(
+      subject:
+          "cloud.out.user.$userId.organization.$organizationId.roles.list",
+      listenSubject: "cloud.in.organization.$organizationId.roles.list",
+      request: request,
+      responseBuilder: role_api.ListRolesResponse.new,
+    );
+
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.roles.roles.map(_protoToMemberRole).toList();
+    }
   }
 }
 
@@ -163,26 +171,34 @@ class OrganizationRoles extends _$OrganizationRoles {
 @riverpod
 class OrganizationMembers extends _$OrganizationMembers {
   @override
-  Future<List<OrganizationMember>> build() async {
+  Stream<List<OrganizationMember>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) return [];
+    if (userId == null) {
+      yield [];
+      return;
+    }
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return [];
-
-    final request = member_api.ListMembersRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.$organizationId.members.list",
-          request,
-          member_api.ListMembersResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    if (organizationId == null) {
+      yield [];
+      return;
     }
 
-    return response.members.members.map(_protoToOrganizationMember).toList();
+    final request = member_api.ListMembersRequest();
+    final stream = ref.requestProtoThenListen(
+      subject:
+          "cloud.out.user.$userId.organization.$organizationId.members.list",
+      listenSubject: "cloud.in.organization.$organizationId.members.list",
+      request: request,
+      responseBuilder: member_api.ListMembersResponse.new,
+    );
+
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.members.members.map(_protoToOrganizationMember).toList();
+    }
   }
 
   Future<List<MemberRole>> _actualRoles(
@@ -250,7 +266,7 @@ class OrganizationMembers extends _$OrganizationMembers {
 
       if (response.hasError()) {
         state = previousState;
-        ref.invalidate(organizationMembersProvider);
+        ref.invalidateSelf();
         throw ApiException.fromProto(response.error);
       }
 
@@ -265,7 +281,7 @@ class OrganizationMembers extends _$OrganizationMembers {
       }
     } catch (e) {
       state = previousState;
-      ref.invalidate(organizationMembersProvider);
+      ref.invalidateSelf();
       rethrow;
     }
   }
@@ -302,12 +318,12 @@ class OrganizationMembers extends _$OrganizationMembers {
 
       if (response.hasError()) {
         state = previousState;
-        ref.invalidate(organizationMembersProvider);
+        ref.invalidateSelf();
         throw ApiException.fromProto(response.error);
       }
     } catch (e) {
       state = previousState;
-      ref.invalidate(organizationMembersProvider);
+      ref.invalidateSelf();
       rethrow;
     }
   }
@@ -323,26 +339,35 @@ class OrganizationMembers extends _$OrganizationMembers {
 @riverpod
 class OrganizationJoinRequests extends _$OrganizationJoinRequests {
   @override
-  Future<List<JoinRequest>> build() async {
+  Stream<List<JoinRequest>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) return [];
+    if (userId == null) {
+      yield [];
+      return;
+    }
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return [];
-
-    final request = member_api.ListJoinRequestsRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.$organizationId.members.join_requests.list",
-          request,
-          member_api.ListJoinRequestsResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    if (organizationId == null) {
+      yield [];
+      return;
     }
 
-    return response.requests.requests.map(_protoToJoinRequest).toList();
+    final request = member_api.ListJoinRequestsRequest();
+    final stream = ref.requestProtoThenListen(
+      subject:
+          "cloud.out.user.$userId.organization.$organizationId.members.join_requests.list",
+      listenSubject:
+          "cloud.in.organization.$organizationId.members.join_requests.list",
+      request: request,
+      responseBuilder: member_api.ListJoinRequestsResponse.new,
+    );
+
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.requests.requests.map(_protoToJoinRequest).toList();
+    }
   }
 
   /// Approves a join request and assigns roles to the new member.
@@ -381,10 +406,6 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
         state = previousState;
         throw ApiException.fromProto(response.error);
       }
-
-      ref
-        ..invalidateSelf()
-        ..invalidate(organizationMembersProvider);
     } catch (e) {
       state = previousState;
       rethrow;
@@ -424,12 +445,12 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
 
       if (response.hasError()) {
         state = previousState; // Rollback on API error
+        ref.invalidateSelf();
         throw ApiException.fromProto(response.error);
       }
-
-      ref.invalidateSelf();
     } catch (e) {
       state = previousState; // Rollback on any exception
+      ref.invalidateSelf();
       rethrow;
     }
   }
@@ -449,26 +470,35 @@ int joinRequestCount(Ref ref) {
 @riverpod
 class OrganizationJoinCodes extends _$OrganizationJoinCodes {
   @override
-  Future<List<JoinCode>> build() async {
+  Stream<List<JoinCode>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) return [];
+    if (userId == null) {
+      yield [];
+      return;
+    }
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return [];
-
-    final request = member_api.ListJoinCodesRequest();
-    final response = await ref
-        .watch(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.list",
-          request,
-          member_api.ListJoinCodesResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    if (organizationId == null) {
+      yield [];
+      return;
     }
 
-    return response.joinCodes.joinCodes.map(_protoToJoinCode).toList();
+    final request = member_api.ListJoinCodesRequest();
+    final stream = ref.requestProtoThenListen(
+      subject:
+          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.list",
+      listenSubject:
+          "cloud.in.organization.$organizationId.members.join_codes.list",
+      request: request,
+      responseBuilder: member_api.ListJoinCodesResponse.new,
+    );
+
+    await for (final response in stream) {
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      yield response.joinCodes.joinCodes.map(_protoToJoinCode).toList();
+    }
   }
 
   /// Revokes a join code.
@@ -503,12 +533,12 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
 
       if (response.hasError()) {
         state = previousState;
-        ref.invalidate(organizationJoinCodesProvider);
+        ref.invalidateSelf();
         throw ApiException.fromProto(response.error);
       }
     } catch (e) {
       state = previousState;
-      ref.invalidate(organizationJoinCodesProvider);
+      ref.invalidateSelf();
       rethrow;
     }
   }

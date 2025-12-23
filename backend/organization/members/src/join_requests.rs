@@ -8,7 +8,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
-use crate::{typewriter, JoinRequestRecord, MemberWithRolesRecord};
+use crate::{refresh, typewriter, JoinRequestRecord, MemberWithRolesRecord};
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list (join_requests) invoked");
@@ -153,6 +153,8 @@ pub fn handle_approve(msg: BrokerMessage, params: HashMap<String, String>) -> Re
 
     trace!("Created member record: {:?}", member_record);
 
+    let user_id = member_record.user.id.id.to_string();
+
     let response = typewriter::api::v1::ApproveJoinRequestResponse {
         result: Some(
             typewriter::api::v1::approve_join_request_response::Result::Member(
@@ -162,7 +164,14 @@ pub fn handle_approve(msg: BrokerMessage, params: HashMap<String, String>) -> Re
     };
     trace!("Prepared ApproveJoinRequestResponse");
 
-    reply(msg, response.encode_to_vec())
+    reply(msg, response.encode_to_vec())?;
+
+    refresh::refresh_organization_members_join_codes_list(org_id, Some(&user_id))?;
+    refresh::refresh_members_join_requests_list(org_id, Some(&user_id))?;
+    refresh::refresh_organization_members_list(org_id, Some(&user_id))?;
+    refresh::refresh_user_organization_list(&user_id)?;
+    refresh::refresh_user_organization_join_requests_list(&user_id)?;
+    Ok(())
 }
 
 pub fn handle_decline(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
@@ -180,7 +189,17 @@ pub fn handle_decline(msg: BrokerMessage, params: HashMap<String, String>) -> Re
 
     info!("Declining join request '{}'", request_id);
 
-    query("DELETE type::thing('requests_to_join', $request_id)")
+    let result = query(r#"
+        BEGIN TRANSACTION;
+
+        LET $request = SELECT id, in.* as user, requested_at, expires_at FROM  type::thing('requests_to_join', $request_id)
+        FETCH in;
+
+        DELETE $request.id;
+
+        RETURN $request;
+        COMMIT TRANSACTION;
+        "#)
         .bind("request_id", &request_id)
         .execute()
         .map_err(|e| format!("failed to decline join request: {}", e))?;
@@ -191,7 +210,18 @@ pub fn handle_decline(msg: BrokerMessage, params: HashMap<String, String>) -> Re
     };
     trace!("Prepared DeclineJoinRequestResponse");
 
-    reply(msg, response.encode_to_vec())
+    reply(msg, response.encode_to_vec())?;
+
+    let join_request: Option<JoinRequestRecord> = result
+        .take(0)
+        .map_err(|e| format!("failed to fetch join request: {}", e))?;
+    let join_request = join_request.ok_or("failed to fetch join request")?;
+
+    let user_id = join_request.user.id.id;
+
+    refresh::refresh_members_join_requests_list(org_id, params.get("user_id"))?;
+    refresh::refresh_user_organization_join_requests_list(&user_id)?;
+    Ok(())
 }
 
 internal_error_fn!(
