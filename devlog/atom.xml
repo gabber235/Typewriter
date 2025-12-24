@@ -16,7 +16,7 @@
         <summary type="html"><![CDATA[Today's beta update is fantastic! A long-requested feature has finally been implemented. I spent way too much time creating a video to explain and showcase everything (though I think it looks nice).]]></summary>
         <content type="html"><![CDATA[<p>Today's beta update is fantastic! A long-requested feature has finally been implemented. I spent <em>way</em> too much time creating a video to explain and showcase everything (though I think it looks nice).</p>
 <!-- -->
-<p>There are also some much-needed bug fixes. You can read about all the changes <a href="https://typewriter.fibery.io/Milestone/Beta/Beta-161-88?sharing-key=29aec52b-35ac-45fa-8d2a-bb8b65104e3e" target="_blank" rel="noopener noreferrer">here</a>.</p>
+<p>There are also some much-needed bug fixes. You can read about all the changes <a href="https://typewriter.fibery.io/Milestone/Beta/Beta-161-88?sharing-key=29aec52b-35ac-45fa-8d2a-bb8b65104e3e" target="_blank" rel="noopener noreferrer" class="">here</a>.</p>
 <p>Enjoy the update!</p>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/X0av-Q1e53U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>]]></content>
         <author>
@@ -44,33 +44,33 @@ Interaction bounds can be in 2 modes:&nbsp;<code>Interrupting</code>&nbsp;and&nb
 Entries inherit their priority from the page.</p>
 <p>Some examples of Interaction Bounds are:</p>
 <ul>
-<li><code>PlayerRadiusInteractionBound</code>: Player stays within a certain radius from when the bound started.</li>
-<li><code>LookAtNpcInteractionBound</code>: Similar to&nbsp;<code>PlayerRadiusInteractionBound</code>&nbsp;but forces the player to look at the entity.</li>
-<li><code>LockInteractionBound</code>: Completely locks the player's camera from moving and rotating.</li>
-<li><code>CommandInteractionBound</code>: Triggered when the player runs a command other than the&nbsp;<code>/tw</code>&nbsp;command.</li>
+<li class=""><code>PlayerRadiusInteractionBound</code>: Player stays within a certain radius from when the bound started.</li>
+<li class=""><code>LookAtNpcInteractionBound</code>: Similar to&nbsp;<code>PlayerRadiusInteractionBound</code>&nbsp;but forces the player to look at the entity.</li>
+<li class=""><code>LockInteractionBound</code>: Completely locks the player's camera from moving and rotating.</li>
+<li class=""><code>CommandInteractionBound</code>: Triggered when the player runs a command other than the&nbsp;<code>/tw</code>&nbsp;command.</li>
 </ul>
 <h1>Interaction Context</h1>
 <p>The second new concept is&nbsp;<code>Interaction Context</code>. This allows you to pass variables to subsequent entries in a sequence, allowing for more flexible interactions, such as asking the user for input and using that later, or spawning something on the block the player clicked on.</p>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="custom-commands">Custom Commands<a href="https://docs.typewritermc.com/devlog/0.8.0-release#custom-commands" class="hash-link" aria-label="Direct link to Custom Commands" title="Direct link to Custom Commands">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="custom-commands">Custom Commands<a href="https://docs.typewritermc.com/devlog/0.8.0-release#custom-commands" class="hash-link" aria-label="Direct link to Custom Commands" title="Direct link to Custom Commands" translate="no">​</a></h3>
 <p>Though you could already have Typewriter create a custom command, you can now have arguments for this command and use the input of the arguments in subsequent entries.</p>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="inputdialogue">InputDialogue<a href="https://docs.typewritermc.com/devlog/0.8.0-release#inputdialogue" class="hash-link" aria-label="Direct link to InputDialogue" title="Direct link to InputDialogue">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="inputdialogue">InputDialogue<a href="https://docs.typewritermc.com/devlog/0.8.0-release#inputdialogue" class="hash-link" aria-label="Direct link to InputDialogue" title="Direct link to InputDialogue" translate="no">​</a></h3>
 <p>NPCs can now ask more open-ended questions, like how many cookies 🍪 you want to have baked, or asking for a certain phrase like a password.</p>
 <h1>Other Features</h1>
 <p>This is not the only thing we added. Some noteworthy new features:</p>
 <ul>
-<li><strong>Speed Data</strong>: You can now specify how fast/slow an NPC should walk.</li>
-<li><strong>Replace With … Button</strong>: Now in the web panel, you can replace an existing entry with a different one. This is particularly useful!</li>
-<li><strong>Improved Navigation for long cinematic content modes</strong></li>
-<li><strong>Allow glowing effect data to have colors</strong></li>
-<li>And 70+ more new features!</li>
+<li class=""><strong>Speed Data</strong>: You can now specify how fast/slow an NPC should walk.</li>
+<li class=""><strong>Replace With … Button</strong>: Now in the web panel, you can replace an existing entry with a different one. This is particularly useful!</li>
+<li class=""><strong>Improved Navigation for long cinematic content modes</strong></li>
+<li class=""><strong>Allow glowing effect data to have colors</strong></li>
+<li class="">And 70+ more new features!</li>
 </ul>
-<p>To see all the changes,&nbsp;<a href="https://typewriter.fibery.io/Milestone/Milestone/Interaction-Context-Bounds-(0.8)-5?sharing-key=1a6cdbd9-b4a2-4ece-b132-0338e6777f96" target="_blank" rel="noopener noreferrer">look at the full changelogs</a></p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="developer-changes">Developer Changes<a href="https://docs.typewritermc.com/devlog/0.8.0-release#developer-changes" class="hash-link" aria-label="Direct link to Developer Changes" title="Direct link to Developer Changes">​</a></h2>
-<p>This new version comes with many breaking changes for developers! A&nbsp;<a href="https://docs.typewritermc.com/develop/extensions/api-changes/0.8" target="_blank" rel="noopener noreferrer">full migration guide</a>&nbsp;is provided to help you migrate your extensions to the new version.</p>
+<p>To see all the changes,&nbsp;<a href="https://typewriter.fibery.io/Milestone/Milestone/Interaction-Context-Bounds-(0.8)-5?sharing-key=1a6cdbd9-b4a2-4ece-b132-0338e6777f96" target="_blank" rel="noopener noreferrer" class="">look at the full changelogs</a></p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="developer-changes">Developer Changes<a href="https://docs.typewritermc.com/devlog/0.8.0-release#developer-changes" class="hash-link" aria-label="Direct link to Developer Changes" title="Direct link to Developer Changes" translate="no">​</a></h2>
+<p>This new version comes with many breaking changes for developers! A&nbsp;<a href="https://docs.typewritermc.com/develop/extensions/api-changes/0.8" target="_blank" rel="noopener noreferrer" class="">full migration guide</a>&nbsp;is provided to help you migrate your extensions to the new version.</p>
 <blockquote>
-<p>If you find Typewriter valuable for your server, please consider&nbsp;<a href="https://github.com/sponsors/gabber235" target="_blank" rel="noopener noreferrer">Sponsoring the Project</a></p>
+<p>If you find Typewriter valuable for your server, please consider&nbsp;<a href="https://github.com/sponsors/gabber235" target="_blank" rel="noopener noreferrer" class="">Sponsoring the Project</a></p>
 </blockquote>
-<p>You can download the new update over on <a href="https://modrinth.com/plugin/typewriter/version/0.8.0" target="_blank" rel="noopener noreferrer">Modrinth</a></p>]]></content>
+<p>You can download the new update over on <a href="https://modrinth.com/plugin/typewriter/version/0.8.0" target="_blank" rel="noopener noreferrer" class="">Modrinth</a></p>]]></content>
         <author>
             <name>Gabber235</name>
             <uri>https://github.com/gabber235</uri>
@@ -86,10 +86,10 @@ Entries inherit their priority from the page.</p>
         <content type="html"><![CDATA[<p>Hey Readers! As some of you might have noticed, some new design elements have been created by me and added to the server! The following elements have been added:</p>
 <!-- -->
 <ul>
-<li>Animated Logo</li>
-<li>Static Banner with background</li>
-<li>Transparent Static Banner</li>
-<li>Animated Banner:</li>
+<li class="">Animated Logo</li>
+<li class="">Static Banner with background</li>
+<li class="">Transparent Static Banner</li>
+<li class="">Animated Banner:</li>
 </ul>
 <div class="relative w-full h-full outline-none cursor-default"><div class="w-full flex items-center text-white"><div class="flex-grow"><div class="relative h-[5px] rounded-t-lg overflow-hidden pb-2"><input type="range" min="0" max="100" class="absolute top-0 left-0 w-full h-[5px] opacity-0 cursor-pointer" style="-webkit-appearance:none;-moz-appearance:none;appearance:none" value="0"><div class="h-full bg-primary transition-width duration-200 pb-2" style="width:0%"></div></div></div></div><div class="relative w-full h-full outline-none cursor-default" tabindex="0"><div style="width:100%;height:100%" playsinline=""></div><div class="opacity-0 hover:opacity-100 transition-opacity duration-300 w-full h-full flex items-center justify-center"><div class="absolute bottom-0 left-0 right-0 flex items-center justify-center h-full p-4"><span></span></div><div class="absolute bottom-2 right-2 p-2"><span></span></div></div></div></div>]]></content>
         <author>
@@ -106,31 +106,31 @@ Entries inherit their priority from the page.</p>
         <summary type="html"><![CDATA[Hey reader! After weeks of development, I'm thrilled to introduce Dynamic Variables - a system that lets your content adapt during gameplay.]]></summary>
         <content type="html"><![CDATA[<p>Hey reader! After weeks of development, I'm thrilled to introduce Dynamic Variables - a system that lets your content adapt during gameplay.</p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="what-are-dynamic-variables">What are Dynamic Variables<a href="https://docs.typewritermc.com/devlog/0.7.0-release#what-are-dynamic-variables" class="hash-link" aria-label="Direct link to What are Dynamic Variables" title="Direct link to What are Dynamic Variables">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-are-dynamic-variables">What are Dynamic Variables<a href="https://docs.typewritermc.com/devlog/0.7.0-release#what-are-dynamic-variables" class="hash-link" aria-label="Direct link to What are Dynamic Variables" title="Direct link to What are Dynamic Variables" translate="no">​</a></h2>
 <p>Before, all fields on an entry needed to be filled in with valid values during configuration time.
 With Dynamic variables, fields can now be substituted with runtime values.</p>
 <p>To give you some inspiration of what you can now do:</p>
 <ul>
-<li><strong>Have cinematics in the world the player is in, instead of in a fixed world. Which is useful for playing cinematics in generated dungeons.</strong></li>
-<li>Have the skin of a NPC be determined from a placeholder. For making leaderboard NPCs.</li>
-<li>Having the strength of a potion effect be the value of a fact. For "upgradable skills."</li>
-<li>Making launch pads shoot the player in the direction where they are looking.</li>
+<li class=""><strong>Have cinematics in the world the player is in, instead of in a fixed world. Which is useful for playing cinematics in generated dungeons.</strong></li>
+<li class="">Have the skin of a NPC be determined from a placeholder. For making leaderboard NPCs.</li>
+<li class="">Having the strength of a potion effect be the value of a fact. For "upgradable skills."</li>
+<li class="">Making launch pads shoot the player in the direction where they are looking.</li>
 </ul>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="placeholder-parameters">Placeholder Parameters<a href="https://docs.typewritermc.com/devlog/0.7.0-release#placeholder-parameters" class="hash-link" aria-label="Direct link to Placeholder Parameters" title="Direct link to Placeholder Parameters">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="placeholder-parameters">Placeholder Parameters<a href="https://docs.typewritermc.com/devlog/0.7.0-release#placeholder-parameters" class="hash-link" aria-label="Direct link to Placeholder Parameters" title="Direct link to Placeholder Parameters" translate="no">​</a></h2>
 <p>Sometimes you want to know different details of an entry. Like the time it last got updated. The remaining time until the fact resets.
 Entries now support parameterized placeholders for more detailed information:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#000000;--prism-background-color:#ffffff"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#000000;background-color:#ffffff"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#000000"><span class="token plain">%typewriter_&lt;entry id&gt;:remaining:10%     // Items left to collect</span><br></span><span class="token-line" style="color:#000000"><span class="token plain">%typewriter_&lt;entry id&gt;:time:expires:relative%     // Time until daily quest is active</span><br></span></code></pre></div></div>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="new-entries">New Entries<a href="https://docs.typewritermc.com/devlog/0.7.0-release#new-entries" class="hash-link" aria-label="Direct link to New Entries" title="Direct link to New Entries">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="new-entries">New Entries<a href="https://docs.typewritermc.com/devlog/0.7.0-release#new-entries" class="hash-link" aria-label="Direct link to New Entries" title="Direct link to New Entries" translate="no">​</a></h2>
 <ul>
-<li>Entity types: ArmorStand, EnderDragon, Parrot, Wolf, BlockDisplay</li>
-<li><code>CalculatedFact</code> for complex expressions</li>
-<li><code>WeightedRandomTriggerGate</code> for probability-based triggers</li>
-<li>World and potion effect audience filters</li>
+<li class="">Entity types: ArmorStand, EnderDragon, Parrot, Wolf, BlockDisplay</li>
+<li class=""><code>CalculatedFact</code> for complex expressions</li>
+<li class=""><code>WeightedRandomTriggerGate</code> for probability-based triggers</li>
+<li class="">World and potion effect audience filters</li>
 </ul>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="breaking-changes">Breaking Changes<a href="https://docs.typewritermc.com/devlog/0.7.0-release#breaking-changes" class="hash-link" aria-label="Direct link to Breaking Changes" title="Direct link to Breaking Changes">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="breaking-changes">Breaking Changes<a href="https://docs.typewritermc.com/devlog/0.7.0-release#breaking-changes" class="hash-link" aria-label="Direct link to Breaking Changes" title="Direct link to Breaking Changes" translate="no">​</a></h2>
 <ul>
-<li>Extension developers: PlaceholderEntry API updated</li>
-<li><code>Random...DialogueEntry</code> deprecated (use <code>RandomVariable</code> instead)</li>
+<li class="">Extension developers: PlaceholderEntry API updated</li>
+<li class=""><code>Random...DialogueEntry</code> deprecated (use <code>RandomVariable</code> instead)</li>
 </ul>]]></content>
         <author>
             <name>Gabber235</name>
@@ -146,37 +146,37 @@ Entries now support parameterized placeholders for more detailed information:</p
         <summary type="html"><![CDATA[This release brings a foundational shift in Typewriter’s core structure and a major update to the item system, along with new features and important usability improvements. Below are the highlights:]]></summary>
         <content type="html"><![CDATA[<p>This release brings a foundational shift in Typewriter’s core structure and a major update to the item system, along with new features and important usability improvements. Below are the highlights:</p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="critical-changes">Critical Changes<a href="https://docs.typewritermc.com/devlog/0.6.0-release#critical-changes" class="hash-link" aria-label="Direct link to Critical Changes" title="Direct link to Critical Changes">​</a></h2>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="from-adapters-to-extensions">From Adapters to Extensions<a href="https://docs.typewritermc.com/devlog/0.6.0-release#from-adapters-to-extensions" class="hash-link" aria-label="Direct link to From Adapters to Extensions" title="Direct link to From Adapters to Extensions">​</a></h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="critical-changes">Critical Changes<a href="https://docs.typewritermc.com/devlog/0.6.0-release#critical-changes" class="hash-link" aria-label="Direct link to Critical Changes" title="Direct link to Critical Changes" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="from-adapters-to-extensions">From Adapters to Extensions<a href="https://docs.typewritermc.com/devlog/0.6.0-release#from-adapters-to-extensions" class="hash-link" aria-label="Direct link to From Adapters to Extensions" title="Direct link to From Adapters to Extensions" translate="no">​</a></h3>
 <p>Typewriter has transitioned from using <code>Adapters</code> to <code>Extensions</code>, marking a significant evolution in how custom functionality is integrated. Key improvements with this change include:</p>
 <ul>
-<li><strong>Gradle Plugin for Extensions</strong>: A new Gradle plugin simplifies the process of developing Extensions, making setup and management easier for developers.</li>
-<li><strong>Compile-Time Discovery</strong>: Discovery of Extension internals, such as entries, now occurs at compile-time instead of runtime. This not only future-proofs Typewriter but also lays the groundwork for the upcoming marketplace, where entries in each Extension will be viewable without running the Extension.</li>
-<li><strong>Hot Reloading</strong>: Extensions can now be reloaded on-the-fly using <code>/tw reload</code>, enabling real-time updates without the need for a server restart.</li>
-<li><strong>Optimized Loading</strong>: Only the necessary classes are loaded from Extensions. For example, if an Extension contains thousands of entries but only one is used, Typewriter loads only that specific entry, enhancing memory and processing efficiency.</li>
-<li><strong>Extension Validators</strong>: Built-in validators now check Extensions against Typewriter’s standards, helping to ensure reliability and consistency across user-created Extensions.</li>
+<li class=""><strong>Gradle Plugin for Extensions</strong>: A new Gradle plugin simplifies the process of developing Extensions, making setup and management easier for developers.</li>
+<li class=""><strong>Compile-Time Discovery</strong>: Discovery of Extension internals, such as entries, now occurs at compile-time instead of runtime. This not only future-proofs Typewriter but also lays the groundwork for the upcoming marketplace, where entries in each Extension will be viewable without running the Extension.</li>
+<li class=""><strong>Hot Reloading</strong>: Extensions can now be reloaded on-the-fly using <code>/tw reload</code>, enabling real-time updates without the need for a server restart.</li>
+<li class=""><strong>Optimized Loading</strong>: Only the necessary classes are loaded from Extensions. For example, if an Extension contains thousands of entries but only one is used, Typewriter loads only that specific entry, enhancing memory and processing efficiency.</li>
+<li class=""><strong>Extension Validators</strong>: Built-in validators now check Extensions against Typewriter’s standards, helping to ensure reliability and consistency across user-created Extensions.</li>
 </ul>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="new-item-system">New Item System<a href="https://docs.typewritermc.com/devlog/0.6.0-release#new-item-system" class="hash-link" aria-label="Direct link to New Item System" title="Direct link to New Item System">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="new-item-system">New Item System<a href="https://docs.typewritermc.com/devlog/0.6.0-release#new-item-system" class="hash-link" aria-label="Direct link to New Item System" title="Direct link to New Item System" translate="no">​</a></h3>
 <p>Typewriter introduces a completely new item system, which is <strong>incompatible with previously defined items</strong>. Users will need to recreate items to align with the new structure. Based on user feedback, no migrator will be provided, as the majority found it unnecessary. <strong>Please test this update on a development server before upgrading your production environment.</strong></p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="important-features">Important Features<a href="https://docs.typewritermc.com/devlog/0.6.0-release#important-features" class="hash-link" aria-label="Direct link to Important Features" title="Direct link to Important Features">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="important-features">Important Features<a href="https://docs.typewritermc.com/devlog/0.6.0-release#important-features" class="hash-link" aria-label="Direct link to Important Features" title="Direct link to Important Features" translate="no">​</a></h2>
 <ol>
-<li>
+<li class="">
 <p><strong>Skip Cinematic Segments</strong><br>
 <!-- -->A new <code>SkipCinematicEntry</code> gives players the option to skip sections of cinematics by pressing a configured key, offering more control over in-game cinematic experiences.</p>
 </li>
-<li>
+<li class="">
 <p><strong>UI and Web Panel Upgrades</strong><br>
 <!-- -->Improvements to the web panel and UI components provide a smoother experience. These upgrades include the ability to unselect Sound IDs, layout enhancements, compatibility improvements behind reverse proxies, and visual indicators for empty fields, all of which contribute to a more intuitive and flexible panel.</p>
 </li>
 </ol>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="new-entries">New Entries<a href="https://docs.typewritermc.com/devlog/0.6.0-release#new-entries" class="hash-link" aria-label="Direct link to New Entries" title="Direct link to New Entries">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="new-entries">New Entries<a href="https://docs.typewritermc.com/devlog/0.6.0-release#new-entries" class="hash-link" aria-label="Direct link to New Entries" title="Direct link to New Entries" translate="no">​</a></h2>
 <ul>
-<li><strong>Cinematic Entries</strong>: <code>GameTimeCinematicEntry</code>, <code>WeatherCinematicEntry</code>, <code>SkipCinematicEntry</code>, <code>BlockCommandCinematicEntry</code></li>
-<li><strong>Dialogue</strong>: <code>ActionbarDialogueEntry</code>, <code>SimpleMessageActionEntry</code></li>
-<li><strong>Entity and Activity Entries</strong>: <code>MythicMobKillPlayerEventEntry</code>, <code>RemovePotionEffectActionEntry</code>, <code>LookAtBlockActivity</code>, <code>LookAtPitchYawActivity</code>, <code>RandomPatrolActivity</code>, <code>AmbientSoundActivity</code>, <code>ScaleData</code>, <code>InteractionEntity</code>, <code>PillagerEntity</code>, <code>VindicatorEntity</code>, <code>Llama Entity</code></li>
-<li><strong>Miscellaneous</strong>: <code>WeatherAudienceEntry</code>, <code>FireworkActionEntry</code> (with <code>flight duration</code> setting)</li>
+<li class=""><strong>Cinematic Entries</strong>: <code>GameTimeCinematicEntry</code>, <code>WeatherCinematicEntry</code>, <code>SkipCinematicEntry</code>, <code>BlockCommandCinematicEntry</code></li>
+<li class=""><strong>Dialogue</strong>: <code>ActionbarDialogueEntry</code>, <code>SimpleMessageActionEntry</code></li>
+<li class=""><strong>Entity and Activity Entries</strong>: <code>MythicMobKillPlayerEventEntry</code>, <code>RemovePotionEffectActionEntry</code>, <code>LookAtBlockActivity</code>, <code>LookAtPitchYawActivity</code>, <code>RandomPatrolActivity</code>, <code>AmbientSoundActivity</code>, <code>ScaleData</code>, <code>InteractionEntity</code>, <code>PillagerEntity</code>, <code>VindicatorEntity</code>, <code>Llama Entity</code></li>
+<li class=""><strong>Miscellaneous</strong>: <code>WeatherAudienceEntry</code>, <code>FireworkActionEntry</code> (with <code>flight duration</code> setting)</li>
 </ul>
-<p><strong>If you consider Typewriter to be valuable to your server, please consider <a href="https://github.com/sponsors/gabber235" target="_blank" rel="noopener noreferrer">Sponsoring the Project</a></strong></p>]]></content>
+<p><strong>If you consider Typewriter to be valuable to your server, please consider <a href="https://github.com/sponsors/gabber235" target="_blank" rel="noopener noreferrer" class="">Sponsoring the Project</a></strong></p>]]></content>
         <author>
             <name>Gabber235</name>
             <uri>https://github.com/gabber235</uri>
@@ -192,30 +192,30 @@ Entries now support parameterized placeholders for more detailed information:</p
         <content type="html"><![CDATA[<p>Since this update is so big, it is almost impossible to list every change. Therefore, only the biggest changes are listed.</p>
 <p>With <strong>729</strong> commits, <strong>1,438</strong> changed files, with <strong>60,258</strong> additions and <strong>33,483</strong> deletions, this is by far the biggest update in the history of Typewriter.</p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="manifest-entries">Manifest Entries<a href="https://docs.typewritermc.com/devlog/0.5.0-release#manifest-entries" class="hash-link" aria-label="Direct link to Manifest Entries" title="Direct link to Manifest Entries">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="manifest-entries">Manifest Entries<a href="https://docs.typewritermc.com/devlog/0.5.0-release#manifest-entries" class="hash-link" aria-label="Direct link to Manifest Entries" title="Direct link to Manifest Entries" translate="no">​</a></h2>
 <p>Manifest entries are entries that automatically do stuff based on the environment. Think of showing NPCs based on filters (such as quest status) and having NPC holograms. Boss bars, Creating scoreboards, Interaction zones, and much more!</p>
 <p><em>For the programmers under us, where sequence entries are like imperative programming. Manifest entries are declarative programming. They can be linked in an acyclic-directional graph.</em></p>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="audience-entries">Audience Entries<a href="https://docs.typewritermc.com/devlog/0.5.0-release#audience-entries" class="hash-link" aria-label="Direct link to Audience Entries" title="Direct link to Audience Entries">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="audience-entries">Audience Entries<a href="https://docs.typewritermc.com/devlog/0.5.0-release#audience-entries" class="hash-link" aria-label="Direct link to Audience Entries" title="Direct link to Audience Entries" translate="no">​</a></h3>
 <p>The first subclass of Manifest Entries are Audience Entries.
 They display anything to the player, Such as a boss bar. There is a special variety of audience entries, which are AudienceFilterEntries. They filter out players, such as regions, if they are in a certain part of a quest, if they are in a cinematic...
 These types of filters can be chained to have extreme customizability and flexibility.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="entity-adapter">Entity Adapter<a href="https://docs.typewritermc.com/devlog/0.5.0-release#entity-adapter" class="hash-link" aria-label="Direct link to Entity Adapter" title="Direct link to Entity Adapter">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="entity-adapter">Entity Adapter<a href="https://docs.typewritermc.com/devlog/0.5.0-release#entity-adapter" class="hash-link" aria-label="Direct link to Entity Adapter" title="Direct link to Entity Adapter" translate="no">​</a></h2>
 <p>Say goodbye to the old NPC adapters like Citizens, FancyNpcs, and ZNPCs. The Entity Adapter allows you to define entities directly within Typewriter, empowering you to use them in cinematics, control their visibility based on conditions (like during a quest segment), and even have them navigate and exhibit complex behaviors. With full control, the sky is the limit!</p>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Ny-OhrV5FQQ?si=dqzetbInKE6jxRjy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="road-network">Road Network<a href="https://docs.typewritermc.com/devlog/0.5.0-release#road-network" class="hash-link" aria-label="Direct link to Road Network" title="Direct link to Road Network">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="road-network">Road Network<a href="https://docs.typewritermc.com/devlog/0.5.0-release#road-network" class="hash-link" aria-label="Direct link to Road Network" title="Direct link to Road Network" translate="no">​</a></h2>
 <p>You can now create <strong>Road Networks</strong> in Typewriter.
 These allow NPCs to navigate through the world and show Path Streams to guide the players.</p>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/uVKGS70PEq4?si=FdXpg4lVTRMtU7lu" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="grouped-facts">Grouped Facts<a href="https://docs.typewritermc.com/devlog/0.5.0-release#grouped-facts" class="hash-link" aria-label="Direct link to Grouped Facts" title="Direct link to Grouped Facts">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="grouped-facts">Grouped Facts<a href="https://docs.typewritermc.com/devlog/0.5.0-release#grouped-facts" class="hash-link" aria-label="Direct link to Grouped Facts" title="Direct link to Grouped Facts" translate="no">​</a></h2>
 <p>The value of a fact can now be set for a group of players.
 For example, you can now check if a party of players have killed a certain number of enemies.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="documentation-improvements">Documentation Improvements<a href="https://docs.typewritermc.com/devlog/0.5.0-release#documentation-improvements" class="hash-link" aria-label="Direct link to Documentation Improvements" title="Direct link to Documentation Improvements">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="documentation-improvements">Documentation Improvements<a href="https://docs.typewritermc.com/devlog/0.5.0-release#documentation-improvements" class="hash-link" aria-label="Direct link to Documentation Improvements" title="Direct link to Documentation Improvements" translate="no">​</a></h2>
 <p>Some of you may have already looked at the new documentation.
 We've made major improvements to the documentation. All to make it easier to use and understand Typewriter.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="switched-from-protocollib-to-packetevents">Switched from ProtocolLib to PacketEvents<a href="https://docs.typewritermc.com/devlog/0.5.0-release#switched-from-protocollib-to-packetevents" class="hash-link" aria-label="Direct link to Switched from ProtocolLib to PacketEvents" title="Direct link to Switched from ProtocolLib to PacketEvents">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="switched-from-protocollib-to-packetevents">Switched from ProtocolLib to PacketEvents<a href="https://docs.typewritermc.com/devlog/0.5.0-release#switched-from-protocollib-to-packetevents" class="hash-link" aria-label="Direct link to Switched from ProtocolLib to PacketEvents" title="Direct link to Switched from ProtocolLib to PacketEvents" translate="no">​</a></h2>
 <p>This switch has allowed many new features in Typewriter, like the new buttery smooth camera cinematics. It means that now you need to install PacketEvents in order for Typewriter to work.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="made-some-breaking-api-changes">Made some breaking API changes<a href="https://docs.typewritermc.com/devlog/0.5.0-release#made-some-breaking-api-changes" class="hash-link" aria-label="Direct link to Made some breaking API changes" title="Direct link to Made some breaking API changes">​</a></h2>
-<p>There are various breaking API changes for Adapters. To view the migration, take a look at the <a href="https://docs.typewritermc.com/develop/adapters/api-changes/0.5.0" target="_blank" rel="noopener noreferrer">Migration Guide</a></p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="made-some-breaking-api-changes">Made some breaking API changes<a href="https://docs.typewritermc.com/devlog/0.5.0-release#made-some-breaking-api-changes" class="hash-link" aria-label="Direct link to Made some breaking API changes" title="Direct link to Made some breaking API changes" translate="no">​</a></h2>
+<p>There are various breaking API changes for Adapters. To view the migration, take a look at the <a href="https://docs.typewritermc.com/develop/adapters/api-changes/0.5.0" target="_blank" rel="noopener noreferrer" class="">Migration Guide</a></p>
 <div class="theme-admonition theme-admonition-danger admonition_Gfwi alert alert--danger border-2"><div class="admonitionHeading_f1Ed"><span class="admonitionIcon_kpSf"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z"></path></svg></span>&nbsp;<!-- -->Deprecation Warning</div><div class="admonitionContent_UjKb"><p>With this release, we're marking the old NPC adapters, such as ZNPCs and FancyNpcs, as deprecated. This means that while they will still function in the current version, this will be the last release where they are supported. Though only the files added here will work. Going forward, we'll only be providing bug fixes for the Citizens NPC adapter. It will remain updated primarily to assist new users in getting started, but we strongly encourage everyone to transition to the Entity Adapter for the best Typewriter experience.</p></div></div>]]></content>
         <author>
             <name>Gabber235</name>
@@ -231,34 +231,34 @@ We've made major improvements to the documentation. All to make it easier to use
         <summary type="html"><![CDATA[Hey reader, and fellow members! I've added numerous additions to the documentation. Here's a quick summary:]]></summary>
         <content type="html"><![CDATA[<p>Hey reader, and fellow members! I've added numerous additions to the documentation. Here's a quick summary:</p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="upgraded-video-player">Upgraded Video Player<a href="https://docs.typewritermc.com/devlog/documentation-improvements#upgraded-video-player" class="hash-link" aria-label="Direct link to Upgraded Video Player" title="Direct link to Upgraded Video Player">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="upgraded-video-player">Upgraded Video Player<a href="https://docs.typewritermc.com/devlog/documentation-improvements#upgraded-video-player" class="hash-link" aria-label="Direct link to Upgraded Video Player" title="Direct link to Upgraded Video Player" translate="no">​</a></h2>
 <p>The video player in our documentation has been completely revamped with custom styles and controls, providing a much-improved user experience.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="enhanced-entrysearch">Enhanced EntrySearch<a href="https://docs.typewritermc.com/devlog/documentation-improvements#enhanced-entrysearch" class="hash-link" aria-label="Direct link to Enhanced EntrySearch" title="Direct link to Enhanced EntrySearch">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="enhanced-entrysearch">Enhanced EntrySearch<a href="https://docs.typewritermc.com/devlog/documentation-improvements#enhanced-entrysearch" class="hash-link" aria-label="Direct link to Enhanced EntrySearch" title="Direct link to Enhanced EntrySearch" translate="no">​</a></h2>
 <p>The EntrySearch component now redirects you directly to the entry adapter documentation upon clicking an entry, streamlining navigation.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="improved-404-page">Improved 404 Page<a href="https://docs.typewritermc.com/devlog/documentation-improvements#improved-404-page" class="hash-link" aria-label="Direct link to Improved 404 Page" title="Direct link to Improved 404 Page">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="improved-404-page">Improved 404 Page<a href="https://docs.typewritermc.com/devlog/documentation-improvements#improved-404-page" class="hash-link" aria-label="Direct link to Improved 404 Page" title="Direct link to Improved 404 Page" translate="no">​</a></h2>
 <p>Our 404 page has been redesigned for a more polished and user-friendly appearance.</p>
 <h1>✨ New Features</h1>
 <ul>
-<li><strong>Difficulty Levels</strong>: Each page now displays its difficulty level at the top, making it easier to understand the complexity of the content at a glance.</li>
-<li><strong>Last Updated Information</strong>: The bottom of each page now shows the last edit date, helping you track the most recent updates.</li>
+<li class=""><strong>Difficulty Levels</strong>: Each page now displays its difficulty level at the top, making it easier to understand the complexity of the content at a glance.</li>
+<li class=""><strong>Last Updated Information</strong>: The bottom of each page now shows the last edit date, helping you track the most recent updates.</li>
 </ul>
 <h1>📚 New Documentation Pages</h1>
 <p>I've added several new pages for you to explore:</p>
 <ul>
-<li>Conditional Dialogue</li>
-<li>First Join Cinematic</li>
-<li>Interacting with an Entity</li>
-<li>Road Network</li>
+<li class="">Conditional Dialogue</li>
+<li class="">First Join Cinematic</li>
+<li class="">Interacting with an Entity</li>
+<li class="">Road Network</li>
 </ul>
 <h1>🛠️ Tweaks and Fixes</h1>
 <ul>
-<li>Added video converter to the .vscode folder</li>
-<li>Added build/develop scripts to the .vscode folder</li>
-<li>Removed unused imports</li>
-<li>Added light theme to EntrySearch</li>
-<li>Included new metadata</li>
+<li class="">Added video converter to the .vscode folder</li>
+<li class="">Added build/develop scripts to the .vscode folder</li>
+<li class="">Removed unused imports</li>
+<li class="">Added light theme to EntrySearch</li>
+<li class="">Included new metadata</li>
 </ul>
-<p>You can explore all these updates in our <a href="https://docs.typewritermc.com/beta/docs/home" target="_blank" rel="noopener noreferrer">beta documentation</a>!</p>]]></content>
+<p>You can explore all these updates in our <a href="https://docs.typewritermc.com/beta/docs/home" target="_blank" rel="noopener noreferrer" class="">beta documentation</a>!</p>]]></content>
         <author>
             <name>MartenMrfc</name>
             <uri>https://github.com/marten-mrfc</uri>
@@ -276,16 +276,16 @@ We've made major improvements to the documentation. All to make it easier to use
 <!-- -->
 <p>Let's break down the update:</p>
 <ul>
-<li>
+<li class="">
 <p><strong>Easy Version Switching</strong>: Now, you can switch between Typewriter versions effortlessly to find exactly what you need. Super handy for those big updates like 4.0 or 5.0.</p>
 </li>
-<li>
+<li class="">
 <p><strong>Fresh Look</strong>: The documentation got a big update on the layout, matching the vibe of the latest beta version.</p>
 </li>
-<li>
+<li class="">
 <p><strong>More Content, More Fun</strong>: I've thrown in a bunch of new pages for you to read and improve your experience with Typewriter.</p>
 </li>
-<li>
+<li class="">
 <p><strong>Installation Guide Makeover</strong>: We've revamped the whole installation guide to make your life simpler. Installing the plugin should be a breeze with this new guide by your side.</p>
 </li>
 </ul>
@@ -304,17 +304,17 @@ We've made major improvements to the documentation. All to make it easier to use
         <summary type="html"><![CDATA[Hey reader, hope you have had a great start to the new year! To make it even sweeter, the next version of Typewriter is here: **The Quality of life update**]]></summary>
         <content type="html"><![CDATA[<p>Hey reader, hope you have had a great start to the new year! To make it even sweeter, the next version of <strong>Typewriter</strong> is here: <em><strong>The Quality of life update</strong></em></p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="whats-new-in-040">What's new in 0.4.0?<a href="https://docs.typewritermc.com/devlog/0.4.0-release#whats-new-in-040" class="hash-link" aria-label="Direct link to What's new in 0.4.0?" title="Direct link to What's new in 0.4.0?">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="whats-new-in-040">What's new in 0.4.0?<a href="https://docs.typewritermc.com/devlog/0.4.0-release#whats-new-in-040" class="hash-link" aria-label="Direct link to What's new in 0.4.0?" title="Direct link to What's new in 0.4.0?" translate="no">​</a></h2>
 <p>It may seem like a small update, but with 24,957 lines added and 17,267 lines removed it is packing some great improvements. To give you a short list:</p>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="major-changes">Major Changes<a href="https://docs.typewritermc.com/devlog/0.4.0-release#major-changes" class="hash-link" aria-label="Direct link to Major Changes" title="Direct link to Major Changes">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="major-changes">Major Changes<a href="https://docs.typewritermc.com/devlog/0.4.0-release#major-changes" class="hash-link" aria-label="Direct link to Major Changes" title="Direct link to Major Changes" translate="no">​</a></h3>
 <ul>
-<li><strong>Item Inspector</strong>: Now items are more flexible and easier to use in the ui. It also add the ability for NBT data.</li>
-<li><strong>Revamp CI/CD</strong>: Allow quick dev-builds to release early and allow users to test the plugin.</li>
-<li><strong>Chapters</strong>: Finally there is a way to order pages.</li>
-<li><strong>Custom Sounds</strong>: Allow users to have custom sounds.</li>
-<li><strong>Muli-Command</strong>: Allow multiple commands to be specified in a single entry.</li>
-<li><strong>Drag &amp; Drop for pages &amp; entries</strong>: Allow you to drag and drop entries onto each other for quick linking.</li>
-<li>And 23 other improvements &amp; bug fixes</li>
+<li class=""><strong>Item Inspector</strong>: Now items are more flexible and easier to use in the ui. It also add the ability for NBT data.</li>
+<li class=""><strong>Revamp CI/CD</strong>: Allow quick dev-builds to release early and allow users to test the plugin.</li>
+<li class=""><strong>Chapters</strong>: Finally there is a way to order pages.</li>
+<li class=""><strong>Custom Sounds</strong>: Allow users to have custom sounds.</li>
+<li class=""><strong>Muli-Command</strong>: Allow multiple commands to be specified in a single entry.</li>
+<li class=""><strong>Drag &amp; Drop for pages &amp; entries</strong>: Allow you to drag and drop entries onto each other for quick linking.</li>
+<li class="">And 23 other improvements &amp; bug fixes</li>
 </ul>]]></content>
         <author>
             <name>Gabber235</name>
@@ -330,7 +330,7 @@ We've made major improvements to the documentation. All to make it easier to use
         <summary type="html"><![CDATA[Hey reader, Get ready to bring your Minecraft server to life with the most exciting update since Typewriter's release. We've been hard at work, and this update is packed with game-changing features, led by the introduction of Cinematics 🎬.]]></summary>
         <content type="html"><![CDATA[<p>Hey reader, Get ready to bring your Minecraft server to life with the most exciting update since Typewriter's release. We've been hard at work, and this update is packed with game-changing features, led by the introduction of Cinematics 🎬.</p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="what-are-cinematics">What are cinematics?<a href="https://docs.typewritermc.com/devlog/0.3.0-release#what-are-cinematics" class="hash-link" aria-label="Direct link to What are cinematics?" title="Direct link to What are cinematics?">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-are-cinematics">What are cinematics?<a href="https://docs.typewritermc.com/devlog/0.3.0-release#what-are-cinematics" class="hash-link" aria-label="Direct link to What are cinematics?" title="Direct link to What are cinematics?" translate="no">​</a></h2>
 <p>Cinematics are the ultimate tool for creating immersive experiences in your Minecraft world. With precisely timed sequences of actions, you can now craft stunning cutscenes for quests, engaging tutorials, fast travel systems, thrilling random encounters, and so much more. The possibilities are endless ✨!</p>
 <p>But that's not all. Cinematics in Typewriter go above and beyond. You can create dynamic camera paths to capture the perfect angles 🎥, weave in captivating dialogues for your characters 🎭, and even record your own NPC 💃 to take center stage in your cinematic masterpiece.</p>
 <p>With over <code>28,131 lines</code> changed and <code>10,988 lines</code> removed, this is the biggest update to Typewriter yet. We've fine-tuned every aspect to ensure a seamless and powerful cinematic experience that will leave your players in awe.</p>
@@ -348,21 +348,21 @@ We've made major improvements to the documentation. All to make it easier to use
         <link href="https://docs.typewritermc.com/devlog/why-i-created-typewriter"/>
         <updated>2023-02-13T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Who am I?]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorWithStickyNavbar_LWe7" id="who-am-i">Who am I?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#who-am-i" class="hash-link" aria-label="Direct link to Who am I?" title="Direct link to Who am I?">​</a></h2>
+        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="who-am-i">Who am I?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#who-am-i" class="hash-link" aria-label="Direct link to Who am I?" title="Direct link to Who am I?" translate="no">​</a></h2>
 <p>Hello there, Minecraft enthusiasts! My name is Gabber235, and for the past 10 years I've been creating Minecraft content. I've made a variety of different projects, from simple tweaks to complex interactions. And while I've always enjoyed creating these projects, I've always found that creating custom player interactions was a pain.</p>
 <!-- -->
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="the-problem">The problem<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#the-problem" class="hash-link" aria-label="Direct link to The problem" title="Direct link to The problem">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-problem">The problem<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#the-problem" class="hash-link" aria-label="Direct link to The problem" title="Direct link to The problem" translate="no">​</a></h2>
 <p>You see, I love telling stories in Minecraft. Bringing my wildest ideas to life in a virtual world is one of my greatest joys.
 However, actually creating these stories was a different story 😆. Not only did it require a lot of time and effort, but I also had to be an expert coder to make anything happen.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="how-does-typewriter-help">How does Typewriter help?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#how-does-typewriter-help" class="hash-link" aria-label="Direct link to How does Typewriter help?" title="Direct link to How does Typewriter help?">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-does-typewriter-help">How does Typewriter help?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#how-does-typewriter-help" class="hash-link" aria-label="Direct link to How does Typewriter help?" title="Direct link to How does Typewriter help?" translate="no">​</a></h2>
 <p>With Typewriter, I wanted to provide a tool that was accessible and easy to use, even for those who have no coding experience. I wanted to help reduce the complexity and time required to create custom player interactions, allowing server owners to focus on other aspects of their projects. Letting them create the stories they want to tell, without having to worry about the technical side of things.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="there-are-already-a-lot-of-tools-out-there-why-create-another-one">There are already a lot of tools out there, why create another one?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#there-are-already-a-lot-of-tools-out-there-why-create-another-one" class="hash-link" aria-label="Direct link to There are already a lot of tools out there, why create another one?" title="Direct link to There are already a lot of tools out there, why create another one?">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="there-are-already-a-lot-of-tools-out-there-why-create-another-one">There are already a lot of tools out there, why create another one?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#there-are-already-a-lot-of-tools-out-there-why-create-another-one" class="hash-link" aria-label="Direct link to There are already a lot of tools out there, why create another one?" title="Direct link to There are already a lot of tools out there, why create another one?" translate="no">​</a></h2>
 <p>Now, I know what you're thinking. "But Gabber, why not just use an existing tool?" Well, I tried. But I always found that existing tools were either too complex, requiring you to navigate way to many YAML files, or not flexible enough, leaving me with untold possibilities.
 That is why I created Typewriter, a tool that is easy to use, but also flexible enough to be used for a variety of different Minecraft projects, from simple tweaks to complex interactions. With a unique web panel and a powerful API, Typewriter is the perfect tool for creating custom player interactions.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="yes-i-am-sold-but-how-do-i-get-started">Yes I am sold, but how do I get started?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#yes-i-am-sold-but-how-do-i-get-started" class="hash-link" aria-label="Direct link to Yes I am sold, but how do I get started?" title="Direct link to Yes I am sold, but how do I get started?">​</a></h2>
-<p>Well, I'm glad you asked! You can get started by visiting the <a href="https://docs.typewritermc.com/docs/home" target="_blank" rel="noopener noreferrer">Documentation</a>.
-There you can find a variety of different resources, from a <a href="https://docs.typewritermc.com/docs/installation-guide" target="_blank" rel="noopener noreferrer">Installation Guide</a> to creating your <a href="https://docs.typewritermc.com/docs/first-interaction" target="_blank" rel="noopener noreferrer">First interaction</a> that will help you get started with Typewriter.
-You can also find a <a href="https://discord.gg/gs5QYhfv9x" target="_blank" rel="noopener noreferrer">discord server</a> where you can get help from the community and the developers.</p>]]></content>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="yes-i-am-sold-but-how-do-i-get-started">Yes I am sold, but how do I get started?<a href="https://docs.typewritermc.com/devlog/why-i-created-typewriter#yes-i-am-sold-but-how-do-i-get-started" class="hash-link" aria-label="Direct link to Yes I am sold, but how do I get started?" title="Direct link to Yes I am sold, but how do I get started?" translate="no">​</a></h2>
+<p>Well, I'm glad you asked! You can get started by visiting the <a href="https://docs.typewritermc.com/docs/home" target="_blank" rel="noopener noreferrer" class="">Documentation</a>.
+There you can find a variety of different resources, from a <a href="https://docs.typewritermc.com/docs/installation-guide" target="_blank" rel="noopener noreferrer" class="">Installation Guide</a> to creating your <a href="https://docs.typewritermc.com/docs/first-interaction" target="_blank" rel="noopener noreferrer" class="">First interaction</a> that will help you get started with Typewriter.
+You can also find a <a href="https://discord.gg/gs5QYhfv9x" target="_blank" rel="noopener noreferrer" class="">discord server</a> where you can get help from the community and the developers.</p>]]></content>
         <author>
             <name>Gabber235</name>
             <uri>https://github.com/gabber235</uri>
