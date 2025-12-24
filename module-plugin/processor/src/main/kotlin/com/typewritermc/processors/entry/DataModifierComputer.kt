@@ -1,11 +1,11 @@
 package com.typewritermc.processors.entry
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.typewritermc.processors.entry.modifiers.*
+import com.typewritermc.processors.superAnnotationsByType
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
 
@@ -15,7 +15,7 @@ interface DataModifierComputer<A : Annotation> {
     context(logger: KSPLogger, resolver: Resolver)
     @OptIn(KspExperimental::class)
     fun applyModifier(blueprint: DataBlueprint, property: KSPropertyDeclaration) {
-        val annotation = property.getAnnotationsByType(annotationClass).firstOrNull() ?: return
+        val annotation = property.superAnnotationsByType(annotationClass).firstOrNull() ?: return
         val modifier = compute(blueprint, annotationClass.cast(annotation)).getOrNull() ?: return
         modifier.appendModifier(blueprint)
     }
