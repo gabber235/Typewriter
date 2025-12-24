@@ -7,7 +7,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.matches
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.QuestStatus
 import org.bukkit.entity.Player
 

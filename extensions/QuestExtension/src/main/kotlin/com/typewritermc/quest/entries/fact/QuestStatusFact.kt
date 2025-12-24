@@ -7,7 +7,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.GroupEntry
 import com.typewritermc.engine.paper.entry.entries.ReadableFactEntry
 import com.typewritermc.engine.paper.facts.FactData
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.isQuestActive
 import com.typewritermc.quest.isQuestCompleted
 import com.typewritermc.quest.isQuestTracked

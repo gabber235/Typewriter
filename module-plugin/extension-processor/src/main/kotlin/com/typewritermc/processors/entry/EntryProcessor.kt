@@ -1,7 +1,6 @@
 package com.typewritermc.processors.entry
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -42,36 +41,33 @@ class EntryProcessor(
         val annotation = clazz.getAnnotationsByType(Entry::class).first()
         val dataBlueprint = clazz.fieldBlueprints()
 
-        val blueprint = EntryBlueprint(
-            id = annotation.name,
-            name = annotation.name,
-            description = annotation.description,
-            color = annotation.color,
-            icon = annotation.icon,
-            className = clazz.qualifiedName?.asString() ?: throw IllegalClassTypeException(clazz.simpleName.asString()),
-            extension = configuration.name,
-            tags = clazz.tags,
-            dataBlueprint = dataBlueprint,
-            genericConstraints = clazz.genericConstraints(dataBlueprint),
-            variableDataBlueprint = clazz.variableDataBlueprint(),
-            contextKeys = clazz.contextKeys(),
-            modifiers = clazz.getModifiers(),
-        )
+
+        val blueprint = with(logger) {
+            EntryBlueprint(
+                id = annotation.name,
+                name = annotation.name,
+                description = annotation.description,
+                color = annotation.color,
+                icon = annotation.icon,
+                className = clazz.qualifiedName?.asString()
+                    ?: throw IllegalClassTypeException(clazz.simpleName.asString()),
+                extension = configuration.name,
+                tags = clazz.tags,
+                dataBlueprint = dataBlueprint,
+                genericConstraints = clazz.genericConstraints(dataBlueprint),
+                variableDataBlueprint = clazz.variableDataBlueprint(),
+                contextKeys = clazz.contextKeys(),
+                modifiers = clazz.getModifiers(),
+            )
+        }
 
         return blueprintJson.encodeToJsonElement(blueprint)
     }
 
     @OptIn(KspExperimental::class)
+    context(logger: KSPLogger)
     private val KSClassDeclaration.tags: List<String>
-        get() {
-            val clazzTags = getAnnotationsByType(Tags::class).firstOrNull()?.tags?.toList() ?: emptyList()
-            val superTags: List<String> =
-                getAllSuperTypes().map { it.declaration }.filterIsInstance<KSClassDeclaration>().flatMap {
-                    it.getAnnotationsByType(Tags::class).firstOrNull()?.tags?.toList() ?: emptyList()
-                }.toList()
-
-            return clazzTags + superTags
-        }
+        get() = superAnnotationsByType(Tags::class).flatMap { it.tags.toList() }.toList()
 
     context(resolver: Resolver)
     private fun KSClassDeclaration.fieldBlueprints(): DataBlueprint {
@@ -89,7 +85,7 @@ class EntryProcessor(
     @OptIn(KspExperimental::class)
     private fun KSClassDeclaration.genericConstraints(fields: DataBlueprint): List<DataBlueprint>? {
         with(logger) {
-            val data = getAnnotationsByType(GenericConstraint::class)
+            val data = superAnnotationsByType(GenericConstraint::class)
                 .map { annotation ->
                     annotation.annotationClassValue { type }
                 }
@@ -122,7 +118,7 @@ class EntryProcessor(
     @OptIn(KspExperimental::class)
     private fun KSClassDeclaration.variableDataBlueprint(): DataBlueprint? {
         with(logger) {
-            val data = getAnnotationsByType(VariableData::class)
+            val data = superAnnotationsByType(VariableData::class)
                 .map { it.annotationClassValue { it.type } }
                 .firstOrNull() ?: return null
 
@@ -138,7 +134,7 @@ class EntryProcessor(
     @OptIn(KspExperimental::class)
     private fun KSClassDeclaration.contextKeys(): List<ContextKey> {
         with(logger) {
-            val data = getAnnotationsByType(ContextKeys::class)
+            val data = superAnnotationsByType(ContextKeys::class)
                 .map { it.annotationClassValue { it.klass } }
                 .firstOrNull() ?: return emptyList()
 
@@ -148,7 +144,7 @@ class EntryProcessor(
                 .filterIsInstance<KSClassDeclaration>()
                 .filter { it.classKind == ClassKind.ENUM_ENTRY }
                 .map {
-                    val annotation = it.getAnnotationsByType(KeyType::class).firstOrNull()
+                    val annotation = it.superAnnotationsByType(KeyType::class).firstOrNull()
                         ?: throw IllegalArgumentException("Could not find @KeyType annotation for ${it.simpleName} on ${declaration.fullName}")
                     val type = annotation.annotationClassValue { type }
                     ContextKey(
@@ -165,9 +161,10 @@ class EntryProcessor(
     }
 
     @OptIn(KspExperimental::class)
+    context(logger: KSPLogger)
     private fun KSClassDeclaration.getModifiers(): List<EntryModifier> {
         val modifiers = mutableListOf<EntryModifier>()
-        val annotation = this.getAnnotationsByType(Deprecated::class).firstOrNull()
+        val annotation = this.superAnnotationsByType(Deprecated::class).firstOrNull()
         if (annotation != null) {
             modifiers.add(EntryModifier.Deprecated(annotation.message))
         }

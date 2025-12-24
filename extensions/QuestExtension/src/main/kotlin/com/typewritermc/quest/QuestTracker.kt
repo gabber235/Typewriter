@@ -11,6 +11,7 @@ import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.interaction.PlayerSessionManager
+import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
 import com.typewritermc.quest.events.AsyncTrackedQuestUpdate
 import kotlinx.coroutines.Dispatchers

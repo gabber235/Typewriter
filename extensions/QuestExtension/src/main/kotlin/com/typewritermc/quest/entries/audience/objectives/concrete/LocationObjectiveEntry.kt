@@ -1,4 +1,4 @@
-package com.typewritermc.quest.entries.audience
+package com.typewritermc.quest.entries.audience.objectives.concrete
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
@@ -11,8 +11,8 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.get
-import com.typewritermc.quest.LocatableObjective
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
 import org.bukkit.entity.Player
 import java.util.*
 

@@ -10,11 +10,17 @@ import { SplitLayout, Section } from '@site/src/components/SplitLayout';
 import EntryDisplay from "@site/src/components/EntryDisplay";
 
 # Kill Zombie Objective
+:::tip[Expanded]
+Rather than the [Simplified Kill Zombie Objective](../03-simplified/02-kill-zombie-objective.mdx) guide,\
+this tutorial goes into an example of how to create this objective without using simplified entries.
+
+This guide is meant for more advanced users who want to understand how to create quests and objectives from scratch.
+:::
 :::info[Before starting]
-It's best to first read [Questing](./index.mdx) before starting this tutorial.
+It's best to first read [Questing](../index.mdx) before starting this tutorial.
 :::
 :::warning[NPC]
-This tutorial requires you to already have created an NPC using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+This tutorial requires you to already have created an NPC using the [Entity Extension](../../04-entity-extension/index.mdx) guide.
 :::
 
 In this tutorial, you will learn how to create a quest where:
@@ -102,7 +108,7 @@ This guide is split up into 2 sections.
 
 ## Manifest Section
 :::warning[Before Starting]
-Make sure you have the [Entity Extension](../04-entity-extension/index.mdx) guide completed before starting this tutorial.
+Make sure you have the [Entity Extension](../../04-entity-extension/index.mdx) guide completed before starting this tutorial.
 > In this guide we will be using the Oliver NPC as the quest giver.
 
 Also make sure you have created a manifest page.
@@ -132,7 +138,7 @@ Now inside the objective entry set the following fields:
 * **Completed Criteria**: `Zombie Quest Fact = 1` + `Killed Zombies Fact >= 2`
 * **Display**: `Kill 2 Zombies`
 :::tip[Optional]
-Inside the display you can also choose the display the progress using [PlaceHolderAPI](../../05-helpful-features/03-placeholderapi.mdx)
+Inside the display you can also choose to display the progress using [PlaceHolderAPI](../../../05-helpful-features/03-placeholderapi.mdx)
 
 *Example:* `Kill 2 zombies (%typewriter_nOfQzADcAmcR6ao%/2)`
 
@@ -145,18 +151,18 @@ You can also add a second objective that requires the player to return to the NP
 * **Completed Criteria**: `Zombie Quest Fact = 2`
 * **Display**: `Return to Oliver`
 
-See [talk objective](./01-talk-objective.mdx) for more information on how to do this.
+See [talk objective](../03-simplified/01-talk-objective.mdx) for more information on how to do this.
 :::
 
 ### Manifest Result
 <EntryDisplay pages={[
-    require("../../assets/questing/kill-zombie-objective/manifest.json"),
-    require("../../assets/questing/kill-zombie-objective/static.json")
+    require("../../../assets/questing/kill-zombie-objective/manifest.json"),
+    require("../../../assets/questing/kill-zombie-objective/static.json")
 ]} />
 
 ## Sequence Section
 :::info[Before Starting]
-It is recommended to have a good understanding of [Interactions](../01-interactions/index.mdx) and [Facts](../03-facts/index.mdx) before starting this section.
+It is recommended to have a good understanding of [Interactions](../../01-interactions/index.mdx) and [Facts](../../03-facts/index.mdx) before starting this section.
 :::
 > In this section, we will be creating the sequence that gives the player the quest and makes the objective completable.
 
@@ -200,16 +206,20 @@ This will increase the fact by 1 every time the player kills a zombie and only d
 
 ### Sequence Result
 <EntryDisplay pages={[
-    require("../../assets/questing/kill-zombie-objective/sequence.json"),
-    require("../../assets/questing/kill-zombie-objective/manifest.json"),
-    require("../../assets/questing/kill-zombie-objective/static.json")
+    require("../../../assets/questing/kill-zombie-objective/sequence.json"),
+    require("../../../assets/questing/kill-zombie-objective/manifest.json"),
+    require("../../../assets/questing/kill-zombie-objective/static.json")
 ]} />
 
 ## Final Result
 Now when you click on Oliver you will get the dialogue and when you click on the first option you will get the quest. When you kill 2 zombies the objective will be completed.
 
-<Player url={require("../../assets/questing/kill-zombie-objective/kill-zombie-objective-result.webm").default} />
+<Player url={require("../../../assets/questing/kill-zombie-objective/kill-zombie-objective-result.webm").default} />
 
 :::info[Quest Display]
-In this video you can see the quest tracking with scoreboard and titles displayed to the player. By default, quests won't be displayed to players - you need to manually configure how you want quests to be shown. To learn how to set up quest display (scoreboard, titles, etc.), read the [Displaying Quests Guide](./05-displaying_quests.mdx).
+In this video you can see the quest tracking with scoreboard and titles displayed to the player. 
+
+By default, quests won't be displayed to players - you need to manually configure how you want quests to be shown. 
+
+To learn how to set up quest display (scoreboard, titles, etc.), read the [Displaying Quests Guide](../02-displaying_quests.mdx).
 :::

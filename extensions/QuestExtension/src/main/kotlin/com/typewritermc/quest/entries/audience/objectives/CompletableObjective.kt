@@ -1,4 +1,4 @@
-package com.typewritermc.quest.entries.audience
+package com.typewritermc.quest.entries.audience.objectives
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
@@ -14,15 +14,15 @@ import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
-import com.typewritermc.quest.ObjectiveEntry
-import com.typewritermc.quest.QuestEntry
-import com.typewritermc.quest.inactiveObjectiveDisplay
-import com.typewritermc.quest.showingObjectiveDisplay
+import com.typewritermc.quest.entries.ObjectiveEntry
+import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.inactiveObjectiveDisplay
+import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
 import java.util.*
 
 private val completedObjectiveDisplay by snippet(
-    "quest.completable_objective.completed",
+    "quest.objectives.completable.completed",
     "<green>✔</green> <gray><display></gray>"
 )
 

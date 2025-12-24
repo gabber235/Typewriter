@@ -4,12 +4,12 @@ title: 0.9.X API changes
 
 # 0.9.X API changes
 :::danger[Kotlin Upgrade Required]
-Typewriter v0.9 requires the Kotlin JVM plugin version 2.2.10 and the Typewriter module plugin version 2.0.0. Update your Gradle configuration:
+Typewriter v0.9 requires the Kotlin JVM plugin version 2.2.10 and the Typewriter module plugin version 2.1.0. Update your Gradle configuration:
 
 ```kotlin showLineNumbers
 plugins {
     kotlin("jvm") version "2.2.10"
-    id("com.typewritermc.module-plugin") version "2.0.0"
+    id("com.typewritermc.module-plugin") version "2.1.0"
 }
 ```
 
@@ -207,3 +207,32 @@ player.listenForFacts(listOf(factRef)) {
 
 The listener now receives a context with `player`, `ref`, `oldValue`, and `newValue` properties instead of separate parameters.
 
+## Questing Extension Changes
+The Questing extension has undergone several changes in its API and structure. Below are the key updates:
+
+### Path Changes
+A few classes have been moved to different packages.
+
+#### `QuestEntry`
+```kotlin showLineNumbers
+// highlight-red
+import com.typewritermc.quest.QuestEntry
+// highlight-green
+import com.typewritermc.quest.entries.QuestEntry
+```
+
+#### `LocatableObjective`
+```kotlin showLineNumbers
+// highlight-red
+import com.typewritermc.quest.LocatableObjective
+// highlight-green
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
+```
+
+#### `trackedShowingObjectives`
+```kotlin showLineNumbers
+// highlight-red
+import com.typewritermc.quest.trackedShowingObjectives
+// highlight-green
+import com.typewritermc.quest.entries.trackedShowingObjectives
+```

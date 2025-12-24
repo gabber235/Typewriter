@@ -1,0 +1,1 @@
+{"id":"kuB0YiWIf9UJPeO","name":"static","type":"static","entries":[{"id":"ZPVmegXMQ7Jmzgm","name":"zombie_quest_fact","comment":"","group":null,"type":"permanent_fact","_genericBlueprint":null},{"id":"UHdJmqP2jE3UGqi","name":"zombies_killed_fact","comment":"","group":null,"type":"permanent_fact","_genericBlueprint":null}],"chapter":"simplified","priority":0,"version":"0.9.0"}

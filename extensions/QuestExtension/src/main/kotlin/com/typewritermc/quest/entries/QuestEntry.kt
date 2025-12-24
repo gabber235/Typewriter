@@ -1,28 +1,33 @@
-package com.typewritermc.quest
+package com.typewritermc.quest.entries
 
 import com.typewritermc.core.entries.*
 import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.extension.annotations.Tags
-import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.FactUpdateContext
 import com.typewritermc.engine.paper.facts.listenForFacts
+import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.engine.paper.utils.server
+import com.typewritermc.quest.QuestStatus
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
+import com.typewritermc.quest.isQuestActive
+import com.typewritermc.quest.trackQuest
+import com.typewritermc.quest.trackedQuest
+import lirand.api.extensions.events.listen
 import org.bukkit.entity.Player
+import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
+import org.bukkit.event.player.PlayerEvent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.roundToInt
+import kotlin.reflect.KClass
 
 @Tags("quest")
 interface QuestEntry : AudienceFilterEntry, PlaceholderEntry {
@@ -104,6 +109,31 @@ class ObjectiveAudienceFilter(
     private val criteria: List<Criteria>,
 ) : AudienceFilter(objective) {
     private val factWatcherSubscriptions = ConcurrentHashMap<UUID, FactListenerSubscription>()
+    private val listenersCallbacks = mutableMapOf<KClass<Event>, (Event) -> Unit>()
+
+    // TODO: This should probably be moved later on to the AudienceDisplay.
+    fun <E : Event> listenToEvent(klass: KClass<E>, callback: (E) -> Unit): ObjectiveAudienceFilter {
+        @Suppress("UNCHECKED_CAST", "ReplacePutWithAssignment")
+        listenersCallbacks.put(klass as KClass<Event>) { event ->
+            if (event is PlayerEvent) {
+                val player = event.player
+                if (player !in this) {
+                    return@put
+                }
+            }
+            if (klass.isInstance(event)) {
+                callback(event as E)
+            }
+        }
+        return this
+    }
+
+    override fun initialize() {
+        super.initialize()
+        for (callback in listenersCallbacks) {
+            listen(plugin, callback.key, block = callback.value)
+        }
+    }
 
     override fun filter(player: Player): Boolean =
         criteria.matches(player)
@@ -158,32 +188,6 @@ class ObjectiveAudienceFilter(
         }
     }
 }
-
-interface LocatableObjective : ObjectiveEntry {
-    fun positions(player: Player?): List<Position>
-
-    override fun parser(): PlaceholderParser = placeholderParser {
-        include(super.parser())
-
-        literal("distance") {
-            supplyPlayer { player ->
-                val playerPosition = player.position;
-                val positions = positions(player)
-                if (positions.isEmpty()) return@supplyPlayer null
-                val closestPosition =
-                    positions(player).maxBy { it.distanceSqrt(playerPosition) ?: Double.POSITIVE_INFINITY }
-
-                if (closestPosition.world != playerPosition.world) {
-                    return@supplyPlayer "∞ m"
-                }
-
-                val distance = player.position.distance(closestPosition).roundToInt()
-                "${distance}m"
-            }
-        }
-    }
-}
-
 
 fun Player.trackedShowingObjectives() = trackedQuest()?.let { questShowingObjectives(it) } ?: emptySequence()
 

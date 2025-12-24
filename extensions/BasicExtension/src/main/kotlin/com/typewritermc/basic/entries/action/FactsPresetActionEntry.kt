@@ -31,9 +31,10 @@ class FactsPresetActionEntry(
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val preset: Ref<FactsPresetEntry> = emptyRef(),
+    val serialization: String = "",
 ) : ActionEntry {
     override val eventTriggers: List<EventTrigger>
-        get() = listOf(FactsPresetStartTrigger(preset, super.eventTriggers))
+        get() = listOf(FactsPresetStartTrigger(preset, super.eventTriggers, serialization))
 
     override fun ActionTrigger.execute() {}
 }

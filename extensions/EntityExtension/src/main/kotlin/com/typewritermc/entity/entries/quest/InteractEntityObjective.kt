@@ -13,8 +13,8 @@ import com.typewritermc.engine.paper.entry.entity.AudienceEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.findDisplay
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.quest.LocatableObjective
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.quest.entries.QuestEntry
 import org.bukkit.entity.Player
 import java.util.*
 

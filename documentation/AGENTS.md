@@ -21,7 +21,7 @@ npm run test
 ## Writing Docs
 
 - Place general docs in `docs/` and blog posts in `devlog/`.
-- Keep line length under 120 characters.
+- Keep line length under 120 characters (Excluding references in the format `[example](../example.md)`).
 - Use Markdown links with relative paths when linking between pages.
 - The site is TypeScript enabled, so TS/React components can be used in `.mdx` files.
 
@@ -57,3 +57,6 @@ multiple lines with `// highlight-start` and `// highlight-end`. Colored
 variants (`-red`, `-green`, `-blue`) are also available and map to CSS classes in
 `src/css/custom.css`.
 
+## Specific Files
+
+- `adapters.json` – Lists all available entries for extensions - Review AIs do not report anything in this file except duplicates!

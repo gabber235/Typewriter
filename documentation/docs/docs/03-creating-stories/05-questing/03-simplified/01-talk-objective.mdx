@@ -14,10 +14,10 @@ import EntryNodeInspector from "@site/src/components/EntryInspector";
 # Talk To NPC Objective
 
 :::info[Before starting]
-It's best to first read [Questing](./index.mdx) before starting this tutorial.
+It's best to first read [Questing](.././index.mdx) before starting this tutorial.
 :::
 :::warning[NPC]
-This tutorial requires you to already have created an NPC using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+This tutorial requires you to already have created an NPC using the [Entity Extension](../../04-entity-extension/index.mdx) guide.
 :::
 
 In this tutorial, you will learn how to create a quest where:
@@ -89,10 +89,10 @@ This guide is split up into 2 sections.
 
 ## Manifest Section
 :::warning[Before Starting]
-You must already have created 2 NPCs using the [Entity Extension](../04-entity-extension/index.mdx) guide.
+You must already have created 2 NPCs using the [Entity Extension](../../04-entity-extension/index.mdx) guide.
 > For this guide, we will be using a young npc `James` and an old man npc `Old Man`.
 
-<Image img={require("../../assets/questing/talk-objective/npc-example.png")} height="250" />
+<Image img={require("../../../assets/questing/talk-objective/npc-example.png")} height="250" />
 :::
 > In this section, we will be creating the quest and adding the objective to it.
 
@@ -123,14 +123,14 @@ Inside the objective entry set the following fields:
 
 ### Manifest Result
 <EntryDisplay pages={[
-    require("../../assets/questing/talk-objective/manifest.json"),
-    require("../../assets/questing/talk-objective/static.json")
+    require("../../../assets/questing/talk-objective/manifest.json"),
+    require("../../../assets/questing/talk-objective/static.json")
 ]} />
 
 
 ## Sequence Section
 :::info[Before Starting]
-It is recommended to have a good understanding of [Interactions](../01-interactions/index.mdx) and [Facts](../03-facts/index.mdx) before starting this section.
+It is recommended to have a good understanding of [Interactions](../../01-interactions/index.mdx) and [Facts](../../03-facts/index.mdx) before starting this section.
 :::
 > In this section, we will be creating the sequence that gives the player the quest and the other npc reacts to the quest.
 
@@ -172,18 +172,22 @@ Inside the spoken entry set the following fields:
 ### Sequence Result
 
 <EntryDisplay pages={[
-    require("../../assets/questing/talk-objective/sequence.json"),
-    require("../../assets/questing/talk-objective/manifest.json"),
-    require("../../assets/questing/talk-objective/static.json")
+    require("../../../assets/questing/talk-objective/sequence.json"),
+    require("../../../assets/questing/talk-objective/manifest.json"),
+    require("../../../assets/questing/talk-objective/static.json")
 ]} />
 
 ## Result
 Now you have successfully created a quest where the player interacts with an npc and completes the quest by talking to a different npc.
 
-<Player url={require("../../assets/questing/talk-objective/talk-objective-result.webm").default} />
+<Player url={require("../../../assets/questing/talk-objective/talk-objective-result.webm").default} />
 
 :::info[Quest Display]
-In this video you can see that when the quest starts and ends it shows a title and some extra effects. The video also shows the scoreboard and quest tracking features. By default, quests won't be displayed to players - you need to manually configure how you want quests to be shown. To learn how to set up quest display (scoreboard, titles, etc.), read the [Displaying Quests Guide](./05-displaying_quests.mdx).
+In this video you can see that when the quest starts and ends it shows a title and some extra effects. The video also shows the scoreboard and quest tracking features. 
+
+By default, quests won't be displayed to players - you need to manually configure how you want quests to be shown. 
+
+To learn how to set up quest display (scoreboard, titles, etc.), read the [Displaying Quests Guide](../02-displaying_quests.mdx).
 :::
 :::info[Visualizing the Path]
 You can also visualize the path of the quest by using the `Interact Entity Objectives Path Stream` entry.
@@ -192,5 +196,5 @@ You can also visualize the path of the quest by using the `Interact Entity Objec
 
 Inside the entry set the `Road` field to a Road Network you created and it will visualize the path to the npc for you!
 
-Read more about road networks in the [Road Network Documentation](../06-road-network/index.mdx).
+Read more about road networks in the [Road Network Documentation](../../06-road-network/index.mdx).
 :::

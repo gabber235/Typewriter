@@ -4,6 +4,8 @@ import com.typewritermc.core.extension.annotations.Singleton
 import com.typewritermc.core.utils.point.formatted
 import com.typewritermc.engine.paper.extensions.placeholderapi.PlaceholderHandler
 import com.typewritermc.engine.paper.snippets.snippet
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.quest.entries.trackedShowingObjectives
 import org.bukkit.entity.Player
 
 private val noneTracked by snippet("quest.tracked.none", "<gray>None tracked</gray>")
