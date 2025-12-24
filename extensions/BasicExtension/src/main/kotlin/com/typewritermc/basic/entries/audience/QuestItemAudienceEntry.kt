@@ -1,17 +1,25 @@
 package com.typewritermc.basic.entries.audience
 
+import com.github.shynixn.mccoroutine.bukkit.ticks
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.AudienceManager
-import com.typewritermc.engine.paper.entry.entries.*
+import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
+import com.typewritermc.engine.paper.entry.entries.AudienceEntry
+import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
+import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.server
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import lirand.api.extensions.events.unregister
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.ArmorStand
@@ -26,13 +34,13 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryType
-import org.bukkit.event.player.*
+import org.bukkit.event.player.PlayerDropItemEvent
+import org.bukkit.event.player.PlayerInteractAtEntityEvent
+import org.bukkit.event.player.PlayerInteractEntityEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.koin.java.KoinJavaComponent.get
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
 private val inventoryFullMessage by snippet(
     "quest_item.inventory_full",
@@ -72,8 +80,6 @@ class QuestItemAudienceEntry(
 class QuestItemAudienceDisplay(
     private val ref: Ref<QuestItemAudienceEntry>
 ) : AudienceDisplay(), Listener {
-    private val playerItems = ConcurrentHashMap<UUID, ItemStack>()
-
     override fun initialize() {
         super.initialize()
         server.pluginManager.registerEvents(this, plugin)
@@ -83,98 +89,184 @@ class QuestItemAudienceDisplay(
         return NamespacedKey(plugin, "quest_item_id")
     }
 
-    private fun tagItem(item: ItemStack, entryId: String): ItemStack {
+    private fun tagItem(item: ItemStack): ItemStack {
         val meta = item.itemMeta ?: return item
-        meta.persistentDataContainer.set(getNamespacedKey(), PersistentDataType.STRING, entryId)
+        meta.persistentDataContainer.set(getNamespacedKey(), PersistentDataType.STRING, ref.id)
         item.itemMeta = meta
         return item
     }
 
-    private fun isQuestItem(item: ItemStack?, entryId: String): Boolean {
-        if (item == null || item.type.isAir) return false
-        val meta = item.itemMeta ?: return false
-        val storedId = meta.persistentDataContainer.get(getNamespacedKey(), PersistentDataType.STRING)
-        return storedId == entryId
+    private fun questItemData(itemStack: ItemStack?): String? {
+        if (itemStack == null || itemStack.type.isAir) return null
+        val meta = itemStack.itemMeta ?: return null
+        return meta.persistentDataContainer.get(getNamespacedKey(), PersistentDataType.STRING)
     }
 
-    private fun getForbiddenSlots(player: Player): Set<Int> {
+    private fun isQuestItem(itemStack: ItemStack?): Boolean {
+        return questItemData(itemStack) == ref.id
+    }
+
+    /**
+     * Determines the slots in the player's inventory that are considered forbidden for use with quest items.
+     * Forbidden slots include:
+     * - Slots bound to item binders that the player is part of.
+     * - Slots occupied by another quest item
+     *
+     * @param player The player whose inventory will be checked for forbidden slots.
+     * @return A set of integers representing the indices of forbidden slots in the player's inventory.
+     */
+    private fun forbiddenSlots(player: Player): Set<Int> {
         val manager = get<AudienceManager>(AudienceManager::class.java)
-        val forbidden = mutableSetOf<Int>()
-        // Find all ItemSlotBinderAudience displays
-        manager.findDisplays(ItemSlotBinderAudience::class).forEach { display ->
-             if (display.contains(player)) {
-                 forbidden.add(display.key(player))
-             }
+        val itemBinderSlots =
+            manager.findDisplays(ItemSlotBinderAudience::class).filter { it.contains(player) }.map { it.key(player) }
+                .toSet()
+
+        val takenQuestItemSlots =
+            player.inventory.contents.withIndex().filter { (_, item) ->
+                val questItemData = questItemData(item) ?: return@filter false
+                questItemData != ref.id
+            }.map { it.index }
+
+        return itemBinderSlots + takenQuestItemSlots
+    }
+
+
+    /**
+     * Forcibly gives a quest item to a player, ensuring the item is added to their inventory or dropped at their location
+     * if no eligible slot is available. The method respects forbidden slots and handles replacement or dropping logic.
+     *
+     * @param player The player who will receive the quest item.
+     * @param questItem The quest item to be given to the player. Must be a valid quest item tagged with the appropriate entry ID.
+     */
+    private fun forceGiveQuestItem(player: Player, questItem: ItemStack) = Dispatchers.Sync.launch {
+        if (!player.isOnline) return@launch
+        assert(isQuestItem(questItem)) { "Quest item must be tagged with the entry id" }
+
+
+        if (replaceExistingQuestItem(player, questItem)) return@launch
+        if (isQuestItem(player.itemOnCursor)) {
+            player.setItemOnCursor(questItem)
+            return@launch
         }
-        return forbidden
+
+        val forbiddenSlots = forbiddenSlots(player)
+
+        val storageContents = player.inventory.storageContents
+
+        if (insertIntoEmptySlot(forbiddenSlots, storageContents, player, questItem)) return@launch
+        if (dropAndReplaceNonQuestItem(forbiddenSlots, storageContents, player, questItem)) return@launch
+
+        player.world.dropItemNaturally(player.location, questItem)
     }
 
-    private fun forceGiveQuestItem(player: Player, questItem: ItemStack) {
-        server.scheduler.runTask(plugin, Runnable {
-            if (!player.isOnline) return@Runnable
-            
-            val forbiddenSlots = getForbiddenSlots(player)
-            
-            // Check if player already has it (double check inside task)
-            if (player.inventory.contents.any { isQuestItem(it, ref.get()?.id ?: "") }) return@Runnable
-            if (isQuestItem(player.itemOnCursor, ref.get()?.id ?: "")) return@Runnable
-
-            var targetSlot = -1
-            val storageContents = player.inventory.storageContents
-            
-            // 1. Try to find empty, non-forbidden slot
-            for (i in 0 until 36) {
-                if (i in forbiddenSlots) continue
-                val item = storageContents[i]
-                if (item == null || item.type.isAir) {
-                    targetSlot = i
-                    break
-                }
-            }
-            
-            if (targetSlot != -1) {
-                player.inventory.setItem(targetSlot, questItem)
-                playerItems[player.uniqueId] = questItem
-                return@Runnable
-            }
-            
-            // 2. Swap with non-forbidden slot
-            var slotToSwap = -1
-            for (i in 0 until 36) {
-                if (i in forbiddenSlots) continue
-                val item = storageContents[i]
-                if (item != null && !item.type.isAir && !isQuestItem(item, ref.get()?.id ?: "")) {
-                    slotToSwap = i
-                    break
-                }
-            }
-
-            if (slotToSwap != -1) {
-                val itemToDrop = player.inventory.getItem(slotToSwap)
-                if (itemToDrop != null) {
-                    player.world.dropItemNaturally(player.location, itemToDrop)
-                    player.inventory.setItem(slotToSwap, questItem)
-                    player.sendMessage(inventoryFullMessage.parsePlaceholders(player).asMini())
-                    playerItems[player.uniqueId] = questItem
-                }
-            } else {
-                 // 3. Drop quest item if absolutely no space
-                 player.world.dropItemNaturally(player.location, questItem)
-            }
-        })
+    /**
+     * Replaces an existing quest item in the player's inventory with a new quest item.
+     * If a quest item is found in the inventory, it will be replaced with the provided item.
+     * The player's existing quest item reference is also updated.
+     *
+     * @param player The player whose inventory will be checked and updated.
+     * @param questItem The new quest item to replace the existing one in the inventory.
+     * @return `true` if a quest item was found and successfully replaced; `false` otherwise.
+     */
+    private fun replaceExistingQuestItem(player: Player, questItem: ItemStack): Boolean {
+        val index = player.inventory.contents.withIndex()
+            .firstOrNull { (_, itemStack) -> isQuestItem(itemStack) }?.index
+            ?: return false
+        player.inventory.setItem(index, questItem)
+        return true
     }
-    
+
+    /**
+     * Finds the first eligible slot in the storage contents that satisfies the given predicate and is not in the set of forbidden slots.
+     *
+     * @param forbiddenSlots A set of indices representing slots that cannot be selected.
+     * @param storageContents An array of ItemStack objects representing the storage contents to evaluate.
+     * @param predicate A function that takes an ItemStack and returns true if it satisfies a given condition.
+     * @return The index of the first slot that satisfies the predicate and is not forbidden, or null if no such slot exists.
+     */
+    private fun findEligibleSlot(
+        forbiddenSlots: Set<Int>,
+        storageContents: Array<out ItemStack?>,
+        predicate: (ItemStack?) -> Boolean,
+    ): Int? {
+        return storageContents.withIndex()
+            .firstOrNull { (index, itemStack) -> index !in forbiddenSlots && predicate(itemStack) }?.index
+    }
+
+    /**
+     * Attempts to insert a quest item into the first available empty inventory slot of the player,
+     * skipping over any forbidden slots. If an eligible slot is found, the item is added to the
+     * player's inventory, and their quest item reference is updated.
+     *
+     * @param forbiddenSlots A set of indices representing inventory slots that should not be used for insertion.
+     * @param storageContents An array containing the contents of the player's storage to evaluate for availability.
+     * @param player The player whose inventory will be modified.
+     * @param questItem The quest item to be inserted into the player's inventory.
+     * @return `true` if the item was successfully inserted into an empty slot; `false` otherwise.
+     */
+    private fun insertIntoEmptySlot(
+        forbiddenSlots: Set<Int>,
+        storageContents: Array<out ItemStack?>,
+        player: Player,
+        questItem: ItemStack
+    ): Boolean {
+        val targetSlot =
+            findEligibleSlot(forbiddenSlots, storageContents) { it == null || it.type.isAir } ?: return false
+
+        player.inventory.setItem(targetSlot, questItem)
+        return true
+    }
+
+    /**
+     * Drops a non-quest item from the player's inventory and replaces it with a specified quest item.
+     * Ensures that forbidden slots are not modified and only eligible non-quest items are replaced.
+     *
+     * @param forbiddenSlots A set of indices representing inventory slots that are restricted from use.
+     * @param storageContents An array containing the contents of the player's storage to evaluate for eligible items.
+     * @param player The player whose inventory will be checked and modified.
+     * @param questItem The quest item to replace the non-quest item with. The item must be a valid quest item.
+     * @return `true` if an eligible non-quest item was successfully replaced; `false` if no eligible items were found.
+     */
+    private fun dropAndReplaceNonQuestItem(
+        forbiddenSlots: Set<Int>,
+        storageContents: Array<out ItemStack?>,
+        player: Player,
+        questItem: ItemStack
+    ): Boolean {
+        val slotToSwap =
+            findEligibleSlot(forbiddenSlots, storageContents) { it != null && !it.type.isAir && !isQuestItem(it) }
+                ?: return false
+
+        val itemToDrop = player.inventory.getItem(slotToSwap)
+        assert(itemToDrop != null) { "Item to drop cannot be null" }
+
+        player.world.dropItemNaturally(player.location, itemToDrop!!)
+        player.inventory.setItem(slotToSwap, questItem)
+        player.sendMessage(inventoryFullMessage.parsePlaceholders(player).asMini())
+        return true
+    }
+
+
+    /**
+     * Removes all quest items from the specified player's inventory and clears the reference
+     * to the player's quest items in the internal tracking system.
+     *
+     * This method ensures that:
+     * - All quest items in the player's inventory are set to null.
+     * - The item on the player's cursor is cleared if it is a quest item.
+     * - The player's quest item reference is removed from the `playerItems` collection.
+     *
+     * @param player The player from whose inventory the quest items should be removed.
+     */
     private fun removeQuestItem(player: Player) {
-        val entry = ref.get() ?: return
-        playerItems.remove(player.uniqueId)
-        
-        player.inventory.contents.forEachIndexed { index, item ->
-            if (isQuestItem(item, entry.id)) {
+
+        player.inventory.contents.withIndex()
+            .filter { (_, item) -> isQuestItem(item) }
+            .forEach { (index, _) ->
                 player.inventory.setItem(index, null)
             }
-        }
-        
-        if (isQuestItem(player.itemOnCursor, entry.id)) {
+
+        if (isQuestItem(player.itemOnCursor)) {
             player.setItemOnCursor(null)
         }
     }
@@ -182,7 +274,7 @@ class QuestItemAudienceDisplay(
     override fun onPlayerAdd(player: Player) {
         val entry = ref.get() ?: return
         val rawItem = entry.item.get(player).build(player)
-        val questItem = tagItem(rawItem, entry.id)
+        val questItem = tagItem(rawItem)
         forceGiveQuestItem(player, questItem)
     }
 
@@ -192,10 +284,9 @@ class QuestItemAudienceDisplay(
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onItemDrop(event: PlayerDropItemEvent) {
-        val entry = ref.get() ?: return
         if (!contains(event.player)) return
-        
-        if (isQuestItem(event.itemDrop.itemStack, entry.id)) {
+
+        if (isQuestItem(event.itemDrop.itemStack)) {
             event.isCancelled = true
         }
     }
@@ -203,11 +294,10 @@ class QuestItemAudienceDisplay(
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInventoryClose(event: InventoryCloseEvent) {
         val player = event.player as? Player ?: return
-        val entry = ref.get() ?: return
         if (!contains(player)) return
 
         val cursor = player.itemOnCursor
-        if (isQuestItem(cursor, entry.id)) {
+        if (isQuestItem(cursor)) {
             player.setItemOnCursor(null)
             forceGiveQuestItem(player, cursor)
         }
@@ -216,126 +306,114 @@ class QuestItemAudienceDisplay(
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInventoryClick(event: InventoryClickEvent) {
         val player = event.whoClicked as? Player ?: return
-        val entry = ref.get() ?: return
         if (!contains(player)) return
-        
+
+        val cursorItem = event.cursor
         if (event.clickedInventory == null) {
-            if (isQuestItem(event.cursor, entry.id)) {
+            if (isQuestItem(cursorItem)) {
                 event.isCancelled = true
             }
             return
         }
-        
+
         val clickedInventory = event.clickedInventory!!
         val currentItem = event.currentItem
-        val cursorItem = event.cursor
+
 
         // Block interaction with crafting slots
         if (clickedInventory.type == InventoryType.CRAFTING && event.slot in 1..4) {
-            if (isQuestItem(currentItem, entry.id) || isQuestItem(cursorItem, entry.id)) {
-                event.isCancelled = true
-                return
-            }
-        }
-        
-        // Prevent placing into containers
-        if (clickedInventory.type != InventoryType.PLAYER && clickedInventory.type != InventoryType.CRAFTING) {
-            if (isQuestItem(cursorItem, entry.id)) {
+            if (isQuestItem(currentItem) || isQuestItem(cursorItem)) {
                 event.isCancelled = true
                 return
             }
         }
 
+        if (!isQuestItem(currentItem)) return
+
+        // Prevent placing into containers
+        if (clickedInventory.type != InventoryType.PLAYER && clickedInventory.type != InventoryType.CRAFTING) {
+            event.isCancelled = true
+            return
+        }
+
         // Prevent shift-clicking into containers
-        if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER) {
-            if (isQuestItem(currentItem, entry.id) && event.click.isShiftClick) {
-                event.isCancelled = true
-                return
-            }
+        if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER && event.click.isShiftClick) {
+            event.isCancelled = true
+            return
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInventoryDrag(event: InventoryDragEvent) {
         val player = event.whoClicked as? Player ?: return
-        val entry = ref.get() ?: return
         if (!contains(player)) return
 
-        if (isQuestItem(event.oldCursor, entry.id)) {
-            if (event.view.topInventory.type != InventoryType.PLAYER && event.view.topInventory.type != InventoryType.CRAFTING) {
-                val topSize = event.view.topInventory.size
-                if (event.rawSlots.any { it < topSize }) {
-                    event.isCancelled = true
-                }
-            }
-        }
+        if (!isQuestItem(event.oldCursor)) return
+        if (event.view.topInventory.type == InventoryType.PLAYER || event.view.topInventory.type == InventoryType.CRAFTING) return
+        val topSize = event.view.topInventory.size
+        if (event.rawSlots.none { it < topSize }) return
+        event.isCancelled = true
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onBlockPlace(event: BlockPlaceEvent) {
-        val entry = ref.get() ?: return
         if (!contains(event.player)) return
 
-        if (isQuestItem(event.itemInHand, entry.id)) {
-            event.isCancelled = true
-        }
+        if (!isQuestItem(event.itemInHand)) return
+        event.isCancelled = true
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInteractEntity(event: PlayerInteractEntityEvent) {
-        val entry = ref.get() ?: return
         if (!contains(event.player)) return
 
-        if (event.rightClicked is ItemFrame || event.rightClicked is ArmorStand) {
-            val hand = event.hand
-            val item = if (hand == EquipmentSlot.HAND) event.player.inventory.itemInMainHand else event.player.inventory.itemInOffHand
-            
-            if (isQuestItem(item, entry.id)) {
-                event.isCancelled = true
-            }
-        }
+        if (event.rightClicked !is ItemFrame && event.rightClicked !is ArmorStand) return
+        val hand = event.hand
+        val item =
+            if (hand == EquipmentSlot.HAND) event.player.inventory.itemInMainHand else event.player.inventory.itemInOffHand
+
+        if (!isQuestItem(item)) return
+        event.isCancelled = true
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInteractAtEntity(event: PlayerInteractAtEntityEvent) {
-        val entry = ref.get() ?: return
         if (!contains(event.player)) return
 
-        if (event.rightClicked is ArmorStand) {
-            val hand = event.hand
-            val item = if (hand == EquipmentSlot.HAND) event.player.inventory.itemInMainHand else event.player.inventory.itemInOffHand
-            
-            if (isQuestItem(item, entry.id)) {
-                event.isCancelled = true
-            }
-        }
+        if (event.rightClicked !is ArmorStand) return
+        val hand = event.hand
+        val item =
+            if (hand == EquipmentSlot.HAND) event.player.inventory.itemInMainHand else event.player.inventory.itemInOffHand
+
+        if (!isQuestItem(item)) return
+        event.isCancelled = true
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerDeath(event: PlayerDeathEvent) {
-        val entry = ref.get() ?: return
         if (!contains(event.entity)) return
-        
+
         val questItemStacks = event.drops.filter { item ->
-            isQuestItem(item, entry.id)
+            isQuestItem(item)
         }
-        
+        if (questItemStacks.isEmpty()) return
+
         event.drops.removeAll(questItemStacks)
-        
+
         val playerId = event.entity.uniqueId
-        server.scheduler.runTaskLater(plugin, Runnable {
-            val player = server.getPlayer(playerId) ?: return@Runnable
-            if (!contains(player)) return@Runnable
-            
+        Dispatchers.Sync.launch {
+            delay(1.ticks)
+            val player = server.getPlayer(playerId) ?: return@launch
+            if (!contains(player)) return@launch
+
             questItemStacks.forEach { item ->
                 forceGiveQuestItem(player, item)
             }
-         }, 1L)
+        }
     }
 
     override fun dispose() {
         super.dispose()
         unregister()
-        playerItems.clear()
     }
 }
