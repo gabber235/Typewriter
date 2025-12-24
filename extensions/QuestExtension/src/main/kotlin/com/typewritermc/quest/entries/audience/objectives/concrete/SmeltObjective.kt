@@ -12,6 +12,7 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.quest.entries.ObjectiveAudienceFilter
 import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.entries.interfaces.CachableFactObjective
@@ -37,7 +38,7 @@ class SmeltObjective(
     override val children: List<Ref<AudienceEntry>> = emptyList(),
     override val criteria: List<Criteria> = emptyList(),
     @Help("The item that is the end result of the smelt (e.g. IRON_INGOT)! If not set, any block type will count.")
-    val result: Optional<Var<Material>> = Optional.empty(),
+    val result: Optional<Var<Item>> = Optional.empty(),
     @Help("Track the progress of the SmeltObjective using a fact and set its target value.")
     override val progressTracking: CacheableFactObjectiveProgressTracking = CacheableFactObjectiveProgressTracking(),
     override val display: Var<String> = ConstVar(""),
@@ -59,8 +60,8 @@ class SmeltObjective(
             )
             if (!validFurnace || event.rawSlot != 2 || item.type == Material.AIR) return@listenToEvent
 
-            val expectedType = result.takeIf { it.isPresent }?.get()?.get(player)
-            if (expectedType != null && item.type != expectedType) return@listenToEvent
+            val expectedItem = result.takeIf { it.isPresent }?.get()?.get(player)
+            if (expectedItem != null && expectedItem.isSameAs(player, item)) return@listenToEvent
 
             incrementFact(player, item.amount)
         }
