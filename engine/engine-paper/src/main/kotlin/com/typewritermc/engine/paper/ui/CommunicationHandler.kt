@@ -79,6 +79,7 @@ class CommunicationHandler : KoinComponent {
         val config = Configuration().apply {
             hostname = "0.0.0.0"
             port = this@CommunicationHandler.webSocketPort
+            isWebsocketCompression = false // Disable compression to avoid Netty 4.1/4.2 API conflict
             setAuthorizationListener(this@CommunicationHandler::authenticate)
         }
 

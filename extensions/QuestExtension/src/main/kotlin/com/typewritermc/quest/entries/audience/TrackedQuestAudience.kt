@@ -10,7 +10,7 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.AudienceFilterEntry
 import com.typewritermc.engine.paper.entry.entries.Invertible
-import com.typewritermc.quest.QuestEntry
+import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.events.AsyncTrackedQuestUpdate
 import com.typewritermc.quest.isQuestTracked
 import org.bukkit.entity.Player

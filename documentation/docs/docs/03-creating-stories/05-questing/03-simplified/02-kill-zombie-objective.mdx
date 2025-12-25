@@ -1,0 +1,198 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import Image from "@site/src/components/Image";
+import Player from "@site/src/components/Player";
+import StateFlow from '@site/src/components/StateFlow';
+import { SplitLayout, Section } from '@site/src/components/SplitLayout';
+import EntryDisplay from "@site/src/components/EntryDisplay";
+
+# Kill Zombie Objective
+:::info[Before starting]
+It's best to first read [Questing](../index.mdx) before starting this tutorial.
+:::
+:::warning[NPC Interaction]
+This tutorial requires you to already have some knowledge of creating NPCs using the [Entity Extension](../../04-entity-extension/index.mdx) and [using them in a quest](./01-talk-objective.mdx)
+:::
+
+<SplitLayout>
+<Section divider='left'>
+## Quest Flow
+<StateFlow
+  nodes={[
+    {
+      id: 'not-started',
+      title: 'Not Started',
+      facts: ['Zombie Quest Fact = 0'],
+      className: 'bg-gray-100 dark:bg-zinc-600 ring-1 ring-[#1f2937] dark:ring-white',
+      description: 'Player hasn\'t started the quest yet',
+      icon: 'tabler:circle-dot',
+      transitions: [
+        { 
+          targetId: 'quest-received', 
+          label: 'Talk to NPC', 
+          icon: 'tabler:message-circle' 
+        }
+      ]
+    },
+    {
+      id: 'quest-received',
+      title: 'Quest Received',
+      facts: ['Zombie Quest Fact = 1', 'Kill Zombie Fact = 0'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-cyan-500 border-cyan-100 dark:border-cyan-800',
+      description: 'Player has received the quest from the NPC',
+      icon: 'tabler:message-circle',
+      transitions: [
+        { 
+          targetId: 'killing', 
+          label: 'Kill Zombies', 
+          icon: 'tabler:sword' 
+        }
+      ]
+    },
+    {
+      id: 'killing',
+      title: 'Killing Zombies',
+      facts: ['Zombie Quest Fact = 1', 'Kill Zombie Fact >= 2'],
+      className: 'bg-[#eef9fd] dark:bg-[#193c47] ring-[#4cb3d4] border-cyan-100 dark:border-cyan-800',
+      description: 'Player is killing zombies',
+      icon: 'tabler:sword',
+      transitions: [
+        { 
+          targetId: 'completed', 
+          label: 'Return to NPC', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      facts: ['Zombie Quest Fact = 2'],
+      className: 'bg-[#e6f6e6] dark:bg-[#003100] ring-[#009400] border-green-100 dark:border-green-800',
+      description: 'Player has completed the quest by killing 2 zombies',
+      icon: 'tabler:check-circle',
+      transitions: [
+        { 
+          targetId: 'not-started', 
+          label: 'Reset Quest', 
+          icon: 'tabler:arrow-back-up' 
+        }
+      ]
+    }
+  ]}
+/>
+</Section>
+<Section divider='right'>
+## Quest Setup
+In this guide you will learn how to create:
+* Add a quest 
+* Add an objective where the player must kill 2 zombies to complete the quest.
+
+</Section>
+</SplitLayout>
+
+## Setting up the manifest page
+Starting off this guide, we will first make the Manifest page.
+
+:::warning[Before Starting]
+Make sure you have the [Entity Extension](../../04-entity-extension/index.mdx) guide completed before starting this tutorial.
+> In this guide we will be using the Oliver NPC as the quest giver.
+
+Also make sure you have created a manifest page.
+:::
+
+### Creating the Quest
+Now inside the manifest page, click on the **+** button in the top right corner and search for `Quest`. Click on the **+** button to add it to your page.
+
+<EntrySearch entryName="quest" />
+
+#### Configuring the Quest Entry
+Now inside the quest entry set the following fields:
+* **Display Name**: `ZombieQuest`
+* **Active Criteria**: `Zombie Quest Fact >= 1`
+* **Completed Criteria**: `Zombie Quest Fact = 2`\
+*For this guide I used a permanent fact*
+
+### Adding the Kill Entity Objective
+Now again click on the **+** button in the top right corner and search for `Kill Entity Objective`. Click on the **+** button to add it to your page.
+
+<EntrySearch entryName="kill_entity_objective" />
+
+### Configuring the objective
+Inside the Kill Entity Objective set the following fields:
+* **Quest**: `ZombieQuest`
+* **Criteria**: `Zombie Quest Fact = 1`
+* **Entity**: `ZOMBIE`
+
+:::tip[Progress Tracking]
+You've now reached the Progress Tracking configuration. 
+
+This feature makes it a simplified objective by combining multiple entries into one.
+
+If you'd like to configure this manually, see the [expanded documentation](../04-expanded/02-kill-zombie-objective.mdx) for the kill entity objective.
+:::
+
+* **Progress Tracking**: 
+  * **Value**: `Zombies Killed Fact`
+  * **Operator**: `>=`
+  * **Target**: `2`\
+*Fact used here is permanent*
+
+* **Override Display**: `Kill Zombies (<value>/<target>)`\
+*The `<value>` and `<target>` are parsed to the `Zombies Killed Fact` value and the set target amount.*
+
+### Manifest Result
+<EntryDisplay pages={[
+    require("../../../assets/questing/simplified/kill-zombie-objective/manifest.json"),
+    require("../../../assets/questing/simplified/kill-zombie-objective/static.json")
+]} />
+
+## Sequence Section
+:::info[Before Starting]
+Make sure you have created a sequence page.
+> In this section, we will be making the NPC give the quest and react to the quest
+:::
+
+### Making the NPC give the Quest
+First, we will make the NPC give the quest to the player. Go to the top right corner and click on the **+** button and search for `Entity Interact Event`. Click on the **+** button to add it to your page.
+<EntrySearch entryName="entity_interact_event" />
+
+Inside the entry set the Definition field to the NPC you created. In this case, we will be using `Oliver`.
+
+### Configuring the interaction
+Now you can configure an interaction that happens when you interact with oliver!
+
+**Important** in this case is that when you start the quest you set the `Zombie Quest Fact` to 1.\
+and when the quest is completed to 2.
+
+:::warning[Repeatable Quests]
+If you configure this as a repeatable quest, make sure to reset the `Zombies Killed Fact` back to 0 when the quest is started!
+> This is even recommended for non-repeatable quests to avoid issues.
+:::
+
+For how we configured the quest view the sequence result here below!\
+*Especially look in the `accept` and `give sword` entries as these decide the quest state!*
+
+### Sequence Result
+
+<EntryDisplay pages={[
+    require("../../../assets/questing/simplified/kill-zombie-objective/sequence.json"),
+    require("../../../assets/questing/simplified/kill-zombie-objective/manifest.json"),
+    require("../../../assets/questing/simplified/kill-zombie-objective/static.json")
+]} />
+
+## Final Result
+Now you have successfully created a quest where the player must kill 2 zombies to complete the quest
+
+<Player url={require("../../../assets/questing/simplified/kill-zombie-objective/kill-zombie-result.webm").default} />
+
+:::info[Quest Display]
+In this video you can see the quest tracking with scoreboard and titles displayed to the player. 
+
+By default, quests won't be displayed to players - you need to manually configure how you want quests to be shown. 
+
+To learn how to set up quest display (scoreboard, titles, etc.), read the [Displaying Quests Guide](../02-displaying_quests.mdx).
+:::

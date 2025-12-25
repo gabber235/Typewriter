@@ -1,6 +1,7 @@
 package com.typewritermc.processors
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.gson.annotations.SerializedName
@@ -68,6 +69,20 @@ inline fun <reified T : Annotation> T.annotationClassValue(f: T.() -> KClass<*>)
     declaration.asStarProjectedType()
 } catch (e: KSTypeNotPresentException) {
     e.ksType
+}
+
+@OptIn(KspExperimental::class)
+context(logger: KSPLogger)
+fun <T : Annotation> KSAnnotated.superAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> = sequence {
+    val toLook = mutableListOf(this@superAnnotationsByType)
+    while (toLook.isNotEmpty()) {
+        val current = toLook.removeFirst();
+        yieldAll(current.getAnnotationsByType(annotationKClass))
+        when (current) {
+            is KSClassDeclaration -> toLook.addAll(current.superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration })
+            is KSPropertyDeclaration -> current.findOverridee()?.let { toLook.add(it) }
+        }
+    }
 }
 
 fun List<KSValueParameter>.hasParameter(className: String): Boolean {

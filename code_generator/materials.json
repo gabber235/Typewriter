@@ -478,7 +478,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -489,7 +489,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -500,7 +500,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -511,7 +511,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -522,7 +522,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -533,7 +533,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -545,7 +545,7 @@
       "interactable",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -557,7 +557,7 @@
       "interactable",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -568,7 +568,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -579,7 +579,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -590,7 +590,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -601,7 +601,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -612,7 +612,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -623,7 +623,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -634,7 +634,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -645,7 +645,7 @@
       "item",
       "occluding",
       "solid",
-        "ore"
+      "ore"
     ]
   },
   {
@@ -7451,7 +7451,7 @@
     "properties": [
       "item",
       "fuel",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7460,7 +7460,7 @@
     "properties": [
       "item",
       "fuel",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7469,7 +7469,7 @@
     "properties": [
       "item",
       "fuel",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7494,7 +7494,7 @@
     "id": "stone_pickaxe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7502,7 +7502,7 @@
     "id": "stone_axe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7510,7 +7510,7 @@
     "id": "stone_hoe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7518,8 +7518,8 @@
     "id": "golden_sword",
     "properties": [
       "item",
-        "weapon",
-        "tool"
+      "weapon",
+      "tool"
     ]
   },
   {
@@ -7527,7 +7527,7 @@
     "id": "golden_shovel",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7535,7 +7535,7 @@
     "id": "golden_pickaxe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7543,7 +7543,7 @@
     "id": "golden_axe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7551,7 +7551,7 @@
     "id": "golden_hoe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7559,8 +7559,8 @@
     "id": "iron_sword",
     "properties": [
       "item",
-        "weapon",
-        "tool"
+      "weapon",
+      "tool"
     ]
   },
   {
@@ -7568,7 +7568,7 @@
     "id": "iron_shovel",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7576,7 +7576,7 @@
     "id": "iron_pickaxe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7584,7 +7584,7 @@
     "id": "iron_axe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7592,7 +7592,7 @@
     "id": "iron_hoe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7600,8 +7600,8 @@
     "id": "diamond_sword",
     "properties": [
       "item",
-        "weapon",
-        "tool"
+      "weapon",
+      "tool"
     ]
   },
   {
@@ -7609,7 +7609,7 @@
     "id": "diamond_shovel",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7617,7 +7617,7 @@
     "id": "diamond_pickaxe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7625,7 +7625,7 @@
     "id": "diamond_axe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7633,7 +7633,7 @@
     "id": "diamond_hoe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7641,8 +7641,8 @@
     "id": "netherite_sword",
     "properties": [
       "item",
-        "weapon",
-        "tool"
+      "weapon",
+      "tool"
     ]
   },
   {
@@ -7650,7 +7650,7 @@
     "id": "netherite_shovel",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7658,7 +7658,7 @@
     "id": "netherite_pickaxe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7666,7 +7666,7 @@
     "id": "netherite_axe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7674,7 +7674,7 @@
     "id": "netherite_hoe",
     "properties": [
       "item",
-        "tool"
+      "tool"
     ]
   },
   {
@@ -7759,7 +7759,7 @@
     "id": "leather_chestplate",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7767,7 +7767,7 @@
     "id": "leather_leggings",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7775,7 +7775,7 @@
     "id": "leather_boots",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7783,7 +7783,7 @@
     "id": "chainmail_helmet",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7791,7 +7791,7 @@
     "id": "chainmail_chestplate",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7799,7 +7799,7 @@
     "id": "chainmail_leggings",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7807,7 +7807,7 @@
     "id": "chainmail_boots",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7815,7 +7815,7 @@
     "id": "iron_helmet",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7823,7 +7823,7 @@
     "id": "iron_chestplate",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7831,7 +7831,7 @@
     "id": "iron_leggings",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7839,7 +7839,7 @@
     "id": "iron_boots",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7847,7 +7847,7 @@
     "id": "diamond_helmet",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7855,7 +7855,7 @@
     "id": "diamond_chestplate",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7863,7 +7863,7 @@
     "id": "diamond_leggings",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7871,7 +7871,7 @@
     "id": "diamond_boots",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7879,7 +7879,7 @@
     "id": "golden_helmet",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7887,7 +7887,7 @@
     "id": "golden_chestplate",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7895,7 +7895,7 @@
     "id": "golden_leggings",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7903,7 +7903,7 @@
     "id": "golden_boots",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7911,7 +7911,7 @@
     "id": "netherite_helmet",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7919,7 +7919,7 @@
     "id": "netherite_chestplate",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7927,7 +7927,7 @@
     "id": "netherite_leggings",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -7935,7 +7935,7 @@
     "id": "netherite_boots",
     "properties": [
       "item",
-        "armor"
+      "armor"
     ]
   },
   {
@@ -11947,6 +11947,137 @@
       "block",
       "interactable",
       "transparent"
+    ]
+  },
+  {
+    "name": "WOODEN_SPEAR",
+    "id": "wooden_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "STONE_SPEAR",
+    "id": "stone_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "COPPER_SPEAR",
+    "id": "copper_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "IRON_SPEAR",
+    "id": "iron_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "GOLDEN_SPEAR",
+    "id": "golden_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "DIAMOND_SPEAR",
+    "id": "diamond_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "NETHERITE_SPEAR",
+    "id": "netherite_spear",
+    "properties": [
+      "item",
+      "weapon"
+    ]
+  },
+  {
+    "name": "COPPER_NAUTILUS_ARMOR",
+    "id": "copper_nautilus_armor",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "GOLDEN_NAUTILUS_ARMOR",
+    "id": "golden_nautilus_armor",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "IRON_NAUTILUS_ARMOR",
+    "id": "iron_nautilus_armor",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "DIAMOND_NAUTILUS_ARMOR",
+    "id": "diamond_nautilus_armor",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "NETHERITE_NAUTILUS_ARMOR",
+    "id": "netherite_nautilus_armor",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "NETHERITE_HORSE_ARMOR",
+    "id": "netherite_horse_armor",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CAMEL_HUSK_SPAWN_EGG",
+    "id": "camel_husk_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PARCHED_SPAWN_EGG",
+    "id": "parched_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "NAUTILUS_SPAWN_EGG",
+    "id": "nautilus_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ZOMBIE_NAUTILUS_SPAWN_EGG",
+    "id": "zombie_nautilus_spawn_egg",
+    "properties": [
+      "item"
     ]
   }
 ]

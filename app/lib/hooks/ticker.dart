@@ -24,7 +24,7 @@ class _TickerProviderHookState
     extends HookState<TickerProvider, _TickerProviderHook>
     implements TickerProvider {
   Set<Ticker>? _tickers;
-  ValueListenable<bool>? _tickerModeNotifier;
+  ValueListenable<TickerModeData>? _tickerModeNotifier;
 
   @override
   Ticker createTicker(TickerCallback onTick) {
@@ -35,7 +35,7 @@ class _TickerProviderHookState
     assert(_tickerModeNotifier != null, "TickerMode was not initialized");
     _tickers ??= <Ticker>{};
     final result = Ticker(onTick, debugLabel: "created by $context")
-      ..muted = !_tickerModeNotifier!.value;
+      ..muted = !_tickerModeNotifier!.value.enabled;
     _tickers!.add(result);
     return result;
   }
@@ -81,16 +81,18 @@ class _TickerProviderHookState
   }
 
   void _updateTickers() {
-    if (_tickers != null) {
-      final muted = !_tickerModeNotifier!.value;
-      for (final ticker in _tickers!) {
-        ticker.muted = muted;
-      }
+    final notifier = _tickerModeNotifier;
+    final tickers = _tickers;
+    if (notifier == null || tickers == null) return;
+
+    final muted = !notifier.value.enabled;
+    for (final ticker in tickers) {
+      ticker.muted = muted;
     }
   }
 
   void _updateTickerModeNotifier() {
-    final newNotifier = TickerMode.getNotifier(context);
+    final newNotifier = TickerMode.getValuesNotifier(context);
     if (newNotifier == _tickerModeNotifier) {
       return;
     }

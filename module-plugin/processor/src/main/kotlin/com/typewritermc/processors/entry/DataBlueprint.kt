@@ -14,6 +14,7 @@ import com.typewritermc.core.utils.ok
 import com.typewritermc.processors.format
 import com.typewritermc.processors.fullName
 import com.typewritermc.processors.serializedName
+import com.typewritermc.processors.superAnnotationsByType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -247,8 +248,19 @@ sealed class DataBlueprint {
                         if (default != null) {
                             val result = blueprint.validateDefault(default)
                             if (result.isFailure) {
-                                val annotation = property.annotations.first { it.shortName.asString() == "Default" }
-                                throw InvalidDefaultValueException("${result.exceptionOrNull()?.message?.format(property.simpleName.asString())} at ${annotation.location.format}")
+                                var declaration: KSPropertyDeclaration? = property
+                                var annotation: KSAnnotation? = null
+                                while (declaration != null) {
+                                    val an =
+                                        declaration.annotations.firstOrNull { it.shortName.asString() == "Default" }
+                                    if (an != null) {
+                                        annotation = an
+                                        break
+                                    }
+                                    declaration = declaration.parentDeclaration as? KSPropertyDeclaration
+                                }
+
+                                throw InvalidDefaultValueException("${result.exceptionOrNull()?.message?.format(property.simpleName.asString())} at ${annotation?.location?.format ?: "unknown location"}")
                             }
                             blueprint.default = default
                         }
@@ -354,7 +366,7 @@ sealed class DataBlueprint {
 context(logger: KSPLogger)
 @OptIn(KspExperimental::class)
 private fun KSPropertyDeclaration.defaultValue(): JsonElement? {
-    val default = getAnnotationsByType(Default::class).firstOrNull() ?: return null
+    val default = superAnnotationsByType(Default::class).firstOrNull() ?: return null
     try {
         return Json.parseToJsonElement(default.json)
     } catch (e: SerializationException) {

@@ -25,7 +25,6 @@ const config: Config = {
   organizationName: "gabber235",
   projectName: "Typewriter",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
   clientModules: [require.resolve("./src/css/custom.css")],
   i18n: {
     defaultLocale: "en",
@@ -34,6 +33,9 @@ const config: Config = {
 
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
     mdx1Compat: {
       comments: false,
       admonitions: false,

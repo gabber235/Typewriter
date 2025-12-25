@@ -10243,6 +10243,686 @@
                 ]
             },
             {
+                "name": "break_block_objective",
+                "description": "A break block objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "quest": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                                {
+                                    "name": "entry",
+                                    "data": "quest"
+                                },
+                                {
+                                    "name": "help",
+                                    "data": "The quest that the objective is a part of."
+                                }
+                            ]
+                        },
+                        "children": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference",
+                                "default": "",
+                                "modifiers": [
+                                    {
+                                        "name": "entry",
+                                        "data": "audience"
+                                    }
+                                ]
+                            },
+                            "modifiers": []
+                        },
+                        "criteria": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {
+                                    "fact": {
+                                        "kind": "custom",
+                                        "editor": "entryReference",
+                                        "default": "",
+                                        "modifiers": [
+                                            {
+                                                "name": "entry",
+                                                "data": "readable-fact"
+                                            },
+                                            {
+                                                "name": "help",
+                                                "data": "The fact to check before triggering the entry"
+                                            }
+                                        ]
+                                    },
+                                    "operator": {
+                                        "kind": "enum",
+                                        "values": [
+                                            "==",
+                                            "<",
+                                            ">",
+                                            "<=",
+                                            ">=",
+                                            "!="
+                                        ],
+                                        "modifiers": [
+                                            {
+                                                "name": "help",
+                                                "data": "The operator to use when comparing the fact value to the criteria value"
+                                            }
+                                        ]
+                                    },
+                                    "value": {
+                                        "kind": "primitive",
+                                        "type": "integer",
+                                        "modifiers": [
+                                            {
+                                                "name": "help",
+                                                "data": "The value to compare the fact value to"
+                                            },
+                                            {
+                                                "name": "negative"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "modifiers": []
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The criteria need to be met for the objective to be able to be shown."
+                                }
+                            ]
+                        },
+                        "block": {
+                            "kind": "custom",
+                            "editor": "optional",
+                            "fieldInfo": {
+                                "kind": "custom",
+                                "editor": "material",
+                                "default": "AIR",
+                                "modifiers": [
+                                    {
+                                        "name": "material_properties",
+                                        "data": "block"
+                                    }
+                                ]
+                            },
+                            "default": {
+                                "enabled": false,
+                                "value": "AIR"
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The specific block type that needs to be broken. If not set, any block type will count."
+                                }
+                            ]
+                        },
+                        "progressTracking": {
+                            "kind": "object",
+                            "fields": {
+                                "value": {
+                                    "kind": "custom",
+                                    "editor": "entryReference",
+                                    "default": "",
+                                    "modifiers": [
+                                        {
+                                            "name": "entry",
+                                            "data": "readable-fact"
+                                        },
+                                        {
+                                            "name": "help",
+                                            "data": "The fact that is being updated with the value towards the target."
+                                        }
+                                    ]
+                                },
+                                "operator": {
+                                    "kind": "enum",
+                                    "values": [
+                                        "==",
+                                        "<",
+                                        ">",
+                                        "<=",
+                                        ">=",
+                                        "!="
+                                    ],
+                                    "modifiers": [
+                                        {
+                                            "name": "help",
+                                            "data": "The operator to use when comparing the fact value to the target value for completion."
+                                        }
+                                    ]
+                                },
+                                "target": {
+                                    "kind": "primitive",
+                                    "type": "integer",
+                                    "modifiers": [
+                                        {
+                                            "name": "help",
+                                            "data": "The target value to reach for completion."
+                                        },
+                                        {
+                                            "name": "negative"
+                                        }
+                                    ]
+                                }
+                            },
+                            "modifiers": []
+                        },
+                        "display": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The display supports the <value> and <target> tags from the fact."
+                                },
+                                {
+                                    "name": "placeholder"
+                                },
+                                {
+                                    "name": "colored"
+                                }
+                            ]
+                        },
+                        "priorityOverride": {
+                            "kind": "custom",
+                            "editor": "optional",
+                            "fieldInfo": {
+                                "kind": "primitive",
+                                "type": "integer",
+                                "modifiers": []
+                            },
+                            "default": {
+                                "enabled": false,
+                                "value": 0
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The priority of the entry. If not set, the priority of the page will be used."
+                                }
+                            ]
+                        }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "mdi:pickaxe",
+                "tags": [
+                    "objective",
+                    "audience_filter",
+                    "audience",
+                    "manifest",
+                    "placeholder"
+                ]
+            },
+            {
+                "name": "kill_entity_objective",
+                "description": "A kill entity objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "quest": {
+                            "kind": "custom",
+                            "editor": "entryReference",
+                            "default": "",
+                            "modifiers": [
+                                {
+                                    "name": "entry",
+                                    "data": "quest"
+                                },
+                                {
+                                    "name": "help",
+                                    "data": "The quest that the objective is a part of."
+                                }
+                            ]
+                        },
+                        "children": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "custom",
+                                "editor": "entryReference",
+                                "default": "",
+                                "modifiers": [
+                                    {
+                                        "name": "entry",
+                                        "data": "audience"
+                                    }
+                                ]
+                            },
+                            "modifiers": []
+                        },
+                        "criteria": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {
+                                    "fact": {
+                                        "kind": "custom",
+                                        "editor": "entryReference",
+                                        "default": "",
+                                        "modifiers": [
+                                            {
+                                                "name": "entry",
+                                                "data": "readable-fact"
+                                            },
+                                            {
+                                                "name": "help",
+                                                "data": "The fact to check before triggering the entry"
+                                            }
+                                        ]
+                                    },
+                                    "operator": {
+                                        "kind": "enum",
+                                        "values": [
+                                            "==",
+                                            "<",
+                                            ">",
+                                            "<=",
+                                            ">=",
+                                            "!="
+                                        ],
+                                        "modifiers": [
+                                            {
+                                                "name": "help",
+                                                "data": "The operator to use when comparing the fact value to the criteria value"
+                                            }
+                                        ]
+                                    },
+                                    "value": {
+                                        "kind": "primitive",
+                                        "type": "integer",
+                                        "modifiers": [
+                                            {
+                                                "name": "help",
+                                                "data": "The value to compare the fact value to"
+                                            },
+                                            {
+                                                "name": "negative"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "modifiers": []
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The criteria need to be met for the objective to be able to be shown."
+                                }
+                            ]
+                        },
+                        "entity": {
+                            "kind": "custom",
+                            "editor": "optional",
+                            "fieldInfo": {
+                                "kind": "enum",
+                                "values": [
+                                    "ITEM",
+                                    "EXPERIENCE_ORB",
+                                    "AREA_EFFECT_CLOUD",
+                                    "ELDER_GUARDIAN",
+                                    "WITHER_SKELETON",
+                                    "STRAY",
+                                    "EGG",
+                                    "LEASH_KNOT",
+                                    "PAINTING",
+                                    "ARROW",
+                                    "SNOWBALL",
+                                    "FIREBALL",
+                                    "SMALL_FIREBALL",
+                                    "ENDER_PEARL",
+                                    "EYE_OF_ENDER",
+                                    "POTION",
+                                    "EXPERIENCE_BOTTLE",
+                                    "ITEM_FRAME",
+                                    "WITHER_SKULL",
+                                    "TNT",
+                                    "FALLING_BLOCK",
+                                    "FIREWORK_ROCKET",
+                                    "HUSK",
+                                    "SPECTRAL_ARROW",
+                                    "SHULKER_BULLET",
+                                    "DRAGON_FIREBALL",
+                                    "ZOMBIE_VILLAGER",
+                                    "SKELETON_HORSE",
+                                    "ZOMBIE_HORSE",
+                                    "ARMOR_STAND",
+                                    "DONKEY",
+                                    "MULE",
+                                    "EVOKER_FANGS",
+                                    "EVOKER",
+                                    "VEX",
+                                    "VINDICATOR",
+                                    "ILLUSIONER",
+                                    "COMMAND_BLOCK_MINECART",
+                                    "BOAT",
+                                    "MINECART",
+                                    "CHEST_MINECART",
+                                    "FURNACE_MINECART",
+                                    "TNT_MINECART",
+                                    "HOPPER_MINECART",
+                                    "SPAWNER_MINECART",
+                                    "CREEPER",
+                                    "SPIDER",
+                                    "GIANT",
+                                    "ZOMBIE",
+                                    "SLIME",
+                                    "GHAST",
+                                    "ENDERMAN",
+                                    "CAVE_SPIDER",
+                                    "SILVERFISH",
+                                    "BLAZE",
+                                    "MAGMA_CUBE",
+                                    "BAT",
+                                    "ENDERMITE",
+                                    "GUARDIAN",
+                                    "PIG",
+                                    "SHEEP",
+                                    "COW",
+                                    "CHICKEN",
+                                    "SQUID",
+                                    "WOLF",
+                                    "MUSHROOM_COW",
+                                    "SNOWMAN",
+                                    "OCELOT",
+                                    "IRON_GOLEM",
+                                    "HORSE",
+                                    "RABBIT",
+                                    "POLAR_BEAR",
+                                    "LLAMA",
+                                    "LLAMA_SPIT",
+                                    "PARROT",
+                                    "VILLAGER",
+                                    "TURTLE",
+                                    "PHANTOM",
+                                    "TRIDENT",
+                                    "COD",
+                                    "SALMON",
+                                    "PUFFERFISH",
+                                    "TROPICAL_FISH",
+                                    "DOLPHIN",
+                                    "CAT",
+                                    "PILLAGER",
+                                    "RAVAGER",
+                                    "DROWNED",
+                                    "FOX",
+                                    "PANDA",
+                                    "HOGLIN",
+                                    "STRIDER",
+                                    "SKELETON",
+                                    "WITCH",
+                                    "BEE",
+                                    "ZOMBIFIED_PIGLIN"
+                                ],
+                                "modifiers": [
+                                    {
+                                        "name": "help",
+                                        "data": "The specific entity type that needs to be killed. If not set, any entity type will count."
+                                    }
+                                ]
+                            },
+                            "default": {
+                                "enabled": false,
+                                "value": ""
+                            },
+                            "modifiers": []
+                        },
+                        "progressTracking": {
+                            "kind": "object",
+                            "fields": {
+                                "value": {
+                                    "kind": "custom",
+                                    "editor": "entryReference",
+                                    "default": "",
+                                    "modifiers": [
+                                        {
+                                            "name": "entry",
+                                            "data": "readable-fact"
+                                        },
+                                        {
+                                            "name": "help",
+                                            "data": "The fact that is being updated with the value towards the target."
+                                        }
+                                    ]
+                                },
+                                "operator": {
+                                    "kind": "enum",
+                                    "values": [
+                                        "==",
+                                        "<",
+                                        ">",
+                                        "<=",
+                                        ">=",
+                                        "!="
+                                    ],
+                                    "modifiers": [
+                                        {
+                                            "name": "help",
+                                            "data": "The operator to use when comparing the fact value to the target value for completion."
+                                        }
+                                    ]
+                                },
+                                "target": {
+                                    "kind": "primitive",
+                                    "type": "integer",
+                                    "modifiers": [
+                                        {
+                                            "name": "help",
+                                            "data": "The target value to reach for completion."
+                                        },
+                                        {
+                                            "name": "negative"
+                                        }
+                                    ]
+                                }
+                            },
+                            "modifiers": []
+                        },
+                        "display": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The display supports the <value> and <target> tags from the fact."
+                                },
+                                {
+                                    "name": "placeholder"
+                                },
+                                {
+                                    "name": "colored"
+                                }
+                            ]
+                        },
+                        "priorityOverride": {
+                            "kind": "custom",
+                            "editor": "optional",
+                            "fieldInfo": {
+                                "kind": "primitive",
+                                "type": "integer",
+                                "modifiers": []
+                            },
+                            "default": {
+                                "enabled": false,
+                                "value": 0
+                            },
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The priority of the entry. If not set, the priority of the page will be used."
+                                }
+                            ]
+                        }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "fa6-solid:skull",
+                "tags": [
+                    "objective",
+                    "audience_filter",
+                    "audience",
+                    "manifest",
+                    "placeholder"
+                ]
+            },
+            {
+                "name": "place_block_objective",
+                "description": "A place block objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "name": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "quest": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "quest"}, {"name": "help", "data": "The quest that the objective is a part of."}] },
+                        "children": { "kind": "list", "type": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "audience"}] }, "modifiers": [] },
+                        "criteria": {
+                            "kind": "list",
+                            "type": {
+                                "kind": "object",
+                                "fields": {
+                                    "fact": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "readable-fact"}, {"name": "help", "data": "The fact to check before triggering the entry"}] },
+                                    "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{"name": "help", "data": "The operator to use when comparing the fact value to the criteria value"}] },
+                                    "value": { "kind": "primitive", "type": "integer", "modifiers": [{"name": "help", "data": "The value to compare the fact value to"}, {"name": "negative"}] }
+                                },
+                                "modifiers": []
+                            },
+                            "modifiers": [{"name": "help", "data": "The criteria need to be met for the objective to be able to be shown."}]
+                        },
+                        "block": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "custom", "editor": "material", "default": "AIR", "modifiers": [{ "name": "material_properties", "data": "block" }] }, "default": { "enabled": false, "value": "AIR" }, "modifiers": [{ "name": "help", "data": "The specific block type that needs to be placed. If not set, any block type will count." }] },
+                        "progressTracking": { "kind": "object", "fields": { "value": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{ "name": "entry", "data": "readable-fact" }, { "name": "help", "data": "The fact that is being updated with the value towards the target." }] }, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{ "name": "help", "data": "The operator to use when comparing the fact value to the target value for completion." }] }, "target": { "kind": "primitive", "type": "integer", "modifiers": [{ "name": "help", "data": "The target value to reach for completion." }, { "name": "negative" }] } }, "modifiers": [] },
+                        "display": { "kind": "primitive", "type": "string", "modifiers": [{ "name": "help", "data": "The display supports the <value> and <target> tags from the fact." }, { "name": "placeholder" }, { "name": "colored" }] },
+                        "priorityOverride": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "primitive", "type": "integer", "modifiers": [] }, "default": { "enabled": false, "value": 0 }, "modifiers": [{ "name": "help", "data": "The priority of the entry. If not set, the priority of the page will be used." }] }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "fluent:cube-add-20-filled",
+                "tags": ["objective","audience_filter","audience","manifest","placeholder"]
+            },
+            {
+                "name": "smelt_objective",
+                "description": "A smelt objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "name": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "quest": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "quest"}, {"name": "help", "data": "The quest that the objective is a part of."}] },
+                        "children": { "kind": "list", "type": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "audience"}] }, "modifiers": [] },
+                        "criteria": { "kind": "list", "type": { "kind": "object", "fields": { "fact": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "readable-fact"}, {"name": "help", "data": "The fact to check before triggering the entry"}]}, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{"name": "help", "data": "The operator to use when comparing the fact value to the criteria value"}]}, "value": { "kind": "primitive", "type": "integer", "modifiers": [{"name": "help", "data": "The value to compare the fact value to"}, {"name": "negative"}] } }, "modifiers": [] }, "modifiers": [{"name": "help", "data": "The criteria need to be met for the objective to be able to be shown."}] },
+                        "item": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "custom", "editor": "material", "default": "AIR", "modifiers": [{ "name": "material_properties", "data": "item" }] }, "default": { "enabled": false, "value": "AIR" }, "modifiers": [{ "name": "help", "data": "The item that needs to be smelted. If not set, any item counts." }] },
+                        "progressTracking": { "kind": "object", "fields": { "value": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{ "name": "entry", "data": "readable-fact" }, { "name": "help", "data": "The fact that is being updated with the value towards the target." }] }, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{ "name": "help", "data": "The operator to use when comparing the fact value to the target value for completion." }] }, "target": { "kind": "primitive", "type": "integer", "modifiers": [{ "name": "help", "data": "The target value to reach for completion." }, { "name": "negative" }] } }, "modifiers": [] },
+                        "display": { "kind": "primitive", "type": "string", "modifiers": [{ "name": "help", "data": "The display supports the <value> and <target> tags from the fact." }, { "name": "placeholder" }, { "name": "colored" }] },
+                        "priorityOverride": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "primitive", "type": "integer", "modifiers": [] }, "default": { "enabled": false, "value": 0 }, "modifiers": [{ "name": "help", "data": "The priority of the entry. If not set, the priority of the page will be used." }] }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "fa6-solid:flask-vial",
+                "tags": ["objective","audience_filter","audience","manifest","placeholder"]
+            },
+            {
+                "name": "shear_entity_objective",
+                "description": "A shear entity objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "name": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "quest": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "quest"}, {"name": "help", "data": "The quest that the objective is a part of."}] },
+                        "children": { "kind": "list", "type": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "audience"}] }, "modifiers": [] },
+                        "criteria": { "kind": "list", "type": { "kind": "object", "fields": { "fact": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "readable-fact"}, {"name": "help", "data": "The fact to check before triggering the entry"}]}, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{"name": "help", "data": "The operator to use when comparing the fact value to the criteria value"}]}, "value": { "kind": "primitive", "type": "integer", "modifiers": [{"name": "help", "data": "The value to compare the fact value to"}, {"name": "negative"}] } }, "modifiers": [] }, "modifiers": [{"name": "help", "data": "The criteria need to be met for the objective to be able to be shown."}] },
+                        "entity": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "enum", "values": ["SHEEP","LLAMA","COW","MUSHROOM_COW"], "modifiers": [{ "name": "help", "data": "The specific entity type that needs to be sheared. If not set, any suitable entity counts." }] }, "default": { "enabled": false, "value": "" }, "modifiers": [] },
+                        "progressTracking": { "kind": "object", "fields": { "value": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{ "name": "entry", "data": "readable-fact" }, { "name": "help", "data": "The fact that is being updated with the value towards the target." }] }, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{ "name": "help", "data": "The operator to use when comparing the fact value to the target value for completion." }] }, "target": { "kind": "primitive", "type": "integer", "modifiers": [{ "name": "help", "data": "The target value to reach for completion." }, { "name": "negative" }] } }, "modifiers": [] },
+                        "display": { "kind": "primitive", "type": "string", "modifiers": [{ "name": "help", "data": "The display supports the <value> and <target> tags from the fact." }, { "name": "placeholder" }, { "name": "colored" }] },
+                        "priorityOverride": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "primitive", "type": "integer", "modifiers": [] }, "default": { "enabled": false, "value": 0 }, "modifiers": [{ "name": "help", "data": "The priority of the entry. If not set, the priority of the page will be used." }] }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "fa6-solid:shears",
+                "tags": ["objective","audience_filter","audience","manifest","placeholder"]
+            },
+            {
+                "name": "fish_objective",
+                "description": "A fish objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "name": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "quest": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "quest"}, {"name": "help", "data": "The quest that the objective is a part of."}] },
+                        "children": { "kind": "list", "type": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "audience"}] }, "modifiers": [] },
+                        "criteria": { "kind": "list", "type": { "kind": "object", "fields": { "fact": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "readable-fact"}, {"name": "help", "data": "The fact to check before triggering the entry"}]}, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{"name": "help", "data": "The operator to use when comparing the fact value to the criteria value"}]}, "value": { "kind": "primitive", "type": "integer", "modifiers": [{"name": "help", "data": "The value to compare the fact value to"}, {"name": "negative"}] } }, "modifiers": [] }, "modifiers": [{"name": "help", "data": "The criteria need to be met for the objective to be able to be shown."}] },
+                        "entity": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "enum", "values": ["COD","SALMON","PUFFERFISH","TROPICAL_FISH"], "modifiers": [{ "name": "help", "data": "The specific fish type to catch. If not set, any fish counts." }] }, "default": { "enabled": false, "value": "" }, "modifiers": [] },
+                        "progressTracking": { "kind": "object", "fields": { "value": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{ "name": "entry", "data": "readable-fact" }, { "name": "help", "data": "The fact that is being updated with the value towards the target." }] }, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{ "name": "help", "data": "The operator to use when comparing the fact value to the target value for completion." }] }, "target": { "kind": "primitive", "type": "integer", "modifiers": [{ "name": "help", "data": "The target value to reach for completion." }, { "name": "negative" }] } }, "modifiers": [] },
+                        "display": { "kind": "primitive", "type": "string", "modifiers": [{ "name": "help", "data": "The display supports the <value> and <target> tags from the fact." }, { "name": "placeholder" }, { "name": "colored" }] },
+                        "priorityOverride": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "primitive", "type": "integer", "modifiers": [] }, "default": { "enabled": false, "value": 0 }, "modifiers": [{ "name": "help", "data": "The priority of the entry. If not set, the priority of the page will be used." }] }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "mdi:fish",
+                "tags": ["objective","audience_filter","audience","manifest","placeholder"]
+            },
+            {
+                "name": "breed_mob_objective",
+                "description": "A breed mob objective definition",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "name": { "kind": "primitive", "type": "string", "modifiers": [] },
+                        "quest": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "quest"}, {"name": "help", "data": "The quest that the objective is a part of."}] },
+                        "children": { "kind": "list", "type": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "audience"}] }, "modifiers": [] },
+                        "criteria": { "kind": "list", "type": { "kind": "object", "fields": { "fact": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{"name": "entry", "data": "readable-fact"}, {"name": "help", "data": "The fact to check before triggering the entry"}]}, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{"name": "help", "data": "The operator to use when comparing the fact value to the criteria value"}]}, "value": { "kind": "primitive", "type": "integer", "modifiers": [{"name": "help", "data": "The value to compare the fact value to"}, {"name": "negative"}] } }, "modifiers": [] }, "modifiers": [{"name": "help", "data": "The criteria need to be met for the objective to be able to be shown."}] },
+                        "entity": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "enum", "values": ["PIG","SHEEP","COW","CHICKEN"], "modifiers": [{ "name": "help", "data": "The specific mob to breed. If not set, any mob that can be bred counts." }] }, "default": { "enabled": false, "value": "" }, "modifiers": [] },
+                        "progressTracking": { "kind": "object", "fields": { "value": { "kind": "custom", "editor": "entryReference", "default": "", "modifiers": [{ "name": "entry", "data": "readable-fact" }, { "name": "help", "data": "The fact that is being updated with the value towards the target." }] }, "operator": { "kind": "enum", "values": ["==","<",">","<=",">=","!="], "modifiers": [{ "name": "help", "data": "The operator to use when comparing the fact value to the target value for completion." }] }, "target": { "kind": "primitive", "type": "integer", "modifiers": [{ "name": "help", "data": "The target value to reach for completion." }, { "name": "negative" }] } }, "modifiers": [] },
+                        "display": { "kind": "primitive", "type": "string", "modifiers": [{ "name": "help", "data": "The display supports the <value> and <target> tags from the fact." }, { "name": "placeholder" }, { "name": "colored" }] },
+                        "priorityOverride": { "kind": "custom", "editor": "optional", "fieldInfo": { "kind": "primitive", "type": "integer", "modifiers": [] }, "default": { "enabled": false, "value": 0 }, "modifiers": [{ "name": "help", "data": "The priority of the entry. If not set, the priority of the page will be used." }] }
+                    },
+                    "modifiers": []
+                },
+                "color": "#8A2BE2",
+                "icon": "mdi:dog-side",
+                "tags": ["objective","audience_filter","audience","manifest","placeholder"]
+            },
+            {
                 "name": "tracked_objective_audience",
                 "description": "Filters an audience based on if they have a tracked objective",
                 "adapter": "Basic",

@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnlyApi("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
@@ -54,10 +54,10 @@ dependencies {
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.10.0")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.10.0")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.11.0")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.11.0")
 
-    compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnly("me.clip:placeholderapi:2.11.7")
     compileOnlyApi("org.geysermc.geyser:api:2.8.3-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
 

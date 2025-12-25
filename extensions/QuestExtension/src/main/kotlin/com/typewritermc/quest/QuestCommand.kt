@@ -4,6 +4,7 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.TypewriterCommand
 import com.typewritermc.engine.paper.command.dsl.*
 import com.typewritermc.engine.paper.utils.msg
+import com.typewritermc.quest.entries.QuestEntry
 
 @TypewriterCommand
 fun CommandTree.questCommand() = literal("quest") {

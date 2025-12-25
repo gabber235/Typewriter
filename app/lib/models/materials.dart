@@ -12102,6 +12102,112 @@ const Map<String, MinecraftMaterial> materials = {
     ],
     icon: "assets/materials/yellow_harness.png",
   ),
+  // 1.21.11 - Spears
+  "wooden_spear": MinecraftMaterial(
+    name: "Wooden Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/wooden_spear.png",
+  ),
+  "stone_spear": MinecraftMaterial(
+    name: "Stone Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/stone_spear.png",
+  ),
+  "copper_spear": MinecraftMaterial(
+    name: "Copper Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/copper_spear.png",
+  ),
+  "iron_spear": MinecraftMaterial(
+    name: "Iron Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/iron_spear.png",
+  ),
+  "golden_spear": MinecraftMaterial(
+    name: "Golden Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/golden_spear.png",
+  ),
+  "diamond_spear": MinecraftMaterial(
+    name: "Diamond Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/diamond_spear.png",
+  ),
+  "netherite_spear": MinecraftMaterial(
+    name: "Netherite Spear",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.weapon],
+    icon: "assets/materials/netherite_spear.png",
+  ),
+  // 1.21.11 - Nautilus Armor
+  "copper_nautilus_armor": MinecraftMaterial(
+    name: "Copper Nautilus Armor",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.armor],
+    icon: "assets/materials/copper_nautilus_armor.png",
+  ),
+  "golden_nautilus_armor": MinecraftMaterial(
+    name: "Golden Nautilus Armor",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.armor],
+    icon: "assets/materials/golden_nautilus_armor.png",
+  ),
+  "iron_nautilus_armor": MinecraftMaterial(
+    name: "Iron Nautilus Armor",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.armor],
+    icon: "assets/materials/iron_nautilus_armor.png",
+  ),
+  "diamond_nautilus_armor": MinecraftMaterial(
+    name: "Diamond Nautilus Armor",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.armor],
+    icon: "assets/materials/diamond_nautilus_armor.png",
+  ),
+  "netherite_nautilus_armor": MinecraftMaterial(
+    name: "Netherite Nautilus Armor",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item, MaterialProperty.armor],
+    icon: "assets/materials/netherite_nautilus_armor.png",
+  ),
+  // 1.21.11 - Horse Armor
+  "netherite_horse_armor": MinecraftMaterial(
+    name: "Netherite Horse Armor",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item],
+    icon: "assets/materials/netherite_horse_armor.png",
+  ),
+  // 1.21.11 - Spawn eggs
+  "camel_husk_spawn_egg": MinecraftMaterial(
+    name: "Camel Husk Spawn Egg",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item],
+    icon: "assets/materials/camel_husk_spawn_egg.png",
+  ),
+  "parched_spawn_egg": MinecraftMaterial(
+    name: "Parched Spawn Egg",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item],
+    icon: "assets/materials/parched_spawn_egg.png",
+  ),
+  "nautilus_spawn_egg": MinecraftMaterial(
+    name: "Nautilus Spawn Egg",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item],
+    icon: "assets/materials/nautilus_spawn_egg.png",
+  ),
+  "zombie_nautilus_spawn_egg": MinecraftMaterial(
+    name: "Zombie Nautilus Spawn Egg",
+    since: McVersion.v1_21,
+    properties: [MaterialProperty.item],
+    icon: "assets/materials/zombie_nautilus_spawn_egg.png",
+  ),
 };
 
 @freezed

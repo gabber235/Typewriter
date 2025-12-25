@@ -1,14 +1,16 @@
-package com.typewritermc.quest.entries.audience
+package com.typewritermc.quest.entries.audience.objectives
 
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
-import com.typewritermc.engine.paper.entry.entries.*
-import com.typewritermc.quest.ObjectiveEntry
-import com.typewritermc.quest.QuestEntry
-import java.util.*
+import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.engine.paper.entry.Criteria
+import com.typewritermc.engine.paper.entry.entries.AudienceEntry
+import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.quest.entries.ObjectiveEntry
+import com.typewritermc.quest.entries.QuestEntry
+import java.util.Optional
 
 @Entry("objective", "An objective definition", Colors.BLUE_VIOLET, "streamline:target-solid")
 /**
