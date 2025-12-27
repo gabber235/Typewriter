@@ -4,5 +4,5 @@ silent: true
 
 includes:
   shared:
-    taskfile: ../../Taskfile.yml
+    taskfile: ../../Taskfile.single.yml
     flatten: true

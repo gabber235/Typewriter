@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package typewriter.api.v1;
+
+import "models/common.proto";
+import "models/service.proto";
+
+// IssueServiceIdentityRequest requests the issuance of a new service identity.
+message IssueServiceIdentityRequest {
+  // List of service types (engine and/or realm).
+  repeated typewriter.models.v1.ServiceType service_types = 2;
+
+  // Metadata about the service.
+  typewriter.models.v1.ServiceMetadata metadata = 3;
+}
+
+// IssueServiceIdentityResponse returns the credentials or an error.
+message IssueServiceIdentityResponse {
+  oneof result {
+    ServiceCredentials credentials = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+// ServiceCredentials contains the authentication credentials for a service.
+// IMPORTANT: The token is only shown once and cannot be retrieved again.
+message ServiceCredentials {
+  // Service identifier (SurrealDB record ID, which is the Authentik user ID).
+  string service_id = 1;
+
+  // Authentik username for the service.
+  string username = 2;
+
+  // Authentik authentication token (shown once only!).
+  string token = 3;
+}

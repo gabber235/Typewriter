@@ -56,7 +56,8 @@ DEFINE INDEX OVERWRITE unique_role_per_org ON role FIELDS name, organization UNI
 -- TABLE: user
 -- ------------------------------
 
-DEFINE TABLE OVERWRITE user TYPE ANY SCHEMAFULL PERMISSIONS NONE;
+-- Service table (authentik_user_id is the record id)
+DEFINE TABLE OVERWRITE user TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE avatar ON user TYPE option<string> PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE avatar_url ON user TYPE option<string> PERMISSIONS NONE;
@@ -92,3 +93,48 @@ DEFINE FIELD OVERWRITE created_by ON join_code TYPE record<user> PERMISSIONS NON
 DEFINE FIELD OVERWRITE single_use ON join_code TYPE bool DEFAULT true PERMISSIONS NONE;
 -- Auto-accept role IDs: empty array means manual approval required
 DEFINE FIELD OVERWRITE auto_accept_roles ON join_code TYPE array<record<role>> DEFAULT [] PERMISSIONS NONE;
+
+-- ------------------------------
+-- TABLE: service
+-- ------------------------------
+
+-- Service table (authentik_user_id is the record id)
+DEFINE TABLE OVERWRITE service TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE name ON service TYPE string
+  ASSERT string::matches($value, '^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$')
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE service_types ON service TYPE array<'engine' | 'realm'>
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
+  DEFAULT time::now() READONLY VALUE $before OR time::now()
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE last_seen ON service TYPE option<datetime>
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE metadata ON service TYPE option<object>
+  PERMISSIONS NONE;
+
+-- Organization the service belongs to (set later during linking)
+DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
+  PERMISSIONS NONE;
+
+-- Only engines can have a runs_in reference, and it must point to a realm
+DEFINE FIELD OVERWRITE runs_in ON service TYPE option<record<service>>
+  ASSERT {
+    IF $value IS NONE {
+      RETURN true
+    };
+    IF !('engine' IN $this.service_types) {
+      THROW "Only services with 'engine' type can have runs_in set"
+    };
+    IF !('realm' IN $value.service_types) {
+      THROW "runs_in must reference a service with 'realm' type"
+    };
+    RETURN true
+  }
+  PERMISSIONS NONE;
+

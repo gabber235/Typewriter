@@ -43,7 +43,9 @@ impl From<RoleRecord> for typewriter::models::v1::Role {
         typewriter::models::v1::Role {
             id: record.id.id.to_string(),
             name: record.name,
-            color: record.color as u32,
+            color: Some(typewriter::models::v1::Color {
+                value: record.color as u32,
+            }),
             default_role: record.default_role.unwrap_or(false),
             assignable: record.assignable,
             deletable: record.deletable,

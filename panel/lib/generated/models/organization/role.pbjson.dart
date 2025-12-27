@@ -21,7 +21,14 @@ const Role$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'color', '3': 3, '4': 1, '5': 13, '10': 'color'},
+    {
+      '1': 'color',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Color',
+      '10': 'color'
+    },
     {'1': 'default_role', '3': 4, '4': 1, '5': 8, '10': 'defaultRole'},
     {'1': 'assignable', '3': 5, '4': 1, '5': 8, '10': 'assignable'},
     {'1': 'deletable', '3': 6, '4': 1, '5': 8, '10': 'deletable'},
@@ -30,6 +37,7 @@ const Role$json = {
 
 /// Descriptor for `Role`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List roleDescriptor = $convert.base64Decode(
-    'CgRSb2xlEg4KAmlkGAEgASgJUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEhQKBWNvbG9yGAMgAS'
-    'gNUgVjb2xvchIhCgxkZWZhdWx0X3JvbGUYBCABKAhSC2RlZmF1bHRSb2xlEh4KCmFzc2lnbmFi'
-    'bGUYBSABKAhSCmFzc2lnbmFibGUSHAoJZGVsZXRhYmxlGAYgASgIUglkZWxldGFibGU=');
+    'CgRSb2xlEg4KAmlkGAEgASgJUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEjEKBWNvbG9yGAMgAS'
+    'gLMhsudHlwZXdyaXRlci5tb2RlbHMudjEuQ29sb3JSBWNvbG9yEiEKDGRlZmF1bHRfcm9sZRgE'
+    'IAEoCFILZGVmYXVsdFJvbGUSHgoKYXNzaWduYWJsZRgFIAEoCFIKYXNzaWduYWJsZRIcCglkZW'
+    'xldGFibGUYBiABKAhSCWRlbGV0YWJsZQ==');

@@ -70,60 +70,6 @@ class Color extends $pb.GeneratedMessage {
   void clearValue() => $_clearField(1);
 }
 
-class Version extends $pb.GeneratedMessage {
-  factory Version({
-    $core.String? value,
-  }) {
-    final result = create();
-    if (value != null) result.value = value;
-    return result;
-  }
-
-  Version._();
-
-  factory Version.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Version.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Version',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'typewriter.models.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'value')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Version clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Version copyWith(void Function(Version) updates) =>
-      super.copyWith((message) => updates(message as Version)) as Version;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Version create() => Version._();
-  @$core.override
-  Version createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static Version getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Version>(create);
-  static Version? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get value => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set value($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasValue() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearValue() => $_clearField(1);
-}
-
 class Error extends $pb.GeneratedMessage {
   factory Error({
     $core.int? code,

@@ -1,0 +1,13 @@
+{
+  "build": {
+    "rust": {
+      "target": "wasm32-wasip2",
+      "cargo_flags": [],
+      "release": true,
+      "features": [],
+      "no_default_features": false
+    },
+    "component_path": "target/wasm32-wasip2/release/service_identity_component.wasm"
+  },
+  "templates": []
+}

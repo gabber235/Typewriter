@@ -14,6 +14,8 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../common.pb.dart' as $0;
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 /// Role represents a role that can be assigned to organization members.
@@ -22,7 +24,7 @@ class Role extends $pb.GeneratedMessage {
   factory Role({
     $core.String? id,
     $core.String? name,
-    $core.int? color,
+    $0.Color? color,
     $core.bool? defaultRole,
     $core.bool? assignable,
     $core.bool? deletable,
@@ -53,7 +55,8 @@ class Role extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'name')
-    ..aI(3, _omitFieldNames ? '' : 'color', fieldType: $pb.PbFieldType.OU3)
+    ..aOM<$0.Color>(3, _omitFieldNames ? '' : 'color',
+        subBuilder: $0.Color.create)
     ..aOB(4, _omitFieldNames ? '' : 'defaultRole')
     ..aOB(5, _omitFieldNames ? '' : 'assignable')
     ..aOB(6, _omitFieldNames ? '' : 'deletable')
@@ -99,13 +102,15 @@ class Role extends $pb.GeneratedMessage {
 
   /// Color for the role in ARGB format
   @$pb.TagNumber(3)
-  $core.int get color => $_getIZ(2);
+  $0.Color get color => $_getN(2);
   @$pb.TagNumber(3)
-  set color($core.int value) => $_setUnsignedInt32(2, value);
+  set color($0.Color value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasColor() => $_has(2);
   @$pb.TagNumber(3)
   void clearColor() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $0.Color ensureColor() => $_ensure(2);
 
   /// Whether this is the default role assigned to new members
   @$pb.TagNumber(4)

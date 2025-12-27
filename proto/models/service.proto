@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package typewriter.models.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ServiceType represents the type of service (engine or realm).
+enum ServiceType {
+  // Unspecified service type (default value).
+  SERVICE_TYPE_UNSPECIFIED = 0;
+
+  // Engine service type.
+  SERVICE_TYPE_ENGINE = 1;
+
+  // Realm service type.
+  SERVICE_TYPE_REALM = 2;
+}
+
+// ServiceMetadata contains version and other metadata about a service.
+message ServiceMetadata {
+  // Version of the engine (if applicable).
+  optional string engine_version = 1;
+
+  // Version of the realm (if applicable).
+  optional string realm_version = 2;
+}
+
+// Service represents a service identity stored in SurrealDB.
+message Service {
+  // Service identifier (authentik_user_id as record ID).
+  string id = 1;
+
+  // Name of the service.
+  string name = 2;
+
+  // List of service types (engine and/or realm).
+  repeated ServiceType service_types = 3;
+
+  // Timestamp when the service was created.
+  google.protobuf.Timestamp created_at = 4;
+
+  // Timestamp when the service was last seen (optional).
+  optional google.protobuf.Timestamp last_seen = 5;
+
+  // Metadata about the service.
+  ServiceMetadata metadata = 6;
+}

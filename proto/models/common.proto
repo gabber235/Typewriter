@@ -6,10 +6,6 @@ message Color {
   uint32 value = 1;
 }
 
-message Version {
-  string value = 1;
-}
-
 message Error {
   uint32 code = 1;
   string message = 2;

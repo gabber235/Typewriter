@@ -1,0 +1,54 @@
+[package]
+name = "backend-tests"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+# wash-runtime for running WASM components (NO CLI needed!)
+wash-runtime = { path = "/Users/thijs/Bestanden/wash/crates/wash-runtime", features = [
+    "washlet",
+    "wasi-surrealdb",
+    "wasi-config",
+    "wasi-logging",
+] }
+
+# Testcontainers for real infrastructure
+testcontainers = "0.26"
+testcontainers-modules = { version = "0.14", features = ["nats", "surrealdb"] }
+
+# NATS client for test messaging
+async-nats = "0.44"
+
+# SurrealDB client for database assertions & seeding
+surrealdb = { version = "2.2", features = ["kv-mem"] }
+
+# Protobuf for message encoding (generated from proto files)
+prost = "0.13"
+prost-types = "0.13"
+
+# Async runtime
+tokio = { version = "1", features = ["full", "test-util"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_cbor = "0.11"
+serde_yaml = "0.9"
+
+# Test utilities
+anyhow = "1"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# For component discovery
+glob = "0.3"
+
+# Bytes for component loading
+bytes = "1"
+
+[build-dependencies]
+# Proto code generation
+prost-build = "0.13"
+glob = "0.3"

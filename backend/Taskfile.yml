@@ -4,192 +4,118 @@ silent: true
 
 vars:
   ENV: '{{default "local" .ENV}}'
-  INFRASTRUCTURE_DIR: "/Users/thijs/Bestanden/Infrastructure/v2"
-  HARBOR_URL:
-    sh: cd {{.INFRASTRUCTURE_DIR}}/6_harbor/installation && terraform output -raw harbor_registry_url 2>/dev/null || echo "oci.seamlezz.com"
-  HARBOR_INSECURE:
-    sh: cd {{.INFRASTRUCTURE_DIR}}/6_harbor/installation && terraform output -raw harbor_environment 2>/dev/null | grep -q "local" && echo "true" || echo "false"
-  OPENBAO_URL:
-    sh: cd {{.INFRASTRUCTURE_DIR}}/3_openbao && terraform output -raw openbao_url 2>/dev/null || echo ""
-  WASMCLOUD_NAMESPACE: "wasmcloud"
-
-env:
-  VAULT_ADDR: "{{.OPENBAO_URL}}"
 
 tasks:
-  harbor:login:
-    desc: Login to Harbor registry using robot credentials from OpenBao
-    status:
-      - docker login {{.HARBOR_URL}} --get-login 2>/dev/null | grep -q "robot"
-    cmds:
-      - |
-        echo "Fetching Harbor credentials from OpenBao..."
-        HARBOR_USER=$(vault kv get -field=username secret/harbor/robot-wasmcloud-push)
-        HARBOR_PASS=$(vault kv get -field=secret secret/harbor/robot-wasmcloud-push)
-        echo "$HARBOR_PASS" | docker login {{.HARBOR_URL}} -u "$HARBOR_USER" --password-stdin
-        echo "✅ Harbor credentials configured"
-
-  build:
-    desc: Build the wasmCloud component
-    dir: "{{.USER_WORKING_DIR}}"
-    sources:
-      - "src/**/*.rs"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - "wit/**/*.wit"
-      - "build.rs"
-    cmds:
-      - wash build --skip-fetch
-
-  push:
-    desc: Push component to Harbor registry
-    dir: "{{.USER_WORKING_DIR}}"
-    deps:
-      - harbor:login
-      - build
+  all:
+    desc: Run a task on all sub-Taskfiles
     vars:
-      COMPONENT_NAME:
-        sh: 'pwd | sed "s|.*/backend/||" | tr "/" "-"'
-      VERSION:
-        sh: 'grep -m1 "^version" Cargo.toml | sed ''s/version = "\(.*\)"/\1/'''
-      WASM_PATH:
-        sh: |
-          if [ -f .wash/config.json ]; then
-            CONFIGURED_PATH=$(cat .wash/config.json | grep -o '"component_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*: *"\([^"]*\)".*/\1/' || echo "")
-            if [ -n "$CONFIGURED_PATH" ] && [ -f "$CONFIGURED_PATH" ]; then
-              echo "$CONFIGURED_PATH"
-              exit 0
-            fi
-          fi
-          if [ -d build ] && ls build/*.wasm >/dev/null 2>&1; then
-            ls build/*.wasm | head -1
-            exit 0
-          fi
-          COMPONENT_WASM_NAME=$(grep -m1 '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/' | tr '-' '_')
-          for dir in target ../target ../../target; do
-            if [ -f "$dir/wasm32-wasip2/release/${COMPONENT_WASM_NAME}.wasm" ]; then
-              echo "$dir/wasm32-wasip2/release/${COMPONENT_WASM_NAME}.wasm"
-              exit 0
-            fi
-          done
-          echo "build/*.wasm"
+      TASK_CMD: '{{default "" .TASK_CMD}}'
     cmds:
       - |
-        INSECURE_FLAG=""
-        if [ "{{.HARBOR_INSECURE}}" = "true" ]; then
-          INSECURE_FLAG="--insecure"
+        if [ -z "{{.TASK_CMD}}" ]; then
+          echo "Usage: task all TASK_CMD=<task-name>"
+          echo "Example: task all TASK_CMD=deploy"
+          exit 1
         fi
-        IMAGE="{{.HARBOR_URL}}/wasmcloud/{{.COMPONENT_NAME}}:{{.VERSION}}"
-        echo "Pushing {{.WASM_PATH}} to $IMAGE..."
-        wash oci push $INSECURE_FLAG "$IMAGE" "{{.WASM_PATH}}"
-        echo "✅ Pushed $IMAGE"
 
-  terraform:init:
-    desc: Initialize terraform for the component
-    dir: "{{.USER_WORKING_DIR}}/infrastructure"
-    preconditions:
-      - sh: '[ -d "{{.USER_WORKING_DIR}}/infrastructure" ]'
-        msg: "No infrastructure directory found"
-    cmds:
-      - |
-        if [ "{{.ENV}}" = "production" ]; then
-          terraform init -upgrade -backend-config=backend-production.hcl
+        # Find all Taskfile.yml files in subdirectories (excluding this one and Taskfile.single.yml)
+        TASKFILES=$(find . -mindepth 2 -name "Taskfile.yml" -type f | sort)
+
+        if [ -z "$TASKFILES" ]; then
+          echo "No sub-Taskfiles found"
+          exit 0
+        fi
+
+        echo "Running '{{.TASK_CMD}}' on all components..."
+        echo "=========================================="
+
+        FAILED=""
+        for taskfile in $TASKFILES; do
+          DIR=$(dirname "$taskfile")
+
+          if ! (cd "$DIR" && task --list 2>/dev/null | grep -q "^{{.TASK_CMD}}"); then
+            echo "⊘ $DIR (task '{{.TASK_CMD}}' not found, skipping)"
+            continue
+          fi
+
+          echo ""
+          echo ">>> $DIR"
+          echo "-------------------------------------------"
+          if (cd "$DIR" && task {{.TASK_CMD}} ENV={{.ENV}}); then
+            echo "<<< $DIR completed"
+          else
+            echo "<<< $DIR FAILED"
+            FAILED="$FAILED $DIR"
+          fi
+        done
+
+        echo ""
+        echo "=========================================="
+        if [ -n "$FAILED" ]; then
+          echo "Failed components:$FAILED"
+          exit 1
         else
-          terraform init -upgrade
+          echo "All components completed successfully"
         fi
 
-  terraform:apply:
-    desc: Apply terraform (deploy infrastructure + workload)
-    dir: "{{.USER_WORKING_DIR}}/infrastructure"
-    deps:
-      - terraform:init
+  deploy:all:
+    desc: Deploy all components
     cmds:
-      - terraform apply -var-file=terraform.tfvars.{{.ENV}} -auto-approve
+      - task: all
+        vars:
+          TASK_CMD: deploy
 
-  terraform:destroy:
-    desc: Destroy terraform-managed resources
-    dir: "{{.USER_WORKING_DIR}}/infrastructure"
-    deps:
-      - terraform:init
+  undeploy:all:
+    desc: Undeploy all components
     cmds:
-      - terraform destroy -var-file=terraform.tfvars.{{.ENV}} -auto-approve
+      - task: all
+        vars:
+          TASK_CMD: undeploy
 
-  deploy:
-    desc: Deploy via terraform (preferred method)
-    dir: "{{.USER_WORKING_DIR}}"
+  build:all:
+    desc: Build all components
     cmds:
-      - task: terraform:apply
+      - task: all
+        vars:
+          TASK_CMD: build
 
-  undeploy:
-    desc: Undeploy via terraform
-    dir: "{{.USER_WORKING_DIR}}"
+  push:all:
+    desc: Push all components
     cmds:
-      - task: terraform:destroy
+      - task: all
+        vars:
+          TASK_CMD: push
 
-  setup:
-    desc: Setup environment for development
-    dir: "{{.USER_WORKING_DIR}}"
+  setup:all:
+    desc: Setup all components (build, push, deploy)
     cmds:
-      - task: build
-      - task: push
-      - task: deploy
+      - task: all
+        vars:
+          TASK_CMD: setup
 
-  dev:
-    desc: Build, push, and deploy in one step
-    dir: "{{.USER_WORKING_DIR}}"
+  status:all:
+    desc: Check status of all components
     cmds:
-      - task: build
-      - task: push
-      - task: undeploy:kubectl
-      - task: deploy:kubectl
+      - task: all
+        vars:
+          TASK_CMD: status
 
-  deploy:kubectl:
-    desc: Deploy using kubectl directly (legacy, for components without terraform)
-    dir: "{{.USER_WORKING_DIR}}"
-    vars:
-      MANIFEST:
-        sh: 'ls manifests/workloaddeployment.yaml 2>/dev/null || echo ""'
-    preconditions:
-      - sh: '[ -n "{{.MANIFEST}}" ]'
-        msg: "No manifest found at manifests/workloaddeployment.yaml"
+  clean:all:
+    desc: Clean all components
     cmds:
-      - kubectl apply -f {{.MANIFEST}}
-      - echo "✅ Deployed workload"
+      - task: all
+        vars:
+          TASK_CMD: clean
 
-  undeploy:kubectl:
-    desc: Remove deployed workload using kubectl (legacy)
-    dir: "{{.USER_WORKING_DIR}}"
-    vars:
-      MANIFEST:
-        sh: 'ls manifests/workloaddeployment.yaml 2>/dev/null || echo ""'
+  list:
+    desc: List all sub-Taskfiles
     cmds:
-      - kubectl delete -f {{.MANIFEST}} --ignore-not-found
-      - echo "✅ Workload removed"
-
-  clean:
-    desc: Clean build artifacts
-    dir: "{{.USER_WORKING_DIR}}"
-    cmds:
-      - rm -rf build/ target/ .task/
-
-  status:
-    desc: Check workload status
-    dir: "{{.USER_WORKING_DIR}}"
-    vars:
-      WORKLOAD_NAME:
-        sh: 'grep -m1 "^  name:" manifests/workloaddeployment.yaml 2>/dev/null | sed "s/.*name: *//" || basename "$(pwd)"'
-    cmds:
-      - kubectl get workloaddeployment -n {{.WASMCLOUD_NAMESPACE}} {{.WORKLOAD_NAME}} 2>/dev/null || echo "Workload not deployed"
-      - kubectl get pods -n {{.WASMCLOUD_NAMESPACE}} -l wasmcloud.com/workload={{.WORKLOAD_NAME}} 2>/dev/null || true
-
-  logs:
-    desc: View component logs
-    dir: "{{.USER_WORKING_DIR}}"
-    vars:
-      WORKLOAD_NAME:
-        sh: 'grep -m1 "^  name:" manifests/workloaddeployment.yaml 2>/dev/null | sed "s/.*name: *//" || basename "$(pwd)"'
-    cmds:
-      - kubectl logs -n {{.WASMCLOUD_NAMESPACE}} -l wasmcloud.com/workload={{.WORKLOAD_NAME}} --tail=100 -f
+      - |
+        echo "Sub-Taskfiles found:"
+        find . -mindepth 2 -name "Taskfile.yml" -type f | sort | while read taskfile; do
+          DIR=$(dirname "$taskfile")
+          echo "  - $DIR"
+        done
 
   default:
     desc: Show available tasks

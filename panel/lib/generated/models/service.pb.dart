@@ -1,0 +1,226 @@
+// This is a generated file - do not edit.
+//
+// Generated from models/service.proto.
+
+// @dart = 3.3
+
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
+import 'dart:core' as $core;
+
+import 'package:protobuf/protobuf.dart' as $pb;
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart'
+    as $0;
+
+import 'service.pbenum.dart';
+
+export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'service.pbenum.dart';
+
+/// ServiceMetadata contains version and other metadata about a service.
+class ServiceMetadata extends $pb.GeneratedMessage {
+  factory ServiceMetadata({
+    $core.String? engineVersion,
+    $core.String? realmVersion,
+  }) {
+    final result = create();
+    if (engineVersion != null) result.engineVersion = engineVersion;
+    if (realmVersion != null) result.realmVersion = realmVersion;
+    return result;
+  }
+
+  ServiceMetadata._();
+
+  factory ServiceMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ServiceMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ServiceMetadata',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'typewriter.models.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'engineVersion')
+    ..aOS(2, _omitFieldNames ? '' : 'realmVersion')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceMetadata copyWith(void Function(ServiceMetadata) updates) =>
+      super.copyWith((message) => updates(message as ServiceMetadata))
+          as ServiceMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ServiceMetadata create() => ServiceMetadata._();
+  @$core.override
+  ServiceMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ServiceMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServiceMetadata>(create);
+  static ServiceMetadata? _defaultInstance;
+
+  /// Version of the engine (if applicable).
+  @$pb.TagNumber(1)
+  $core.String get engineVersion => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set engineVersion($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEngineVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEngineVersion() => $_clearField(1);
+
+  /// Version of the realm (if applicable).
+  @$pb.TagNumber(2)
+  $core.String get realmVersion => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set realmVersion($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRealmVersion() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRealmVersion() => $_clearField(2);
+}
+
+/// Service represents a service identity stored in SurrealDB.
+class Service extends $pb.GeneratedMessage {
+  factory Service({
+    $core.String? id,
+    $core.String? name,
+    $core.Iterable<ServiceType>? serviceTypes,
+    $0.Timestamp? createdAt,
+    $0.Timestamp? lastSeen,
+    ServiceMetadata? metadata,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (name != null) result.name = name;
+    if (serviceTypes != null) result.serviceTypes.addAll(serviceTypes);
+    if (createdAt != null) result.createdAt = createdAt;
+    if (lastSeen != null) result.lastSeen = lastSeen;
+    if (metadata != null) result.metadata = metadata;
+    return result;
+  }
+
+  Service._();
+
+  factory Service.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Service.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Service',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'typewriter.models.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..pc<ServiceType>(
+        3, _omitFieldNames ? '' : 'serviceTypes', $pb.PbFieldType.KE,
+        valueOf: ServiceType.valueOf,
+        enumValues: ServiceType.values,
+        defaultEnumValue: ServiceType.SERVICE_TYPE_UNSPECIFIED)
+    ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'createdAt',
+        subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(5, _omitFieldNames ? '' : 'lastSeen',
+        subBuilder: $0.Timestamp.create)
+    ..aOM<ServiceMetadata>(6, _omitFieldNames ? '' : 'metadata',
+        subBuilder: ServiceMetadata.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Service clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Service copyWith(void Function(Service) updates) =>
+      super.copyWith((message) => updates(message as Service)) as Service;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Service create() => Service._();
+  @$core.override
+  Service createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Service getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Service>(create);
+  static Service? _defaultInstance;
+
+  /// Service identifier (authentik_user_id as record ID).
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  /// Name of the service.
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+
+  /// List of service types (engine and/or realm).
+  @$pb.TagNumber(3)
+  $pb.PbList<ServiceType> get serviceTypes => $_getList(2);
+
+  /// Timestamp when the service was created.
+  @$pb.TagNumber(4)
+  $0.Timestamp get createdAt => $_getN(3);
+  @$pb.TagNumber(4)
+  set createdAt($0.Timestamp value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCreatedAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCreatedAt() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $0.Timestamp ensureCreatedAt() => $_ensure(3);
+
+  /// Timestamp when the service was last seen (optional).
+  @$pb.TagNumber(5)
+  $0.Timestamp get lastSeen => $_getN(4);
+  @$pb.TagNumber(5)
+  set lastSeen($0.Timestamp value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasLastSeen() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearLastSeen() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.Timestamp ensureLastSeen() => $_ensure(4);
+
+  /// Metadata about the service.
+  @$pb.TagNumber(6)
+  ServiceMetadata get metadata => $_getN(5);
+  @$pb.TagNumber(6)
+  set metadata(ServiceMetadata value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasMetadata() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearMetadata() => $_clearField(6);
+  @$pb.TagNumber(6)
+  ServiceMetadata ensureMetadata() => $_ensure(5);
+}
+
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

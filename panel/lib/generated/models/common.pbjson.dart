@@ -27,18 +27,6 @@ const Color$json = {
 final $typed_data.Uint8List colorDescriptor =
     $convert.base64Decode('CgVDb2xvchIUCgV2YWx1ZRgBIAEoDVIFdmFsdWU=');
 
-@$core.Deprecated('Use versionDescriptor instead')
-const Version$json = {
-  '1': 'Version',
-  '2': [
-    {'1': 'value', '3': 1, '4': 1, '5': 9, '10': 'value'},
-  ],
-};
-
-/// Descriptor for `Version`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List versionDescriptor =
-    $convert.base64Decode('CgdWZXJzaW9uEhQKBXZhbHVlGAEgASgJUgV2YWx1ZQ==');
-
 @$core.Deprecated('Use errorDescriptor instead')
 const Error$json = {
   '1': 'Error',

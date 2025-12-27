@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package typewriter.models.v1;
 
+import "models/common.proto";
+
 // Role represents a role that can be assigned to organization members.
 // Roles define permissions and access levels within the organization.
 message Role {
@@ -12,7 +14,7 @@ message Role {
   string name = 2;
 
   // Color for the role in ARGB format
-  uint32 color = 3;
+  Color color = 3;
 
   // Whether this is the default role assigned to new members
   bool default_role = 4;
