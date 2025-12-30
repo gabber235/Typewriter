@@ -11,33 +11,48 @@ use bytes::Bytes;
 
 use wash_runtime::engine::Engine;
 use wash_runtime::host::{Host, HostApi, HostBuilder};
-use wash_runtime::types::{Component, LocalResources, Workload, WorkloadStartRequest};
-use wash_runtime::wit::WitInterface;
-use wash_runtime::washlet::plugins::wasmcloud_messaging::WasmcloudMessaging;
-use wash_runtime::washlet::plugins::surrealdb::{Auth, SurrealdbConfig, WasiSurrealdb};
 use wash_runtime::plugin::wasi_config::WasiConfig;
 use wash_runtime::plugin::wasi_logging::WasiLogging;
+use wash_runtime::types::{Component, LocalResources, Workload, WorkloadStartRequest};
+use wash_runtime::washlet::plugins::surrealdb::{Auth, SurrealdbConfig, WasiSurrealdb};
+use wash_runtime::washlet::plugins::wasmcloud_messaging::WasmcloudMessaging;
+use wash_runtime::wit::WitInterface;
 
-use super::components::ComponentRegistry;
+use super::components::{ComponentRegistry, DiscoveredComponent};
+
+/// Result of deploying components, tracking all workload IDs.
+#[derive(Debug, Clone, Default)]
+pub struct DeploymentResult {
+    /// All workload IDs for cleanup.
+    pub workload_ids: Vec<String>,
+    /// Map from component name to workload ID for targeted operations.
+    pub component_workloads: HashMap<String, String>,
+}
+
+impl DeploymentResult {
+    /// Get all workload IDs for cleanup.
+    pub fn all_ids(&self) -> &[String] {
+        &self.workload_ids
+    }
+
+    /// Get workload ID for a specific component.
+    pub fn get(&self, component_name: &str) -> Option<&str> {
+        self.component_workloads
+            .get(component_name)
+            .map(|s| s.as_str())
+    }
+}
 
 /// Test host that runs WASM components with all required plugins.
 pub struct TestHost {
     host: Arc<Host>,
-    nats_client: async_nats::Client,
 }
 
 impl TestHost {
     /// Create a new test host connected to NATS and SurrealDB.
-    pub async fn new(nats_url: &str, surrealdb_url: &str) -> Result<Self> {
-        tracing::info!(nats = %nats_url, surrealdb = %surrealdb_url, "Creating test host...");
+    pub async fn new(nats_client: &async_nats::Client, surrealdb_url: &str) -> Result<Self> {
+        tracing::info!(surrealdb = %surrealdb_url, "Creating test host...");
 
-        // Connect to NATS
-        let nats_client = async_nats::connect(nats_url)
-            .await
-            .context("Failed to connect to NATS")?;
-        tracing::info!("Connected to NATS");
-
-        // Configure SurrealDB plugin
         let surrealdb_config = SurrealdbConfig {
             url: surrealdb_url.to_string(),
             namespace: "typewriter".to_string(),
@@ -52,11 +67,9 @@ impl TestHost {
             .context("Failed to create SurrealDB plugin")?;
         tracing::info!("Created SurrealDB plugin");
 
-        // Create NATS messaging plugin
         let messaging_plugin = WasmcloudMessaging::new(Arc::new(nats_client.clone()));
         tracing::info!("Created NATS messaging plugin");
 
-        // Build the host with all required plugins
         let engine = Engine::builder()
             .build()
             .context("Failed to create engine")?;
@@ -79,64 +92,112 @@ impl TestHost {
 
         tracing::info!("Test host created successfully");
 
-        Ok(Self { host, nats_client })
+        Ok(Self { host })
     }
 
-    /// Deploy ALL components as a SINGLE workload.
+    /// Deploy all components that don't require environment configuration.
     ///
-    /// This is critical: multiple components must be in the same workload
-    /// to enable proper inter-component communication.
-    pub async fn deploy_all_components(&self, registry: &ComponentRegistry) -> Result<String> {
-        let workload_id = uuid::Uuid::new_v4().to_string();
-        tracing::info!(workload_id = %workload_id, "Deploying all components...");
+    /// Each component is deployed as a separate workload with its own host interfaces.
+    /// Components requiring environment configuration (auth-callout, service-identity)
+    /// are skipped and must be deployed explicitly via `deploy_component()`.
+    pub async fn deploy_all_components(
+        &self,
+        registry: &ComponentRegistry,
+    ) -> Result<DeploymentResult> {
+        tracing::info!("Deploying all components as separate workloads...");
 
-        // Collect all components into a single workload
-        let mut components = Vec::new();
-        let mut all_host_interfaces: Vec<WitInterface> = Vec::new();
+        let mut result = DeploymentResult::default();
 
         for discovered in registry.all() {
-            let bytes = discovered
-                .bytes
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Component {} not built", discovered.name))?;
-
-            components.push(Component {
-                bytes: Bytes::from(bytes.clone()),
-                local_resources: LocalResources::default(),
-                pool_size: 1,
-                max_invocations: 1000,
-            });
-
-            // Convert host_interfaces from workloaddeployment.yaml to WitInterface
-            for hi in &discovered.host_interfaces {
-                all_host_interfaces.push(WitInterface {
-                    namespace: hi.namespace.clone(),
-                    package: hi.package.clone(),
-                    interfaces: hi.interfaces.iter().cloned().collect(),
-                    version: None,
-                    config: hi.config.clone(),
-                });
+            // Skip components that require environment configuration
+            if discovered.requires_environment() {
+                tracing::info!(
+                    name = %discovered.name,
+                    config_refs = ?discovered.config_refs,
+                    secret_refs = ?discovered.secret_refs,
+                    "Skipping component (requires environment configuration)"
+                );
+                continue;
             }
 
-            tracing::debug!(
-                name = %discovered.name,
-                interfaces = discovered.host_interfaces.len(),
-                "Added component to workload"
-            );
+            let workload_id = self
+                .deploy_component_internal(discovered, HashMap::new())
+                .await?;
+            result.workload_ids.push(workload_id.clone());
+            result
+                .component_workloads
+                .insert(discovered.name.clone(), workload_id);
         }
 
-        // Merge host_interfaces - combine subscriptions for messaging
-        let merged_interfaces = merge_host_interfaces(all_host_interfaces);
+        tracing::info!(
+            deployed = result.workload_ids.len(),
+            "All eligible components deployed as separate workloads"
+        );
+
+        Ok(result)
+    }
+
+    /// Deploy a specific component with its environment variables.
+    ///
+    /// Use this for components that require environment configuration,
+    /// such as auth-callout or service-identity.
+    pub async fn deploy_component(
+        &self,
+        registry: &ComponentRegistry,
+        name: &str,
+        environment: HashMap<String, String>,
+    ) -> Result<String> {
+        let discovered = registry
+            .get(name)
+            .ok_or_else(|| anyhow::anyhow!("Component {} not found", name))?;
+
+        self.deploy_component_internal(discovered, environment).await
+    }
+
+    /// Internal helper that deploys a single component as its own workload.
+    async fn deploy_component_internal(
+        &self,
+        discovered: &DiscoveredComponent,
+        environment: HashMap<String, String>,
+    ) -> Result<String> {
+        let bytes = discovered
+            .bytes
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Component {} not built", discovered.name))?;
+
+        let workload_id = uuid::Uuid::new_v4().to_string();
+
+        let component = Component {
+            bytes: Bytes::from(bytes.clone()),
+            local_resources: LocalResources {
+                environment,
+                ..Default::default()
+            },
+            pool_size: 1,
+            max_invocations: 1000,
+        };
+
+        let host_interfaces: Vec<WitInterface> = discovered
+            .host_interfaces
+            .iter()
+            .map(|hi| WitInterface {
+                namespace: hi.namespace.clone(),
+                package: hi.package.clone(),
+                interfaces: hi.interfaces.iter().cloned().collect(),
+                version: None,
+                config: hi.config.clone(),
+            })
+            .collect();
 
         let req = WorkloadStartRequest {
             workload_id: workload_id.clone(),
             workload: Workload {
                 namespace: "test".into(),
-                name: "integration-test".into(),
+                name: discovered.name.clone(),
                 annotations: HashMap::new(),
                 service: None,
-                components,
-                host_interfaces: merged_interfaces,
+                components: vec![component],
+                host_interfaces,
                 volumes: Vec::new(),
             },
         };
@@ -144,69 +205,14 @@ impl TestHost {
         self.host
             .workload_start(req)
             .await
-            .context("Failed to start workload")?;
+            .with_context(|| format!("Failed to start workload for {}", discovered.name))?;
 
         tracing::info!(
             workload_id = %workload_id,
-            components = registry.names().len(),
-            "Workload deployed successfully"
+            component = %discovered.name,
+            "Component deployed as separate workload"
         );
 
         Ok(workload_id)
     }
-
-    /// Get the NATS client for test assertions.
-    pub fn nats_client(&self) -> &async_nats::Client {
-        &self.nats_client
-    }
-}
-
-/// Merge host interfaces, combining subscriptions for messaging interfaces.
-fn merge_host_interfaces(interfaces: Vec<WitInterface>) -> Vec<WitInterface> {
-    let mut result: HashMap<(String, String), WitInterface> = HashMap::new();
-    let mut messaging_subscriptions: Vec<String> = Vec::new();
-
-    for hi in interfaces {
-        let key = (hi.namespace.clone(), hi.package.clone());
-
-        // Special handling for messaging - collect all subscriptions
-        if hi.namespace == "wasmcloud" && hi.package == "messaging" {
-            if let Some(subs) = hi.config.get("subscriptions") {
-                messaging_subscriptions.push(subs.clone());
-            }
-            // Merge interfaces
-            if let Some(existing) = result.get_mut(&key) {
-                existing.interfaces.extend(hi.interfaces);
-            } else {
-                result.insert(key, WitInterface {
-                    namespace: hi.namespace,
-                    package: hi.package,
-                    interfaces: hi.interfaces,
-                    version: hi.version,
-                    config: HashMap::new(), // Config will be added later
-                });
-            }
-        } else {
-            // For non-messaging interfaces, just merge
-            if let Some(existing) = result.get_mut(&key) {
-                existing.interfaces.extend(hi.interfaces);
-                existing.config.extend(hi.config);
-            } else {
-                result.insert(key, hi);
-            }
-        }
-    }
-
-    // Add merged subscriptions to messaging interface
-    if !messaging_subscriptions.is_empty() {
-        let key = ("wasmcloud".to_string(), "messaging".to_string());
-        if let Some(messaging) = result.get_mut(&key) {
-            messaging.config.insert(
-                "subscriptions".to_string(),
-                messaging_subscriptions.join(","),
-            );
-        }
-    }
-
-    result.into_values().collect()
 }

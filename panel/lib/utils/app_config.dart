@@ -6,6 +6,7 @@ class AppConfig {
   static const NatsConfig nats = NatsConfig._();
   static const AuthConfig auth = AuthConfig._();
   static const DocsConfig docs = DocsConfig._();
+  static const ApiConfig api = ApiConfig._();
 }
 
 class NatsConfig {
@@ -19,17 +20,6 @@ class NatsConfig {
   String get desktopUrl => const String.fromEnvironment(
     "NATS_DESKTOP_URL",
     defaultValue: "nats://localhost:4222",
-  );
-
-  String get sentinelJwt => const String.fromEnvironment(
-    "NATS_SENTINEL_JWT",
-    defaultValue:
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJqdGkiOiJUWVFNSVhCUUJNSEhOUzdWTU1RRk1OSlhBVENWS1RJRUJGTlVEQzRWNVpQUTY2NVgzMkRBIiwiaWF0IjoxNzQ1NzI4NjQ4LCJpc3MiOiJBQlU2SFRaTEpETUU3TFBHU0xBVkdNSjJXS0Y1TUlOQzZKTlRIR0JLMlFKRzJRNjVKUkU0VEFOUSIsIm5hbWUiOiJzZW50aW5lbCIsInN1YiI6IlVDRkpZSVozVkdNSzVJSElJUldPNlJIRU9ISVhJVE1QNEhZNERHSEJTMk8yRkU0SUI2TlM2RjNLIiwibmF0cyI6eyJwdWIiOnsiZGVueSI6WyJcdTAwM2UiXX0sInN1YiI6eyJkZW55IjpbIlx1MDAzZSJdfSwic3VicyI6LTEsImRhdGEiOi0xLCJwYXlsb2FkIjotMSwiaXNzdWVyX2FjY291bnQiOiJBQ05BWVZJQVZNQ0FVU0c1NUg2WUhXT0dRVlUzQUhNRVoyNFBYNVVPMkEyNkYzTUZBSVFSM0dGSyIsInR5cGUiOiJ1c2VyIiwidmVyc2lvbiI6Mn19.QYjsUBqshe5G7FNuDGg1ouxevrJ3sHAqJj0G8VCeVUhJLH3tl2v6nuS8UtICuz5g-BlId2Tg_wAjumQW5tHFAA",
-  );
-
-  String get sentinelSeed => const String.fromEnvironment(
-    "NATS_SENTINEL_SEED",
-    defaultValue: "SUAG6J2O4ULGEZBKLVFQIDHFIZWR5PVEAROIQTE5VISCE3VCMFI2AHS25U",
   );
 
   bool get acceptBadCert =>
@@ -89,4 +79,13 @@ class DocsConfig {
   String get engineDocsUrl => "$baseUrl/develop";
 
   String get extensionsDocsUrl => "$baseUrl/develop/extensions";
+}
+
+class ApiConfig {
+  const ApiConfig._();
+
+  String get baseUrl => const String.fromEnvironment(
+    "API_BASE_URL",
+    defaultValue: "https://api.typewritermc.com",
+  );
 }

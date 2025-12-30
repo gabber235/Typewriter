@@ -2,13 +2,16 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use surrealdb::engine::remote::ws::Client;
-use surrealdb::Surreal;
+use surrealdb::engine::any::Any;
+use surrealdb::{RecordId, Surreal};
+use uuid::Uuid;
 
 use super::organization::Organization;
 
+// Note: Uuid is still used for generating new IDs as strings via Uuid::new_v4().to_string()
+
 /// A role record created in the database.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Role {
     pub id: String,
     pub name: String,
@@ -18,6 +21,31 @@ pub struct Role {
     pub assignable: bool,
     pub default_role: bool,
     pub priority: i32,
+}
+
+/// Data to be stored for a role record.
+#[derive(Debug, Serialize)]
+struct RoleData {
+    name: String,
+    organization: RecordId,
+    color: i64,
+    deletable: bool,
+    assignable: bool,
+    default_role: bool,
+    priority: i32,
+}
+
+/// Record returned from SurrealDB create operation.
+#[derive(Debug, Deserialize)]
+struct RoleRecord {
+    id: RecordId,
+    name: String,
+    organization: RecordId,
+    color: i64,
+    deletable: bool,
+    assignable: bool,
+    default_role: bool,
+    priority: i32,
 }
 
 /// Builder for creating test roles.
@@ -78,43 +106,44 @@ impl RoleBuilder {
     }
 
     /// Create the role in the database.
-    pub async fn create(self, db: &Surreal<Client>) -> Result<Role> {
-        let id = uuid::Uuid::new_v4().to_string();
+    ///
+    /// Uses string-type record keys to match what the component expects when using
+    /// `type::thing('role', $role_id)` in SurrealQL queries.
+    pub async fn create(self, db: &Surreal<Any>) -> Result<Role> {
+        // Use string ID to match component's type::thing() usage
+        let id = Uuid::new_v4().to_string();
 
-        #[derive(Serialize)]
-        struct CreateRole {
-            name: String,
-            organization: String, // Record link format
-            color: i64,
-            deletable: bool,
-            assignable: bool,
-            default_role: bool,
-            priority: i32,
-        }
-
-        let _: Option<serde_json::Value> = db
-            .create(("role", &id))
-            .content(CreateRole {
-                name: self.name.clone(),
-                organization: format!("organization:{}", self.organization_id),
-                color: self.color as i64,
-                deletable: self.deletable,
-                assignable: self.assignable,
-                default_role: self.default_role,
-                priority: self.priority,
-            })
-            .await
-            .context("Failed to create role")?;
-
-        Ok(Role {
-            id,
+        let data = RoleData {
             name: self.name,
-            organization_id: self.organization_id,
-            color: self.color,
+            // Use string key for organization reference to match component's type::thing() usage
+            organization: RecordId::from(("organization", self.organization_id.as_str())),
+            color: self.color as i64,
             deletable: self.deletable,
             assignable: self.assignable,
             default_role: self.default_role,
             priority: self.priority,
+        };
+
+        let record: Option<RoleRecord> = db
+            .create(("role", &id))
+            .content(data)
+            .await
+            .context("Failed to create role")?;
+
+        let record = record.context("No record returned from create")?;
+
+        // Extract organization ID from the record
+        let org_id = record.organization.key().to_string();
+
+        Ok(Role {
+            id,
+            name: record.name,
+            organization_id: org_id,
+            color: record.color as u32,
+            deletable: record.deletable,
+            assignable: record.assignable,
+            default_role: record.default_role,
+            priority: record.priority,
         })
     }
 }

@@ -1,7 +1,7 @@
 //! Member builder for seeding test data.
 
 use anyhow::{Context, Result};
-use surrealdb::engine::remote::ws::Client;
+use surrealdb::engine::any::Any;
 use surrealdb::Surreal;
 
 use super::organization::Organization;
@@ -40,21 +40,26 @@ impl MemberBuilder {
     }
 
     /// Create the membership in the database.
-    pub async fn create(self, db: &Surreal<Client>) -> Result<()> {
+    ///
+    /// Uses raw RELATE query due to known issues with insert().relation() in SurrealDB Rust SDK.
+    /// See: https://github.com/surrealdb/surrealdb/issues/5209
+    ///
+    /// Uses string-type record keys (backtick syntax) to match what the component expects when
+    /// using `type::thing()` in SurrealQL queries.
+    pub async fn create(self, db: &Surreal<Any>) -> Result<()> {
         if self.role_ids.is_empty() {
             anyhow::bail!("At least one role is required for membership");
         }
 
-        // Build the role references
+        // Use backtick syntax for string-type record keys to match component's type::thing() usage
         let roles: Vec<String> = self
             .role_ids
             .iter()
-            .map(|id| format!("role:{}", id))
+            .map(|id| format!("role:`{}`", id))
             .collect();
 
-        // Create the relation using RELATE
         let query = format!(
-            "RELATE user:{}->member_of->organization:{} SET roles = [{}]",
+            "RELATE user:`{}`->member_of->organization:`{}` SET roles = [{}]",
             self.user_id,
             self.organization_id,
             roles.join(", ")

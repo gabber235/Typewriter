@@ -1,0 +1,51 @@
+[versions]
+kotlin = "2.3.0"
+foojay = "0.8.0"
+koin-bom = "4.2.0-beta2"
+kotlin-logging = "7.0.4"
+logback = "1.5.23"
+
+protokt = "1.0.0-beta.8"
+protobuf-java = "4.33.2"
+nats = "0.6.1-SNAPSHOT"
+
+kotlin-serialize = "1.10.0-RC"
+kotlin-coroutines = "1.10.2"
+
+gradle-buildconfig = "6.0.7"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+kotlin-logging-jvm = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+koin-core = { module = "io.insert-koin:koin-core" }
+koin-test = { module = "io.insert-koin:koin-test" }
+
+protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf-java" }
+nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
+nats-jetstream = { module = "io.github.n-hass:natskt-jetstream", version.ref = "nats" }
+
+kotlin-serialize-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlin-serialize" }
+kotlin-serialize-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor", version.ref = "kotlin-serialize" }
+kotlin-serialize-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialize" }
+
+kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay" }
+protokt = { id = "com.toasttab.protokt.v1", version.ref = "protokt" }
+
+kotlin-serialize = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "gradle-buildconfig" }
+
+
+[bundles]
+basic-implementation = ["kotlin-stdlib", "koin-core", "kotlin-logging-jvm", "kotlin-coroutines-core"]
+basic-test = ["koin-test"]

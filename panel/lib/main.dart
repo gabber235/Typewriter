@@ -13,6 +13,7 @@ import "package:rive/rive.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
+import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/widgets/app/components/app_required.dart";
@@ -415,6 +416,12 @@ class _EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Fetch sentinel credentials before authentication checks
+    final (_, sentinelWidget) = require(ref.watch(sentinelCredentialsProvider));
+    if (sentinelWidget != null) {
+      return sentinelWidget;
+    }
+
     final (isAuthenticated, widget) = require(
       ref.watch(isAuthenticatedProvider),
     );

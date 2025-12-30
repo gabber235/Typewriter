@@ -57,10 +57,49 @@ resource "kubectl_manifest" "service_identity_secrets_external_secret" {
   })
 }
 
+resource "kubectl_manifest" "service_identity_nats_secrets_external_secret" {
+  yaml_body = yamlencode({
+    apiVersion = "external-secrets.io/v1"
+    kind       = "ExternalSecret"
+    metadata = {
+      name      = "service-identity-nats-secrets"
+      namespace = local.wasmcloud_namespace
+    }
+    spec = {
+      refreshInterval = "8760h"
+      secretStoreRef = {
+        name = "openbao-nats-backend"
+        kind = "ClusterSecretStore"
+      }
+      target = {
+        name           = "service-identity-nats-secrets"
+        creationPolicy = "Owner"
+        template = {
+          engineVersion = "v2"
+          data = {
+            "NATS_SENTINEL_JWT"  = "{{ .creds | regexReplaceAll \"(?s).*-----BEGIN NATS USER JWT-----\\n([^\\n]+)\\n.*\" \"$1\" }}"
+            "NATS_SENTINEL_SEED" = "{{ .creds | regexReplaceAll \"(?s).*-----BEGIN USER NKEY SEED-----\\n([^\\n]+)\\n.*\" \"$1\" }}"
+          }
+        }
+      }
+      data = [
+        {
+          secretKey = "creds"
+          remoteRef = {
+            key      = "vault-plugin-secrets-nats/creds/operator/operator/account/WASMCLOUD/user/sentinel"
+            property = "creds"
+          }
+        }
+      ]
+    }
+  })
+}
+
 resource "kubectl_manifest" "service_identity_workload" {
   yaml_body = file("${path.module}/../manifests/workloaddeployment.yaml")
 
   depends_on = [
-    kubectl_manifest.service_identity_secrets_external_secret
+    kubectl_manifest.service_identity_secrets_external_secret,
+    kubectl_manifest.service_identity_nats_secrets_external_secret
   ]
 }

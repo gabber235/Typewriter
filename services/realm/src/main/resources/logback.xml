@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Define colors for log levels -->
+    <conversionRule conversionWord="clr" converterClass="ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter"/>
+
+    <!-- Console Appender with Colors -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{0}) %X{requestId:--}%X{userId:--}- %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Shortened stack traces -->
+    <conversionRule conversionWord="ex" converterClass="ch.qos.logback.classic.pattern.ThrowableProxyConverter"/>
+    
+    <!-- Quiet down noisy libraries -->
+    <logger name="io.nats" level="INFO"/>
+    <logger name="com.google.protobuf" level="INFO"/>
+
+    <!-- Root logger -->
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

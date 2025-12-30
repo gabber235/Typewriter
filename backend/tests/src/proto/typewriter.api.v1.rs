@@ -13,6 +13,39 @@ pub struct PermissionResponse {
     #[prost(string, repeated, tag = "2")]
     pub tags: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
+/// GetSentinelCredentialsRequest requests the NATS sentinel credentials.
+/// This endpoint is unauthenticated as sentinel credentials are needed
+/// before authentication can occur.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct GetSentinelCredentialsRequest {}
+/// GetSentinelCredentialsResponse returns the sentinel credentials or an error.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetSentinelCredentialsResponse {
+    #[prost(oneof = "get_sentinel_credentials_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<get_sentinel_credentials_response::Result>,
+}
+/// Nested message and enum types in `GetSentinelCredentialsResponse`.
+pub mod get_sentinel_credentials_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Credentials(super::SentinelCredentials),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+/// SentinelCredentials contains the NATS sentinel JWT and seed.
+/// These credentials have no permissions and are only used to identify
+/// the account during NATS auth callout.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SentinelCredentials {
+    /// The sentinel user JWT token.
+    #[prost(string, tag = "1")]
+    pub jwt: ::prost::alloc::string::String,
+    /// The sentinel user NKEY seed.
+    #[prost(string, tag = "2")]
+    pub seed: ::prost::alloc::string::String,
+}
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ListBooksRequest {}
 #[derive(Clone, PartialEq, ::prost::Message)]

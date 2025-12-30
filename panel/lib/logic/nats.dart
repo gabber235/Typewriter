@@ -2,21 +2,48 @@ import "dart:async";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
+import "package:http/http.dart" as http;
 import "package:protobuf/protobuf.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/generated/api/auth.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/app_config.dart";
 
 part "nats.g.dart";
 
-// The sentinel JWT is just used to make sure the user gets into the correct account on the NATS server.
-// It is not actually a valid credential nor allows the user to do anything.
-// That is why its safe to store it in a constant.
-// TODO: Remove when nats allows for the `default_sentinel` config option.
-final _natsSentinelJwt = AppConfig.nats.sentinelJwt;
-final _natsSentinelSeed = AppConfig.nats.sentinelSeed;
 final _natsAcceptBadCert = AppConfig.nats.acceptBadCert;
+
+/// Fetches the sentinel credentials from the API.
+@Riverpod(keepAlive: true)
+Future<SentinelCredentials> sentinelCredentials(Ref ref) async {
+  final url = Uri.parse("${AppConfig.api.baseUrl}/auth/sentinel");
+  final response = await http.get(url);
+
+  if (response.statusCode != 200) {
+    throw Exception(
+      "Failed to fetch sentinel credentials: ${response.statusCode}",
+    );
+  }
+
+  final protoResponse = GetSentinelCredentialsResponse.fromBuffer(
+    response.bodyBytes,
+  );
+
+  if (protoResponse.hasError()) {
+    throw Exception(
+      "Failed to fetch sentinel credentials: ${protoResponse.error.message}",
+    );
+  }
+
+  if (!protoResponse.hasCredentials()) {
+    throw Exception(
+      "Failed to fetch sentinel credentials: No credentials returned",
+    );
+  }
+
+  return protoResponse.credentials;
+}
 
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
@@ -28,6 +55,9 @@ class Nats extends _$Nats {
     }
 
     final user = ref.watch(authUserInfoProvider).requireValue;
+    final sentinelCredentials = ref
+        .watch(sentinelCredentialsProvider)
+        .requireValue;
 
     final client = Client()..acceptBadCert = _natsAcceptBadCert;
 
@@ -38,7 +68,7 @@ class Nats extends _$Nats {
     );
 
     client
-      ..seed = _natsSentinelSeed
+      ..seed = sentinelCredentials.seed
       ..inboxPrefix = "_INBOX.${user.sub}";
 
     unawaited(
@@ -46,7 +76,7 @@ class Nats extends _$Nats {
           .connect(
             Uri.parse(url),
             connectOption: ConnectOption(
-              jwt: _natsSentinelJwt,
+              jwt: sentinelCredentials.jwt,
               user: user.username ?? user.name ?? user.sub,
               pass: token,
               // ignore: only_use_keep_alive_inside_keep_alive

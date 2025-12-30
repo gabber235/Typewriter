@@ -2,16 +2,34 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use surrealdb::engine::remote::ws::Client;
-use surrealdb::Surreal;
+use surrealdb::engine::any::Any;
+use surrealdb::{RecordId, Surreal};
+use uuid::Uuid;
 
 /// A user record created in the database.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct User {
     pub id: String,
     pub name: Option<String>,
     pub email: Option<String>,
     pub avatar_url: Option<String>,
+}
+
+/// Data to be stored for a user record.
+#[derive(Debug, Serialize)]
+struct UserData {
+    name: Option<String>,
+    email: Option<String>,
+    avatar_url: Option<String>,
+}
+
+/// Record returned from SurrealDB create operation.
+#[derive(Debug, Deserialize)]
+struct UserRecord {
+    id: RecordId,
+    name: Option<String>,
+    email: Option<String>,
+    avatar_url: Option<String>,
 }
 
 /// Builder for creating test users.
@@ -44,31 +62,32 @@ impl UserBuilder {
     }
 
     /// Create the user in the database.
-    pub async fn create(self, db: &Surreal<Client>) -> Result<User> {
-        let id = uuid::Uuid::new_v4().to_string();
+    ///
+    /// Uses string-type record keys to match what the component expects when using
+    /// `type::thing('user', $user_id)` in SurrealQL queries.
+    pub async fn create(self, db: &Surreal<Any>) -> Result<User> {
+        // Use string ID to match component's type::thing() usage
+        let id = Uuid::new_v4().to_string();
 
-        #[derive(Serialize)]
-        struct CreateUser {
-            name: Option<String>,
-            email: Option<String>,
-            avatar_url: Option<String>,
-        }
-
-        let _: Option<serde_json::Value> = db
-            .create(("user", &id))
-            .content(CreateUser {
-                name: self.name.clone(),
-                email: self.email.clone(),
-                avatar_url: self.avatar_url.clone(),
-            })
-            .await
-            .context("Failed to create user")?;
-
-        Ok(User {
-            id,
+        let data = UserData {
             name: self.name,
             email: self.email,
             avatar_url: self.avatar_url,
+        };
+
+        let record: Option<UserRecord> = db
+            .create(("user", &id))
+            .content(data)
+            .await
+            .context("Failed to create user")?;
+
+        let record = record.context("No record returned from create")?;
+
+        Ok(User {
+            id,
+            name: record.name,
+            email: record.email,
+            avatar_url: record.avatar_url,
         })
     }
 }

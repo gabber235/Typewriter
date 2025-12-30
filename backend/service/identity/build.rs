@@ -3,6 +3,7 @@ fn main() {
         "../../../proto/models/common.proto",
         "../../../proto/models/service.proto",
         "../../../proto/api/service.proto",
+        "../../../proto/api/auth.proto",
     ];
 
     prost_build::Config::new()

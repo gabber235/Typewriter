@@ -1,0 +1,555 @@
+//! Tests for removing organization members.
+
+use backend_tests::proto::typewriter::api::v1::{
+    list_members_response, remove_member_response, ListMembersRequest, ListMembersResponse,
+    RemoveMemberRequest, RemoveMemberResponse,
+};
+use backend_tests::{
+    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
+};
+
+/// Test successfully removing a member from an organization.
+#[tokio::test]
+async fn test_remove_member_success() {
+    let fixtures = get_fixtures().await;
+    let db = &fixtures.infra.db;
+    let nats = fixtures.infra.nats_client();
+    let client = TestNatsClient::new(nats);
+
+    // Create test data
+    let org = OrganizationBuilder::new("remove_member_success_org")
+        .create(db)
+        .await
+        .expect("Failed to create organization");
+
+    let role = RoleBuilder::new("remove_success_role", &org)
+        .create(db)
+        .await
+        .expect("Failed to create role");
+
+    let admin_user = UserBuilder::new("Remove Success Admin")
+        .email("remove.success.admin@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create admin user");
+
+    let target_user = UserBuilder::new("Remove Success Target")
+        .email("remove.success.target@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create target user");
+
+    // Create memberships
+    MemberBuilder::new(&admin_user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create admin membership");
+
+    MemberBuilder::new(&target_user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create target membership");
+
+    let member_id = get_member_id(db, &target_user.id, &org.id).await;
+
+    // Send remove request
+    let subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.remove",
+        admin_user.id, org.id
+    );
+    let response: RemoveMemberResponse = client
+        .request(
+            &subject,
+            &RemoveMemberRequest {
+                member_id: member_id.clone(),
+            },
+        )
+        .await
+        .expect("Failed to send request");
+
+    // Verify success response
+    match response.result {
+        Some(remove_member_response::Result::Success(success)) => {
+            assert!(success, "Remove operation should return success=true");
+        }
+        Some(remove_member_response::Result::Error(err)) => {
+            panic!("Unexpected error: {} - {}", err.code, err.message);
+        }
+        None => panic!("Expected result in response"),
+    }
+}
+
+/// Test that removed member no longer appears in the member list.
+#[tokio::test]
+async fn test_removed_member_not_in_list() {
+    let fixtures = get_fixtures().await;
+    let db = &fixtures.infra.db;
+    let nats = fixtures.infra.nats_client();
+    let client = TestNatsClient::new(nats);
+
+    // Create test data
+    let org = OrganizationBuilder::new("remove_verify_list_org")
+        .create(db)
+        .await
+        .expect("Failed to create organization");
+
+    let role = RoleBuilder::new("remove_verify_role", &org)
+        .create(db)
+        .await
+        .expect("Failed to create role");
+
+    let admin_user = UserBuilder::new("Remove Verify Admin")
+        .email("remove.verify.admin@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create admin user");
+
+    let target_user = UserBuilder::new("Remove Verify Target")
+        .email("remove.verify.target@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create target user");
+
+    let remaining_user = UserBuilder::new("Remove Verify Remaining")
+        .email("remove.verify.remaining@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create remaining user");
+
+    // Create memberships for all three users
+    MemberBuilder::new(&admin_user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create admin membership");
+
+    MemberBuilder::new(&target_user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create target membership");
+
+    MemberBuilder::new(&remaining_user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create remaining membership");
+
+    // Get member ID for target
+    let member_id = get_member_id(db, &target_user.id, &org.id).await;
+
+    // Verify member exists in list before removal
+    let list_subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.list",
+        admin_user.id, org.id
+    );
+    let list_response: ListMembersResponse = client
+        .request(&list_subject, &ListMembersRequest {})
+        .await
+        .expect("Failed to list members");
+
+    match &list_response.result {
+        Some(list_members_response::Result::Members(list)) => {
+            assert_eq!(list.members.len(), 3, "Expected three members before removal");
+            assert!(
+                list.members.iter().any(|m| m.name == "Remove Verify Target"),
+                "Target should be in member list before removal"
+            );
+        }
+        _ => panic!("Expected members list"),
+    }
+
+    // Remove the target member
+    let remove_subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.remove",
+        admin_user.id, org.id
+    );
+    let remove_response: RemoveMemberResponse = client
+        .request(
+            &remove_subject,
+            &RemoveMemberRequest {
+                member_id: member_id.clone(),
+            },
+        )
+        .await
+        .expect("Failed to send remove request");
+
+    // Verify removal was successful
+    match remove_response.result {
+        Some(remove_member_response::Result::Success(success)) => {
+            assert!(success, "Remove should succeed");
+        }
+        Some(remove_member_response::Result::Error(err)) => {
+            panic!("Remove failed: {} - {}", err.code, err.message);
+        }
+        None => panic!("Expected result in response"),
+    }
+
+    // Verify member no longer appears in list
+    let final_list_response: ListMembersResponse = client
+        .request(&list_subject, &ListMembersRequest {})
+        .await
+        .expect("Failed to list members after removal");
+
+    match final_list_response.result {
+        Some(list_members_response::Result::Members(list)) => {
+            assert_eq!(
+                list.members.len(),
+                2,
+                "Expected two members after removal"
+            );
+
+            // Verify target is not in the list
+            assert!(
+                !list.members.iter().any(|m| m.name == "Remove Verify Target"),
+                "Removed member should not appear in list"
+            );
+
+            // Verify other members are still present
+            assert!(
+                list.members.iter().any(|m| m.name == "Remove Verify Admin"),
+                "Admin should still be in list"
+            );
+            assert!(
+                list.members
+                    .iter()
+                    .any(|m| m.name == "Remove Verify Remaining"),
+                "Remaining member should still be in list"
+            );
+        }
+        Some(list_members_response::Result::Error(err)) => {
+            panic!("List failed: {} - {}", err.code, err.message);
+        }
+        None => panic!("Expected result in response"),
+    }
+}
+
+/// Test error when trying to remove a member that doesn't exist.
+#[tokio::test]
+async fn test_remove_member_not_found() {
+    let fixtures = get_fixtures().await;
+    let db = &fixtures.infra.db;
+    let nats = fixtures.infra.nats_client();
+    let client = TestNatsClient::new(nats);
+
+    // Create test data
+    let org = OrganizationBuilder::new("remove_not_found_org")
+        .create(db)
+        .await
+        .expect("Failed to create organization");
+
+    let role = RoleBuilder::new("remove_nf_role", &org)
+        .create(db)
+        .await
+        .expect("Failed to create role");
+
+    let user = UserBuilder::new("Remove Not Found User")
+        .email("remove.notfound@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create user");
+
+    MemberBuilder::new(&user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create membership");
+
+    // Use a non-existent member ID
+    let fake_member_id = "00000000-0000-0000-0000-000000000000";
+
+    let subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.remove",
+        user.id, org.id
+    );
+    let response: RemoveMemberResponse = client
+        .request(
+            &subject,
+            &RemoveMemberRequest {
+                member_id: fake_member_id.to_string(),
+            },
+        )
+        .await
+        .expect("Failed to send request");
+
+    // Verify error response
+    match response.result {
+        Some(remove_member_response::Result::Error(err)) => {
+            assert!(
+                err.message.to_lowercase().contains("not found")
+                    || err.message.to_lowercase().contains("member"),
+                "Error message should indicate member not found: {}",
+                err.message
+            );
+        }
+        Some(remove_member_response::Result::Success(_)) => {
+            panic!("Expected error but got success");
+        }
+        None => panic!("Expected result in response"),
+    }
+}
+
+/// Test malicious input: invalid member_id formats.
+#[tokio::test]
+async fn test_remove_member_invalid_member_id() {
+    let fixtures = get_fixtures().await;
+    let db = &fixtures.infra.db;
+    let nats = fixtures.infra.nats_client();
+    let client = TestNatsClient::new(nats);
+
+    // Create test data
+    let org = OrganizationBuilder::new("remove_invalid_id_org")
+        .create(db)
+        .await
+        .expect("Failed to create organization");
+
+    let role = RoleBuilder::new("remove_inv_id_role", &org)
+        .create(db)
+        .await
+        .expect("Failed to create role");
+
+    let user = UserBuilder::new("Remove Invalid ID User")
+        .email("remove.invalidid@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create user");
+
+    MemberBuilder::new(&user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create membership");
+
+    // Test various invalid member_id formats
+    let invalid_member_ids = vec![
+        "not-a-valid-id",
+        "12345",
+        "'; DROP TABLE member_of; --",
+        "<script>alert('xss')</script>",
+        "../../../../etc/passwd",
+        "",
+        "member_of:fake",
+        "../../../",
+        "null",
+        "undefined",
+    ];
+
+    for invalid_id in invalid_member_ids {
+        let subject = format!(
+            "typewriter.in.user.{}.organization.{}.members.remove",
+            user.id, org.id
+        );
+        let response: RemoveMemberResponse = client
+            .request(
+                &subject,
+                &RemoveMemberRequest {
+                    member_id: invalid_id.to_string(),
+                },
+            )
+            .await
+            .expect("Failed to send request");
+
+        // Should return an error or handle gracefully, not crash
+        match response.result {
+            Some(remove_member_response::Result::Error(_err)) => {
+                // Expected - invalid member ID should result in error
+            }
+            Some(remove_member_response::Result::Success(success)) => {
+                // If it returns success=false, that's also acceptable for "not found"
+                assert!(
+                    !success,
+                    "Should not return success=true for invalid member_id '{}'",
+                    invalid_id
+                );
+            }
+            None => {
+                // Also acceptable - no result could indicate handled error
+            }
+        }
+    }
+}
+
+/// Test removing multiple members sequentially.
+#[tokio::test]
+async fn test_remove_multiple_members() {
+    let fixtures = get_fixtures().await;
+    let db = &fixtures.infra.db;
+    let nats = fixtures.infra.nats_client();
+    let client = TestNatsClient::new(nats);
+
+    // Create test data
+    let org = OrganizationBuilder::new("remove_multi_members_org")
+        .create(db)
+        .await
+        .expect("Failed to create organization");
+
+    let role = RoleBuilder::new("remove_multi_role", &org)
+        .create(db)
+        .await
+        .expect("Failed to create role");
+
+    let admin_user = UserBuilder::new("Remove Multi Admin")
+        .email("remove.multi.admin@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create admin user");
+
+    let user1 = UserBuilder::new("Remove Multi User1")
+        .email("remove.multi.user1@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create user1");
+
+    let user2 = UserBuilder::new("Remove Multi User2")
+        .email("remove.multi.user2@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create user2");
+
+    let user3 = UserBuilder::new("Remove Multi User3")
+        .email("remove.multi.user3@example.com")
+        .create(db)
+        .await
+        .expect("Failed to create user3");
+
+    // Create memberships
+    MemberBuilder::new(&admin_user, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create admin membership");
+
+    MemberBuilder::new(&user1, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create user1 membership");
+
+    MemberBuilder::new(&user2, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create user2 membership");
+
+    MemberBuilder::new(&user3, &org)
+        .with_role(&role)
+        .create(db)
+        .await
+        .expect("Failed to create user3 membership");
+
+    // Get member IDs
+    let member1_id = get_member_id(db, &user1.id, &org.id).await;
+    let member2_id = get_member_id(db, &user2.id, &org.id).await;
+
+    let remove_subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.remove",
+        admin_user.id, org.id
+    );
+    let list_subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.list",
+        admin_user.id, org.id
+    );
+
+    // Remove first member
+    let response1: RemoveMemberResponse = client
+        .request(
+            &remove_subject,
+            &RemoveMemberRequest {
+                member_id: member1_id,
+            },
+        )
+        .await
+        .expect("Failed to remove first member");
+
+    match response1.result {
+        Some(remove_member_response::Result::Success(s)) => assert!(s),
+        _ => panic!("First removal should succeed"),
+    }
+
+    // Verify count after first removal
+    let list1: ListMembersResponse = client
+        .request(&list_subject, &ListMembersRequest {})
+        .await
+        .expect("Failed to list after first removal");
+
+    match list1.result {
+        Some(list_members_response::Result::Members(list)) => {
+            assert_eq!(list.members.len(), 3, "Expected 3 members after first removal");
+        }
+        _ => panic!("Expected members list"),
+    }
+
+    // Remove second member
+    let response2: RemoveMemberResponse = client
+        .request(
+            &remove_subject,
+            &RemoveMemberRequest {
+                member_id: member2_id,
+            },
+        )
+        .await
+        .expect("Failed to remove second member");
+
+    match response2.result {
+        Some(remove_member_response::Result::Success(s)) => assert!(s),
+        _ => panic!("Second removal should succeed"),
+    }
+
+    // Verify count after second removal
+    let list2: ListMembersResponse = client
+        .request(&list_subject, &ListMembersRequest {})
+        .await
+        .expect("Failed to list after second removal");
+
+    match list2.result {
+        Some(list_members_response::Result::Members(list)) => {
+            assert_eq!(
+                list.members.len(),
+                2,
+                "Expected 2 members after second removal"
+            );
+
+            // Verify remaining members
+            let names: Vec<&str> = list.members.iter().map(|m| m.name.as_str()).collect();
+            assert!(names.contains(&"Remove Multi Admin"));
+            assert!(names.contains(&"Remove Multi User3"));
+            assert!(!names.contains(&"Remove Multi User1"));
+            assert!(!names.contains(&"Remove Multi User2"));
+        }
+        _ => panic!("Expected members list"),
+    }
+}
+
+/// Helper function to get the member_of relation ID for a user in an organization.
+async fn get_member_id(
+    db: &surrealdb::Surreal<surrealdb::engine::any::Any>,
+    user_id: &str,
+    org_id: &str,
+) -> String {
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct MemberOfRecord {
+        id: surrealdb::sql::Thing,
+    }
+
+    let query = format!(
+        "SELECT id FROM member_of WHERE in = user:`{}` AND out = organization:`{}`",
+        user_id, org_id
+    );
+
+    let mut result = db.query(&query).await.expect("Failed to query member_of");
+    let records: Vec<MemberOfRecord> = result.take(0).expect("Failed to take result");
+
+    assert!(
+        !records.is_empty(),
+        "No member_of record found for user {} in org {}",
+        user_id,
+        org_id
+    );
+
+    // Extract just the ID part (without the table prefix)
+    records[0].id.id.to_string()
+}

@@ -8,6 +8,52 @@ part of 'nats.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Fetches the sentinel credentials from the API.
+
+@ProviderFor(sentinelCredentials)
+const sentinelCredentialsProvider = SentinelCredentialsProvider._();
+
+/// Fetches the sentinel credentials from the API.
+
+final class SentinelCredentialsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SentinelCredentials>,
+          SentinelCredentials,
+          FutureOr<SentinelCredentials>
+        >
+    with
+        $FutureModifier<SentinelCredentials>,
+        $FutureProvider<SentinelCredentials> {
+  /// Fetches the sentinel credentials from the API.
+  const SentinelCredentialsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sentinelCredentialsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sentinelCredentialsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SentinelCredentials> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SentinelCredentials> create(Ref ref) {
+    return sentinelCredentials(ref);
+  }
+}
+
+String _$sentinelCredentialsHash() =>
+    r'7af6d56b5446a8f989d1b063756203ce7ae1229d';
 
 @ProviderFor(Nats)
 const natsProvider = NatsProvider._();
@@ -40,7 +86,7 @@ final class NatsProvider extends $NotifierProvider<Nats, Client> {
   }
 }
 
-String _$natsHash() => r'b591a4b8eb7584d94edf2d75ddcc3c7163c7248a';
+String _$natsHash() => r'998911dfdfe84fe65c9d0bafe0e25cbeb13b5860';
 
 abstract class _$Nats extends $Notifier<Client> {
   Client build();

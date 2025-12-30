@@ -33,7 +33,7 @@ tasks:
         for taskfile in $TASKFILES; do
           DIR=$(dirname "$taskfile")
 
-          if ! (cd "$DIR" && task --list 2>/dev/null | grep -q "^{{.TASK_CMD}}"); then
+          if ! (cd "$DIR" && task --list 2>/dev/null | grep -q "^\* {{.TASK_CMD}}:"); then
             echo "⊘ $DIR (task '{{.TASK_CMD}}' not found, skipping)"
             continue
           fi
@@ -116,6 +116,18 @@ tasks:
           DIR=$(dirname "$taskfile")
           echo "  - $DIR"
         done
+
+  test:
+    desc: "Run integration tests (builds components if needed)"
+    cmds:
+      - task: build:all
+      - cd tests && cargo test {{.CLI_ARGS}}
+
+  test:all:
+    desc: "Run all integration tests in single binary (fastest)"
+    cmds:
+      - task: build:all
+      - cd tests && cargo test --test integration {{.CLI_ARGS}}
 
   default:
     desc: Show available tasks

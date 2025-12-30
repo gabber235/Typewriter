@@ -3,18 +3,16 @@
 //! This module contains types generated from the proto/ directory.
 //! The build.rs script generates .rs files here from .proto files.
 
-pub mod models {
-    pub mod v1 {
-        include!("typewriter.models.v1.rs");
+pub mod typewriter {
+    pub mod models {
+        pub mod v1 {
+            include!("typewriter.models.v1.rs");
+        }
+    }
+
+    pub mod api {
+        pub mod v1 {
+            include!("typewriter.api.v1.rs");
+        }
     }
 }
-
-pub mod api {
-    pub mod v1 {
-        include!("typewriter.api.v1.rs");
-    }
-}
-
-// Convenience re-exports
-pub use api::v1 as api_v1;
-pub use models::v1 as models_v1;

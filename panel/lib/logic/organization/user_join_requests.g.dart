@@ -33,7 +33,7 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'3379108b9f44f34b8a59ba951d39d70a98e3f275';
+String _$userJoinRequestsHash() => r'fffcb32938c280814e2024a2d0cb3f8013909e32';
 
 abstract class _$UserJoinRequests
     extends $StreamNotifier<List<UserJoinRequest>> {

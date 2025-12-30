@@ -21,7 +21,7 @@ spec:
             - handler
             - consumer
           config:
-            subscriptions: auth.permissions.typewriter
+            subscriptions: auth.permissions.typewriter-panel,auth.permissions.typewriter-services
         - namespace: seamlezz
           package: surrealdb
           interfaces:

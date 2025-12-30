@@ -78,3 +78,26 @@ impl ServiceType {
         }
     }
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Permission {
+    #[prost(string, repeated, tag = "1")]
+    pub allow: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "2")]
+    pub deny: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ResponsePermission {
+    #[prost(int32, tag = "1")]
+    pub max_messages: i32,
+    #[prost(message, optional, tag = "2")]
+    pub ttl: ::core::option::Option<::prost_types::Duration>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Permissions {
+    #[prost(message, optional, tag = "1")]
+    pub publish: ::core::option::Option<Permission>,
+    #[prost(message, optional, tag = "2")]
+    pub subscribe: ::core::option::Option<Permission>,
+    #[prost(message, optional, tag = "3")]
+    pub resp: ::core::option::Option<ResponsePermission>,
+}

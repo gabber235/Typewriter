@@ -2,15 +2,31 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use surrealdb::engine::remote::ws::Client;
-use surrealdb::Surreal;
+use surrealdb::engine::any::Any;
+use surrealdb::{RecordId, Surreal};
+use uuid::Uuid;
 
 /// An organization record created in the database.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Organization {
     pub id: String,
     pub name: String,
     pub icon_url: String,
+}
+
+/// Data to be stored for an organization record.
+#[derive(Debug, Serialize)]
+struct OrganizationData {
+    name: String,
+    icon_url: String,
+}
+
+/// Record returned from SurrealDB create operation.
+#[derive(Debug, Deserialize)]
+struct OrganizationRecord {
+    id: RecordId,
+    name: String,
+    icon_url: String,
 }
 
 /// Builder for creating test organizations.
@@ -37,28 +53,30 @@ impl OrganizationBuilder {
     }
 
     /// Create the organization in the database.
-    pub async fn create(self, db: &Surreal<Client>) -> Result<Organization> {
-        let id = uuid::Uuid::new_v4().to_string();
+    ///
+    /// Uses string-type record keys to match what the component expects when using
+    /// `type::thing('organization', $org_id)` in SurrealQL queries.
+    pub async fn create(self, db: &Surreal<Any>) -> Result<Organization> {
+        // Use string ID to match component's type::thing() usage
+        let id = Uuid::new_v4().to_string();
 
-        #[derive(Serialize)]
-        struct CreateOrg {
-            name: String,
-            icon_url: String,
-        }
+        let data = OrganizationData {
+            name: self.name,
+            icon_url: self.icon_url,
+        };
 
-        let _: Option<serde_json::Value> = db
+        let record: Option<OrganizationRecord> = db
             .create(("organization", &id))
-            .content(CreateOrg {
-                name: self.name.clone(),
-                icon_url: self.icon_url.clone(),
-            })
+            .content(data)
             .await
             .context("Failed to create organization")?;
 
+        let record = record.context("No record returned from create")?;
+
         Ok(Organization {
             id,
-            name: self.name,
-            icon_url: self.icon_url,
+            name: record.name,
+            icon_url: record.icon_url,
         })
     }
 }

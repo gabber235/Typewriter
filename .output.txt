@@ -1,0 +1,827 @@
+build-logic             libs.versions.toml
+libs                    realm
+services/build-logic:
+build                   gradlew                 src
+build.gradle.kts        gradlew.bat
+gradle                  settings.gradle.kts
+services/build-logic/build:
+classes                 kotlin-dsl              resources
+generated-sources       libs                    tmp
+kotlin                  pluginDescriptors
+services/build-logic/build/classes:
+kotlin
+services/build-logic/build/classes/kotlin:
+main
+services/build-logic/build/classes/kotlin/main:
+Com_typewritermc_basic_conventions_gradle.class
+Com_typewritermc_basic_conventions_gradle$3.class
+Com_typewritermc_basic_conventions_gradle$special$$inlined$getByType$1.class
+Com_typewritermc_basicConventionsPlugin.class
+Com_typewritermc_settings_conventions_settings_gradle.class
+Com_typewritermc_settings_conventions_settings_gradle$2.class
+Com_typewritermc_settings_conventions_settings_gradle$2$1.class
+Com_typewritermc_settings_conventions_settings_gradle$2$1$1.class
+Com_typewritermc_settingsConventionsPlugin.class
+gradle
+META-INF
+services/build-logic/build/classes/kotlin/main/gradle:
+kotlin
+services/build-logic/build/classes/kotlin/main/gradle/kotlin:
+dsl
+services/build-logic/build/classes/kotlin/main/gradle/kotlin/dsl:
+accessors       plugins
+services/build-logic/build/classes/kotlin/main/gradle/kotlin/dsl/accessors:
+_1fecaaa69017c0b639000a1c9113da6f
+services/build-logic/build/classes/kotlin/main/gradle/kotlin/dsl/accessors/_1fecaaa69017c0b639000a1c9113da6f:
+Accessors1fs3wrxdosf2ka31sf0gje7j1Kt.class
+Accessors1o14lwohrtsl26y7sjpg5nxh9Kt.class
+Accessors1vc5ojqnd7f0dgmcaq6blw3npKt.class
+Accessors22lqpdpak3qpmy37wqy1qw17lKt.class
+Accessors25okzv3t5f9ndaxmr2gbbk6r6Kt.class
+Accessors2fk7drs3cyp11dqshko5v1iq4Kt.class
+Accessors2g5epxeyye0j2zlp62h6aad2oKt.class
+Accessors2g7vjsrso8j52iodhg0tff11gKt.class
+Accessors2nqf0jd7tnlgoaus469s3yzvoKt.class
+Accessors2qky2eojh91w0xj5jyia7c9ltKt.class
+Accessors2y3qmtkmk3qb3zvtsnb7mkugkKt.class
+Accessors30t2f6yfiutsmabi1tmq15qw8Kt.class
+Accessors337zjoz5qsbasch1okns2ran3Kt.class
+Accessors37tjhwvheu8bq0e6jokqe7tfxKt.class
+Accessors3erpdjb5xlzct19ari9o1ualnKt.class
+Accessors3g8bczlt7g0zdc4zg06md12mzKt.class
+Accessors3lcthf961f3cqifvliyumu99fKt.class
+Accessors3op0r6ttwyzgkfcu84v2ovb1dKt.class
+Accessors3u8ph69ek2e5jp540mhz6dpxeKt.class
+Accessors3z43w53nnfonayurfzc8m4wnjKt.class
+Accessors400p2vbr8w1trtjqiz0qkgrnlKt.class
+Accessors40f42suo4q76qw1urne49eo0mKt.class
+Accessors44ybqista0s8gs1bcwfnka55kKt.class
+Accessors4iyx9zxz4zi6yifd0x0vb2nqnKt.class
+Accessors4qehku0p9fscm3xeaddworifcKt.class
+Accessors4sewldgh518tpm34zx6sg3cq5Kt.class
+Accessors4utk9s9wkq1gwnfaumz2ci2i4Kt.class
+Accessors4vifg8gzy2a7k2v5ombthh1q1Kt.class
+Accessors4xjj5cwoccnv1ueo1z57aygvyKt.class
+Accessors4xsvbsv0xr5dr62eja7ywms6fKt.class
+Accessors4xvfemd9lvpi9b8esvyj9whbaKt.class
+Accessors4yaxtnbpkg64y49crl7pfoiphKt.class
+Accessors54jzbiw56ns2oqpcbh1elzsroKt.class
+Accessors5ahnjddwfewopj5p9tcumx3nzKt.class
+Accessors5igw27crtgawysfpsiujyw959Kt.class
+Accessors5n84r8d0wlgk7ty6rfnleln5aKt.class
+Accessors67q0lajwq7wg74m3cz5jc3ayuKt.class
+Accessors6opw1s7r61hstwgakg6doc02sKt.class
+Accessors6su2os1zvten8f40s35jyjjy6Kt.class
+Accessors6vdwjhcp8dvjsg2xoo69liytfKt.class
+Accessors755qfgs1mebxgj2rkmtzq31iwKt.class
+Accessors75xkem3lde4pem4br2cwiigylKt.class
+Accessors76y3pwxxefugsdk4ysgb6ees0Kt.class
+Accessors7aku3vjeg8daft93gf2grwhmtKt.class
+Accessors7gwyi5l0uer6owf7iu635a0mlKt.class
+Accessors7hfc7mtl7c7yydyful1vy1qzhKt.class
+Accessors7x4qu5531xu7ktfs12jo4ysdnKt.class
+Accessors85xt4dym90vciqd6uu6787r45Kt.class
+Accessors8caod4ihvpfyvapqxjgvkn3f3Kt.class
+Accessors8r3pzu8s5dgb513rury213rqpKt.class
+Accessors8td4devrrwikhzxu1to1g92gqKt.class
+Accessors98whoj51ui4r5h8p91zbn54pjKt.class
+Accessors9adivy4f6l6d8g56phbztb03mKt.class
+Accessors9tta56tlj7j7pbo2zpo3u1i94Kt.class
+Accessors9vima736ghgz222gu2to8zzdxKt.class
+Accessors9vrma8vzwnl7z03k8r27uyhspKt.class
+Accessorsakm04274c22y1kwaaolwod9e9Kt.class
+Accessorsapq585jv1zsyn7qca8uyk26waKt.class
+Accessorsarn1h9iwtq4k7nkbaatlvxnbcKt.class
+Accessorsatwx21vsjp6j3aqvlsnr74s73Kt.class
+Accessorsaw6xvodoeo2covzpy09nd0l1tKt.class
+Accessorsb79i79k7aviornwuvyq7l346vKt.class
+Accessorsbgzxaj6m8nz804ucgw3h4se8tKt.class
+Accessorsbhj18kij3h6d7ssnuczhux6xmKt.class
+Accessorsbinuh2dmy82szfgqwl4ef9ib0Kt.class
+Accessorsbu4celzmx94h5ebu8epruan0bKt.class
+Accessorsbxw74g3otztqb39ge6a61agcwKt.class
+Accessorsc0ibcv0380rfgbcgtea3zbicrKt.class
+Accessorsc45ut2seuz3sbidt6jo530i2mKt.class
+Accessorscezdufs7l7p6s9szrj0wtc3s7Kt.class
+Accessorscg6dv71k933p3puh25cs07s0aKt.class
+Accessorscke8mzg7m3ox0h0d2xjigp6y5Kt.class
+Accessorscmejyt0dpu7fa2wz9lzfkhl96Kt.class
+Accessorscrn1jef4u3rcf4o72a8wsn7n0Kt.class
+Accessorsd9m6fkxq7ghqiwg81lfnu9t5Kt.class
+Accessorsd9v5jc44ay2w45lzvv9lvk5anKt.class
+Accessorsdbt921k4ba3xhu4lycg5hkfe6Kt.class
+Accessorsdmsy3k8cm773hjrapu8p7awn7Kt.class
+Accessorsdqbo1shju2fvsk7apjsbytiyrKt.class
+Accessorsdrmm11332nlkjzc9h83jsq6zxKt.class
+Accessorse1map9aawudc3lc4td9g7tndaKt.class
+Accessorse70wsgfmvqexvoyfpbz2vul7zKt.class
+Accessorsechirmfpk0ykh1a173w9hvgpiKt.class
+Accessorsecqt5ls3z468l1nhixbd6bnhKt.class
+Accessorsefaf4qyddh684d3vhn1r8m4c8Kt.class
+Accessorserpuo9ri63i4ut3d5pyptv112Kt.class
+Accessorsex8wf65fx8jjukhb9w181r613Kt.class
+Accessorsexiottiqdoq5rm4qirwgv19flKt.class
+Accessorsf11l8bkjl2p5umjgiuxwmgh3sKt.class
+Accessorsf3x1gshl0cel3bf2lk4k7ip0zKt.class
+Accessorsnmns7jvnets03na1atu2vvojKt.class
+Accessorsru6gx7sfokphljom41w3ebxjKt.class
+Accessorsspgwg3tig051v3x33c5t7bdcKt.class
+AnnotationProcessorConfigurationAccessorsKt.class
+AnnotationProcessorConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+ApiConfigurationAccessorsKt.class
+ApiConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+ApiElementsConfigurationAccessorsKt.class
+ApiElementsConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+ArchivesConfigurationAccessorsKt.class
+ArchivesConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+CompileClasspathConfigurationAccessorsKt.class
+CompileClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+CompileOnlyConfigurationAccessorsKt.class
+CompileOnlyConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+DefaultConfigurationAccessorsKt.class
+DefaultConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+ImplementationConfigurationAccessorsKt.class
+ImplementationConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+ImplementationDependenciesMetadataConfigurationAccessorsKt.class
+ImplementationDependenciesMetadataConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinBuildToolsApiClasspathConfigurationAccessorsKt.class
+KotlinBuildToolsApiClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinCompilerClasspathConfigurationAccessorsKt.class
+KotlinCompilerClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinCompilerPluginClasspathConfigurationAccessorsKt.class
+KotlinCompilerPluginClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinCompilerPluginClasspathMainConfigurationAccessorsKt.class
+KotlinCompilerPluginClasspathMainConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinCompilerPluginClasspathTestConfigurationAccessorsKt.class
+KotlinCompilerPluginClasspathTestConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinInternalAbiValidationConfigurationAccessorsKt.class
+KotlinInternalAbiValidationConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinKlibCommonizerClasspathConfigurationAccessorsKt.class
+KotlinKlibCommonizerClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinNativeCompilerPluginClasspathConfigurationAccessorsKt.class
+KotlinNativeCompilerPluginClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinScriptDefConfigurationAccessorsKt.class
+KotlinScriptDefConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+KotlinScriptDefExtensionsConfigurationAccessorsKt.class
+KotlinScriptDefExtensionsConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+MainSourceElementsConfigurationAccessorsKt.class
+MainSourceElementsConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+RuntimeClasspathConfigurationAccessorsKt.class
+RuntimeClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+RuntimeElementsConfigurationAccessorsKt.class
+RuntimeElementsConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+RuntimeOnlyConfigurationAccessorsKt.class
+RuntimeOnlyConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestAnnotationProcessorConfigurationAccessorsKt.class
+TestAnnotationProcessorConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestApiConfigurationAccessorsKt.class
+TestApiConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestCompileClasspathConfigurationAccessorsKt.class
+TestCompileClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestCompileOnlyConfigurationAccessorsKt.class
+TestCompileOnlyConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestImplementationConfigurationAccessorsKt.class
+TestImplementationConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestImplementationDependenciesMetadataConfigurationAccessorsKt.class
+TestImplementationDependenciesMetadataConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestKotlinScriptDefConfigurationAccessorsKt.class
+TestKotlinScriptDefConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestKotlinScriptDefExtensionsConfigurationAccessorsKt.class
+TestKotlinScriptDefExtensionsConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestResultsElementsForTestConfigurationAccessorsKt.class
+TestResultsElementsForTestConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestRuntimeClasspathConfigurationAccessorsKt.class
+TestRuntimeClasspathConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+TestRuntimeOnlyConfigurationAccessorsKt.class
+TestRuntimeOnlyConfigurationAccessorsKt$sam$org_gradle_api_Action$0.class
+services/build-logic/build/classes/kotlin/main/gradle/kotlin/dsl/plugins:
+_baacc9b5aba00ff5a6bb4fd3b97befeb
+services/build-logic/build/classes/kotlin/main/gradle/kotlin/dsl/plugins/_baacc9b5aba00ff5a6bb4fd3b97befeb:
+OrgGradlePluginGroup.class
+OrgGradleToolchainsPluginGroup.class
+OrgJetbrainsKotlinNativePluginGroup.class
+OrgJetbrainsKotlinPluginGroup.class
+OrgJetbrainsKotlinPluginPluginGroup.class
+OrgJetbrainsPluginGroup.class
+OrgPluginGroup.class
+PluginSpecBuildersKt.class
+services/build-logic/build/classes/kotlin/main/META-INF:
+build-logic.kotlin_module
+services/build-logic/build/generated-sources:
+kotlin-dsl-accessors
+kotlin-dsl-external-plugin-spec-builders
+kotlin-dsl-plugins
+services/build-logic/build/generated-sources/kotlin-dsl-accessors:
+kotlin
+services/build-logic/build/generated-sources/kotlin-dsl-accessors/kotlin:
+gradle
+services/build-logic/build/generated-sources/kotlin-dsl-accessors/kotlin/gradle:
+kotlin
+services/build-logic/build/generated-sources/kotlin-dsl-accessors/kotlin/gradle/kotlin:
+dsl
+services/build-logic/build/generated-sources/kotlin-dsl-accessors/kotlin/gradle/kotlin/dsl:
+accessors
+services/build-logic/build/generated-sources/kotlin-dsl-accessors/kotlin/gradle/kotlin/dsl/accessors:
+_1fecaaa69017c0b639000a1c9113da6f
+services/build-logic/build/generated-sources/kotlin-dsl-accessors/kotlin/gradle/kotlin/dsl/accessors/_1fecaaa69017c0b639000a1c9113da6f:
+Accessors1fs3wrxdosf2ka31sf0gje7j1.kt
+Accessors1o14lwohrtsl26y7sjpg5nxh9.kt
+Accessors1vc5ojqnd7f0dgmcaq6blw3np.kt
+Accessors22lqpdpak3qpmy37wqy1qw17l.kt
+Accessors25okzv3t5f9ndaxmr2gbbk6r6.kt
+Accessors2fk7drs3cyp11dqshko5v1iq4.kt
+Accessors2g5epxeyye0j2zlp62h6aad2o.kt
+Accessors2g7vjsrso8j52iodhg0tff11g.kt
+Accessors2nqf0jd7tnlgoaus469s3yzvo.kt
+Accessors2qky2eojh91w0xj5jyia7c9lt.kt
+Accessors2y3qmtkmk3qb3zvtsnb7mkugk.kt
+Accessors30t2f6yfiutsmabi1tmq15qw8.kt
+Accessors337zjoz5qsbasch1okns2ran3.kt
+Accessors37tjhwvheu8bq0e6jokqe7tfx.kt
+Accessors3erpdjb5xlzct19ari9o1ualn.kt
+Accessors3g8bczlt7g0zdc4zg06md12mz.kt
+Accessors3lcthf961f3cqifvliyumu99f.kt
+Accessors3op0r6ttwyzgkfcu84v2ovb1d.kt
+Accessors3u8ph69ek2e5jp540mhz6dpxe.kt
+Accessors3z43w53nnfonayurfzc8m4wnj.kt
+Accessors400p2vbr8w1trtjqiz0qkgrnl.kt
+Accessors40f42suo4q76qw1urne49eo0m.kt
+Accessors44ybqista0s8gs1bcwfnka55k.kt
+Accessors4iyx9zxz4zi6yifd0x0vb2nqn.kt
+Accessors4qehku0p9fscm3xeaddworifc.kt
+Accessors4sewldgh518tpm34zx6sg3cq5.kt
+Accessors4utk9s9wkq1gwnfaumz2ci2i4.kt
+Accessors4vifg8gzy2a7k2v5ombthh1q1.kt
+Accessors4xjj5cwoccnv1ueo1z57aygvy.kt
+Accessors4xsvbsv0xr5dr62eja7ywms6f.kt
+Accessors4xvfemd9lvpi9b8esvyj9whba.kt
+Accessors4yaxtnbpkg64y49crl7pfoiph.kt
+Accessors54jzbiw56ns2oqpcbh1elzsro.kt
+Accessors5ahnjddwfewopj5p9tcumx3nz.kt
+Accessors5igw27crtgawysfpsiujyw959.kt
+Accessors5n84r8d0wlgk7ty6rfnleln5a.kt
+Accessors67q0lajwq7wg74m3cz5jc3ayu.kt
+Accessors6opw1s7r61hstwgakg6doc02s.kt
+Accessors6su2os1zvten8f40s35jyjjy6.kt
+Accessors6vdwjhcp8dvjsg2xoo69liytf.kt
+Accessors755qfgs1mebxgj2rkmtzq31iw.kt
+Accessors75xkem3lde4pem4br2cwiigyl.kt
+Accessors76y3pwxxefugsdk4ysgb6ees0.kt
+Accessors7aku3vjeg8daft93gf2grwhmt.kt
+Accessors7gwyi5l0uer6owf7iu635a0ml.kt
+Accessors7hfc7mtl7c7yydyful1vy1qzh.kt
+Accessors7x4qu5531xu7ktfs12jo4ysdn.kt
+Accessors85xt4dym90vciqd6uu6787r45.kt
+Accessors8caod4ihvpfyvapqxjgvkn3f3.kt
+Accessors8r3pzu8s5dgb513rury213rqp.kt
+Accessors8td4devrrwikhzxu1to1g92gq.kt
+Accessors98whoj51ui4r5h8p91zbn54pj.kt
+Accessors9adivy4f6l6d8g56phbztb03m.kt
+Accessors9tta56tlj7j7pbo2zpo3u1i94.kt
+Accessors9vima736ghgz222gu2to8zzdx.kt
+Accessors9vrma8vzwnl7z03k8r27uyhsp.kt
+Accessorsakm04274c22y1kwaaolwod9e9.kt
+Accessorsapq585jv1zsyn7qca8uyk26wa.kt
+Accessorsarn1h9iwtq4k7nkbaatlvxnbc.kt
+Accessorsatwx21vsjp6j3aqvlsnr74s73.kt
+Accessorsaw6xvodoeo2covzpy09nd0l1t.kt
+Accessorsb79i79k7aviornwuvyq7l346v.kt
+Accessorsbgzxaj6m8nz804ucgw3h4se8t.kt
+Accessorsbhj18kij3h6d7ssnuczhux6xm.kt
+Accessorsbinuh2dmy82szfgqwl4ef9ib0.kt
+Accessorsbu4celzmx94h5ebu8epruan0b.kt
+Accessorsbxw74g3otztqb39ge6a61agcw.kt
+Accessorsc0ibcv0380rfgbcgtea3zbicr.kt
+Accessorsc45ut2seuz3sbidt6jo530i2m.kt
+Accessorscezdufs7l7p6s9szrj0wtc3s7.kt
+Accessorscg6dv71k933p3puh25cs07s0a.kt
+Accessorscke8mzg7m3ox0h0d2xjigp6y5.kt
+Accessorscmejyt0dpu7fa2wz9lzfkhl96.kt
+Accessorscrn1jef4u3rcf4o72a8wsn7n0.kt
+Accessorsd9m6fkxq7ghqiwg81lfnu9t5.kt
+Accessorsd9v5jc44ay2w45lzvv9lvk5an.kt
+Accessorsdbt921k4ba3xhu4lycg5hkfe6.kt
+Accessorsdmsy3k8cm773hjrapu8p7awn7.kt
+Accessorsdqbo1shju2fvsk7apjsbytiyr.kt
+Accessorsdrmm11332nlkjzc9h83jsq6zx.kt
+Accessorse1map9aawudc3lc4td9g7tnda.kt
+Accessorse70wsgfmvqexvoyfpbz2vul7z.kt
+Accessorsechirmfpk0ykh1a173w9hvgpi.kt
+Accessorsecqt5ls3z468l1nhixbd6bnh.kt
+Accessorsefaf4qyddh684d3vhn1r8m4c8.kt
+Accessorserpuo9ri63i4ut3d5pyptv112.kt
+Accessorsex8wf65fx8jjukhb9w181r613.kt
+Accessorsexiottiqdoq5rm4qirwgv19fl.kt
+Accessorsf11l8bkjl2p5umjgiuxwmgh3s.kt
+Accessorsf3x1gshl0cel3bf2lk4k7ip0z.kt
+Accessorsnmns7jvnets03na1atu2vvoj.kt
+Accessorsru6gx7sfokphljom41w3ebxj.kt
+Accessorsspgwg3tig051v3x33c5t7bdc.kt
+AnnotationProcessorConfigurationAccessors.kt
+ApiConfigurationAccessors.kt
+ApiElementsConfigurationAccessors.kt
+ArchivesConfigurationAccessors.kt
+CompileClasspathConfigurationAccessors.kt
+CompileOnlyConfigurationAccessors.kt
+DefaultConfigurationAccessors.kt
+ImplementationConfigurationAccessors.kt
+ImplementationDependenciesMetadataConfigurationAccessors.kt
+KotlinBuildToolsApiClasspathConfigurationAccessors.kt
+KotlinCompilerClasspathConfigurationAccessors.kt
+KotlinCompilerPluginClasspathConfigurationAccessors.kt
+KotlinCompilerPluginClasspathMainConfigurationAccessors.kt
+KotlinCompilerPluginClasspathTestConfigurationAccessors.kt
+KotlinInternalAbiValidationConfigurationAccessors.kt
+KotlinKlibCommonizerClasspathConfigurationAccessors.kt
+KotlinNativeCompilerPluginClasspathConfigurationAccessors.kt
+KotlinScriptDefConfigurationAccessors.kt
+KotlinScriptDefExtensionsConfigurationAccessors.kt
+MainSourceElementsConfigurationAccessors.kt
+RuntimeClasspathConfigurationAccessors.kt
+RuntimeElementsConfigurationAccessors.kt
+RuntimeOnlyConfigurationAccessors.kt
+TestAnnotationProcessorConfigurationAccessors.kt
+TestApiConfigurationAccessors.kt
+TestCompileClasspathConfigurationAccessors.kt
+TestCompileOnlyConfigurationAccessors.kt
+TestImplementationConfigurationAccessors.kt
+TestImplementationDependenciesMetadataConfigurationAccessors.kt
+TestKotlinScriptDefConfigurationAccessors.kt
+TestKotlinScriptDefExtensionsConfigurationAccessors.kt
+TestResultsElementsForTestConfigurationAccessors.kt
+TestRuntimeClasspathConfigurationAccessors.kt
+TestRuntimeOnlyConfigurationAccessors.kt
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders:
+kotlin
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin:
+gradle
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin/gradle:
+kotlin
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin/gradle/kotlin:
+dsl
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin/gradle/kotlin/dsl:
+plugins
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin/gradle/kotlin/dsl/plugins:
+_baacc9b5aba00ff5a6bb4fd3b97befeb
+services/build-logic/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin/gradle/kotlin/dsl/plugins/_baacc9b5aba00ff5a6bb4fd3b97befeb:
+PluginSpecBuilders.kt
+services/build-logic/build/generated-sources/kotlin-dsl-plugins:
+kotlin
+services/build-logic/build/generated-sources/kotlin-dsl-plugins/kotlin:
+Com_typewritermc_basicConventionsPlugin.kt
+Com_typewritermc_settingsConventionsPlugin.kt
+services/build-logic/build/kotlin:
+compileKotlin           compilePluginsBlocks
+services/build-logic/build/kotlin/compileKotlin:
+cacheable               classpath-snapshot      local-state
+services/build-logic/build/kotlin/compileKotlin/cacheable:
+caches-jvm      last-build.bin
+services/build-logic/build/kotlin/compileKotlin/cacheable/caches-jvm:
+inputs  jvm     lookups
+services/build-logic/build/kotlin/compileKotlin/cacheable/caches-jvm/inputs:
+source-to-output.tab                    source-to-output.tab.len
+source-to-output.tab_i                  source-to-output.tab.values
+source-to-output.tab_i.len              source-to-output.tab.values.at
+source-to-output.tab.keystream          source-to-output.tab.values.s
+source-to-output.tab.keystream.len
+services/build-logic/build/kotlin/compileKotlin/cacheable/caches-jvm/jvm:
+kotlin
+services/build-logic/build/kotlin/compileKotlin/cacheable/caches-jvm/jvm/kotlin:
+class-attributes.tab
+class-attributes.tab_i
+class-attributes.tab_i.len
+class-attributes.tab.keystream
+class-attributes.tab.keystream.len
+class-attributes.tab.len
+class-attributes.tab.values.at
+class-fq-name-to-source.tab
+class-fq-name-to-source.tab_i
+class-fq-name-to-source.tab_i.len
+class-fq-name-to-source.tab.keystream
+class-fq-name-to-source.tab.keystream.len
+class-fq-name-to-source.tab.len
+class-fq-name-to-source.tab.values.at
+internal-name-to-source.tab
+internal-name-to-source.tab_i
+internal-name-to-source.tab_i.len
+internal-name-to-source.tab.keystream
+internal-name-to-source.tab.keystream.len
+internal-name-to-source.tab.len
+internal-name-to-source.tab.values
+internal-name-to-source.tab.values.at
+internal-name-to-source.tab.values.s
+package-parts.tab
+package-parts.tab_i
+package-parts.tab_i.len
+package-parts.tab.keystream
+package-parts.tab.keystream.len
+package-parts.tab.len
+package-parts.tab.values.at
+proto.tab
+proto.tab_i
+proto.tab_i.len
+proto.tab.keystream
+proto.tab.keystream.len
+proto.tab.len
+proto.tab.values
+proto.tab.values.at
+proto.tab.values.s
+source-to-classes.tab
+source-to-classes.tab_i
+source-to-classes.tab_i.len
+source-to-classes.tab.keystream
+source-to-classes.tab.keystream.len
+source-to-classes.tab.len
+source-to-classes.tab.values
+source-to-classes.tab.values.at
+source-to-classes.tab.values.s
+subtypes.tab
+subtypes.tab_i
+subtypes.tab_i.len
+subtypes.tab.keystream
+subtypes.tab.keystream.len
+subtypes.tab.len
+subtypes.tab.values.at
+supertypes.tab
+supertypes.tab_i
+supertypes.tab_i.len
+supertypes.tab.keystream
+supertypes.tab.keystream.len
+supertypes.tab.len
+supertypes.tab.values.at
+services/build-logic/build/kotlin/compileKotlin/cacheable/caches-jvm/lookups:
+counters.tab                    id-to-file.tab.len
+file-to-id.tab                  id-to-file.tab.values
+file-to-id.tab_i                id-to-file.tab.values.at
+file-to-id.tab_i.len            id-to-file.tab.values.s
+file-to-id.tab.keystream        lookups.tab
+file-to-id.tab.keystream.len    lookups.tab_i
+file-to-id.tab.len              lookups.tab_i.len
+file-to-id.tab.values.at        lookups.tab.keystream
+id-to-file.tab                  lookups.tab.keystream.len
+id-to-file.tab_i                lookups.tab.len
+id-to-file.tab_i.len            lookups.tab.values
+id-to-file.tab.keystream        lookups.tab.values.at
+id-to-file.tab.keystream.len    lookups.tab.values.s
+services/build-logic/build/kotlin/compileKotlin/classpath-snapshot:
+shrunk-classpath-snapshot.bin
+services/build-logic/build/kotlin/compileKotlin/local-state:
+services/build-logic/build/kotlin/compilePluginsBlocks:
+cacheable               classpath-snapshot      local-state
+services/build-logic/build/kotlin/compilePluginsBlocks/cacheable:
+caches-jvm      last-build.bin
+services/build-logic/build/kotlin/compilePluginsBlocks/cacheable/caches-jvm:
+inputs  jvm     lookups
+services/build-logic/build/kotlin/compilePluginsBlocks/cacheable/caches-jvm/inputs:
+source-to-output.tab                    source-to-output.tab.keystream.len
+source-to-output.tab_i                  source-to-output.tab.len
+source-to-output.tab_i.len              source-to-output.tab.values.at
+source-to-output.tab.keystream
+services/build-logic/build/kotlin/compilePluginsBlocks/cacheable/caches-jvm/jvm:
+kotlin
+services/build-logic/build/kotlin/compilePluginsBlocks/cacheable/caches-jvm/jvm/kotlin:
+class-attributes.tab
+class-attributes.tab_i
+class-attributes.tab_i.len
+class-attributes.tab.keystream
+class-attributes.tab.keystream.len
+class-attributes.tab.len
+class-attributes.tab.values.at
+class-fq-name-to-source.tab
+class-fq-name-to-source.tab_i
+class-fq-name-to-source.tab_i.len
+class-fq-name-to-source.tab.keystream
+class-fq-name-to-source.tab.keystream.len
+class-fq-name-to-source.tab.len
+class-fq-name-to-source.tab.values.at
+internal-name-to-source.tab
+internal-name-to-source.tab_i
+internal-name-to-source.tab_i.len
+internal-name-to-source.tab.keystream
+internal-name-to-source.tab.keystream.len
+internal-name-to-source.tab.len
+internal-name-to-source.tab.values.at
+package-parts.tab
+package-parts.tab_i
+package-parts.tab_i.len
+package-parts.tab.keystream
+package-parts.tab.keystream.len
+package-parts.tab.len
+package-parts.tab.values.at
+proto.tab
+proto.tab_i
+proto.tab_i.len
+proto.tab.keystream
+proto.tab.keystream.len
+proto.tab.len
+proto.tab.values.at
+source-to-classes.tab
+source-to-classes.tab_i
+source-to-classes.tab_i.len
+source-to-classes.tab.keystream
+source-to-classes.tab.keystream.len
+source-to-classes.tab.len
+source-to-classes.tab.values.at
+services/build-logic/build/kotlin/compilePluginsBlocks/cacheable/caches-jvm/lookups:
+counters.tab                    id-to-file.tab.keystream
+file-to-id.tab                  id-to-file.tab.keystream.len
+file-to-id.tab_i                id-to-file.tab.len
+file-to-id.tab_i.len            id-to-file.tab.values.at
+file-to-id.tab.keystream        lookups.tab
+file-to-id.tab.keystream.len    lookups.tab_i
+file-to-id.tab.len              lookups.tab_i.len
+file-to-id.tab.values.at        lookups.tab.keystream
+id-to-file.tab                  lookups.tab.keystream.len
+id-to-file.tab_i                lookups.tab.len
+id-to-file.tab_i.len            lookups.tab.values.at
+services/build-logic/build/kotlin/compilePluginsBlocks/classpath-snapshot:
+shrunk-classpath-snapshot.bin
+services/build-logic/build/kotlin/compilePluginsBlocks/local-state:
+services/build-logic/build/kotlin-dsl:
+plugins-blocks                          precompiled-script-plugins-metadata
+services/build-logic/build/kotlin-dsl/plugins-blocks:
+compiled        extracted
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled:
+Com_typewritermc_basic_conventions_gradle.class
+gradle
+META-INF
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled/gradle:
+kotlin
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled/gradle/kotlin:
+dsl
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled/gradle/kotlin/dsl:
+plugins
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled/gradle/kotlin/dsl/plugins:
+_baacc9b5aba00ff5a6bb4fd3b97befeb
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled/gradle/kotlin/dsl/plugins/_baacc9b5aba00ff5a6bb4fd3b97befeb:
+OrgGradlePluginGroup.class
+OrgGradleToolchainsPluginGroup.class
+OrgJetbrainsKotlinNativePluginGroup.class
+OrgJetbrainsKotlinPluginGroup.class
+OrgJetbrainsKotlinPluginPluginGroup.class
+OrgJetbrainsPluginGroup.class
+OrgPluginGroup.class
+PluginSpecBuildersKt.class
+services/build-logic/build/kotlin-dsl/plugins-blocks/compiled/META-INF:
+gradle-kotlin-dsl-plugins-blocks.kotlin_module
+services/build-logic/build/kotlin-dsl/plugins-blocks/extracted:
+com.typewritermc.basic-conventions.gradle.kts
+services/build-logic/build/kotlin-dsl/precompiled-script-plugins-metadata:
+accessors               plugin-spec-builders
+services/build-logic/build/kotlin-dsl/precompiled-script-plugins-metadata/accessors:
+e04c70b5c7b8f2ec1f75200d8a7d8dca
+services/build-logic/build/kotlin-dsl/precompiled-script-plugins-metadata/plugin-spec-builders:
+kotlinDslPluginSpecBuildersImplicitImports
+services/build-logic/build/libs:
+build-logic.jar
+services/build-logic/build/pluginDescriptors:
+com.typewritermc.basic-conventions.properties
+com.typewritermc.settings-conventions.properties
+services/build-logic/build/resources:
+main
+services/build-logic/build/resources/main:
+META-INF
+services/build-logic/build/resources/main/META-INF:
+gradle-plugins
+services/build-logic/build/resources/main/META-INF/gradle-plugins:
+com.typewritermc.basic-conventions.properties
+com.typewritermc.settings-conventions.properties
+services/build-logic/build/tmp:
+generatePrecompiledScriptPluginAccessors
+jar
+services/build-logic/build/tmp/generatePrecompiledScriptPluginAccessors:
+accessors2270039931660080246
+services/build-logic/build/tmp/generatePrecompiledScriptPluginAccessors/accessors2270039931660080246:
+services/build-logic/build/tmp/jar:
+MANIFEST.MF
+services/build-logic/gradle:
+wrapper
+services/build-logic/gradle/wrapper:
+gradle-wrapper.jar              gradle-wrapper.properties
+services/build-logic/src:
+main    test
+services/build-logic/src/main:
+kotlin          resources
+services/build-logic/src/main/kotlin:
+com.typewritermc.basic-conventions.gradle.kts
+com.typewritermc.settings-conventions.settings.gradle.kts
+services/build-logic/src/main/resources:
+services/build-logic/src/test:
+kotlin          resources
+services/build-logic/src/test/kotlin:
+services/build-logic/src/test/resources:
+services/libs:
+service-communicator    service-registrar
+services/libs/service-communicator:
+build                   gradlew                 src
+build.gradle.kts        gradlew.bat
+gradle                  settings.gradle.kts
+services/libs/service-communicator/build:
+extracted-include-protos        reports
+extracted-protos                tmp
+generated
+services/libs/service-communicator/build/extracted-include-protos:
+main
+services/libs/service-communicator/build/extracted-include-protos/main:
+google
+services/libs/service-communicator/build/extracted-include-protos/main/google:
+protobuf
+services/libs/service-communicator/build/extracted-include-protos/main/google/protobuf:
+any.proto               empty.proto             struct.proto
+api.proto               field_mask.proto        timestamp.proto
+descriptor.proto        java_features.proto     type.proto
+duration.proto          source_context.proto    wrappers.proto
+services/libs/service-communicator/build/extracted-protos:
+main
+services/libs/service-communicator/build/extracted-protos/main:
+services/libs/service-communicator/build/generated:
+sources
+services/libs/service-communicator/build/generated/sources:
+proto
+services/libs/service-communicator/build/generated/sources/proto:
+main
+services/libs/service-communicator/build/generated/sources/proto/main:
+protokt
+services/libs/service-communicator/build/generated/sources/proto/main/protokt:
+protokt
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt:
+v1
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt/v1:
+typewriter
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt/v1/typewriter:
+api     models
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt/v1/typewriter/api:
+v1
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt/v1/typewriter/api/v1:
+auth.kt         member.kt       page.kt         service.kt
+book.kt         organization.kt role.kt
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt/v1/typewriter/models:
+v1
+services/libs/service-communicator/build/generated/sources/proto/main/protokt/protokt/v1/typewriter/models/v1:
+auth.kt         common.kt       organization.kt service.kt
+book.kt         member.kt       role.kt
+services/libs/service-communicator/build/reports:
+problems
+services/libs/service-communicator/build/reports/problems:
+problems-report.html
+services/libs/service-communicator/build/tmp:
+services/libs/service-communicator/gradle:
+wrapper
+services/libs/service-communicator/gradle/wrapper:
+gradle-wrapper.jar              gradle-wrapper.properties
+services/libs/service-communicator/src:
+main    test
+services/libs/service-communicator/src/main:
+kotlin          resources
+services/libs/service-communicator/src/main/kotlin:
+services/libs/service-communicator/src/main/resources:
+services/libs/service-communicator/src/test:
+resources
+services/libs/service-communicator/src/test/resources:
+services/libs/service-registrar:
+build.gradle.kts        gradlew                 settings.gradle.kts
+gradle                  gradlew.bat             src
+services/libs/service-registrar/gradle:
+wrapper
+services/libs/service-registrar/gradle/wrapper:
+gradle-wrapper.jar              gradle-wrapper.properties
+services/libs/service-registrar/src:
+main    test
+services/libs/service-registrar/src/main:
+kotlin          resources
+services/libs/service-registrar/src/main/kotlin:
+com
+services/libs/service-registrar/src/main/kotlin/com:
+typewritermc
+services/libs/service-registrar/src/main/kotlin/com/typewritermc:
+services
+services/libs/service-registrar/src/main/kotlin/com/typewritermc/services:
+libs
+services/libs/service-registrar/src/main/kotlin/com/typewritermc/services/libs:
+registrar
+services/libs/service-registrar/src/main/kotlin/com/typewritermc/services/libs/registrar:
+ServiceRegistrar.kt
+services/libs/service-registrar/src/main/resources:
+services/libs/service-registrar/src/test:
+resources
+services/libs/service-registrar/src/test/resources:
+services/realm:
+build                   gradlew                 src
+build.gradle.kts        gradlew.bat
+gradle                  settings.gradle.kts
+services/realm/build:
+classes kotlin  libs    tmp
+services/realm/build/classes:
+kotlin
+services/realm/build/classes/kotlin:
+main
+services/realm/build/classes/kotlin/main:
+com             META-INF
+services/realm/build/classes/kotlin/main/com:
+typewritermc
+services/realm/build/classes/kotlin/main/com/typewritermc:
+realm
+services/realm/build/classes/kotlin/main/com/typewritermc/realm:
+MainKt.class
+services/realm/build/classes/kotlin/main/META-INF:
+realm.kotlin_module
+services/realm/build/kotlin:
+compileKotlin
+services/realm/build/kotlin/compileKotlin:
+cacheable               classpath-snapshot      local-state
+services/realm/build/kotlin/compileKotlin/cacheable:
+caches-jvm      last-build.bin
+services/realm/build/kotlin/compileKotlin/cacheable/caches-jvm:
+compilerPluginFiles     jvm
+inputs                  lookups
+services/realm/build/kotlin/compileKotlin/cacheable/caches-jvm/compilerPluginFiles:
+outputs-generated-for-plugins.tab
+outputs-generated-for-plugins.tab_i.len
+outputs-generated-for-plugins.tab.keystream
+outputs-generated-for-plugins.tab.keystream.len
+outputs-generated-for-plugins.tab.len
+outputs-generated-for-plugins.tab.values.at
+sources-referenced-by-plugins.tab
+sources-referenced-by-plugins.tab_i.len
+sources-referenced-by-plugins.tab.keystream
+sources-referenced-by-plugins.tab.keystream.len
+sources-referenced-by-plugins.tab.len
+sources-referenced-by-plugins.tab.values.at
+services/realm/build/kotlin/compileKotlin/cacheable/caches-jvm/inputs:
+source-to-output.tab                    source-to-output.tab.keystream.len
+source-to-output.tab_i                  source-to-output.tab.len
+source-to-output.tab_i.len              source-to-output.tab.values.at
+source-to-output.tab.keystream
+services/realm/build/kotlin/compileKotlin/cacheable/caches-jvm/jvm:
+kotlin
+services/realm/build/kotlin/compileKotlin/cacheable/caches-jvm/jvm/kotlin:
+internal-name-to-source.tab
+internal-name-to-source.tab_i
+internal-name-to-source.tab_i.len
+internal-name-to-source.tab.keystream
+internal-name-to-source.tab.keystream.len
+internal-name-to-source.tab.len
+internal-name-to-source.tab.values.at
+package-parts.tab
+package-parts.tab_i
+package-parts.tab_i.len
+package-parts.tab.keystream
+package-parts.tab.keystream.len
+package-parts.tab.len
+package-parts.tab.values.at
+proto.tab
+proto.tab_i
+proto.tab_i.len
+proto.tab.keystream
+proto.tab.keystream.len
+proto.tab.len
+proto.tab.values.at
+source-to-classes.tab
+source-to-classes.tab_i
+source-to-classes.tab_i.len
+source-to-classes.tab.keystream
+source-to-classes.tab.keystream.len
+source-to-classes.tab.len
+source-to-classes.tab.values.at
+services/realm/build/kotlin/compileKotlin/cacheable/caches-jvm/lookups:
+counters.tab                    id-to-file.tab.keystream.len
+file-to-id.tab                  id-to-file.tab.len
+file-to-id.tab_i                id-to-file.tab.values.at
+file-to-id.tab_i.len            lookups.tab
+file-to-id.tab.keystream        lookups.tab_i
+file-to-id.tab.keystream.len    lookups.tab_i.len
+file-to-id.tab.len              lookups.tab.keystream
+file-to-id.tab.values.at        lookups.tab.keystream.len
+id-to-file.tab                  lookups.tab.len
+id-to-file.tab_i.len            lookups.tab.values.at
+id-to-file.tab.keystream
+services/realm/build/kotlin/compileKotlin/classpath-snapshot:
+shrunk-classpath-snapshot.bin
+services/realm/build/kotlin/compileKotlin/local-state:
+services/realm/build/libs:
+realm.jar
+services/realm/build/tmp:
+jar
+services/realm/build/tmp/jar:
+MANIFEST.MF
+services/realm/gradle:
+wrapper
+services/realm/gradle/wrapper:
+gradle-wrapper.jar              gradle-wrapper.properties
+services/realm/src:
+main    test
+services/realm/src/main:
+kotlin          resources
+services/realm/src/main/kotlin:
+com
+services/realm/src/main/kotlin/com:
+typewritermc
+services/realm/src/main/kotlin/com/typewritermc:
+realm
+services/realm/src/main/kotlin/com/typewritermc/realm:
+Main.kt
+services/realm/src/main/resources:
+services/realm/src/test:
+kotlin          resources
+services/realm/src/test/kotlin:
+services/realm/src/test/resources:

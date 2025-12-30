@@ -4,3 +4,4 @@
 //! Tests are organized into modules by domain.
 
 mod organization;
+mod user;

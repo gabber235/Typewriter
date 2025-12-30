@@ -476,6 +476,7 @@ dependencies = [
  "anyhow",
  "async-nats",
  "bytes",
+ "chrono",
  "glob",
  "prost 0.13.5",
  "prost-build 0.13.5",
@@ -491,6 +492,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+ "walkdir",
  "wash-runtime",
 ]
 

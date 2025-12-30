@@ -3,12 +3,14 @@
 //! These builders provide a convenient API for creating test fixtures
 //! directly in the database without going through the NATS API.
 
-mod user;
+mod join_request;
+mod member;
 mod organization;
 mod role;
-mod member;
+mod user;
 
-pub use user::UserBuilder;
-pub use organization::OrganizationBuilder;
-pub use role::RoleBuilder;
+pub use join_request::{JoinRequest, JoinRequestBuilder};
 pub use member::MemberBuilder;
+pub use organization::{Organization, OrganizationBuilder};
+pub use role::{Role, RoleBuilder};
+pub use user::{User, UserBuilder};

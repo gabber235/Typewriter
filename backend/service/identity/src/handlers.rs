@@ -6,8 +6,9 @@ use crate::{
     authentik::{create_service_account, AuthentikError},
     typewriter::{
         api::v1::{
-            issue_service_identity_response, IssueServiceIdentityRequest,
-            IssueServiceIdentityResponse, ServiceCredentials,
+            get_sentinel_credentials_response, issue_service_identity_response,
+            GetSentinelCredentialsResponse, IssueServiceIdentityRequest,
+            IssueServiceIdentityResponse, SentinelCredentials, ServiceCredentials,
         },
         models::v1::ServiceType,
     },
@@ -48,6 +49,7 @@ pub enum HandlerError {
     DatabaseError(String),
     EncodeError(String),
     DecodeError(String),
+    ConfigError(String),
 }
 
 impl std::fmt::Display for HandlerError {
@@ -58,6 +60,7 @@ impl std::fmt::Display for HandlerError {
             HandlerError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
             HandlerError::EncodeError(msg) => write!(f, "Encode error: {}", msg),
             HandlerError::DecodeError(msg) => write!(f, "Decode error: {}", msg),
+            HandlerError::ConfigError(msg) => write!(f, "Config error: {}", msg),
         }
     }
 }
@@ -210,6 +213,24 @@ pub fn handle_register(body: &[u8]) -> Result<Vec<u8>, HandlerError> {
 
     let response = IssueServiceIdentityResponse {
         result: Some(issue_service_identity_response::Result::Credentials(
+            credentials,
+        )),
+    };
+
+    Ok(response.encode_to_vec())
+}
+
+pub fn handle_get_sentinel_credentials() -> Result<Vec<u8>, HandlerError> {
+    let jwt = std::env::var("NATS_SENTINEL_JWT")
+        .map_err(|_| HandlerError::ConfigError("NATS_SENTINEL_JWT not found in environment".to_string()))?;
+
+    let seed = std::env::var("NATS_SENTINEL_SEED")
+        .map_err(|_| HandlerError::ConfigError("NATS_SENTINEL_SEED not found in environment".to_string()))?;
+
+    let credentials = SentinelCredentials { jwt, seed };
+
+    let response = GetSentinelCredentialsResponse {
+        result: Some(get_sentinel_credentials_response::Result::Credentials(
             credentials,
         )),
     };

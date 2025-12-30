@@ -18,6 +18,7 @@ spec:
             environment:
               secretFrom:
                 - name: service-identity-secrets
+                - name: service-identity-nats-secrets
       hostInterfaces:
         - namespace: wasi
           package: http

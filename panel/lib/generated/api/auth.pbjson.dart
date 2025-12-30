@@ -61,3 +61,62 @@ const PermissionResponse$json = {
 final $typed_data.Uint8List permissionResponseDescriptor = $convert.base64Decode(
     'ChJQZXJtaXNzaW9uUmVzcG9uc2USQwoLcGVybWlzc2lvbnMYASABKAsyIS50eXBld3JpdGVyLm'
     '1vZGVscy52MS5QZXJtaXNzaW9uc1ILcGVybWlzc2lvbnMSEgoEdGFncxgCIAMoCVIEdGFncw==');
+
+@$core.Deprecated('Use getSentinelCredentialsRequestDescriptor instead')
+const GetSentinelCredentialsRequest$json = {
+  '1': 'GetSentinelCredentialsRequest',
+};
+
+/// Descriptor for `GetSentinelCredentialsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getSentinelCredentialsRequestDescriptor =
+    $convert.base64Decode('Ch1HZXRTZW50aW5lbENyZWRlbnRpYWxzUmVxdWVzdA==');
+
+@$core.Deprecated('Use getSentinelCredentialsResponseDescriptor instead')
+const GetSentinelCredentialsResponse$json = {
+  '1': 'GetSentinelCredentialsResponse',
+  '2': [
+    {
+      '1': 'credentials',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.api.v1.SentinelCredentials',
+      '9': 0,
+      '10': 'credentials'
+    },
+    {
+      '1': 'error',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Error',
+      '9': 0,
+      '10': 'error'
+    },
+  ],
+  '8': [
+    {'1': 'result'},
+  ],
+};
+
+/// Descriptor for `GetSentinelCredentialsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getSentinelCredentialsResponseDescriptor =
+    $convert.base64Decode(
+        'Ch5HZXRTZW50aW5lbENyZWRlbnRpYWxzUmVzcG9uc2USSgoLY3JlZGVudGlhbHMYASABKAsyJi'
+        '50eXBld3JpdGVyLmFwaS52MS5TZW50aW5lbENyZWRlbnRpYWxzSABSC2NyZWRlbnRpYWxzEjMK'
+        'BWVycm9yGAIgASgLMhsudHlwZXdyaXRlci5tb2RlbHMudjEuRXJyb3JIAFIFZXJyb3JCCAoGcm'
+        'VzdWx0');
+
+@$core.Deprecated('Use sentinelCredentialsDescriptor instead')
+const SentinelCredentials$json = {
+  '1': 'SentinelCredentials',
+  '2': [
+    {'1': 'jwt', '3': 1, '4': 1, '5': 9, '10': 'jwt'},
+    {'1': 'seed', '3': 2, '4': 1, '5': 9, '10': 'seed'},
+  ],
+};
+
+/// Descriptor for `SentinelCredentials`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sentinelCredentialsDescriptor = $convert.base64Decode(
+    'ChNTZW50aW5lbENyZWRlbnRpYWxzEhAKA2p3dBgBIAEoCVIDand0EhIKBHNlZWQYAiABKAlSBH'
+    'NlZWQ=');
