@@ -27,6 +27,7 @@ class NatsCommunicator : KoinComponent {
     private val natsUrl: String by inject(named("nats-url"))
     private val jwtProvider: JwtProvider by inject()
     private val sentinelCredentialsFetcher: SentinelCredentialsFetcher by inject()
+    private val json: Json by inject()
 
     private var _client: NatsClient? = null
 
@@ -59,7 +60,11 @@ class NatsCommunicator : KoinComponent {
             )
         }
 
-        natsClient.connect()
+        val result = natsClient.connect()
+        result.onFailure {
+            logger.error { "Failed to connect to NATS: ${it.message}" }
+            throw it
+        }
 
         val natsModule = module {
             factory { natsClient }.override()
@@ -83,9 +88,9 @@ class NatsCommunicator : KoinComponent {
 
         val payload = parts[1]
         val decodedPayload = java.util.Base64.getUrlDecoder().decode(payload)
-        val json = String(decodedPayload, Charsets.UTF_8)
+        val jsonString = String(decodedPayload, Charsets.UTF_8)
 
-        val jwtPayload = Json.decodeFromString<JwtPayload>(json)
+        val jwtPayload = json.decodeFromString<JwtPayload>(jsonString)
         return jwtPayload.sub
             ?: throw IllegalArgumentException("JWT token missing 'sub' claim")
     }
@@ -99,14 +104,6 @@ class NatsCommunicator : KoinComponent {
         disconnect()
         connect()
     }
-
-    /**
-     * Get the active NATS client.
-     *
-     * @throws IllegalStateException if not connected
-     */
-    val client: NatsClient
-        get() = _client ?: throw IllegalStateException("NATS not connected. Call connect() first.")
 
     /**
      * Disconnect from NATS server.

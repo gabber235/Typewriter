@@ -19,12 +19,13 @@ val SERVICE_REGISTRAR_MODULE = module {
     singleOf<JwtExchanger>(::AuthentikJwtExchanger)
 
     single(named("service-issue-url")) {
-        getProperty("SERVICE_ISSUE_URL", "https://api.typewritermc.com/service/identity/issue")
+        val apiBase: String = get(named("api-base-url"))
+        "$apiBase/service/identity/issue"
     }
 
-    // JWT Exchange configuration
     single(named("jwt-token-endpoint")) {
-        getProperty("JWT_TOKEN_ENDPOINT", "https://auth.typewritermc.com/application/o/token/")
+        val authBase: String = get(named("auth-base-url"))
+        "$authBase/application/o/token/"
     }
     single(named("jwt-client-id")) {
         getProperty("JWT_CLIENT_ID", "typewriter-services")

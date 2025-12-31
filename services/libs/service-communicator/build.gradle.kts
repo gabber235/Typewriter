@@ -3,6 +3,7 @@ import org.gradle.kotlin.dsl.protokt
 plugins {
     id("com.typewritermc.basic-conventions")
     alias(libs.plugins.protokt)
+    alias(libs.plugins.kotlin.serialize)
 }
 
 dependencies {

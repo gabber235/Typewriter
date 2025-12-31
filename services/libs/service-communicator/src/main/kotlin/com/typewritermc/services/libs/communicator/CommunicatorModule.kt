@@ -6,9 +6,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 
-/**
- * Koin module for service-communicator.
- */
 val SERVICE_COMMUNICATOR_MODULE = module {
     singleOf(::NatsCommunicator) onClose {
         runBlocking {
@@ -22,7 +19,16 @@ val SERVICE_COMMUNICATOR_MODULE = module {
         getProperty("NATS_URL", "nats://nats.seamlezz.com:4222")
     }
 
+    single(named("api-base-url")) {
+        getProperty("API_BASE_URL", "https://api.typewritermc.com")
+    }
+
+    single(named("auth-base-url")) {
+        getProperty("AUTH_BASE_URL", "https://auth.typewritermc.com")
+    }
+
     single(named("sentinel-url")) {
-        getProperty("SENTINEL_URL", "https://api.typewritermc.com/auth/sentinel")
+        val apiBase: String = get(named("api-base-url"))
+        "$apiBase/auth/sentinel"
     }
 }
