@@ -149,6 +149,7 @@ docker/nats
 .env
 
 **.task/**
+**.credential
 
 # Terraform state files
 *.tfstate
