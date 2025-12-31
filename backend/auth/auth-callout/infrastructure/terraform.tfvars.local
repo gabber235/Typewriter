@@ -2,6 +2,10 @@ kubernetes_context = "minikube"
 
 openbao_address = "https://vault.seamlezz.test"
 
-authentik_issuer_url = "https://auth.typewritermc.test/application/o/typewriter-panel/"
+panel_issuer_url = "https://auth.typewritermc.test/application/o/typewriter-panel/"
 # This needs to be http because outbound requests from wasmtime do not support self-signed certificates
-authentik_jwks_url   = "http://auth.typewritermc.test/application/o/typewriter-panel/jwks/"
+panel_jwks_url   = "http://auth.typewritermc.test/application/o/typewriter-panel/jwks/"
+
+services_issuer_url = "https://auth.typewritermc.test/application/o/typewriter-services/"
+# This needs to be http because outbound requests from wasmtime do not support self-signed certificates
+services_jwks_url   = "http://auth.typewritermc.test/application/o/typewriter-services/jwks/"

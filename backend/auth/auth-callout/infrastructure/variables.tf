@@ -8,12 +8,22 @@ variable "openbao_address" {
   type        = string
 }
 
-variable "authentik_issuer_url" {
-  description = "Authentik OIDC issuer URL for typewriter"
+variable "panel_issuer_url" {
+  description = "Authentik OIDC issuer URL for typewriter-panel"
   type        = string
 }
 
-variable "authentik_jwks_url" {
-  description = "Authentik JWKS URL for typewriter"
+variable "panel_jwks_url" {
+  description = "Authentik JWKS URL for typewriter-panel"
+  type        = string
+}
+
+variable "services_issuer_url" {
+  description = "Authentik OIDC issuer URL for typewriter-services"
+  type        = string
+}
+
+variable "services_jwks_url" {
+  description = "Authentik JWKS URL for typewriter-services"
   type        = string
 }

@@ -21,7 +21,7 @@ data "vault_generic_secret" "nats_typewriter_account_public_key" {
 }
 
 data "vault_generic_secret" "auth_callout_signing_key" {
-  path      = "vault-plugin-secrets-nats/nkey/operator/operator/account/TYPEWRITER/signing/auth-callout"
+  path = "vault-plugin-secrets-nats/nkey/operator/operator/account/TYPEWRITER/signing/auth-callout"
 }
 
 resource "kubectl_manifest" "auth_callout_secrets_external_secret" {
@@ -45,7 +45,7 @@ resource "kubectl_manifest" "auth_callout_secrets_external_secret" {
           engineVersion = "v2"
           data = {
             "NATS_ISSUER_SEED"  = "{{ .accountSeed }}"
-            "NATS_SIGNING_KEYS" = "{\"typewriter\": \"{{ .signingKeySeed }}\"}"
+            "NATS_SIGNING_KEYS" = "{\"typewriter-panel\": \"{{ .signingKeySeed }}\", \"typewriter-services\": \"{{ .signingKeySeed }}\"}"
           }
         }
       }
@@ -80,9 +80,15 @@ resource "kubernetes_config_map" "auth_callout_config" {
   data = {
     ISSUERS = jsonencode([
       {
-        id               = "typewriter"
-        issuer_url       = var.authentik_issuer_url
-        jwks_url         = var.authentik_jwks_url
+        id               = "typewriter-panel"
+        issuer_url       = var.panel_issuer_url
+        jwks_url         = var.panel_jwks_url
+        nats_account_key = data.vault_generic_secret.nats_typewriter_account_public_key.data["publicKey"]
+      },
+      {
+        id               = "typewriter-services"
+        issuer_url       = var.services_issuer_url
+        jwks_url         = var.services_jwks_url
         nats_account_key = data.vault_generic_secret.nats_typewriter_account_public_key.data["publicKey"]
       }
     ])

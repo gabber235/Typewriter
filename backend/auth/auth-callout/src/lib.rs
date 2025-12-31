@@ -20,7 +20,7 @@ use nats_jwt_rs::{
 use nkeys::KeyPair;
 use prost::Message;
 use serde::{Deserialize, Serialize};
-use wasmcloud_component::{debug, info, trace};
+use wasmcloud_component::{debug, error, info, trace};
 use wasmcloud_utils::wasmcloud::messaging::{consumer, handler::Guest, reply, types};
 
 mod typewriter {
@@ -57,7 +57,7 @@ impl Guest for AuthCallout {
                 kp
             }
             Err(e) => {
-                info!("Failed to get keypair: {}", e);
+                error!("Failed to get keypair: {}", e);
                 return Err(e);
             }
         };
@@ -68,7 +68,7 @@ impl Guest for AuthCallout {
                 req
             }
             Err(e) => {
-                info!("Bad request: {}", e);
+                error!("Bad request: {}", e);
                 return Err(e.to_string());
             }
         };
@@ -92,7 +92,7 @@ impl Guest for AuthCallout {
                 response.payload_mut().error = "user not authorized".to_string();
             }
             Err(e) => {
-                info!("JWT processing error: {}", e);
+                error!("JWT processing error: {}", e);
                 return Err(e.to_string());
             }
         };
@@ -141,7 +141,7 @@ fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, any
             result
         }
         Err(e) => {
-            debug!("JWT validation failed: {}", e);
+            error!("JWT validation failed: {}", e);
             return Ok(None);
         }
     };
@@ -202,7 +202,7 @@ fn validate_user_jwt<'a>(
                 .user
                 .clone()
                 .unwrap_or_else(|| "Unknown".to_string());
-            debug!("Invalid JWT for {}: {}", username, e);
+            error!("Invalid JWT for {}: {}", username, e);
             Err(anyhow!("Invalid JWT for {}: {}", username, e))
         }
     }
