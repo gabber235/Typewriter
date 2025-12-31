@@ -74,17 +74,10 @@ resource "kubectl_manifest" "service_identity_nats_secrets_external_secret" {
       target = {
         name           = "service-identity-nats-secrets"
         creationPolicy = "Owner"
-        template = {
-          engineVersion = "v2"
-          data = {
-            "NATS_SENTINEL_JWT"  = "{{ .creds | regexReplaceAll \"(?s).*-----BEGIN NATS USER JWT-----\\n([^\\n]+)\\n.*\" \"$1\" }}"
-            "NATS_SENTINEL_SEED" = "{{ .creds | regexReplaceAll \"(?s).*-----BEGIN USER NKEY SEED-----\\n([^\\n]+)\\n.*\" \"$1\" }}"
-          }
-        }
       }
       data = [
         {
-          secretKey = "creds"
+          secretKey = "NATS_SENTINEL_CREDS"
           remoteRef = {
             key      = "vault-plugin-secrets-nats/creds/operator/operator/account/WASMCLOUD/user/sentinel"
             property = "creds"

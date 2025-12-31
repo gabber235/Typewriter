@@ -221,11 +221,14 @@ pub fn handle_register(body: &[u8]) -> Result<Vec<u8>, HandlerError> {
 }
 
 pub fn handle_get_sentinel_credentials() -> Result<Vec<u8>, HandlerError> {
-    let jwt = std::env::var("NATS_SENTINEL_JWT")
-        .map_err(|_| HandlerError::ConfigError("NATS_SENTINEL_JWT not found in environment".to_string()))?;
+    let creds = std::env::var("NATS_SENTINEL_CREDS")
+        .map_err(|_| HandlerError::ConfigError("NATS_SENTINEL_CREDS not found in environment".to_string()))?;
 
-    let seed = std::env::var("NATS_SENTINEL_SEED")
-        .map_err(|_| HandlerError::ConfigError("NATS_SENTINEL_SEED not found in environment".to_string()))?;
+    let jwt = extract_from_creds(&creds, "-----BEGIN NATS USER JWT-----", "------END NATS USER JWT------")
+        .ok_or_else(|| HandlerError::ConfigError("Failed to extract JWT from NATS credentials".to_string()))?;
+
+    let seed = extract_from_creds(&creds, "-----BEGIN USER NKEY SEED-----", "------END USER NKEY SEED------")
+        .ok_or_else(|| HandlerError::ConfigError("Failed to extract seed from NATS credentials".to_string()))?;
 
     let credentials = SentinelCredentials { jwt, seed };
 
@@ -236,6 +239,13 @@ pub fn handle_get_sentinel_credentials() -> Result<Vec<u8>, HandlerError> {
     };
 
     Ok(response.encode_to_vec())
+}
+
+fn extract_from_creds(creds: &str, begin_marker: &str, end_marker: &str) -> Option<String> {
+    let start = creds.find(begin_marker)? + begin_marker.len();
+    let end = creds.find(end_marker)?;
+    let content = &creds[start..end];
+    Some(content.trim().to_string())
 }
 
 #[cfg(test)]
