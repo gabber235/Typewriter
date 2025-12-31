@@ -14,8 +14,12 @@ application {
 dependencies {
     implementation(libs.logback)
     implementation(libs.kotlin.serialize.cbor)
+    implementation(libs.kotlin.serialize.json)
     implementation("com.typewritermc:service-registrar")
     implementation("com.typewritermc:service-communicator")
+
+    implementation(libs.jline)
+    implementation(libs.clikt)
 }
 
 buildConfig {

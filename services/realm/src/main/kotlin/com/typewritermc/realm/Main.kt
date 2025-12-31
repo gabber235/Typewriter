@@ -4,6 +4,8 @@ package com.typewritermc.realm
 
 import com.typewritermc.realm.REALM_VERSION
 import com.typewritermc.realm.registrar.RealmCredentialStorage
+import com.typewritermc.realm.shell.RealmShell
+import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.communicator.SERVICE_COMMUNICATOR_MODULE
 import com.typewritermc.services.libs.registrar.CredentialStorage
 import com.typewritermc.services.libs.registrar.SERVICE_REGISTRAR_MODULE
@@ -14,7 +16,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialFormat
+import kotlinx.serialization.StringFormat
 import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -39,6 +43,13 @@ fun main() {
                 ignoreUnknownKeys = true
             }
         } binds arrayOf(Cbor::class, BinaryFormat::class, SerialFormat::class)
+
+        single {
+            Json {
+                ignoreUnknownKeys = true
+            }
+        } binds arrayOf(Json::class, StringFormat::class, SerialFormat::class)
+
         single {
             RealmCredentialStorage(get(), Paths.get(".credential").toFile())
         } bind CredentialStorage::class
@@ -48,6 +59,9 @@ fun main() {
                 realm = ServiceInformation.RealmInformation(version = REALM_VERSION)
             )
         }
+
+        single { RealmShellContext() }
+        single { RealmShell(get()) }
     }
 
     val application = startKoin {
@@ -58,4 +72,7 @@ fun main() {
 
     application.koin.get<ServiceRegistrar>().initialize()
     Runtime.getRuntime().addShutdownHook(Thread { application.close() })
+
+    val shell = application.koin.get<RealmShell>()
+    shell.run()
 }

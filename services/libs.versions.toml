@@ -11,13 +11,17 @@ nats = "0.6.1-SNAPSHOT"
 
 kotlin-serialize = "1.10.0-RC"
 kotlin-coroutines = "1.10.2"
-
+jline = "3.30.6"
+clikt = "5.0.3"
 gradle-buildconfig = "6.0.7"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+jline = { module = "org.jline:jline", version.ref = "jline" }
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 
 kotlin-logging-jvm = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
