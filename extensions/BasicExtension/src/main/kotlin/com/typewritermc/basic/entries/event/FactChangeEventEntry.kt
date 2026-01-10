@@ -87,7 +87,6 @@ class FactEventWatcher : Initializable, Listener {
     private var facts = emptyList<Ref<ReadableFactEntry>>()
 
     override suspend fun initialize() {
-        // Register this as a Bukkit listener so @EventHandler methods work
         server.pluginManager.registerEvents(this, plugin)
 
         facts = Query.find<FactChangeEventEntry>().map { it.fact }.distinct().toList()
@@ -128,7 +127,6 @@ class FactEventWatcher : Initializable, Listener {
             subscription.cancel(player)
         }
         subscriptions.clear()
-        // Unregister this listener
         this.unregister()
     }
 }
