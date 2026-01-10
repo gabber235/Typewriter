@@ -23,9 +23,11 @@ import com.typewritermc.engine.paper.entry.triggerAllFor
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.interaction.interactionContext
+import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.server
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import lirand.api.extensions.events.unregister
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -85,6 +87,9 @@ class FactEventWatcher : Initializable, Listener {
     private var facts = emptyList<Ref<ReadableFactEntry>>()
 
     override suspend fun initialize() {
+        // Register this as a Bukkit listener so @EventHandler methods work
+        server.pluginManager.registerEvents(this, plugin)
+
         facts = Query.find<FactChangeEventEntry>().map { it.fact }.distinct().toList()
         if (facts.isEmpty()) return
         Dispatchers.UntickedAsync.launch {
@@ -123,5 +128,7 @@ class FactEventWatcher : Initializable, Listener {
             subscription.cancel(player)
         }
         subscriptions.clear()
+        // Unregister this listener
+        this.unregister()
     }
 }
