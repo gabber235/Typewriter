@@ -18,12 +18,19 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
 import org.bukkit.inventory.EquipmentSlot
+import com.github.retrooper.packetevents.PacketEvents
+import com.github.retrooper.packetevents.event.PacketListenerAbstract
+import com.github.retrooper.packetevents.event.PacketListenerPriority
+import com.github.retrooper.packetevents.event.PacketReceiveEvent
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
 
 
 private val confirmationKeyString by config(
     "confirmationKey", ConfirmationKey.JUMP.name, comment = """
     |The key that should be pressed to confirm a dialogue option.
     |Possible values: ${ConfirmationKey.entries.joinToString(", ") { it.name }}
+    |Note: LEFT_CLICK and RIGHT_CLICK are valid.
 """.trimMargin()
 )
 
@@ -50,8 +57,8 @@ enum class ConfirmationKey(val keybind: String) {
             SWAP_HANDS -> SwapHandsHandler(player, block)
             JUMP -> JumpHandler(player, block)
             SNEAK -> SneakHandler(player, block)
-            LEFT_CLICK -> ClickHandler(player, block, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK)
-            RIGHT_CLICK -> ClickHandler(player, block, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK)
+            LEFT_CLICK -> ClickHandler(player, block, true)
+            RIGHT_CLICK -> ClickHandler(player, block, false)
         }.apply { initialize() }
     }
 
@@ -117,14 +124,59 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
     }
 }
 
-class ClickHandler(override val player: Player, override val block: () -> Unit, vararg val actions: Action) : ConfirmationKeyHandler {
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler, PacketListenerAbstract(PacketListenerPriority.NORMAL) {
+    override fun initialize() {
+        server.pluginManager.registerEvents(this, plugin)
+        PacketEvents.getAPI().eventManager.registerListener(this)
+    }
+
+    override fun dispose() {
+        PlayerInteractEvent.getHandlerList().unregister(this as Listener)
+        PacketEvents.getAPI().eventManager.unregisterListener(this)
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     fun onInteract(event: PlayerInteractEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         if (event.hand != EquipmentSlot.HAND) return
-        if (event.action !in actions) return
-        event.isCancelled = true
-        block()
+
+        // Right Click Block is handled here to ensure we catch block interactions correctly
+        // Left Click is fully handled by packets (Animation)
+        if (!isLeft && event.action == Action.RIGHT_CLICK_BLOCK) {
+            event.isCancelled = true
+            block()
+        }
+    }
+
+    override fun onPacketReceive(event: PacketReceiveEvent) {
+        if (event.user.uuid != player.uniqueId) return
+
+        val type = event.packetType
+
+        var triggered = false
+        if (isLeft) {
+            if (type == PacketType.Play.Client.ANIMATION) {
+                triggered = true
+            } else if (type == PacketType.Play.Client.INTERACT_ENTITY) {
+                val wrapper = WrapperPlayClientInteractEntity(event)
+                if (wrapper.action == WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
+                    triggered = true
+                }
+            }
+        } else {
+            if (type == PacketType.Play.Client.USE_ITEM) {
+                triggered = true
+            } else if (type == PacketType.Play.Client.INTERACT_ENTITY) {
+                val wrapper = WrapperPlayClientInteractEntity(event)
+                if (wrapper.action != WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
+                    triggered = true
+                }
+            }
+        }
+
+        if (triggered) {
+            event.isCancelled = true
+            server.scheduler.runTask(plugin, Runnable { block() })
+        }
     }
 }
-
