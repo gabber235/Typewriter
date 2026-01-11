@@ -65,7 +65,15 @@ data class FactCriteria(
     val value: Var<Int> = ConstVar(0)
 ) {
     fun matches(player: Player, context: InteractionContext?, value: Int): Boolean {
-        return this.value.get(player, context) == value
+        val criteriaValue = this.value.get(player, context)
+        return when (operator) {
+            CriteriaOperator.EQUALS -> value == criteriaValue
+            CriteriaOperator.NOT_EQUALS -> value != criteriaValue
+            CriteriaOperator.GREATER_THAN -> value > criteriaValue
+            CriteriaOperator.LESS_THAN -> value < criteriaValue
+            CriteriaOperator.GREATER_THAN_OR_EQUAL -> value >= criteriaValue
+            CriteriaOperator.LESS_THAN_OR_EQUALS -> value <= criteriaValue
+        }
     }
 }
 
