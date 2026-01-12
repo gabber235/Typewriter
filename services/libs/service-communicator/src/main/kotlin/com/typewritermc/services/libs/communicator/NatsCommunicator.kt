@@ -3,6 +3,8 @@ package com.typewritermc.services.libs.communicator
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.NatsClient
+import io.natskt.api.AuthPayload
+import io.natskt.api.AuthProvider
 import io.natskt.api.Credentials
 import io.natskt.api.NatsClient
 import kotlinx.serialization.Serializable
@@ -49,14 +51,14 @@ class NatsCommunicator : KoinComponent {
             server = natsUrl
             inboxPrefix = "_INBOX.$serviceId."
             authentication = Credentials.Custom(
-                jwt = Credentials.Jwt(
-                    token = sentinelCredentials.jwt,
-                    nkey = sentinelCredentials.seed
-                ),
-                password = Credentials.Password(
-                    username = serviceId,
-                    password = token
-                )
+                provider = AuthProvider { info ->
+                    AuthPayload(
+                        jwt = sentinelCredentials.jwt,
+                        signature = signNonce(sentinelCredentials.seed, info),
+                        username = serviceId,
+                        password = token
+                    )
+                }
             )
         }
 

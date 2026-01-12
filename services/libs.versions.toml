@@ -7,7 +7,7 @@ logback = "1.5.23"
 
 protokt = "1.0.0-beta.8"
 protobuf-java = "4.33.2"
-nats = "0.6.1-SNAPSHOT"
+nats = "0.7.0"
 
 kotlin-serialize = "1.10.0-RC"
 kotlin-coroutines = "1.10.2"
