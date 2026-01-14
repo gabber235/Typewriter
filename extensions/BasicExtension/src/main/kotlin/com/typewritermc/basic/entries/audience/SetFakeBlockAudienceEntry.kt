@@ -4,6 +4,8 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBl
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.MaterialProperties
+import com.typewritermc.core.extension.annotations.MaterialProperty
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
@@ -33,7 +35,8 @@ class SetFakeBlockAudienceEntry(
     override val name: String = "",
     @Help("The location where the fake block will be set")
     val location: Var<Position> = ConstVar(Position.ORIGIN),
-    @Help("The fake block material to set.")
+    @MaterialProperties(MaterialProperty.BLOCK)
+    @Help("The block to fake.")
     val block: Var<Material> = ConstVar(Material.AIR),
 ) : AudienceEntry {
     override suspend fun display(): AudienceDisplay {
@@ -60,9 +63,14 @@ class SetFakeBlockDisplay(
             val currentPosition = position.get(player, context)
             val currentMaterial = block.get(player, context)
 
-            if (currentPosition != state.position || currentMaterial != state.material) {
+            val realBlock = currentPosition.toBukkitLocation().block.type
+
+            if ((currentPosition != state.position) || (currentMaterial != state.material)) {
+                resetBlockChange(player, state.position)
                 sendBlockChange(player, currentPosition, currentMaterial)
                 blocks[playerId] = PlayerBlockState(currentPosition, currentMaterial)
+            } else if (realBlock != currentMaterial) {
+                sendBlockChange(player, currentPosition, currentMaterial)
             }
         }
     }
@@ -78,8 +86,8 @@ class SetFakeBlockDisplay(
 
     override fun onPlayerRemove(player: Player) {
         val state = blocks.remove(player.uniqueId) ?: return
-        val originalBlock = state.position.toBukkitLocation().block
-        sendBlockChange(player, state.position, originalBlock.type)
+        val position = state.position
+        resetBlockChange(player, position)
     }
 
     private fun sendBlockChange(player: Player, position: Position, material: Material) {
@@ -88,5 +96,10 @@ class SetFakeBlockDisplay(
             SpigotConversionUtil.fromBukkitBlockData(material.createBlockData())
         )
         packet.sendPacketTo(player)
+    }
+
+    private fun resetBlockChange(player: Player, position: Position) {
+        val bukkitLocation = position.toBukkitLocation()
+        player.sendBlockChange(bukkitLocation, bukkitLocation.block.blockData)
     }
 }
