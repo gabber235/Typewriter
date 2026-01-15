@@ -2,21 +2,12 @@ package com.typewritermc.basic.entries.audience
 
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.extension.annotations.MaterialProperties
-import com.typewritermc.core.extension.annotations.MaterialProperty
+import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
-import com.typewritermc.engine.paper.entry.entries.AudienceEntry
-import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.TickableDisplay
-import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.interactionContext
-import com.typewritermc.engine.paper.utils.server
-import com.typewritermc.engine.paper.utils.toBukkitLocation
-import com.typewritermc.engine.paper.utils.toPacketVector3i
+import com.typewritermc.engine.paper.utils.*
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -39,12 +30,10 @@ class SetFakeBlockAudienceEntry(
     @Help("The block to fake.")
     val block: Var<Material> = ConstVar(Material.AIR),
 ) : AudienceEntry {
-    override suspend fun display(): AudienceDisplay {
-        return SetFakeBlockDisplay(location, block)
-    }
+    override suspend fun display() = SetFakeBlockDisplay(location, block)
 }
 
-private data class PlayerBlockState(
+private data class PlayerBlock(
     val position: Position,
     val material: Material
 )
@@ -53,22 +42,20 @@ class SetFakeBlockDisplay(
     private val position: Var<Position>,
     private val block: Var<Material>,
 ) : AudienceDisplay(), TickableDisplay {
-    private val blocks = ConcurrentHashMap<UUID, PlayerBlockState>()
+    private val blocks = ConcurrentHashMap<UUID, PlayerBlock>()
 
     override fun tick() {
-        for ((playerId, state) in blocks) {
-            val player = server.getPlayer(playerId) ?: continue
+        blocks.forEach { (playerId, state) ->
+            val player = server.getPlayer(playerId) ?: return@forEach
             val context = player.interactionContext
-
             val currentPosition = position.get(player, context)
             val currentMaterial = block.get(player, context)
-
             val realBlock = currentPosition.toBukkitLocation().block.type
 
-            if ((currentPosition != state.position) || (currentMaterial != state.material)) {
-                resetBlockChange(player, state.position)
+            if (currentPosition != state.position || currentMaterial != state.material) {
+                sendBlockChange(player, state.position, state.position.toBukkitLocation().block.type)
                 sendBlockChange(player, currentPosition, currentMaterial)
-                blocks[playerId] = PlayerBlockState(currentPosition, currentMaterial)
+                blocks[playerId] = PlayerBlock(currentPosition, currentMaterial)
             } else if (realBlock != currentMaterial) {
                 sendBlockChange(player, currentPosition, currentMaterial)
             }
@@ -79,27 +66,18 @@ class SetFakeBlockDisplay(
         val context = player.interactionContext
         val position = position.get(player, context)
         val material = block.get(player, context)
-
-        blocks[player.uniqueId] = PlayerBlockState(position, material)
+        blocks[player.uniqueId] = PlayerBlock(position, material)
         sendBlockChange(player, position, material)
     }
 
     override fun onPlayerRemove(player: Player) {
-        val state = blocks.remove(player.uniqueId) ?: return
-        val position = state.position
-        resetBlockChange(player, position)
+        blocks.remove(player.uniqueId)?.let { sendBlockChange(player, it.position, it.position.toBukkitLocation().block.type) }
     }
 
     private fun sendBlockChange(player: Player, position: Position, material: Material) {
-        val packet = WrapperPlayServerBlockChange(
+        WrapperPlayServerBlockChange(
             position.toPacketVector3i(),
             SpigotConversionUtil.fromBukkitBlockData(material.createBlockData())
-        )
-        packet.sendPacketTo(player)
-    }
-
-    private fun resetBlockChange(player: Player, position: Position) {
-        val bukkitLocation = position.toBukkitLocation()
-        player.sendBlockChange(bukkitLocation, bukkitLocation.block.blockData)
+        ).sendPacketTo(player)
     }
 }
