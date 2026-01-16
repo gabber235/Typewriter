@@ -21,10 +21,20 @@ class ItemSkullComponent(
     val texture: Var<String> = ConstVar("")
 ) : ItemComponent {
     override fun apply(player: Player?, interactionContext: InteractionContext?, item: ItemStack) {
-        val url = texture.get(player) ?: return
+        var url = texture.get(player) ?: return
         if (url.isEmpty()) return
 
         if (item.type != Material.PLAYER_HEAD) return
+
+        if (!url.startsWith("http")) {
+            try {
+                val decoded = String(java.util.Base64.getDecoder().decode(url))
+                val match = Regex("\"url\"\\s*:\\s*\"([^\"]+)\"").find(decoded)
+                url = match?.groupValues?.get(1) ?: return
+            } catch (e: Exception) {
+                return
+            }
+        }
 
         val meta = item.itemMeta as? SkullMeta ?: return
         meta.applySkinUrl(url)
