@@ -12210,24 +12210,31 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "acacia_hanging_sign": MinecraftMaterial(
     name: "Acacia Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/acacia_hanging_sign.png",
   ),
   "acacia_shelf": MinecraftMaterial(
     name: "Acacia Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/acacia_shelf.png",
   ),
   "angler_pottery_sherd": MinecraftMaterial(
     name: "Angler Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12235,7 +12242,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "archer_pottery_sherd": MinecraftMaterial(
     name: "Archer Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12259,7 +12266,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "arms_up_pottery_sherd": MinecraftMaterial(
     name: "Arms Up Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12267,71 +12274,103 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "bamboo_block": MinecraftMaterial(
     name: "Bamboo Block",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_block.png",
   ),
   "bamboo_button": MinecraftMaterial(
     name: "Bamboo Button",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_button.png",
   ),
   "bamboo_chest_raft": MinecraftMaterial(
     name: "Bamboo Chest Raft",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
-      MaterialProperty.block,
       MaterialProperty.item,
     ],
     icon: "assets/materials/bamboo_chest_raft.png",
   ),
   "bamboo_door": MinecraftMaterial(
     name: "Bamboo Door",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_door.png",
   ),
   "bamboo_fence": MinecraftMaterial(
     name: "Bamboo Fence",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_fence.png",
   ),
   "bamboo_fence_gate": MinecraftMaterial(
     name: "Bamboo Fence Gate",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_fence_gate.png",
   ),
   "bamboo_hanging_sign": MinecraftMaterial(
     name: "Bamboo Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_hanging_sign.png",
   ),
   "bamboo_mosaic": MinecraftMaterial(
     name: "Bamboo Mosaic",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_mosaic.png",
   ),
@@ -12355,25 +12394,33 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "bamboo_planks": MinecraftMaterial(
     name: "Bamboo Planks",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_planks.png",
   ),
   "bamboo_pressure_plate": MinecraftMaterial(
     name: "Bamboo Pressure Plate",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_pressure_plate.png",
   ),
   "bamboo_raft": MinecraftMaterial(
     name: "Bamboo Raft",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12381,68 +12428,95 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "bamboo_shelf": MinecraftMaterial(
     name: "Bamboo Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_shelf.png",
   ),
   "bamboo_sign": MinecraftMaterial(
     name: "Bamboo Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_sign.png",
   ),
   "bamboo_slab": MinecraftMaterial(
     name: "Bamboo Slab",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_slab.png",
   ),
   "bamboo_stairs": MinecraftMaterial(
     name: "Bamboo Stairs",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_stairs.png",
   ),
   "bamboo_trapdoor": MinecraftMaterial(
     name: "Bamboo Trapdoor",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/bamboo_trapdoor.png",
   ),
   "birch_hanging_sign": MinecraftMaterial(
     name: "Birch Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/birch_hanging_sign.png",
   ),
   "birch_shelf": MinecraftMaterial(
     name: "Birch Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/birch_shelf.png",
   ),
   "blade_pottery_sherd": MinecraftMaterial(
     name: "Blade Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12498,7 +12572,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "brewer_pottery_sherd": MinecraftMaterial(
     name: "Brewer Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12514,15 +12588,16 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "brush": MinecraftMaterial(
     name: "Brush",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.tool,
     ],
     icon: "assets/materials/brush.png",
   ),
   "burn_pottery_sherd": MinecraftMaterial(
     name: "Burn Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12530,16 +12605,17 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "calibrated_sculk_sensor": MinecraftMaterial(
     name: "Calibrated Sculk Sensor",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.solid,
     ],
     icon: "assets/materials/calibrated_sculk_sensor.png",
   ),
   "camel_spawn_egg": MinecraftMaterial(
     name: "Camel Spawn Egg",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12547,7 +12623,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "cherry_boat": MinecraftMaterial(
     name: "Cherry Boat",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12555,160 +12631,230 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "cherry_button": MinecraftMaterial(
     name: "Cherry Button",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_button.png",
   ),
   "cherry_chest_boat": MinecraftMaterial(
     name: "Cherry Chest Boat",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
-      MaterialProperty.block,
       MaterialProperty.item,
     ],
     icon: "assets/materials/cherry_chest_boat.png",
   ),
   "cherry_door": MinecraftMaterial(
     name: "Cherry Door",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_door.png",
   ),
   "cherry_fence": MinecraftMaterial(
     name: "Cherry Fence",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_fence.png",
   ),
   "cherry_fence_gate": MinecraftMaterial(
     name: "Cherry Fence Gate",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_fence_gate.png",
   ),
   "cherry_hanging_sign": MinecraftMaterial(
     name: "Cherry Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_hanging_sign.png",
   ),
   "cherry_leaves": MinecraftMaterial(
     name: "Cherry Leaves",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.transparent,
+      MaterialProperty.occluding,
+      MaterialProperty.flammable,
+      MaterialProperty.burnable,
     ],
     icon: "assets/materials/cherry_leaves.png",
   ),
   "cherry_log": MinecraftMaterial(
     name: "Cherry Log",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_log.png",
   ),
   "cherry_planks": MinecraftMaterial(
     name: "Cherry Planks",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_planks.png",
   ),
   "cherry_pressure_plate": MinecraftMaterial(
     name: "Cherry Pressure Plate",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_pressure_plate.png",
   ),
   "cherry_sapling": MinecraftMaterial(
     name: "Cherry Sapling",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.transparent,
     ],
     icon: "assets/materials/cherry_sapling.png",
   ),
   "cherry_shelf": MinecraftMaterial(
     name: "Cherry Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_shelf.png",
   ),
   "cherry_sign": MinecraftMaterial(
     name: "Cherry Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_sign.png",
   ),
   "cherry_slab": MinecraftMaterial(
     name: "Cherry Slab",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_slab.png",
   ),
   "cherry_stairs": MinecraftMaterial(
     name: "Cherry Stairs",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_stairs.png",
   ),
   "cherry_trapdoor": MinecraftMaterial(
     name: "Cherry Trapdoor",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.intractable,
+      MaterialProperty.solid,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_trapdoor.png",
   ),
   "cherry_wood": MinecraftMaterial(
     name: "Cherry Wood",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/cherry_wood.png",
   ),
   "chiseled_bookshelf": MinecraftMaterial(
     name: "Chiseled Bookshelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/chiseled_bookshelf.png",
   ),
@@ -12739,7 +12885,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "coast_armor_trim_smithing_template": MinecraftMaterial(
     name: "Coast Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12788,16 +12934,17 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "crimson_hanging_sign": MinecraftMaterial(
     name: "Crimson Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.solid,
     ],
     icon: "assets/materials/crimson_hanging_sign.png",
   ),
   "crimson_shelf": MinecraftMaterial(
     name: "Crimson Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12805,7 +12952,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "danger_pottery_sherd": MinecraftMaterial(
     name: "Danger Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12813,32 +12960,41 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "dark_oak_hanging_sign": MinecraftMaterial(
     name: "Dark Oak Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/dark_oak_hanging_sign.png",
   ),
   "dark_oak_shelf": MinecraftMaterial(
     name: "Dark Oak Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/dark_oak_shelf.png",
   ),
   "decorated_pot": MinecraftMaterial(
     name: "Decorated Pot",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.solid,
     ],
     icon: "assets/materials/decorated_pot.png",
   ),
   "dune_armor_trim_smithing_template": MinecraftMaterial(
     name: "Dune Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12854,7 +13010,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "explorer_pottery_sherd": MinecraftMaterial(
     name: "Explorer Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12903,7 +13059,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "eye_armor_trim_smithing_template": MinecraftMaterial(
     name: "Eye Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12943,7 +13099,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "friend_pottery_sherd": MinecraftMaterial(
     name: "Friend Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12967,7 +13123,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "heart_pottery_sherd": MinecraftMaterial(
     name: "Heart Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12975,7 +13131,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "heartbreak_pottery_sherd": MinecraftMaterial(
     name: "Heartbreak Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12991,7 +13147,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "host_armor_trim_smithing_template": MinecraftMaterial(
     name: "Host Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -12999,7 +13155,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "howl_pottery_sherd": MinecraftMaterial(
     name: "Howl Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13023,18 +13179,25 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "jungle_hanging_sign": MinecraftMaterial(
     name: "Jungle Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/jungle_hanging_sign.png",
   ),
   "jungle_shelf": MinecraftMaterial(
     name: "Jungle Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/jungle_shelf.png",
   ),
@@ -13048,24 +13211,31 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "mangrove_hanging_sign": MinecraftMaterial(
     name: "Mangrove Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/mangrove_hanging_sign.png",
   ),
   "mangrove_shelf": MinecraftMaterial(
     name: "Mangrove Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/mangrove_shelf.png",
   ),
   "miner_pottery_sherd": MinecraftMaterial(
     name: "Miner Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13073,7 +13243,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "mourner_pottery_sherd": MinecraftMaterial(
     name: "Mourner Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13115,7 +13285,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "netherite_upgrade_smithing_template": MinecraftMaterial(
     name: "Netherite Upgrade Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13123,18 +13293,25 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "oak_hanging_sign": MinecraftMaterial(
     name: "Oak Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/oak_hanging_sign.png",
   ),
   "oak_shelf": MinecraftMaterial(
     name: "Oak Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/oak_shelf.png",
   ),
@@ -13205,31 +13382,34 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "piglin_head": MinecraftMaterial(
     name: "Piglin Head",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
     ],
     icon: "assets/materials/piglin_head.png",
   ),
   "pink_petals": MinecraftMaterial(
     name: "Pink Petals",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
     ],
     icon: "assets/materials/pink_petals.png",
   ),
   "pitcher_plant": MinecraftMaterial(
     name: "Pitcher Plant",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
     ],
     icon: "assets/materials/pitcher_plant.png",
   ),
   "pitcher_pod": MinecraftMaterial(
     name: "Pitcher Pod",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13237,7 +13417,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "plenty_pottery_sherd": MinecraftMaterial(
     name: "Plenty Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13280,7 +13460,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "prize_pottery_sherd": MinecraftMaterial(
     name: "Prize Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13288,7 +13468,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "raiser_armor_trim_smithing_template": MinecraftMaterial(
     name: "Raiser Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13296,7 +13476,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "rib_armor_trim_smithing_template": MinecraftMaterial(
     name: "Rib Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13312,7 +13492,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "sentry_armor_trim_smithing_template": MinecraftMaterial(
     name: "Sentry Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13320,7 +13500,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "shaper_armor_trim_smithing_template": MinecraftMaterial(
     name: "Shaper Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13328,7 +13508,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "sheaf_pottery_sherd": MinecraftMaterial(
     name: "Sheaf Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13336,7 +13516,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "shelter_pottery_sherd": MinecraftMaterial(
     name: "Shelter Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13344,7 +13524,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "silence_armor_trim_smithing_template": MinecraftMaterial(
     name: "Silence Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13352,7 +13532,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "skull_pottery_sherd": MinecraftMaterial(
     name: "Skull Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13360,15 +13540,16 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "sniffer_egg": MinecraftMaterial(
     name: "Sniffer Egg",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
+      MaterialProperty.block,
       MaterialProperty.item,
     ],
     icon: "assets/materials/sniffer_egg.png",
   ),
   "sniffer_spawn_egg": MinecraftMaterial(
     name: "Sniffer Spawn Egg",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13376,7 +13557,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "snort_pottery_sherd": MinecraftMaterial(
     name: "Snort Pottery Sherd",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13384,7 +13565,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "snout_armor_trim_smithing_template": MinecraftMaterial(
     name: "Snout Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13401,7 +13582,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "spire_armor_trim_smithing_template": MinecraftMaterial(
     name: "Spire Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13409,45 +13590,67 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "spruce_hanging_sign": MinecraftMaterial(
     name: "Spruce Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/spruce_hanging_sign.png",
   ),
   "spruce_shelf": MinecraftMaterial(
     name: "Spruce Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/spruce_shelf.png",
   ),
   "stripped_bamboo_block": MinecraftMaterial(
     name: "Stripped Bamboo Block",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/stripped_bamboo_block.png",
   ),
   "stripped_cherry_log": MinecraftMaterial(
     name: "Stripped Cherry Log",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/stripped_cherry_log.png",
   ),
   "stripped_cherry_wood": MinecraftMaterial(
     name: "Stripped Cherry Wood",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.fuel,
+      MaterialProperty.occluding,
+      MaterialProperty.solid,
+      MaterialProperty.burnable,
+      MaterialProperty.flammable,
     ],
     icon: "assets/materials/stripped_cherry_wood.png",
   ),
@@ -13471,19 +13674,21 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "suspicious_gravel": MinecraftMaterial(
     name: "Suspicious Gravel",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.solid,
     ],
     icon: "assets/materials/suspicious_gravel.png",
   ),
   "suspicious_sand": MinecraftMaterial(
     name: "Suspicious Sand",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.solid,
     ],
     icon: "assets/materials/suspicious_sand.png",
   ),
@@ -13507,7 +13712,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "tide_armor_trim_smithing_template": MinecraftMaterial(
     name: "Tide Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13515,7 +13720,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "torchflower": MinecraftMaterial(
     name: "Torchflower",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
@@ -13524,7 +13729,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "torchflower_seeds": MinecraftMaterial(
     name: "Torchflower Seeds",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
@@ -13628,7 +13833,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "vex_armor_trim_smithing_template": MinecraftMaterial(
     name: "Vex Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13636,7 +13841,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "ward_armor_trim_smithing_template": MinecraftMaterial(
     name: "Ward Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13644,16 +13849,17 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "warped_hanging_sign": MinecraftMaterial(
     name: "Warped Hanging Sign",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.block,
       MaterialProperty.item,
+      MaterialProperty.solid,
     ],
     icon: "assets/materials/warped_hanging_sign.png",
   ),
   "warped_shelf": MinecraftMaterial(
     name: "Warped Shelf",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13891,7 +14097,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "wayfinder_armor_trim_smithing_template": MinecraftMaterial(
     name: "Wayfinder Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
@@ -13948,7 +14154,7 @@ const Map<String, MinecraftMaterial> materials = {
   ),
   "wild_armor_trim_smithing_template": MinecraftMaterial(
     name: "Wild Armor Trim Smithing Template",
-    since: McVersion.v1_21,
+    since: McVersion.v1_20,
     properties: [
       MaterialProperty.item,
     ],
