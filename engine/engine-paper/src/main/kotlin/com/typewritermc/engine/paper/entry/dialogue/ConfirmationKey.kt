@@ -30,7 +30,6 @@ private val confirmationKeyString by config(
     "confirmationKey", ConfirmationKey.JUMP.name, comment = """
     |The key that should be pressed to confirm a dialogue option.
     |Possible values: ${ConfirmationKey.entries.joinToString(", ") { it.name }}
-    |Note: LEFT_CLICK and RIGHT_CLICK are valid.
 """.trimMargin()
 )
 
