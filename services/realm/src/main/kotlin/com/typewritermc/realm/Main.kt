@@ -13,6 +13,7 @@ import com.typewritermc.services.libs.registrar.ServiceInformation
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServicesInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialFormat
@@ -70,7 +71,9 @@ fun main() {
     }
     logger.trace { "Koin started" }
 
-    application.koin.get<ServiceRegistrar>().initialize()
+    runBlocking {
+        application.koin.get<ServiceRegistrar>().initialize()
+    }
     Runtime.getRuntime().addShutdownHook(Thread { application.close() })
 
     val shell = application.koin.get<RealmShell>()

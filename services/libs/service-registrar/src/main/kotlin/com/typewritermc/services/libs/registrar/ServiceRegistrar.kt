@@ -4,7 +4,6 @@ import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
-import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.context.loadKoinModules
@@ -44,7 +43,7 @@ class ServiceRegistrar(
 
     private var credential: Credential? = null
 
-    fun initialize() {
+    suspend fun initialize() {
         logger.info { "Initializing service registrar" }
 
         var cred = credentialStorage.credential()
@@ -60,12 +59,25 @@ class ServiceRegistrar(
 
         this.credential = cred
 
+        loadKoinModules(module { single { cred } })
+
         registerJwtProvider()
         setupNatsConnection()
 
-        // TODO: Check if we belong to an organization
-        // TODO: If so, then startup the realm
-        // TODO: If not, then startup the registration protocol
+        val registrationProtocol = RegistrationProtocol()
+        val state = registrationProtocol.checkAndRegister()
+        when (state) {
+            is RegistrationState.Bound -> {
+                logger.info { "Service bound to organization: ${state.organizationName}" }
+            }
+            is RegistrationState.Failed -> {
+                logger.error { "Registration failed: ${state.message}" }
+                throw IllegalStateException("Registration failed: ${state.message}")
+            }
+            else -> {
+                throw IllegalStateException("Unexpected registration state: $state")
+            }
+        }
 
         logger.info { "Service registrar initialized" }
     }
@@ -93,13 +105,11 @@ class ServiceRegistrar(
     /**
      * Setup NATS connection using the communicator.
      */
-    private fun setupNatsConnection() {
+    private suspend fun setupNatsConnection() {
         logger.info { "Setting up NATS connection" }
 
         val communicator: NatsCommunicator by inject()
-        runBlocking {
-            communicator.connect()
-        }
+        communicator.connect()
 
         logger.info { "NATS connection established" }
     }
