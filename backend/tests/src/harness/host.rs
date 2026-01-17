@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
+use futures::future::join_all;
 
 use wash_runtime::engine::Engine;
 use wash_runtime::host::{Host, HostApi, HostBuilder};
@@ -44,6 +45,7 @@ impl DeploymentResult {
 }
 
 /// Test host that runs WASM components with all required plugins.
+#[derive(Clone)]
 pub struct TestHost {
     host: Arc<Host>,
 }
@@ -100,38 +102,66 @@ impl TestHost {
     /// Each component is deployed as a separate workload with its own host interfaces.
     /// Components requiring environment configuration (auth-callout, service-identity)
     /// are skipped and must be deployed explicitly via `deploy_component()`.
+    ///
+    /// Components are deployed concurrently for faster startup.
     pub async fn deploy_all_components(
         &self,
         registry: &ComponentRegistry,
     ) -> Result<DeploymentResult> {
-        tracing::info!("Deploying all components as separate workloads...");
+        // Collect components to deploy (skip those requiring environment configuration)
+        let components_to_deploy: Vec<_> = registry
+            .all()
+            .filter(|d| {
+                if d.requires_environment() {
+                    tracing::info!(
+                        name = %d.name,
+                        config_refs = ?d.config_refs,
+                        secret_refs = ?d.secret_refs,
+                        "Skipping component (requires environment configuration)"
+                    );
+                    false
+                } else {
+                    true
+                }
+            })
+            .cloned()
+            .collect();
 
+        tracing::info!(
+            count = components_to_deploy.len(),
+            "Deploying components concurrently..."
+        );
+
+        // Spawn each deployment as a separate task for true concurrency
+        let mut handles = Vec::new();
+        for discovered in components_to_deploy {
+            let host = self.clone();
+            let handle = tokio::spawn(async move {
+                let name = discovered.name.clone();
+                let workload_id = host
+                    .deploy_component_internal(&discovered, HashMap::new())
+                    .await?;
+                Ok::<(String, String), anyhow::Error>((name, workload_id))
+            });
+            handles.push(handle);
+        }
+
+        // Wait for all deployments to complete
+        let results = join_all(handles).await;
+
+        // Collect results, fail fast on any error
         let mut result = DeploymentResult::default();
-
-        for discovered in registry.all() {
-            // Skip components that require environment configuration
-            if discovered.requires_environment() {
-                tracing::info!(
-                    name = %discovered.name,
-                    config_refs = ?discovered.config_refs,
-                    secret_refs = ?discovered.secret_refs,
-                    "Skipping component (requires environment configuration)"
-                );
-                continue;
-            }
-
-            let workload_id = self
-                .deploy_component_internal(discovered, HashMap::new())
-                .await?;
+        for join_result in results {
+            let (name, workload_id) = join_result
+                .context("Task panicked")?
+                .context("Deployment failed")?;
             result.workload_ids.push(workload_id.clone());
-            result
-                .component_workloads
-                .insert(discovered.name.clone(), workload_id);
+            result.component_workloads.insert(name, workload_id);
         }
 
         tracing::info!(
             deployed = result.workload_ids.len(),
-            "All eligible components deployed as separate workloads"
+            "All components deployed concurrently"
         );
 
         Ok(result)
@@ -173,7 +203,7 @@ impl TestHost {
                 environment,
                 ..Default::default()
             },
-            pool_size: 1,
+            pool_size: 10,
             max_invocations: 1000,
         };
 

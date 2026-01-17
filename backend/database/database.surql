@@ -27,7 +27,7 @@ DEFINE FIELD OVERWRITE roles ON member_of TYPE array<record<role>>
 DEFINE TABLE OVERWRITE organization TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE name ON organization TYPE string ASSERT string::matches($value, '^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$') PERMISSIONS NONE;
-DEFINE FIELD OVERWRITE icon_url ON organization TYPE string ASSERT string::is::url($value) PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE icon_url ON organization TYPE string ASSERT string::is::url($value) AND (string::starts_with($value, "http://") OR string::starts_with($value, "https://")) PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_at ON organization TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE updated_at ON organization TYPE datetime DEFAULT time::now() PERMISSIONS NONE;
 
@@ -51,6 +51,7 @@ DEFINE FIELD OVERWRITE priority ON role TYPE int DEFAULT 1 PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_at ON role TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
 
 DEFINE INDEX OVERWRITE unique_role_per_org ON role FIELDS name, organization UNIQUE;
+DEFINE INDEX OVERWRITE role_org_default ON role FIELDS organization, default_role;
 
 -- ------------------------------
 -- TABLE: user
@@ -78,6 +79,8 @@ DEFINE FIELD OVERWRITE requested_at ON requests_to_join TYPE datetime DEFAULT ti
 -- Default expiration is 7 days from now
 DEFINE FIELD OVERWRITE expires_at ON requests_to_join TYPE datetime DEFAULT time::now() + 7d PERMISSIONS NONE;
 
+DEFINE INDEX OVERWRITE requests_user_expiry ON requests_to_join FIELDS in, expires_at;
+
 -- ------------------------------
 -- TABLE: join_code
 -- ------------------------------
@@ -87,7 +90,7 @@ DEFINE TABLE OVERWRITE join_code TYPE NORMAL SCHEMAFULL PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE organization ON join_code TYPE record<organization> PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_at ON join_code TYPE datetime DEFAULT time::now() READONLY VALUE $before OR time::now() PERMISSIONS NONE;
 -- Expiration: NONE means never expires
-DEFINE FIELD OVERWRITE expires_at ON join_code TYPE option<datetime> DEFAULT time::now() + 7d PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE expires_at ON join_code TYPE option<datetime> PERMISSIONS NONE;
 DEFINE FIELD OVERWRITE created_by ON join_code TYPE record<user> PERMISSIONS NONE;
 -- Single-use flag: code is deleted when used
 DEFINE FIELD OVERWRITE single_use ON join_code TYPE bool DEFAULT true PERMISSIONS NONE;
@@ -119,7 +122,32 @@ DEFINE FIELD OVERWRITE metadata ON service TYPE option<object>
   PERMISSIONS NONE;
 
 -- Organization the service belongs to (set later during linking)
+-- Mutually exclusive with registration field
 DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
+  ASSERT {
+    IF $value IS NOT NONE AND $this.registration IS NOT NONE {
+      THROW "Service cannot have both organization and registration set"
+    };
+    RETURN true
+  }
+  PERMISSIONS NONE;
+
+-- Registration token for unbound services
+-- Mutually exclusive with organization field
+DEFINE FIELD OVERWRITE registration ON service TYPE option<object>
+  ASSERT {
+    IF $value IS NOT NONE AND $this.organization IS NOT NONE {
+      THROW "Service cannot have both organization and registration set"
+    };
+    RETURN true
+  }
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE registration.token ON service TYPE string
+  ASSERT string::matches($value, '^[A-Z0-9]{10}$')
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE registration.expires_at ON service TYPE datetime
   PERMISSIONS NONE;
 
 -- Only engines can have a runs_in reference, and it must point to a realm

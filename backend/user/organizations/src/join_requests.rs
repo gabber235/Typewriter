@@ -91,7 +91,6 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
         FROM requests_to_join
         WHERE in = type::thing('user', $user_id)
           AND expires_at > time::now()
-        FETCH out
         "#,
     )
     .bind("user_id", user_id)
@@ -189,7 +188,6 @@ fn fetch_join_code(code: &str) -> Result<Option<JoinCodeData>, String> {
             auto_accept_roles
         FROM type::thing('join_code', $code)
         WHERE expires_at IS NONE OR expires_at > time::now()
-        FETCH organization
         "#,
     )
     .bind("code", code)
@@ -367,8 +365,7 @@ fn handle_join_request(
             out.* as organization,
             requested_at,
             expires_at
-        FROM ONLY $request
-        FETCH out;
+        FROM ONLY $request;
 
         COMMIT TRANSACTION;
         "#,
@@ -447,8 +444,7 @@ pub fn handle_cancel(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         BEGIN TRANSACTION;
 
         LET $request = SELECT id, out.* as organization, requested_at, expires_at FROM  type::thing('requests_to_join', $request_id)
-        WHERE in = type::thing('user', $user_id)
-        FETCH out;
+        WHERE in = type::thing('user', $user_id);
 
         DELETE $request.id;
 
