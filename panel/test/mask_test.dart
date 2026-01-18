@@ -220,12 +220,26 @@ void main() {
         "int": 1,
       });
       final merged2 = fakeMap.mask(trueMap);
-      expect(merged2, {
-        "list": "",
-        "map": "",
-        "string": 0,
-        "int": "",
-      });
+      expect(merged2, {"list": "", "map": "", "string": 0, "int": ""});
+    });
+  });
+
+  group("stringMap", () {
+    test("returns same map for Map<String, dynamic>", () {
+      final map = <String, dynamic>{"a": 1, "b": "two"};
+      expect(stringMap(map), {"a": 1, "b": "two"});
+    });
+
+    test("converts non-string keys to strings", () {
+      final map = <dynamic, dynamic>{1: "one", 2: "two", "three": 3};
+      expect(stringMap(map), {"1": "one", "2": "two", "three": 3});
+    });
+
+    test("returns empty map for non-map value", () {
+      expect(stringMap("not a map"), isEmpty);
+      expect(stringMap(123), isEmpty);
+      expect(stringMap(null), isEmpty);
+      expect(stringMap([1, 2, 3]), isEmpty);
     });
   });
 }

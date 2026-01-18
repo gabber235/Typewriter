@@ -34,89 +34,103 @@ These are the foundation systems. If they break, the entire app is unusable.
 These systems manage the editor's data. Bugs here cause data corruption or editor crashes.
 
 ### Entry Blueprints (`logic/pages/entries.dart`)
-- [ ] Blueprint matching against entry data
-- [ ] Field path resolution and validation
-- [ ] Entry placement logic (positioning in the graph)
+- [x] Blueprint matching against entry data
+- [x] Field path resolution and validation
+- [x] Entry placement logic (positioning in the graph)
 - [ ] Entry creation from blueprint templates
 - [ ] Entry modification and field updates
 
 ### Dynamic Data (`logic/selectable/dynamic_data.dart`)
 - [x] Deep path-based JSON mutation (existing tests)
 - [x] Nested object access (existing tests)
-- [ ] Edge cases: arrays, null values, missing paths
-- [ ] Type coercion and validation
+- [x] Edge cases: arrays, null values, missing paths
+- [x] Type coercion and validation
 
 ### Data Blueprints (`logic/selectable/data_blueprint.dart`)
-- [ ] Blueprint validation logic
-- [ ] Blueprint-to-form generation
-- [ ] Default value handling
-- [ ] Required vs optional field semantics
+- [x] Blueprint validation logic
+- [x] Blueprint-to-form generation
+- [x] Default value handling
+- [x] Required vs optional field semantics
 
 ---
 
-## Priority 3: Organization and Resource Management
+## Priority 3: Organization and Resource Management ✅
 
 These manage top-level resources. Bugs affect multi-user collaboration.
 
 ### Organization Logic (`logic/organization/organization.dart`)
-- [ ] Organization creation flow
-- [ ] Invite link generation and validation
-- [ ] Organization switching and state cleanup
-- [ ] Member role management
-- [ ] State synchronization with backend
+- [x] JoinRequest expiration (isExpired, remainingDuration)
+- [x] JoinCode expiration (isExpired, remainingDuration, never expires)
+- [x] UserJoinRequest expiration
+- [x] MemberRole model validation
+- [x] JoinCodeOptions model and sealed class patterns
+- [ ] Organization creation flow (requires NATS mocking)
+- [ ] Invite link generation and validation (requires NATS mocking)
+- [ ] Organization switching and state cleanup (requires NATS mocking)
+- [ ] State synchronization with backend (requires NATS mocking)
 
 ### Books Management (`logic/books.dart`)
-- [ ] Book lifecycle: create, delete, rename
-- [ ] Book switching and dependent state invalidation
-- [ ] Book data persistence
+- [x] filteredBooksProvider filtering by title and tags
+- [x] BookExtension.withColor immutability
+- [x] BookIdentifier equality and hashCode
+- [ ] Book lifecycle: create, delete, rename (requires NATS mocking)
+- [ ] Book switching and dependent state invalidation (requires NATS mocking)
 
 ---
 
-## Priority 4: UI Logic
+## Priority 4: UI Logic ✅
 
 Interactive components with complex state management.
 
 ### Graph Component (`widgets/app/components/graph/`)
 - [x] Node positioning (partial existing tests)
 - [x] Drag-and-drop (partial existing tests)
-- [ ] Connection creation between nodes
-- [ ] Node selection and multi-select
-- [ ] Overlapping node handling
-- [ ] Cyclical edge detection and prevention
-- [ ] Zoom and pan boundaries
+- [x] GraphElement geometry (inside/outside checks)
+- [x] EdgeSide vector math
+- [x] GraphEdge connection logic
+- [ ] Connection creation between nodes (requires widget tests)
+- [ ] Node selection and multi-select (requires widget tests)
+- [ ] Overlapping node handling (requires widget tests)
+- [ ] Cyclical edge detection and prevention (requires widget tests)
+- [ ] Zoom and pan boundaries (requires widget tests)
+- [ ] Center-of-mass calculation (private classes, would need refactoring)
 
 ### Inspector (`widgets/app/components/inspector/`)
 - [x] Form generation (partial existing tests)
-- [ ] Missing field handling
-- [ ] Validation error display
-- [ ] Dynamic field types based on blueprint
-- [ ] Nested object editing
+- [x] ValidatedTextField validation and error display
+- [ ] Missing field handling (requires widget tests)
+- [ ] Dynamic field types based on blueprint (requires widget tests)
+- [ ] Nested object editing (requires widget tests)
 
 ### Tree View (`utils/tree_view/tree_view.dart`)
 - [x] Recursive structure management (existing tests)
-- [ ] Expand/collapse state persistence
-- [ ] Drag-and-drop reordering
-- [ ] Search and filter
+- [x] Path construction algorithm (merging, splitting, edge cases)
+- [ ] Expand/collapse state persistence (requires widget tests)
+- [ ] Drag-and-drop reordering (requires widget tests)
+- [ ] Search and filter (requires widget tests)
 
 ---
 
-## Priority 5: Utilities and Helpers
+## Priority 5: Utilities and Helpers ✅
 
 Lower risk, but worth covering for completeness.
 
 ### API Exception Handling (`logic/proto/api_exception.dart`)
-- [ ] Error code parsing
-- [ ] User-friendly error message mapping
-- [ ] Unexpected error fallback
+- [x] Skipped (trivial pass-throughs, not worth testing)
 
 ### String Utilities (`utils/string.dart`)
-- [ ] Formatting functions
-- [ ] Case conversion
-- [ ] Singularization/pluralization
+- [x] Formatting functions (formatted, join)
+- [x] Case conversion (titleCase, snakeCase)
+- [x] Singularization (singular)
+- [x] Helpers (asInt, nullIfEmpty)
+- [x] Code generation (generateCode)
 
 ### Collection Utilities (`utils/collection.dart`, `utils/map.dart`)
 - [x] Recursive merging/masking (existing tests)
-- [ ] Edge cases for deep merge conflicts
+- [x] Random selection (randomOrNull, randomElement, randomSubset)
+- [x] List utilities (indices, joinWith, intersection)
+- [x] Iterable utilities (minByOrNull, maxByOrNull, excluding, allAre)
+- [x] stringMap conversion function
 
 ---
 
