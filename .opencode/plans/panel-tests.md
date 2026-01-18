@@ -13,18 +13,18 @@ The panel has partial test coverage for low-level utilities (DynamicData, collec
 These are the foundation systems. If they break, the entire app is unusable.
 
 ### NATS Communication (`logic/nats.dart`)
-- [ ] Connection lifecycle: connect, disconnect, reconnect on failure
+- [x] Connection lifecycle: connect, disconnect, reconnect on failure
 - [ ] JWT handling and refresh before expiry
-- [ ] Inbox prefixing for request/response patterns
-- [ ] Protobuf request/response serialization
-- [ ] Error handling for timeouts and no responders
-- [ ] Streaming subscription management
+- [x] Inbox prefixing for request/response patterns
+- [x] Protobuf request/response serialization
+- [x] Error handling for timeouts and no responders
+- [x] Streaming subscription management
 
 ### Authentication (`logic/auth.dart`)
 - [ ] OAuth2 flow state management
-- [ ] User info parsing from JWT claims
+- [x] User info parsing from JWT claims
 - [ ] Token refresh handling
-- [ ] Logout cleanup of dependent state
+- [x] Logout cleanup of dependent state
 - [ ] Error states: network failure, invalid token, expired session
 
 ---
