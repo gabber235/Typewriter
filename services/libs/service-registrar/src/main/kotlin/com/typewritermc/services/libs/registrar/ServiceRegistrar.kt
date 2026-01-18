@@ -2,11 +2,13 @@ package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
+import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.NatsMessageBus
 import com.typewritermc.services.libs.communicator.interfaces.NatsRegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.api.NatsClient
@@ -21,8 +23,25 @@ import org.koin.dsl.onClose
 
 val SERVICE_REGISTRAR_MODULE = module {
     singleOf(::ServiceRegistrar) onClose { it?.shutdown() }
-    singleOf<CredentialIssuer>(::BackendCredentialIssuer)
-    singleOf<JwtExchanger>(::AuthentikJwtExchanger)
+
+    single<HttpClient> { SimpleHttpClient() }
+
+    single<CredentialIssuer> {
+        BackendCredentialIssuer(
+            httpClient = get(),
+            serviceIssueUrl = get(named("service-issue-url")),
+            servicesInfo = get()
+        )
+    }
+
+    single<JwtExchanger> {
+        AuthentikJwtExchanger(
+            httpClient = get(),
+            tokenEndpoint = get(named("jwt-token-endpoint")),
+            clientId = get(named("jwt-client-id")),
+            scopes = get(named("jwt-scopes"))
+        )
+    }
 
     single(named("service-issue-url")) {
         val apiBase: String = get(named("api-base-url"))

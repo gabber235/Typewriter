@@ -1,32 +1,28 @@
 package com.typewritermc.services.libs.registrar
 
-import jdk.internal.joptsimple.internal.Messages.message
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
+import com.typewritermc.services.libs.communicator.interfaces.HttpClient
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import protokt.v1.typewriter.api.v1.IssueServiceIdentityRequest
 import protokt.v1.typewriter.api.v1.IssueServiceIdentityResponse
 import protokt.v1.typewriter.models.v1.ServiceMetadata
 import protokt.v1.typewriter.models.v1.ServiceType
-import java.net.HttpURLConnection
-import java.net.URI
+import java.io.ByteArrayOutputStream
 
-/**
- * Represents an entity capable of issuing credentials.
- *
- * Implementations of this interface are responsible for generating and issuing
- * instances of the [Credential] class. These credentials can then be used for
- * authentication and authorization purposes within the typewriter cloud.
- */
 interface CredentialIssuer {
     fun issueCredential(): Credential
 }
 
-class BackendCredentialIssuer : CredentialIssuer, KoinComponent {
-    private val serviceIssueUrl: String by inject(named("service-issue-url"))
-    private val servicesInfo: ServicesInfo by inject()
+class BackendCredentialIssuer(
+    private val httpClient: HttpClient,
+    private val serviceIssueUrl: String,
+    private val servicesInfo: ServicesInfo
+) : CredentialIssuer {
+    private val logger: KLogger = logger {}
 
     override fun issueCredential(): Credential {
+        logger.debug { "Issuing new service credential from $serviceIssueUrl" }
+
         val request = IssueServiceIdentityRequest {
             metadata = ServiceMetadata {
                 servicesInfo.realm?.let { realmVersion = it.version }
@@ -38,38 +34,49 @@ class BackendCredentialIssuer : CredentialIssuer, KoinComponent {
             }
         }
 
-        val url = URI(serviceIssueUrl).toURL()
-        val connection = url.openConnection() as HttpURLConnection
+        val requestBytes = ByteArrayOutputStream().also { request.serialize(it) }.toByteArray()
+        val headers = mapOf("Content-Type" to "application/x-protobuf")
 
-        connection.requestMethod = "POST"
-        connection.doOutput = true
-        connection.setRequestProperty("Content-Type", "application/x-protobuf")
-
-        request.serialize(connection.outputStream)
-
-        val responseCode = connection.responseCode
-        val stream = if (responseCode in 200..299) {
-            connection.inputStream
-        } else {
-            connection.errorStream
+        val response = try {
+            httpClient.post(serviceIssueUrl, requestBytes, headers)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to issue credential: connection error" }
+            throw IssueException("Failed to issue credential: ${e.message}", e)
         }
 
-        val response = IssueServiceIdentityResponse.deserialize(stream)
+        if (!response.isSuccessful) {
+            val errorBody = response.body.bufferedReader().readText()
+            logger.error { "Credential issuance failed: HTTP ${response.statusCode} - $errorBody" }
+            throw IssueException("Failed to issue credential: HTTP ${response.statusCode}")
+        }
 
-        return when (val result = response.result) {
-            is IssueServiceIdentityResponse.Result.Credentials -> Credential(
-                id = result.credentials.serviceId,
-                name = result.credentials.username,
-                token = result.credentials.token
-            )
+        val protoResponse = try {
+            IssueServiceIdentityResponse.deserialize(response.body)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to parse credential response" }
+            throw IssueException("Failed to parse credential response", e)
+        }
 
-            is IssueServiceIdentityResponse.Result.Error -> throw IssueException(
-                "Service returned error (${result.error.code}): ${result.error.message}"
-            )
+        return when (val result = protoResponse.result) {
+            is IssueServiceIdentityResponse.Result.Credentials -> {
+                logger.info { "Credential issued successfully: ${result.credentials.serviceId}" }
+                Credential(
+                    id = result.credentials.serviceId,
+                    name = result.credentials.username,
+                    token = result.credentials.token
+                )
+            }
+
+            is IssueServiceIdentityResponse.Result.Error -> {
+                logger.error { "Backend returned error: ${result.error.code} - ${result.error.message}" }
+                throw IssueException(
+                    "Service returned error (${result.error.code}): ${result.error.message}"
+                )
+            }
 
             null -> throw IssueException("Empty response from identity service")
         }
     }
 }
 
-class IssueException(message: String) : RuntimeException(message)
+class IssueException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

@@ -1,21 +1,14 @@
 package com.typewritermc.services.libs.registrar
 
+import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
-import java.net.HttpURLConnection
-import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-/**
- * Response from OAuth2 token endpoint.
- */
 @Serializable
 data class TokenResponse(
     @SerialName("access_token") val accessToken: String,
@@ -24,36 +17,18 @@ data class TokenResponse(
     @SerialName("token_type") val tokenType: String
 )
 
-/**
- * Interface for exchanging service credentials for JWT tokens.
- *
- * Implementations are responsible for exchanging a [Credential]'s username
- * and token (app password) for a JWT access token from the authentication provider.
- */
 interface JwtExchanger {
-    /**
-     * Exchanges the given credential for a JWT access token.
-     *
-     * @param credential The service credential containing username and app password
-     * @return TokenResponse containing the access token and metadata
-     * @throws JwtExchangeException if the exchange fails
-     */
     fun exchangeForJwt(credential: Credential): TokenResponse
 }
 
-/**
- * Implementation of [JwtExchanger] that exchanges credentials via Authentik OAuth2.
- *
- * Uses the client credentials grant type with username/password to exchange
- * service credentials (username + app password) for JWT tokens.
- */
-class AuthentikJwtExchanger : JwtExchanger, KoinComponent {
+class AuthentikJwtExchanger(
+    private val httpClient: HttpClient,
+    private val tokenEndpoint: String,
+    private val clientId: String,
+    private val scopes: String
+) : JwtExchanger {
     private val logger: KLogger = logger {}
     private val json = Json { ignoreUnknownKeys = true }
-
-    private val tokenEndpoint: String by inject(named("jwt-token-endpoint"))
-    private val clientId: String by inject(named("jwt-client-id"))
-    private val scopes: String by inject(named("jwt-scopes"))
 
     override fun exchangeForJwt(credential: Credential): TokenResponse {
         logger.debug { "Exchanging credential for JWT: ${credential.name}" }
@@ -66,24 +41,20 @@ class AuthentikJwtExchanger : JwtExchanger, KoinComponent {
             "scope" to scopes
         )
 
-        val url = URI(tokenEndpoint).toURL()
-        val connection = url.openConnection() as HttpURLConnection
+        val headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
 
-        connection.requestMethod = "POST"
-        connection.doOutput = true
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-
-        connection.outputStream.use { outputStream ->
-            outputStream.write(formData.toByteArray(StandardCharsets.UTF_8))
+        val response = try {
+            httpClient.post(tokenEndpoint, formData.toByteArray(StandardCharsets.UTF_8), headers)
+        } catch (e: Exception) {
+            logger.error(e) { "JWT exchange failed: connection error" }
+            throw JwtExchangeException("Failed to exchange credential for JWT: ${e.message}", e)
         }
 
-        val responseCode = connection.responseCode
-        val responseBody = if (responseCode in 200..299) {
-            connection.inputStream.bufferedReader().readText()
-        } else {
-            val errorBody = connection.errorStream?.bufferedReader()?.readText() ?: "No error body"
-            logger.error { "JWT exchange failed: $responseCode - $errorBody" }
-            throw JwtExchangeException("Failed to exchange credential for JWT: HTTP $responseCode - $errorBody")
+        val responseBody = response.body.bufferedReader().readText()
+
+        if (!response.isSuccessful) {
+            logger.error { "JWT exchange failed: ${response.statusCode} - $responseBody" }
+            throw JwtExchangeException("Failed to exchange credential for JWT: HTTP ${response.statusCode} - $responseBody")
         }
 
         return try {
@@ -101,7 +72,4 @@ class AuthentikJwtExchanger : JwtExchanger, KoinComponent {
     }
 }
 
-/**
- * Exception thrown when JWT exchange fails.
- */
 class JwtExchangeException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
