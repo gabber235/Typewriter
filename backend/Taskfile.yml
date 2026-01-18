@@ -129,6 +129,84 @@ tasks:
       - task: build:all
       - cd tests && cargo test --test integration {{.CLI_ARGS}}
 
+  test:flaky:
+    desc: "Detect flaky tests by running the suite multiple times (run build:all first)"
+    vars:
+      ITERATIONS: '{{default "10" .ITERATIONS}}'
+      RETRIES: '{{default "2" .RETRIES}}'
+      FILTER: '{{default "" .FILTER}}'
+    cmds:
+      - |
+        echo "Checking for cargo-nextest..."
+        if ! command -v cargo-nextest >/dev/null 2>&1; then
+          echo "Installing cargo-nextest..."
+          cargo install cargo-nextest
+        fi
+        
+        echo ""
+        FILTER_DESC="{{.FILTER}}"
+        if [ -z "$FILTER_DESC" ]; then
+          FILTER_DESC="all tests"
+        fi
+        echo "Running $FILTER_DESC {{.ITERATIONS}} times with {{.RETRIES}} retries each..."
+        echo "This will identify tests that fail intermittently."
+        echo "(Run 'task build:all' first if components are not built)"
+        echo "=================================================="
+        
+        # Track failures across all iterations
+        declare -A failure_counts
+        total_runs=0
+        
+        for i in $(seq 1 {{.ITERATIONS}}); do
+          echo ""
+          echo ">>> Iteration $i/{{.ITERATIONS}}"
+          total_runs=$((total_runs + 1))
+          
+          # Run tests with retries, capture output
+          # Tests that pass on retry are marked FLAKY
+          if [ -z "{{.FILTER}}" ]; then
+            output=$(cd tests && cargo nextest run --retries {{.RETRIES}} --no-fail-fast 2>&1) || true
+          else
+            output=$(cd tests && cargo nextest run --retries {{.RETRIES}} --no-fail-fast -E "test({{.FILTER}})" 2>&1) || true
+          fi
+          
+          # Extract failed tests (after all retries exhausted)
+          while IFS= read -r line; do
+            if [[ "$line" =~ FAIL.*[[:space:]]([a-zA-Z0-9_:]+) ]]; then
+              test_name="${BASH_REMATCH[1]}"
+              failure_counts["$test_name"]=$((${failure_counts["$test_name"]:-0} + 1))
+            fi
+          done <<< "$output"
+          
+          # Extract flaky tests (failed then passed on retry)
+          while IFS= read -r line; do
+            if [[ "$line" =~ FLAKY.*[[:space:]]([a-zA-Z0-9_:]+) ]]; then
+              test_name="${BASH_REMATCH[1]}"
+              failure_counts["$test_name"]=$((${failure_counts["$test_name"]:-0} + 1))
+            fi
+          done <<< "$output"
+        done
+        
+        echo ""
+        echo "=================================================="
+        echo "FLAKINESS REPORT (after {{.ITERATIONS}} iterations)"
+        echo "=================================================="
+        
+        if [ ${#failure_counts[@]} -eq 0 ]; then
+          echo "No flaky tests detected!"
+        else
+          printf "%-60s | %8s | %6s\n" "Test Name" "Failures" "Rate"
+          echo "-------------------------------------------------------------+----------+-------"
+          for test in "${!failure_counts[@]}"; do
+            count=${failure_counts[$test]}
+            rate=$((count * 100 / total_runs))
+            printf "%-60s | %8d | %5d%%\n" "$test" "$count" "$rate"
+          done | sort -t'|' -k3 -rn
+        fi
+        
+        echo ""
+        echo "Total iterations: $total_runs"
+
   default:
     desc: Show available tasks
     cmds:
