@@ -1,7 +1,7 @@
-//! Integration tests for the service heartbeat handler.
+//! Integration tests for the service shutdown handler.
 
 use anyhow::Result;
-use backend_tests::proto::typewriter::api::v1::ServiceHeartbeatRequest;
+use backend_tests::proto::typewriter::api::v1::{ServiceHeartbeatRequest, ServiceShutdownRequest};
 use backend_tests::{get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient};
 use repeated_assert::that_async;
 use std::time::Duration;
@@ -27,45 +27,163 @@ async fn get_state(
     check.and_then(|c| c.state)
 }
 
-async fn get_last_seen(
-    db: &Surreal<surrealdb::engine::any::Any>,
-    service_id: &str,
-) -> Option<Datetime> {
-    get_state(db, service_id).await.and_then(|s| s.last_seen)
-}
-
-#[allow(dead_code)]
-async fn get_status(
-    db: &Surreal<surrealdb::engine::any::Any>,
-    service_id: &str,
-) -> Option<String> {
-    get_state(db, service_id).await.and_then(|s| s.status)
-}
-
 #[tokio::test]
-async fn test_heartbeat_updates_last_seen_timestamp() -> Result<()> {
+async fn test_shutdown_sets_status_to_offline() -> Result<()> {
     let fixtures = get_fixtures().await;
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
 
-    let org = OrganizationBuilder::new("heartbeat_org")
+    let org = OrganizationBuilder::new("shutdown_org")
         .create(&fixtures.infra.db)
         .await?;
 
-    let service = ServiceBuilder::new("heartbeat_service")
+    let service = ServiceBuilder::new("shutdown_service")
         .service_type("engine")
         .organization(&org)
         .create(&fixtures.infra.db)
         .await?;
 
-    let before = get_state(&fixtures.infra.db, &service.id).await;
-    assert!(
-        before.is_none(),
-        "state should be None before heartbeat"
+    // First send a heartbeat to set the service online
+    let heartbeat_subject = format!("typewriter.in.service.{}.heartbeat", service.id);
+    nats.publish(&heartbeat_subject, &ServiceHeartbeatRequest {})
+        .await?;
+
+    let db = fixtures.infra.db.clone();
+    let service_id = service.id.clone();
+    that_async(20, Duration::from_millis(50), || {
+        let db = db.clone();
+        let service_id = service_id.clone();
+        async move {
+            let state = get_state(&db, &service_id).await;
+            assert!(
+                state.is_some_and(|s| s.status.as_deref() == Some("ONLINE")),
+                "service should be ONLINE after heartbeat"
+            );
+        }
+    })
+    .await;
+
+    // Now send shutdown
+    let shutdown_subject = format!("typewriter.in.service.{}.shutdown", service.id);
+    nats.publish(&shutdown_subject, &ServiceShutdownRequest {})
+        .await?;
+
+    let db = fixtures.infra.db.clone();
+    let service_id = service.id.clone();
+    that_async(20, Duration::from_millis(50), || {
+        let db = db.clone();
+        let service_id = service_id.clone();
+        async move {
+            let state = get_state(&db, &service_id).await;
+            assert!(state.is_some(), "state should be set after shutdown");
+            assert_eq!(
+                state.unwrap().status.as_deref(),
+                Some("OFFLINE"),
+                "status should be OFFLINE after shutdown"
+            );
+        }
+    })
+    .await;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_shutdown_updates_last_seen() -> Result<()> {
+    let fixtures = get_fixtures().await;
+    let nats = TestNatsClient::new(fixtures.infra.nats_client());
+
+    let org = OrganizationBuilder::new("shutdown_lastseen_org")
+        .create(&fixtures.infra.db)
+        .await?;
+
+    let service = ServiceBuilder::new("shutdown_lastseen_service")
+        .service_type("realm")
+        .organization(&org)
+        .create(&fixtures.infra.db)
+        .await?;
+
+    let before_shutdown = chrono::Utc::now();
+
+    let shutdown_subject = format!("typewriter.in.service.{}.shutdown", service.id);
+    nats.publish(&shutdown_subject, &ServiceShutdownRequest {})
+        .await?;
+
+    let db = fixtures.infra.db.clone();
+    let service_id = service.id.clone();
+    that_async(20, Duration::from_millis(50), || {
+        let db = db.clone();
+        let service_id = service_id.clone();
+        async move {
+            let state = get_state(&db, &service_id).await;
+            assert!(state.is_some(), "state should be set after shutdown");
+        }
+    })
+    .await;
+
+    let after_shutdown = chrono::Utc::now();
+
+    let state = get_state(&fixtures.infra.db, &service.id)
+        .await
+        .expect("state should be set");
+
+    assert_eq!(
+        state.status.as_deref(),
+        Some("OFFLINE"),
+        "status should be OFFLINE"
     );
 
-    let subject = format!("typewriter.in.service.{}.heartbeat", service.id);
-    let request = ServiceHeartbeatRequest {};
-    nats.publish(&subject, &request).await?;
+    let last_seen = state.last_seen.expect("last_seen should be set");
+    let last_seen_time = last_seen.0;
+    assert!(
+        last_seen_time >= before_shutdown && last_seen_time <= after_shutdown,
+        "last_seen ({:?}) should be between {:?} and {:?}",
+        last_seen_time,
+        before_shutdown,
+        after_shutdown
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_shutdown_can_be_followed_by_heartbeat() -> Result<()> {
+    let fixtures = get_fixtures().await;
+    let nats = TestNatsClient::new(fixtures.infra.nats_client());
+
+    let org = OrganizationBuilder::new("shutdown_recovery_org")
+        .create(&fixtures.infra.db)
+        .await?;
+
+    let service = ServiceBuilder::new("shutdown_recovery_service")
+        .service_type("engine")
+        .organization(&org)
+        .create(&fixtures.infra.db)
+        .await?;
+
+    // Send shutdown first
+    let shutdown_subject = format!("typewriter.in.service.{}.shutdown", service.id);
+    nats.publish(&shutdown_subject, &ServiceShutdownRequest {})
+        .await?;
+
+    let db = fixtures.infra.db.clone();
+    let service_id = service.id.clone();
+    that_async(20, Duration::from_millis(50), || {
+        let db = db.clone();
+        let service_id = service_id.clone();
+        async move {
+            let state = get_state(&db, &service_id).await;
+            assert!(
+                state.is_some_and(|s| s.status.as_deref() == Some("OFFLINE")),
+                "service should be OFFLINE after shutdown"
+            );
+        }
+    })
+    .await;
+
+    // Now send heartbeat - simulating service restart
+    let heartbeat_subject = format!("typewriter.in.service.{}.heartbeat", service.id);
+    nats.publish(&heartbeat_subject, &ServiceHeartbeatRequest {})
+        .await?;
 
     let db = fixtures.infra.db.clone();
     let service_id = service.id.clone();
@@ -75,132 +193,10 @@ async fn test_heartbeat_updates_last_seen_timestamp() -> Result<()> {
         async move {
             let state = get_state(&db, &service_id).await;
             assert!(state.is_some(), "state should be set after heartbeat");
-            let state = state.unwrap();
             assert_eq!(
-                state.status.as_deref(),
+                state.unwrap().status.as_deref(),
                 Some("ONLINE"),
-                "status should be ONLINE after heartbeat"
-            );
-            assert!(
-                state.last_seen.is_some(),
-                "last_seen should be set after heartbeat"
-            );
-        }
-    })
-    .await;
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_heartbeat_updates_last_seen_to_recent_time() -> Result<()> {
-    let fixtures = get_fixtures().await;
-    let nats = TestNatsClient::new(fixtures.infra.nats_client());
-
-    let org = OrganizationBuilder::new("heartbeat_recent_org")
-        .create(&fixtures.infra.db)
-        .await?;
-
-    let service = ServiceBuilder::new("heartbeat_recent_service")
-        .service_type("realm")
-        .organization(&org)
-        .create(&fixtures.infra.db)
-        .await?;
-
-    let before_heartbeat = chrono::Utc::now();
-
-    let subject = format!("typewriter.in.service.{}.heartbeat", service.id);
-    let request = ServiceHeartbeatRequest {};
-    nats.publish(&subject, &request).await?;
-
-    let db = fixtures.infra.db.clone();
-    let service_id = service.id.clone();
-    that_async(20, Duration::from_millis(50), || {
-        let db = db.clone();
-        let service_id = service_id.clone();
-        async move {
-            let state = get_state(&db, &service_id).await;
-            assert!(state.is_some(), "state should be set");
-        }
-    })
-    .await;
-
-    let after_heartbeat = chrono::Utc::now();
-
-    let state = get_state(&fixtures.infra.db, &service.id)
-        .await
-        .expect("state should be set");
-
-    assert_eq!(
-        state.status.as_deref(),
-        Some("ONLINE"),
-        "status should be ONLINE"
-    );
-
-    let last_seen = state.last_seen.expect("last_seen should be set");
-    let last_seen_time = last_seen.0;
-    assert!(
-        last_seen_time >= before_heartbeat && last_seen_time <= after_heartbeat,
-        "last_seen ({:?}) should be between {:?} and {:?}",
-        last_seen_time,
-        before_heartbeat,
-        after_heartbeat
-    );
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_multiple_heartbeats_update_last_seen() -> Result<()> {
-    let fixtures = get_fixtures().await;
-    let nats = TestNatsClient::new(fixtures.infra.nats_client());
-
-    let org = OrganizationBuilder::new("heartbeat_multi_org")
-        .create(&fixtures.infra.db)
-        .await?;
-
-    let service = ServiceBuilder::new("heartbeat_multi_service")
-        .service_type("engine")
-        .organization(&org)
-        .create(&fixtures.infra.db)
-        .await?;
-
-    let subject = format!("typewriter.in.service.{}.heartbeat", service.id);
-    let request = ServiceHeartbeatRequest {};
-
-    nats.publish(&subject, &request).await?;
-
-    let db = fixtures.infra.db.clone();
-    let service_id = service.id.clone();
-    that_async(20, Duration::from_millis(50), || {
-        let db = db.clone();
-        let service_id = service_id.clone();
-        async move {
-            let state = get_state(&db, &service_id).await;
-            assert!(state.is_some(), "first state should be set");
-        }
-    })
-    .await;
-
-    let first_state = get_state(&fixtures.infra.db, &service.id)
-        .await
-        .expect("first state should exist");
-    let first_last_seen = first_state.last_seen.expect("first last_seen should exist");
-
-    nats.publish(&subject, &request).await?;
-
-    let db = fixtures.infra.db.clone();
-    let service_id = service.id.clone();
-    let first_ts = first_last_seen.0;
-    that_async(20, Duration::from_millis(50), || {
-        let db = db.clone();
-        let service_id = service_id.clone();
-        async move {
-            let state = get_state(&db, &service_id).await;
-            let ts = state.and_then(|s| s.last_seen).map(|ls| ls.0);
-            assert!(
-                ts.is_some_and(|t| t >= first_ts),
-                "second last_seen should be >= first"
+                "status should be ONLINE after heartbeat following shutdown"
             );
         }
     })

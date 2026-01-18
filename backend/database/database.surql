@@ -115,7 +115,14 @@ DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
   DEFAULT time::now() READONLY VALUE $before OR time::now()
   PERMISSIONS NONE;
 
-DEFINE FIELD OVERWRITE last_seen ON service TYPE option<datetime>
+-- Service state containing status and last_seen timestamp
+DEFINE FIELD OVERWRITE state ON service TYPE option<object>
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE state.status ON service TYPE option<'ONLINE' | 'OFFLINE'>
+  PERMISSIONS NONE;
+
+DEFINE FIELD OVERWRITE state.last_seen ON service TYPE option<datetime>
   PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE metadata ON service TYPE option<object>
