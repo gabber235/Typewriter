@@ -95,9 +95,8 @@ abstract class JoinCode with _$JoinCode {
 /// Auto-accept configuration for a join code.
 @freezed
 abstract class JoinCodeAutoAccept with _$JoinCodeAutoAccept {
-  const factory JoinCodeAutoAccept({
-    required List<String> roleIds,
-  }) = _JoinCodeAutoAccept;
+  const factory JoinCodeAutoAccept({required List<String> roleIds}) =
+      _JoinCodeAutoAccept;
 }
 
 /// Expiration configuration for generating a join code.
@@ -189,8 +188,7 @@ class OrganizationRoles extends _$OrganizationRoles {
 
     final request = role_api.ListRolesRequest();
     final stream = ref.requestProtoThenListen(
-      subject:
-          "cloud.out.user.$userId.organization.$organizationId.roles.list",
+      subject: "cloud.out.user.$userId.organization.$organizationId.roles.list",
       listenSubject: "cloud.in.organization.$organizationId.roles.list",
       request: request,
       responseBuilder: role_api.ListRolesResponse.new,
@@ -292,7 +290,7 @@ class OrganizationMembers extends _$OrganizationMembers {
 
     try {
       final request = member_api.UpdateMemberRolesRequest()
-        ..memberId = memberId
+        ..userId = memberId
         ..roleIds.addAll(roles.map((r) => r.id));
 
       final response = await ref
@@ -345,7 +343,7 @@ class OrganizationMembers extends _$OrganizationMembers {
     );
 
     try {
-      final request = member_api.RemoveMemberRequest()..memberId = memberId;
+      final request = member_api.RemoveMemberRequest()..userId = memberId;
 
       final response = await ref
           .read(natsProvider)
