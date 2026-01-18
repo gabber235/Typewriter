@@ -25,6 +25,7 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 
 jline = { module = "org.jline:jline", version.ref = "jline" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+clikt-testing = { module = "com.github.ajalt.clikt:clikt-testing", version.ref = "clikt" }
 
 kotlin-logging-jvm = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
@@ -47,6 +48,7 @@ kotlin-serialize-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-
 kotlin-serialize-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialize" }
 
 kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
+kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -60,4 +62,4 @@ gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "grad
 
 [bundles]
 basic-implementation = ["kotlin-stdlib", "koin-core", "kotlin-logging-jvm", "kotlin-coroutines-core"]
-basic-test = ["koin-test", "kotest-runner", "kotest-assertions", "kotest-property", "mockk"]
+basic-test = ["koin-test", "kotest-runner", "kotest-assertions", "kotest-property", "mockk", "kotlin-coroutines-test"]
