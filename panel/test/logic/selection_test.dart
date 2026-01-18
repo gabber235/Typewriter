@@ -98,7 +98,6 @@ void main() {
   group("Selection state machine", () {
     test("single select on empty selection adds item", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       container
@@ -110,7 +109,6 @@ void main() {
 
     test("single select replaces existing selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -127,7 +125,6 @@ void main() {
 
     test("single select on already selected sole item clears selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
 
@@ -145,7 +142,6 @@ void main() {
       "single select on already selected item with multiple keeps only that item",
       () {
         final container = ProviderContainer.test();
-        addTearDown(container.dispose);
 
         final idA = MockSelectableIdentifier("A");
         final idB = MockSelectableIdentifier("B");
@@ -161,7 +157,6 @@ void main() {
 
     test("multi-select adds to existing selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -178,7 +173,6 @@ void main() {
 
     test("multi-select on already selected item removes it", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -193,7 +187,6 @@ void main() {
 
     test("selectAll replaces selection by default", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -209,7 +202,6 @@ void main() {
 
     test("selectAll appends when replaceCurrentSelection is false", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -226,7 +218,6 @@ void main() {
 
     test("unselect removes specific item", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -239,7 +230,6 @@ void main() {
 
     test("unselect on non-existent item is no-op", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -254,7 +244,6 @@ void main() {
 
     test("unselectAll removes multiple items", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -268,7 +257,6 @@ void main() {
 
     test("clear empties selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -363,14 +351,12 @@ void main() {
   group("hasSelection and isSelected providers", () {
     test("hasSelection returns false when empty", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       expect(container.read(hasSelectionProvider), isFalse);
     });
 
     test("hasSelection returns true when items selected", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       container
@@ -382,7 +368,6 @@ void main() {
 
     test("isSelected returns true for selected item", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idB = MockSelectableIdentifier("B");
@@ -395,7 +380,6 @@ void main() {
 
     test("isSelected returns false for non-selected item", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final idC = MockSelectableIdentifier("C");
@@ -411,7 +395,6 @@ void main() {
   group("Selected provider", () {
     test("returns empty list when no selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final selected = container.read(selectedProvider);
 
@@ -421,7 +404,6 @@ void main() {
 
     test("returns resolved selectables for valid identifiers", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"field": "valueA"});
       final idB = MockSelectableIdentifier("B", {"field": "valueB"});
@@ -438,7 +420,6 @@ void main() {
 
     test("returns loading state when identifier returns loading", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A");
       final loadingId = LoadingSelectableIdentifier("loading");
@@ -452,7 +433,6 @@ void main() {
 
     test("updateFieldValue calls setFieldValue on all selectables", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"field": "oldA"});
       final idB = MockSelectableIdentifier("B", {"field": "oldB"});
@@ -477,7 +457,6 @@ void main() {
   group("fieldValue provider", () {
     test("returns loading when selected is loading", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final loadingId = LoadingSelectableIdentifier("loading");
       container
@@ -491,7 +470,6 @@ void main() {
 
     test("returns none when selection is empty", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final value = container.read(fieldValueProvider("field"));
 
@@ -500,7 +478,6 @@ void main() {
 
     test("returns value for single selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"field": "hello"});
       container
@@ -515,7 +492,6 @@ void main() {
 
     test("returns value when all items have same value", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"field": "same"});
       final idB = MockSelectableIdentifier("B", {"field": "same"});
@@ -531,7 +507,6 @@ void main() {
 
     test("returns conflict when items have different values", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"field": "valueA"});
       final idB = MockSelectableIdentifier("B", {"field": "valueB"});
@@ -545,7 +520,6 @@ void main() {
 
     test("returns none when field value is null", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"field": null});
       container
@@ -561,7 +535,6 @@ void main() {
   group("selectedDataBlueprint provider", () {
     test("returns null when no selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final blueprint = container.read(selectedDataBlueprintProvider);
 
@@ -570,7 +543,6 @@ void main() {
 
     test("returns blueprint for single selection", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"name": "test", "count": 42});
       container
@@ -586,7 +558,6 @@ void main() {
 
     test("returns overlapping blueprint for multiple selections", () {
       final container = ProviderContainer.test();
-      addTearDown(container.dispose);
 
       final idA = MockSelectableIdentifier("A", {"shared": "a", "uniqueA": 1});
       final idB = MockSelectableIdentifier("B", {"shared": "b", "uniqueB": 2});
