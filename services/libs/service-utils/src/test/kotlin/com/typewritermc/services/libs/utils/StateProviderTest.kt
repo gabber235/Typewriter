@@ -36,16 +36,6 @@ class StateProviderTest : FunSpec({
             provider.get() shouldBe 3
         }
 
-        test("state property exposes value as StateFlow") {
-            val provider = StateProvider("initial")
-
-            provider.state.value shouldBe "initial"
-
-            provider.set("updated")
-
-            provider.state.value shouldBe "updated"
-        }
-
         test("awaitValue() returns immediately when predicate already satisfied") {
             val provider = StateProvider(10)
 

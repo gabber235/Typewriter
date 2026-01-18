@@ -25,7 +25,6 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 
 jline = { module = "org.jline:jline", version.ref = "jline" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
-clikt-testing = { module = "com.github.ajalt.clikt:clikt-testing", version.ref = "clikt" }
 
 kotlin-logging-jvm = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
