@@ -70,8 +70,9 @@ class DynamicData {
   List<dynamic> _crawlInList(List<dynamic> list, String part) {
     if (part == "*") {
       return list;
-    } else if (int.tryParse(part) != null && list.length > int.parse(part)) {
-      return [list[int.parse(part)]];
+    } else if (int.tryParse(part) case final index?
+        when index >= 0 && index < list.length) {
+      return [list[index]];
     }
     return [];
   }
@@ -296,7 +297,8 @@ class DynamicData {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is DynamicData && mapEquals(data, other.data);
+      identical(this, other) ||
+      other is DynamicData && mapEquals(data, other.data);
 
   @override
   int get hashCode => data.hashCode;
