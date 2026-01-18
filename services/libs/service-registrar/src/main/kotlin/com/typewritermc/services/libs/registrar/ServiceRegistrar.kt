@@ -1,70 +1,29 @@
 package com.typewritermc.services.libs.registrar
 
+import com.typewritermc.services.libs.communicator.DeferredProvider
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
-import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.NatsMessageBus
 import com.typewritermc.services.libs.communicator.interfaces.NatsRegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
-import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.api.NatsClient
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.context.loadKoinModules
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
-import org.koin.dsl.module
-import org.koin.dsl.onClose
-
-val SERVICE_REGISTRAR_MODULE = module {
-    singleOf(::ServiceRegistrar) onClose { it?.shutdown() }
-
-    single<HttpClient> { SimpleHttpClient() }
-
-    single<CredentialIssuer> {
-        BackendCredentialIssuer(
-            httpClient = get(),
-            serviceIssueUrl = get(named("service-issue-url")),
-            servicesInfo = get()
-        )
-    }
-
-    single<JwtExchanger> {
-        AuthentikJwtExchanger(
-            httpClient = get(),
-            tokenEndpoint = get(named("jwt-token-endpoint")),
-            clientId = get(named("jwt-client-id")),
-            scopes = get(named("jwt-scopes"))
-        )
-    }
-
-    single(named("service-issue-url")) {
-        val apiBase: String = get(named("api-base-url"))
-        "$apiBase/service/identity/issue"
-    }
-
-    single(named("jwt-token-endpoint")) {
-        val authBase: String = get(named("auth-base-url"))
-        "$authBase/application/o/token/"
-    }
-    single(named("jwt-client-id")) {
-        getProperty("JWT_CLIENT_ID", "typewriter-services")
-    }
-    single(named("jwt-scopes")) {
-        getProperty("JWT_SCOPES", "openid profile entitlements")
-    }
-}
 
 class ServiceRegistrar(
     private val credentialStorage: CredentialStorage,
     private val credentialIssuer: CredentialIssuer,
     private val jwtExchanger: JwtExchanger,
-) : KoinComponent {
+    private val communicator: NatsCommunicator,
+    private val credentialProvider: DeferredProvider<Credential>,
+    private val jwtProviderHolder: DeferredProvider<JwtProvider>,
+    private val natsClientProvider: DeferredProvider<NatsClient>,
+    private val messageBusProvider: DeferredProvider<MessageBus>,
+    private val registrationClientProvider: DeferredProvider<RegistrationClient>,
+    private val reconnectorProvider: DeferredProvider<Reconnector>,
+) {
     private val logger: KLogger = logger {}
 
     private var credential: Credential? = null
@@ -84,15 +43,14 @@ class ServiceRegistrar(
         }
 
         this.credential = cred
-
-        loadKoinModules(module { single { cred } })
+        credentialProvider.set(cred)
 
         registerJwtProvider()
         setupNatsConnection()
         registerInterfaceBindings()
 
-        val registrationClient: RegistrationClient by inject()
-        val reconnector: Reconnector by inject()
+        val registrationClient = registrationClientProvider.get()
+        val reconnector = reconnectorProvider.get()
         val registrationProtocol = RegistrationProtocol(registrationClient, cred, reconnector)
         val state = registrationProtocol.checkAndRegister()
         when (state) {
@@ -111,60 +69,36 @@ class ServiceRegistrar(
         logger.info { "Service registrar initialized" }
     }
 
-    /**
-     * Late register the JwtProvider implementation.
-     * This allows service-communicator to use JWT without circular dependencies.
-     */
     private fun registerJwtProvider() {
         logger.debug { "Registering JwtProvider implementation" }
 
-        val jwtProviderModule = module {
-            single<JwtProvider> {
-                JwtProviderImpl(
-                    credentialProvider = { credential },
-                    jwtExchanger = jwtExchanger
-                )
-            }
-        }
+        val jwtProvider = JwtProviderImpl(
+            credentialProvider = { credential },
+            jwtExchanger = jwtExchanger
+        )
 
-        loadKoinModules(jwtProviderModule)
+        jwtProviderHolder.set(jwtProvider)
         logger.debug { "JwtProvider registered" }
     }
 
-    /**
-     * Setup NATS connection using the communicator.
-     */
     private suspend fun setupNatsConnection() {
         logger.info { "Setting up NATS connection" }
-
-        val communicator: NatsCommunicator by inject()
         communicator.connect()
-
         logger.info { "NATS connection established" }
     }
 
-    /**
-     * Register interface bindings for dependency injection.
-     * These bindings wrap the concrete implementations with testable interfaces.
-     */
-    private fun registerInterfaceBindings() {
+    private suspend fun registerInterfaceBindings() {
         logger.debug { "Registering interface bindings" }
 
-        val interfaceModule = module {
-            single<MessageBus> {
-                val natsClient: NatsClient = get()
-                NatsMessageBus(natsClient)
-            }
-            single<RegistrationClient> {
-                val messageBus: MessageBus = get()
-                NatsRegistrationClient(messageBus)
-            }
-            single<Reconnector> {
-                get<NatsCommunicator>()
-            }
-        }
+        val natsClient = natsClientProvider.get()
+        val messageBus = NatsMessageBus(natsClient)
+        messageBusProvider.trySet(messageBus)
 
-        loadKoinModules(interfaceModule)
+        val registrationClient = NatsRegistrationClient(messageBus)
+        registrationClientProvider.trySet(registrationClient)
+
+        reconnectorProvider.trySet(communicator)
+
         logger.debug { "Interface bindings registered" }
     }
 

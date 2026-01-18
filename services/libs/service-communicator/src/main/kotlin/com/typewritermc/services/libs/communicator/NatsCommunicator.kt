@@ -9,28 +9,23 @@ import io.natskt.api.Credentials
 import io.natskt.api.NatsClient
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.context.loadKoinModules
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
-import org.koin.dsl.override
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 
 /**
  * Manages NATS connection with JWT-based authentication.
  *
- * Uses the JwtProvider factory pattern to obtain fresh JWT tokens
- * for authentication. The JwtProvider implementation is registered
- * late by service-registrar after credentials are initialized.
+ * Uses constructor injection for all dependencies. The jwtProvider
+ * and natsClientProvider are DeferredProviders that allow late binding
+ * of values that become available after initialization.
  */
-class NatsCommunicator : KoinComponent, Reconnector {
+class NatsCommunicator(
+    private val natsUrl: String,
+    private val jwtProvider: DeferredProvider<JwtProvider>,
+    private val sentinelCredentialsFetcher: SentinelCredentialsFetcher,
+    private val json: Json,
+    private val natsClientProvider: DeferredProvider<NatsClient>,
+) : Reconnector {
     private val logger: KLogger = logger {}
-
-    private val natsUrl: String by inject(named("nats-url"))
-    private val jwtProvider: JwtProvider by inject()
-    private val sentinelCredentialsFetcher: SentinelCredentialsFetcher by inject()
-    private val json: Json by inject()
 
     private var _client: NatsClient? = null
 
@@ -43,7 +38,8 @@ class NatsCommunicator : KoinComponent, Reconnector {
     suspend fun connect() {
         logger.info { "Connecting to NATS at $natsUrl" }
 
-        val tokenInfo = jwtProvider.getTokenInfo()
+        val jwt = jwtProvider.get()
+        val tokenInfo = jwt.getTokenInfo()
         val token = tokenInfo.accessToken
         val serviceId = extractServiceId(token)
         val sentinelCredentials = sentinelCredentialsFetcher.fetchCredentials()
@@ -69,10 +65,7 @@ class NatsCommunicator : KoinComponent, Reconnector {
             throw it
         }
 
-        val natsModule = module {
-            factory { natsClient }.override()
-        }
-        loadKoinModules(natsModule)
+        natsClientProvider.set(natsClient)
 
         this._client = natsClient
         logger.info { "Connected to NATS successfully" }
