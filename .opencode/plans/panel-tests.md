@@ -46,6 +46,16 @@ These systems manage the editor's data. Bugs here cause data corruption or edito
 - [x] Edge cases: arrays, null values, missing paths
 - [x] Type coercion and validation
 
+### Selection Logic (`logic/selectable/selection.dart`)
+- [x] Selection state machine (select, unselect, clear, selectAll)
+- [x] Single-select vs multi-select behavior
+- [x] Shift-key multi-select integration (HardwareKeyboard)
+- [x] hasSelection and isSelected providers
+- [x] Selected provider (resolving identifiers to Selectables)
+- [x] updateFieldValue propagation to all selected items
+- [x] fieldValue aggregation (loading, none, value, conflict)
+- [x] selectedDataBlueprint overlapping logic
+
 ### Data Blueprints (`logic/selectable/data_blueprint.dart`)
 - [x] Blueprint validation logic
 - [x] Blueprint-to-form generation
