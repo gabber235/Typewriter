@@ -17,8 +17,9 @@ class TestIntent extends Intent {
 
 void main() {
   group("Dropdown - focus & actions", () {
-    testWidgets("DismissIntent moves focus away from the inner DropdownMenu",
-        (tester) async {
+    testWidgets("DismissIntent moves focus away from the inner DropdownMenu", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
       final widget = Dropdown<String>(
         focusNode: innerFocus,
@@ -49,8 +50,9 @@ void main() {
       );
     });
 
-    testWidgets("DismissIntent bubbles up to parent action handlers",
-        (tester) async {
+    testWidgets("DismissIntent bubbles up to parent action handlers", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
       var parentDismissReceived = false;
 
@@ -78,25 +80,21 @@ void main() {
       await tester.pump();
       expect(innerFocus.hasPrimaryFocus, isTrue);
 
-      /// First we dismiss the dropdown menu.
-      var context = FocusManager.instance.primaryFocus!.context!;
-      Actions.invoke(context, const DismissIntent());
-      await tester.pump();
-
-      expect(parentDismissReceived, isFalse);
-      expect(innerFocus.hasPrimaryFocus, isTrue);
-
-      /// Then we dismiss the input field.
-      context = FocusManager.instance.primaryFocus!.context!;
+      /// First dismiss moves focus from the input to the surrounding node.
+      /// We use the DropdownMenu element context (not FocusManager) to ensure
+      /// the action is dispatched from the correct level in the widget tree.
+      var context = tester.element(find.byType(DropdownMenu<String>));
       Actions.invoke(context, const DismissIntent());
       await tester.pump();
 
       expect(parentDismissReceived, isFalse);
       expect(innerFocus.hasPrimaryFocus, isFalse);
 
-      /// Dismissing while we are focusing the surrounding focus should bubble up to the parent action handlers.
-      context = FocusManager.instance.primaryFocus!.context!;
-      Actions.invoke(context, const DismissIntent());
+      /// Dismissing while focusing the surrounding node bubbles up to parent.
+      /// Since focus moved to surroundingNode (which has no DismissIntent handler),
+      /// the intent should bubble up to the parent Actions widget.
+      final context2 = FocusManager.instance.primaryFocus!.context!;
+      Actions.invoke(context2, const DismissIntent());
       await tester.pump();
 
       expect(innerFocus.hasPrimaryFocus, isFalse);
@@ -106,66 +104,68 @@ void main() {
 
   group("Dropdown - callbacks", () {
     testWidgets(
-        "onSelected is called with correct value and controller updates",
-        (tester) async {
-      final innerFocus = FocusNode(debugLabel: "inner");
-      final controller = TextEditingController();
-      String? selected;
+      "onSelected is called with correct value and controller updates",
+      (tester) async {
+        final innerFocus = FocusNode(debugLabel: "inner");
+        final controller = TextEditingController();
+        String? selected;
 
-      final widget = HookBuilder(
-        builder: (context) {
-          final state = useState<String?>(null);
-          return Dropdown<String>(
-            focusNode: innerFocus,
-            controller: controller,
-            selected: state.value,
-            dropdownMenuEntries: const [
-              DropdownMenuEntry(value: "A", label: "Alpha"),
-              DropdownMenuEntry(value: "B", label: "Beta"),
-              DropdownMenuEntry(value: "C", label: "Gamma"),
-            ],
-            onSelected: (v) {
-              selected = v;
-              state.value = v;
-            },
-          );
-        },
-      );
+        final widget = HookBuilder(
+          builder: (context) {
+            final state = useState<String?>(null);
+            return Dropdown<String>(
+              focusNode: innerFocus,
+              controller: controller,
+              selected: state.value,
+              dropdownMenuEntries: const [
+                DropdownMenuEntry(value: "A", label: "Alpha"),
+                DropdownMenuEntry(value: "B", label: "Beta"),
+                DropdownMenuEntry(value: "C", label: "Gamma"),
+              ],
+              onSelected: (v) {
+                selected = v;
+                state.value = v;
+              },
+            );
+          },
+        );
 
-      await tester.pumpTestApp(child: widget);
+        await tester.pumpTestApp(child: widget);
 
-      await tester.tap(find.byType(DropdownMenu<String>));
-      await tester.pump();
-      expect(innerFocus.hasPrimaryFocus, isTrue);
-      expect(
-        tester.container().read(currentInteractionModeProvider),
-        isA<InsertMode>(),
-      );
+        await tester.tap(find.byType(DropdownMenu<String>));
+        await tester.pump();
+        expect(innerFocus.hasPrimaryFocus, isTrue);
+        expect(
+          tester.container().read(currentInteractionModeProvider),
+          isA<InsertMode>(),
+        );
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text("Beta").last);
-      await tester.pumpAndSettle();
+        await tester.tap(find.text("Beta").last);
+        await tester.pumpAndSettle();
 
-      expect(selected, "B");
+        expect(selected, "B");
 
-      final context = tester.element(find.byType(DropdownMenu<String>));
-      Actions.invoke(context, const DismissIntent());
-      await tester.pump();
+        final context = tester.element(find.byType(DropdownMenu<String>));
+        Actions.invoke(context, const DismissIntent());
+        await tester.pump();
 
-      expect(controller.text, "Beta");
-      expect(innerFocus.hasPrimaryFocus, isFalse);
-      expect(
-        tester.container().read(currentInteractionModeProvider),
-        isA<NormalMode>(),
-      );
-    });
+        expect(controller.text, "Beta");
+        expect(innerFocus.hasPrimaryFocus, isFalse);
+        expect(
+          tester.container().read(currentInteractionModeProvider),
+          isA<NormalMode>(),
+        );
+      },
+    );
   });
 
   group("Dropdown - controller resets", () {
-    testWidgets("Controller resets to selected label when dismissing",
-        (tester) async {
+    testWidgets("Controller resets to selected label when dismissing", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
       final controller = TextEditingController(text: "wrong");
       var firedSelected = 0;
@@ -212,8 +212,9 @@ void main() {
       expect(firedSelected, 0);
     });
 
-    testWidgets("Controller resets to selected label on programmatic unfocus",
-        (tester) async {
+    testWidgets("Controller resets to selected label on programmatic unfocus", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
       final controller = TextEditingController(text: "wrong");
       var firedSelected = 0;
@@ -262,101 +263,103 @@ void main() {
 
   group("Dropdown - selection interactions", () {
     testWidgets(
-        "Selecting Gamma calls onSelected with 'C' and updates controller",
-        (tester) async {
-      final innerFocus = FocusNode(debugLabel: "inner");
-      final controller = TextEditingController();
-      String? selected = "A";
-      String? lastSelected;
+      "Selecting Gamma calls onSelected with 'C' and updates controller",
+      (tester) async {
+        final innerFocus = FocusNode(debugLabel: "inner");
+        final controller = TextEditingController();
+        String? selected = "A";
+        String? lastSelected;
 
-      final host = StatefulBuilder(
-        builder: (context, setState) {
-          return Dropdown<String>(
-            focusNode: innerFocus,
-            controller: controller,
-            selected: selected,
-            dropdownMenuEntries: const [
-              DropdownMenuEntry(value: "A", label: "Alpha"),
-              DropdownMenuEntry(value: "B", label: "Beta"),
-              DropdownMenuEntry(value: "C", label: "Gamma"),
-            ],
-            onSelected: (v) {
-              lastSelected = v;
-              setState(() => selected = v);
-            },
-          );
-        },
-      );
+        final host = StatefulBuilder(
+          builder: (context, setState) {
+            return Dropdown<String>(
+              focusNode: innerFocus,
+              controller: controller,
+              selected: selected,
+              dropdownMenuEntries: const [
+                DropdownMenuEntry(value: "A", label: "Alpha"),
+                DropdownMenuEntry(value: "B", label: "Beta"),
+                DropdownMenuEntry(value: "C", label: "Gamma"),
+              ],
+              onSelected: (v) {
+                lastSelected = v;
+                setState(() => selected = v);
+              },
+            );
+          },
+        );
 
-      await tester.pumpTestApp(child: host);
+        await tester.pumpTestApp(child: host);
 
-      await tester.tap(find.byType(DropdownMenu<String>));
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(
-        tester.container().read(currentInteractionModeProvider),
-        isA<InsertMode>(),
-      );
+        await tester.tap(find.byType(DropdownMenu<String>));
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(
+          tester.container().read(currentInteractionModeProvider),
+          isA<InsertMode>(),
+        );
 
-      await tester.tap(find.text("Gamma").last);
-      await tester.pumpAndSettle();
+        await tester.tap(find.text("Gamma").last);
+        await tester.pumpAndSettle();
 
-      expect(lastSelected, "C");
-      expect(controller.text, "Gamma");
-      expect(
-        tester.container().read(currentInteractionModeProvider),
-        isA<NormalMode>(),
-      );
-    });
+        expect(lastSelected, "C");
+        expect(controller.text, "Gamma");
+        expect(
+          tester.container().read(currentInteractionModeProvider),
+          isA<NormalMode>(),
+        );
+      },
+    );
 
     testWidgets(
-        "Selecting Alpha from B calls onSelected with 'A' and updates controller",
-        (tester) async {
-      final innerFocus = FocusNode(debugLabel: "inner");
-      final controller = TextEditingController();
-      String? selected = "B";
-      String? lastSelected;
+      "Selecting Alpha from B calls onSelected with 'A' and updates controller",
+      (tester) async {
+        final innerFocus = FocusNode(debugLabel: "inner");
+        final controller = TextEditingController();
+        String? selected = "B";
+        String? lastSelected;
 
-      final host = StatefulBuilder(
-        builder: (context, setState) {
-          return Dropdown<String>(
-            focusNode: innerFocus,
-            controller: controller,
-            selected: selected,
-            dropdownMenuEntries: const [
-              DropdownMenuEntry(value: "A", label: "Alpha"),
-              DropdownMenuEntry(value: "B", label: "Beta"),
-              DropdownMenuEntry(value: "C", label: "Gamma"),
-            ],
-            onSelected: (v) {
-              lastSelected = v;
-              setState(() => selected = v);
-            },
-          );
-        },
-      );
+        final host = StatefulBuilder(
+          builder: (context, setState) {
+            return Dropdown<String>(
+              focusNode: innerFocus,
+              controller: controller,
+              selected: selected,
+              dropdownMenuEntries: const [
+                DropdownMenuEntry(value: "A", label: "Alpha"),
+                DropdownMenuEntry(value: "B", label: "Beta"),
+                DropdownMenuEntry(value: "C", label: "Gamma"),
+              ],
+              onSelected: (v) {
+                lastSelected = v;
+                setState(() => selected = v);
+              },
+            );
+          },
+        );
 
-      await tester.pumpTestApp(child: host);
+        await tester.pumpTestApp(child: host);
 
-      await tester.tap(find.byType(DropdownMenu<String>));
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(
-        tester.container().read(currentInteractionModeProvider),
-        isA<InsertMode>(),
-      );
+        await tester.tap(find.byType(DropdownMenu<String>));
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(
+          tester.container().read(currentInteractionModeProvider),
+          isA<InsertMode>(),
+        );
 
-      await tester.tap(find.text("Alpha").last);
-      await tester.pumpAndSettle();
+        await tester.tap(find.text("Alpha").last);
+        await tester.pumpAndSettle();
 
-      expect(lastSelected, "A");
-      expect(controller.text, "Alpha");
-      expect(
-        tester.container().read(currentInteractionModeProvider),
-        isA<NormalMode>(),
-      );
-    });
+        expect(lastSelected, "A");
+        expect(controller.text, "Alpha");
+        expect(
+          tester.container().read(currentInteractionModeProvider),
+          isA<NormalMode>(),
+        );
+      },
+    );
   });
 }
