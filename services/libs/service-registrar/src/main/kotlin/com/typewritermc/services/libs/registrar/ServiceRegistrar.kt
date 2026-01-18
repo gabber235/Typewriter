@@ -12,6 +12,7 @@ import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.api.NatsClient
+import kotlinx.coroutines.CoroutineScope
 
 class ServiceRegistrar(
     private val credentialStorage: CredentialStorage,
@@ -25,10 +26,12 @@ class ServiceRegistrar(
     private val registrationClientProvider: DeferredProvider<RegistrationClient>,
     private val reconnectorProvider: DeferredProvider<Reconnector>,
     private val registrationStateProvider: StateProvider<RegistrationState>,
+    private val coroutineScope: CoroutineScope,
 ) {
     private val logger: KLogger = logger {}
 
     private var credential: Credential? = null
+    private var heartbeatSender: HeartbeatSender? = null
 
     suspend fun initialize() {
         logger.info { "Initializing service registrar" }
@@ -60,6 +63,7 @@ class ServiceRegistrar(
         when (state) {
             is RegistrationState.Bound -> {
                 logger.info { "Service bound to organization: ${state.organizationName}" }
+                startHeartbeat(cred.id, registrationClient)
             }
             is RegistrationState.Failed -> {
                 logger.error { "Registration failed: ${state.message}" }
@@ -108,6 +112,16 @@ class ServiceRegistrar(
 
     fun shutdown() {
         logger.info { "Shutting down service registrar" }
+        heartbeatSender?.stop()
         logger.info { "Service registrar shut down" }
+    }
+
+    private fun startHeartbeat(serviceId: String, registrationClient: RegistrationClient) {
+        heartbeatSender = HeartbeatSender(
+            serviceId = serviceId,
+            registrationClient = registrationClient,
+            scope = coroutineScope
+        )
+        heartbeatSender?.start()
     }
 }

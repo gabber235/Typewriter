@@ -1,0 +1,32 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: service-registration
+  namespace: wasmcloud
+spec:
+  replicas: 1
+  template:
+    spec:
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: service-registration
+          image: oci.seamlezz.test/wasmcloud/service-registration:0.1.0
+          imagePullSecret:
+            name: harbor-registry-credentials
+      hostInterfaces:
+        - namespace: wasmcloud
+          package: messaging
+          interfaces:
+            - handler
+            - consumer
+          config:
+            subscriptions: typewriter.in.service.*.status,typewriter.in.user.*.organization.*.services.>
+        - namespace: seamlezz
+          package: surrealdb
+          interfaces:
+            - call
+        - namespace: wasi
+          package: logging
+          interfaces:
+            - logging

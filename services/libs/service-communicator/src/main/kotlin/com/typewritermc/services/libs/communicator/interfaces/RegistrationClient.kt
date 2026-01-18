@@ -10,4 +10,6 @@ interface RegistrationClient {
         serviceId: String,
         onBound: suspend (organizationId: String, organizationName: String) -> Unit
     ): Job
+
+    suspend fun sendHeartbeat(serviceId: String)
 }

@@ -1,0 +1,1 @@
+workspaces { name = "service-registration" }

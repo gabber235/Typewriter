@@ -9,6 +9,7 @@ import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.natskt.api.NatsClient
+import kotlinx.coroutines.CoroutineScope
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.dsl.onClose
@@ -32,7 +33,8 @@ val SERVICE_REGISTRAR_MODULE = module {
             messageBusProvider = get<DeferredProvider<MessageBus>>(),
             registrationClientProvider = get<DeferredProvider<RegistrationClient>>(),
             reconnectorProvider = get<DeferredProvider<Reconnector>>(),
-            registrationStateProvider = get<StateProvider<RegistrationState>>()
+            registrationStateProvider = get<StateProvider<RegistrationState>>(),
+            coroutineScope = get<CoroutineScope>()
         )
     } onClose { it?.shutdown() }
 
