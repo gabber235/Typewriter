@@ -1,5 +1,7 @@
 package com.typewritermc.services.libs.communicator
 
+import com.typewritermc.services.libs.communicator.interfaces.Reconnector
+import com.typewritermc.services.libs.utils.DeferredProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.NatsClient
@@ -9,7 +11,6 @@ import io.natskt.api.Credentials
 import io.natskt.api.NatsClient
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 
 /**
  * Manages NATS connection with JWT-based authentication.

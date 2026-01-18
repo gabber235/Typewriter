@@ -1,12 +1,13 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.DeferredProvider
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
+import com.typewritermc.services.libs.utils.DeferredProvider
+import com.typewritermc.services.libs.utils.StateProvider
 import io.natskt.api.NatsClient
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -17,6 +18,7 @@ val SERVICE_REGISTRAR_MODULE = module {
     single { DeferredProvider<MessageBus>() }
     single { DeferredProvider<RegistrationClient>() }
     single { DeferredProvider<Reconnector>() }
+    single { StateProvider<RegistrationState>(RegistrationState.Initializing) }
 
     single {
         ServiceRegistrar(
@@ -29,7 +31,8 @@ val SERVICE_REGISTRAR_MODULE = module {
             natsClientProvider = get<DeferredProvider<NatsClient>>(),
             messageBusProvider = get<DeferredProvider<MessageBus>>(),
             registrationClientProvider = get<DeferredProvider<RegistrationClient>>(),
-            reconnectorProvider = get<DeferredProvider<Reconnector>>()
+            reconnectorProvider = get<DeferredProvider<Reconnector>>(),
+            registrationStateProvider = get<StateProvider<RegistrationState>>()
         )
     } onClose { it?.shutdown() }
 

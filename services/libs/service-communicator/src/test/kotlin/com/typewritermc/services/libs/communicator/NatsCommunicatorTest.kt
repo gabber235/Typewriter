@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.communicator
 
+import com.typewritermc.services.libs.utils.DeferredProvider
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

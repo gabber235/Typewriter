@@ -8,10 +8,12 @@ import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.communicator.SERVICE_COMMUNICATOR_MODULE
 import com.typewritermc.services.libs.registrar.CredentialStorage
+import com.typewritermc.services.libs.registrar.RegistrationState
 import com.typewritermc.services.libs.registrar.SERVICE_REGISTRAR_MODULE
 import com.typewritermc.services.libs.registrar.ServiceInformation
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServicesInfo
+import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.BinaryFormat
@@ -61,7 +63,11 @@ fun main() {
             )
         }
 
-        single { RealmShellContext() }
+        single { 
+            RealmShellContext(
+                registrationStateProvider = get<StateProvider<RegistrationState>>()
+            )
+        }
         single { RealmShell(get()) }
     }
 

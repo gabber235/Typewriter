@@ -1,4 +1,4 @@
-package com.typewritermc.services.libs.communicator
+package com.typewritermc.services.libs.utils
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec

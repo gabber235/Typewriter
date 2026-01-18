@@ -3,6 +3,7 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.Job
@@ -16,7 +17,8 @@ import kotlin.time.Duration.Companion.minutes
 class RegistrationProtocol(
     private val registrationClient: RegistrationClient,
     private val credential: Credential,
-    private val reconnector: Reconnector
+    private val reconnector: Reconnector,
+    private val stateProvider: StateProvider<RegistrationState>,
 ) {
     private val logger: KLogger = logger {}
 
@@ -30,16 +32,22 @@ class RegistrationProtocol(
         when (val status = registrationClient.queryServiceStatus(serviceId)) {
             is ServiceStatusResult.Bound -> {
                 logger.info { "Service already bound to organization: ${status.organizationName}" }
-                return RegistrationState.Bound(status.organizationId, status.organizationName)
+                val state = RegistrationState.Bound(status.organizationId, status.organizationName)
+                stateProvider.set(state)
+                return state
             }
 
             is ServiceStatusResult.Unbound -> {
+                val pendingState = RegistrationState.Pending(status.token)
+                stateProvider.set(pendingState)
                 return handleUnboundState(serviceId, status.token)
             }
 
             is ServiceStatusResult.Error -> {
                 logger.error { "Failed to query status: ${status.message} (code: ${status.code})" }
-                return RegistrationState.Failed(status.message)
+                val state = RegistrationState.Failed(status.message)
+                stateProvider.set(state)
+                return state
             }
         }
     }
@@ -60,7 +68,9 @@ class RegistrationProtocol(
         logger.info { "Service bound! Reconnecting to get full permissions..." }
         reconnector.reconnect()
 
-        return RegistrationState.Bound(orgId, orgName)
+        val boundState = RegistrationState.Bound(orgId, orgName)
+        stateProvider.set(boundState)
+        return boundState
     }
 
     private suspend fun scheduleRequery(serviceId: String) {
@@ -76,6 +86,7 @@ class RegistrationProtocol(
                     }
 
                     is ServiceStatusResult.Unbound -> {
+                        stateProvider.set(RegistrationState.Pending(status.token))
                         displayToken(status.token)
                     }
 

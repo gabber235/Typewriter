@@ -1,4 +1,4 @@
-package com.typewritermc.services.libs.communicator
+package com.typewritermc.services.libs.utils
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi

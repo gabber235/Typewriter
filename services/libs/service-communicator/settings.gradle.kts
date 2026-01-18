@@ -12,3 +12,5 @@ plugins {
 }
 
 rootProject.name = "service-communicator"
+
+includeBuild("../service-utils")

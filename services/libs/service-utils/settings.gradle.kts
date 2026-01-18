@@ -6,7 +6,4 @@ plugins {
     id("com.typewritermc.settings-conventions")
 }
 
-rootProject.name = "service-registrar"
-
-includeBuild("../service-utils")
-includeBuild("../service-communicator")
+rootProject.name = "service-utils"

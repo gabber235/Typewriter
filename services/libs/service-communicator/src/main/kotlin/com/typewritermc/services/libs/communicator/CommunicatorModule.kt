@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.communicator
 
 import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
+import com.typewritermc.services.libs.utils.DeferredProvider
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json

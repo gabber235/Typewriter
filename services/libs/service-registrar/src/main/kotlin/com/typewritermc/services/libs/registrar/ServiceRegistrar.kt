@@ -1,6 +1,5 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.DeferredProvider
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
@@ -8,6 +7,8 @@ import com.typewritermc.services.libs.communicator.interfaces.NatsMessageBus
 import com.typewritermc.services.libs.communicator.interfaces.NatsRegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.utils.DeferredProvider
+import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.api.NatsClient
@@ -23,6 +24,7 @@ class ServiceRegistrar(
     private val messageBusProvider: DeferredProvider<MessageBus>,
     private val registrationClientProvider: DeferredProvider<RegistrationClient>,
     private val reconnectorProvider: DeferredProvider<Reconnector>,
+    private val registrationStateProvider: StateProvider<RegistrationState>,
 ) {
     private val logger: KLogger = logger {}
 
@@ -51,7 +53,9 @@ class ServiceRegistrar(
 
         val registrationClient = registrationClientProvider.get()
         val reconnector = reconnectorProvider.get()
-        val registrationProtocol = RegistrationProtocol(registrationClient, cred, reconnector)
+        val registrationProtocol = RegistrationProtocol(
+            registrationClient, cred, reconnector, registrationStateProvider
+        )
         val state = registrationProtocol.checkAndRegister()
         when (state) {
             is RegistrationState.Bound -> {

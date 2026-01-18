@@ -7,6 +7,7 @@ plugins {
 }
 
 dependencies {
+    implementation("com.typewritermc:service-utils")
     implementation(libs.protobuf.java)
     implementation(libs.nats.core)
     implementation(libs.nats.jetstream)

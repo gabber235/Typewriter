@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.DeferredProvider
+import com.typewritermc.services.libs.utils.DeferredProvider
+import com.typewritermc.services.libs.utils.StateProvider
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
 import com.typewritermc.services.libs.communicator.ServiceStatusResult
@@ -174,6 +175,7 @@ private fun createServiceRegistrar(
     messageBusProvider: DeferredProvider<MessageBus>? = null,
     registrationClientProvider: DeferredProvider<RegistrationClient>? = null,
     reconnectorProvider: DeferredProvider<Reconnector>? = null,
+    registrationStateProvider: StateProvider<RegistrationState>? = null,
     preSetRegistrationClient: Boolean = true
 ): ServiceRegistrar {
     val storedCredential = Credential(id = "default-id", name = "default", token = "token")
@@ -213,6 +215,9 @@ private fun createServiceRegistrar(
         reconProvider.set(mockk())
     }
 
+    val stateProvider: StateProvider<RegistrationState> =
+        registrationStateProvider ?: StateProvider(RegistrationState.Initializing)
+
     return ServiceRegistrar(
         credentialStorage = storage,
         credentialIssuer = issuer,
@@ -223,6 +228,7 @@ private fun createServiceRegistrar(
         natsClientProvider = natsProvider,
         messageBusProvider = msgBusProvider,
         registrationClientProvider = regClientProvider,
-        reconnectorProvider = reconProvider
+        reconnectorProvider = reconProvider,
+        registrationStateProvider = stateProvider
     )
 }

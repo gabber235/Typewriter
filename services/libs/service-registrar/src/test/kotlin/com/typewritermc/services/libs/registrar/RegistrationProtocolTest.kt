@@ -3,6 +3,7 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.utils.StateProvider
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -17,17 +18,20 @@ import kotlinx.coroutines.launch
 
 class RegistrationProtocolTest : FunSpec({
 
+    fun createStateProvider() = StateProvider<RegistrationState>(RegistrationState.Initializing)
+
     context("Happy Path Scenarios") {
 
         test("already bound service returns Bound state immediately") {
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "test-service-id", name = "test-service", token = "test-token")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
                 ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -42,6 +46,7 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "test-service-id", name = "test-service", token = "test-token")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
                 ServiceStatusResult.Unbound(token = "REG-TOKEN-123")
@@ -56,7 +61,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -68,6 +73,7 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "svc-1", name = "service", token = "tok")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc-1") } returns
                 ServiceStatusResult.Unbound(token = "TOKEN")
@@ -82,7 +88,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             protocol.checkAndRegister()
 
             coVerify(exactly = 1) { reconnector.reconnect() }
@@ -95,11 +101,12 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "test-service-id", name = "test-service", token = "test-token")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
                 ServiceStatusResult.Error(code = 404, message = "Service not found")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Failed>()
@@ -112,11 +119,12 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                 ServiceStatusResult.Error(code = 500, message = "Internal server error: database unavailable")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Failed>()
@@ -130,11 +138,12 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "my-unique-service-id", name = "My Service", token = "secret")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("my-unique-service-id") } returns
                 ServiceStatusResult.Bound(organizationId = "org", organizationName = "Org")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             protocol.checkAndRegister()
 
             coVerify { registrationClient.queryServiceStatus("my-unique-service-id") }
@@ -144,6 +153,7 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "svc-xyz", name = "s", token = "t")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc-xyz") } returns
                 ServiceStatusResult.Unbound(token = "TOK")
@@ -158,7 +168,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             protocol.checkAndRegister()
 
             coVerify { registrationClient.subscribeToBoundNotification("svc-xyz", any()) }
@@ -171,11 +181,12 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                 ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -186,11 +197,12 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                 ServiceStatusResult.Bound(organizationId = "org", organizationName = "日本語組織 🎮")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -201,6 +213,7 @@ class RegistrationProtocolTest : FunSpec({
             val registrationClient = mockk<RegistrationClient>()
             val reconnector = mockk<Reconnector>()
             val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
 
             val longToken = "A".repeat(100)
             coEvery { registrationClient.queryServiceStatus("svc") } returns
@@ -216,10 +229,68 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
+        }
+    }
+
+    context("StateProvider Updates") {
+
+        test("updates state to Bound when service is already bound") {
+            val registrationClient = mockk<RegistrationClient>()
+            val reconnector = mockk<Reconnector>()
+            val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
+
+            coEvery { registrationClient.queryServiceStatus("svc") } returns
+                ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
+
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            protocol.checkAndRegister()
+
+            stateProvider.get().shouldBeInstanceOf<RegistrationState.Bound>()
+        }
+
+        test("updates state to Pending when service is unbound") {
+            val registrationClient = mockk<RegistrationClient>()
+            val reconnector = mockk<Reconnector>()
+            val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
+
+            coEvery { registrationClient.queryServiceStatus("svc") } returns
+                ServiceStatusResult.Unbound(token = "TOKEN-123")
+
+            coEvery {
+                registrationClient.subscribeToBoundNotification("svc", any())
+            } coAnswers {
+                val callback = secondArg<suspend (String, String) -> Unit>()
+                callback("org", "Org")
+                Job()
+            }
+
+            coEvery { reconnector.reconnect() } just runs
+
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            protocol.checkAndRegister()
+
+            stateProvider.get().shouldBeInstanceOf<RegistrationState.Bound>()
+        }
+
+        test("updates state to Failed on error") {
+            val registrationClient = mockk<RegistrationClient>()
+            val reconnector = mockk<Reconnector>()
+            val credential = Credential(id = "svc", name = "s", token = "t")
+            val stateProvider = createStateProvider()
+
+            coEvery { registrationClient.queryServiceStatus("svc") } returns
+                ServiceStatusResult.Error(code = 500, message = "Server error")
+
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            protocol.checkAndRegister()
+
+            stateProvider.get().shouldBeInstanceOf<RegistrationState.Failed>()
         }
     }
 })
