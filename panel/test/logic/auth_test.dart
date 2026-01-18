@@ -108,10 +108,9 @@ void main() {
         email: "test@example.com",
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: authProviderOverrides(userInfo: testUserInfo),
       );
-      addTearDown(container.dispose);
 
       final userInfo = await container.read(authUserInfoProvider.future);
 
@@ -121,8 +120,9 @@ void main() {
     });
 
     test("uses default mock user when no override specified", () async {
-      final container = ProviderContainer(overrides: authProviderOverrides());
-      addTearDown(container.dispose);
+      final container = ProviderContainer.test(
+        overrides: authProviderOverrides(),
+      );
 
       final userInfo = await container.read(authUserInfoProvider.future);
 
@@ -136,7 +136,7 @@ void main() {
     test("returns sub when authenticated", () async {
       const testUserInfo = UserInfo(sub: "unique-user-id-123");
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           ...authProviderOverrides(userInfo: testUserInfo),
           isAuthenticatedProvider.overrideWithValue(
@@ -144,7 +144,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       final userId = await container.read(userIdProvider.future);
 
@@ -152,14 +151,13 @@ void main() {
     });
 
     test("returns null when not authenticated", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           isAuthenticatedProvider.overrideWithValue(
             const AsyncValue.data(false),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       final userId = await container.read(userIdProvider.future);
 
@@ -169,14 +167,13 @@ void main() {
 
   group("isAuthenticatedProvider", () {
     test("returns true when overridden as authenticated", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           isAuthenticatedProvider.overrideWithValue(
             const AsyncValue.data(true),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       final isAuthenticated = await container.read(
         isAuthenticatedProvider.future,
@@ -186,14 +183,13 @@ void main() {
     });
 
     test("returns false when overridden as not authenticated", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           isAuthenticatedProvider.overrideWithValue(
             const AsyncValue.data(false),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       final isAuthenticated = await container.read(
         isAuthenticatedProvider.future,
@@ -211,12 +207,11 @@ void main() {
         expiresAt: expiresAt,
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           accessTokenProvider.overrideWithValue(AsyncValue.data(testToken)),
         ],
       );
-      addTearDown(container.dispose);
 
       final token = await container.read(accessTokenProvider.future);
 
@@ -226,12 +221,11 @@ void main() {
     });
 
     test("returns null when no token available", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           accessTokenProvider.overrideWithValue(const AsyncValue.data(null)),
         ],
       );
-      addTearDown(container.dispose);
 
       final token = await container.read(accessTokenProvider.future);
 

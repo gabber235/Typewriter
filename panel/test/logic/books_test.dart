@@ -1,8 +1,8 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/generated/models/common.pb.dart" as proto;
 import "package:typewriter_panel/logic/books.dart";
@@ -65,10 +65,9 @@ void main() {
     }
 
     test("returns all books when query is empty", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "");
 
@@ -76,10 +75,9 @@ void main() {
     });
 
     test("matches book title case-insensitively", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "QUEST");
 
@@ -88,10 +86,9 @@ void main() {
     });
 
     test("matches book title with partial query", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "glory");
 
@@ -100,10 +97,9 @@ void main() {
     });
 
     test("matches book tags case-insensitively", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "ADVENTURE");
 
@@ -112,10 +108,9 @@ void main() {
     });
 
     test("matches any of multiple tags", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "horror");
 
@@ -124,10 +119,9 @@ void main() {
     });
 
     test("returns empty list when no matches", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "zombies");
 
@@ -141,12 +135,11 @@ void main() {
           ..title = "Tagless Adventure",
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           booksProvider.overrideWith(() => _MockBooks(booksWithNoTags)),
         ],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "adventure");
 
@@ -155,10 +148,9 @@ void main() {
     });
 
     test("handles empty book list", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [booksProvider.overrideWith(() => _MockBooks(<Book>[]))],
       );
-      addTearDown(container.dispose);
 
       final result = await getFilteredBooks(container, "anything");
 

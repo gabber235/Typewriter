@@ -1,8 +1,8 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/generated/api/organization/member.pb.dart"
     as member_api;
 import "package:typewriter_panel/generated/models/organization/member.pb.dart"
@@ -114,27 +114,25 @@ void main() {
     }
 
     test("returns 0 when provider is loading", () {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinRequestsProvider.overrideWith(
-            () => _LoadingJoinRequestsNotifier(),
+            _LoadingJoinRequestsNotifier.new,
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       expect(container.read(joinRequestCountProvider), 0);
     });
 
     test("returns 0 when provider has error", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinRequestsProvider.overrideWith(
-            () => _ErrorJoinRequestsNotifier(),
+            _ErrorJoinRequestsNotifier.new,
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       final completer = Completer<void>();
       final sub = container.listen(organizationJoinRequestsProvider, (
@@ -148,7 +146,7 @@ void main() {
 
       try {
         await completer.future.timeout(const Duration(seconds: 2));
-      } catch (_) {
+      } on TimeoutException catch (_) {
       } finally {
         sub.close();
       }
@@ -157,14 +155,13 @@ void main() {
     });
 
     test("returns 0 for empty list", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinRequestsProvider.overrideWith(
             () => _MockJoinRequestsNotifier([]),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinRequests(container);
       expect(await getJoinRequestCount(container), 0);
@@ -176,14 +173,13 @@ void main() {
         createRequest(expired: true),
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinRequestsProvider.overrideWith(
             () => _MockJoinRequestsNotifier(expiredRequests),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinRequests(container);
       expect(await getJoinRequestCount(container), 0);
@@ -196,14 +192,13 @@ void main() {
         createRequest(expired: false),
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinRequestsProvider.overrideWith(
             () => _MockJoinRequestsNotifier(activeRequests),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinRequests(container);
       expect(await getJoinRequestCount(container), 3);
@@ -217,14 +212,13 @@ void main() {
         createRequest(expired: true),
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinRequestsProvider.overrideWith(
             () => _MockJoinRequestsNotifier(mixedRequests),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinRequests(container);
       expect(await getJoinRequestCount(container), 2);
@@ -232,14 +226,14 @@ void main() {
   });
 
   group("joinCodeCount", () {
-    int codeCounter = 0;
+    var codeCounter = 0;
 
     JoinCode createCode({bool? expired, bool neverExpires = false}) {
       codeCounter++;
       final now = DateTime.now();
       DateTime? expiresAt;
       if (!neverExpires) {
-        expiresAt = expired == true
+        expiresAt = expired ?? false
             ? now.subtract(const Duration(days: 1))
             : now.add(const Duration(days: 7));
       }
@@ -251,27 +245,25 @@ void main() {
     }
 
     test("returns 0 when provider is loading", () {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinCodesProvider.overrideWith(
-            () => _LoadingJoinCodesNotifier(),
+            _LoadingJoinCodesNotifier.new,
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       expect(container.read(joinCodeCountProvider), 0);
     });
 
     test("returns 0 for empty list", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinCodesProvider.overrideWith(
             () => _MockJoinCodesNotifier([]),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinCodes(container);
       expect(await getJoinCodeCount(container), 0);
@@ -283,14 +275,13 @@ void main() {
         createCode(expired: true),
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinCodesProvider.overrideWith(
             () => _MockJoinCodesNotifier(expiredCodes),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinCodes(container);
       expect(await getJoinCodeCount(container), 0);
@@ -299,14 +290,13 @@ void main() {
     test("counts never-expires codes as active", () async {
       final codes = [createCode(neverExpires: true)];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinCodesProvider.overrideWith(
             () => _MockJoinCodesNotifier(codes),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinCodes(container);
       expect(await getJoinCodeCount(container), 1);
@@ -319,14 +309,13 @@ void main() {
         createCode(neverExpires: true),
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinCodesProvider.overrideWith(
             () => _MockJoinCodesNotifier(mixedCodes),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinCodes(container);
       expect(await getJoinCodeCount(container), 2);
@@ -340,14 +329,13 @@ void main() {
         createCode(neverExpires: true),
       ];
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           organizationJoinCodesProvider.overrideWith(
             () => _MockJoinCodesNotifier(activeCodes),
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForJoinCodes(container);
       expect(await getJoinCodeCount(container), 4);
@@ -537,7 +525,7 @@ void main() {
     }
 
     test("updateMemberRoles throws when userId is null", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -556,7 +544,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -569,7 +556,7 @@ void main() {
     });
 
     test("updateMemberRoles throws when organizationId is null", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => null),
@@ -588,7 +575,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -601,7 +587,7 @@ void main() {
     });
 
     test("removeMember throws when userId is null", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -620,7 +606,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -633,7 +618,7 @@ void main() {
     });
 
     test("removeMember throws when organizationId is null", () async {
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => null),
@@ -652,7 +637,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -709,7 +693,7 @@ void main() {
           joinedAt: DateTime.now(),
         );
 
-        final container = ProviderContainer(
+        final container = ProviderContainer.test(
           overrides: [
             userIdProvider.overrideWith((ref) async => "user-1"),
             organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -719,7 +703,6 @@ void main() {
             ),
           ],
         );
-        addTearDown(container.dispose);
 
         await waitForMembers(container);
 
@@ -734,7 +717,7 @@ void main() {
           await container
               .read(organizationMembersProvider.notifier)
               .removeMember("m1");
-        } catch (_) {}
+        } on Exception catch (_) {}
 
         final currentState = container.read(organizationMembersProvider);
         expect(currentState.value, isNotNull);
@@ -753,7 +736,7 @@ void main() {
         joinedAt: DateTime.now(),
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -763,7 +746,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -806,7 +788,7 @@ void main() {
           joinedAt: DateTime.now(),
         );
 
-        final container = ProviderContainer(
+        final container = ProviderContainer.test(
           overrides: [
             userIdProvider.overrideWith((ref) async => "user-1"),
             organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -819,7 +801,6 @@ void main() {
             ),
           ],
         );
-        addTearDown(container.dispose);
 
         await waitForMembers(container);
 
@@ -834,7 +815,7 @@ void main() {
           await container
               .read(organizationMembersProvider.notifier)
               .updateMemberRoles("m1", [newRole]);
-        } catch (_) {}
+        } on Exception catch (_) {}
 
         final currentState = container.read(organizationMembersProvider);
         expect(currentState.value, isNotNull);
@@ -866,7 +847,7 @@ void main() {
         joinedAt: DateTime.now(),
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -879,7 +860,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -960,7 +940,7 @@ void main() {
         joinedAt: DateTime.now(),
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -977,7 +957,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -1024,7 +1003,7 @@ void main() {
         joinedAt: DateTime.now(),
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -1037,7 +1016,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
@@ -1103,7 +1081,7 @@ void main() {
         }
       }
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -1116,7 +1094,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
       await waitForRoles(container);
@@ -1157,7 +1134,7 @@ void main() {
         joinedAt: DateTime.now(),
       );
 
-      final container = ProviderContainer(
+      final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith((ref) => "org-1"),
@@ -1170,7 +1147,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       await waitForMembers(container);
 
