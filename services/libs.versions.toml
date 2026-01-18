@@ -15,6 +15,9 @@ jline = "3.30.6"
 clikt = "5.0.3"
 gradle-buildconfig = "6.0.7"
 
+kotest = "5.9.1"
+mockk = "1.13.16"
+
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
@@ -29,6 +32,11 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-test = { module = "io.insert-koin:koin-test" }
+
+kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf-java" }
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
@@ -52,4 +60,4 @@ gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "grad
 
 [bundles]
 basic-implementation = ["kotlin-stdlib", "koin-core", "kotlin-logging-jvm", "kotlin-coroutines-core"]
-basic-test = ["koin-test"]
+basic-test = ["koin-test", "kotest-runner", "kotest-assertions", "kotest-property", "mockk"]

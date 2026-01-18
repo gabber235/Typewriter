@@ -34,6 +34,10 @@ dependencies {
     testImplementation(libs.findBundle("basic-test").get())
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 fun String.runCommand(): String? = try {
     ProcessBuilder(*split(" ").toTypedArray())
         .redirectOutput(ProcessBuilder.Redirect.PIPE)

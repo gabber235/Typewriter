@@ -1,27 +1,24 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.NatsCommunicator
 import com.typewritermc.services.libs.communicator.ServiceStatusResult
-import com.typewritermc.services.libs.communicator.queryServiceStatus
-import com.typewritermc.services.libs.communicator.subscribeToBoundNotification
+import com.typewritermc.services.libs.communicator.interfaces.Reconnector
+import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
-import io.natskt.api.NatsClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.minutes
 
-class RegistrationProtocol : KoinComponent {
+class RegistrationProtocol(
+    private val registrationClient: RegistrationClient,
+    private val credential: Credential,
+    private val reconnector: Reconnector
+) {
     private val logger: KLogger = logger {}
-    private val natsClient: NatsClient by inject()
-    private val credential: Credential by inject()
-    private val natsCommunicator: NatsCommunicator by inject()
 
     private val boundChannel = Channel<Pair<String, String>>(1)
     private var requeryJob: Job? = null
@@ -30,14 +27,16 @@ class RegistrationProtocol : KoinComponent {
     suspend fun checkAndRegister(): RegistrationState {
         val serviceId = credential.id
 
-        when (val status = natsClient.queryServiceStatus(serviceId)) {
+        when (val status = registrationClient.queryServiceStatus(serviceId)) {
             is ServiceStatusResult.Bound -> {
                 logger.info { "Service already bound to organization: ${status.organizationName}" }
                 return RegistrationState.Bound(status.organizationId, status.organizationName)
             }
+
             is ServiceStatusResult.Unbound -> {
                 return handleUnboundState(serviceId, status.token)
             }
+
             is ServiceStatusResult.Error -> {
                 logger.error { "Failed to query status: ${status.message} (code: ${status.code})" }
                 return RegistrationState.Failed(status.message)
@@ -48,7 +47,7 @@ class RegistrationProtocol : KoinComponent {
     private suspend fun handleUnboundState(serviceId: String, token: String): RegistrationState {
         displayToken(token)
 
-        subscriptionJob = natsClient.subscribeToBoundNotification(serviceId) { orgId, orgName ->
+        subscriptionJob = registrationClient.subscribeToBoundNotification(serviceId) { orgId, orgName ->
             boundChannel.send(orgId to orgName)
         }
 
@@ -59,25 +58,27 @@ class RegistrationProtocol : KoinComponent {
         cleanup()
 
         logger.info { "Service bound! Reconnecting to get full permissions..." }
-        natsCommunicator.reconnect()
+        reconnector.reconnect()
 
         return RegistrationState.Bound(orgId, orgName)
     }
 
     private suspend fun scheduleRequery(serviceId: String) {
-        requeryJob = kotlinx.coroutines.CoroutineScope(coroutineContext).launch {
+        requeryJob = kotlinx.coroutines.CoroutineScope(currentCoroutineContext()).launch {
             while (isActive) {
                 delay(2.minutes)
                 logger.debug { "Requerying status to refresh token..." }
 
-                when (val status = natsClient.queryServiceStatus(serviceId)) {
+                when (val status = registrationClient.queryServiceStatus(serviceId)) {
                     is ServiceStatusResult.Bound -> {
                         boundChannel.send(status.organizationId to status.organizationName)
                         return@launch
                     }
+
                     is ServiceStatusResult.Unbound -> {
                         displayToken(status.token)
                     }
+
                     is ServiceStatusResult.Error -> {
                         logger.warn { "Requery failed: ${status.message}" }
                     }

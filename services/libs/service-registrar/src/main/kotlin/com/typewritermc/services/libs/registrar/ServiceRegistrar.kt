@@ -2,13 +2,20 @@ package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
+import com.typewritermc.services.libs.communicator.interfaces.MessageBus
+import com.typewritermc.services.libs.communicator.interfaces.NatsMessageBus
+import com.typewritermc.services.libs.communicator.interfaces.NatsRegistrationClient
+import com.typewritermc.services.libs.communicator.interfaces.Reconnector
+import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import io.natskt.api.NatsClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.context.loadKoinModules
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 
@@ -63,8 +70,11 @@ class ServiceRegistrar(
 
         registerJwtProvider()
         setupNatsConnection()
+        registerInterfaceBindings()
 
-        val registrationProtocol = RegistrationProtocol()
+        val registrationClient: RegistrationClient by inject()
+        val reconnector: Reconnector by inject()
+        val registrationProtocol = RegistrationProtocol(registrationClient, cred, reconnector)
         val state = registrationProtocol.checkAndRegister()
         when (state) {
             is RegistrationState.Bound -> {
@@ -112,6 +122,31 @@ class ServiceRegistrar(
         communicator.connect()
 
         logger.info { "NATS connection established" }
+    }
+
+    /**
+     * Register interface bindings for dependency injection.
+     * These bindings wrap the concrete implementations with testable interfaces.
+     */
+    private fun registerInterfaceBindings() {
+        logger.debug { "Registering interface bindings" }
+
+        val interfaceModule = module {
+            single<MessageBus> {
+                val natsClient: NatsClient = get()
+                NatsMessageBus(natsClient)
+            }
+            single<RegistrationClient> {
+                val messageBus: MessageBus = get()
+                NatsRegistrationClient(messageBus)
+            }
+            single<Reconnector> {
+                get<NatsCommunicator>()
+            }
+        }
+
+        loadKoinModules(interfaceModule)
+        logger.debug { "Interface bindings registered" }
     }
 
     fun shutdown() {

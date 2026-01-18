@@ -15,6 +15,7 @@ import org.koin.core.context.loadKoinModules
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.dsl.override
+import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 
 /**
  * Manages NATS connection with JWT-based authentication.
@@ -23,7 +24,7 @@ import org.koin.dsl.override
  * for authentication. The JwtProvider implementation is registered
  * late by service-registrar after credentials are initialized.
  */
-class NatsCommunicator : KoinComponent {
+class NatsCommunicator : KoinComponent, Reconnector {
     private val logger: KLogger = logger {}
 
     private val natsUrl: String by inject(named("nats-url"))
@@ -101,7 +102,7 @@ class NatsCommunicator : KoinComponent {
      * Reconnect with a fresh JWT token.
      * Use this when the token has expired or connection was lost.
      */
-    suspend fun reconnect() {
+    override suspend fun reconnect() {
         logger.info { "Reconnecting to NATS with fresh JWT" }
         disconnect()
         connect()
