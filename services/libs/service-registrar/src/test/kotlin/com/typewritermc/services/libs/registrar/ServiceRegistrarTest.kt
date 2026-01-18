@@ -1,13 +1,13 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.utils.DeferredProvider
-import com.typewritermc.services.libs.utils.StateProvider
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
 import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.utils.DeferredProvider
+import com.typewritermc.services.libs.utils.StateProvider
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -17,7 +17,11 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import io.natskt.api.NatsClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ServiceRegistrarTest : FunSpec({
 
     context("Constructor Injection") {
@@ -162,6 +166,77 @@ class ServiceRegistrarTest : FunSpec({
             interfaces.contains("KoinComponent") shouldBe false
         }
     }
+
+    context("Heartbeat Lifecycle") {
+
+        test("heartbeat sender starts when service is bound") {
+            val mockRegistrationClient = mockk<RegistrationClient>()
+            coEvery { mockRegistrationClient.queryServiceStatus(any()) } returns ServiceStatusResult.Bound(
+                organizationId = "org-id",
+                organizationName = "Test Org"
+            )
+            coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
+
+            val registrationClientProvider = DeferredProvider<RegistrationClient>()
+            registrationClientProvider.set(mockRegistrationClient)
+
+            val mockReconnector = mockk<Reconnector>()
+            val reconnectorProvider = DeferredProvider<Reconnector>()
+            reconnectorProvider.set(mockReconnector)
+
+            val testScope = TestScope()
+
+            val registrar = createServiceRegistrar(
+                registrationClientProvider = registrationClientProvider,
+                reconnectorProvider = reconnectorProvider,
+                preSetRegistrationClient = false,
+                coroutineScope = testScope
+            )
+
+            registrar.initialize()
+            testScope.testScheduler.runCurrent()
+
+            coVerify(atLeast = 1) { mockRegistrationClient.sendHeartbeat("default-id") }
+        }
+
+        test("heartbeat sender stops on shutdown") {
+            val mockRegistrationClient = mockk<RegistrationClient>()
+            coEvery { mockRegistrationClient.queryServiceStatus(any()) } returns ServiceStatusResult.Bound(
+                organizationId = "org-id",
+                organizationName = "Test Org"
+            )
+            coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
+
+            val registrationClientProvider = DeferredProvider<RegistrationClient>()
+            registrationClientProvider.set(mockRegistrationClient)
+
+            val mockReconnector = mockk<Reconnector>()
+            val reconnectorProvider = DeferredProvider<Reconnector>()
+            reconnectorProvider.set(mockReconnector)
+
+            val testScope = TestScope()
+
+            val registrar = createServiceRegistrar(
+                registrationClientProvider = registrationClientProvider,
+                reconnectorProvider = reconnectorProvider,
+                preSetRegistrationClient = false,
+                coroutineScope = testScope
+            )
+
+            registrar.initialize()
+            testScope.testScheduler.runCurrent()
+
+            val callCountBeforeShutdown = 1
+            coVerify(exactly = callCountBeforeShutdown) { mockRegistrationClient.sendHeartbeat("default-id") }
+
+            registrar.shutdown()
+
+            testScope.testScheduler.advanceTimeBy(60_000)
+            testScope.testScheduler.runCurrent()
+
+            coVerify(exactly = callCountBeforeShutdown) { mockRegistrationClient.sendHeartbeat("default-id") }
+        }
+    }
 })
 
 private fun createServiceRegistrar(
@@ -176,6 +251,7 @@ private fun createServiceRegistrar(
     registrationClientProvider: DeferredProvider<RegistrationClient>? = null,
     reconnectorProvider: DeferredProvider<Reconnector>? = null,
     registrationStateProvider: StateProvider<RegistrationState>? = null,
+    coroutineScope: CoroutineScope? = null,
     preSetRegistrationClient: Boolean = true
 ): ServiceRegistrar {
     val storedCredential = Credential(id = "default-id", name = "default", token = "token")
@@ -207,6 +283,7 @@ private fun createServiceRegistrar(
             organizationId = "org-id",
             organizationName = "Test Organization"
         )
+        coEvery { mockRegClient.sendHeartbeat(any()) } just Runs
         regClientProvider.set(mockRegClient)
     }
 
@@ -217,6 +294,8 @@ private fun createServiceRegistrar(
 
     val stateProvider: StateProvider<RegistrationState> =
         registrationStateProvider ?: StateProvider(RegistrationState.Initializing)
+
+    val scope = coroutineScope ?: TestScope()
 
     return ServiceRegistrar(
         credentialStorage = storage,
@@ -229,6 +308,7 @@ private fun createServiceRegistrar(
         messageBusProvider = msgBusProvider,
         registrationClientProvider = regClientProvider,
         reconnectorProvider = reconProvider,
-        registrationStateProvider = stateProvider
+        registrationStateProvider = stateProvider,
+        coroutineScope = scope
     )
 }

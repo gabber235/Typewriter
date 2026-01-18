@@ -4,6 +4,7 @@
 //! WASM components with real NATS and SurrealDB infrastructure via testcontainers.
 
 pub mod builders;
+pub mod debug;
 pub mod harness;
 
 // Generated protobuf types
@@ -15,7 +16,8 @@ mod fixtures;
 // Re-export main types for convenience
 pub use builders::{
     JoinRequest, JoinRequestBuilder, MemberBuilder, Organization, OrganizationBuilder, Role,
-    RoleBuilder, User, UserBuilder,
+    RoleBuilder, Service, ServiceBuilder, User, UserBuilder,
 };
-pub use fixtures::get_fixtures;
+pub use debug::export_db_state;
+pub use fixtures::{get_fixtures, TestFixtures};
 pub use harness::{ComponentRegistry, DeploymentResult, TestHost, TestInfra, TestNatsClient};

@@ -7,10 +7,12 @@ mod join_request;
 mod member;
 mod organization;
 mod role;
+mod service;
 mod user;
 
 pub use join_request::{JoinRequest, JoinRequestBuilder};
 pub use member::MemberBuilder;
 pub use organization::{Organization, OrganizationBuilder};
 pub use role::{Role, RoleBuilder};
+pub use service::{Service, ServiceBuilder};
 pub use user::{User, UserBuilder};
