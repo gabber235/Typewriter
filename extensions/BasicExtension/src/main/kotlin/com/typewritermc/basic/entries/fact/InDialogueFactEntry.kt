@@ -33,10 +33,12 @@ class InDialogueFactEntry(
     val dialogue: Ref<DialogueEntry> = emptyRef(),
 ) : ReadableFactEntry {
     override fun readSinglePlayer(player: Player): FactData {
-        val inDialogue = if (dialogue.isSet)
-            player.currentDialogue?.id == dialogue.id
-        else
+        val inDialogue = if (dialogue.isSet) {
+            val currentDialogue = player.currentDialogue
+            currentDialogue != null && currentDialogue.id == dialogue.id
+        } else {
             player.isInDialogue
+        }
 
         return FactData(inDialogue.toInt())
     }
