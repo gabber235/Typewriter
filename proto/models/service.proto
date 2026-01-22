@@ -16,6 +16,27 @@ enum ServiceType {
   SERVICE_TYPE_REALM = 2;
 }
 
+// ServiceStatus represents the current online/offline status of a service.
+enum ServiceStatus {
+  // Unspecified status (service has never reported).
+  SERVICE_STATUS_UNSPECIFIED = 0;
+
+  // Service is online and responding to heartbeats.
+  SERVICE_STATUS_ONLINE = 1;
+
+  // Service has explicitly shut down.
+  SERVICE_STATUS_OFFLINE = 2;
+}
+
+// ServiceState contains the current status and last seen timestamp.
+message ServiceState {
+  // Current status of the service.
+  ServiceStatus status = 1;
+
+  // Timestamp when the service was last seen.
+  google.protobuf.Timestamp last_seen = 2;
+}
+
 // ServiceMetadata contains version and other metadata about a service.
 message ServiceMetadata {
   // Version of the engine (if applicable).
@@ -39,9 +60,12 @@ message Service {
   // Timestamp when the service was created.
   google.protobuf.Timestamp created_at = 4;
 
-  // Timestamp when the service was last seen (optional).
-  optional google.protobuf.Timestamp last_seen = 5;
+  // Current state of the service (status and last seen).
+  ServiceState state = 5;
 
   // Metadata about the service.
   ServiceMetadata metadata = 6;
+
+  // Organization this service is bound to (optional).
+  optional string organization_id = 7;
 }

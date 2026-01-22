@@ -149,10 +149,23 @@ message UnbindServiceResponse {
 // =============================================================================
 // Service Heartbeat
 // Subject: typewriter.in.service.{service_id}.heartbeat
-// Sent by services periodically to update their last_seen timestamp.
+// Sent by services periodically to indicate they are online.
+// Updates state.status to ONLINE and state.last_seen to current time.
 // Fire-and-forget - no response is sent.
 // =============================================================================
 
-// ServiceHeartbeatRequest updates the service's last_seen timestamp.
+// ServiceHeartbeatRequest updates the service's state to online.
 // Service ID is extracted from the NATS subject.
 message ServiceHeartbeatRequest {}
+
+// =============================================================================
+// Service Shutdown
+// Subject: typewriter.in.service.{service_id}.shutdown
+// Sent by services when they are shutting down gracefully.
+// Updates state.status to OFFLINE and state.last_seen to current time.
+// Fire-and-forget - no response is sent.
+// =============================================================================
+
+// ServiceShutdownRequest indicates the service is going offline.
+// Service ID is extracted from the NATS subject.
+message ServiceShutdownRequest {}

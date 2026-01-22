@@ -26,8 +26,8 @@ message ListMembers {
 
 // UpdateMemberRolesRequest updates the roles assigned to a member.
 message UpdateMemberRolesRequest {
-  // Unique identifier of the member to update
-  string member_id = 1;
+  // User ID of the member to update
+  string user_id = 1;
 
   // List of role IDs to assign to the member
   repeated string role_ids = 2;
@@ -43,8 +43,8 @@ message UpdateMemberRolesResponse {
 
 // RemoveMemberRequest removes a member from the organization.
 message RemoveMemberRequest {
-  // Unique identifier of the member to remove
-  string member_id = 1;
+  // User ID of the member to remove
+  string user_id = 1;
 }
 
 // RemoveMemberResponse indicates success or returns an error.
