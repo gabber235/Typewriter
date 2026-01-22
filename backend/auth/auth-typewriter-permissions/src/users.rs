@@ -73,6 +73,8 @@ pub fn handle_panel_user(
         add_user_organizations_permissions(&user_id, &mut allow_publish, &mut allow_subscribe);
 
         if let Some(ref org_id) = organization_id {
+            // TODO!: Validate that the user actually has access to the organization (currently
+            // this is a security risk)
             add_organization_roles_permissions(
                 &user_id,
                 org_id,
@@ -80,6 +82,12 @@ pub fn handle_panel_user(
                 &mut allow_subscribe,
             );
             add_organization_members_permissions(
+                &user_id,
+                org_id,
+                &mut allow_publish,
+                &mut allow_subscribe,
+            );
+            add_organization_services_permissions(
                 &user_id,
                 org_id,
                 &mut allow_publish,
@@ -197,6 +205,35 @@ fn add_organization_members_permissions(
 
     allow_publish.push(format!(
         "cloud.out.user.{}.organization.{}.members.join_codes.revoke",
+        user_id, org_id
+    ));
+}
+
+/// Adds permissions for the organization/services component
+fn add_organization_services_permissions(
+    user_id: &str,
+    org_id: &str,
+    allow_publish: &mut Vec<String>,
+    allow_subscribe: &mut Vec<String>,
+) {
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.services.list",
+        user_id, org_id
+    ));
+    allow_subscribe.push(format!("cloud.in.organization.{}.services.list", org_id));
+
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.services.bind",
+        user_id, org_id
+    ));
+
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.services.update",
+        user_id, org_id
+    ));
+
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.services.unbind",
         user_id, org_id
     ));
 }

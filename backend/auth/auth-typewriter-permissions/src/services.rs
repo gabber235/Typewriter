@@ -65,6 +65,8 @@ pub fn handle_service(
 
     allow_subscribe.push(format!("_INBOX.{}.>", service_id));
     allow_publish.push(format!("cloud.out.service.{}.status", service_id));
+    allow_publish.push(format!("cloud.out.service.{}.heartbeat", service_id));
+    allow_publish.push(format!("cloud.out.service.{}.shutdown", service_id));
 
     match status.binding {
         Some(service_status::Binding::Bound(bound)) => {
