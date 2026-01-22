@@ -64,7 +64,7 @@ impl<'de> Deserialize<'de> for Datetime {
             type Value = Datetime;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("a datetime string in RFC 3339 format")
+                formatter.write_str("a datetime string in RFC 3339 format or Unix timestamp")
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
@@ -81,6 +81,33 @@ impl<'de> Deserialize<'de> for Datetime {
                 E: de::Error,
             {
                 self.visit_str(&value)
+            }
+
+            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                DateTime::from_timestamp(value, 0)
+                    .map(Datetime)
+                    .ok_or_else(|| de::Error::custom(format!("invalid Unix timestamp: {}", value)))
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                self.visit_i64(value as i64)
+            }
+
+            fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                let secs = value.trunc() as i64;
+                let nanos = ((value.fract()) * 1_000_000_000.0) as u32;
+                DateTime::from_timestamp(secs, nanos)
+                    .map(Datetime)
+                    .ok_or_else(|| de::Error::custom(format!("invalid Unix timestamp: {}", value)))
             }
         }
 

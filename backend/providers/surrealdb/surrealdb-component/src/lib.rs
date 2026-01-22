@@ -8,19 +8,17 @@ use crate::seamlezz::surrealdb::call;
 use anyhow::{anyhow, Context, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_content::{Deserializer, Value};
 
 pub trait SingleQueryResultExtractor: Sized {
     fn from_bytes(bytes: &[u8]) -> Result<Self>;
 }
 
 fn parse<D: DeserializeOwned>(bytes: &[u8]) -> Result<D> {
-    let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
-    let deserializer = Deserializer::new(value.clone()).coerce_numbers();
-    D::deserialize(deserializer).with_context(|| {
+    ciborium::from_reader(bytes).with_context(|| {
+        let json_preview: Result<serde_json::Value, _> = ciborium::from_reader(bytes);
         format!(
-            "Deserialization content error, could not parse {} into {}",
-            serde_json::to_string(&value).unwrap_or_else(|_| format!("{:?}", value)),
+            "CBOR Deserialization failed, data preview: {:?}, target type: {}",
+            json_preview.ok(),
             std::any::type_name::<D>()
         )
     })
@@ -40,15 +38,7 @@ where
     D: DeserializeOwned,
 {
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        let value: Value = serde_cbor::from_slice(bytes).context("CBOR Deserialization failed")?;
-        let deserializer = Deserializer::new(value.clone()).coerce_numbers();
-        let items = Vec::<D>::deserialize(deserializer).with_context(|| {
-            format!(
-                "Deserialization content error could not parse {} into Option<{}>",
-                serde_json::to_string(&value).unwrap_or_else(|_| format!("{:?}", value)),
-                std::any::type_name::<D>()
-            )
-        })?;
+        let items: Vec<D> = parse(bytes)?;
         Ok(items.into_iter().next())
     }
 }
@@ -107,22 +97,31 @@ impl QueryResultHolder {
     }
 
     fn find_user_error(&self) -> Option<String> {
-        let Some(Err(e)) = self.results.iter().find(|r| {
-            r.as_ref()
-                .is_err_and(|e| e.starts_with("An error occurred: "))
-        }) else {
-            return None;
-        };
+        let mut error_messages = Vec::new();
 
-        Some(
-            e.strip_prefix("An error occurred: ")
-                .unwrap_or(e)
-                .to_string(),
-        )
+        for (idx, result) in self.results.iter().enumerate() {
+            if let Err(err) = result {
+                let err_str = err.to_string();
+                if err_str.contains("The query was not executed due to a failed transaction") {
+                    continue;
+                }
+                error_messages.push(format!("Statement {}: {}", idx, err_str));
+            }
+        }
+
+        if error_messages.is_empty() {
+            None
+        } else {
+            Some(error_messages.join("; "))
+        }
     }
 
     pub fn len(&self) -> usize {
         self.results.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.results.is_empty()
     }
 }
 
@@ -138,13 +137,14 @@ impl<'a> Query<'a> {
             return self;
         }
 
-        match serde_cbor::to_vec(&value) {
-            Ok(bytes) => {
+        let mut bytes = Vec::new();
+        match ciborium::into_writer(&value, &mut bytes) {
+            Ok(()) => {
                 self.params.push((key.to_string(), bytes));
             }
             Err(e) => {
                 self.bind_error = Some(
-                    anyhow!(e).context(format!("CBOR serialization failed for key '{}'", key)),
+                    anyhow!(e.to_string()).context(format!("CBOR serialization failed for key '{}'", key)),
                 );
             }
         }

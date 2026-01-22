@@ -313,71 +313,58 @@ impl<'de> Deserialize<'de> for RecordIdKey {
             where
                 M: MapAccess<'de>,
             {
-                // First, collect all key-value pairs to determine the map type
-                let mut entries: Vec<(String, serde_json::Value)> = Vec::new();
+                #[derive(Deserialize)]
+                #[serde(untagged)]
+                enum TaggedValue {
+                    String(String),
+                    Number(i64),
+                    Array(Vec<RecordIdValue>),
+                    Object(HashMap<String, RecordIdValue>),
+                }
+
+                let mut entries: Vec<(String, TaggedValue)> = Vec::new();
 
                 while let Some(key) = map.next_key::<String>()? {
-                    let value: serde_json::Value = map.next_value()?;
+                    let value: TaggedValue = map.next_value()?;
                     entries.push((key, value));
                 }
 
-                // Check for tagged enum format (single key that's a type discriminator)
                 if entries.len() == 1 {
-                    let (key, value) = &entries[0];
-                    match key.as_str() {
-                        "String" => {
-                            if let Some(s) = value.as_str() {
-                                return Ok(RecordIdKey::String(s.to_string()));
-                            }
+                    let (key, value) = entries.into_iter().next().unwrap();
+                    match (key.as_str(), value) {
+                        ("String", TaggedValue::String(s)) => return Ok(RecordIdKey::String(s)),
+                        ("Number", TaggedValue::Number(n))
+                        | ("Integer", TaggedValue::Number(n)) => return Ok(RecordIdKey::Number(n)),
+                        ("Uuid", TaggedValue::String(s)) => return Ok(RecordIdKey::Uuid(s)),
+                        ("Array", TaggedValue::Array(arr)) => return Ok(RecordIdKey::Array(arr)),
+                        ("Object", TaggedValue::Object(obj)) => return Ok(RecordIdKey::Object(obj)),
+                        (k, v) => {
+                            let mut map = HashMap::new();
+                            let val = match v {
+                                TaggedValue::String(s) => RecordIdValue::String(s),
+                                TaggedValue::Number(n) => RecordIdValue::Number(n),
+                                TaggedValue::Array(a) => RecordIdValue::Array(a),
+                                TaggedValue::Object(o) => RecordIdValue::Object(o),
+                            };
+                            map.insert(k.to_string(), val);
+                            return Ok(RecordIdKey::Object(map));
                         }
-                        "Number" | "Integer" => {
-                            if let Some(n) = value.as_i64() {
-                                return Ok(RecordIdKey::Number(n));
-                            }
-                        }
-                        "Uuid" => {
-                            if let Some(s) = value.as_str() {
-                                return Ok(RecordIdKey::Uuid(s.to_string()));
-                            }
-                        }
-                        "Array" => {
-                            if let Some(arr) = value.as_array() {
-                                let values: Result<Vec<RecordIdValue>, _> = arr
-                                    .iter()
-                                    .map(|v| {
-                                        serde_json::from_value(v.clone()).map_err(de::Error::custom)
-                                    })
-                                    .collect();
-                                return Ok(RecordIdKey::Array(values?));
-                            }
-                        }
-                        "Object" => {
-                            if let Some(obj) = value.as_object() {
-                                let values: Result<HashMap<String, RecordIdValue>, _> = obj
-                                    .iter()
-                                    .map(|(k, v)| {
-                                        let val: RecordIdValue = serde_json::from_value(v.clone())
-                                            .map_err(de::Error::custom)?;
-                                        Ok((k.clone(), val))
-                                    })
-                                    .collect();
-                                return Ok(RecordIdKey::Object(values?));
-                            }
-                        }
-                        _ => {}
                     }
                 }
 
-                // Not a tagged enum, treat as a regular object ID
-                let values: Result<HashMap<String, RecordIdValue>, _> = entries
+                let values: HashMap<String, RecordIdValue> = entries
                     .into_iter()
                     .map(|(k, v)| {
-                        let val: RecordIdValue =
-                            serde_json::from_value(v).map_err(de::Error::custom)?;
-                        Ok((k, val))
+                        let val = match v {
+                            TaggedValue::String(s) => RecordIdValue::String(s),
+                            TaggedValue::Number(n) => RecordIdValue::Number(n),
+                            TaggedValue::Array(a) => RecordIdValue::Array(a),
+                            TaggedValue::Object(o) => RecordIdValue::Object(o),
+                        };
+                        (k, val)
                     })
                     .collect();
-                Ok(RecordIdKey::Object(values?))
+                Ok(RecordIdKey::Object(values))
             }
         }
 
@@ -427,7 +414,7 @@ impl<'de> Deserialize<'de> for RecordId {
             }
         }
 
-        deserializer.deserialize_map(RecordIdVisitor)
+        deserializer.deserialize_any(RecordIdVisitor)
     }
 }
 
