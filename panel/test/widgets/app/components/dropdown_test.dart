@@ -83,7 +83,7 @@ void main() {
       /// First dismiss moves focus from the input to the surrounding node.
       /// We use the DropdownMenu element context (not FocusManager) to ensure
       /// the action is dispatched from the correct level in the widget tree.
-      var context = tester.element(find.byType(DropdownMenu<String>));
+      final context = tester.element(find.byType(DropdownMenu<String>));
       Actions.invoke(context, const DismissIntent());
       await tester.pump();
 

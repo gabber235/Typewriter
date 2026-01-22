@@ -24,7 +24,7 @@ void main() {
     group("randomElement", () {
       test("throws exception for empty list", () {
         final list = <int>[];
-        expect(() => list.randomElement(), throwsException);
+        expect(list.randomElement, throwsException);
       });
 
       test("returns element for non-empty list", () {

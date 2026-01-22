@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";

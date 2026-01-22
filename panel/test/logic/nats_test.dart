@@ -3,7 +3,6 @@ import "dart:typed_data";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:protobuf/protobuf.dart";
 import "package:typewriter_panel/generated/api/auth.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";

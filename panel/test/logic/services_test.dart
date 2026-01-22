@@ -5,31 +5,38 @@ import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/logic/services.dart";
 
 void main() {
-  Service createServiceWithLastSeen(DateTime lastSeenTime) {
+  Service createServiceWithState({
+    required DateTime lastSeenTime,
+    ServiceStatus status = ServiceStatus.SERVICE_STATUS_ONLINE,
+  }) {
     final timestamp = Timestamp()
       ..seconds = Int64(lastSeenTime.millisecondsSinceEpoch ~/ 1000);
-    return Service(id: "test-id", lastSeen: timestamp);
+    final state = ServiceState(status: status, lastSeen: timestamp);
+    return Service(id: "test-id", state: state);
   }
 
-  Service createServiceWithoutLastSeen() {
+  Service createServiceWithoutState() {
     return Service(id: "test-id");
   }
 
   group("ServiceExtension.isOnline", () {
-    test("returns true when lastSeen is within 2 minutes", () {
-      final now = DateTime.now();
-      final oneMinuteAgo = now.subtract(const Duration(minutes: 1));
-      final service = createServiceWithLastSeen(oneMinuteAgo);
+    test(
+      "returns true when status is ONLINE and lastSeen is within 2 minutes",
+      () {
+        final now = DateTime.now();
+        final oneMinuteAgo = now.subtract(const Duration(minutes: 1));
+        final service = createServiceWithState(lastSeenTime: oneMinuteAgo);
 
-      expect(service.isOnline, isTrue);
-    });
+        expect(service.isOnline, isTrue);
+      },
+    );
 
     test("returns true when lastSeen is just under 2 minutes ago", () {
       final now = DateTime.now();
       final justUnder2Minutes = now.subtract(
         const Duration(minutes: 1, seconds: 59),
       );
-      final service = createServiceWithLastSeen(justUnder2Minutes);
+      final service = createServiceWithState(lastSeenTime: justUnder2Minutes);
 
       expect(service.isOnline, isTrue);
     });
@@ -37,7 +44,7 @@ void main() {
     test("returns false when lastSeen is exactly 2 minutes ago", () {
       final now = DateTime.now();
       final exactly2MinutesAgo = now.subtract(const Duration(minutes: 2));
-      final service = createServiceWithLastSeen(exactly2MinutesAgo);
+      final service = createServiceWithState(lastSeenTime: exactly2MinutesAgo);
 
       expect(service.isOnline, isFalse);
     });
@@ -45,7 +52,7 @@ void main() {
     test("returns false when lastSeen is older than 2 minutes", () {
       final now = DateTime.now();
       final fiveMinutesAgo = now.subtract(const Duration(minutes: 5));
-      final service = createServiceWithLastSeen(fiveMinutesAgo);
+      final service = createServiceWithState(lastSeenTime: fiveMinutesAgo);
 
       expect(service.isOnline, isFalse);
     });
@@ -53,15 +60,37 @@ void main() {
     test("returns false when lastSeen is much older", () {
       final now = DateTime.now();
       final oneDayAgo = now.subtract(const Duration(days: 1));
-      final service = createServiceWithLastSeen(oneDayAgo);
+      final service = createServiceWithState(lastSeenTime: oneDayAgo);
 
       expect(service.isOnline, isFalse);
     });
 
-    test("returns false when lastSeen is not set", () {
-      final service = createServiceWithoutLastSeen();
+    test("returns false when state is not set", () {
+      final service = createServiceWithoutState();
 
       expect(service.isOnline, isFalse);
+    });
+
+    test("returns false when status is OFFLINE even with recent lastSeen", () {
+      final now = DateTime.now();
+      final oneMinuteAgo = now.subtract(const Duration(minutes: 1));
+      final service = createServiceWithState(
+        lastSeenTime: oneMinuteAgo,
+        status: ServiceStatus.SERVICE_STATUS_OFFLINE,
+      );
+
+      expect(service.isOnline, isFalse);
+    });
+
+    test("returns false when status is UNSPECIFIED with recent lastSeen", () {
+      final now = DateTime.now();
+      final oneMinuteAgo = now.subtract(const Duration(minutes: 1));
+      final service = createServiceWithState(
+        lastSeenTime: oneMinuteAgo,
+        status: ServiceStatus.SERVICE_STATUS_UNSPECIFIED,
+      );
+
+      expect(service.isOnline, isTrue);
     });
   });
 
@@ -69,7 +98,7 @@ void main() {
     test('returns "Just now" for less than 60 seconds', () {
       final now = DateTime.now();
       final thirtySecondsAgo = now.subtract(const Duration(seconds: 30));
-      final service = createServiceWithLastSeen(thirtySecondsAgo);
+      final service = createServiceWithState(lastSeenTime: thirtySecondsAgo);
 
       expect(service.lastSeenLabel, equals("Just now"));
     });
@@ -77,15 +106,15 @@ void main() {
     test('returns "Just now" at exactly 59 seconds', () {
       final now = DateTime.now();
       final fiftyNineSecondsAgo = now.subtract(const Duration(seconds: 59));
-      final service = createServiceWithLastSeen(fiftyNineSecondsAgo);
+      final service = createServiceWithState(lastSeenTime: fiftyNineSecondsAgo);
 
       expect(service.lastSeenLabel, equals("Just now"));
     });
 
-    test('returns minutes format at exactly 60 seconds', () {
+    test("returns minutes format at exactly 60 seconds", () {
       final now = DateTime.now();
       final sixtySecondsAgo = now.subtract(const Duration(seconds: 60));
-      final service = createServiceWithLastSeen(sixtySecondsAgo);
+      final service = createServiceWithState(lastSeenTime: sixtySecondsAgo);
 
       expect(service.lastSeenLabel, equals("1m ago"));
     });
@@ -94,11 +123,13 @@ void main() {
       final now = DateTime.now();
 
       final fiveMinutesAgo = now.subtract(const Duration(minutes: 5));
-      final service5m = createServiceWithLastSeen(fiveMinutesAgo);
+      final service5m = createServiceWithState(lastSeenTime: fiveMinutesAgo);
       expect(service5m.lastSeenLabel, equals("5m ago"));
 
       final fiftyNineMinutesAgo = now.subtract(const Duration(minutes: 59));
-      final service59m = createServiceWithLastSeen(fiftyNineMinutesAgo);
+      final service59m = createServiceWithState(
+        lastSeenTime: fiftyNineMinutesAgo,
+      );
       expect(service59m.lastSeenLabel, equals("59m ago"));
     });
 
@@ -106,11 +137,13 @@ void main() {
       final now = DateTime.now();
 
       final twoHoursAgo = now.subtract(const Duration(hours: 2));
-      final service2h = createServiceWithLastSeen(twoHoursAgo);
+      final service2h = createServiceWithState(lastSeenTime: twoHoursAgo);
       expect(service2h.lastSeenLabel, equals("2h ago"));
 
       final twentyThreeHoursAgo = now.subtract(const Duration(hours: 23));
-      final service23h = createServiceWithLastSeen(twentyThreeHoursAgo);
+      final service23h = createServiceWithState(
+        lastSeenTime: twentyThreeHoursAgo,
+      );
       expect(service23h.lastSeenLabel, equals("23h ago"));
     });
 
@@ -118,20 +151,20 @@ void main() {
       final now = DateTime.now();
 
       final oneDayAgo = now.subtract(const Duration(days: 1));
-      final service1d = createServiceWithLastSeen(oneDayAgo);
+      final service1d = createServiceWithState(lastSeenTime: oneDayAgo);
       expect(service1d.lastSeenLabel, equals("1d ago"));
 
       final twoDaysAgo = now.subtract(const Duration(days: 2));
-      final service2d = createServiceWithLastSeen(twoDaysAgo);
+      final service2d = createServiceWithState(lastSeenTime: twoDaysAgo);
       expect(service2d.lastSeenLabel, equals("2d ago"));
 
       final tenDaysAgo = now.subtract(const Duration(days: 10));
-      final service10d = createServiceWithLastSeen(tenDaysAgo);
+      final service10d = createServiceWithState(lastSeenTime: tenDaysAgo);
       expect(service10d.lastSeenLabel, equals("10d ago"));
     });
 
-    test('returns "Never" when lastSeen is not set', () {
-      final service = createServiceWithoutLastSeen();
+    test('returns "Never" when state is not set', () {
+      final service = createServiceWithoutState();
 
       expect(service.lastSeenLabel, equals("Never"));
     });
