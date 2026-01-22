@@ -207,9 +207,9 @@ pub struct ListMembers {
 /// UpdateMemberRolesRequest updates the roles assigned to a member.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateMemberRolesRequest {
-    /// Unique identifier of the member to update
+    /// User ID of the member to update
     #[prost(string, tag = "1")]
-    pub member_id: ::prost::alloc::string::String,
+    pub user_id: ::prost::alloc::string::String,
     /// List of role IDs to assign to the member
     #[prost(string, repeated, tag = "2")]
     pub role_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
@@ -233,9 +233,9 @@ pub mod update_member_roles_response {
 /// RemoveMemberRequest removes a member from the organization.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RemoveMemberRequest {
-    /// Unique identifier of the member to remove
+    /// User ID of the member to remove
     #[prost(string, tag = "1")]
-    pub member_id: ::prost::alloc::string::String,
+    pub user_id: ::prost::alloc::string::String,
 }
 /// RemoveMemberResponse indicates success or returns an error.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -584,6 +584,178 @@ pub mod rename_page_response {
         Error(super::super::super::models::v1::Error),
     }
 }
+/// GetServiceStatusRequest queries a service's binding status.
+/// Service ID is extracted from the NATS subject.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct GetServiceStatusRequest {}
+/// GetServiceStatusResponse returns the service's binding status.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetServiceStatusResponse {
+    #[prost(oneof = "get_service_status_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<get_service_status_response::Result>,
+}
+/// Nested message and enum types in `GetServiceStatusResponse`.
+pub mod get_service_status_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Status(super::ServiceStatus),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+/// ServiceStatus indicates whether a service is bound to an organization.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ServiceStatus {
+    #[prost(oneof = "service_status::Binding", tags = "1, 2")]
+    pub binding: ::core::option::Option<service_status::Binding>,
+}
+/// Nested message and enum types in `ServiceStatus`.
+pub mod service_status {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Binding {
+        #[prost(message, tag = "1")]
+        Bound(super::BoundStatus),
+        #[prost(message, tag = "2")]
+        Unbound(super::UnboundStatus),
+    }
+}
+/// BoundStatus indicates the service is bound to an organization.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BoundStatus {
+    #[prost(string, tag = "1")]
+    pub organization_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub organization_name: ::prost::alloc::string::String,
+}
+/// UnboundStatus indicates the service needs registration.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UnboundStatus {
+    #[prost(string, tag = "1")]
+    pub registration_token: ::prost::alloc::string::String,
+}
+/// BindServiceRequest binds a service to the organization using a token.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BindServiceRequest {
+    #[prost(string, tag = "1")]
+    pub registration_token: ::prost::alloc::string::String,
+}
+/// BindServiceResponse returns the bound service or an error.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BindServiceResponse {
+    #[prost(oneof = "bind_service_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<bind_service_response::Result>,
+}
+/// Nested message and enum types in `BindServiceResponse`.
+pub mod bind_service_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Service(super::BoundService),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+/// BoundService contains info about the newly bound service.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BoundService {
+    #[prost(string, tag = "1")]
+    pub service_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub service_name: ::prost::alloc::string::String,
+    #[prost(enumeration = "super::super::models::v1::ServiceType", repeated, tag = "3")]
+    pub service_types: ::prost::alloc::vec::Vec<i32>,
+}
+/// ListOrganizationServicesRequest requests all services for an organization.
+/// Organization ID is extracted from the NATS subject.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ListOrganizationServicesRequest {}
+/// ListOrganizationServicesResponse returns the services or an error.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListOrganizationServicesResponse {
+    #[prost(oneof = "list_organization_services_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<list_organization_services_response::Result>,
+}
+/// Nested message and enum types in `ListOrganizationServicesResponse`.
+pub mod list_organization_services_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Services(super::OrganizationServicesList),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+/// OrganizationServicesList contains the list of services.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct OrganizationServicesList {
+    #[prost(message, repeated, tag = "1")]
+    pub services: ::prost::alloc::vec::Vec<super::super::models::v1::Service>,
+}
+/// ServiceBoundNotification is published when binding completes.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ServiceBoundNotification {
+    #[prost(string, tag = "1")]
+    pub organization_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub organization_name: ::prost::alloc::string::String,
+}
+/// UpdateServiceRequest updates a service's metadata.
+/// Service must be bound to the organization specified in the NATS subject.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdateServiceRequest {
+    #[prost(string, tag = "1")]
+    pub service_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub name: ::prost::alloc::string::String,
+}
+/// UpdateServiceResponse returns the updated service or an error.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdateServiceResponse {
+    #[prost(oneof = "update_service_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<update_service_response::Result>,
+}
+/// Nested message and enum types in `UpdateServiceResponse`.
+pub mod update_service_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Service(super::super::super::models::v1::Service),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+/// UnbindServiceRequest removes a service from the organization.
+/// Service must be bound to the organization specified in the NATS subject.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UnbindServiceRequest {
+    #[prost(string, tag = "1")]
+    pub service_id: ::prost::alloc::string::String,
+}
+/// UnbindServiceResponse returns success or an error.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UnbindServiceResponse {
+    #[prost(oneof = "unbind_service_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<unbind_service_response::Result>,
+}
+/// Nested message and enum types in `UnbindServiceResponse`.
+pub mod unbind_service_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(bool, tag = "1")]
+        Success(bool),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+/// ServiceHeartbeatRequest updates the service's state to online.
+/// Service ID is extracted from the NATS subject.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ServiceHeartbeatRequest {}
+/// ServiceShutdownRequest indicates the service is going offline.
+/// Service ID is extracted from the NATS subject.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ServiceShutdownRequest {}
 /// IssueServiceIdentityRequest requests the issuance of a new service identity.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IssueServiceIdentityRequest {

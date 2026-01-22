@@ -13,6 +13,16 @@ pub struct Error {
     #[prost(string, repeated, tag = "3")]
     pub details: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
+/// ServiceState contains the current status and last seen timestamp.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ServiceState {
+    /// Current status of the service.
+    #[prost(enumeration = "ServiceStatus", tag = "1")]
+    pub status: i32,
+    /// Timestamp when the service was last seen.
+    #[prost(message, optional, tag = "2")]
+    pub last_seen: ::core::option::Option<::prost_types::Timestamp>,
+}
 /// ServiceMetadata contains version and other metadata about a service.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ServiceMetadata {
@@ -38,12 +48,15 @@ pub struct Service {
     /// Timestamp when the service was created.
     #[prost(message, optional, tag = "4")]
     pub created_at: ::core::option::Option<::prost_types::Timestamp>,
-    /// Timestamp when the service was last seen (optional).
+    /// Current state of the service (status and last seen).
     #[prost(message, optional, tag = "5")]
-    pub last_seen: ::core::option::Option<::prost_types::Timestamp>,
+    pub state: ::core::option::Option<ServiceState>,
     /// Metadata about the service.
     #[prost(message, optional, tag = "6")]
     pub metadata: ::core::option::Option<ServiceMetadata>,
+    /// Organization this service is bound to (optional).
+    #[prost(string, optional, tag = "7")]
+    pub organization_id: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// ServiceType represents the type of service (engine or realm).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -74,6 +87,39 @@ impl ServiceType {
             "SERVICE_TYPE_UNSPECIFIED" => Some(Self::Unspecified),
             "SERVICE_TYPE_ENGINE" => Some(Self::Engine),
             "SERVICE_TYPE_REALM" => Some(Self::Realm),
+            _ => None,
+        }
+    }
+}
+/// ServiceStatus represents the current online/offline status of a service.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum ServiceStatus {
+    /// Unspecified status (service has never reported).
+    Unspecified = 0,
+    /// Service is online and responding to heartbeats.
+    Online = 1,
+    /// Service has explicitly shut down.
+    Offline = 2,
+}
+impl ServiceStatus {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "SERVICE_STATUS_UNSPECIFIED",
+            Self::Online => "SERVICE_STATUS_ONLINE",
+            Self::Offline => "SERVICE_STATUS_OFFLINE",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "SERVICE_STATUS_UNSPECIFIED" => Some(Self::Unspecified),
+            "SERVICE_STATUS_ONLINE" => Some(Self::Online),
+            "SERVICE_STATUS_OFFLINE" => Some(Self::Offline),
             _ => None,
         }
     }
