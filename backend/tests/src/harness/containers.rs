@@ -4,33 +4,30 @@
 
 use anyhow::{Context, Result};
 use std::path::Path;
+use std::sync::Arc;
 use surrealdb::Surreal;
 use surrealdb::engine::any::Any;
+use testcontainers::ContainerAsync;
 use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::nats::Nats;
 use testcontainers_modules::surrealdb::SurrealDb;
+use tokio::sync::Mutex;
 
-/// Test infrastructure holding all running containers and connections.
-pub struct TestInfra {
-    /// NATS container instance
-    _nats_container: testcontainers::ContainerAsync<Nats>,
-    /// SurrealDB container instance
-    _surrealdb_container: testcontainers::ContainerAsync<SurrealDb>,
-    /// NATS connection URL
+/// Shared infrastructure holding containers that persist across all tests.
+/// The containers are wrapped in Mutex<Option> to allow cleanup on process exit.
+pub struct SharedInfra {
+    nats_container: Mutex<Option<ContainerAsync<Nats>>>,
+    surrealdb_container: Mutex<Option<ContainerAsync<SurrealDb>>>,
     pub nats_url: String,
-    /// SurrealDB connection URL
     pub surrealdb_url: String,
-    /// SurrealDB client for direct database access
-    pub db: Surreal<Any>,
-    /// NATS client for messaging
-    nats_client: async_nats::Client,
+    pub surrealdb_http_url: String,
 }
 
-impl TestInfra {
-    /// Start test infrastructure (NATS + SurrealDB containers).
+impl SharedInfra {
+    /// Start shared infrastructure (NATS + SurrealDB containers).
     ///
     /// This also imports the database schema from `database/database.surql`.
-    pub async fn start(backend_path: &Path) -> Result<Self> {
+    pub async fn start(backend_path: &Path) -> Result<Arc<Self>> {
         let nats_container = Nats::default()
             .start()
             .await
@@ -41,11 +38,6 @@ impl TestInfra {
             .context("Failed to get NATS port")?;
         let nats_url = format!("nats://127.0.0.1:{}", nats_port);
         tracing::info!(url = %nats_url, "NATS container started");
-
-        let nats_client = async_nats::connect(&nats_url)
-            .await
-            .context("Failed to connect to NATS")?;
-        tracing::info!("Connected to NATS");
 
         let surrealdb_container = SurrealDb::default()
             .with_user("root")
@@ -58,6 +50,7 @@ impl TestInfra {
             .await
             .context("Failed to get SurrealDB port")?;
         let surrealdb_url = format!("ws://127.0.0.1:{}", surreal_port);
+        let surrealdb_http_url = format!("http://127.0.0.1:{}", surreal_port);
         tracing::info!(url = %surrealdb_url, "SurrealDB container started");
 
         let db: Surreal<Any> = Surreal::init();
@@ -86,11 +79,73 @@ impl TestInfra {
             .context("Failed to import database schema")?;
         tracing::info!("Database schema imported successfully");
 
-        Ok(Self {
-            _nats_container: nats_container,
-            _surrealdb_container: surrealdb_container,
+        Ok(Arc::new(Self {
+            nats_container: Mutex::new(Some(nats_container)),
+            surrealdb_container: Mutex::new(Some(surrealdb_container)),
             nats_url,
             surrealdb_url,
+            surrealdb_http_url,
+        }))
+    }
+
+    /// Stop and remove all containers.
+    /// Called during process cleanup via ctor::dtor.
+    pub async fn stop(&self) {
+        tracing::info!("Stopping test containers...");
+        if let Some(c) = self.nats_container.lock().await.take() {
+            if let Err(e) = c.rm().await {
+                tracing::warn!(error = %e, "Failed to remove NATS container");
+            } else {
+                tracing::info!("NATS container removed");
+            }
+        }
+        if let Some(c) = self.surrealdb_container.lock().await.take() {
+            if let Err(e) = c.rm().await {
+                tracing::warn!(error = %e, "Failed to remove SurrealDB container");
+            } else {
+                tracing::info!("SurrealDB container removed");
+            }
+        }
+    }
+}
+
+/// Per-test infrastructure with fresh client connections.
+pub struct TestInfra {
+    pub nats_url: String,
+    pub surrealdb_url: String,
+    pub surrealdb_http_url: String,
+    pub db: Surreal<Any>,
+    nats_client: async_nats::Client,
+}
+
+impl TestInfra {
+    /// Create fresh client connections to the shared infrastructure.
+    pub async fn connect(shared: &SharedInfra) -> Result<Self> {
+        let nats_client = async_nats::connect(&shared.nats_url)
+            .await
+            .context("Failed to connect to NATS")?;
+
+        let db: Surreal<Any> = Surreal::init();
+        db.connect(&shared.surrealdb_url)
+            .await
+            .context("Failed to connect to SurrealDB")?;
+
+        db.signin(surrealdb::opt::auth::Root {
+            username: "root",
+            password: "root",
+        })
+        .await
+        .context("Failed to sign in to SurrealDB")?;
+
+        db.use_ns("typewriter")
+            .use_db("test")
+            .await
+            .context("Failed to select namespace/database")?;
+
+        Ok(Self {
+            nats_url: shared.nats_url.clone(),
+            surrealdb_url: shared.surrealdb_url.clone(),
+            surrealdb_http_url: shared.surrealdb_http_url.clone(),
             db,
             nats_client,
         })

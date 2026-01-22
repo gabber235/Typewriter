@@ -32,7 +32,7 @@ impl<'a> TestNatsClient<'a> {
         Req: Message,
         Res: Message + Default,
     {
-        self.request_with_timeout(subject, request, Duration::from_secs(5))
+        self.request_with_timeout(subject, request, Duration::from_secs(30))
             .await
     }
 

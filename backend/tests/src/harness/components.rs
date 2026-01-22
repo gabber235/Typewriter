@@ -84,6 +84,7 @@ pub struct HostInterface {
 }
 
 /// A discovered component with its configuration.
+#[derive(Clone)]
 pub struct DiscoveredComponent {
     /// Component name from workloaddeployment.yaml
     pub name: String,

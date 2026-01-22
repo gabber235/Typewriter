@@ -11,7 +11,7 @@ mod components;
 mod host;
 mod nats_client;
 
-pub use containers::TestInfra;
+pub use containers::{SharedInfra, TestInfra};
 pub use components::ComponentRegistry;
 pub use host::{DeploymentResult, TestHost};
 pub use nats_client::TestNatsClient;

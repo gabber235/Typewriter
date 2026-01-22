@@ -1,45 +1,53 @@
 //! Shared test fixtures initialized once for all tests.
 //!
-//! Uses tokio's OnceCell to ensure fixtures are only initialized once,
-//! even when tests run in parallel.
+//! Uses a dedicated tokio runtime for shared infrastructure to avoid
+//! channel closure issues when individual test runtimes complete.
 
 use std::path::Path;
 use std::sync::Arc;
 
+use ctor::dtor;
+use tokio::runtime::Runtime;
 use tokio::sync::OnceCell;
 
-use crate::harness::{ComponentRegistry, DeploymentResult, TestHost, TestInfra};
+use crate::harness::{ComponentRegistry, DeploymentResult, SharedInfra, TestHost, TestInfra};
 
-/// Shared test fixtures - built once, used by all tests.
-pub struct TestFixtures {
-    /// Infrastructure (containers + database connection)
-    pub infra: TestInfra,
-    /// wash-runtime host with all plugins
+/// Shared fixtures that persist across all tests.
+/// These are initialized once in a dedicated runtime.
+pub struct SharedFixtures {
+    pub infra: Arc<SharedInfra>,
     pub host: TestHost,
-    /// Registry of discovered and built components
-    pub registry: ComponentRegistry,
-    /// Deployed workloads tracking
+    pub registry: Arc<ComponentRegistry>,
     pub deployment: DeploymentResult,
 }
 
-/// Global fixture storage.
-static FIXTURES: OnceCell<Arc<TestFixtures>> = OnceCell::const_new();
+/// Per-test fixtures with fresh client connections.
+pub struct TestFixtures {
+    pub infra: TestInfra,
+    pub host: TestHost,
+    pub registry: Arc<ComponentRegistry>,
+    pub deployment: DeploymentResult,
+}
 
-/// Initialize fixtures once before all tests run.
-///
-/// This function:
-/// 1. Discovers and builds all WASM components
-/// 2. Starts NATS and SurrealDB containers
-/// 3. Imports the database schema
-/// 4. Creates the wash-runtime host
-/// 5. Deploys each component as a separate workload
-///
-/// Components requiring environment configuration (auth-callout, service-identity)
-/// are skipped and must be deployed explicitly in tests that need them.
-///
-/// Subsequent calls return the same fixtures.
-pub async fn get_fixtures() -> Arc<TestFixtures> {
-    FIXTURES
+/// Dedicated runtime for shared infrastructure.
+/// This runtime persists for the entire test process lifetime,
+/// ensuring that background tasks (NATS, wash-runtime Host) don't get
+/// killed when individual test runtimes complete.
+static SHARED_RUNTIME: std::sync::LazyLock<Runtime> = std::sync::LazyLock::new(|| {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .thread_name("test-shared-runtime")
+        .build()
+        .expect("Failed to create shared runtime")
+});
+
+/// Global shared fixture storage.
+static SHARED_FIXTURES: OnceCell<Arc<SharedFixtures>> = OnceCell::const_new();
+
+/// Get or initialize shared fixtures.
+/// Called internally by get_fixtures().
+async fn get_shared_fixtures() -> Arc<SharedFixtures> {
+    SHARED_FIXTURES
         .get_or_init(|| async {
             tracing_subscriber::fmt()
                 .with_env_filter(
@@ -50,7 +58,7 @@ pub async fn get_fixtures() -> Arc<TestFixtures> {
                 .try_init()
                 .ok();
 
-            tracing::info!("Initializing test fixtures...");
+            tracing::info!("Initializing shared test fixtures...");
 
             let backend_path = Path::new(env!("CARGO_MANIFEST_DIR"))
                 .parent()
@@ -64,12 +72,17 @@ pub async fn get_fixtures() -> Arc<TestFixtures> {
                 .build_all()
                 .await
                 .expect("Failed to build components");
+            let registry = Arc::new(registry);
 
-            let infra = TestInfra::start(backend_path)
+            let infra = SharedInfra::start(backend_path)
                 .await
                 .expect("Failed to start infrastructure");
 
-            let host = TestHost::new(infra.nats_client(), &infra.surrealdb_url)
+            let nats_client = async_nats::connect(&infra.nats_url)
+                .await
+                .expect("Failed to connect to NATS for host");
+
+            let host = TestHost::new(&nats_client, &infra.surrealdb_url)
                 .await
                 .expect("Failed to create host");
             let deployment = host
@@ -79,10 +92,10 @@ pub async fn get_fixtures() -> Arc<TestFixtures> {
 
             tracing::info!(
                 deployed = deployment.workload_ids.len(),
-                "Test fixtures initialized successfully"
+                "Shared test fixtures initialized successfully"
             );
 
-            Arc::new(TestFixtures {
+            Arc::new(SharedFixtures {
                 infra,
                 host,
                 registry,
@@ -91,4 +104,41 @@ pub async fn get_fixtures() -> Arc<TestFixtures> {
         })
         .await
         .clone()
+}
+
+/// Initialize fixtures for a test.
+///
+/// This function:
+/// 1. Ensures shared infrastructure is started (containers, host, components)
+/// 2. Creates fresh NATS and SurrealDB client connections for this test
+///
+/// Each test gets its own client connections, avoiding channel closure issues
+/// when other tests complete.
+pub async fn get_fixtures() -> TestFixtures {
+    let shared = SHARED_RUNTIME
+        .spawn(get_shared_fixtures())
+        .await
+        .expect("Failed to initialize shared fixtures");
+
+    let infra = TestInfra::connect(&shared.infra)
+        .await
+        .expect("Failed to create per-test infrastructure");
+
+    TestFixtures {
+        infra,
+        host: shared.host.clone(),
+        registry: shared.registry.clone(),
+        deployment: shared.deployment.clone(),
+    }
+}
+
+/// Cleanup handler called when the test process exits.
+/// Stops and removes all containers.
+#[dtor]
+fn cleanup_fixtures() {
+    if let Some(shared) = SHARED_FIXTURES.get() {
+        SHARED_RUNTIME.block_on(async {
+            shared.infra.stop().await;
+        });
+    }
 }
