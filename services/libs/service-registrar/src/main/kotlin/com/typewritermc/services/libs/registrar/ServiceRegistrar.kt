@@ -65,10 +65,12 @@ class ServiceRegistrar(
                 logger.info { "Service bound to organization: ${state.organizationName}" }
                 startHeartbeat(cred.id, registrationClient)
             }
+
             is RegistrationState.Failed -> {
                 logger.error { "Registration failed: ${state.message}" }
                 throw IllegalStateException("Registration failed: ${state.message}")
             }
+
             else -> {
                 throw IllegalStateException("Unexpected registration state: $state")
             }
@@ -110,8 +112,20 @@ class ServiceRegistrar(
         logger.debug { "Interface bindings registered" }
     }
 
-    fun shutdown() {
+    suspend fun shutdown() {
         logger.info { "Shutting down service registrar" }
+
+        val cred = credential
+        if (cred != null) {
+            try {
+                val registrationClient = registrationClientProvider.get()
+                registrationClient.sendShutdown(cred.id)
+                logger.info { "Shutdown notification sent for service: ${cred.id}" }
+            } catch (e: Exception) {
+                logger.warn(e) { "Failed to send shutdown notification" }
+            }
+        }
+
         heartbeatSender?.stop()
         logger.info { "Service registrar shut down" }
     }

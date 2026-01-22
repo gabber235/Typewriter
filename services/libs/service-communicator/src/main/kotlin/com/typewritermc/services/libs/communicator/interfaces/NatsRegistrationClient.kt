@@ -9,6 +9,7 @@ import protokt.v1.typewriter.api.v1.GetServiceStatusRequest
 import protokt.v1.typewriter.api.v1.GetServiceStatusResponse
 import protokt.v1.typewriter.api.v1.ServiceBoundNotification
 import protokt.v1.typewriter.api.v1.ServiceHeartbeatRequest
+import protokt.v1.typewriter.api.v1.ServiceShutdownRequest
 import protokt.v1.typewriter.api.v1.ServiceStatus
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -108,6 +109,23 @@ class NatsRegistrationClient(private val messageBus: MessageBus) : RegistrationC
             messageBus.publish(subject, requestBytes)
         } catch (e: Exception) {
             logger.warn(e) { "Failed to send heartbeat" }
+        }
+    }
+
+    override suspend fun sendShutdown(serviceId: String) {
+        val subject = "cloud.out.service.$serviceId.shutdown"
+        val request = ServiceShutdownRequest {}
+
+        val outputStream = ByteArrayOutputStream()
+        request.serialize(outputStream)
+        val requestBytes = outputStream.toByteArray()
+
+        logger.info { "Sending shutdown notification on subject: $subject" }
+
+        try {
+            messageBus.publish(subject, requestBytes)
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to send shutdown notification" }
         }
     }
 }

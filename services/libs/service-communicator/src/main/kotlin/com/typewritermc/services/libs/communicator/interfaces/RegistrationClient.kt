@@ -12,4 +12,6 @@ interface RegistrationClient {
     ): Job
 
     suspend fun sendHeartbeat(serviceId: String)
+
+    suspend fun sendShutdown(serviceId: String)
 }
