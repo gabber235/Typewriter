@@ -9,7 +9,7 @@ mod error_response;
 
 #[cfg(test)]
 mod tests {
-    use super::wasmcloud::messaging::parse_subject;
+    use super::wasmcloud::messaging::{expand_template_pattern, parse_subject};
 
     #[test]
     fn test_parse_subject_single_segment_action() {
@@ -64,13 +64,11 @@ mod tests {
 
     #[test]
     fn test_parse_subject_multi_segment_action() {
-        // This test demonstrates the DESIRED behavior for nested actions
         let template = "user.<user_id>.organization.<action>";
         let subject = "user.123.organization.join_requests.list";
 
         let result = parse_subject(template, subject).unwrap();
         assert_eq!(result.get("user_id"), Some(&"123".to_string()));
-        // We want <action> at the end to capture all remaining segments
         assert_eq!(
             result.get("action"),
             Some(&"join_requests.list".to_string())
@@ -105,13 +103,62 @@ mod tests {
 
     #[test]
     fn test_parse_subject_action_in_middle_stays_single() {
-        // When <action> is NOT at the end, it should only capture one segment
         let template = "user.<action>.details.<id>";
         let subject = "user.list.details.123";
 
         let result = parse_subject(template, subject).unwrap();
         assert_eq!(result.get("action"), Some(&"list".to_string()));
         assert_eq!(result.get("id"), Some(&"123".to_string()));
+    }
+
+    #[test]
+    fn test_expand_template_pattern_single() {
+        let templates: &[(&str, &str)] = &[("services", "typewriter.in.service.<service_id>")];
+        let pattern = "{services}.status";
+
+        let expanded = expand_template_pattern(pattern, templates);
+        assert_eq!(expanded, "typewriter.in.service.<service_id>.status");
+    }
+
+    #[test]
+    fn test_expand_template_pattern_multiple() {
+        let templates: &[(&str, &str)] = &[
+            ("services", "typewriter.in.service.<service_id>"),
+            (
+                "user_services",
+                "typewriter.in.user.<user_id>.organization.<org_id>.services",
+            ),
+        ];
+
+        let pattern1 = "{services}.status";
+        let pattern2 = "{user_services}.bind";
+
+        assert_eq!(
+            expand_template_pattern(pattern1, templates),
+            "typewriter.in.service.<service_id>.status"
+        );
+        assert_eq!(
+            expand_template_pattern(pattern2, templates),
+            "typewriter.in.user.<user_id>.organization.<org_id>.services.bind"
+        );
+    }
+
+    #[test]
+    fn test_expand_template_pattern_in_middle() {
+        let templates: &[(&str, &str)] = &[("base", "typewriter.in.user.<user_id>")];
+        let pattern = "hey.{base}.something.<id>";
+
+        let expanded = expand_template_pattern(pattern, templates);
+        assert_eq!(expanded, "hey.typewriter.in.user.<user_id>.something.<id>");
+    }
+
+    #[test]
+    fn test_expand_template_pattern_no_match() {
+        let templates: &[(&str, &str)] = &[("services", "typewriter.in.service.<service_id>")];
+        let pattern = "{unknown}.status";
+
+        let expanded = expand_template_pattern(pattern, templates);
+        assert_eq!(expanded, "{unknown}.status");
     }
 }
 
@@ -238,7 +285,7 @@ pub mod wasmcloud {
                 results.push(result);
             }
 
-            results.sort_by(|a, b| b.len().cmp(&a.len()));
+            results.sort_by_key(|b| std::cmp::Reverse(b.len()));
             results
         }
 
@@ -404,6 +451,59 @@ pub mod wasmcloud {
 
             result
         }
+
+        pub fn expand_template_pattern(pattern: &str, templates: &[(&str, &str)]) -> String {
+            let mut result = pattern.to_string();
+            for (template_name, template_value) in templates {
+                let placeholder = format!("{{{}}}", template_name);
+                result = result.replace(&placeholder, template_value);
+            }
+            result
+        }
+
+        pub fn dispatch_action_with_templates(
+            msg: types::BrokerMessage,
+            templates: &[(&str, &str)],
+            actions: &[(
+                &str,
+                fn(types::BrokerMessage, std::collections::HashMap<String, String>) -> Result<(), String>,
+                Option<fn() -> Vec<u8>>,
+            )],
+        ) -> Result<(), String> {
+            for (pattern, handler, error_handler) in actions {
+                let expanded = expand_template_pattern(pattern, templates);
+
+                let Ok(params) = parse_subject(&expanded, &msg.subject) else {
+                    continue;
+                };
+
+                let error_handler = *error_handler;
+                let result = handler(msg.clone(), params);
+
+                let Err(_) = result else {
+                    return result;
+                };
+
+                let Some(err_fn) = error_handler else {
+                    return result;
+                };
+
+                let error_response = err_fn();
+                let Some(ref reply_to) = msg.reply_to else {
+                    return result;
+                };
+
+                let _ = consumer::publish(&types::BrokerMessage {
+                    subject: reply_to.clone(),
+                    reply_to: None,
+                    body: error_response,
+                });
+
+                return result;
+            }
+
+            Err(format!("No matching action for subject '{}'", msg.subject))
+        }
     }
 }
 
@@ -413,7 +513,7 @@ pub mod wasmcloud {
 /// The error handler will be called and its result sent as a reply to the original message.
 /// Use `=> handler => error_handler` syntax to specify an error handler.
 ///
-/// # Example
+/// # Example (single template - backwards compatible)
 /// ```rust,no_run
 /// use wasmcloud_utils::dispatch_actions;
 /// use wasmcloud_utils::wasmcloud::messaging::types::BrokerMessage;
@@ -440,8 +540,48 @@ pub mod wasmcloud {
 ///     )
 /// }
 /// ```
+///
+/// # Example (named templates)
+/// ```rust,no_run
+/// use wasmcloud_utils::dispatch_actions;
+/// use wasmcloud_utils::wasmcloud::messaging::types::BrokerMessage;
+/// use std::collections::HashMap;
+///
+/// fn handle_status(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
+///     Ok(())
+/// }
+///
+/// fn handle_bind(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
+///     Ok(())
+/// }
+///
+/// fn handle_message(msg: BrokerMessage) -> Result<(), String> {
+///     dispatch_actions!(
+///         msg,
+///         services: "typewriter.in.service.<service_id>",
+///         user_services: "typewriter.in.user.<user_id>.organization.<org_id>.services";
+///         "{services}.status" => handle_status,
+///         "{user_services}.bind" => handle_bind,
+///     )
+/// }
+/// ```
 #[macro_export]
 macro_rules! dispatch_actions {
+    // New syntax with named templates: dispatch_actions!(msg, name: "template", ...; "pattern" => handler, ...)
+    // Note the semicolon separator between templates and actions
+    ($msg:expr, $($name:ident : $template:expr),+ ; $($rest:tt)+) => {{
+        let templates: &[(&str, &str)] = &[
+            $((stringify!($name), $template)),+
+        ];
+
+        $crate::wasmcloud::messaging::dispatch_action_with_templates(
+            $msg,
+            templates,
+            &$crate::dispatch_actions!(@collect [] $($rest)+),
+        )
+    }};
+
+    // Original syntax (backwards compatible): dispatch_actions!(msg, "template.<action>", "action" => handler, ...)
     ($msg:expr, $template:expr, $($rest:tt)+) => {{
         $crate::wasmcloud::messaging::dispatch_action(
             $msg,
