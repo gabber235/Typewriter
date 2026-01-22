@@ -38,12 +38,20 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
         .into_iter()
         .map(|record| {
             let metadata = record.metadata.as_ref();
+            let state = record.state.as_ref();
             typewriter::models::v1::Service {
                 id: record.id.id.to_string(),
                 name: record.name,
                 service_types: utils::map_service_types(&record.service_types),
                 created_at: Some(record.created_at.into()),
-                last_seen: record.last_seen.map(|dt| dt.into()),
+                state: state.map(|s| typewriter::models::v1::ServiceState {
+                    status: match s.status.as_deref() {
+                        Some("ONLINE") => typewriter::models::v1::ServiceStatus::Online as i32,
+                        Some("OFFLINE") => typewriter::models::v1::ServiceStatus::Offline as i32,
+                        _ => typewriter::models::v1::ServiceStatus::Unspecified as i32,
+                    },
+                    last_seen: s.last_seen.clone().map(|dt| dt.into()),
+                }),
                 metadata: Some(typewriter::models::v1::ServiceMetadata {
                     engine_version: metadata.and_then(|m| m.engine_version.clone()),
                     realm_version: metadata.and_then(|m| m.realm_version.clone()),

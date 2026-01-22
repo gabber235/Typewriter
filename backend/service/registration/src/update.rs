@@ -52,6 +52,7 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
 
     let service = &services[0];
     let metadata = service.metadata.as_ref();
+    let state = service.state.as_ref();
 
     let response = typewriter::api::v1::UpdateServiceResponse {
         result: Some(
@@ -61,7 +62,14 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
                     name: service.name.clone(),
                     service_types: utils::map_service_types(&service.service_types),
                     created_at: Some(service.created_at.clone().into()),
-                    last_seen: None,
+                    state: state.map(|s| typewriter::models::v1::ServiceState {
+                        status: match s.status.as_deref() {
+                            Some("ONLINE") => typewriter::models::v1::ServiceStatus::Online as i32,
+                            Some("OFFLINE") => typewriter::models::v1::ServiceStatus::Offline as i32,
+                            _ => typewriter::models::v1::ServiceStatus::Unspecified as i32,
+                        },
+                        last_seen: s.last_seen.clone().map(|dt| dt.into()),
+                    }),
                     metadata: Some(typewriter::models::v1::ServiceMetadata {
                         engine_version: metadata.and_then(|m| m.engine_version.clone()),
                         realm_version: metadata.and_then(|m| m.realm_version.clone()),
