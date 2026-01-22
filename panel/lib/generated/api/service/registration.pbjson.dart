@@ -379,3 +379,21 @@ final $typed_data.Uint8List unbindServiceResponseDescriptor = $convert.base64Dec
     'ChVVbmJpbmRTZXJ2aWNlUmVzcG9uc2USGgoHc3VjY2VzcxgBIAEoCEgAUgdzdWNjZXNzEjMKBW'
     'Vycm9yGAIgASgLMhsudHlwZXdyaXRlci5tb2RlbHMudjEuRXJyb3JIAFIFZXJyb3JCCAoGcmVz'
     'dWx0');
+
+@$core.Deprecated('Use serviceHeartbeatRequestDescriptor instead')
+const ServiceHeartbeatRequest$json = {
+  '1': 'ServiceHeartbeatRequest',
+};
+
+/// Descriptor for `ServiceHeartbeatRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List serviceHeartbeatRequestDescriptor =
+    $convert.base64Decode('ChdTZXJ2aWNlSGVhcnRiZWF0UmVxdWVzdA==');
+
+@$core.Deprecated('Use serviceShutdownRequestDescriptor instead')
+const ServiceShutdownRequest$json = {
+  '1': 'ServiceShutdownRequest',
+};
+
+/// Descriptor for `ServiceShutdownRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List serviceShutdownRequestDescriptor =
+    $convert.base64Decode('ChZTZXJ2aWNlU2h1dGRvd25SZXF1ZXN0');

@@ -1162,6 +1162,90 @@ class UnbindServiceResponse extends $pb.GeneratedMessage {
   $0.Error ensureError() => $_ensure(1);
 }
 
+/// ServiceHeartbeatRequest updates the service's state to online.
+/// Service ID is extracted from the NATS subject.
+class ServiceHeartbeatRequest extends $pb.GeneratedMessage {
+  factory ServiceHeartbeatRequest() => create();
+
+  ServiceHeartbeatRequest._();
+
+  factory ServiceHeartbeatRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ServiceHeartbeatRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ServiceHeartbeatRequest',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceHeartbeatRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceHeartbeatRequest copyWith(
+          void Function(ServiceHeartbeatRequest) updates) =>
+      super.copyWith((message) => updates(message as ServiceHeartbeatRequest))
+          as ServiceHeartbeatRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ServiceHeartbeatRequest create() => ServiceHeartbeatRequest._();
+  @$core.override
+  ServiceHeartbeatRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ServiceHeartbeatRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServiceHeartbeatRequest>(create);
+  static ServiceHeartbeatRequest? _defaultInstance;
+}
+
+/// ServiceShutdownRequest indicates the service is going offline.
+/// Service ID is extracted from the NATS subject.
+class ServiceShutdownRequest extends $pb.GeneratedMessage {
+  factory ServiceShutdownRequest() => create();
+
+  ServiceShutdownRequest._();
+
+  factory ServiceShutdownRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ServiceShutdownRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ServiceShutdownRequest',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceShutdownRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceShutdownRequest copyWith(
+          void Function(ServiceShutdownRequest) updates) =>
+      super.copyWith((message) => updates(message as ServiceShutdownRequest))
+          as ServiceShutdownRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ServiceShutdownRequest create() => ServiceShutdownRequest._();
+  @$core.override
+  ServiceShutdownRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ServiceShutdownRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServiceShutdownRequest>(create);
+  static ServiceShutdownRequest? _defaultInstance;
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

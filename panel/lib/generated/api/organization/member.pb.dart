@@ -204,11 +204,11 @@ class ListMembers extends $pb.GeneratedMessage {
 /// UpdateMemberRolesRequest updates the roles assigned to a member.
 class UpdateMemberRolesRequest extends $pb.GeneratedMessage {
   factory UpdateMemberRolesRequest({
-    $core.String? memberId,
+    $core.String? userId,
     $core.Iterable<$core.String>? roleIds,
   }) {
     final result = create();
-    if (memberId != null) result.memberId = memberId;
+    if (userId != null) result.userId = userId;
     if (roleIds != null) result.roleIds.addAll(roleIds);
     return result;
   }
@@ -227,7 +227,7 @@ class UpdateMemberRolesRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'memberId')
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
     ..pPS(2, _omitFieldNames ? '' : 'roleIds')
     ..hasRequiredFields = false;
 
@@ -251,15 +251,15 @@ class UpdateMemberRolesRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<UpdateMemberRolesRequest>(create);
   static UpdateMemberRolesRequest? _defaultInstance;
 
-  /// Unique identifier of the member to update
+  /// User ID of the member to update
   @$pb.TagNumber(1)
-  $core.String get memberId => $_getSZ(0);
+  $core.String get userId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set memberId($core.String value) => $_setString(0, value);
+  set userId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasMemberId() => $_has(0);
+  $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearMemberId() => $_clearField(1);
+  void clearUserId() => $_clearField(1);
 
   /// List of role IDs to assign to the member
   @$pb.TagNumber(2)
@@ -361,10 +361,10 @@ class UpdateMemberRolesResponse extends $pb.GeneratedMessage {
 /// RemoveMemberRequest removes a member from the organization.
 class RemoveMemberRequest extends $pb.GeneratedMessage {
   factory RemoveMemberRequest({
-    $core.String? memberId,
+    $core.String? userId,
   }) {
     final result = create();
-    if (memberId != null) result.memberId = memberId;
+    if (userId != null) result.userId = userId;
     return result;
   }
 
@@ -382,7 +382,7 @@ class RemoveMemberRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'memberId')
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -404,15 +404,15 @@ class RemoveMemberRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<RemoveMemberRequest>(create);
   static RemoveMemberRequest? _defaultInstance;
 
-  /// Unique identifier of the member to remove
+  /// User ID of the member to remove
   @$pb.TagNumber(1)
-  $core.String get memberId => $_getSZ(0);
+  $core.String get userId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set memberId($core.String value) => $_setString(0, value);
+  set userId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasMemberId() => $_has(0);
+  $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearMemberId() => $_clearField(1);
+  void clearUserId() => $_clearField(1);
 }
 
 enum RemoveMemberResponse_Result { success, error, notSet }

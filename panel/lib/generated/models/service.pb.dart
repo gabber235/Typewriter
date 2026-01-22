@@ -22,6 +22,80 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 export 'service.pbenum.dart';
 
+/// ServiceState contains the current status and last seen timestamp.
+class ServiceState extends $pb.GeneratedMessage {
+  factory ServiceState({
+    ServiceStatus? status,
+    $0.Timestamp? lastSeen,
+  }) {
+    final result = create();
+    if (status != null) result.status = status;
+    if (lastSeen != null) result.lastSeen = lastSeen;
+    return result;
+  }
+
+  ServiceState._();
+
+  factory ServiceState.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ServiceState.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ServiceState',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'typewriter.models.v1'),
+      createEmptyInstance: create)
+    ..aE<ServiceStatus>(1, _omitFieldNames ? '' : 'status',
+        enumValues: ServiceStatus.values)
+    ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'lastSeen',
+        subBuilder: $0.Timestamp.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceState clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServiceState copyWith(void Function(ServiceState) updates) =>
+      super.copyWith((message) => updates(message as ServiceState))
+          as ServiceState;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ServiceState create() => ServiceState._();
+  @$core.override
+  ServiceState createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ServiceState getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServiceState>(create);
+  static ServiceState? _defaultInstance;
+
+  /// Current status of the service.
+  @$pb.TagNumber(1)
+  ServiceStatus get status => $_getN(0);
+  @$pb.TagNumber(1)
+  set status(ServiceStatus value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStatus() => $_clearField(1);
+
+  /// Timestamp when the service was last seen.
+  @$pb.TagNumber(2)
+  $0.Timestamp get lastSeen => $_getN(1);
+  @$pb.TagNumber(2)
+  set lastSeen($0.Timestamp value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLastSeen() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLastSeen() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $0.Timestamp ensureLastSeen() => $_ensure(1);
+}
+
 /// ServiceMetadata contains version and other metadata about a service.
 class ServiceMetadata extends $pb.GeneratedMessage {
   factory ServiceMetadata({
@@ -99,16 +173,18 @@ class Service extends $pb.GeneratedMessage {
     $core.String? name,
     $core.Iterable<ServiceType>? serviceTypes,
     $0.Timestamp? createdAt,
-    $0.Timestamp? lastSeen,
+    ServiceState? state,
     ServiceMetadata? metadata,
+    $core.String? organizationId,
   }) {
     final result = create();
     if (id != null) result.id = id;
     if (name != null) result.name = name;
     if (serviceTypes != null) result.serviceTypes.addAll(serviceTypes);
     if (createdAt != null) result.createdAt = createdAt;
-    if (lastSeen != null) result.lastSeen = lastSeen;
+    if (state != null) result.state = state;
     if (metadata != null) result.metadata = metadata;
+    if (organizationId != null) result.organizationId = organizationId;
     return result;
   }
 
@@ -135,10 +211,11 @@ class Service extends $pb.GeneratedMessage {
         defaultEnumValue: ServiceType.SERVICE_TYPE_UNSPECIFIED)
     ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'createdAt',
         subBuilder: $0.Timestamp.create)
-    ..aOM<$0.Timestamp>(5, _omitFieldNames ? '' : 'lastSeen',
-        subBuilder: $0.Timestamp.create)
+    ..aOM<ServiceState>(5, _omitFieldNames ? '' : 'state',
+        subBuilder: ServiceState.create)
     ..aOM<ServiceMetadata>(6, _omitFieldNames ? '' : 'metadata',
         subBuilder: ServiceMetadata.create)
+    ..aOS(7, _omitFieldNames ? '' : 'organizationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -195,17 +272,17 @@ class Service extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $0.Timestamp ensureCreatedAt() => $_ensure(3);
 
-  /// Timestamp when the service was last seen (optional).
+  /// Current state of the service (status and last seen).
   @$pb.TagNumber(5)
-  $0.Timestamp get lastSeen => $_getN(4);
+  ServiceState get state => $_getN(4);
   @$pb.TagNumber(5)
-  set lastSeen($0.Timestamp value) => $_setField(5, value);
+  set state(ServiceState value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasLastSeen() => $_has(4);
+  $core.bool hasState() => $_has(4);
   @$pb.TagNumber(5)
-  void clearLastSeen() => $_clearField(5);
+  void clearState() => $_clearField(5);
   @$pb.TagNumber(5)
-  $0.Timestamp ensureLastSeen() => $_ensure(4);
+  ServiceState ensureState() => $_ensure(4);
 
   /// Metadata about the service.
   @$pb.TagNumber(6)
@@ -218,6 +295,16 @@ class Service extends $pb.GeneratedMessage {
   void clearMetadata() => $_clearField(6);
   @$pb.TagNumber(6)
   ServiceMetadata ensureMetadata() => $_ensure(5);
+
+  /// Organization this service is bound to (optional).
+  @$pb.TagNumber(7)
+  $core.String get organizationId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set organizationId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasOrganizationId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearOrganizationId() => $_clearField(7);
 }
 
 const $core.bool _omitFieldNames =

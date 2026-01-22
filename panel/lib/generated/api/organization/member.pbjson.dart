@@ -82,7 +82,7 @@ final $typed_data.Uint8List listMembersDescriptor = $convert.base64Decode(
 const UpdateMemberRolesRequest$json = {
   '1': 'UpdateMemberRolesRequest',
   '2': [
-    {'1': 'member_id', '3': 1, '4': 1, '5': 9, '10': 'memberId'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
     {'1': 'role_ids', '3': 2, '4': 3, '5': 9, '10': 'roleIds'},
   ],
 };
@@ -90,8 +90,8 @@ const UpdateMemberRolesRequest$json = {
 /// Descriptor for `UpdateMemberRolesRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateMemberRolesRequestDescriptor =
     $convert.base64Decode(
-        'ChhVcGRhdGVNZW1iZXJSb2xlc1JlcXVlc3QSGwoJbWVtYmVyX2lkGAEgASgJUghtZW1iZXJJZB'
-        'IZCghyb2xlX2lkcxgCIAMoCVIHcm9sZUlkcw==');
+        'ChhVcGRhdGVNZW1iZXJSb2xlc1JlcXVlc3QSFwoHdXNlcl9pZBgBIAEoCVIGdXNlcklkEhkKCH'
+        'JvbGVfaWRzGAIgAygJUgdyb2xlSWRz');
 
 @$core.Deprecated('Use updateMemberRolesResponseDescriptor instead')
 const UpdateMemberRolesResponse$json = {
@@ -131,14 +131,14 @@ final $typed_data.Uint8List updateMemberRolesResponseDescriptor = $convert.base6
 const RemoveMemberRequest$json = {
   '1': 'RemoveMemberRequest',
   '2': [
-    {'1': 'member_id', '3': 1, '4': 1, '5': 9, '10': 'memberId'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
   ],
 };
 
 /// Descriptor for `RemoveMemberRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List removeMemberRequestDescriptor =
     $convert.base64Decode(
-        'ChNSZW1vdmVNZW1iZXJSZXF1ZXN0EhsKCW1lbWJlcl9pZBgBIAEoCVIIbWVtYmVySWQ=');
+        'ChNSZW1vdmVNZW1iZXJSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAlSBnVzZXJJZA==');
 
 @$core.Deprecated('Use removeMemberResponseDescriptor instead')
 const RemoveMemberResponse$json = {

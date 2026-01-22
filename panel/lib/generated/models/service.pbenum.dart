@@ -42,5 +42,33 @@ class ServiceType extends $pb.ProtobufEnum {
   const ServiceType._(super.value, super.name);
 }
 
+/// ServiceStatus represents the current online/offline status of a service.
+class ServiceStatus extends $pb.ProtobufEnum {
+  /// Unspecified status (service has never reported).
+  static const ServiceStatus SERVICE_STATUS_UNSPECIFIED =
+      ServiceStatus._(0, _omitEnumNames ? '' : 'SERVICE_STATUS_UNSPECIFIED');
+
+  /// Service is online and responding to heartbeats.
+  static const ServiceStatus SERVICE_STATUS_ONLINE =
+      ServiceStatus._(1, _omitEnumNames ? '' : 'SERVICE_STATUS_ONLINE');
+
+  /// Service has explicitly shut down.
+  static const ServiceStatus SERVICE_STATUS_OFFLINE =
+      ServiceStatus._(2, _omitEnumNames ? '' : 'SERVICE_STATUS_OFFLINE');
+
+  static const $core.List<ServiceStatus> values = <ServiceStatus>[
+    SERVICE_STATUS_UNSPECIFIED,
+    SERVICE_STATUS_ONLINE,
+    SERVICE_STATUS_OFFLINE,
+  ];
+
+  static final $core.List<ServiceStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static ServiceStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ServiceStatus._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');
