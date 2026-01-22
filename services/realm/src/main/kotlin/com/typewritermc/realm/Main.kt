@@ -15,6 +15,10 @@ import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServicesInfo
 import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -69,6 +73,12 @@ fun main() {
             )
         }
         single { RealmShell(get()) }
+
+        single {
+            CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        } onClose {
+            it?.cancel()
+        }
     }
 
     val application = startKoin {
