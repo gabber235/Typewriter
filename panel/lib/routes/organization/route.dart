@@ -73,11 +73,11 @@ class OrganizationSidebarContent extends HookConsumerWidget {
       children: [
         const SidebarHeader(text: "Organization"),
         if (organizationId != null) ...[
-          // SidebarLink(
-          //   icon: Icones(IcomoonFree.books),
-          //   text: "Library",
-          //   route: OrganizationRoute(organizationId: organizationId),
-          // ),
+          SidebarLink(
+            icon: Icones(MaterialSymbols.dns),
+            text: "Services",
+            route: ServicesRoute(),
+          ),
           SidebarLink(
             icon: Icones(MaterialSymbols.groups_rounded),
             text: "Members",

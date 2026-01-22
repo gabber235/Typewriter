@@ -1,7 +1,8 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/generated/api/service/registration.pb.dart";
+import "package:typewriter_panel/generated/api/service/registration.pb.dart"
+    hide ServiceStatus;
 import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
@@ -163,19 +164,25 @@ extension ServiceExtension on Service {
   String get displayName => name.isNotEmpty ? name : "Unnamed Service";
 
   bool get isOnline {
-    if (!hasLastSeen()) return false;
+    if (!hasState()) return false;
+
+    if (state.status == ServiceStatus.SERVICE_STATUS_OFFLINE) {
+      return false;
+    }
+
+    if (!state.hasLastSeen()) return false;
     final now = DateTime.now();
     final lastSeenTime = DateTime.fromMillisecondsSinceEpoch(
-      lastSeen.seconds.toInt() * 1000,
+      state.lastSeen.seconds.toInt() * 1000,
     );
     return now.difference(lastSeenTime).inMinutes < 2;
   }
 
   String get lastSeenLabel {
-    if (!hasLastSeen()) return "Never";
+    if (!hasState() || !state.hasLastSeen()) return "Never";
     final now = DateTime.now();
     final lastSeenTime = DateTime.fromMillisecondsSinceEpoch(
-      lastSeen.seconds.toInt() * 1000,
+      state.lastSeen.seconds.toInt() * 1000,
     );
     final difference = now.difference(lastSeenTime);
 

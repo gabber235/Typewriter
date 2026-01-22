@@ -256,3 +256,19 @@ class RouteRouteArgs {
   @override
   int get hashCode => pageId.hashCode ^ key.hashCode;
 }
+
+/// generated route for
+/// [ServicesPage]
+class ServicesRoute extends PageRouteInfo<void> {
+  const ServicesRoute({List<PageRouteInfo>? children})
+    : super(ServicesRoute.name, initialChildren: children);
+
+  static const String name = 'ServicesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ServicesPage();
+    },
+  );
+}
