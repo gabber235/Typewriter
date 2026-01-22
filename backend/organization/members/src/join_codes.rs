@@ -145,14 +145,20 @@ pub fn handle_revoke(msg: BrokerMessage, params: HashMap<String, String>) -> Res
 
     info!("Revoking join code '{}'", code_id);
 
-    query("DELETE type::thing('join_code', $code_id)")
+    let result = query("DELETE type::thing('join_code', $code_id) RETURN BEFORE")
         .bind("code_id", &code_id)
         .execute()
         .map_err(|e| format!("failed to revoke join code: {}", e))?;
-    trace!("Delete executed successfully");
+
+    let deleted: Option<JoinCodeRecord> = result
+        .take(0)
+        .map_err(|e| format!("failed to parse delete result: {}", e))?;
+
+    let was_deleted = deleted.is_some();
+    trace!("Delete executed, was_deleted: {}", was_deleted);
 
     let response = typewriter::api::v1::RevokeJoinCodeResponse {
-        result: Some(typewriter::api::v1::revoke_join_code_response::Result::Success(true)),
+        result: Some(typewriter::api::v1::revoke_join_code_response::Result::Success(was_deleted)),
     };
     trace!("Prepared RevokeJoinCodeResponse");
 
