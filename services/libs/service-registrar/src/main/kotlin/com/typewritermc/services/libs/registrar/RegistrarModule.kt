@@ -10,15 +10,16 @@ import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.runBlocking
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 val SERVICE_REGISTRAR_MODULE = module {
-    single { DeferredProvider<Credential>() }
-    single { DeferredProvider<MessageBus>() }
-    single { DeferredProvider<RegistrationClient>() }
-    single { DeferredProvider<Reconnector>() }
+    single(named("credential")) { DeferredProvider<Credential>() }
+    single(named("messageBus")) { DeferredProvider<MessageBus>() }
+    single(named("registrationClient")) { DeferredProvider<RegistrationClient>() }
+    single(named("reconnector")) { DeferredProvider<Reconnector>() }
     single { StateProvider<RegistrationState>(RegistrationState.Initializing) }
 
     single {
@@ -27,16 +28,16 @@ val SERVICE_REGISTRAR_MODULE = module {
             credentialIssuer = get(),
             jwtExchanger = get(),
             communicator = get(),
-            credentialProvider = get<DeferredProvider<Credential>>(),
-            jwtProviderHolder = get<DeferredProvider<JwtProvider>>(),
-            natsClientProvider = get<DeferredProvider<NatsClient>>(),
-            messageBusProvider = get<DeferredProvider<MessageBus>>(),
-            registrationClientProvider = get<DeferredProvider<RegistrationClient>>(),
-            reconnectorProvider = get<DeferredProvider<Reconnector>>(),
+            credentialProvider = get(named("credential")),
+            jwtProviderHolder = get(named("jwtProvider")),
+            natsClientProvider = get(named("natsClient")),
+            messageBusProvider = get(named("messageBus")),
+            registrationClientProvider = get(named("registrationClient")),
+            reconnectorProvider = get(named("reconnector")),
             registrationStateProvider = get<StateProvider<RegistrationState>>(),
             coroutineScope = get<CoroutineScope>()
         )
-    } onClose { it?.shutdown() }
+    } onClose { it?.let { registrar -> runBlocking { registrar.shutdown() } } }
 
     single<HttpClient> { SimpleHttpClient() }
 

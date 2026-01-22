@@ -11,16 +11,16 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 val SERVICE_COMMUNICATOR_MODULE = module {
-    single { DeferredProvider<NatsClient>() }
-    single { DeferredProvider<JwtProvider>() }
+    single(named("natsClient")) { DeferredProvider<NatsClient>() }
+    single(named("jwtProvider")) { DeferredProvider<JwtProvider>() }
 
     single {
         NatsCommunicator(
             natsUrl = get(named("nats-url")),
-            jwtProvider = get(),
+            jwtProvider = get(named("jwtProvider")),
             sentinelCredentialsFetcher = get(),
             json = get(),
-            natsClientProvider = get()
+            natsClientProvider = get(named("natsClient"))
         )
     } onClose {
         runBlocking {
