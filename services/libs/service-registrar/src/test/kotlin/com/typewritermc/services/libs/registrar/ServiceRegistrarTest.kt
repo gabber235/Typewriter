@@ -206,6 +206,7 @@ class ServiceRegistrarTest : FunSpec({
                 organizationName = "Test Org"
             )
             coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
+            coEvery { mockRegistrationClient.sendShutdown(any()) } just Runs
 
             val registrationClientProvider = DeferredProvider<RegistrationClient>()
             registrationClientProvider.set(mockRegistrationClient)
@@ -229,12 +230,48 @@ class ServiceRegistrarTest : FunSpec({
             val callCountBeforeShutdown = 1
             coVerify(exactly = callCountBeforeShutdown) { mockRegistrationClient.sendHeartbeat("default-id") }
 
-            registrar.shutdown()
+            testScope.launch { registrar.shutdown() }
+            testScope.testScheduler.runCurrent()
 
             testScope.testScheduler.advanceTimeBy(60_000)
             testScope.testScheduler.runCurrent()
 
             coVerify(exactly = callCountBeforeShutdown) { mockRegistrationClient.sendHeartbeat("default-id") }
+            coVerify(exactly = 1) { mockRegistrationClient.sendShutdown("default-id") }
+        }
+
+        test("shutdown sends notification before stopping heartbeat") {
+            val mockRegistrationClient = mockk<RegistrationClient>()
+            coEvery { mockRegistrationClient.queryServiceStatus(any()) } returns ServiceStatusResult.Bound(
+                organizationId = "org-id",
+                organizationName = "Test Org"
+            )
+            coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
+            coEvery { mockRegistrationClient.sendShutdown(any()) } just Runs
+
+            val registrationClientProvider = DeferredProvider<RegistrationClient>()
+            registrationClientProvider.set(mockRegistrationClient)
+
+            val mockReconnector = mockk<Reconnector>()
+            val reconnectorProvider = DeferredProvider<Reconnector>()
+            reconnectorProvider.set(mockReconnector)
+
+            val testScope = TestScope()
+
+            val registrar = createServiceRegistrar(
+                registrationClientProvider = registrationClientProvider,
+                reconnectorProvider = reconnectorProvider,
+                preSetRegistrationClient = false,
+                coroutineScope = testScope
+            )
+
+            registrar.initialize()
+            testScope.testScheduler.runCurrent()
+
+            testScope.launch { registrar.shutdown() }
+            testScope.testScheduler.runCurrent()
+
+            coVerify(exactly = 1) { mockRegistrationClient.sendShutdown("default-id") }
         }
     }
 })
