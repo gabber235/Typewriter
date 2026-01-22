@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use prost::Message;
 use surrealdb_component::query;
-use wasmcloud_component::{debug, info, trace};
+use wasmcloud_component::{debug, error, info, trace};
 use wasmcloud_utils::{
     error_response_bytes, extract_param, internal_error_fn,
     wasmcloud::messaging::{reply, types::BrokerMessage},
 };
 
-use crate::{refresh, typewriter, MemberWithRolesRecord};
+use crate::{refresh, typewriter, DeleteMemberResult, MemberWithRolesRecord};
 
 pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
     debug!("handle_list (members) invoked");
@@ -65,21 +65,23 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         .map_err(|e| format!("failed to decode request: {}", e))?;
     trace!("Decoded UpdateMemberRolesRequest: {:?}", request);
 
-    let member_id = request.member_id;
+    let user_id = request.user_id;
     let role_ids: Vec<String> = request.role_ids;
 
-    info!("Updating member '{}' roles to {:?}", member_id, role_ids);
+    info!("Updating user '{}' roles to {:?}", user_id, role_ids);
 
     let result = query(
         r#"
         BEGIN TRANSACTION;
         LET $requested_roles = $role_ids.map(|$id| type::thing('role', $id));
 
-        LET $member = SELECT id, roles FROM ONLY member_of WHERE out = type::thing('organization', $org_id) AND in = type::thing('user', $member_id);
+        LET $members = SELECT id, roles FROM member_of WHERE out = type::thing('organization', $org_id) AND in = type::thing('user', $user_id);
 
-        IF !$member {
-            THROW "Not a member of the organization";
+        IF array::len($members) == 0 {
+            THROW "User is not a member of this organization";
         };
+
+        LET $member = array::first($members);
 
         LET $roles = array::concat(
             $member.roles.filter(|$role| !$role.assignable),
@@ -87,7 +89,7 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         );
 
         IF array::is_empty($roles) {
-            THROW "A user must have at least one valid role";
+            THROW "User must have at least one valid assignable role";
         };
 
         UPDATE $member.id SET
@@ -103,16 +105,19 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("org_id", &org_id)
-    .bind("member_id", &member_id)
+    .bind("org_id", org_id)
+    .bind("user_id", &user_id)
     .bind("role_ids", &role_ids)
     .execute()
     .map_err(|e| format!("failed to update member roles: {}", e))?;
-    trace!("Update executed successfully");
+    trace!("Update executed successfully, {} results", result.len());
 
-    let updated_record: Result<MemberWithRolesRecord, String> = result
-        .parse_result(0)
-        .map_err(|e| format!("failed to take result: {}", e))?;
+    trace!("Attempting to parse result at index 0");
+    let updated_record: Result<MemberWithRolesRecord, String> =
+        result.parse_result(0).map_err(|e| {
+            error!("Failed to parse result: {:?}", e);
+            format!("failed to parse result: {}", e)
+        })?;
 
     if let Err(e) = updated_record {
         return reply(
@@ -152,31 +157,67 @@ pub fn handle_remove(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         .map_err(|e| format!("failed to decode request: {}", e))?;
     trace!("Decoded RemoveMemberRequest: {:?}", request);
 
-    let member_id = request.member_id;
+    let user_id = request.user_id;
 
-    info!("Removing member '{}'", member_id);
+    info!("Removing user '{}'", user_id);
 
-    query(
-    r#"
-        LET $member = SELECT VALUE id FROM ONLY member_of WHERE out = type::thing('organization', $org_id) AND in = type::thing('user', $member_id);
-        DELETE $member
+    let result = query(
+        r#"
+        BEGIN TRANSACTION;
+
+        LET $user = SELECT * FROM type::thing('user', $user_id);
+        IF array::len($user) == 0 {
+            THROW "User not found";
+        };
+
+        LET $org = SELECT * FROM type::thing('organization', $org_id);
+        IF array::len($org) == 0 {
+            THROW "Organization not found";
+        };
+
+        LET $deleted = DELETE member_of 
+            WHERE out = type::thing('organization', $org_id) 
+            AND in = type::thing('user', $user_id) 
+            RETURN BEFORE;
+
+        RETURN { deleted: $deleted };
+        COMMIT TRANSACTION;
         "#,
     )
     .bind("org_id", &org_id)
-        .bind("member_id", &member_id)
-        .execute()
-        .map_err(|e| format!("failed to remove member: {}", e))?;
-    trace!("Delete executed successfully");
+    .bind("user_id", &user_id)
+    .execute()
+    .map_err(|e| format!("failed to remove member: {}", e))?;
+    trace!("Delete transaction executed successfully");
+
+    let parsed: Result<DeleteMemberResult, String> = result
+        .parse_result(0)
+        .map_err(|e| format!("failed to parse result: {}", e))?;
+
+    if let Err(e) = parsed {
+        return reply(
+            msg,
+            error_response_bytes!(
+                typewriter::api::v1::RemoveMemberResponse,
+                remove_member_response,
+                404,
+                e
+            ),
+        );
+    }
+
+    let delete_result = parsed.unwrap();
+    let success = !delete_result.deleted.is_empty();
 
     let response = typewriter::api::v1::RemoveMemberResponse {
-        result: Some(typewriter::api::v1::remove_member_response::Result::Success(true)),
+        result: Some(typewriter::api::v1::remove_member_response::Result::Success(success)),
     };
     trace!("Prepared RemoveMemberResponse");
 
     reply(msg, response.encode_to_vec())?;
 
     refresh::refresh_organization_members_list(org_id, params.get("user_id"))?;
-    refresh::refresh_user_organization_list(&member_id)?;
+    refresh::refresh_user_organization_list(&user_id)?;
     Ok(())
 }
 

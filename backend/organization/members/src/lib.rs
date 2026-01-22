@@ -41,6 +41,16 @@ pub struct RoleRecord {
     deletable: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MemberOfRecord {
+    id: RecordId,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DeleteMemberResult {
+    pub deleted: Vec<MemberOfRecord>,
+}
+
 impl From<RoleRecord> for typewriter::models::v1::Role {
     fn from(record: RoleRecord) -> Self {
         typewriter::models::v1::Role {
