@@ -101,6 +101,8 @@ import 'package:widgetbook_workspace/stories/routes/organizations/library/route.
     as _widgetbook_workspace_stories_routes_organizations_library_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/members/route.stories.dart'
     as _widgetbook_workspace_stories_routes_organizations_members_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organizations/services/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organizations_services_route_stories;
 import 'package:widgetbook_workspace/stories/routes/route.stories.dart'
     as _widgetbook_workspace_stories_routes_route_stories;
 import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
@@ -200,6 +202,22 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_routes_organizations_members_route_stories
                             .membersPageUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'services',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'ServicesPage',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'ServicesPage',
+                    builder:
+                        _widgetbook_workspace_stories_routes_organizations_services_route_stories
+                            .servicesPageUseCase,
                   ),
                 ],
               ),
