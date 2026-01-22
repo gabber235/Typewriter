@@ -36,9 +36,13 @@ async fn create_organization(
 /// Helper to list members for a given organization.
 async fn list_members(
     client: &TestNatsClient<'_>,
+    user_id: &str,
     organization_id: &str,
 ) -> ListMembersResponse {
-    let subject = format!("typewriter.in.organization.{}.members.list", organization_id);
+    let subject = format!(
+        "typewriter.in.user.{}.organization.{}.members.list",
+        user_id, organization_id
+    );
     let request = ListMembersRequest {};
     client
         .request::<_, ListMembersResponse>(&subject, &request)
@@ -49,9 +53,13 @@ async fn list_members(
 /// Helper to list roles for a given organization.
 async fn list_roles(
     client: &TestNatsClient<'_>,
+    user_id: &str,
     organization_id: &str,
 ) -> ListRolesResponse {
-    let subject = format!("typewriter.in.organization.{}.roles.list", organization_id);
+    let subject = format!(
+        "typewriter.in.user.{}.organization.{}.roles.list",
+        user_id, organization_id
+    );
     let request = ListRolesRequest {};
     client
         .request::<_, ListRolesResponse>(&subject, &request)
@@ -205,7 +213,7 @@ async fn test_creator_becomes_member() {
     let org = assert_success_response(&create_response);
 
     // List members to verify the creator is a member
-    let members_response = list_members(&client, &org.id).await;
+    let members_response = list_members(&client, &user.id, &org.id).await;
 
     match &members_response.result {
         Some(list_members_response::Result::Members(members_list)) => {
@@ -257,7 +265,7 @@ async fn test_founder_and_writer_roles_created() {
     let org = assert_success_response(&create_response);
 
     // List roles to verify founder and writer roles exist
-    let roles_response = list_roles(&client, &org.id).await;
+    let roles_response = list_roles(&client, &user.id, &org.id).await;
 
     match &roles_response.result {
         Some(list_roles_response::Result::Roles(roles_list)) => {
@@ -334,7 +342,7 @@ async fn test_creator_has_founder_role() {
     let org = assert_success_response(&create_response);
 
     // List members to verify the creator has the founder role
-    let members_response = list_members(&client, &org.id).await;
+    let members_response = list_members(&client, &user.id, &org.id).await;
 
     match &members_response.result {
         Some(list_members_response::Result::Members(members_list)) => {

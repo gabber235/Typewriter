@@ -1,13 +1,12 @@
 //! Tests for updating organization member roles.
 //!
 //! Subject: `typewriter.in.user.<user_id>.organization.<org_id>.members.update`
-//! Request: `UpdateMemberRolesRequest` with `member_id: String`, `role_ids: Vec<String>`
+//! Request: `UpdateMemberRolesRequest` with `user_id: String`, `role_ids: Vec<String>`
 //! Response: `UpdateMemberRolesResponse` with `member: OrganizationMember` or error
 //!
 //! Note: Non-assignable roles are preserved, assignable roles are replaced.
 
 use anyhow::Result;
-use serde::Deserialize;
 
 use backend_tests::proto::typewriter::api::v1::{self, update_member_roles_response};
 use backend_tests::{
@@ -20,36 +19,6 @@ fn update_member_subject(user_id: &str, org_id: &str) -> String {
         "typewriter.in.user.{}.organization.{}.members.update",
         user_id, org_id
     )
-}
-
-/// Helper to get the member_of relation ID for a user in an organization.
-async fn get_member_id(
-    db: &surrealdb::Surreal<surrealdb::engine::any::Any>,
-    user_id: &str,
-    org_id: &str,
-) -> String {
-    #[derive(Debug, Deserialize)]
-    struct MemberOfRecord {
-        id: surrealdb::sql::Thing,
-    }
-
-    let query = format!(
-        "SELECT id FROM member_of WHERE in = user:`{}` AND out = organization:`{}`",
-        user_id, org_id
-    );
-
-    let mut result = db.query(&query).await.expect("Failed to query member_of");
-    let records: Vec<MemberOfRecord> = result.take(0).expect("Failed to take result");
-
-    assert!(
-        !records.is_empty(),
-        "No member_of record found for user {} in org {}",
-        user_id,
-        org_id
-    );
-
-    // Extract just the ID part (without the table prefix)
-    records[0].id.id.to_string()
 }
 
 /// Test updating a member to have a different role.
@@ -92,7 +61,12 @@ async fn test_update_member_different_role() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    let member_id = get_member_id(&fixtures.infra.db, &target_user.id, &org.id).await;
+    // Export database state before the update for debugging
+    backend_tests::export_db_state(
+        &fixtures.infra.surrealdb_http_url,
+        "/tmp/test_update_member_state.surql",
+    )
+    .await?;
 
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = update_member_subject(&admin_user.id, &org.id);
@@ -101,7 +75,7 @@ async fn test_update_member_different_role() -> Result<()> {
         .request(
             &subject,
             &v1::UpdateMemberRolesRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
                 role_ids: vec![new_role.id.clone()],
             },
         )
@@ -168,8 +142,6 @@ async fn test_update_member_multiple_roles() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    let member_id = get_member_id(&fixtures.infra.db, &target_user.id, &org.id).await;
-
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = update_member_subject(&admin_user.id, &org.id);
 
@@ -177,7 +149,7 @@ async fn test_update_member_multiple_roles() -> Result<()> {
         .request(
             &subject,
             &v1::UpdateMemberRolesRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
                 role_ids: vec![role1.id.clone(), role2.id.clone(), role3.id.clone()],
             },
         )
@@ -257,8 +229,6 @@ async fn test_update_member_preserve_non_assignable_roles() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    let member_id = get_member_id(&fixtures.infra.db, &target_user.id, &org.id).await;
-
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = update_member_subject(&admin_user.id, &org.id);
 
@@ -267,7 +237,7 @@ async fn test_update_member_preserve_non_assignable_roles() -> Result<()> {
         .request(
             &subject,
             &v1::UpdateMemberRolesRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
                 role_ids: vec![assignable_role2.id.clone()],
             },
         )
@@ -324,8 +294,8 @@ async fn test_update_member_not_found() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    // Use a non-existent member ID
-    let fake_member_id = "00000000-0000-0000-0000-000000000000";
+    // Use a non-existent user ID
+    let fake_user_id = "00000000-0000-0000-0000-000000000000";
 
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = update_member_subject(&user.id, &org.id);
@@ -334,7 +304,7 @@ async fn test_update_member_not_found() -> Result<()> {
         .request(
             &subject,
             &v1::UpdateMemberRolesRequest {
-                member_id: fake_member_id.to_string(),
+                user_id: fake_user_id.to_string(),
                 role_ids: vec![role.id.clone()],
             },
         )
@@ -394,8 +364,6 @@ async fn test_update_member_role_not_found() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    let member_id = get_member_id(&fixtures.infra.db, &target_user.id, &org.id).await;
-
     // Use a non-existent role ID
     let fake_role_id = "00000000-0000-0000-0000-000000000001";
 
@@ -406,7 +374,7 @@ async fn test_update_member_role_not_found() -> Result<()> {
         .request(
             &subject,
             &v1::UpdateMemberRolesRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
                 role_ids: vec![fake_role_id.to_string()],
             },
         )
@@ -465,8 +433,6 @@ async fn test_update_member_empty_roles_error() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    let member_id = get_member_id(&fixtures.infra.db, &target_user.id, &org.id).await;
-
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = update_member_subject(&admin_user.id, &org.id);
 
@@ -475,7 +441,7 @@ async fn test_update_member_empty_roles_error() -> Result<()> {
         .request(
             &subject,
             &v1::UpdateMemberRolesRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
                 role_ids: vec![], // Empty roles
             },
         )
@@ -535,8 +501,6 @@ async fn test_update_member_invalid_role_uuid() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    let member_id = get_member_id(&fixtures.infra.db, &target_user.id, &org.id).await;
-
     // Test various invalid UUID formats
     let invalid_uuids = vec![
         "not-a-uuid",
@@ -555,7 +519,7 @@ async fn test_update_member_invalid_role_uuid() -> Result<()> {
             .request(
                 &subject,
                 &v1::UpdateMemberRolesRequest {
-                    member_id: member_id.clone(),
+                    user_id: target_user.id.clone(),
                     role_ids: vec![invalid_uuid.to_string()],
                 },
             )
@@ -581,9 +545,9 @@ async fn test_update_member_invalid_role_uuid() -> Result<()> {
     Ok(())
 }
 
-/// Test malicious input: invalid member_id format.
+/// Test malicious input: invalid user_id format.
 #[tokio::test]
-async fn test_update_member_invalid_member_id() -> Result<()> {
+async fn test_update_member_invalid_user_id() -> Result<()> {
     let fixtures = get_fixtures().await;
 
     // Create test data
@@ -605,8 +569,8 @@ async fn test_update_member_invalid_member_id() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    // Test various invalid member_id formats
-    let invalid_member_ids = vec![
+    // Test various invalid user_id formats
+    let invalid_user_ids = vec![
         "not-a-valid-id",
         "'; DROP TABLE member_of; --",
         "<script>alert('xss')</script>",
@@ -617,12 +581,12 @@ async fn test_update_member_invalid_member_id() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = update_member_subject(&user.id, &org.id);
 
-    for invalid_id in invalid_member_ids {
+    for invalid_id in invalid_user_ids {
         let response: v1::UpdateMemberRolesResponse = nats
             .request(
                 &subject,
                 &v1::UpdateMemberRolesRequest {
-                    member_id: invalid_id.to_string(),
+                    user_id: invalid_id.to_string(),
                     role_ids: vec![role.id.clone()],
                 },
             )
@@ -631,11 +595,11 @@ async fn test_update_member_invalid_member_id() -> Result<()> {
         // Should return an error, not crash
         match response.result {
             Some(update_member_roles_response::Result::Error(_err)) => {
-                // Expected - invalid member ID should result in error
+                // Expected - invalid user ID should result in error
             }
             Some(update_member_roles_response::Result::Member(_)) => {
                 panic!(
-                    "Expected error for invalid member_id '{}' but got success",
+                    "Expected error for invalid user_id '{}' but got success",
                     invalid_id
                 );
             }

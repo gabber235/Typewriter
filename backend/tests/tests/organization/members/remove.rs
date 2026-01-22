@@ -52,9 +52,6 @@ async fn test_remove_member_success() {
         .await
         .expect("Failed to create target membership");
 
-    let member_id = get_member_id(db, &target_user.id, &org.id).await;
-
-    // Send remove request
     let subject = format!(
         "typewriter.in.user.{}.organization.{}.members.remove",
         admin_user.id, org.id
@@ -63,7 +60,7 @@ async fn test_remove_member_success() {
         .request(
             &subject,
             &RemoveMemberRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
             },
         )
         .await
@@ -137,9 +134,6 @@ async fn test_removed_member_not_in_list() {
         .await
         .expect("Failed to create remaining membership");
 
-    // Get member ID for target
-    let member_id = get_member_id(db, &target_user.id, &org.id).await;
-
     // Verify member exists in list before removal
     let list_subject = format!(
         "typewriter.in.user.{}.organization.{}.members.list",
@@ -170,7 +164,7 @@ async fn test_removed_member_not_in_list() {
         .request(
             &remove_subject,
             &RemoveMemberRequest {
-                member_id: member_id.clone(),
+                user_id: target_user.id.clone(),
             },
         )
         .await
@@ -257,8 +251,8 @@ async fn test_remove_member_not_found() {
         .await
         .expect("Failed to create membership");
 
-    // Use a non-existent member ID
-    let fake_member_id = "00000000-0000-0000-0000-000000000000";
+    // Use a non-existent user ID
+    let fake_user_id = "00000000-0000-0000-0000-000000000000";
 
     let subject = format!(
         "typewriter.in.user.{}.organization.{}.members.remove",
@@ -268,32 +262,32 @@ async fn test_remove_member_not_found() {
         .request(
             &subject,
             &RemoveMemberRequest {
-                member_id: fake_member_id.to_string(),
+                user_id: fake_user_id.to_string(),
             },
         )
         .await
         .expect("Failed to send request");
 
-    // Verify error response
+    // Trying to remove a non-existent user should return an error
     match response.result {
         Some(remove_member_response::Result::Error(err)) => {
+            assert_eq!(err.code, 404, "Should return 404 for non-existent user");
             assert!(
-                err.message.to_lowercase().contains("not found")
-                    || err.message.to_lowercase().contains("member"),
-                "Error message should indicate member not found: {}",
+                err.message.contains("User not found"),
+                "Error message should indicate user not found, got: {}",
                 err.message
             );
         }
         Some(remove_member_response::Result::Success(_)) => {
-            panic!("Expected error but got success");
+            panic!("Expected error for non-existent user, got success");
         }
         None => panic!("Expected result in response"),
     }
 }
 
-/// Test malicious input: invalid member_id formats.
+/// Test malicious input: invalid user_id formats.
 #[tokio::test]
-async fn test_remove_member_invalid_member_id() {
+async fn test_remove_member_invalid_user_id() {
     let fixtures = get_fixtures().await;
     let db = &fixtures.infra.db;
     let nats = fixtures.infra.nats_client();
@@ -322,8 +316,8 @@ async fn test_remove_member_invalid_member_id() {
         .await
         .expect("Failed to create membership");
 
-    // Test various invalid member_id formats
-    let invalid_member_ids = vec![
+    // Test various invalid user_id formats
+    let invalid_user_ids = vec![
         "not-a-valid-id",
         "12345",
         "'; DROP TABLE member_of; --",
@@ -336,7 +330,7 @@ async fn test_remove_member_invalid_member_id() {
         "undefined",
     ];
 
-    for invalid_id in invalid_member_ids {
+    for invalid_id in invalid_user_ids {
         let subject = format!(
             "typewriter.in.user.{}.organization.{}.members.remove",
             user.id, org.id
@@ -345,7 +339,7 @@ async fn test_remove_member_invalid_member_id() {
             .request(
                 &subject,
                 &RemoveMemberRequest {
-                    member_id: invalid_id.to_string(),
+                    user_id: invalid_id.to_string(),
                 },
             )
             .await
@@ -354,13 +348,13 @@ async fn test_remove_member_invalid_member_id() {
         // Should return an error or handle gracefully, not crash
         match response.result {
             Some(remove_member_response::Result::Error(_err)) => {
-                // Expected - invalid member ID should result in error
+                // Expected - invalid user ID should result in error
             }
             Some(remove_member_response::Result::Success(success)) => {
                 // If it returns success=false, that's also acceptable for "not found"
                 assert!(
                     !success,
-                    "Should not return success=true for invalid member_id '{}'",
+                    "Should not return success=true for invalid user_id '{}'",
                     invalid_id
                 );
             }
@@ -439,10 +433,6 @@ async fn test_remove_multiple_members() {
         .await
         .expect("Failed to create user3 membership");
 
-    // Get member IDs
-    let member1_id = get_member_id(db, &user1.id, &org.id).await;
-    let member2_id = get_member_id(db, &user2.id, &org.id).await;
-
     let remove_subject = format!(
         "typewriter.in.user.{}.organization.{}.members.remove",
         admin_user.id, org.id
@@ -457,7 +447,7 @@ async fn test_remove_multiple_members() {
         .request(
             &remove_subject,
             &RemoveMemberRequest {
-                member_id: member1_id,
+                user_id: user1.id.clone(),
             },
         )
         .await
@@ -486,7 +476,7 @@ async fn test_remove_multiple_members() {
         .request(
             &remove_subject,
             &RemoveMemberRequest {
-                member_id: member2_id,
+                user_id: user2.id.clone(),
             },
         )
         .await
@@ -522,34 +512,4 @@ async fn test_remove_multiple_members() {
     }
 }
 
-/// Helper function to get the member_of relation ID for a user in an organization.
-async fn get_member_id(
-    db: &surrealdb::Surreal<surrealdb::engine::any::Any>,
-    user_id: &str,
-    org_id: &str,
-) -> String {
-    use serde::Deserialize;
 
-    #[derive(Debug, Deserialize)]
-    struct MemberOfRecord {
-        id: surrealdb::sql::Thing,
-    }
-
-    let query = format!(
-        "SELECT id FROM member_of WHERE in = user:`{}` AND out = organization:`{}`",
-        user_id, org_id
-    );
-
-    let mut result = db.query(&query).await.expect("Failed to query member_of");
-    let records: Vec<MemberOfRecord> = result.take(0).expect("Failed to take result");
-
-    assert!(
-        !records.is_empty(),
-        "No member_of record found for user {} in org {}",
-        user_id,
-        org_id
-    );
-
-    // Extract just the ID part (without the table prefix)
-    records[0].id.id.to_string()
-}
