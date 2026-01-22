@@ -10,6 +10,7 @@ mod bind;
 mod heartbeat;
 mod list;
 mod notifications;
+mod shutdown;
 mod status;
 mod unbind;
 mod update;
@@ -48,6 +49,12 @@ pub struct ServiceMetadataRecord {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ServiceStateRecord {
+    pub status: Option<String>,
+    pub last_seen: Option<Datetime>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServiceRecord {
     pub id: RecordId,
     pub name: String,
@@ -56,7 +63,7 @@ pub struct ServiceRecord {
     pub metadata: Option<ServiceMetadataRecord>,
     pub organization: Option<RecordId>,
     pub registration: Option<RegistrationData>,
-    pub last_seen: Option<Datetime>,
+    pub state: Option<ServiceStateRecord>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -86,6 +93,7 @@ impl Guest for ServiceRegistration {
             user_services: "[typewriter.in.]user.<user_id>.organization.<org_id>.services";
             "{services}.status" => status::handle_status => status::internal_error_status,
             "{services}.heartbeat" => heartbeat::handle_heartbeat,
+            "{services}.shutdown" => shutdown::handle_shutdown,
             "{user_services}.bind" => bind::handle_bind => bind::internal_error_bind,
             "{user_services}.list" => list::handle_list => list::internal_error_list,
             "{user_services}.update" => update::handle_update => update::internal_error_update,

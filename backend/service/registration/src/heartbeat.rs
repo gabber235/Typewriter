@@ -16,13 +16,16 @@ pub fn handle_heartbeat(msg: BrokerMessage, params: HashMap<String, String>) -> 
 
     query(
         r#"
-        UPDATE type::thing('service', $service_id) SET last_seen = time::now();
+        UPDATE type::thing('service', $service_id) SET state = {
+            status: 'ONLINE',
+            last_seen: time::now()
+        };
         "#,
     )
     .bind("service_id", &service_id)
     .execute()
-    .map_err(|e| format!("failed to update last_seen: {}", e))?;
+    .map_err(|e| format!("failed to update state: {}", e))?;
 
-    debug!("Heartbeat recorded for service {}", service_id);
+    debug!("Heartbeat recorded for service {} (status: ONLINE)", service_id);
     Ok(())
 }
