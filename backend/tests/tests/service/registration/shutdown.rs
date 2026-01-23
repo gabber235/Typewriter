@@ -1,8 +1,13 @@
 //! Integration tests for the service shutdown handler.
 
 use anyhow::Result;
-use backend_tests::proto::typewriter::api::v1::{ServiceHeartbeatRequest, ServiceShutdownRequest};
+use backend_tests::proto::typewriter::api::v1::{
+    list_organization_services_response, ListOrganizationServicesResponse, ServiceHeartbeatRequest,
+    ServiceShutdownRequest,
+};
 use backend_tests::{get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient};
+use futures::StreamExt;
+use prost::Message;
 use repeated_assert::that_async;
 use std::time::Duration;
 use surrealdb::sql::Datetime;
@@ -201,6 +206,79 @@ async fn test_shutdown_can_be_followed_by_heartbeat() -> Result<()> {
         }
     })
     .await;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_shutdown_triggers_services_list_refresh() -> Result<()> {
+    let fixtures = get_fixtures().await;
+    let nats = TestNatsClient::new(fixtures.infra.nats_client());
+
+    let org = OrganizationBuilder::new("shutdown_refresh_org")
+        .create(&fixtures.infra.db)
+        .await?;
+
+    let service = ServiceBuilder::new("shutdown_refresh_service")
+        .service_type("engine")
+        .organization(&org)
+        .create(&fixtures.infra.db)
+        .await?;
+
+    // First send a heartbeat to set the service online
+    let heartbeat_subject = format!("typewriter.in.service.{}.heartbeat", service.id);
+    nats.publish(&heartbeat_subject, &ServiceHeartbeatRequest {})
+        .await?;
+
+    let db = fixtures.infra.db.clone();
+    let service_id = service.id.clone();
+    that_async(20, Duration::from_millis(50), || {
+        let db = db.clone();
+        let service_id = service_id.clone();
+        async move {
+            let state = get_state(&db, &service_id).await;
+            assert!(
+                state.is_some_and(|s| s.status.as_deref() == Some("ONLINE")),
+                "service should be ONLINE after heartbeat"
+            );
+        }
+    })
+    .await;
+
+    let refresh_subject = format!("typewriter.out.organization.{}.services.list", org.id);
+    let mut subscription = fixtures.infra.nats_client().subscribe(refresh_subject).await?;
+
+    let shutdown_subject = format!("typewriter.in.service.{}.shutdown", service.id);
+    nats.publish(&shutdown_subject, &ServiceShutdownRequest {})
+        .await?;
+
+    let received = tokio::time::timeout(Duration::from_secs(2), subscription.next()).await;
+
+    assert!(
+        received.is_ok(),
+        "Should receive services list refresh notification after shutdown"
+    );
+
+    let message = received.unwrap();
+    assert!(message.is_some(), "Message should not be None");
+
+    let msg = message.unwrap();
+    let response = ListOrganizationServicesResponse::decode(msg.payload.as_ref())?;
+
+    match &response.result {
+        Some(list_organization_services_response::Result::Services(list)) => {
+            assert!(
+                list.services.iter().any(|s| s.id == service.id),
+                "Refresh should include the service that was shut down"
+            );
+        }
+        Some(list_organization_services_response::Result::Error(err)) => {
+            panic!("Expected services list, got error: {:?}", err);
+        }
+        None => {
+            panic!("Expected services list result, got None");
+        }
+    }
 
     Ok(())
 }

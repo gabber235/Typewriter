@@ -1,8 +1,12 @@
 //! Integration tests for the service heartbeat handler.
 
 use anyhow::Result;
-use backend_tests::proto::typewriter::api::v1::ServiceHeartbeatRequest;
+use backend_tests::proto::typewriter::api::v1::{
+    list_organization_services_response, ListOrganizationServicesResponse, ServiceHeartbeatRequest,
+};
 use backend_tests::{get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient};
+use futures::StreamExt;
+use prost::Message;
 use repeated_assert::that_async;
 use std::time::Duration;
 use surrealdb::sql::Datetime;
@@ -205,6 +209,59 @@ async fn test_multiple_heartbeats_update_last_seen() -> Result<()> {
         }
     })
     .await;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_heartbeat_triggers_services_list_refresh() -> Result<()> {
+    let fixtures = get_fixtures().await;
+    let nats = TestNatsClient::new(fixtures.infra.nats_client());
+
+    let org = OrganizationBuilder::new("heartbeat_refresh_org")
+        .create(&fixtures.infra.db)
+        .await?;
+
+    let service = ServiceBuilder::new("heartbeat_refresh_service")
+        .service_type("engine")
+        .organization(&org)
+        .create(&fixtures.infra.db)
+        .await?;
+
+    let refresh_subject = format!("typewriter.out.organization.{}.services.list", org.id);
+    let mut subscription = fixtures.infra.nats_client().subscribe(refresh_subject).await?;
+
+    let subject = format!("typewriter.in.service.{}.heartbeat", service.id);
+    let request = ServiceHeartbeatRequest {};
+    nats.publish(&subject, &request).await?;
+
+    let received = tokio::time::timeout(Duration::from_secs(2), subscription.next()).await;
+
+    assert!(
+        received.is_ok(),
+        "Should receive services list refresh notification after heartbeat"
+    );
+
+    let message = received.unwrap();
+    assert!(message.is_some(), "Message should not be None");
+
+    let msg = message.unwrap();
+    let response = ListOrganizationServicesResponse::decode(msg.payload.as_ref())?;
+
+    match &response.result {
+        Some(list_organization_services_response::Result::Services(list)) => {
+            assert!(
+                list.services.iter().any(|s| s.id == service.id),
+                "Refresh should include the service that sent the heartbeat"
+            );
+        }
+        Some(list_organization_services_response::Result::Error(err)) => {
+            panic!("Expected services list, got error: {:?}", err);
+        }
+        None => {
+            panic!("Expected services list result, got None");
+        }
+    }
 
     Ok(())
 }
