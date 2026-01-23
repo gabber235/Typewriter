@@ -1,6 +1,6 @@
-# TypeWriter Protocol Buffers
+# Typewriter Protocol Buffers
 
-This directory contains all Protocol Buffer definitions for TypeWriter's panel and backend communication.
+This directory contains all Protocol Buffer definitions for Typewriter's panel and backend communication.
 
 ## Structure
 

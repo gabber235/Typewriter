@@ -118,7 +118,7 @@ class RegistrationProtocol(
             appendLine("║${" ".repeat(boxWidth)}║")
             appendLine("║$paddedToken")
             appendLine("║${" ".repeat(boxWidth)}║")
-            appendLine("║    Enter this token in the TypeWriter Panel to bind${" ".repeat(boxWidth - 53)}║")
+            appendLine("║    Enter this token in the Typewriter Panel to bind${" ".repeat(boxWidth - 53)}║")
             appendLine("║    this service to your organization.${" ".repeat(boxWidth - 40)}║")
             appendLine("║${" ".repeat(boxWidth)}║")
             appendLine("║    Token refreshes every 2 minutes.${" ".repeat(boxWidth - 38)}║")

@@ -4,9 +4,12 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/generated/models/service.pb.dart";
+import "package:typewriter_panel/hooks/loading_button_controller.dart";
 import "package:typewriter_panel/logic/services.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/empty_state.dart";
@@ -66,7 +69,7 @@ class ServicesPage extends HookConsumerWidget {
                       return EmptyState(
                         title: "No services connected",
                         description:
-                            "Start a server with TypeWriter installed and enter the registration token above.",
+                            "Start a server with Typewriter installed and enter the registration token above.",
                         icon: MaterialSymbols.dns,
                       );
                     }
@@ -86,18 +89,34 @@ class ServicesPage extends HookConsumerWidget {
 class _TokenInput extends HookConsumerWidget {
   const _TokenInput();
 
+  bool isValidToken(String token) {
+    final regex = RegExp(r"^[A-Z0-9]{10}$");
+    return regex.hasMatch(token);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final controller = useTextEditingController();
     final focusNode = useFocusNode();
+    final loadingButtonController = useLoadingButtonController();
+    final error = useState<String?>(null);
 
     Future<void> handleBind() async {
       final token = controller.text.trim();
-      if (token.isEmpty) return;
-
+      if (!isValidToken(token)) {
+        error.value = "Token must be 10 uppercase alphanumeric characters";
+        return;
+      }
+      error.value = null;
       await ref.read(servicesProvider.notifier).bindService(token);
       controller.clear();
+    }
+
+    void handleChange(String value) {
+      if (error.value != null && isValidToken(value.trim())) {
+        error.value = null;
+      }
     }
 
     return Container(
@@ -117,7 +136,7 @@ class _TokenInput extends HookConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "When you start a TypeWriter server, it will display a registration token. Enter it here to bind the service to this organization.",
+            "When you start a Typewriter server, it will display a registration token. Enter it here to bind the service to this organization.",
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -126,23 +145,23 @@ class _TokenInput extends HookConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: DecoratedTextField(
                   controller: controller,
                   focusNode: focusNode,
                   decoration: InputDecoration(
                     hintText: "Enter registration token",
                     prefixIcon: const Icon(Icons.key),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: theme.colorScheme.surface,
+                    errorText: error.value,
                   ),
-                  onSubmitted: (_) => handleBind(),
+                  onChanged: handleChange,
+                  onSubmitted: loadingButtonController.canTrigger
+                      ? (_) => loadingButtonController.trigger()
+                      : null,
                 ),
               ),
               const SizedBox(width: 12),
               LoadingButton(
+                controller: loadingButtonController,
                 onPressed: handleBind,
                 child: const Text("Connect"),
               ),
@@ -190,19 +209,13 @@ class _ServiceCard extends HookConsumerWidget {
       focusNode: focusNode,
       builder: (isSelected, isFocused, isHovered) {
         return GridSelectableCard(
-          title: service.displayName,
+          title: service.displayName.formatted,
           baseColor: theme.colorScheme.primary,
           isSelected: isSelected,
           isFocused: isFocused,
           isHovered: isHovered,
           badgeLabel: service.typeLabel,
-          header: Icon(
-            service.icon,
-            size: 32,
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.primary,
-          ),
+          header: Icon(service.icon, size: 32),
           footer: _StatusIndicator(
             isOnline: service.isOnline,
             lastSeenLabel: service.lastSeenLabel,

@@ -1,4 +1,4 @@
-![TypeWriter Logo](https://github.com/gabber235/TypeWriter/blob/develop/design/Banner/TW_Banner_Transparant.png?raw=true)
+![Typewriter Logo](https://github.com/gabber235/TypeWriter/blob/develop/design/Banner/TW_Banner_Transparant.png?raw=true)
 
 [![Discord](https://img.shields.io/discord/1054708062520360960?label=discord&logo=discord&logoColor=white)](https://discord.gg/HtbKyuDDBw)
 

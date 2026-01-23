@@ -5,7 +5,7 @@
 
 ## OVERVIEW
 
-TypeWriter: Minecraft Paper plugin for interactive quests, NPC dialogues, and cinematics. Polyglot monorepo: Kotlin engine + extensions, Flutter panel, Rust/wasmCloud backend, shared Protobuf contracts.
+Typewriter: Minecraft Paper plugin for interactive quests, NPC dialogues, and cinematics. Polyglot monorepo: Kotlin engine + extensions, Flutter panel, Rust/wasmCloud backend, shared Protobuf contracts.
 
 ## STRUCTURE
 

@@ -76,7 +76,7 @@ class InDialogueActivity(
 
     override fun currentChild(context: ActivityContext): Ref<out EntityActivityEntry> {
         val definition =
-            context.instanceRef.get()?.definition.logErrorIfNull("Could not find definition, this should not happen. Please report this on the TypeWriter Discord!")
+            context.instanceRef.get()?.definition.logErrorIfNull("Could not find definition, this should not happen. Please report this on the Typewriter Discord!")
                 ?: return idleActivity
         val inDialogue = context.viewers.filter { viewer ->
             viewer.speakersInDialogue.any {

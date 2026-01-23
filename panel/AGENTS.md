@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-Flutter app for configuring TypeWriter quests, dialogues, and entries. Connects to Backend via NATS/Protobuf.
+Flutter app for configuring Typewriter quests, dialogues, and entries. Connects to Backend via NATS/Protobuf.
 
 ## STRUCTURE
 
@@ -14,7 +14,7 @@ panel/
 │   ├── routes/         # auto_route page definitions
 │   ├── utils/          # Helpers, extensions
 │   └── widgets/
-│       ├── app/        # TypeWriter-specific components
+│       ├── app/        # Typewriter-specific components
 │       └── generic/    # Reusable UI components
 ├── test/               # Widget tests
 ├── testkit/            # Shared test utilities package

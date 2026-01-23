@@ -195,6 +195,6 @@ class WrongActivityContextException(
     |And you can't use an individual activity on a shared entity.
     |
     |To fix this, you need to make sure that the activity matches the entity visibility.
-    |If you need more help, please join the TypeWriter Discord! https://discord.gg/gs5QYhfv9x
+    |If you need more help, please join the Typewriter Discord! https://discord.gg/gs5QYhfv9x
 """.trimMargin()
 )

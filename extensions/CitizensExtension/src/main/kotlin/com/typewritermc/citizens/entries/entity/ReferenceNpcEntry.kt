@@ -11,7 +11,7 @@ import net.citizensnpcs.api.CitizensAPI
 import org.bukkit.entity.Player
 
 @Tags("reference_npc")
-@Entry("reference_npc", "When the npc is not managed by TypeWriter", Colors.ORANGE, "fa-solid:user-tie")
+@Entry("reference_npc", "When the npc is not managed by Typewriter", Colors.ORANGE, "fa-solid:user-tie")
 /**
  * An identifier that references an NPC in the Citizens plugin. But does not manage the NPC.
  *

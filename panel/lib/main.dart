@@ -455,7 +455,7 @@ class _Loading extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "TypeWriter",
+      title: "Typewriter",
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
@@ -471,7 +471,7 @@ class _Error extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
-      title: "TypeWriter",
+      title: "Typewriter",
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),

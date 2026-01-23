@@ -15,7 +15,7 @@ typewriter {
         name = "SuperiorSkyblock"
         shortDescription = "Integrate SuperiorSkyblock with Typewriter."
         description = """
-            |The Superior Skyblock Extension allows you to use the Superior Skyblock plugin with TypeWriter.
+            |The Superior Skyblock Extension allows you to use the Superior Skyblock plugin with Typewriter.
             |It includes many events for you to use in your dialogue, as well as a few actions and conditions.
         """.trimMargin()
         flag(ExtensionFlag.Deprecated)
