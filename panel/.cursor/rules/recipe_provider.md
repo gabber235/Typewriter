@@ -1,4 +1,4 @@
-TypeWriter Panel — Recipe: Providers (Riverpod)
+Typewriter Panel: Recipe: Providers (Riverpod)
 
 Intent: Define and evolve providers for state and logic using Riverpod code generation, aligned with this project.
 

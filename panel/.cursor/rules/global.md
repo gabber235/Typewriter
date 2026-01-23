@@ -1,4 +1,4 @@
-TypeWriter Panel — Global Agent Rule
+Typewriter Panel: Global Agent Rule
 
 Scope: Always apply when working in this repository.
 

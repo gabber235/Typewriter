@@ -1,4 +1,4 @@
-# AGENT Instructions – Engine
+# AGENT Instructions: Engine
 
 The engine is written in Kotlin and built with Gradle. To work on this module:
 
@@ -16,9 +16,9 @@ From this folder run:
 
 ## Submodules
 
-- `engine-core` – platform-agnostic logic and API definitions.
-- `engine-loader` – bootstraps the core and loads extensions.
-- `engine-paper` – Paper-specific implementation and test harness.
+- `engine-core`: platform-agnostic logic and API definitions.
+- `engine-loader`: bootstraps the core and loads extensions.
+- `engine-paper`: Paper-specific implementation and test harness.
 
 ## Code Style
 

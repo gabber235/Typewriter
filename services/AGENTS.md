@@ -1,4 +1,4 @@
-# Services - Kotlin Microservices
+# Services: Kotlin Microservices
 
 ## OVERVIEW
 

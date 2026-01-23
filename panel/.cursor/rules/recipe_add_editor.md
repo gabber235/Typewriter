@@ -1,4 +1,4 @@
-# TypeWriter Panel — Recipe: Add an Inspector Editor (and Custom Modifiers)
+# Typewriter Panel: Recipe: Add an Inspector Editor (and Custom Modifiers)
 
 Intent
 Add a new field editor used by the Inspector to edit values described by `DataBlueprint` or extend the system with a custom modifier or a custom editor for a `CustomBlueprint`.
@@ -153,9 +153,9 @@ Use when a field needs fully bespoke UX not expressible by existing blueprint ty
 ## Default Value & Modifier Utilities
 
 Available helpers inside editors:
-- `blueprint.defaultValue()` — resolves a safe default including modifier effects (e.g. generated string).
+- `blueprint.defaultValue()`: resolves a safe default including modifier effects (e.g. generated string).
 - `blueprint.hasModifier<SomeModifier>()`
-- `blueprint.getModifiers<SomeModifier>()` — returns iterable (useful when multiples are allowed like `min` / `max`).
+- `blueprint.getModifiers<SomeModifier>()`: returns iterable (useful when multiples are allowed like `min` / `max`).
 
 If you introduce new semantics that alter defaults, extend the relevant private `_defaultXValue` logic or add conditional branches before returning the fallback.
 

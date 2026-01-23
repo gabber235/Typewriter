@@ -3,13 +3,14 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
+import "package:responsive_framework/responsive_framework.dart";
 import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/hooks/loading_button_controller.dart";
 import "package:typewriter_panel/logic/services.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
-import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/empty_state.dart";
@@ -17,6 +18,10 @@ import "package:typewriter_panel/widgets/generic/components/grid_selectable_card
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
+import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
+
+const double _serviceCardWidth = 180;
+const double _serviceCardAspectRatio = 1.05;
 
 @RoutePage()
 class ServicesPage extends HookConsumerWidget {
@@ -24,60 +29,74 @@ class ServicesPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scrollController = useScrollController();
     final servicesAsync = ref.watch(servicesProvider);
 
-    final paddingAmount = context.responsive(
-      mobile: 16.0,
-      tablet: 24.0,
-      desktop: 32.0,
-    );
-
-    return Pane(
-      id: "services",
-      borderRadius: BorderRadius.circular(12),
-      margin: EdgeInsets.only(
-        top: 8,
-        left: 8,
-        right: context.isDesktop ? 0 : 8,
-      ),
-      child: Section(
-        margin: EdgeInsets.zero,
-        child: SingleChildScrollView(
-          controller: scrollController,
+    return Inspector(
+      margin: EdgeInsets.only(top: 8, right: 8),
+      child: Pane(
+        id: "services",
+        borderRadius: BorderRadius.circular(12),
+        margin: EdgeInsets.only(
+          top: 8,
+          left: 8,
+          right: context.isMobile ? 8 : 0,
+        ),
+        child: Section(
+          margin: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PageHeading(
+              const PageHeading(
                 title: "Services",
                 subtext:
                     "Connect your Minecraft servers to this organization. Enter a registration token to bind a service.",
-                padding: EdgeInsets.all(paddingAmount),
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: paddingAmount),
+                padding: const EdgeInsets.all(16.0),
                 child: const _TokenInput(),
               ),
-              const SizedBox(height: 24),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: paddingAmount),
+              Expanded(
                 child: servicesAsync(
                   name: "Services",
-                  shrink: true,
                   builder: (services) {
                     if (services.isEmpty) {
-                      return EmptyState(
-                        title: "No services connected",
-                        description:
-                            "Start a server with Typewriter installed and enter the registration token above.",
-                        icon: MaterialSymbols.dns,
+                      return Center(
+                        child: EmptyState(
+                          title: "No services connected",
+                          description:
+                              "Start a server with Typewriter installed and enter the registration token above.",
+                          icon: MaterialSymbols.dns,
+                        ),
                       );
                     }
-                    return _ServicesGrid(services: services);
+
+                    return ClipPath(
+                      clipper: VerticalClipper(additionalWidth: 100),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 16,
+                        ),
+                        child: ResponsiveGridView.builder(
+                          gridDelegate: ResponsiveGridDelegate(
+                            crossAxisExtent: _serviceCardWidth,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: _serviceCardAspectRatio,
+                          ),
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.center,
+                          itemCount: services.length,
+                          itemBuilder: (context, index) {
+                            final service = services[index];
+                            return _ServiceCard(service: service);
+                          },
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -173,31 +192,10 @@ class _TokenInput extends HookConsumerWidget {
   }
 }
 
-class _ServicesGrid extends HookWidget {
-  const _ServicesGrid({required this.services});
-
-  final List<Service> services;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: [
-        for (final service in services)
-          _ServiceCard(service: service, theme: theme),
-      ],
-    );
-  }
-}
-
 class _ServiceCard extends HookConsumerWidget {
-  const _ServiceCard({required this.service, required this.theme});
+  const _ServiceCard({required this.service});
 
   final Service service;
-  final ThemeData theme;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -208,18 +206,25 @@ class _ServiceCard extends HookConsumerWidget {
       selectableId: selectableId,
       focusNode: focusNode,
       builder: (isSelected, isFocused, isHovered) {
-        return GridSelectableCard(
-          title: service.displayName.formatted,
-          baseColor: theme.colorScheme.primary,
-          isSelected: isSelected,
-          isFocused: isFocused,
-          isHovered: isHovered,
-          badgeLabel: service.typeLabel,
-          header: Icon(service.icon, size: 32),
-          footer: _StatusIndicator(
-            isOnline: service.isOnline,
-            lastSeenLabel: service.lastSeenLabel,
+        return Opacity(
+          opacity: service.isOnline
+              ? 1
+              : isSelected
+              ? 0.8
+              : 0.5,
+          child: GridSelectableCard(
+            title: service.displayName,
+            baseColor: service.color,
             isSelected: isSelected,
+            isFocused: isFocused,
+            isHovered: isHovered,
+            badgeLabel: service.typeLabel,
+            header: Icon(service.icon, size: 32),
+            footer: _StatusIndicator(
+              isOnline: service.isOnline,
+              lastSeenLabel: service.lastSeenLabel,
+              isSelected: isSelected,
+            ),
           ),
         );
       },
@@ -241,10 +246,19 @@ class _StatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final statusColor = isOnline ? Colors.green : Colors.grey;
-    final textColor = isSelected
-        ? theme.colorScheme.onPrimary.withValues(alpha: 0.8)
-        : theme.colorScheme.onSurfaceVariant;
+    final statusColor = switch ((isOnline, isSelected)) {
+      (true, false) => Colors.green,
+      (true, true) => Colors.white,
+      (false, false) => Colors.grey,
+      (false, true) => theme.colorScheme.surface.withValues(alpha: 0.7),
+    };
+    final textColor = switch ((isOnline, isSelected)) {
+      (true, _) => Colors.white.withValues(alpha: 0.7),
+      (false, false) => theme.colorScheme.onSurfaceVariant.withValues(
+        alpha: 0.7,
+      ),
+      (false, true) => theme.colorScheme.surface.withValues(alpha: 0.5),
+    };
 
     return Row(
       mainAxisSize: MainAxisSize.min,

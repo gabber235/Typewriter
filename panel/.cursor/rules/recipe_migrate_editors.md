@@ -1,7 +1,7 @@
-# TypeWriter Panel — Recipe: Migrate Legacy Inspector Editors to the New Editors System
+# Typewriter Panel: Recipe: Migrate Legacy Inspector Editors to the New Editors System
 
 Intent
-A precise, mechanical step plan to migrate legacy Inspector editors (pre–EditorMode/FieldValueEditor system) to the new architecture. This guide ensures:
+A precise, mechanical step plan to migrate legacy Inspector editors (pre EditorMode/FieldValueEditor system) to the new architecture. This guide ensures:
 - All modifiers are ported to the new Freezed-based `Modifier` union.
 - Custom editors are modeled via `CustomBlueprint` and registered.
 - Editors use new value/state handling via `FieldValueEditor`.
@@ -24,7 +24,7 @@ High-level differences you must account for
 
 ---
 
-Phase 0 — Pre-flight and placement
+Phase 0: Pre-flight and placement
 - Where to put editors
   - Editor classes/widgets: lib/widgets/app/components/inspector/editors/
   - Central registry: lib/widgets/app/components/inspector/editors.dart
@@ -36,7 +36,7 @@ Phase 0 — Pre-flight and placement
 
 ---
 
-Phase 1 — Convert imports and symbol names
+Phase 1: Convert imports and symbol names
 - Use package imports only, prefixed with typewriter_panel:
   - Replace old “package:typewriter/...” with “package:typewriter_panel/...”.
 - Replace legacy helpers with new counterparts:
@@ -62,7 +62,7 @@ Phase 1 — Convert imports and symbol names
 
 ---
 
-Phase 2 — Migrate modifiers
+Phase 2: Migrate modifiers
 - Replace stringly-typed modifier checks with strongly-typed union checks:
   - Old: `primitiveBlueprint.hasModifier("multiline")`
   - New: `primitiveBlueprint.hasModifier<MultilineModifier>()`
@@ -76,7 +76,7 @@ Phase 2 — Migrate modifiers
 
 ---
 
-Phase 3 — Convert EditorFilter to Editor
+Phase 3: Convert EditorFilter to Editor
 - Replace `class XEditorFilter extends EditorFilter` with `class XEditor extends Editor`.
 - Implement:
   - `bool canEdit(DataBlueprint dataBlueprint)` using:
@@ -160,7 +160,7 @@ class MyEditorWidget extends HookConsumerWidget {
 
 ---
 
-Phase 4 — Use FieldValueEditor for value and states
+Phase 4: Use FieldValueEditor for value and states
 - Wrap the actual input UI with `FieldValueEditor`:
   - Use `builder: (value) { ... }` to render the editor with the resolved value.
   - FieldValueEditor handles:
@@ -255,7 +255,7 @@ class StringEditorWidget extends HookConsumerWidget {
 
 ---
 
-Phase 5 — Header actions and nested traversal
+Phase 5: Header actions and nested traversal
 - If an editor contributes nested child fields (list/object/custom shape), override `headerActions(...)` and append children:
   - For each nested field item produce a `(childPath, childContext, childBlueprint)` tuple.
   - Always call `super.headerActions(...)` to get the base actions for this path and merge with children.
@@ -340,7 +340,7 @@ Register your `HeaderAction` in `headerActions(Ref ref)` if it’s global, or re
 
 ---
 
-Phase 6 — Register the editor
+Phase 6: Register the editor
 - Open lib/widgets/app/components/inspector/editors.dart and add your editor to the list:
   - Keep order: custom/specialized editors first, then primitive, then list/object.
   - Ensure your import is present with package: import.
@@ -363,7 +363,7 @@ List<Editor> editors(Ref ref) => [
 
 ---
 
-Phase 7 — If this is a custom editor, add it to DataBlueprint
+Phase 7: If this is a custom editor, add it to DataBlueprint
 - Add a static constructor to DataBlueprint that returns a CustomBlueprint with your editor id and shape:
   - File: lib/logic/selectable/data_blueprint.dart
   - Choose an editor id, e.g., "tag", "color_picker".
@@ -387,7 +387,7 @@ static CustomBlueprint tag({
 
 ---
 
-Phase 8 — Widgetbook story
+Phase 8: Widgetbook story
 - Create a story under widgetbook/lib/stories/app/components/inspector/editors/<your_editor>.stories.dart.
 - Use EditorStory from widgetbook workspace and pass an ObjectBlueprint with your field’s blueprint.
 - Use package imports. Do not use relative imports.
@@ -415,7 +415,7 @@ Widget stringEditorUseCase(BuildContext context) {
 
 ---
 
-Phase 9 — Tests
+Phase 9: Tests
 - Prefer widget tests that render the editor in a minimal, controlled environment.
 - Use the provided test utilities in test/test_utils.dart. Both testApp() and pumpTestApp() accept overrides: []. Prefer pumpTestApp(child: ..., overrides: [...]) to provide provider overrides. Also call setupMocks() in your test main() or setUpAll to register mocktail fallback values used by the testkit.
 - Prefer using override helpers from the testkit package (package:typewriter_testkit/typewriter_testkit.dart) for common app providers (e.g., appearanceProviderOverrides(...), authProviderOverrides(...), booksProviderOverrides(...), manualsProviderOverrides(...), modulesProviderOverrides(...), organizationsProviderOverrides(...)).
@@ -490,7 +490,7 @@ void main() {
 
 ---
 
-Phase 10 — Analyze, codegen, and verify
+Phase 10: Analyze, codegen, and verify
 - If you added new Freezed unions or Riverpod annotations:
   - dart run build_runner build -d
   - If issues: dart run build_runner clean && dart run build_runner build -d
@@ -504,7 +504,7 @@ Phase 10 — Analyze, codegen, and verify
 
 ---
 
-Mechanical mapping reference — old to new
+Mechanical mapping reference: old to new
 
 - Value read/write
   - read: `ref.watch(fieldValueProvider(path))` now returns `SelectedValue`

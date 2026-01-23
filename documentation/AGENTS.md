@@ -1,4 +1,4 @@
-# AGENT Instructions – Documentation
+# AGENT Instructions: Documentation
 
 This folder contains the Docusaurus website. Documentation and blog posts are written in Markdown/MDX.
 
@@ -27,9 +27,9 @@ npm run test
 
 ## Docs Structure
 
-- `docs/docs/` – player-facing documentation.
-- `docs/develop/` – developer guides and API docs.
-- `docs/adapters/` – integration guides for optional adapters. **Never edit this folder directly.**
+- `docs/docs/`: player-facing documentation.
+- `docs/develop/`: developer guides and API docs.
+- `docs/adapters/`: integration guides for optional adapters. **Never edit this folder directly.**
 - Each folder, and any nested folder within it, keeps its own `assets/` directory for images and other media.
 
 ## Code Snippets

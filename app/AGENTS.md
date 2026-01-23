@@ -1,4 +1,4 @@
-# AGENT Instructions – App
+# AGENT Instructions: App
 
 The Flutter application provides a web interface for managing Typewriter projects.
 

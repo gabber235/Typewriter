@@ -1,4 +1,4 @@
-# Backend - Rust/wasmCloud Services
+# Backend: Rust/wasmCloud Services
 
 ## OVERVIEW
 

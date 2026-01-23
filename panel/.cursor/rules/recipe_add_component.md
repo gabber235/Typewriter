@@ -1,4 +1,4 @@
-TypeWriter Panel — Recipe: Add a new UI component (with Widgetbook story)
+Typewriter Panel: Recipe: Add a new UI component (with Widgetbook story)
 
 Intent: Create a reusable or app-specific widget and its Widgetbook story, following this project’s structure and story patterns.
 
@@ -17,7 +17,7 @@ Checklist
 5) Launch Widgetbook and verify the story.
 6) Run analysis.
 
-Scaffold (pure UI widget — HookWidget)
+Scaffold (pure UI widget: HookWidget)
 ```dart
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";

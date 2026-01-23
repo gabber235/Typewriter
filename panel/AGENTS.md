@@ -1,4 +1,4 @@
-# Panel - Flutter Web/Desktop Configuration UI
+# Panel: Flutter Web/Desktop Configuration UI
 
 ## OVERVIEW
 
@@ -45,9 +45,9 @@ flutter test                  # Run tests
 ## CONVENTIONS
 
 ### Code Style (CRITICAL)
-- **Double quotes ONLY** - `"string"` not `'string'`
+- **Double quotes ONLY**: `"string"` not `'string'`
 - **Trailing commas** on multiline args
-- **Package imports ONLY** - `import "package:typewriter_panel/..."` never relative
+- **Package imports ONLY**: `import "package:typewriter_panel/..."` never relative
 - Files under 300 lines
 - Run `dart run build_runner build -d` after editing files with codegen
 
@@ -79,11 +79,11 @@ flutter test                  # Run tests
 ## DEPENDENCIES
 
 Key packages:
-- `hooks_riverpod` 3.0 - State management
-- `auto_route` 11 - Routing
-- `dart_nats` - NATS messaging
-- `freezed` - Immutable models
-- `protobuf` 6.0 - Protocol buffers
+- `hooks_riverpod` 3.0: State management
+- `auto_route` 11: Routing
+- `dart_nats`: NATS messaging
+- `freezed`: Immutable models
+- `protobuf` 6.0: Protocol buffers
 
 ## NOTES
 

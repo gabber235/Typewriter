@@ -1,4 +1,4 @@
-TypeWriter Panel — Recipe: Models (freezed + json_serializable)
+Typewriter Panel: Recipe: Models (freezed + json_serializable)
 
 Intent: Define immutable, typed data models with copyWith and JSON helpers. Include both simple data classes and union types (multiple constructors/case distinctions).
 

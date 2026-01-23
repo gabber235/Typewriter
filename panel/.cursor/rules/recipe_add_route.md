@@ -1,4 +1,4 @@
-TypeWriter Panel — Recipe: Add a route (page)
+Typewriter Panel: Recipe: Add a route (page)
 
 Intent: Create a new page and register it with auto_route for typed navigation.
 

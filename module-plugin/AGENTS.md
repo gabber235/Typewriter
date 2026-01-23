@@ -1,4 +1,4 @@
-# AGENT Instructions – Module Plugin
+# AGENT Instructions: Module Plugin
 
 This Gradle plugin is used to build Typewriter modules.
 

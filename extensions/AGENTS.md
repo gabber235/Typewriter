@@ -1,4 +1,4 @@
-# AGENT Instructions – Extensions
+# AGENT Instructions: Extensions
 
 Extensions are modular Kotlin projects that add features on top of the engine.
 

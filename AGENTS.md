@@ -11,18 +11,18 @@ Typewriter: Minecraft Paper plugin for interactive quests, NPC dialogues, and ci
 
 ```
 typewriter/
-├── engine/           # Kotlin - Paper plugin core (loader, API)
-├── extensions/       # Kotlin - Modular feature JARs (Basic, Entity, Quest...)
-├── module-plugin/    # Kotlin - Gradle plugin + KSP for extension building
-├── panel/            # Dart/Flutter - Web/desktop configuration UI
-├── app/              # Dart/Flutter - Legacy/shared components
-├── backend/          # Rust/wasmCloud - Identity, auth, org management
-├── services/         # Kotlin - Microservices (realm) via NATS
-├── proto/            # Protobuf - Shared contracts (Panel <-> Backend <-> Engine)
-├── documentation/    # TypeScript - Docusaurus site
-├── marketplace/      # TypeScript - SvelteKit extension marketplace
-├── discord_bot/      # Rust - Discord integration
-└── code_generator/   # Rust - Entity/material code generation
+├── engine/           # Kotlin: Paper plugin core (loader, API)
+├── extensions/       # Kotlin: Modular feature JARs (Basic, Entity, Quest...)
+├── module-plugin/    # Kotlin: Gradle plugin + KSP for extension building
+├── panel/            # Dart/Flutter: Web/desktop configuration UI
+├── app/              # Dart/Flutter: Legacy/shared components
+├── backend/          # Rust/wasmCloud: Identity, auth, org management
+├── services/         # Kotlin: Microservices (realm) via NATS
+├── proto/            # Protobuf: Shared contracts (Panel <-> Backend <-> Engine)
+├── documentation/    # TypeScript: Docusaurus site
+├── marketplace/      # TypeScript: SvelteKit extension marketplace
+├── discord_bot/      # Rust: Discord integration
+└── code_generator/   # Rust: Entity/material code generation
 ```
 
 ## ARCHITECTURE
@@ -104,12 +104,12 @@ docker compose up                     # SurrealDB + WasmCloud + Marketplace
 - Guard clauses over nested conditionals
 - Composition over inheritance
 - KDoc: explain **when** to use, not what it does
-- **No inline comments** - refactor unclear code instead
+- **No inline comments**: refactor unclear code instead
 
 ### Dart/Flutter (panel, app)
 - **Double quotes** required (`"string"` not `'string'`)
 - **Trailing commas** on multiline args
-- **Package imports only** - no relative imports
+- **Package imports only**: no relative imports
 - Files under 300 lines
 - Riverpod for state management
 
@@ -119,7 +119,7 @@ docker compose up                     # SurrealDB + WasmCloud + Marketplace
 - Packages: `typewriter.models.v1`, `typewriter.api.v1`
 
 ### Documentation
-- **Never edit `docs/adapters/`** - auto-generated
+- **Never edit `docs/adapters/`**: auto-generated
 - Code snippets in `extensions/_DocsExtension` only
 - Use `<CodeSnippet tag="..." />` component
 - Never manually edit `snippets.json`
@@ -138,19 +138,19 @@ docker compose up                     # SurrealDB + WasmCloud + Marketplace
 ## MODULE-SPECIFIC INSTRUCTIONS
 
 Each major directory has its own `AGENTS.md` with detailed instructions:
-- `engine/AGENTS.md` - Engine build, submodules, testing
-- `extensions/AGENTS.md` - Creating/modifying extensions
-- `module-plugin/AGENTS.md` - Gradle plugin development
-- `panel/AGENTS.md` - Panel UI, state, NATS communication
-- `app/AGENTS.md` - Legacy Flutter app
-- `documentation/AGENTS.md` - Docs, snippets, components
-- `backend/AGENTS.md` - wasmCloud services
-- `services/AGENTS.md` - Kotlin microservices
-- `proto/AGENTS.md` - Protobuf conventions
+- `engine/AGENTS.md`: Engine build, submodules, testing
+- `extensions/AGENTS.md`: Creating/modifying extensions
+- `module-plugin/AGENTS.md`: Gradle plugin development
+- `panel/AGENTS.md`: Panel UI, state, NATS communication
+- `app/AGENTS.md`: Legacy Flutter app
+- `documentation/AGENTS.md`: Docs, snippets, components
+- `backend/AGENTS.md`: wasmCloud services
+- `services/AGENTS.md`: Kotlin microservices
+- `proto/AGENTS.md`: Protobuf conventions
 
 ## NOTES
 
-- **Blueprints**: Extensions define entries via annotations. `module-plugin` KSP generates JSON blueprints that Panel uses to render dynamic forms - no Minecraft logic in Panel.
+- **Blueprints**: Extensions define entries via annotations. `module-plugin` KSP generates JSON blueprints that Panel uses to render dynamic forms; no Minecraft logic in Panel.
 - **NATS**: Central message bus. Panel gets JWT from Backend (Sentinel auth) to connect.
 - **Proto regeneration**: After changing `.proto` files, run `task proto` in panel. Backend regenerates automatically via `build.rs`.
 - **Version compatibility**: Extensions declare compatible engine versions. Loader validates at runtime.

@@ -1,4 +1,4 @@
-# Proto - Shared Protobuf Contracts
+# Proto: Shared Protobuf Contracts
 
 ## OVERVIEW
 
