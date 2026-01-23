@@ -138,6 +138,15 @@ extension RouteExtensions on Route {
 }
 
 @riverpod
+class CurrentRoute extends _$CurrentRoute {
+  @override
+  String build() {
+    final router = ref.watch(appRouterProvider);
+    return router.currentPath;
+  }
+}
+
+@riverpod
 String? routeParam(Ref ref, String id) {
   final router = ref.watch(appRouterProvider);
   return _fetchRouteParam(id, router);

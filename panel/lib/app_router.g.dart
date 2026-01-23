@@ -50,6 +50,59 @@ final class AppRouterProvider
 
 String _$appRouterHash() => r'babffb8e22cefce44520192b1132c6d68d9f20a5';
 
+@ProviderFor(CurrentRoute)
+const currentRouteProvider = CurrentRouteProvider._();
+
+final class CurrentRouteProvider
+    extends $NotifierProvider<CurrentRoute, String> {
+  const CurrentRouteProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentRouteProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentRouteHash();
+
+  @$internal
+  @override
+  CurrentRoute create() => CurrentRoute();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$currentRouteHash() => r'4d674e4c2628483be0c07103bd68ab85d47f7c82';
+
+abstract class _$CurrentRoute extends $Notifier<String> {
+  String build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<String, String>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String, String>,
+              String,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
 @ProviderFor(routeParam)
 const routeParamProvider = RouteParamFamily._();
 

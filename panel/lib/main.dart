@@ -54,6 +54,7 @@ class TypewriterPanel extends HookConsumerWidget {
                 // We don't want to invalidate during the build phase, so we wait
                 await WidgetsBinding.instance.endOfFrame;
                 ref.invalidate(routeParamProvider);
+                ref.invalidate(currentRouteProvider);
               }),
               LoggerNavigatorObserver(),
             ],
