@@ -1,18 +1,14 @@
-//! Component discovery, building, and manifest parsing.
+//! Component discovery and loading.
 //!
 //! Discovers WASM components by scanning for `.wash` directories,
 //! reads configuration from `manifests/workloaddeployment.yaml`,
-//! and builds components programmatically using cargo.
+//! and loads component bytes (preferring pre-compiled .cwasm when available).
 
 use std::collections::HashMap;
-use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use serde::Deserialize;
-use tokio::process::Command;
-use walkdir::WalkDir;
 
 /// Parsed from manifests/workloaddeployment.yaml
 #[derive(Debug, Deserialize)]
@@ -83,7 +79,38 @@ pub struct HostInterface {
     pub config: HashMap<String, String>,
 }
 
-/// A discovered component with its configuration.
+/// Distinguishes between raw WASM and pre-compiled CWASM bytes.
+#[derive(Clone)]
+pub enum ComponentBytes {
+    /// Raw WASM bytes that need JIT compilation
+    Wasm(Vec<u8>),
+    /// Pre-compiled CWASM bytes (faster to load, skips JIT)
+    Precompiled(Vec<u8>),
+}
+
+impl ComponentBytes {
+    pub fn into_inner(self) -> Vec<u8> {
+        match self {
+            Self::Wasm(b) | Self::Precompiled(b) => b,
+        }
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            Self::Wasm(b) | Self::Precompiled(b) => b,
+        }
+    }
+
+    pub fn is_precompiled(&self) -> bool {
+        matches!(self, Self::Precompiled(_))
+    }
+
+    pub fn len(&self) -> usize {
+        self.as_bytes().len()
+    }
+}
+
+/// A discovered component with its configuration and loaded bytes.
 #[derive(Clone)]
 pub struct DiscoveredComponent {
     /// Component name from workloaddeployment.yaml
@@ -92,8 +119,8 @@ pub struct DiscoveredComponent {
     pub path: PathBuf,
     /// Host interfaces from workloaddeployment.yaml
     pub host_interfaces: Vec<HostInterface>,
-    /// Built WASM bytes (populated after build)
-    pub bytes: Option<Vec<u8>>,
+    /// Component bytes (always loaded during discovery)
+    pub bytes: ComponentBytes,
     /// Config references from localResources.environment.configFrom
     pub config_refs: Vec<String>,
     /// Secret references from localResources.environment.secretFrom
@@ -115,97 +142,45 @@ pub struct ComponentRegistry {
 }
 
 impl ComponentRegistry {
-    /// Discover all components from the backend directory by scanning for .wash directories.
+    /// Discover all components from the backend directory.
+    ///
+    /// Scans for `.wash` directories, parses their manifests, and loads
+    /// component bytes. Prefers pre-compiled `.cwasm` files when available.
     pub fn discover(backend_path: &Path) -> Result<Self> {
+        let wash_dirs = find_wash_directories(backend_path)?;
         let mut components = HashMap::new();
 
-        let pattern = format!("{}/**/.wash", backend_path.display());
-        tracing::info!(pattern = %pattern, "Discovering components...");
+        tracing::info!(count = wash_dirs.len(), "Discovering components...");
 
-        for entry in glob::glob(&pattern).context("Invalid glob pattern")? {
-            let wash_dir = entry.context("Failed to read glob entry")?;
-            let component_dir = wash_dir
-                .parent()
-                .context("Failed to get parent of .wash dir")?;
-
-            let manifest_path = component_dir.join("manifests/workloaddeployment.yaml");
-            if !manifest_path.exists() {
-                tracing::warn!(path = ?component_dir, "No workloaddeployment.yaml found, skipping");
-                continue;
+        for component_dir in wash_dirs {
+            match discover_component(&component_dir) {
+                Ok(Some(component)) => {
+                    let source = if component.bytes.is_precompiled() {
+                        "cwasm"
+                    } else {
+                        "wasm"
+                    };
+                    tracing::info!(
+                        name = %component.name,
+                        source = source,
+                        size = component.bytes.len(),
+                        requires_env = component.requires_environment(),
+                        "Discovered component"
+                    );
+                    components.insert(component.name.clone(), component);
+                }
+                Ok(None) => {
+                    tracing::warn!(path = ?component_dir, "No workloaddeployment.yaml found, skipping");
+                }
+                Err(e) => {
+                    tracing::error!(path = ?component_dir, error = ?e, "Failed to discover component");
+                    return Err(e);
+                }
             }
-
-            let manifest_content = std::fs::read_to_string(&manifest_path)
-                .with_context(|| format!("Failed to read {:?}", manifest_path))?;
-            let deployment: WorkloadDeployment = serde_yaml::from_str(&manifest_content)
-                .with_context(|| format!("Failed to parse {:?}", manifest_path))?;
-
-            // Extract config/secret refs from the first component's localResources
-            let (config_refs, secret_refs) = deployment
-                .spec
-                .template
-                .spec
-                .components
-                .first()
-                .and_then(|c| c.local_resources.as_ref())
-                .and_then(|lr| lr.environment.as_ref())
-                .map(|env| {
-                    (
-                        env.config_from.iter().map(|r| r.name.clone()).collect(),
-                        env.secret_from.iter().map(|r| r.name.clone()).collect(),
-                    )
-                })
-                .unwrap_or_default();
-
-            let component = DiscoveredComponent {
-                name: deployment.metadata.name.clone(),
-                path: component_dir.to_path_buf(),
-                host_interfaces: deployment.spec.template.spec.host_interfaces,
-                bytes: None,
-                config_refs,
-                secret_refs,
-            };
-
-            tracing::info!(
-                name = %component.name,
-                path = ?component.path,
-                interfaces = component.host_interfaces.len(),
-                requires_env = component.requires_environment(),
-                "Discovered component"
-            );
-
-            components.insert(deployment.metadata.name, component);
         }
 
         tracing::info!(count = components.len(), "Component discovery complete");
         Ok(Self { components })
-    }
-
-    /// Build all components, skipping those that are already up-to-date.
-    ///
-    /// Runs `cargo build --target wasm32-wasip2 --release` for each component
-    /// only if the source files have changed since the last build.
-    pub async fn build_all(&mut self) -> Result<()> {
-        tracing::info!(count = self.components.len(), "Preparing components...");
-
-        for (name, component) in &mut self.components {
-            let wasm_path = get_wasm_path(&component.path)?;
-
-            if needs_rebuild(&component.path, &wasm_path)? {
-                tracing::info!(name = %name, "Building component (source changed)...");
-                build_component(name, &component.path).await?;
-            } else {
-                tracing::info!(name = %name, "Skipping build (up-to-date)");
-            }
-
-            let bytes = std::fs::read(&wasm_path)
-                .with_context(|| format!("Failed to read {:?}", wasm_path))?;
-
-            tracing::info!(name = %name, size = bytes.len(), "Component ready");
-            component.bytes = Some(bytes);
-        }
-
-        tracing::info!("All components ready");
-        Ok(())
     }
 
     /// Get an iterator over all components.
@@ -224,12 +199,74 @@ impl ComponentRegistry {
     }
 }
 
-/// Find the target directory for a component.
-///
-/// If the component is part of a Cargo workspace, the target directory
-/// is in the workspace root, not the component directory.
+fn find_wash_directories(backend_path: &Path) -> Result<Vec<PathBuf>> {
+    let pattern = format!("{}/**/.wash", backend_path.display());
+
+    glob::glob(&pattern)
+        .context("Invalid glob pattern")?
+        .filter_map(|entry| entry.ok())
+        .filter_map(|wash_dir| wash_dir.parent().map(|p| p.to_path_buf()))
+        .map(Ok)
+        .collect()
+}
+
+fn discover_component(component_dir: &Path) -> Result<Option<DiscoveredComponent>> {
+    let deployment = match parse_manifest(component_dir)? {
+        Some(d) => d,
+        None => return Ok(None),
+    };
+
+    let (config_refs, secret_refs) = extract_resource_refs(&deployment);
+    let wasm_path = get_wasm_path(component_dir)?;
+    let bytes = load_component_bytes(&wasm_path)?;
+
+    Ok(Some(DiscoveredComponent {
+        name: deployment.metadata.name,
+        path: component_dir.to_path_buf(),
+        host_interfaces: deployment.spec.template.spec.host_interfaces,
+        bytes,
+        config_refs,
+        secret_refs,
+    }))
+}
+
+fn parse_manifest(component_dir: &Path) -> Result<Option<WorkloadDeployment>> {
+    let manifest_path = component_dir.join("manifests/workloaddeployment.yaml");
+
+    if !manifest_path.exists() {
+        return Ok(None);
+    }
+
+    let content = std::fs::read_to_string(&manifest_path)
+        .with_context(|| format!("Failed to read {:?}", manifest_path))?;
+
+    let deployment = serde_yaml::from_str(&content)
+        .with_context(|| format!("Failed to parse {:?}", manifest_path))?;
+
+    Ok(Some(deployment))
+}
+
+fn extract_resource_refs(deployment: &WorkloadDeployment) -> (Vec<String>, Vec<String>) {
+    deployment
+        .spec
+        .template
+        .spec
+        .components
+        .first()
+        .and_then(|c| c.local_resources.as_ref())
+        .and_then(|lr| lr.environment.as_ref())
+        .map(|env| {
+            (
+                env.config_from.iter().map(|r| r.name.clone()).collect(),
+                env.secret_from.iter().map(|r| r.name.clone()).collect(),
+            )
+        })
+        .unwrap_or_default()
+}
+
 fn find_target_dir(component_path: &Path) -> Result<PathBuf> {
     let mut current = component_path.to_path_buf();
+
     while let Some(parent) = current.parent() {
         let cargo_toml = parent.join("Cargo.toml");
         if cargo_toml.exists() {
@@ -247,7 +284,6 @@ fn find_target_dir(component_path: &Path) -> Result<PathBuf> {
     Ok(component_path.join("target"))
 }
 
-/// Get the expected WASM path for a component.
 fn get_wasm_path(component_path: &Path) -> Result<PathBuf> {
     let cargo_toml_path = component_path.join("Cargo.toml");
     let cargo_toml = std::fs::read_to_string(&cargo_toml_path)
@@ -271,66 +307,20 @@ fn get_wasm_path(component_path: &Path) -> Result<PathBuf> {
         .join(format!("{}.wasm", binary_name)))
 }
 
-/// Check if component needs to be rebuilt.
-///
-/// Returns true if:
-/// - The WASM file doesn't exist
-/// - Any .rs file in src/ is newer than the WASM
-/// - Cargo.toml is newer than the WASM
-fn needs_rebuild(source_dir: &Path, wasm_path: &Path) -> Result<bool> {
-    if !wasm_path.exists() {
-        return Ok(true);
+fn load_component_bytes(wasm_path: &Path) -> Result<ComponentBytes> {
+    let cwasm_path = wasm_path.with_extension("cwasm");
+
+    if cwasm_path.exists() {
+        let bytes = std::fs::read(&cwasm_path)
+            .with_context(|| format!("Failed to read {:?}", cwasm_path))?;
+        return Ok(ComponentBytes::Precompiled(bytes));
     }
 
-    let wasm_mtime = std::fs::metadata(wasm_path)?.modified()?;
-
-    for entry in WalkDir::new(source_dir.join("src"))
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        if entry.path().extension() == Some(OsStr::new("rs")) {
-            if let Ok(meta) = entry.metadata() {
-                if let Ok(src_mtime) = meta.modified() {
-                    if src_mtime > wasm_mtime {
-                        return Ok(true);
-                    }
-                }
-            }
-        }
+    if wasm_path.exists() {
+        let bytes =
+            std::fs::read(wasm_path).with_context(|| format!("Failed to read {:?}", wasm_path))?;
+        return Ok(ComponentBytes::Wasm(bytes));
     }
 
-    let cargo_toml = source_dir.join("Cargo.toml");
-    if cargo_toml.exists() {
-        if let Ok(meta) = std::fs::metadata(&cargo_toml) {
-            if let Ok(toml_mtime) = meta.modified() {
-                if toml_mtime > wasm_mtime {
-                    return Ok(true);
-                }
-            }
-        }
-    }
-
-    Ok(false)
-}
-
-/// Build a single component.
-async fn build_component(name: &str, component_path: &Path) -> Result<()> {
-    let output = Command::new("cargo")
-        .arg("build")
-        .arg("--target")
-        .arg("wasm32-wasip2")
-        .arg("--release")
-        .current_dir(component_path)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()
-        .await
-        .with_context(|| format!("Failed to run cargo build for {}", name))?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("Failed to build component {}: {}", name, stderr);
-    }
-
-    Ok(())
+    bail!("No .wasm or .cwasm found at {}", wasm_path.display())
 }

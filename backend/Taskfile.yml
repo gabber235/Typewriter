@@ -86,6 +86,22 @@ tasks:
         vars:
           TASK_CMD: push
 
+  dev:all:
+    desc: Run all components in development mode
+    cmds:
+      - task: all
+        vars:
+          TASK_CMD: dev
+
+  compile:cwasm:all:
+    desc: Pre-compile all WASM components to .cwasm (for faster test startup)
+    deps:
+      - build:all
+    cmds:
+      - |
+        echo "Pre-compiling WASM components..."
+        cargo run --manifest-path tests/Cargo.toml --bin precompile --release -- .
+
   setup:all:
     desc: Setup all components (build, push, deploy)
     cmds:
@@ -120,13 +136,13 @@ tasks:
   test:
     desc: "Run integration tests (builds components if needed)"
     cmds:
-      - task: build:all
+      - task: compile:cwasm:all
       - cd tests && cargo test {{.CLI_ARGS}}
 
   test:all:
     desc: "Run all integration tests in single binary (fastest)"
     cmds:
-      - task: build:all
+      - task: compile:cwasm:all
       - cd tests && cargo test --test integration {{.CLI_ARGS}}
 
   test:flaky:
@@ -142,7 +158,7 @@ tasks:
           echo "Installing cargo-nextest..."
           cargo install cargo-nextest
         fi
-        
+
         echo ""
         FILTER_DESC="{{.FILTER}}"
         if [ -z "$FILTER_DESC" ]; then
@@ -152,16 +168,16 @@ tasks:
         echo "This will identify tests that fail intermittently."
         echo "(Run 'task build:all' first if components are not built)"
         echo "=================================================="
-        
+
         # Track failures across all iterations
         declare -A failure_counts
         total_runs=0
-        
+
         for i in $(seq 1 {{.ITERATIONS}}); do
           echo ""
           echo ">>> Iteration $i/{{.ITERATIONS}}"
           total_runs=$((total_runs + 1))
-          
+
           # Run tests with retries, capture output
           # Tests that pass on retry are marked FLAKY
           if [ -z "{{.FILTER}}" ]; then
@@ -169,7 +185,7 @@ tasks:
           else
             output=$(cd tests && cargo nextest run --retries {{.RETRIES}} --no-fail-fast -E "test({{.FILTER}})" 2>&1) || true
           fi
-          
+
           # Extract failed tests (after all retries exhausted)
           while IFS= read -r line; do
             if [[ "$line" =~ FAIL.*[[:space:]]([a-zA-Z0-9_:]+) ]]; then
@@ -177,7 +193,7 @@ tasks:
               failure_counts["$test_name"]=$((${failure_counts["$test_name"]:-0} + 1))
             fi
           done <<< "$output"
-          
+
           # Extract flaky tests (failed then passed on retry)
           while IFS= read -r line; do
             if [[ "$line" =~ FLAKY.*[[:space:]]([a-zA-Z0-9_:]+) ]]; then
@@ -186,12 +202,12 @@ tasks:
             fi
           done <<< "$output"
         done
-        
+
         echo ""
         echo "=================================================="
         echo "FLAKINESS REPORT (after {{.ITERATIONS}} iterations)"
         echo "=================================================="
-        
+
         if [ ${#failure_counts[@]} -eq 0 ]; then
           echo "No flaky tests detected!"
         else
@@ -203,7 +219,7 @@ tasks:
             printf "%-60s | %8d | %5d%%\n" "$test" "$count" "$rate"
           done | sort -t'|' -k3 -rn
         fi
-        
+
         echo ""
         echo "Total iterations: $total_runs"
 

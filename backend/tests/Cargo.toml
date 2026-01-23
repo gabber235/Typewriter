@@ -4,6 +4,14 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+[[bin]]
+name = "precompile"
+path = "src/bin/precompile.rs"
+
+[features]
+default = []
+profiling = ["tracing-chrome"]
+
 [dependencies]
 # Test utilities
 anyhow = "1"
@@ -37,10 +45,13 @@ tokio = { version = "1", features = ["full", "test-util"] }
 # Retry assertions for async tests
 repeated-assert = { version = "0.4", features = ["async"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-chrome = { version = "0.7", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
 uuid = { version = "1", features = ["v4"] }
 # For recursive file walking in rebuild detection
 walkdir = "2"
+# Wasmtime for pre-compilation binary (must match wash-runtime version)
+wasmtime = { version = "38", features = ["component-model"] }
 wash-runtime = { path = "/Users/thijs/Bestanden/wash/crates/wash-runtime", features = [
   "washlet",
   "wasi-config",
