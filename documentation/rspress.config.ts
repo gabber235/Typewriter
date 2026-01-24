@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
 import { pluginAlgolia } from '@rspress/plugin-algolia';
-
+import readingTime from 'rspress-plugin-reading-time';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
@@ -16,7 +16,7 @@ export default defineConfig({
     versions: ['v1.0.0'],
   },
   llms: true,
-  plugins: [pluginAlgolia()],
+  plugins: [pluginAlgolia(), readingTime()],
   themeConfig: {
     llmsUI: {
       viewOptions: ['markdownLink'],
