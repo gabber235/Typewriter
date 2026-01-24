@@ -2,24 +2,17 @@
 
 package com.typewritermc.realm
 
-import com.typewritermc.realm.REALM_VERSION
+import com.surrealdb.Surreal
+import com.typewritermc.realm.RealmQualifier.*
 import com.typewritermc.realm.registrar.RealmCredentialStorage
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.communicator.SERVICE_COMMUNICATOR_MODULE
-import com.typewritermc.services.libs.registrar.CredentialStorage
-import com.typewritermc.services.libs.registrar.RegistrationState
-import com.typewritermc.services.libs.registrar.SERVICE_REGISTRAR_MODULE
-import com.typewritermc.services.libs.registrar.ServiceInformation
-import com.typewritermc.services.libs.registrar.ServiceRegistrar
-import com.typewritermc.services.libs.registrar.ServicesInfo
+import com.typewritermc.services.libs.registrar.*
+import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialFormat
@@ -27,7 +20,7 @@ import kotlinx.serialization.StringFormat
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
-import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
@@ -44,7 +37,7 @@ fun main() {
     logger.trace { "Starting Koin" }
 
     val module = module {
-        singleOf(::Realm) onClose { it?.shutdown() }
+        single { Realm(get(named(DATABASE))) } onClose { it?.shutdown() }
         single {
             Cbor {
                 ignoreUnknownKeys = true
@@ -61,13 +54,17 @@ fun main() {
             RealmCredentialStorage(get(), Paths.get(".credential").toFile())
         } bind CredentialStorage::class
 
+        single(named(DATABASE)) {
+            DeferredProvider<Surreal>()
+        } onClose { it?.getOrNull()?.close() }
+
         single {
             ServicesInfo(
                 realm = ServiceInformation.RealmInformation(version = REALM_VERSION)
             )
         }
 
-        single { 
+        single {
             RealmShellContext(
                 registrationStateProvider = get<StateProvider<RegistrationState>>()
             )
@@ -87,10 +84,11 @@ fun main() {
     }
     logger.trace { "Koin started" }
 
+    Runtime.getRuntime().addShutdownHook(Thread { application.close() })
     runBlocking {
         application.koin.get<ServiceRegistrar>().initialize()
     }
-    Runtime.getRuntime().addShutdownHook(Thread { application.close() })
+    application.koin.get<Realm>().initialize()
 
     val shell = application.koin.get<RealmShell>()
     shell.run()

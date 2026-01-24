@@ -1,11 +1,13 @@
 package com.typewritermc.services.libs.registrar
 
+import com.typewritermc.services.libs.communicator.CommunicatorQualifier.*
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
+import com.typewritermc.services.libs.registrar.RegistrarQualifier.*
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.natskt.api.NatsClient
@@ -16,10 +18,10 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 val SERVICE_REGISTRAR_MODULE = module {
-    single(named("credential")) { DeferredProvider<Credential>() }
-    single(named("messageBus")) { DeferredProvider<MessageBus>() }
-    single(named("registrationClient")) { DeferredProvider<RegistrationClient>() }
-    single(named("reconnector")) { DeferredProvider<Reconnector>() }
+    single(named(CREDENTIAL)) { DeferredProvider<Credential>() }
+    single(named(MESSAGE_BUS)) { DeferredProvider<MessageBus>() }
+    single(named(REGISTRATION_CLIENT)) { DeferredProvider<RegistrationClient>() }
+    single(named(RECONNECTOR)) { DeferredProvider<Reconnector>() }
     single { StateProvider<RegistrationState>(RegistrationState.Initializing) }
 
     single {
@@ -28,12 +30,12 @@ val SERVICE_REGISTRAR_MODULE = module {
             credentialIssuer = get(),
             jwtExchanger = get(),
             communicator = get(),
-            credentialProvider = get(named("credential")),
-            jwtProviderHolder = get(named("jwtProvider")),
-            natsClientProvider = get(named("natsClient")),
-            messageBusProvider = get(named("messageBus")),
-            registrationClientProvider = get(named("registrationClient")),
-            reconnectorProvider = get(named("reconnector")),
+            credentialProvider = get(named(CREDENTIAL)),
+            jwtProviderHolder = get(named(JWT_PROVIDER)),
+            natsClientProvider = get<StateProvider<NatsClient?>>(named(NATS_CLIENT)),
+            messageBusProvider = get(named(MESSAGE_BUS)),
+            registrationClientProvider = get(named(REGISTRATION_CLIENT)),
+            reconnectorProvider = get(named(RECONNECTOR)),
             registrationStateProvider = get<StateProvider<RegistrationState>>(),
             coroutineScope = get<CoroutineScope>()
         )
@@ -44,7 +46,7 @@ val SERVICE_REGISTRAR_MODULE = module {
     single<CredentialIssuer> {
         BackendCredentialIssuer(
             httpClient = get(),
-            serviceIssueUrl = get(named("service-issue-url")),
+            serviceIssueUrl = get(named(SERVICE_ISSUE_URL)),
             servicesInfo = get()
         )
     }
@@ -52,25 +54,25 @@ val SERVICE_REGISTRAR_MODULE = module {
     single<JwtExchanger> {
         AuthentikJwtExchanger(
             httpClient = get(),
-            tokenEndpoint = get(named("jwt-token-endpoint")),
-            clientId = get(named("jwt-client-id")),
-            scopes = get(named("jwt-scopes"))
+            tokenEndpoint = get(named(JWT_TOKEN_ENDPOINT)),
+            clientId = get(named(JWT_CLIENT_ID)),
+            scopes = get(named(JWT_SCOPES))
         )
     }
 
-    single(named("service-issue-url")) {
-        val apiBase: String = get(named("api-base-url"))
+    single(named(SERVICE_ISSUE_URL)) {
+        val apiBase: String = get(named(API_BASE_URL))
         "$apiBase/service/identity/issue"
     }
 
-    single(named("jwt-token-endpoint")) {
-        val authBase: String = get(named("auth-base-url"))
+    single(named(JWT_TOKEN_ENDPOINT)) {
+        val authBase: String = get(named(AUTH_BASE_URL))
         "$authBase/application/o/token/"
     }
-    single(named("jwt-client-id")) {
+    single(named(JWT_CLIENT_ID)) {
         getProperty("JWT_CLIENT_ID", "typewriter-services")
     }
-    single(named("jwt-scopes")) {
+    single(named(JWT_SCOPES)) {
         getProperty("JWT_SCOPES", "openid profile entitlements")
     }
 }
