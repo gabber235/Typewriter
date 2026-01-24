@@ -13,7 +13,11 @@ export default defineConfig({
     default: 'v1.0.0',
     versions: ['v1.0.0', 'v0.9.0'],
   },
+  llms: true,
   themeConfig: {
+    llmsUI: {
+      viewOptions: ['markdownLink'],
+    },
     socialLinks: [
       {
         icon: 'github',
