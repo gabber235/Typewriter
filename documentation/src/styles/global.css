@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+@layer base, starlight, theme, components, utilities;
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+:root {
+  /* Your preferred text font. Starlight uses a system font stack by default. */
+  --font-sans: 'JetBrains Mono', monospace;
+  /* Your preferred code font. Starlight uses system monospace fonts by default. */
+  --font-mono: 'JetBrains Mono', monospace;
+}
