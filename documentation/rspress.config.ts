@@ -1,5 +1,7 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
+import { pluginAlgolia } from '@rspress/plugin-algolia';
+
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
@@ -11,9 +13,10 @@ export default defineConfig({
   },
   multiVersion: {
     default: 'v1.0.0',
-    versions: ['v1.0.0', 'v0.9.0'],
+    versions: ['v1.0.0'],
   },
   llms: true,
+  plugins: [pluginAlgolia()],
   themeConfig: {
     llmsUI: {
       viewOptions: ['markdownLink'],
