@@ -1,4 +1,8 @@
-# Rspress website
+# Typewriter Documentation
+
+For Typewriter 1.0.0 we have decided to fully rewrite the docs.
+
+As for now during development this folder will recieve lots of changes and can be revised without notice.
 
 ## Setup
 
