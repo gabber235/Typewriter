@@ -1,1 +1,0 @@
-{"name":"quest_static","type":"static","entries":[{"id":"fTtB7yHVJ6Dkuha","name":"great_chasm_progress","comment":"Values correspond to the followig\n0: Not started\n1: Started Quest\n2: Completed Quest","group":"","type":"permanent_fact"}],"chapter":"demo.quest","priority":0,"version":"0.5.0"}
