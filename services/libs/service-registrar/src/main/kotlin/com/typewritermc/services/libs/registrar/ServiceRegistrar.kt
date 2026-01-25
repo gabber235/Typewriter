@@ -9,6 +9,7 @@ import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
+import com.typewritermc.services.libs.utils.awaitNonNull
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.api.NatsClient
@@ -21,7 +22,7 @@ class ServiceRegistrar(
     private val communicator: NatsCommunicator,
     private val credentialProvider: DeferredProvider<Credential>,
     private val jwtProviderHolder: DeferredProvider<JwtProvider>,
-    private val natsClientProvider: DeferredProvider<NatsClient>,
+    private val natsClientProvider: StateProvider<NatsClient?>,
     private val messageBusProvider: DeferredProvider<MessageBus>,
     private val registrationClientProvider: DeferredProvider<RegistrationClient>,
     private val reconnectorProvider: DeferredProvider<Reconnector>,
@@ -100,8 +101,8 @@ class ServiceRegistrar(
     private suspend fun registerInterfaceBindings() {
         logger.debug { "Registering interface bindings" }
 
-        val natsClient = natsClientProvider.get()
-        val messageBus = NatsMessageBus(natsClient)
+        natsClientProvider.awaitNonNull()
+        val messageBus = NatsMessageBus(natsClientProvider)
         messageBusProvider.trySet(messageBus)
 
         val registrationClient = NatsRegistrationClient(messageBus)
