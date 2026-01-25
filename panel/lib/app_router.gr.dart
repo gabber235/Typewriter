@@ -275,21 +275,13 @@ class RouteRouteArgs {
 /// generated route for
 /// [RealmPage]
 class RealmRoute extends PageRouteInfo<RealmRouteArgs> {
-  RealmRoute({
-    required String organizationId,
-    required String realmId,
-    Key? key,
-    List<PageRouteInfo>? children,
-  }) : super(
-         RealmRoute.name,
-         args: RealmRouteArgs(
-           organizationId: organizationId,
-           realmId: realmId,
-           key: key,
-         ),
-         rawPathParams: {'organizationId': organizationId, 'realmId': realmId},
-         initialChildren: children,
-       );
+  RealmRoute({required String realmId, Key? key, List<PageRouteInfo>? children})
+    : super(
+        RealmRoute.name,
+        args: RealmRouteArgs(realmId: realmId, key: key),
+        rawPathParams: {'realmId': realmId},
+        initialChildren: children,
+      );
 
   static const String name = 'RealmRoute';
 
@@ -298,28 +290,15 @@ class RealmRoute extends PageRouteInfo<RealmRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<RealmRouteArgs>(
-        orElse: () => RealmRouteArgs(
-          organizationId: pathParams.getString('organizationId'),
-          realmId: pathParams.getString('realmId'),
-        ),
+        orElse: () => RealmRouteArgs(realmId: pathParams.getString('realmId')),
       );
-      return RealmPage(
-        organizationId: args.organizationId,
-        realmId: args.realmId,
-        key: args.key,
-      );
+      return RealmPage(realmId: args.realmId, key: args.key);
     },
   );
 }
 
 class RealmRouteArgs {
-  const RealmRouteArgs({
-    required this.organizationId,
-    required this.realmId,
-    this.key,
-  });
-
-  final String organizationId;
+  const RealmRouteArgs({required this.realmId, this.key});
 
   final String realmId;
 
@@ -327,20 +306,18 @@ class RealmRouteArgs {
 
   @override
   String toString() {
-    return 'RealmRouteArgs{organizationId: $organizationId, realmId: $realmId, key: $key}';
+    return 'RealmRouteArgs{realmId: $realmId, key: $key}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! RealmRouteArgs) return false;
-    return organizationId == other.organizationId &&
-        realmId == other.realmId &&
-        key == other.key;
+    return realmId == other.realmId && key == other.key;
   }
 
   @override
-  int get hashCode => organizationId.hashCode ^ realmId.hashCode ^ key.hashCode;
+  int get hashCode => realmId.hashCode ^ key.hashCode;
 }
 
 /// generated route for

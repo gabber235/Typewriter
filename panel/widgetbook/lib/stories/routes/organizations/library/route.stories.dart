@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
-import "package:typewriter_panel/routes/organization/realm/route.dart";
+import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -20,6 +20,6 @@ Widget libraryPageUseCase(BuildContext context) {
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],
-    child: RealmScaffold(child: LibraryPage()),
+    child: OrganizationScaffold(child: LibraryPage()),
   );
 }

@@ -31,28 +31,32 @@ class AppRouter extends RootStackRouter {
       path: "/auth",
       keepHistory: false,
       maintainState: false,
+      guards: [UnAuthGuard(ref)],
     ),
     AutoRoute(page: IndexRoute.page, path: "/", guards: [AuthGuard(ref)]),
     AutoRoute(
       page: OrganizationRoute.page,
       path: "/organization/:organizationId",
+      // TODO: Add guard that organizationId exists and user has access to it.
       guards: [AuthGuard(ref)],
       children: [
         AutoRoute(page: ServicesRoute.page, path: "services", initial: true),
         AutoRoute(page: MembersRoute.page, path: "members"),
-      ],
-    ),
-    AutoRoute(
-      page: RealmRoute.page,
-      path: "/organization/:organizationId/realm/:realmId",
-      guards: [AuthGuard(ref)],
-      children: [
-        AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
+        AutoRoute(
+          page: RealmRoute.page,
+          path: "realm/:realmId",
+          // TODO: Add guard that organizationId and realmId exist and user has access to it.
+          guards: [AuthGuard(ref)],
+          children: [
+            AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
+          ],
+        ),
       ],
     ),
     AutoRoute(
       page: BookRoute.page,
       path: "/organization/:organizationId/realm/:realmId/book/:bookId",
+      // TODO: Add guard that organizationId, realmId, and bookId exist and user has access to it.
       guards: [AuthGuard(ref)],
       children: [AutoRoute(page: RouteRoute.page, path: "page/:pageId")],
     ),
@@ -80,6 +84,26 @@ class AuthGuard extends AutoRouteGuard {
         },
       ),
     );
+  }
+}
+
+class UnAuthGuard extends AutoRouteGuard {
+  const UnAuthGuard(this.ref);
+  final Ref ref;
+
+  @override
+  void onNavigation(NavigationResolver resolver, StackRouter router) {
+    final isAuthenticated = ref.read(isAuthenticatedProvider).requireValue;
+    debugPrint("UnAuthGuard: isAuthenticated: $isAuthenticated");
+
+    if (!isAuthenticated) {
+      resolver.next();
+      return;
+    }
+
+    resolver
+      ..overrideNext(children: [IndexRoute()])
+      ..next();
   }
 }
 
@@ -157,19 +181,6 @@ class CurrentRoute extends _$CurrentRoute {
 @riverpod
 String? routeParam(Ref ref, String id) {
   final router = ref.watch(appRouterProvider);
-  return _fetchRouteParam(id, router);
-}
-
-String? _fetchRouteParam(String id, RoutingController controller) {
-  final param = controller.routeData.params.optString(id);
-  if (param != null) {
-    return param;
-  }
-  for (final child in controller.childControllers) {
-    final childParam = _fetchRouteParam(id, child);
-    if (childParam != null) {
-      return childParam;
-    }
-  }
-  return null;
+  final params = router.topRoute.inheritedPathParams;
+  return params.optString(id);
 }

@@ -205,13 +205,16 @@ class SidebarLink extends HookConsumerWidget {
     ref.watch(currentRouteProvider);
     final scope = StackRouterScope.of(context, watch: true);
     final router = scope?.controller;
-    final selected = router?.isRouteActive(route.routeName) ?? false;
+    final selected =
+        router?.isRouteActive(route.flattened.last.routeName) ?? false;
+
     final color = selected
         ? Theme.of(context).colorScheme.onSurface
         : Theme.of(context).colorScheme.onSurfaceVariant;
     final backgroundColor = selected
         ? Theme.of(context).colorScheme.surfaceContainerHighest
         : Colors.transparent;
+
     return Material(
       color: backgroundColor,
       borderRadius: BorderRadius.circular(8),

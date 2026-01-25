@@ -83,7 +83,7 @@ class _OrganizationMenuContent extends HookConsumerWidget {
                   onSelect: (org) {
                     ref
                         .read(appRouterProvider)
-                        .replace(OrganizationRoute(organizationId: org.id));
+                        .navigate(OrganizationRoute(organizationId: org.id));
                     onDismiss(org);
                   },
                 ),

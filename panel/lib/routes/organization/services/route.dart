@@ -4,6 +4,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:responsive_framework/responsive_framework.dart";
+import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/hooks/loading_button_controller.dart";
 import "package:typewriter_panel/logic/services.dart";
@@ -202,10 +203,21 @@ class _ServiceCard extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
     final selectableId = ServiceIdentifier(service.id);
+    final scope = StackRouterScope.of(context);
 
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,
+      onDoubleTap: scope != null && service.isOnline
+          ? () {
+              scope.controller.navigate(
+                OrganizationRoute(
+                  organizationId: service.organizationId,
+                  children: [RealmRoute(realmId: service.id)],
+                ),
+              );
+            }
+          : null,
       builder: (isSelected, isFocused, isHovered) {
         return Opacity(
           opacity: service.isOnline

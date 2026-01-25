@@ -38,6 +38,7 @@ class Selector extends HookConsumerWidget {
     required this.builder,
     required this.focusNode,
     this.onFocusChange,
+    this.onDoubleTap,
     super.key,
   });
 
@@ -53,6 +54,8 @@ class Selector extends HookConsumerWidget {
   ///
   /// Called with true if the [focusNode] has primary focus.
   final ValueChanged<bool>? onFocusChange;
+
+  final VoidCallback? onDoubleTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,6 +90,7 @@ class Selector extends HookConsumerWidget {
         child: GestureDetector(
           onSecondaryTapUp: ContextMenuRegion.onSecondaryTapUp(controller),
           onLongPressStart: ContextMenuRegion.onLongPressStart(controller),
+          onDoubleTap: onDoubleTap,
           onTapUp: ContextMenuRegion.onTapUp(
             controller,
             orElse: (_) {

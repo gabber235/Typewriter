@@ -9,7 +9,12 @@ import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/entry_operations.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/open_operation.dart";
+import "package:typewriter_panel/widgets/app/components/inspector/operations/unbind_operation.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
+
+export "package:typewriter_panel/widgets/app/components/inspector/operations/open_operation.dart";
+export "package:typewriter_panel/widgets/app/components/inspector/operations/unbind_operation.dart";
 
 part "operations.g.dart";
 
@@ -18,6 +23,8 @@ part "operations.g.dart";
 /// Keep ordering meaningful; it will be used for presentation where applicable.
 @riverpod
 List<Operation> operations(Ref ref) => [
+  const OpenOperation(),
+  const UnbindOperation(),
   const DeleteOperation(),
 
   /// Entry operations

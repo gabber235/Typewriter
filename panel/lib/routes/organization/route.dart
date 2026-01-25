@@ -1,14 +1,17 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
+import "package:typewriter_panel/widgets/app/components/realm_selector.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
@@ -34,11 +37,22 @@ class OrganizationScaffold extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
     return Scaffold(
       appBar: CustomAppBar(
         row: [
-          if (ref.watch(organizationIdProvider) != null)
+          if (organizationId != null) ...[
             const OrganizationSelector(),
+            if (realmId != null) ...[
+              Iconify(
+                MaterialSymbols.chevron_right,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const RealmSelector(),
+            ],
+          ],
           const Spacer(),
           if (!context.isMobile) const ModeDisplayWidget(),
         ],
@@ -65,18 +79,40 @@ class OrganizationScaffold extends HookConsumerWidget {
 class OrganizationSidebarContent extends HookConsumerWidget {
   const OrganizationSidebarContent({super.key});
 
-  static List<Widget> organizationLinks() {
+  static List<Widget> organizationLinks(String organizationId) {
     return [
       const SidebarHeader(text: "Organization"),
       SidebarLink(
         icon: Icones(MaterialSymbols.dns),
         text: "Services",
-        route: ServicesRoute(),
+        route: OrganizationRoute(
+          organizationId: organizationId,
+          children: [ServicesRoute()],
+        ),
       ),
       SidebarLink(
         icon: Icones(MaterialSymbols.groups_rounded),
         text: "Members",
-        route: MembersRoute(),
+        route: OrganizationRoute(
+          organizationId: organizationId,
+          children: [MembersRoute()],
+        ),
+      ),
+    ];
+  }
+
+  static List<Widget> realmLinks(String organizationId, String realmId) {
+    return [
+      const SidebarHeader(text: "Realm"),
+      SidebarLink(
+        icon: Icones(MaterialSymbols.library_books),
+        text: "Library",
+        route: OrganizationRoute(
+          organizationId: organizationId,
+          children: [
+            RealmRoute(realmId: realmId, children: [LibraryRoute()]),
+          ],
+        ),
       ),
     ];
   }
@@ -84,10 +120,17 @@ class OrganizationSidebarContent extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (organizationId != null) ...organizationLinks(),
+        if (organizationId != null) ...[
+          if (realmId != null) ...[
+            ...realmLinks(organizationId, realmId),
+            const SizedBox(height: 16),
+          ],
+          ...organizationLinks(organizationId),
+        ],
         const Spacer(),
         UserMenu(),
       ],

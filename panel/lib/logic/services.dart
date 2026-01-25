@@ -1,6 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/service/registration.pb.dart"
     hide ServiceStatus;
 import "package:typewriter_panel/generated/models/service.pb.dart";
@@ -16,7 +17,6 @@ import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/app/components/organization/services/service_header.dart";
 
 part "services.g.dart";
@@ -306,8 +306,23 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
 
   @override
   List<SelectableOperation> get operations => [
-    DeleteSelectableOperation(
-      onDelete: () =>
+    if (service.isOnline)
+      OpenSelectableOperation(
+        onOpen: () async {
+          final organizationId = ref.read(organizationIdProvider);
+          if (organizationId == null) return;
+          final router = ref.read(appRouterProvider);
+          await router.navigate(
+            OrganizationRoute(
+              organizationId: organizationId,
+              children: [RealmRoute(realmId: service.id)],
+            ),
+          );
+        },
+        allowMultiSelect: false,
+      ),
+    UnbindSelectableOperation(
+      onUnbind: () =>
           ref.read(servicesProvider.notifier).deleteService(service.id),
     ),
   ];
