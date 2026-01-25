@@ -9,6 +9,7 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use bytes::Bytes;
 use futures::future::join_all;
+use tracing::Instrument;
 
 use wash_runtime::engine::Engine;
 use wash_runtime::host::{Host, HostApi, HostBuilder};
@@ -52,21 +53,26 @@ pub struct TestHost {
 
 impl TestHost {
     /// Create a new test host connected to NATS and SurrealDB.
+    #[tracing::instrument(name = "TestHost::new", skip(nats_client, surrealdb_url))]
     pub async fn new(nats_client: &async_nats::Client, surrealdb_url: &str) -> Result<Self> {
         tracing::info!(surrealdb = %surrealdb_url, "Creating test host...");
 
-        let surrealdb_config = SurrealdbConfig {
-            url: surrealdb_url.to_string(),
-            namespace: "typewriter".to_string(),
-            database: "test".to_string(),
-            auth: Auth::Root {
-                username: "root".to_string(),
-                password: "root".to_string(),
-            },
-        };
-        let surrealdb_plugin = WasiSurrealdb::new(surrealdb_config)
-            .await
-            .context("Failed to create SurrealDB plugin")?;
+        let surrealdb_plugin = async {
+            let surrealdb_config = SurrealdbConfig {
+                url: surrealdb_url.to_string(),
+                namespace: "typewriter".to_string(),
+                database: "test".to_string(),
+                auth: Auth::Root {
+                    username: "root".to_string(),
+                    password: "root".to_string(),
+                },
+            };
+            WasiSurrealdb::new(surrealdb_config)
+                .await
+                .context("Failed to create SurrealDB plugin")
+        }
+        .instrument(tracing::info_span!("create_surrealdb_plugin"))
+        .await?;
         tracing::info!("Created SurrealDB plugin");
 
         let messaging_plugin = WasmcloudMessaging::new(Arc::new(nats_client.clone()));
@@ -76,7 +82,7 @@ impl TestHost {
             .build()
             .context("Failed to create engine")?;
 
-        let host = HostBuilder::new()
+        let unstarted_host = HostBuilder::new()
             .with_engine(engine)
             .with_plugin(Arc::new(messaging_plugin))
             .context("Failed to add messaging plugin")?
@@ -87,10 +93,15 @@ impl TestHost {
             .with_plugin(Arc::new(WasiLogging))
             .context("Failed to add logging plugin")?
             .build()
-            .context("Failed to build host")?
-            .start()
-            .await
-            .context("Failed to start host")?;
+            .context("Failed to build host")?;
+
+        let host = async {
+            unstarted_host.start()
+                .await
+                .context("Failed to start host")
+        }
+        .instrument(tracing::info_span!("start_host"))
+        .await?;
 
         tracing::info!("Test host created successfully");
 
@@ -104,6 +115,7 @@ impl TestHost {
     /// are skipped and must be deployed explicitly via `deploy_component()`.
     ///
     /// Components are deployed concurrently for faster startup.
+    #[tracing::instrument(name = "TestHost::deploy_all_components", skip(self, registry))]
     pub async fn deploy_all_components(
         &self,
         registry: &ComponentRegistry,
@@ -185,20 +197,16 @@ impl TestHost {
     }
 
     /// Internal helper that deploys a single component as its own workload.
+    #[tracing::instrument(name = "deploy_component", skip(self, discovered, environment), fields(component = %discovered.name))]
     async fn deploy_component_internal(
         &self,
         discovered: &DiscoveredComponent,
         environment: HashMap<String, String>,
     ) -> Result<String> {
-        let bytes = discovered
-            .bytes
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Component {} not built", discovered.name))?;
-
         let workload_id = uuid::Uuid::new_v4().to_string();
 
         let component = Component {
-            bytes: Bytes::from(bytes.clone()),
+            bytes: Bytes::from(discovered.bytes.as_bytes().to_vec()),
             local_resources: LocalResources {
                 environment,
                 ..Default::default()

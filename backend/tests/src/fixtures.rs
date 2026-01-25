@@ -9,6 +9,10 @@ use std::sync::Arc;
 use ctor::dtor;
 use tokio::runtime::Runtime;
 use tokio::sync::OnceCell;
+#[cfg(feature = "profiling")]
+use tracing_subscriber::layer::SubscriberExt;
+#[cfg(feature = "profiling")]
+use tracing_subscriber::prelude::*;
 
 use crate::harness::{ComponentRegistry, DeploymentResult, SharedInfra, TestHost, TestInfra};
 
@@ -41,22 +45,66 @@ static SHARED_RUNTIME: std::sync::LazyLock<Runtime> = std::sync::LazyLock::new(|
         .expect("Failed to create shared runtime")
 });
 
+/// Global tracing guard - must persist for the entire test process to flush the trace file.
+/// We use a Mutex because FlushGuard is not Sync.
+#[cfg(feature = "profiling")]
+static TRACING_GUARD: std::sync::OnceLock<std::sync::Mutex<Option<tracing_chrome::FlushGuard>>> =
+    std::sync::OnceLock::new();
+
 /// Global shared fixture storage.
 static SHARED_FIXTURES: OnceCell<Arc<SharedFixtures>> = OnceCell::const_new();
+
+/// Initialize tracing for profiling (with Chrome trace output).
+#[cfg(feature = "profiling")]
+fn init_tracing() {
+    TRACING_GUARD.get_or_init(|| {
+        let (chrome_layer, guard) = tracing_chrome::ChromeLayerBuilder::new()
+            .file("test-startup-trace.json")
+            .include_args(true)
+            .build();
+
+        tracing_subscriber::registry()
+            .with(chrome_layer)
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_test_writer()
+                    .with_filter(
+                        tracing_subscriber::EnvFilter::from_default_env()
+                            .add_directive(tracing::Level::INFO.into()),
+                    ),
+            )
+            .init();
+
+        std::sync::Mutex::new(Some(guard))
+    });
+}
+
+/// Initialize tracing for normal test runs (console output only).
+#[cfg(not(feature = "profiling"))]
+fn init_tracing() {
+    use tracing_subscriber::prelude::*;
+
+    static TRACING_INIT: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    TRACING_INIT.get_or_init(|| {
+        tracing_subscriber::registry()
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_test_writer()
+                    .with_filter(
+                        tracing_subscriber::EnvFilter::from_default_env()
+                            .add_directive(tracing::Level::INFO.into()),
+                    ),
+            )
+            .init();
+    });
+}
 
 /// Get or initialize shared fixtures.
 /// Called internally by get_fixtures().
 async fn get_shared_fixtures() -> Arc<SharedFixtures> {
     SHARED_FIXTURES
         .get_or_init(|| async {
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    tracing_subscriber::EnvFilter::from_default_env()
-                        .add_directive(tracing::Level::INFO.into()),
-                )
-                .with_test_writer()
-                .try_init()
-                .ok();
+            init_tracing();
 
             tracing::info!("Initializing shared test fixtures...");
 
@@ -66,12 +114,8 @@ async fn get_shared_fixtures() -> Arc<SharedFixtures> {
 
             tracing::info!(path = ?backend_path, "Backend path determined");
 
-            let mut registry =
+            let registry =
                 ComponentRegistry::discover(backend_path).expect("Failed to discover components");
-            registry
-                .build_all()
-                .await
-                .expect("Failed to build components");
             let registry = Arc::new(registry);
 
             let infra = SharedInfra::start(backend_path)

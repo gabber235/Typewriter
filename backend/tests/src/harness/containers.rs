@@ -12,6 +12,7 @@ use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::nats::Nats;
 use testcontainers_modules::surrealdb::SurrealDb;
 use tokio::sync::Mutex;
+use tracing::Instrument;
 
 /// Shared infrastructure holding containers that persist across all tests.
 /// The containers are wrapped in Mutex<Option> to allow cleanup on process exit.
@@ -27,11 +28,17 @@ impl SharedInfra {
     /// Start shared infrastructure (NATS + SurrealDB containers).
     ///
     /// This also imports the database schema from `database/database.surql`.
+    #[tracing::instrument(name = "SharedInfra::start", skip(backend_path))]
     pub async fn start(backend_path: &Path) -> Result<Arc<Self>> {
-        let nats_container = Nats::default()
-            .start()
-            .await
-            .context("Failed to start NATS container")?;
+        let nats_container = async {
+            Nats::default()
+                .start()
+                .await
+                .context("Failed to start NATS container")
+        }
+        .instrument(tracing::info_span!("start_nats_container"))
+        .await?;
+        
         let nats_port = nats_container
             .get_host_port_ipv4(4222)
             .await
@@ -39,12 +46,17 @@ impl SharedInfra {
         let nats_url = format!("nats://127.0.0.1:{}", nats_port);
         tracing::info!(url = %nats_url, "NATS container started");
 
-        let surrealdb_container = SurrealDb::default()
-            .with_user("root")
-            .with_password("root")
-            .start()
-            .await
-            .context("Failed to start SurrealDB container")?;
+        let surrealdb_container = async {
+            SurrealDb::default()
+                .with_user("root")
+                .with_password("root")
+                .start()
+                .await
+                .context("Failed to start SurrealDB container")
+        }
+        .instrument(tracing::info_span!("start_surrealdb_container"))
+        .await?;
+        
         let surreal_port = surrealdb_container
             .get_host_port_ipv4(testcontainers_modules::surrealdb::SURREALDB_PORT)
             .await
@@ -53,31 +65,45 @@ impl SharedInfra {
         let surrealdb_http_url = format!("http://127.0.0.1:{}", surreal_port);
         tracing::info!(url = %surrealdb_url, "SurrealDB container started");
 
-        let db: Surreal<Any> = Surreal::init();
-        db.connect(&surrealdb_url)
-            .await
-            .context("Failed to connect to SurrealDB")?;
+        let db: Surreal<Any> = async {
+            let db: Surreal<Any> = Surreal::init();
+            db.connect(&surrealdb_url)
+                .await
+                .context("Failed to connect to SurrealDB")?;
+            Ok::<_, anyhow::Error>(db)
+        }
+        .instrument(tracing::info_span!("connect_surrealdb"))
+        .await?;
 
-        db.signin(surrealdb::opt::auth::Root {
-            username: "root",
-            password: "root",
-        })
-        .await
-        .context("Failed to sign in to SurrealDB")?;
+        async {
+            db.signin(surrealdb::opt::auth::Root {
+                username: "root",
+                password: "root",
+            })
+            .await
+            .context("Failed to sign in to SurrealDB")
+        }
+        .instrument(tracing::info_span!("signin_surrealdb"))
+        .await?;
 
         db.use_ns("typewriter")
             .use_db("test")
             .await
             .context("Failed to select namespace/database")?;
 
-        let schema_path = backend_path.join("database/database.surql");
-        tracing::info!(path = ?schema_path, "Importing database schema...");
-        let schema = std::fs::read_to_string(&schema_path)
-            .with_context(|| format!("Failed to read schema from {:?}", schema_path))?;
-        db.query(&schema)
-            .await
-            .context("Failed to import database schema")?;
-        tracing::info!("Database schema imported successfully");
+        async {
+            let schema_path = backend_path.join("database/database.surql");
+            tracing::info!(path = ?schema_path, "Importing database schema...");
+            let schema = std::fs::read_to_string(&schema_path)
+                .with_context(|| format!("Failed to read schema from {:?}", schema_path))?;
+            db.query(&schema)
+                .await
+                .context("Failed to import database schema")?;
+            tracing::info!("Database schema imported successfully");
+            Ok::<_, anyhow::Error>(())
+        }
+        .instrument(tracing::info_span!("import_schema"))
+        .await?;
 
         Ok(Arc::new(Self {
             nats_container: Mutex::new(Some(nats_container)),

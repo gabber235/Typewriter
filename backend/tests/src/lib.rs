@@ -1,4 +1,4 @@
-//! Integration test framework for TypeWriter backend components.
+//! Integration test framework for Typewriter backend components.
 //!
 //! This crate provides a comprehensive test harness for integration testing
 //! WASM components with real NATS and SurrealDB infrastructure via testcontainers.
@@ -19,5 +19,5 @@ pub use builders::{
     RoleBuilder, Service, ServiceBuilder, User, UserBuilder,
 };
 pub use debug::export_db_state;
-pub use fixtures::{get_fixtures, TestFixtures};
+pub use fixtures::{TestFixtures, get_fixtures};
 pub use harness::{ComponentRegistry, DeploymentResult, TestHost, TestInfra, TestNatsClient};
