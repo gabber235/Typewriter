@@ -167,3 +167,40 @@ async fn test_status_nonexistent_service_returns_error() -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_status_token_remains_constant_across_multiple_queries() -> Result<()> {
+    let fixtures = get_fixtures().await;
+    let nats = TestNatsClient::new(fixtures.infra.nats_client());
+
+    let service = ServiceBuilder::new("status_multiple_queries")
+        .service_type("engine")
+        .create(&fixtures.infra.db)
+        .await?;
+
+    // Query status multiple times in succession
+    let response1 = get_status(&nats, &service.id).await?;
+    let token1 = extract_token(&response1);
+
+    // Small delay to ensure DB write completes
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let response2 = get_status(&nats, &service.id).await?;
+    let token2 = extract_token(&response2);
+
+    let response3 = get_status(&nats, &service.id).await?;
+    let token3 = extract_token(&response3);
+
+    let response4 = get_status(&nats, &service.id).await?;
+    let token4 = extract_token(&response4);
+
+    let response5 = get_status(&nats, &service.id).await?;
+    let token5 = extract_token(&response5);
+
+    assert_eq!(token1, token2, "Token should remain constant (query 1 vs 2)");
+    assert_eq!(token2, token3, "Token should remain constant (query 2 vs 3)");
+    assert_eq!(token3, token4, "Token should remain constant (query 3 vs 4)");
+    assert_eq!(token4, token5, "Token should remain constant (query 4 vs 5)");
+
+    Ok(())
+}
