@@ -22,6 +22,7 @@ import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
+import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
@@ -37,6 +38,7 @@ import "package:typewriter_panel/widgets/app/components/formatted_text_field.dar
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/widgets/app/components/organization_selector.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/realm_selector.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/app/components/validated_text_field.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
@@ -51,8 +53,13 @@ part "route.g.dart";
 
 @RoutePage()
 class BookPage extends HookConsumerWidget {
-  const BookPage({@PathParam("bookId") required this.bookId, super.key});
+  const BookPage({
+    @PathParam("realmId") required this.realmId,
+    @PathParam("bookId") required this.bookId,
+    super.key,
+  });
 
+  final String realmId;
   final String bookId;
 
   @override
@@ -100,8 +107,10 @@ class BookScaffold extends HookConsumerWidget {
     return Scaffold(
       appBar: CustomAppBar(
         row: [
-          if (ref.watch(organizationIdProvider) != null)
+          if (ref.watch(organizationIdProvider) != null) ...[
             const OrganizationSelector(),
+            const RealmSelector(),
+          ],
           const Spacer(),
           if (!context.isMobile) const ModeDisplayWidget(),
         ],
@@ -1062,7 +1071,7 @@ class AddPageDialogue extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ValidatedTextField<String>(
-            autofocus: true,
+            autofocus: DecoratedTextFieldAutoFocus.textField,
             keepErrorVisibleWhenUnfocused: true,
             value: name.value,
             name: "Page Name",
@@ -1214,7 +1223,7 @@ class RenamePageDialogue extends HookConsumerWidget {
     return AlertDialog(
       title: Text("Rename ${oldName.formatted}"),
       content: ValidatedTextField<String>(
-        autofocus: true,
+        autofocus: DecoratedTextFieldAutoFocus.textField,
         value: name.value,
         name: "Page Name",
         icon: Ph.book_fill,
@@ -1297,7 +1306,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
       title: Text(title),
       content: FormattedTextField(
         focusNode: focusNode,
-        autofocus: true,
+        autofocus: DecoratedTextFieldAutoFocus.textField,
         text: chapter.value,
         hintText: "Chapter Name",
         icon: Ph.book_bookmark_fill,
@@ -1378,7 +1387,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
       content: FormattedTextField(
         controller: controller,
         focusNode: focusNode,
-        autofocus: true,
+        autofocus: DecoratedTextFieldAutoFocus.textField,
         text: priority.toString(),
         hintText: "Priority",
         icon: MaterialSymbols.priority_high_rounded,
@@ -1429,8 +1438,9 @@ Future<bool> showPageDeletionDialogue(
       final context = ref.context;
       if (!context.mounted) return;
       final bookId = ref.read(bookIdProvider);
-      if (bookId != null) {
-        unawaited(router.push(BookRoute(bookId: bookId)));
+      final realmId = ref.read(realmIdProvider);
+      if (bookId != null && realmId != null) {
+        unawaited(router.push(BookRoute(realmId: realmId, bookId: bookId)));
       }
 
       final organizationId = ref.read(organizationIdProvider);

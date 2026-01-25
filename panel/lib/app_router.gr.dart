@@ -60,13 +60,17 @@ class AuthRouteArgs {
 /// generated route for
 /// [BookPage]
 class BookRoute extends PageRouteInfo<BookRouteArgs> {
-  BookRoute({required String bookId, Key? key, List<PageRouteInfo>? children})
-    : super(
-        BookRoute.name,
-        args: BookRouteArgs(bookId: bookId, key: key),
-        rawPathParams: {'bookId': bookId},
-        initialChildren: children,
-      );
+  BookRoute({
+    required String realmId,
+    required String bookId,
+    Key? key,
+    List<PageRouteInfo>? children,
+  }) : super(
+         BookRoute.name,
+         args: BookRouteArgs(realmId: realmId, bookId: bookId, key: key),
+         rawPathParams: {'realmId': realmId, 'bookId': bookId},
+         initialChildren: children,
+       );
 
   static const String name = 'BookRoute';
 
@@ -75,15 +79,24 @@ class BookRoute extends PageRouteInfo<BookRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<BookRouteArgs>(
-        orElse: () => BookRouteArgs(bookId: pathParams.getString('bookId')),
+        orElse: () => BookRouteArgs(
+          realmId: pathParams.getString('realmId'),
+          bookId: pathParams.getString('bookId'),
+        ),
       );
-      return BookPage(bookId: args.bookId, key: args.key);
+      return BookPage(
+        realmId: args.realmId,
+        bookId: args.bookId,
+        key: args.key,
+      );
     },
   );
 }
 
 class BookRouteArgs {
-  const BookRouteArgs({required this.bookId, this.key});
+  const BookRouteArgs({required this.realmId, required this.bookId, this.key});
+
+  final String realmId;
 
   final String bookId;
 
@@ -91,18 +104,20 @@ class BookRouteArgs {
 
   @override
   String toString() {
-    return 'BookRouteArgs{bookId: $bookId, key: $key}';
+    return 'BookRouteArgs{realmId: $realmId, bookId: $bookId, key: $key}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! BookRouteArgs) return false;
-    return bookId == other.bookId && key == other.key;
+    return realmId == other.realmId &&
+        bookId == other.bookId &&
+        key == other.key;
   }
 
   @override
-  int get hashCode => bookId.hashCode ^ key.hashCode;
+  int get hashCode => realmId.hashCode ^ bookId.hashCode ^ key.hashCode;
 }
 
 /// generated route for
@@ -255,6 +270,77 @@ class RouteRouteArgs {
 
   @override
   int get hashCode => pageId.hashCode ^ key.hashCode;
+}
+
+/// generated route for
+/// [RealmPage]
+class RealmRoute extends PageRouteInfo<RealmRouteArgs> {
+  RealmRoute({
+    required String organizationId,
+    required String realmId,
+    Key? key,
+    List<PageRouteInfo>? children,
+  }) : super(
+         RealmRoute.name,
+         args: RealmRouteArgs(
+           organizationId: organizationId,
+           realmId: realmId,
+           key: key,
+         ),
+         rawPathParams: {'organizationId': organizationId, 'realmId': realmId},
+         initialChildren: children,
+       );
+
+  static const String name = 'RealmRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<RealmRouteArgs>(
+        orElse: () => RealmRouteArgs(
+          organizationId: pathParams.getString('organizationId'),
+          realmId: pathParams.getString('realmId'),
+        ),
+      );
+      return RealmPage(
+        organizationId: args.organizationId,
+        realmId: args.realmId,
+        key: args.key,
+      );
+    },
+  );
+}
+
+class RealmRouteArgs {
+  const RealmRouteArgs({
+    required this.organizationId,
+    required this.realmId,
+    this.key,
+  });
+
+  final String organizationId;
+
+  final String realmId;
+
+  final Key? key;
+
+  @override
+  String toString() {
+    return 'RealmRouteArgs{organizationId: $organizationId, realmId: $realmId, key: $key}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! RealmRouteArgs) return false;
+    return organizationId == other.organizationId &&
+        realmId == other.realmId &&
+        key == other.key;
+  }
+
+  @override
+  int get hashCode => organizationId.hashCode ^ realmId.hashCode ^ key.hashCode;
 }
 
 /// generated route for

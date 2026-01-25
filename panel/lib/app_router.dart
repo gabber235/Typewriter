@@ -7,6 +7,7 @@ import "package:typewriter_panel/routes/organization/book/page/route.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
 import "package:typewriter_panel/routes/organization/library/route.dart";
 import "package:typewriter_panel/routes/organization/members/route.dart";
+import "package:typewriter_panel/routes/organization/realm/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_panel/routes/organization/services/route.dart";
 import "package:typewriter_panel/routes/route.dart";
@@ -38,13 +39,20 @@ class AppRouter extends RootStackRouter {
       guards: [AuthGuard(ref)],
       children: [
         AutoRoute(page: ServicesRoute.page, path: "services", initial: true),
-        AutoRoute(page: LibraryRoute.page, path: "library"),
         AutoRoute(page: MembersRoute.page, path: "members"),
       ],
     ),
     AutoRoute(
+      page: RealmRoute.page,
+      path: "/organization/:organizationId/realm/:realmId",
+      guards: [AuthGuard(ref)],
+      children: [
+        AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
+      ],
+    ),
+    AutoRoute(
       page: BookRoute.page,
-      path: "/organization/:organizationId/books/:bookId",
+      path: "/organization/:organizationId/realm/:realmId/book/:bookId",
       guards: [AuthGuard(ref)],
       children: [AutoRoute(page: RouteRoute.page, path: "page/:pageId")],
     ),
