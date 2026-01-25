@@ -8,14 +8,16 @@ import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/organization.dart";
 import "package:typewriter_panel/logic/proto/api_exception.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
-import "package:typewriter_panel/widgets/generic/components/service_header.dart";
+import "package:typewriter_panel/widgets/app/components/organization/services/service_header.dart";
 
 part "services.g.dart";
 
@@ -161,7 +163,23 @@ Future<Service?> service(Ref ref, String id) async {
 }
 
 extension ServiceExtension on Service {
-  String get displayName => name.isNotEmpty ? name : "Unnamed Service";
+  String get displayName =>
+      name.isNotEmpty ? name.formatted : "Unnamed Service";
+
+  Color get color {
+    Color base;
+    if (serviceTypes.contains(ServiceType.SERVICE_TYPE_ENGINE) &&
+        serviceTypes.contains(ServiceType.SERVICE_TYPE_REALM)) {
+      base = Colors.deepPurpleAccent;
+    } else if (serviceTypes.contains(ServiceType.SERVICE_TYPE_ENGINE)) {
+      base = Colors.blueAccent;
+    } else if (serviceTypes.contains(ServiceType.SERVICE_TYPE_REALM)) {
+      base = Colors.deepOrangeAccent;
+    } else {
+      base = Colors.grey;
+    }
+    return base;
+  }
 
   bool get isOnline {
     if (!hasState()) return false;
@@ -172,19 +190,19 @@ extension ServiceExtension on Service {
 
     if (!state.hasLastSeen()) return false;
     final now = DateTime.now();
-    final lastSeenTime = DateTime.fromMillisecondsSinceEpoch(
-      state.lastSeen.seconds.toInt() * 1000,
-    );
+    final lastSeenTime = state.lastSeen.toDateTime();
     return now.difference(lastSeenTime).inMinutes < 2;
+  }
+
+  DateTime? get lastSeenTime {
+    if (!hasState() || !state.hasLastSeen()) return null;
+    return state.lastSeen.toDateTime();
   }
 
   String get lastSeenLabel {
     if (!hasState() || !state.hasLastSeen()) return "Never";
     final now = DateTime.now();
-    final lastSeenTime = DateTime.fromMillisecondsSinceEpoch(
-      state.lastSeen.seconds.toInt() * 1000,
-    );
-    final difference = now.difference(lastSeenTime);
+    final difference = now.difference(lastSeenTime!);
 
     if (difference.inSeconds < 60) {
       return "Just now";
@@ -263,7 +281,7 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
     required this.ref,
     required this.id,
     required this.service,
-  }) : _data = DynamicData(service.writeToJsonMap());
+  }) : _data = DynamicData(service.toJsonMap());
 
   @override
   final ServiceIdentifier id;
@@ -280,7 +298,9 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
   @override
   ObjectBlueprint get objectBlueprint {
     return ObjectBlueprint(
-      fields: {"name": DataBlueprint.string(modifiers: [])},
+      fields: {
+        "name": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
+      },
     );
   }
 
@@ -296,17 +316,18 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
   Widget? header() => ServiceHeader(
     id: service.id,
     name: service.displayName,
-    typeLabel: service.typeLabel,
-    icon: service.icon,
+    color: service.color,
   );
 
   @override
-  dynamic fieldValue(String path) => _data.get(path);
+  dynamic fieldValue(String path) {
+    return _data.get(path);
+  }
 
   @override
   void setFieldValue(String path, dynamic value) {
     final newData = _data.copyWith(path, value);
-    final newService = Service()..mergeFromJsonMap(newData.toJson());
+    final newService = Service()..mergeFromProto3Json(newData.toJson());
     ref.read(servicesProvider.notifier).updateService(newService);
   }
 

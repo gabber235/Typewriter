@@ -1,5 +1,8 @@
 import "package:flutter/material.dart" show Color;
+import "package:protobuf/protobuf.dart";
+import "package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart";
 import "package:typewriter_panel/generated/models/common.pb.dart" as proto;
+import "package:typewriter_panel/utils/map.dart";
 
 /// Extension on uint32 (int) to convert to/from Flutter Color
 extension ColorIntExtension on int {
@@ -27,4 +30,12 @@ extension ProtoColorExtension on proto.Color {
   Color toFlutterColor() {
     return Color(value);
   }
+}
+
+extension DateTimeExtension on DateTime {
+  Timestamp toTimestamp() => Timestamp.fromDateTime(this);
+}
+
+extension GeneratedMessageJsonExtension on GeneratedMessage {
+  Map<String, dynamic> toJsonMap() => stringMap(toProto3Json());
 }

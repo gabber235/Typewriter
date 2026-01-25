@@ -18,6 +18,7 @@ import "package:typewriter_panel/widgets/generic/components/grid_selectable_card
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
+import "package:typewriter_panel/widgets/generic/components/status_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
 
 const double _serviceCardWidth = 180;
@@ -220,10 +221,15 @@ class _ServiceCard extends HookConsumerWidget {
             isHovered: isHovered,
             badgeLabel: service.typeLabel,
             header: Icon(service.icon, size: 32),
-            footer: _StatusIndicator(
+            footer: StatusIndicator(
               isOnline: service.isOnline,
-              lastSeenLabel: service.lastSeenLabel,
-              isSelected: isSelected,
+              lastSeen: service.lastSeenTime,
+              dotColor: _statusDotColor(context, service.isOnline, isSelected),
+              textColor: _statusTextColor(
+                context,
+                service.isOnline,
+                isSelected,
+              ),
             ),
           ),
         );
@@ -232,48 +238,21 @@ class _ServiceCard extends HookConsumerWidget {
   }
 }
 
-class _StatusIndicator extends StatelessWidget {
-  const _StatusIndicator({
-    required this.isOnline,
-    required this.lastSeenLabel,
-    required this.isSelected,
-  });
+Color _statusDotColor(BuildContext context, bool isOnline, bool isSelected) {
+  final theme = Theme.of(context);
+  return switch ((isOnline, isSelected)) {
+    (true, false) => Colors.green,
+    (true, true) => Colors.white,
+    (false, false) => Colors.grey,
+    (false, true) => theme.colorScheme.surface.withValues(alpha: 0.7),
+  };
+}
 
-  final bool isOnline;
-  final String lastSeenLabel;
-  final bool isSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final statusColor = switch ((isOnline, isSelected)) {
-      (true, false) => Colors.green,
-      (true, true) => Colors.white,
-      (false, false) => Colors.grey,
-      (false, true) => theme.colorScheme.surface.withValues(alpha: 0.7),
-    };
-    final textColor = switch ((isOnline, isSelected)) {
-      (true, _) => Colors.white.withValues(alpha: 0.7),
-      (false, false) => theme.colorScheme.onSurfaceVariant.withValues(
-        alpha: 0.7,
-      ),
-      (false, true) => theme.colorScheme.surface.withValues(alpha: 0.5),
-    };
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          isOnline ? "Online" : lastSeenLabel,
-          style: TextStyle(fontSize: 11, color: textColor),
-        ),
-      ],
-    );
-  }
+Color _statusTextColor(BuildContext context, bool isOnline, bool isSelected) {
+  final theme = Theme.of(context);
+  return switch ((isOnline, isSelected)) {
+    (true, _) => Colors.white.withValues(alpha: 0.7),
+    (false, false) => theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+    (false, true) => theme.colorScheme.surface.withValues(alpha: 0.5),
+  };
 }
