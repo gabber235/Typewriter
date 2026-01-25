@@ -1,6 +1,6 @@
 /// Macro to create a protobuf error response with minimal boilerplate.
 ///
-/// This macro generates the verbose error response pattern commonly used in the TypeWriter API.
+/// This macro generates the verbose error response pattern commonly used in the Typewriter API.
 /// It supports two main use cases:
 ///
 /// 1. **Creating an error response struct** (for inline use or custom handling):
