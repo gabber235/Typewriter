@@ -4,243 +4,100 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
-import "package:typewriter_panel/utils/context.dart";
-import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
-import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
-import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/app/components/selector_popup.dart";
 
 class OrganizationSelector extends HookConsumerWidget {
   const OrganizationSelector({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedOrganizationAsync = ref.watch(organizationProvider);
+    final organizationsAsync = ref.watch(organizationsProvider);
+    final selectedOrgAsync = ref.watch(organizationProvider);
 
-    return selectedOrganizationAsync(
-      name: "selected organization",
-      builder: (selectedOrganization) =>
-          _SelectorButton(selectedOrganization: selectedOrganization, ref: ref),
-      loading: (_) => ShimmerBox.rectangle(width: 200, height: 40),
-      error: (title, error) => Text(error),
-    );
-  }
-}
-
-class _SelectorButton extends HookWidget {
-  const _SelectorButton({
-    required this.selectedOrganization,
-    required this.ref,
-  });
-
-  final OrganizationData? selectedOrganization;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    final link = useRef(LayerLink());
-
-    return Material(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: CompositedTransformTarget(
-        link: link.value,
-        child: InkWell(
-          onTap: () => _showOrganizationMenu(context, link.value),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (selectedOrganization != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: OrganizationIcon(
-                      iconUrl: selectedOrganization!.iconUrl,
-                      size: 24,
-                    ),
-                  ),
-                Text(
-                  selectedOrganization?.name.formatted ?? "Select Organization",
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showOrganizationMenu(BuildContext context, LayerLink link) {
-    if (context.isMobile) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (ctx) {
-          return UncontrolledProviderScope(
-            container: ProviderScope.containerOf(context),
-            child: _MobileOrganizationMenu(
-              selectedOrganization: selectedOrganization,
-            ),
-          );
-        },
-      );
-      return;
-    }
-    Navigator.of(context).push(
-      _OrganizationPopupRoute(
-        link: link,
-        themes: InheritedTheme.capture(
-          from: context,
-          to: Navigator.of(context).context,
-        ),
-        child: UncontrolledProviderScope(
-          container: ProviderScope.containerOf(context),
-          child: _OrganizationMenuContent(
-            selectedOrganization: selectedOrganization,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MobileOrganizationMenu extends StatelessWidget {
-  const _MobileOrganizationMenu({required this.selectedOrganization});
-
-  final OrganizationData? selectedOrganization;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ModalHeader(),
-            Expanded(
-              child: _OrganizationMenuContent(
-                selectedOrganization: selectedOrganization,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OrganizationPopupRoute extends PopupRoute<void> {
-  _OrganizationPopupRoute({
-    required this.link,
-    required this.child,
-    required this.themes,
-  });
-
-  final LayerLink link;
-  final Widget child;
-  final CapturedThemes themes;
-
-  @override
-  Color? get barrierColor => null;
-
-  @override
-  bool get barrierDismissible => true;
-
-  @override
-  String? get barrierLabel => null;
-
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 60);
-
-  @override
-  Widget buildPage(
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-  ) {
-    return themes.wrap(
-      Stack(
+    return SelectorPopupWithSelection<OrganizationData>(
+      itemsAsync: organizationsAsync,
+      selectedAsync: selectedOrgAsync,
+      name: "organizations",
+      buttonBuilder: (selected) => Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CompositedTransformFollower(
-            link: link,
-            showWhenUnlinked: false,
-            followerAnchor: Alignment.topLeft,
-            targetAnchor: Alignment.bottomLeft,
-            child: FadeTransition(
-              opacity: animation,
-              child: Builder(
-                builder: (context) {
-                  return Material(
-                    elevation: 4,
-                    color: Theme.of(context).colorScheme.surfaceContainer,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: 420,
-                        maxHeight: 420,
-                      ),
-                      child: child,
-                    ),
-                  );
-                },
-              ),
+          if (selected != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: OrganizationIcon(iconUrl: selected.iconUrl, size: 24),
             ),
+          Text(
+            selected?.name.formatted ?? "Select Organization",
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
+      contentBuilder: (organizations, selected, onDismiss) =>
+          _OrganizationMenuContent(
+            organizations: organizations,
+            selectedOrganization: selected,
+            onDismiss: onDismiss,
+          ),
     );
   }
 }
 
 class _OrganizationMenuContent extends HookConsumerWidget {
-  const _OrganizationMenuContent({required this.selectedOrganization});
+  const _OrganizationMenuContent({
+    required this.organizations,
+    required this.selectedOrganization,
+    required this.onDismiss,
+  });
 
+  final List<OrganizationData> organizations;
   final OrganizationData? selectedOrganization;
+  final void Function(OrganizationData) onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final searchQuery = useState("");
-    final organizationsAsync = ref.watch(organizationsProvider);
+
+    final filteredOrganizations = organizations.where((org) {
+      if (searchQuery.value.isEmpty) return true;
+      return org.name.toLowerCase().contains(searchQuery.value.toLowerCase());
+    }).toList();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SearchField(searchQuery: searchQuery),
+        SelectorSearchField(
+          searchQuery: searchQuery,
+          hintText: "Search organizations",
+        ),
         Flexible(
-          child: organizationsAsync(
-            name: "organizations",
-            builder: (organizations) {
-              final filteredOrganizations = organizations.where((org) {
-                if (searchQuery.value.isEmpty) return true;
-                return org.name.toLowerCase().contains(
-                  searchQuery.value.toLowerCase(),
-                );
-              }).toList();
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Flexible(
-                    child: _OrganizationsList(
-                      organizations: filteredOrganizations,
-                    ),
-                  ),
-                  if (selectedOrganization != null)
-                    _OrganizationActions(organization: selectedOrganization!),
-                ],
-              );
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Flexible(
+                child: _OrganizationsList(
+                  organizations: filteredOrganizations,
+                  onSelect: (org) {
+                    ref
+                        .read(appRouterProvider)
+                        .replace(OrganizationRoute(organizationId: org.id));
+                    onDismiss(org);
+                  },
+                ),
+              ),
+              if (selectedOrganization != null)
+                _OrganizationActions(
+                  organization: selectedOrganization!,
+                  onDismiss: () {
+                    if (selectedOrganization != null) {
+                      onDismiss(selectedOrganization!);
+                    }
+                  },
+                ),
+            ],
           ),
         ),
       ],
@@ -248,51 +105,22 @@ class _OrganizationMenuContent extends HookConsumerWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField({required this.searchQuery});
+class _OrganizationsList extends StatelessWidget {
+  const _OrganizationsList({
+    required this.organizations,
+    required this.onSelect,
+  });
 
-  final ValueNotifier<String> searchQuery;
+  final List<OrganizationData> organizations;
+  final void Function(OrganizationData) onSelect;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: TextField(
-        autofocus: true,
-        onChanged: (value) => searchQuery.value = value,
-        decoration: InputDecoration(
-          hintText: "Search organizations",
-          prefixIcon: Icon(
-            Icons.search,
-            size: 20,
-            color: Theme.of(context).hintColor,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OrganizationsList extends HookConsumerWidget {
-  const _OrganizationsList({required this.organizations});
-
-  final List<OrganizationData> organizations;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Text(
-            "ORGANIZATIONS",
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
+        const SelectorSectionHeader(title: "Organizations"),
         Flexible(
           child: ListView.builder(
             itemCount: organizations.length,
@@ -312,12 +140,7 @@ class _OrganizationsList extends HookConsumerWidget {
                       ).textTheme.bodyMedium?.copyWith(fontSize: 14),
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                    onTap: () {
-                      ref
-                          .read(appRouterProvider)
-                          .replace(OrganizationRoute(organizationId: org.id));
-                      Navigator.of(context).pop();
-                    },
+                    onTap: () => onSelect(org),
                   ),
                 ),
               );
@@ -330,9 +153,13 @@ class _OrganizationsList extends HookConsumerWidget {
 }
 
 class _OrganizationActions extends HookConsumerWidget {
-  const _OrganizationActions({required this.organization});
+  const _OrganizationActions({
+    required this.organization,
+    required this.onDismiss,
+  });
 
   final OrganizationData organization;
+  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -340,23 +167,18 @@ class _OrganizationActions extends HookConsumerWidget {
       title: "Actions",
       actions: [
         ActionItem(
-          icon: Icons.settings,
-          title: "Organization Settings",
+          icon: Icons.group,
+          title: "Manage Members",
           onTap: () {
-            Navigator.of(context).pop();
+            onDismiss();
             ref
                 .read(appRouterProvider)
-                .push(OrganizationRoute(organizationId: organization.id));
-          },
-        ),
-        ActionItem(
-          icon: Icons.person_add,
-          title: "Invite Users",
-          onTap: () {
-            Navigator.of(context).pop();
-            ref
-                .read(appRouterProvider)
-                .push(OrganizationRoute(organizationId: organization.id));
+                .push(
+                  OrganizationRoute(
+                    organizationId: organization.id,
+                    children: [MembersRoute()],
+                  ),
+                );
           },
         ),
       ],
