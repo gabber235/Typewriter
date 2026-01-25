@@ -39,6 +39,8 @@ import 'package:widgetbook_workspace/stories/app/components/organization_icon.st
     as _widgetbook_workspace_stories_app_components_organization_icon_stories;
 import 'package:widgetbook_workspace/stories/app/components/organization_selector.stories.dart'
     as _widgetbook_workspace_stories_app_components_organization_selector_stories;
+import 'package:widgetbook_workspace/stories/app/components/realm_selector.stories.dart'
+    as _widgetbook_workspace_stories_app_components_realm_selector_stories;
 import 'package:widgetbook_workspace/stories/app/components/selectable.stories.dart'
     as _widgetbook_workspace_stories_app_components_selectable_stories;
 import 'package:widgetbook_workspace/stories/app/components/tag.stories.dart'
@@ -429,6 +431,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_app_components_organization_selector_stories
                             .organizationSelectorUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'RealmSelector',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'RealmSelector',
+                    builder:
+                        _widgetbook_workspace_stories_app_components_realm_selector_stories
+                            .realmSelectorUseCase,
                   ),
                 ],
               ),
