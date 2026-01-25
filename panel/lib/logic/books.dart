@@ -204,7 +204,7 @@ class BookIdentifier extends SelectableIdentifier {
 
 class BookSelection extends Selectable<BookIdentifier> {
   BookSelection({required this.ref, required this.id, required this.book})
-    : _data = DynamicData(book.writeToJsonMap());
+    : _data = DynamicData(book.toJsonMap());
 
   @override
   final BookIdentifier id;
@@ -248,7 +248,7 @@ class BookSelection extends Selectable<BookIdentifier> {
   @override
   void setFieldValue(String path, dynamic value) {
     final newData = _data.copyWith(path, value);
-    final newBook = Book()..mergeFromJsonMap(newData.toJson());
+    final newBook = Book()..mergeFromProto3Json(newData.toJson());
     ref.read(booksProvider.notifier).updateBook(newBook);
   }
 
