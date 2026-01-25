@@ -121,29 +121,32 @@ class GridSelectableCard extends StatelessWidget {
         ),
       ),
       padding: padding,
-      child: Column(
-        crossAxisAlignment: .start,
-        children: [
-          if (badgeLabel != null)
-            _Badge(
-              label: badgeLabel!,
-              isSelected: isSelected,
-              color: (badgeColor ?? baseColor).withValues(alpha: 0.90),
-              onColor: badgeOnColor ?? onBase,
+      child: IconTheme(
+        data: IconThemeData(color: isSelected ? onBase : baseColor),
+        child: Column(
+          crossAxisAlignment: .start,
+          children: [
+            if (badgeLabel != null)
+              _Badge(
+                label: badgeLabel!,
+                isSelected: isSelected,
+                color: (badgeColor ?? baseColor).withValues(alpha: 0.90),
+                onColor: badgeOnColor ?? onBase,
+              ),
+            if (header != null) ...[
+              if (badgeLabel != null) const SizedBox(height: 6),
+              header!,
+            ],
+            const Spacer(),
+            Text(
+              title,
+              maxLines: 3,
+              overflow: .ellipsis,
+              style: resolvedTitleStyle,
             ),
-          if (header != null) ...[
-            if (badgeLabel != null) const SizedBox(height: 6),
-            header!,
+            if (footer != null) ...[const SizedBox(height: 6), footer!],
           ],
-          const Spacer(),
-          Text(
-            title,
-            maxLines: 3,
-            overflow: .ellipsis,
-            style: resolvedTitleStyle,
-          ),
-          if (footer != null) ...[const SizedBox(height: 6), footer!],
-        ],
+        ),
       ),
     ).animate(target: isHovered ? 1 : 0).hoverScale(isHovered);
   }
