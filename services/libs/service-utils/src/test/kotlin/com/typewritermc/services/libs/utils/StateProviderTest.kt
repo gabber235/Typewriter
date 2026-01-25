@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.utils
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
@@ -110,6 +111,86 @@ class StateProviderTest : FunSpec({
 
             collected1 shouldBe listOf(0, 1, 2)
             collected2 shouldBe listOf(0, 1, 2)
+        }
+    }
+
+    context("Nullable Extension Methods") {
+
+        test("awaitNonNull() returns immediately when value is already set") {
+            val provider = StateProvider<String?>("value")
+
+            val result = provider.awaitNonNull()
+
+            result shouldBe "value"
+        }
+
+        test("awaitNonNull() suspends until value becomes non-null") {
+            val provider = StateProvider<String?>(null)
+
+            val deferred = async {
+                provider.awaitNonNull()
+            }
+
+            delay(10)
+            provider.set("now set")
+
+            deferred.await() shouldBe "now set"
+        }
+
+        test("awaitNonNull() returns new value after update from null") {
+            val provider = StateProvider<String?>(null)
+
+            val deferred = async {
+                provider.awaitNonNull()
+            }
+
+            delay(10)
+            provider.set("first")
+            delay(10)
+            provider.set("second")
+
+            deferred.await() shouldBe "first"
+        }
+
+        test("getOrNull() returns null when value is null") {
+            val provider = StateProvider<String?>(null)
+
+            provider.getOrNull() shouldBe null
+        }
+
+        test("getOrNull() returns value when set") {
+            val provider = StateProvider<String?>("value")
+
+            provider.getOrNull() shouldBe "value"
+        }
+
+        test("require() throws when value is null") {
+            val provider = StateProvider<String?>(null)
+
+            shouldThrow<IllegalStateException> {
+                provider.require()
+            }
+        }
+
+        test("require() returns value when set") {
+            val provider = StateProvider<String?>("value")
+
+            provider.require() shouldBe "value"
+        }
+
+        test("awaitNonNull() works after value is set to null then back to non-null") {
+            val provider = StateProvider<String?>("initial")
+
+            provider.set(null)
+
+            val deferred = async {
+                provider.awaitNonNull()
+            }
+
+            delay(10)
+            provider.set("restored")
+
+            deferred.await() shouldBe "restored"
         }
     }
 })

@@ -23,3 +23,19 @@ class StateProvider<T>(initial: T) {
 
     suspend fun awaitValue(predicate: (T) -> Boolean): T = flow.first(predicate)
 }
+
+/**
+ * Suspends until the value becomes non-null and returns it.
+ */
+suspend fun <T : Any> StateProvider<T?>.awaitNonNull(): T = awaitValue { it != null }!!
+
+/**
+ * Returns the current value if non-null, otherwise null.
+ */
+fun <T : Any> StateProvider<T?>.getOrNull(): T? = get()
+
+/**
+ * Returns the current value if non-null, otherwise throws IllegalStateException.
+ */
+fun <T : Any> StateProvider<T?>.require(): T =
+    get() ?: throw IllegalStateException("StateProvider value is null")
