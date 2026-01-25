@@ -148,7 +148,7 @@ docker/surrealdb/database.db
 docker/nats
 .env
 
-**.task/**
+.task/
 **.credential
 
 # Terraform state files
