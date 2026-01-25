@@ -14,12 +14,11 @@ class TestIntent extends Intent {
 
 void main() {
   group("DecoratedTextField - focus & actions", () {
-    testWidgets("DismissIntent moves focus away from the inner TextField",
-        (tester) async {
+    testWidgets("DismissIntent moves focus away from the inner TextField", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
-      final widget = DecoratedTextField(
-        focusNode: innerFocus,
-      );
+      final widget = DecoratedTextField(focusNode: innerFocus);
 
       await tester.pumpTestApp(child: widget);
 
@@ -46,7 +45,7 @@ void main() {
       final innerFocus = FocusNode(debugLabel: "inner");
       final widget = DecoratedTextField(
         focusNode: innerFocus,
-        autofocus: true,
+        autofocus: DecoratedTextFieldAutoFocus.textField,
       );
 
       await tester.pumpTestApp(child: widget);
@@ -58,8 +57,9 @@ void main() {
       );
     });
 
-    testWidgets("DismissIntent bubbles up to parent action handlers",
-        (tester) async {
+    testWidgets("DismissIntent bubbles up to parent action handlers", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
       var parentDismissReceived = false;
 
@@ -72,9 +72,7 @@ void main() {
             },
           ),
         },
-        child: DecoratedTextField(
-          focusNode: innerFocus,
-        ),
+        child: DecoratedTextField(focusNode: innerFocus),
       );
 
       await tester.pumpTestApp(child: widget);
@@ -120,8 +118,9 @@ void main() {
       expect(changedValue, "hello");
     });
 
-    testWidgets("onSubmitted and onDone are called when submitting",
-        (tester) async {
+    testWidgets("onSubmitted and onDone are called when submitting", (
+      tester,
+    ) async {
       final innerFocus = FocusNode(debugLabel: "inner");
       String? submitted;
       String? done;

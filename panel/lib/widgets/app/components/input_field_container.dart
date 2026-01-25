@@ -25,6 +25,7 @@ class InputFieldContainer extends HookConsumerWidget {
     this.surroundingFocusNode,
     this.onInputFocus,
     this.onDismiss,
+    this.autofocus = false,
     super.key,
   });
 
@@ -54,6 +55,9 @@ class InputFieldContainer extends HookConsumerWidget {
 
   /// Called when a dismiss intent is handled while the input is focused.
   final VoidCallback? onDismiss;
+
+  /// Whether the surrounding focus should request focus automatically.
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -129,6 +133,7 @@ class InputFieldContainer extends HookConsumerWidget {
           },
           child: Focus(
             focusNode: surroundingNode,
+            autofocus: autofocus,
             debugLabel: "SurroundingInputFieldContainer",
             descendantsAreTraversable: false,
             onFocusChange: (_) {

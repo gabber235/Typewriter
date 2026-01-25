@@ -39,7 +39,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     required this.value,
     this.controller,
     this.focusNode,
-    this.autofocus = false,
+    this.autofocus = DecoratedTextFieldAutoFocus.none,
     this.name = "",
     this.icon = Ic.round_text_fields,
     this.keyboardType = TextInputType.text,
@@ -67,7 +67,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final T value;
   final TextEditingController? controller;
   final FocusNode? focusNode;
-  final bool autofocus;
+  final DecoratedTextFieldAutoFocus autofocus;
   final String name;
   final String icon;
   final TextInputType keyboardType;

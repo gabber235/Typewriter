@@ -5,10 +5,12 @@ import "package:typewriter_panel/hooks/focused_change.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/input_field_container.dart";
 
+enum DecoratedTextFieldAutoFocus { none, textField, surroundingField }
+
 class DecoratedTextField extends HookWidget {
   const DecoratedTextField({
     required this.focusNode,
-    this.autofocus = false,
+    this.autofocus = DecoratedTextFieldAutoFocus.none,
     this.controller,
     this.text,
     this.onChanged,
@@ -30,8 +32,13 @@ class DecoratedTextField extends HookWidget {
   final TextEditingController? controller;
   final FocusNode focusNode;
 
-  /// Whether the text field should be focused when the widget is inserted into the tree.
-  final bool autofocus;
+  /// Determines if the field auto‑focuses when built.
+  final DecoratedTextFieldAutoFocus autofocus;
+
+  /// The initial text to display in the field. If provided, it will be used to
+  /// initialise the internal [TextEditingController] when no external controller
+  /// is supplied. Subsequent updates are handled via the `text` parameter in the
+  /// widget's build method.
   final String? text;
 
   /// Called any time the text changes.
@@ -72,32 +79,25 @@ class DecoratedTextField extends HookWidget {
     // When we are not focused, we want to update the controller with the latest.
     // Since other people may update the text and we want that reflected.
     // However, when we are focused, we don't want to update the controller as this causes the cursor to jump.
-    useEffect(
-      () {
-        if (!focusNode.hasFocus && text != null) {
-          controller.text = text ?? "";
-        }
-        return null;
-      },
-      [text],
-    );
+    useEffect(() {
+      if (!focusNode.hasFocus && text != null) {
+        controller.text = text ?? "";
+      }
+      return null;
+    }, [text]);
 
     final previousFocus = useState(focusNode.hasFocus);
-    useFocusedChange(
-      focusNode,
-      ({required hasFocus}) {
-        final hadFocus = previousFocus.value;
-        if (!hadFocus && hasFocus) {
-          if (text != null) {
-            controller.text = text!;
-          }
-        } else if (hadFocus && !hasFocus) {
-          onDone?.call(controller.text);
+    useFocusedChange(focusNode, ({required hasFocus}) {
+      final hadFocus = previousFocus.value;
+      if (!hadFocus && hasFocus) {
+        if (text != null) {
+          controller.text = text!;
         }
-        previousFocus.value = hasFocus;
-      },
-      [text],
-    );
+      } else if (hadFocus && !hasFocus) {
+        onDone?.call(controller.text);
+      }
+      previousFocus.value = hasFocus;
+    }, [text]);
 
     final surroundingFocusNode = useFocusNode(
       debugLabel: "Surrounding focus node",
@@ -106,13 +106,14 @@ class DecoratedTextField extends HookWidget {
 
     return InputFieldContainer(
       inputFocusNode: focusNode,
+      autofocus: autofocus == DecoratedTextFieldAutoFocus.surroundingField,
       surroundingFocusNode: surroundingFocusNode,
       actions: actions,
       inputActions: textFieldActions,
       surroundingActions: surroundingActions,
       child: TextField(
         focusNode: focusNode,
-        autofocus: autofocus,
+        autofocus: autofocus == DecoratedTextFieldAutoFocus.textField,
         controller: controller,
         onEditingComplete:
             onEditingComplete ?? surroundingFocusNode.requestFocus,
@@ -122,16 +123,15 @@ class DecoratedTextField extends HookWidget {
         onChanged: onChanged,
         style: style,
         textCapitalization: TextCapitalization.none,
-        textInputAction:
-            maxLines == 1 ? TextInputAction.done : TextInputAction.newline,
+        textInputAction: maxLines == 1
+            ? TextInputAction.done
+            : TextInputAction.newline,
         textAlign: textAlign,
         maxLines: maxLines,
         keyboardType: maxLines == 1 ? keyboardType : TextInputType.multiline,
         readOnly: readOnly,
         selectAllOnFocus: false,
-        inputFormatters: [
-          if (inputFormatters != null) ...inputFormatters!,
-        ],
+        inputFormatters: [if (inputFormatters != null) ...inputFormatters!],
         decoration: decoration,
       ),
     );
