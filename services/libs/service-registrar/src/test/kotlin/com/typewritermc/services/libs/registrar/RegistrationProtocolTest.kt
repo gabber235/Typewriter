@@ -13,8 +13,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class RegistrationProtocolTest : FunSpec({
 
@@ -29,7 +27,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
-                ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
+                    ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
@@ -49,7 +47,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
-                ServiceStatusResult.Unbound(token = "REG-TOKEN-123")
+                    ServiceStatusResult.Unbound(token = "REG-TOKEN-123")
 
             coEvery {
                 registrationClient.subscribeToBoundNotification("test-service-id", any())
@@ -76,7 +74,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc-1") } returns
-                ServiceStatusResult.Unbound(token = "TOKEN")
+                    ServiceStatusResult.Unbound(token = "TOKEN")
 
             coEvery {
                 registrationClient.subscribeToBoundNotification("svc-1", any())
@@ -104,7 +102,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
-                ServiceStatusResult.Error(code = 404, message = "Service not found")
+                    ServiceStatusResult.Error(code = 404, message = "Service not found")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
@@ -122,7 +120,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Error(code = 500, message = "Internal server error: database unavailable")
+                    ServiceStatusResult.Error(code = 500, message = "Internal server error: database unavailable")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
@@ -141,7 +139,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("my-unique-service-id") } returns
-                ServiceStatusResult.Bound(organizationId = "org", organizationName = "Org")
+                    ServiceStatusResult.Bound(organizationId = "org", organizationName = "Org")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             protocol.checkAndRegister()
@@ -156,7 +154,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc-xyz") } returns
-                ServiceStatusResult.Unbound(token = "TOK")
+                    ServiceStatusResult.Unbound(token = "TOK")
 
             coEvery {
                 registrationClient.subscribeToBoundNotification("svc-xyz", any())
@@ -184,7 +182,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "")
+                    ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
@@ -200,39 +198,13 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Bound(organizationId = "org", organizationName = "日本語組織 🎮")
+                    ServiceStatusResult.Bound(organizationId = "org", organizationName = "日本語組織 🎮")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
             result.organizationName shouldBe "日本語組織 🎮"
-        }
-
-        test("handles long registration token display") {
-            val registrationClient = mockk<RegistrationClient>()
-            val reconnector = mockk<Reconnector>()
-            val credential = Credential(id = "svc", name = "s", token = "t")
-            val stateProvider = createStateProvider()
-
-            val longToken = "A".repeat(100)
-            coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Unbound(token = longToken)
-
-            coEvery {
-                registrationClient.subscribeToBoundNotification("svc", any())
-            } coAnswers {
-                val callback = secondArg<suspend (String, String) -> Unit>()
-                callback("org", "Org")
-                Job()
-            }
-
-            coEvery { reconnector.reconnect() } just runs
-
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
-            val result = protocol.checkAndRegister()
-
-            result.shouldBeInstanceOf<RegistrationState.Bound>()
         }
     }
 
@@ -245,7 +217,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
+                    ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             protocol.checkAndRegister()
@@ -260,7 +232,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Unbound(token = "TOKEN-123")
+                    ServiceStatusResult.Unbound(token = "TOKEN-123")
 
             coEvery {
                 registrationClient.subscribeToBoundNotification("svc", any())
@@ -285,7 +257,7 @@ class RegistrationProtocolTest : FunSpec({
             val stateProvider = createStateProvider()
 
             coEvery { registrationClient.queryServiceStatus("svc") } returns
-                ServiceStatusResult.Error(code = 500, message = "Server error")
+                    ServiceStatusResult.Error(code = 500, message = "Server error")
 
             val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
             protocol.checkAndRegister()

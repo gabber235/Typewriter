@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.communicator
 
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.utils.DeferredProvider
+import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.NatsClient
@@ -16,15 +17,16 @@ import kotlinx.serialization.json.Json
  * Manages NATS connection with JWT-based authentication.
  *
  * Uses constructor injection for all dependencies. The jwtProvider
- * and natsClientProvider are DeferredProviders that allow late binding
- * of values that become available after initialization.
+ * is a DeferredProvider that allows late binding of values that become
+ * available after initialization. The natsClientProvider is a StateProvider
+ * that can be updated on reconnection.
  */
 class NatsCommunicator(
     private val natsUrl: String,
     private val jwtProvider: DeferredProvider<JwtProvider>,
     private val sentinelCredentialsFetcher: SentinelCredentialsFetcher,
     private val json: Json,
-    private val natsClientProvider: DeferredProvider<NatsClient>,
+    private val natsClientProvider: StateProvider<NatsClient?>,
 ) : Reconnector {
     private val logger: KLogger = logger {}
 
@@ -109,6 +111,7 @@ class NatsCommunicator(
         logger.info { "Disconnecting from NATS" }
         _client?.disconnect()
         _client = null
+        natsClientProvider.set(null)
         logger.info { "Disconnected from NATS" }
     }
 }

@@ -19,6 +19,7 @@ import io.mockk.mockk
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -283,7 +284,7 @@ private fun createServiceRegistrar(
     communicator: NatsCommunicator? = null,
     credentialProvider: DeferredProvider<Credential>? = null,
     jwtProviderHolder: DeferredProvider<JwtProvider>? = null,
-    natsClientProvider: DeferredProvider<NatsClient>? = null,
+    natsClientProvider: StateProvider<NatsClient?>? = null,
     messageBusProvider: DeferredProvider<MessageBus>? = null,
     registrationClientProvider: DeferredProvider<RegistrationClient>? = null,
     reconnectorProvider: DeferredProvider<Reconnector>? = null,
@@ -301,9 +302,7 @@ private fun createServiceRegistrar(
     val exchanger = jwtExchanger ?: mockk<JwtExchanger>()
 
     val natsClient = mockk<NatsClient>()
-    val natsProvider = natsClientProvider ?: DeferredProvider<NatsClient>().also {
-        it.set(natsClient)
-    }
+    val natsProvider = natsClientProvider ?: StateProvider<NatsClient?>(natsClient)
 
     val comm = communicator ?: mockk<NatsCommunicator>().also {
         coEvery { it.connect() } just Runs

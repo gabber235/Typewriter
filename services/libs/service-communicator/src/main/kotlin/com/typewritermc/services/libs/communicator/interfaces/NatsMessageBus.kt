@@ -1,17 +1,20 @@
 package com.typewritermc.services.libs.communicator.interfaces
 
+import com.typewritermc.services.libs.utils.StateProvider
+import com.typewritermc.services.libs.utils.require
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class NatsMessageBus(private val natsClient: NatsClient) : MessageBus {
+class NatsMessageBus(private val natsClientProvider: StateProvider<NatsClient?>) : MessageBus {
 
     override suspend fun request(
         subject: String,
         data: ByteArray,
         timeoutMs: Long
     ): Message {
-        val response = natsClient.request(subject, data, timeoutMs = timeoutMs)
+        val client = natsClientProvider.require()
+        val response = client.request(subject, data, timeoutMs = timeoutMs)
         return Message(
             subject = response.subject.toString(),
             data = response.data,
@@ -20,12 +23,14 @@ class NatsMessageBus(private val natsClient: NatsClient) : MessageBus {
     }
 
     override suspend fun subscribe(subject: String): Subscription {
-        val natsSubscription = natsClient.subscribe(subject)
+        val client = natsClientProvider.require()
+        val natsSubscription = client.subscribe(subject)
         return NatsSubscription(natsSubscription)
     }
 
     override suspend fun publish(subject: String, data: ByteArray) {
-        natsClient.publish(subject, data)
+        val client = natsClientProvider.require()
+        client.publish(subject, data)
     }
 }
 

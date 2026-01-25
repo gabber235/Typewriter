@@ -1,5 +1,8 @@
 package com.typewritermc.services.libs.registrar
 
+import com.github.ajalt.mordant.rendering.TextColors.blue
+import com.github.ajalt.mordant.rendering.TextColors.gray
+import com.github.ajalt.mordant.rendering.TextStyles.bold
 import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
@@ -107,22 +110,37 @@ class RegistrationProtocol(
 
     private fun displayToken(token: String) {
         val boxWidth = 60
-        val tokenLine = "    Registration Token:  $token"
-        val paddedToken = tokenLine.padEnd(boxWidth - 1) + "║"
+
+        fun padLine(text: String, displayLength: Int = text.length): String {
+            return "║$text${" ".repeat(boxWidth - displayLength)}║"
+        }
+
+        fun centerLine(text: String): String {
+            val padding = (boxWidth - text.length) / 2
+            val extra = if ((boxWidth - text.length) % 2 == 1) 1 else 0
+            return "║${" ".repeat(padding)}$text${" ".repeat(padding + extra)}║"
+        }
+
+        val styledToken = (bold + blue)(token)
+        val tokenText = "    Registration Token:  $styledToken"
+        val tokenDisplayLength = "    Registration Token:  $token".length
+
+        val styledRefresh = gray("    Token refreshes every 2 minutes.")
+        val refreshDisplayLength = "    Token refreshes every 2 minutes.".length
 
         val box = buildString {
             appendLine()
             appendLine("╔${"═".repeat(boxWidth)}╗")
-            appendLine("║${" ".repeat((boxWidth - 20) / 2)}SERVICE REGISTRATION${" ".repeat((boxWidth - 20) / 2)}║")
+            appendLine(centerLine("SERVICE REGISTRATION"))
             appendLine("╠${"═".repeat(boxWidth)}╣")
-            appendLine("║${" ".repeat(boxWidth)}║")
-            appendLine("║$paddedToken")
-            appendLine("║${" ".repeat(boxWidth)}║")
-            appendLine("║    Enter this token in the Typewriter Panel to bind${" ".repeat(boxWidth - 53)}║")
-            appendLine("║    this service to your organization.${" ".repeat(boxWidth - 40)}║")
-            appendLine("║${" ".repeat(boxWidth)}║")
-            appendLine("║    Token refreshes every 2 minutes.${" ".repeat(boxWidth - 38)}║")
-            appendLine("║${" ".repeat(boxWidth)}║")
+            appendLine(padLine(""))
+            appendLine(padLine(tokenText, tokenDisplayLength))
+            appendLine(padLine(""))
+            appendLine(padLine("    Enter this token in the Typewriter Panel to bind"))
+            appendLine(padLine("    this service to your organization."))
+            appendLine(padLine(""))
+            appendLine(padLine(styledRefresh, refreshDisplayLength))
+            appendLine(padLine(""))
             appendLine("╚${"═".repeat(boxWidth)}╝")
             appendLine()
         }

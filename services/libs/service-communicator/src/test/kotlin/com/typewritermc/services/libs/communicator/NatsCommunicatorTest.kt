@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator
 
 import com.typewritermc.services.libs.utils.DeferredProvider
+import com.typewritermc.services.libs.utils.StateProvider
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -24,7 +25,7 @@ class NatsCommunicatorTest : FunSpec({
 
         test("NatsCommunicator accepts all dependencies via constructor") {
             val jwtProvider = DeferredProvider<JwtProvider>()
-            val natsClientProvider = DeferredProvider<NatsClient>()
+            val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
 
@@ -44,7 +45,7 @@ class NatsCommunicatorTest : FunSpec({
 
         test("extractServiceId throws on invalid JWT format - too few parts") {
             val jwtProvider = DeferredProvider<JwtProvider>()
-            val natsClientProvider = DeferredProvider<NatsClient>()
+            val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
 
@@ -71,7 +72,7 @@ class NatsCommunicatorTest : FunSpec({
 
         test("extractServiceId throws on missing sub claim") {
             val jwtProvider = DeferredProvider<JwtProvider>()
-            val natsClientProvider = DeferredProvider<NatsClient>()
+            val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
 
@@ -106,7 +107,7 @@ class NatsCommunicatorTest : FunSpec({
 
         test("connect suspends until JwtProvider is available") {
             val jwtProvider = DeferredProvider<JwtProvider>()
-            val natsClientProvider = DeferredProvider<NatsClient>()
+            val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
 
@@ -119,7 +120,7 @@ class NatsCommunicatorTest : FunSpec({
             )
 
             jwtProvider.isSet shouldBe false
-            natsClientProvider.isSet shouldBe false
+            natsClientProvider.get() shouldBe null
         }
     }
 
@@ -127,7 +128,7 @@ class NatsCommunicatorTest : FunSpec({
 
         test("disconnect can be called when not connected") {
             val jwtProvider = DeferredProvider<JwtProvider>()
-            val natsClientProvider = DeferredProvider<NatsClient>()
+            val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
 
