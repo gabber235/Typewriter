@@ -203,8 +203,9 @@ class SidebarLink extends HookConsumerWidget {
       debugLabel: "SidebarLink-${text.snakeCase()}",
     );
     ref.watch(currentRouteProvider);
-    final router = context.router;
-    final selected = router.isRouteActive(route.routeName);
+    final scope = StackRouterScope.of(context, watch: true);
+    final router = scope?.controller;
+    final selected = router?.isRouteActive(route.routeName) ?? false;
     final color = selected
         ? Theme.of(context).colorScheme.onSurface
         : Theme.of(context).colorScheme.onSurfaceVariant;
@@ -216,11 +217,13 @@ class SidebarLink extends HookConsumerWidget {
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         focusNode: focusNode,
-        onTap: () {
-          if (!selected) {
-            context.router.navigate(route);
-          }
-        },
+        onTap: router != null
+            ? () {
+                if (!selected) {
+                  router.navigate(route);
+                }
+              }
+            : null,
         hoverColor: Theme.of(
           context,
         ).colorScheme.onSurface.withValues(alpha: 0.1),
