@@ -21,6 +21,7 @@ dependencies {
 
     implementation(libs.jline)
     implementation(libs.clikt)
+    implementation(libs.surrealdb)
 }
 
 buildConfig {
@@ -30,4 +31,46 @@ buildConfig {
         internalVisibility = false
     }
     buildConfigField<String>("REALM_VERSION", provider { "${project.version}" })
+}
+
+val generatePatchIndex by tasks.registering {
+    group = "build"
+    description = "Generates _index.txt listing all patch files in order"
+
+    val patchesDir = file("src/main/resources/schema/patches")
+    val outputDir = layout.buildDirectory.dir("generated/resources/main/schema/patches")
+    val outputFile = outputDir.map { it.file("_index.txt") }
+
+    inputs.dir(patchesDir).optional()
+    outputs.file(outputFile)
+
+    doLast {
+        val patches = patchesDir.takeIf { it.exists() }
+            ?.listFiles { file ->
+                file.isFile && file.extension == "surql" && !file.name.startsWith("_")
+            }
+            ?.sortedBy { it.name }
+            ?: emptyList()
+
+        val indexContent = patches.joinToString("\n") { it.name }
+
+        outputFile.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(indexContent)
+        }
+
+        logger.lifecycle("Generated patch index with ${patches.size} patches")
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.dir("generated/resources/main"))
+        }
+    }
+}
+
+tasks.processResources {
+    dependsOn(generatePatchIndex)
 }
