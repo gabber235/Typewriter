@@ -1,0 +1,815 @@
+---
+/// <reference path="../../starlight.d.ts" />
+import project from "virtual:starlight/project-context";
+
+const pagefindTranslations = {
+  placeholder: Astro.locals.t("search.label"),
+  ...Object.fromEntries(
+    Object.entries(Astro.locals.t.all())
+      .filter(([key]) => key.startsWith("pagefind."))
+      .map(([key, value]) => [key.replace("pagefind.", ""), value]),
+  ),
+};
+
+const dataAttributes: Record<string, string> = {
+  "data-translations": JSON.stringify(pagefindTranslations),
+};
+if (project.trailingSlash === "never")
+  dataAttributes["data-strip-trailing-slash"] = "";
+
+const searchLabel = Astro.locals.t("search.label");
+const cancelLabel = Astro.locals.t("search.cancelLabel");
+const closeLabel = cancelLabel; // Reuse cancel label for close button
+const ctrlKey = Astro.locals.t("search.ctrlKey");
+const devWarning = Astro.locals.t("search.devWarning");
+---
+
+<site-search class:list={["contents", Astro.props.class]} {...dataAttributes}>
+  {/* Search trigger button with keyboard shortcut indicator */}
+  <button
+    data-open-modal
+    disabled
+    aria-label={searchLabel}
+    aria-keyshortcuts="Control+K"
+    class="group flex items-center gap-2 h-10 border-0 bg-transparent text-(--sl-color-gray-1) cursor-pointer text-xl
+           md:border md:border-(--sl-color-gray-5) md:rounded-lg md:ps-3 md:pe-2 md:bg-(--sl-color-black) md:text-(--sl-color-gray-2) md:text-sm md:w-full md:max-w-10/12
+           md:hover:border-(--sl-color-gray-2) md:hover:text-white
+           md:focus-visible:outline-none md:focus-visible:ring-2 md:focus-visible:ring-(--sl-color-accent) md:focus-visible:ring-offset-2 md:focus-visible:ring-offset-(--sl-color-black)
+           transition-all duration-200 ease-out">
+    <svg
+      class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      ></path>
+    </svg>
+    <span class="hidden md:block" aria-hidden="true">{searchLabel}</span>
+    <kbd
+      class="hidden md:inline-flex items-center gap-1 ms-auto rounded px-1.5 py-0.5 text-xs bg-(--sl-color-gray-6) text-(--sl-color-gray-3) font-mono
+             transition-colors duration-200 group-hover:bg-(--sl-color-gray-5) group-hover:text-(--sl-color-gray-1)"
+      style="display: none;">
+      <kbd class="font-mono">{ctrlKey}</kbd><kbd class="font-mono">K</kbd>
+    </kbd>
+  </button>
+
+  {/* Search dialog modal with modern animations */}
+  <dialog
+    id="search-dialog"
+    aria-labelledby="search-dialog-title"
+    aria-describedby="search-dialog-description"
+    class="search-dialog fixed inset-0 m-0 p-0 w-full max-w-full h-full max-h-full bg-transparent
+           md:mt-16 md:mx-auto md:mb-auto md:rounded-xl md:w-[90%] md:max-w-2xl md:h-max md:min-h-60 md:max-h-[calc(100%-8rem)]
+           md:bg-(--sl-color-gray-6) md:border md:border-(--sl-color-gray-5) md:shadow-2xl
+           backdrop:bg-black/60 backdrop:backdrop-blur-md">
+    {/* Visually hidden title for screen readers */}
+    <h2 id="search-dialog-title" class="sr-only">{searchLabel}</h2>
+    <p id="search-dialog-description" class="sr-only">
+      Press Escape to close. Use Tab to navigate results.
+    </p>
+
+    <div
+      class="dialog-frame flex flex-col w-full h-full md:h-auto overflow-hidden
+                bg-(--sl-color-gray-6) md:bg-transparent
+                rounded-none md:rounded-xl">
+      {/* Dialog header with close button */}
+      <div
+        class="flex items-center justify-between p-4 shrink-0 border-b border-(--sl-color-gray-5) md:border-none">
+        <span class="text-sm text-(--sl-color-white) md:hidden">Search</span>
+        {/* Close button */}
+        <button
+          data-close-modal
+          type="button"
+          aria-label={closeLabel}
+          class="size-8 flex items-center justify-center rounded-lg ms-auto
+                 text-(--sl-color-gray-3) hover:text-(--sl-color-white)
+                 hover:bg-(--sl-color-gray-5) transition-colors cursor-pointer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="size-5"
+            aria-hidden="true">
+            <path
+              d="m13.41 12 6.3-6.29a1 1 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1 1 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 .33 1.64 1 1 0 0 0 1.09-.22l6.29-6.3 6.29 6.3a1 1 0 0 0 1.64-.33 1 1 0 0 0-.22-1.09L13.41 12Z"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      {/* Search content area */}
+      <div class="flex-1 overflow-auto p-4 md:p-6 md:pt-2">
+        <search role="search" class="w-full">
+          {
+            import.meta.env.DEV ? (
+              <div
+                class="flex items-center justify-center text-center whitespace-pre-line p-8 min-h-40"
+                dir="ltr">
+                <p class="text-(--sl-color-gray-3) text-sm">{devWarning}</p>
+              </div>
+            ) : (
+              <div class="starlight-search">
+                <div class="starlight-search-container" />
+              </div>
+            )
+          }
+        </search>
+      </div>
+    </div>
+  </dialog>
+</site-search>
+
+{/* Inline script for platform-specific keyboard shortcut display */}
+<script is:inline>
+  (() => {
+    const openBtn = document.querySelector("button[data-open-modal]");
+    const shortcut = openBtn?.querySelector("kbd");
+    if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+    const platformKey = shortcut.querySelector("kbd");
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+      platformKey.textContent = "⌘";
+      openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
+    }
+    shortcut.style.display = "";
+  })();
+</script>
+
+{/* Main search functionality */}
+<script>
+  import { pagefindUserConfig } from "virtual:starlight/pagefind-config";
+
+  // Singleton flag to ensure keyboard shortcut only registers once
+  let keyboardListenerRegistered = false;
+
+  class SiteSearch extends HTMLElement {
+    private openBtn: HTMLButtonElement;
+    private closeBtns: NodeListOf<HTMLButtonElement>;
+    private dialog: HTMLDialogElement;
+    private dialogFrame: HTMLElement;
+    private static instances: SiteSearch[] = [];
+
+    constructor() {
+      super();
+
+      this.openBtn = this.querySelector<HTMLButtonElement>(
+        "button[data-open-modal]",
+      )!;
+      this.closeBtns = this.querySelectorAll<HTMLButtonElement>(
+        "button[data-close-modal]",
+      );
+      this.dialog = this.querySelector<HTMLDialogElement>("dialog")!;
+      this.dialogFrame = this.querySelector<HTMLElement>(".dialog-frame")!;
+
+      // Track all instances
+      SiteSearch.instances.push(this);
+
+      this.setupEventListeners();
+      this.setupPagefind();
+    }
+
+    private setupEventListeners(): void {
+      // Open modal button
+      this.openBtn.addEventListener("click", (e) => this.openModal(e));
+      this.openBtn.disabled = false;
+
+      // Close modal buttons (both mobile and desktop)
+      this.closeBtns.forEach((btn) => {
+        btn.addEventListener("click", () => this.closeModal());
+      });
+
+      // Close on backdrop click or link click
+      this.dialog.addEventListener("click", (e) => this.handleDialogClick(e));
+
+      // Handle dialog close event
+      this.dialog.addEventListener("close", () => this.handleDialogClose());
+
+      // Global keyboard shortcuts - only register once across all instances
+      if (!keyboardListenerRegistered) {
+        keyboardListenerRegistered = true;
+        window.addEventListener("keydown", SiteSearch.handleGlobalKeydown);
+      }
+    }
+
+    // Static method to handle keyboard shortcuts globally
+    private static handleGlobalKeydown(e: KeyboardEvent): void {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+
+        // Find if any dialog is currently open
+        const openInstance = SiteSearch.instances.find(
+          (instance) => instance.dialog.open,
+        );
+        if (openInstance) {
+          openInstance.closeModal();
+          return;
+        }
+
+        // Find the visible search instance (button is visible/interactable)
+        const visibleInstance = SiteSearch.instances.find((instance) => {
+          const rect = instance.openBtn.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+
+        // Open the first visible instance, or fallback to first instance
+        (visibleInstance || SiteSearch.instances[0])?.openModal();
+      }
+    }
+
+    private openModal(event?: MouseEvent): void {
+      // Add opening animation class
+      this.dialog.classList.add("is-opening");
+      this.dialog.showModal();
+
+      // Remove opening class after animation starts
+      requestAnimationFrame(() => {
+        this.dialog.classList.remove("is-opening");
+        this.dialog.classList.add("is-open");
+      });
+
+      document.body.toggleAttribute("data-search-modal-open", true);
+
+      // Focus the search input with a small delay for animation
+      setTimeout(() => {
+        this.querySelector("input")?.focus();
+      }, 50);
+
+      event?.stopPropagation();
+    }
+
+    private closeModal(): void {
+      // Add closing animation class
+      this.dialog.classList.add("is-closing");
+      this.dialog.classList.remove("is-open");
+
+      // Wait for animation to complete before closing
+      const handleAnimationEnd = () => {
+        this.dialog.classList.remove("is-closing");
+        this.dialog.close();
+        this.dialog.removeEventListener("animationend", handleAnimationEnd);
+      };
+
+      this.dialog.addEventListener("animationend", handleAnimationEnd);
+
+      // Fallback for browsers without animation support
+      setTimeout(() => {
+        if (this.dialog.open) {
+          this.dialog.classList.remove("is-closing");
+          this.dialog.close();
+        }
+      }, 300);
+    }
+
+    private handleDialogClick(event: MouseEvent): void {
+      const target = event.target as HTMLElement;
+
+      // Check if clicked on a link
+      const isLink = target.closest("a[href]");
+
+      // Check if clicked outside dialog frame (on backdrop)
+      const clickedOnBackdrop = target === this.dialog;
+
+      if (isLink || clickedOnBackdrop) {
+        this.closeModal();
+      }
+    }
+
+    private handleDialogClose(): void {
+      document.body.toggleAttribute("data-search-modal-open", false);
+      this.dialog.classList.remove("is-open", "is-closing", "is-opening");
+
+      // Return focus to the open button for accessibility
+      this.openBtn.focus();
+    }
+
+    private setupPagefind(): void {
+      // Get the search container within this specific instance
+      const searchContainer = this.querySelector<HTMLElement>(
+        ".starlight-search-container",
+      );
+      if (!searchContainer) return;
+
+      // Generate unique ID for this instance's search container
+      const uniqueId = `starlight-search-${Math.random().toString(36).slice(2, 9)}`;
+      searchContainer.id = uniqueId;
+
+      let translations: Record<string, string> = {};
+      try {
+        translations = JSON.parse(this.dataset.translations || "{}");
+      } catch {}
+
+      const shouldStrip = this.dataset.stripTrailingSlash !== undefined;
+      const stripTrailingSlash = (path: string) =>
+        path.replace(/(.)\/(#.*)?$/, "$1$2");
+      const formatURL = shouldStrip
+        ? stripTrailingSlash
+        : (path: string) => path;
+
+      window.addEventListener("DOMContentLoaded", () => {
+        if (import.meta.env.DEV) return;
+
+        const onIdle =
+          window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+        onIdle(async () => {
+          // @ts-expect-error — Missing types for @pagefind/default-ui package.
+          const { PagefindUI } = await import("@pagefind/default-ui");
+          new PagefindUI({
+            ...pagefindUserConfig,
+            element: `#${uniqueId}`,
+            baseUrl: import.meta.env.BASE_URL,
+            bundlePath:
+              import.meta.env.BASE_URL.replace(/\/$/, "") + "/pagefind/",
+            showImages: false,
+            translations,
+            showSubResults: true,
+            processResult: (result: {
+              url: string;
+              sub_results: Array<{ url: string }>;
+            }) => {
+              result.url = formatURL(result.url);
+              result.sub_results = result.sub_results.map((sub_result) => {
+                sub_result.url = formatURL(sub_result.url);
+                return sub_result;
+              });
+            },
+          });
+        });
+      });
+    }
+  }
+
+  customElements.define("site-search", SiteSearch);
+</script>
+
+{/* Component-scoped styles with modern animations */}
+<style>
+  /* Custom animations using @keyframes */
+  @keyframes dialog-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes dialog-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(1rem) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes dialog-fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.98);
+    }
+  }
+
+  @keyframes backdrop-fade-in {
+    from {
+      opacity: 0;
+      backdrop-filter: blur(0);
+    }
+    to {
+      opacity: 1;
+      backdrop-filter: blur(12px);
+    }
+  }
+
+  @keyframes backdrop-fade-out {
+    from {
+      opacity: 1;
+      backdrop-filter: blur(12px);
+    }
+    to {
+      opacity: 0;
+      backdrop-filter: blur(0);
+    }
+  }
+
+  @keyframes content-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Dialog base styles */
+  .search-dialog {
+    /* Override browser defaults */
+    border: none;
+    outline: none;
+
+    /* Animation setup */
+    opacity: 0;
+    transform: translateY(1rem) scale(0.98);
+    transition:
+      opacity 0.2s ease-out,
+      transform 0.2s ease-out,
+      display 0.2s ease-out allow-discrete,
+      overlay 0.2s ease-out allow-discrete;
+  }
+
+  /* Opening state */
+  .search-dialog.is-open,
+  .search-dialog[open] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Opening animation */
+  .search-dialog.is-opening {
+    animation: dialog-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Closing animation */
+  .search-dialog.is-closing {
+    animation: dialog-fade-out 0.2s ease-in forwards;
+  }
+
+  /* Backdrop animations */
+  .search-dialog::backdrop {
+    opacity: 0;
+    transition:
+      opacity 0.25s ease-out,
+      backdrop-filter 0.25s ease-out,
+      display 0.25s ease-out allow-discrete,
+      overlay 0.25s ease-out allow-discrete;
+  }
+
+  .search-dialog.is-open::backdrop,
+  .search-dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  .search-dialog.is-opening::backdrop {
+    animation: backdrop-fade-in 0.3s ease-out forwards;
+  }
+
+  .search-dialog.is-closing::backdrop {
+    animation: backdrop-fade-out 0.2s ease-in forwards;
+  }
+
+  /* Content animation on open */
+  .search-dialog.is-open .dialog-frame,
+  .search-dialog[open] .dialog-frame {
+    animation: content-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+  }
+
+  /* Starting style for modern browsers (CSS Nesting) */
+  @starting-style {
+    .search-dialog[open] {
+      opacity: 0;
+      transform: translateY(1rem) scale(0.98);
+    }
+
+    .search-dialog[open]::backdrop {
+      opacity: 0;
+      backdrop-filter: blur(0);
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .search-dialog,
+    .search-dialog::backdrop,
+    .search-dialog .dialog-frame {
+      animation: none !important;
+      transition: opacity 0.1s ease-out !important;
+      transform: none !important;
+    }
+
+    .search-dialog[open],
+    .search-dialog.is-open {
+      opacity: 1;
+    }
+
+    .search-dialog.is-closing {
+      opacity: 0;
+    }
+  }
+
+  /* Focus visible styling for keyboard navigation */
+  .search-dialog:focus-visible {
+    outline: none;
+  }
+</style>
+
+{/* Global styles for Pagefind UI customization */}
+<style is:global>
+  @import url("@pagefind/default-ui/css/ui.css") layer(pagefind.base);
+
+  /* Prevent body scroll when modal is open */
+  [data-search-modal-open] {
+    overflow: hidden;
+  }
+
+  /* Pagefind UI customization with modern styling */
+  .starlight-search {
+    /* Custom properties for Pagefind theming */
+    --pagefind-ui-scale: 1;
+    --pagefind-ui-primary: var(--sl-color-text);
+    --pagefind-ui-text: var(--sl-color-gray-2);
+    --pagefind-ui-font: var(--__sl-font);
+    --pagefind-ui-background: var(--sl-color-black);
+    --pagefind-ui-border: var(--sl-color-gray-5);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-tag: var(--sl-color-gray-5);
+
+    /* Custom spacing variables */
+    --sl-search-result-spacing: calc(1rem * var(--pagefind-ui-scale));
+    --sl-search-result-pad-inline-start: calc(
+      3.5rem * var(--pagefind-ui-scale)
+    );
+    --sl-search-result-pad-inline-end: calc(1rem * var(--pagefind-ui-scale));
+    --sl-search-result-pad-block: calc(0.875rem * var(--pagefind-ui-scale));
+    --sl-search-result-nested-pad-block: calc(
+      0.625rem * var(--pagefind-ui-scale)
+    );
+    --sl-search-corners: calc(0.5rem * var(--pagefind-ui-scale));
+    --sl-search-page-icon-size: calc(1.5rem * var(--pagefind-ui-scale));
+    --sl-search-page-icon-inline-start: calc(
+      (
+          var(--sl-search-result-pad-inline-start) -
+            var(--sl-search-page-icon-size)
+        ) /
+        2
+    );
+    --sl-search-tree-diagram-size: calc(2rem * var(--pagefind-ui-scale));
+    --sl-search-tree-diagram-inline-start: calc(
+      (
+          var(--sl-search-result-pad-inline-start) -
+            var(--sl-search-tree-diagram-size)
+        ) /
+        2
+    );
+  }
+
+  /* Light theme adjustments */
+  :root[data-theme="light"] .starlight-search {
+    --pagefind-ui-tag: var(--sl-color-gray-6);
+  }
+
+  /* Search form styling - keep default block layout */
+  .starlight-search .pagefind-ui__form {
+    position: relative;
+  }
+
+  .starlight-search .pagefind-ui__form::before {
+    --pagefind-ui-text: var(--sl-color-gray-1);
+    opacity: 1;
+  }
+
+  /* Search input with modern styling */
+  .starlight-search .pagefind-ui__search-input {
+    color: var(--sl-color-white);
+    font-weight: 400;
+    width: 100%;
+    border-radius: var(--sl-search-corners);
+    transition:
+      border-color 0.2s ease-out,
+      box-shadow 0.2s ease-out;
+  }
+
+  .starlight-search .pagefind-ui__search-input:focus {
+    --pagefind-ui-border: var(--sl-color-accent);
+    box-shadow: 0 0 0 3px rgba(var(--sl-color-accent-rgb, 0, 159, 255), 0.15);
+    outline: none;
+  }
+
+  .starlight-search .pagefind-ui__search-input::placeholder {
+    color: var(--sl-color-gray-4);
+  }
+
+  /* Clear button - hide text, show icon */
+  .starlight-search .pagefind-ui__search-clear {
+    font-size: 0;
+    line-height: 0;
+    color: transparent;
+    width: calc(60px * var(--pagefind-ui-scale));
+    height: calc(60px * var(--pagefind-ui-scale));
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .starlight-search .pagefind-ui__search-clear:focus {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  .starlight-search .pagefind-ui__search-clear::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--sl-color-text-accent);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m13.41 12 6.3-6.29a1 1 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1 1 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 .33 1.64 1 1 0 0 0 1.09-.22l6.29-6.3 6.29 6.3a1 1 0 0 0 1.64-.33 1 1 0 0 0-.22-1.09L13.41 12Z'/%3E%3C/svg%3E")
+      center / 50% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m13.41 12 6.3-6.29a1 1 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1 1 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 .33 1.64 1 1 0 0 0 1.09-.22l6.29-6.3 6.29 6.3a1 1 0 0 0 1.64-.33 1 1 0 0 0-.22-1.09L13.41 12Z'/%3E%3C/svg%3E")
+      center / 50% no-repeat;
+  }
+
+  /* Results container */
+  .starlight-search .pagefind-ui__results-area {
+    margin-top: 1rem;
+  }
+
+  .starlight-search .pagefind-ui__results > * + * {
+    margin-top: var(--sl-search-result-spacing);
+  }
+
+  /* Result styling */
+  .starlight-search .pagefind-ui__result {
+    border: 0;
+    padding: 0;
+  }
+
+  .starlight-search .pagefind-ui__result-nested {
+    position: relative;
+    padding: var(--sl-search-result-nested-pad-block)
+      var(--sl-search-result-pad-inline-end);
+    padding-inline-start: var(--sl-search-result-pad-inline-start);
+  }
+
+  .starlight-search
+    .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)),
+  .starlight-search .pagefind-ui__result-nested {
+    position: relative;
+    background-color: var(--sl-color-black);
+    border-radius: var(--sl-search-corners);
+    transition:
+      background-color 0.15s ease-out,
+      box-shadow 0.15s ease-out;
+  }
+
+  .starlight-search
+    .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover,
+  .starlight-search
+    .pagefind-ui__result-title:not(
+      :where(.pagefind-ui__result-nested *)
+    ):focus-within,
+  .starlight-search .pagefind-ui__result-nested:hover,
+  .starlight-search .pagefind-ui__result-nested:focus-within {
+    outline: 1px solid var(--sl-color-accent-high);
+    background-color: var(--sl-color-accent-low);
+  }
+
+  .starlight-search .pagefind-ui__result-thumb,
+  .starlight-search .pagefind-ui__result-inner {
+    margin-top: 0;
+  }
+
+  .starlight-search .pagefind-ui__result-inner > :first-child {
+    border-radius: var(--sl-search-corners) var(--sl-search-corners) 0 0;
+  }
+
+  .starlight-search .pagefind-ui__result-inner > :last-child {
+    border-radius: 0 0 var(--sl-search-corners) var(--sl-search-corners);
+  }
+
+  .starlight-search .pagefind-ui__result-inner > :only-child {
+    border-radius: var(--sl-search-corners);
+  }
+
+  .starlight-search .pagefind-ui__result-inner > .pagefind-ui__result-title {
+    padding: var(--sl-search-result-pad-block)
+      var(--sl-search-result-pad-inline-end);
+    padding-inline-start: var(--sl-search-result-pad-inline-start);
+  }
+
+  /* Page icon */
+  .starlight-search
+    .pagefind-ui__result-inner
+    > .pagefind-ui__result-title::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--sl-search-page-icon-inline-start);
+    width: var(--sl-search-page-icon-size);
+    background: var(--sl-color-gray-3);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='currentColor' viewBox='0 0 24 24'%3E%3Cpath d='M9 10h1a1 1 0 1 0 0-2H9a1 1 0 0 0 0 2Zm0 2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2H9Zm11-3V8l-6-6a1 1 0 0 0-1 0H7a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V9Zm-6-4 3 3h-2a1 1 0 0 1-1-1V5Zm4 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5v3a3 3 0 0 0 3 3h3v9Zm-3-3H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2Z'/%3E%3C/svg%3E")
+      center no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='currentColor' viewBox='0 0 24 24'%3E%3Cpath d='M9 10h1a1 1 0 1 0 0-2H9a1 1 0 0 0 0 2Zm0 2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2H9Zm11-3V8l-6-6a1 1 0 0 0-1 0H7a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V9Zm-6-4 3 3h-2a1 1 0 0 1-1-1V5Zm4 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5v3a3 3 0 0 0 3 3h3v9Zm-3-3H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2Z'/%3E%3C/svg%3E")
+      center no-repeat;
+  }
+
+  .starlight-search .pagefind-ui__result-inner {
+    align-items: stretch;
+    gap: 1px;
+  }
+
+  /* Result link */
+  .starlight-search .pagefind-ui__result-link {
+    position: unset;
+    --pagefind-ui-text: var(--sl-color-white);
+    font-weight: 600;
+  }
+
+  .starlight-search .pagefind-ui__result-link:hover {
+    text-decoration: none;
+  }
+
+  .starlight-search
+    .pagefind-ui__result-nested
+    .pagefind-ui__result-link::before {
+    content: unset;
+  }
+
+  /* Tree diagram for nested results */
+  .starlight-search .pagefind-ui__result-nested::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--sl-search-tree-diagram-inline-start);
+    width: var(--sl-search-tree-diagram-size);
+    background: var(--sl-color-gray-4);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' viewBox='0 0 16 1000' preserveAspectRatio='xMinYMin slice'%3E%3Cpath d='M8 0v1000m6-988H8'/%3E%3C/svg%3E")
+      0% 0% / 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' viewBox='0 0 16 1000' preserveAspectRatio='xMinYMin slice'%3E%3Cpath d='M8 0v1000m6-988H8'/%3E%3C/svg%3E")
+      0% 0% / 100% no-repeat;
+  }
+
+  .starlight-search .pagefind-ui__result-nested:last-of-type::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M8 0v12m6 0H8'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M8 0v12m6 0H8'/%3E%3C/svg%3E");
+  }
+
+  /* RTL support */
+  [dir="rtl"] .pagefind-ui__result-title::before,
+  [dir="rtl"] .pagefind-ui__result-nested::before {
+    transform: matrix(-1, 0, 0, 1, 0, 0);
+  }
+
+  /* Click target expansion */
+  .starlight-search .pagefind-ui__result-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Result excerpt */
+  .starlight-search .pagefind-ui__result-excerpt {
+    font-size: calc(0.9375rem * var(--pagefind-ui-scale));
+    overflow-wrap: anywhere;
+    color: var(--sl-color-gray-3);
+    line-height: 1.6;
+  }
+
+  /* Highlighted search terms */
+  .starlight-search mark {
+    color: var(--sl-color-gray-2);
+    background-color: transparent;
+    font-weight: 600;
+  }
+
+  /* Filter styling */
+  .starlight-search .pagefind-ui__filter-value::before {
+    border-color: var(--sl-color-text-invert);
+  }
+
+  /* Result tags */
+  .starlight-search .pagefind-ui__result-tags {
+    background-color: var(--sl-color-black);
+    margin-top: 0;
+    padding: var(--sl-search-result-nested-pad-block)
+      var(--sl-search-result-pad-inline-end);
+  }
+
+  /* Message styling */
+  .starlight-search .pagefind-ui__message {
+    color: var(--sl-color-gray-3);
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .starlight-search
+      .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)),
+    .starlight-search .pagefind-ui__result-nested,
+    .starlight-search .pagefind-ui__search-input {
+      transition: none;
+    }
+  }
+</style>
