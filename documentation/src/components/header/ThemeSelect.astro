@@ -1,0 +1,224 @@
+---
+
+---
+
+<starlight-theme-select>
+  <button
+    class="theme-toggle"
+    id="theme-toggle"
+    title="Toggles light & dark"
+    aria-label="auto"
+    aria-live="polite">
+    <svg
+      class="sun-and-moon"
+      aria-hidden="true"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24">
+      <circle
+        class="sun"
+        cx="12"
+        cy="12"
+        r="6"
+        mask="url(#moon-mask)"
+        fill="currentColor"></circle>
+      <g class="sun-beams" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </g>
+      <mask class="moon" id="moon-mask">
+        <rect x="0" y="0" width="100%" height="100%" fill="white"></rect>
+        <circle cx="24" cy="10" r="6" fill="black"></circle>
+      </mask>
+    </svg>
+  </button>
+</starlight-theme-select>
+
+<style>
+  .theme-toggle {
+    --size: 1.25rem;
+    --icon-fill: var(--sl-color-text);
+    --icon-fill-hover: var(--color-primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0.375rem;
+
+    inline-size: calc(var(--size) + 0.75rem);
+    block-size: calc(var(--size) + 0.75rem);
+    aspect-ratio: 1;
+    border-radius: 8px;
+
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    outline-offset: 5px;
+    transition: background-color 0.15s ease;
+
+    @media (hover: none) {
+      --size: 1.5rem;
+    }
+  }
+
+  .theme-toggle:hover {
+    background-color: var(--surface-container);
+  }
+
+  .theme-toggle > svg {
+    inline-size: var(--size);
+    block-size: var(--size);
+    stroke-linecap: round;
+  }
+
+  .sun-and-moon > :is(.moon, .sun, .sun-beams) {
+    transform-origin: center center;
+  }
+
+  .sun-and-moon > :is(.moon, .sun) {
+    fill: var(--icon-fill);
+  }
+
+  .theme-toggle:is(:hover, :focus-visible) > .sun-and-moon > :is(.moon, .sun) {
+    fill: var(--icon-fill-hover);
+  }
+
+  .sun-and-moon > .sun-beams {
+    stroke: var(--icon-fill);
+  }
+
+  .theme-toggle:is(:hover, :focus-visible) > .sun-and-moon > .sun-beams {
+    stroke: var(--icon-fill-hover);
+  }
+
+  /* Dark theme styles */
+  :global([data-theme="dark"]) .sun-and-moon > .sun {
+    transform: scale(1.75);
+  }
+
+  :global([data-theme="dark"]) .sun-and-moon > .sun-beams {
+    opacity: 0;
+  }
+
+  :global([data-theme="dark"]) .sun-and-moon > .moon > circle {
+    transform: translateX(-7px);
+  }
+
+  @supports (cx: 1px) {
+    :global([data-theme="dark"]) .sun-and-moon > .moon > circle {
+      transform: translateX(0);
+      cx: 17px;
+    }
+  }
+
+  /* Animations */
+  @media (prefers-reduced-motion: no-preference) {
+    .sun-and-moon > .sun {
+      transition: transform 0.5s cubic-bezier(0.5, 1.25, 0.75, 1.25);
+    }
+
+    .sun-and-moon > .sun-beams {
+      transition:
+        transform 0.5s cubic-bezier(0.5, 1.5, 0.75, 1.25),
+        opacity 0.5s ease;
+    }
+
+    .sun-and-moon .moon > circle {
+      transition: transform 0.25s ease-out;
+    }
+
+    @supports (cx: 1px) {
+      .sun-and-moon .moon > circle {
+        transition: cx 0.25s ease-out;
+      }
+    }
+
+    :global([data-theme="dark"]) .sun-and-moon > .sun {
+      transition-timing-function: ease;
+      transition-duration: 0.25s;
+    }
+
+    :global([data-theme="dark"]) .sun-and-moon > .sun-beams {
+      transform: rotateZ(-25deg);
+      transition-duration: 0.15s;
+    }
+
+    :global([data-theme="dark"]) .sun-and-moon > .moon > circle {
+      transition-delay: 0.25s;
+      transition-duration: 0.5s;
+    }
+  }
+</style>
+
+<script is:inline>
+  StarlightThemeProvider.updatePickers();
+</script>
+
+<script>
+  type Theme = "auto" | "dark" | "light";
+
+  const storageKey = "starlight-theme";
+
+  const parseTheme = (theme: unknown): Theme =>
+    theme === "auto" || theme === "dark" || theme === "light" ? theme : "auto";
+
+  const loadTheme = (): Theme =>
+    parseTheme(
+      typeof localStorage !== "undefined" && localStorage.getItem(storageKey),
+    );
+
+  function storeTheme(theme: Theme): void {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(
+        storageKey,
+        theme === "light" || theme === "dark" ? theme : "",
+      );
+    }
+  }
+
+  const getPreferredColorScheme = (): Theme =>
+    matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+
+  function onThemeChange(theme: Theme): void {
+    StarlightThemeProvider.updatePickers(theme);
+    const resolvedTheme = theme === "auto" ? getPreferredColorScheme() : theme;
+    document.documentElement.dataset.theme = resolvedTheme;
+    storeTheme(theme);
+
+    // Update aria-label
+    document.querySelectorAll("#theme-toggle").forEach((btn) => {
+      btn.setAttribute("aria-label", theme);
+    });
+  }
+
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    if (loadTheme() === "auto") onThemeChange("auto");
+  });
+
+  class StarlightThemeSelect extends HTMLElement {
+    constructor() {
+      super();
+      const currentTheme = loadTheme();
+      onThemeChange(currentTheme);
+
+      const btn = this.querySelector<HTMLButtonElement>(".theme-toggle");
+      btn?.addEventListener("click", () => {
+        const current = loadTheme();
+        const resolved =
+          current === "auto" ? getPreferredColorScheme() : current;
+        // Simple toggle: light ↔ dark
+        const next: Theme = resolved === "light" ? "dark" : "light";
+        onThemeChange(next);
+      });
+    }
+  }
+  customElements.define("starlight-theme-select", StarlightThemeSelect);
+</script>

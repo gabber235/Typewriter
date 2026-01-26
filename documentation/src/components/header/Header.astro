@@ -6,7 +6,7 @@ import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.ast
 import Search from "@astrojs/starlight/components/Search.astro";
 import SiteTitle from "./SiteTitle.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
+import ThemeSelect from "./ThemeSelect.astro";
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
  */
@@ -37,10 +37,12 @@ const shouldRenderSearch =
     }
     <div class="hidden min-[50rem]:flex items-center gap-3">
       <SocialIcons />
-      <div class="h-full w-px bg-material-grey-300 dark:bg-material-grey-800">
+      <div class="h-5 w-px bg-material-grey-300 dark:bg-material-grey-800">
       </div>
     </div>
-    <ThemeSelect />
+    <div class="flex items-center justify-center">
+      <ThemeSelect />
+    </div>
     <LanguageSelect />
   </div>
 </div>

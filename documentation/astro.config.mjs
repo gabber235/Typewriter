@@ -10,7 +10,7 @@ export default defineConfig({
     starlight({
       title: "Typewriter",
       logo: {
-        src: "/public/logo.png",
+        src: "./src/assets/logo.png",
         alt: "Typewriter Logo",
       },
       social: [
@@ -25,6 +25,8 @@ export default defineConfig({
         Sidebar: "./src/components/sidebar/Sidebar.astro",
 		    PageFrame: "./src/components/pageframe/PageFrame.astro",
         Header: "./src/components/header/Header.astro",
+        SiteTitle: "./src/components/header/SiteTitle.astro",
+        ThemeSelect: "./src/components/header/ThemeSelect.astro",
       },
     }),
   ],

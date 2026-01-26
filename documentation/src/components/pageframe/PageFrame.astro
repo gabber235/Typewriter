@@ -4,7 +4,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
 
 <div class="flex flex-col min-h-screen bg-(--surface)">
   <header
-    class="fixed inset-0 top-0 z-50 w-full h-fit px-4 p-1 bg-(--surface) overflow-hidden">
+    class="fixed inset-0 top-0 z-50 w-full h-fit px-4 p-2 bg-(--surface) overflow-hidden">
     <slot name="header" />
   </header>
   {
@@ -15,12 +15,12 @@ const { hasSidebar } = Astro.locals.starlightRoute;
         {/* Backdrop overlay for mobile drawer */}
         <div
           id="sidebar-backdrop"
-          class="fixed top-12 left-0 right-0 bottom-0 bg-black/50 z-10 opacity-0 invisible transition-opacity duration-200 min-[50rem]:hidden"
+          class="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-10 opacity-0 invisible transition-opacity duration-200 min-[50rem]:hidden"
           aria-hidden="true"
         />
         <div
           id="starlight__sidebar"
-          class="fixed top-12 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3rem)] min-[50rem]:top-12 min-[50rem]:bottom-0 min-[50rem]:left-0 min-[50rem]:right-auto min-[50rem]:w-xs min-[50rem]:max-h-none min-[50rem]:h-auto min-[50rem]:translate-y-0 min-[50rem]:translate-x-0 min-[50rem]:rounded-none transition-transform duration-300 min-[50rem]:visible min-[50rem]:z-30">
+          class="fixed top-14 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3rem)] min-[50rem]:top-14 min-[50rem]:bottom-0 min-[50rem]:left-0 min-[50rem]:right-auto min-[50rem]:w-xs min-[50rem]:max-h-none min-[50rem]:h-auto min-[50rem]:translate-y-0 min-[50rem]:translate-x-0 min-[50rem]:rounded-none transition-transform duration-300 min-[50rem]:visible min-[50rem]:z-30">
           <div class="flex flex-col h-full min-h-max gap-4 pt-1 px-1 pb-1 min-[50rem]:pb-4">
             <slot name="sidebar" />
           </div>
