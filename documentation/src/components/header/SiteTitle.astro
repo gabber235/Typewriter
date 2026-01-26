@@ -1,0 +1,49 @@
+---
+/// <reference path="../../../node_modules/@astrojs/starlight/virtual.d.ts" />
+/// <reference path="../../../node_modules/@astrojs/starlight/virtual-internal.d.ts" />
+import { logos } from "virtual:starlight/user-images";
+import config from "virtual:starlight/user-config";
+const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<a
+  href={siteTitleHref}
+  style="height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));"
+  class="flex items-center gap-2 max-w-full text-(--sl-text-h4) font-extrabold no-underline whitespace-nowrap min-w-0">
+  {
+    config.logo && logos.dark && (
+      <>
+        <img
+          class:list={{
+            "light:hidden print:hidden w-auto max-w-full object-contain rounded-lg": true,
+            ...(!("src" in config.logo) ? {} : {}),
+          }}
+          alt={config.logo.alt}
+          src={logos.dark.src}
+          width={logos.dark.width}
+          height={logos.dark.height}
+          style="height: calc(var(--sl-nav-height) - 3 * var(--sl-nav-pad-y));"
+        />
+        {/* Show light alternate if a user configure both light and dark logos. */}
+        {!("src" in config.logo) && (
+          <img
+            class="dark:hidden print:block w-auto max-w-full object-contain rounded-lg"
+            alt={config.logo.alt}
+            src={logos.light?.src}
+            width={logos.light?.width}
+            height={logos.light?.height}
+            style="height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));"
+          />
+        )}
+      </>
+    )
+  }
+  <span
+    class:list={{
+      "sr-only": config.logo?.replacesTitle,
+      "overflow-hidden": true,
+    }}
+    translate="no">
+    {siteTitle}
+  </span>
+</a>

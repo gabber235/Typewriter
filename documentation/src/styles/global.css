@@ -1,14 +1,112 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
 
 @layer base, starlight, theme, components, utilities;
 
-@import '@astrojs/starlight-tailwind';
-@import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/utilities.css' layer(utilities);
+@import "@astrojs/starlight-tailwind";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./colors.css";
 
 :root {
-  /* Your preferred text font. Starlight uses a system font stack by default. */
-  --font-sans: 'JetBrains Mono', monospace;
-  /* Your preferred code font. Starlight uses system monospace fonts by default. */
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: "JetBrains Mono", monospace;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* ############################## */
+/* Color Variables for TypeWriter */
+/* ############################## */
+:root {
+  --color-primary: #009fff;
+  --color-secondary: var(--material-orange-500);
+  --secondary-container: var(--material-deep-orange-700);
+  --on-secondary-container: var(--material-white);
+  --color-error: var(--material-red-accent-200);
+  --on-error: var(--material-black);
+  --surface: #141218;
+  --on-surface-variant: #c4c6d0;
+  --surface-container-lowest: #1f2123;
+  --surface-container: #1f1d23;
+}
+:root[data-theme="light"] {
+  --secondary-container: var(--material-orange-accent-100);
+  --on-secondary-container: var(--material-deep-orange-700);
+  --surface: var(--material-grey-100);
+  --on-surface-variant: #6c6d76;
+  --surface-container-lowest: var(--material-white);
+  --surface-container: #f3edf7;
+}
+
+/* ################################### */
+/* Color Variables for Starlight Theme */
+/* ################################### */
+:root {
+  --sl-color-accent-low: var(--material-white-10);
+  --sl-color-accent: var(--color-primary);
+  --sl-color-accent-high: var(--color-primary);
+  --sl-color-white: var(--material-grey-300);
+  --sl-color-gray-1: var(--material-blue-grey-50);
+  --sl-color-gray-2: var(--material-blue-grey-100);
+  --sl-color-gray-3: var(--material-blue-grey-300);
+  --sl-color-gray-4: var(--material-blue-grey-500);
+  --sl-color-gray-5: var(--material-blue-grey-700);
+  --sl-color-gray-6: var(--material-grey-900);
+  --sl-color-black: var(--surface-container-lowest);
+  --sl-color-hairline-shade: var(--material-grey-900);
+  --sl-color-text: var(--material-grey-200);
+  --sl-content-width: 40vw;
+}
+
+/* Light mode colors. */
+:root[data-theme="light"] {
+  --sl-color-accent-low: var(--material-teal-50);
+  --sl-color-white: var(--material-blue-grey-700);
+  --sl-color-accent-high: var(--color-primary);
+  --sl-color-gray-1: var(--material-blue-grey-800);
+  --sl-color-gray-2: var(--material-blue-grey-700);
+  --sl-color-gray-3: var(--material-blue-grey-500);
+  --sl-color-gray-4: var(--material-blue-grey-300);
+  --sl-color-gray-5: var(--material-blue-grey-100);
+  --sl-color-gray-6: var(--material-grey-50);
+  --sl-color-gray-7: var(--material-grey-50);
+  --sl-color-black: var(--material-white);
+  --sl-color-text-invert: var(--sl-color-black);
+  --sl-color-bg-inline-code: var(--sl-color-gray-6);
+  --sl-color-hairline-light: var(--sl-color-gray-6);
+  --sl-color-hairline-shade: var(--sl-color-gray-6);
+  --sl-color-text: var(--material-grey-800);
+}
+
+@layer utilities {
+  .text-label-large {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  
+  .text-label-medium {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  
+  .text-label-small {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  
+  .text-body-small {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  :root[data-theme="light"] .text-body-small {
+    color: rgba(0, 0, 0, 0.6);
+  }
 }

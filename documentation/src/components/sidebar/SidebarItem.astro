@@ -1,0 +1,99 @@
+---
+const {
+  label,
+  href,
+  isCurrent = false,
+  level = 1,
+  isGroup = false,
+  children,
+  collapsed = true,
+  hasCurrentDescendant = false,
+} = Astro.props;
+
+const paddingLeftValue = (level - 1) * 12; // 12px per level starting at 12px
+const groupId = isGroup
+  ? `sidebar-group-${(href || label).replace(/[^a-zA-Z0-9]/g, "-")}`
+  : undefined;
+---
+
+{
+  isGroup ? (
+    <details
+      class="group sidebar-group"
+      data-group-id={groupId}
+      data-href={href || ""}>
+      <summary
+        style={`margin-left: ${paddingLeftValue}px; padding-left: 0.75rem`}
+        class={`flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 list-none leading-snug cursor-pointer no-underline select-none ${
+          isCurrent
+            ? "text-(--color-primary) bg-(--surface-container) font-medium"
+            : hasCurrentDescendant
+              ? "text-(--color-primary) hover:bg-(--surface-container)"
+              : "text-(--sl-color-text) hover:bg-(--surface-container)"
+        }`}>
+        <span class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">
+          {label}
+        </span>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          class="shrink-0 text-slate-500 transition-transform duration-200">
+          <path
+            d="M6 4L10 8L6 12"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </summary>
+      <div
+        class="sidebar-content overflow-hidden opacity-0 transition-opacity duration-150"
+        data-level={level}>
+        <div class="pt-0.5">
+          <slot />
+        </div>
+      </div>
+    </details>
+  ) : isCurrent ? (
+    <span
+      aria-current="page"
+      style={`margin-left: ${paddingLeftValue}px; padding-left: 0.75rem; width: calc(100% - ${paddingLeftValue}px)`}
+      class="flex items-center py-1.5 pr-3 font-medium rounded-md leading-snug select-none text-(--color-primary) bg-(--surface-container)">
+      <span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">
+        {label}
+      </span>
+    </span>
+  ) : (
+    <a
+      href={href}
+      style={`margin-left: ${paddingLeftValue}px; padding-left: 0.75rem; width: calc(100% - ${paddingLeftValue}px)`}
+      class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)">
+      <span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">
+        {label}
+      </span>
+    </a>
+  )
+}
+
+<style is:global>
+  .sidebar-group .sidebar-content {
+    display: block !important;
+  }
+
+  .sidebar-ready .sidebar-group .sidebar-content {
+    opacity: 1;
+  }
+
+  .sidebar-group[open] > summary svg {
+    transform: rotate(90deg);
+  }
+
+  .sidebar-group summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

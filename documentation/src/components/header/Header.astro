@@ -1,0 +1,46 @@
+---
+import config from "virtual:starlight/user-config";
+
+import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
+import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
+import Search from "@astrojs/starlight/components/Search.astro";
+import SiteTitle from "./SiteTitle.astro";
+import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
+import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
+/**
+ * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
+ */
+const shouldRenderSearch =
+  config.pagefind ||
+  config.components.Search !== "@astrojs/starlight/components/Search.astro";
+---
+
+<div
+  class="flex items-center justify-between h-full min-[50rem]:grid min-[50rem]:grid-cols-3 min-[50rem]:gap-0">
+  <div class="flex items-center gap-2 overflow-clip min-w-0">
+    <div class="min-[50rem]:hidden flex items-center">
+      <MobileMenuToggle />
+    </div>
+    <SiteTitle />
+  </div>
+  <div class="hidden min-[50rem]:flex items-center justify-center print:hidden">
+    {shouldRenderSearch && <Search />}
+  </div>
+  <div
+    class="flex items-center justify-end gap-3 print:hidden min-[50rem]:flex">
+    {
+      shouldRenderSearch && (
+        <div class="min-[50rem]:hidden">
+          <Search />
+        </div>
+      )
+    }
+    <div class="hidden min-[50rem]:flex items-center gap-3">
+      <SocialIcons />
+      <div class="h-full w-px bg-material-grey-300 dark:bg-material-grey-800">
+      </div>
+    </div>
+    <ThemeSelect />
+    <LanguageSelect />
+  </div>
+</div>

@@ -1,0 +1,105 @@
+---
+import SidebarItem from "./SidebarItem.astro";
+import SidebarList from "./SidebarList.astro";
+import type { LinkEntry, GroupEntry, SidebarEntry } from "./types";
+
+interface Props {
+  sublist: Array<SidebarEntry>;
+  nested?: boolean;
+  level?: number;
+}
+
+const { sublist, nested = false, level = 1 } = Astro.props as Props;
+
+const filteredSublist = sublist.filter(
+  (entry) => entry.type !== "link" || entry.href !== "/",
+);
+
+function formatLabel(label: string): string {
+  return label
+    .replace(/^\d+-/, "")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function processGroupEntries(entries: Array<SidebarEntry>) {
+  const indexEntry = entries.find(
+    (e) =>
+      e.type === "link" && (e.href.endsWith("/") || e.href.endsWith("/index")),
+  ) as LinkEntry | undefined;
+
+  const filteredEntries = entries.filter((e) => e !== indexEntry);
+  const groupHref = indexEntry?.href;
+  const isCurrent = indexEntry?.isCurrent || false;
+  const renderAsLink = filteredEntries.length === 0 && indexEntry;
+
+  return { filteredEntries, groupHref, isCurrent, renderAsLink, indexEntry };
+}
+
+function hasCurrentDescendant(entries: Array<SidebarEntry>): boolean {
+  return entries.some((e) =>
+    e.type === "link" ? Boolean(e.isCurrent) : hasCurrentDescendant(e.entries),
+  );
+}
+---
+
+<ul class="list-none p-0 m-0 text-base">
+  {
+    filteredSublist.map((entry) => {
+      if (entry.type === "link") {
+        return (
+          <li class="mt-0.5 first:mt-0">
+            <SidebarItem
+              label={formatLabel(entry.label)}
+              href={entry.href}
+              isCurrent={entry.isCurrent}
+              level={level}
+              isGroup={false}
+            />
+          </li>
+        );
+      } else {
+        const {
+          filteredEntries,
+          groupHref,
+          isCurrent,
+          renderAsLink,
+          indexEntry,
+        } = processGroupEntries(entry.entries);
+
+        const descendantActive = hasCurrentDescendant(entry.entries);
+
+        if (renderAsLink && indexEntry) {
+          return (
+            <li class="mt-0.5 first:mt-0">
+              <SidebarItem
+                label={formatLabel(indexEntry.label)}
+                href={indexEntry.href}
+                isCurrent={indexEntry.isCurrent}
+                level={level}
+                isGroup={false}
+              />
+            </li>
+          );
+        }
+
+        const groupLabel = indexEntry?.label || entry.label;
+
+        return (
+          <li class="mt-0.5 first:mt-0">
+            <SidebarItem
+              label={formatLabel(groupLabel)}
+              href={groupHref}
+              isCurrent={isCurrent}
+              level={level}
+              isGroup={true}
+              hasCurrentDescendant={descendantActive}
+              collapsed={entry.collapsed}>
+              <SidebarList sublist={filteredEntries} nested level={level + 1} />
+            </SidebarItem>
+          </li>
+        );
+      }
+    })
+  }
+</ul>

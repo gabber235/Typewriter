@@ -1,0 +1,629 @@
+---
+import SidebarList from "./SidebarList.astro";
+const { sidebar } = Astro.locals.starlightRoute;
+---
+
+<nav class="py-2" aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
+  <SidebarList sublist={sidebar} />
+</nav>
+
+<script is:inline>
+  (function () {
+    // ========================================
+    // CONSTANTS
+    // ========================================
+    const STORAGE_KEY = "sidebar-groups-state";
+    const ANIMATION_DURATION = 200;
+    const SELECTORS = {
+      group: ".sidebar-group",
+      content: ".sidebar-content",
+      toggle: ".sidebar-toggle",
+      groupLink: ".sidebar-group-link",
+    };
+
+    // ========================================
+    // STATE MANAGEMENT (localStorage)
+    // ========================================
+    let cachedState = null;
+
+    function getStoredState() {
+      if (cachedState !== null) return cachedState;
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        cachedState = stored ? JSON.parse(stored) : {};
+      } catch {
+        cachedState = {};
+      }
+      return cachedState;
+    }
+
+    function saveState(groupId, isOpen) {
+      const state = getStoredState();
+      state[groupId] = isOpen;
+      cachedState = state;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // Ignore storage errors
+      }
+    }
+
+    // ========================================
+    // SIBLING ACCORDION LOGIC
+    // ========================================
+    function getSiblingToCollapse(openedDetails) {
+      const parentLi = openedDetails.closest("li");
+      if (!parentLi) return null;
+
+      const parentUl = parentLi.parentElement;
+      if (!parentUl) return null;
+
+      const siblingDetails = parentUl.querySelectorAll(
+        `:scope > li > .sidebar-group`,
+      );
+
+      for (let i = 0; i < siblingDetails.length; i++) {
+        const details = siblingDetails[i];
+        if (details !== openedDetails && details.open) {
+          return details;
+        }
+      }
+      return null;
+    }
+
+    // ========================================
+    // ANIMATION HELPERS
+    // ========================================
+    function createTransition() {
+      return `height ${ANIMATION_DURATION}ms ease-in-out`;
+    }
+
+    function animateExpand(content, targetHeight, onComplete) {
+      content.style.transition = "none";
+      content.style.height = "0px";
+      content.offsetHeight; // Force reflow
+
+      content.style.transition = createTransition();
+      content.style.height = targetHeight + "px";
+
+      function cleanup() {
+        content.removeEventListener("transitionend", cleanup);
+        content.style.transition = "";
+        content.style.height = "auto";
+        if (onComplete) onComplete();
+      }
+      content.addEventListener("transitionend", cleanup);
+    }
+
+    function animateCollapse(content, onComplete) {
+      const currentHeight = content.scrollHeight;
+      content.style.transition = "none";
+      content.style.height = currentHeight + "px";
+      content.offsetHeight; // Force reflow
+
+      content.style.transition = createTransition();
+      content.style.height = "0px";
+
+      function cleanup() {
+        content.removeEventListener("transitionend", cleanup);
+        content.style.transition = "";
+        content.style.height = "0px";
+        if (onComplete) onComplete();
+      }
+      content.addEventListener("transitionend", cleanup);
+    }
+
+    // ========================================
+    // GROUP TOGGLE OPERATIONS
+    // ========================================
+    function toggleGroup(details) {
+      const groupId = details.dataset.groupId;
+      if (!groupId) return;
+
+      const willOpen = !details.open;
+      const content = details.querySelector(SELECTORS.content);
+      if (!content) return;
+
+      if (willOpen) {
+        openGroupWithSiblingCollapse(details, content, groupId);
+      } else {
+        closeGroup(details, content, groupId);
+      }
+    }
+
+    function openGroupWithSiblingCollapse(details, content, groupId) {
+      // Find and prepare sibling to collapse
+      const siblingToCollapse = getSiblingToCollapse(details);
+      let siblingContent = null;
+      let siblingHeight = 0;
+
+      if (siblingToCollapse) {
+        siblingContent = siblingToCollapse.querySelector(SELECTORS.content);
+        if (siblingContent) {
+          siblingHeight = siblingContent.scrollHeight;
+        }
+      }
+
+      // Open and measure target
+      details.open = true;
+      content.style.height = "auto";
+      const targetHeight = content.scrollHeight;
+
+      // Prepare for synchronized animation
+      content.style.transition = "none";
+      content.style.height = "0px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = "none";
+        siblingContent.style.height = siblingHeight + "px";
+      }
+
+      content.offsetHeight; // Force reflow
+
+      // Animate both simultaneously
+      const transition = createTransition();
+      content.style.transition = transition;
+      content.style.height = targetHeight + "px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = transition;
+        siblingContent.style.height = "0px";
+      }
+
+      // Cleanup handlers
+      function cleanupExpand() {
+        content.removeEventListener("transitionend", cleanupExpand);
+        content.style.transition = "";
+        content.style.height = "auto";
+      }
+      content.addEventListener("transitionend", cleanupExpand);
+
+      if (siblingContent) {
+        const siblingDetails = siblingToCollapse;
+        function cleanupCollapse() {
+          siblingContent.removeEventListener("transitionend", cleanupCollapse);
+          siblingContent.style.transition = "";
+          siblingContent.style.height = "0px";
+          siblingDetails.open = false;
+        }
+        siblingContent.addEventListener("transitionend", cleanupCollapse);
+
+        const siblingId = siblingDetails.dataset.groupId;
+        if (siblingId) {
+          saveState(siblingId, false);
+        }
+      }
+
+      saveState(groupId, true);
+    }
+
+    function closeGroup(details, content, groupId) {
+      animateCollapse(content, function () {
+        details.open = false;
+      });
+      saveState(groupId, false);
+    }
+
+    // Expand group without toggle (for navigation)
+    function expandGroup(details) {
+      if (details.open) return;
+
+      const groupId = details.dataset.groupId;
+      const content = details.querySelector(SELECTORS.content);
+      if (!content) return;
+
+      // Find sibling to collapse
+      const siblingToCollapse = getSiblingToCollapse(details);
+      let siblingContent = null;
+      let siblingHeight = 0;
+
+      if (siblingToCollapse) {
+        siblingContent = siblingToCollapse.querySelector(SELECTORS.content);
+        if (siblingContent) {
+          siblingHeight = siblingContent.scrollHeight;
+        }
+      }
+
+      details.open = true;
+      content.style.height = "auto";
+      const targetHeight = content.scrollHeight;
+
+      content.style.transition = "none";
+      content.style.height = "0px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = "none";
+        siblingContent.style.height = siblingHeight + "px";
+      }
+
+      content.offsetHeight;
+
+      const transition = createTransition();
+      content.style.transition = transition;
+      content.style.height = targetHeight + "px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = transition;
+        siblingContent.style.height = "0px";
+      }
+
+      function cleanupExpand() {
+        content.removeEventListener("transitionend", cleanupExpand);
+        content.style.transition = "";
+        content.style.height = "auto";
+      }
+      content.addEventListener("transitionend", cleanupExpand);
+
+      if (siblingContent) {
+        const siblingDetails = siblingToCollapse;
+        function cleanupCollapse() {
+          siblingContent.removeEventListener("transitionend", cleanupCollapse);
+          siblingContent.style.transition = "";
+          siblingContent.style.height = "0px";
+          siblingDetails.open = false;
+        }
+        siblingContent.addEventListener("transitionend", cleanupCollapse);
+
+        const siblingId = siblingDetails.dataset.groupId;
+        if (siblingId) {
+          saveState(siblingId, false);
+        }
+      }
+
+      if (groupId) {
+        saveState(groupId, true);
+      }
+    }
+
+    // ========================================
+    // STATE RESTORATION (on page load)
+    // ========================================
+    function restoreGroupStates() {
+      cachedState = null;
+      const state = getStoredState();
+      const groups = document.querySelectorAll(SELECTORS.group);
+      const nav = document.querySelector("nav[aria-label]");
+
+      // Check if we need to animate a specific group
+      const animateGroupId = sessionStorage.getItem("sidebar-animate-group");
+      sessionStorage.removeItem("sidebar-animate-group");
+
+      // First pass: set all states immediately (while hidden)
+      groups.forEach(function (details) {
+        const groupId = details.dataset.groupId;
+        if (!groupId) return;
+
+        const shouldBeOpen = state[groupId] === true;
+        const content = details.querySelector(SELECTORS.content);
+
+        // Skip the animated group for now - leave it closed
+        if (animateGroupId === groupId && shouldBeOpen) {
+          details.open = false;
+          if (content) content.style.height = "0px";
+        } else {
+          // Close siblings if this group should be open
+          if (shouldBeOpen) {
+            const siblingToClose = getSiblingToCollapse(details);
+            if (siblingToClose) {
+              siblingToClose.open = false;
+              const siblingContent = siblingToClose.querySelector(
+                SELECTORS.content,
+              );
+              if (siblingContent) siblingContent.style.height = "0px";
+              // Update state for closed sibling
+              const siblingId = siblingToClose.dataset.groupId;
+              if (siblingId) {
+                state[siblingId] = false;
+              }
+            }
+          }
+
+          details.open = shouldBeOpen;
+          if (content) {
+            content.style.height = shouldBeOpen ? "auto" : "0px";
+          }
+        }
+      });
+
+      // Save updated state after sibling closures
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        cachedState = state;
+      } catch {
+        // Ignore storage errors
+      }
+
+      // Reveal sidebar now that states are set
+      if (nav) nav.classList.add("sidebar-ready");
+
+      // Second pass: animate the target group after reveal
+      if (animateGroupId) {
+        const targetGroup = document.querySelector(
+          `${SELECTORS.group}[data-group-id="${animateGroupId}"]`,
+        );
+        if (targetGroup && !targetGroup.open) {
+          // Small delay to let opacity transition start first
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              expandGroup(targetGroup);
+            });
+          });
+        }
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS (delegated)
+    // ========================================
+    function handleToggleClick(e, toggleBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const details = toggleBtn.closest(SELECTORS.group);
+      if (details) {
+        toggleGroup(details);
+      }
+    }
+
+    function handleLabelClick(e, labelSpan) {
+      // Only handle non-link labels (for groups without index pages)
+      const summary = labelSpan.closest("summary");
+      const details = summary ? summary.closest(SELECTORS.group) : null;
+      if (!details) return;
+
+      const href = details.dataset.href || "";
+      const groupId = details.dataset.groupId || "";
+      const currentPathname = window.location.pathname;
+      const isCurrentPage =
+        href &&
+        (currentPathname.endsWith(href.replace(/\/$/, "") + "/") ||
+          currentPathname.endsWith(href));
+
+      e.preventDefault();
+      e.stopPropagation();
+      // If there's an href and we're not on this page, navigate without toggling
+      if (href && !isCurrentPage) {
+        if (groupId) {
+          saveState(groupId, true);
+          // Set animation flag only if group is currently closed
+          if (!details.open) {
+            sessionStorage.setItem("sidebar-animate-group", groupId);
+          }
+        }
+        window.location.href = href;
+      } else {
+        // Otherwise toggle (on same page or no href)
+        toggleGroup(details);
+      }
+    }
+
+    // Single delegated click listener
+    document.addEventListener("click", function (e) {
+      const target = e.target;
+
+      // Handle toggle button clicks (highest priority)
+      const toggleBtn = target.closest(SELECTORS.toggle);
+      if (toggleBtn) {
+        handleToggleClick(e, toggleBtn);
+        return;
+      }
+
+      // Handle SVG chevron clicks (toggle group)
+      const svg = target.closest(`${SELECTORS.group} > summary svg`);
+      if (svg) {
+        e.preventDefault();
+        e.stopPropagation();
+        const details = svg.closest(SELECTORS.group);
+        if (details) {
+          toggleGroup(details);
+        }
+        return;
+      }
+
+      // Handle non-link label clicks
+      const labelSpan = target.closest(`${SELECTORS.group} > summary > span`);
+      if (labelSpan) {
+        handleLabelClick(e, labelSpan);
+        return;
+      }
+
+      // Handle summary clicks (for groups with href)
+      const summary = target.closest(`${SELECTORS.group} > summary`);
+      if (summary) {
+        e.preventDefault();
+        const details = summary.closest(SELECTORS.group);
+        const href = details ? details.dataset.href : "";
+        const groupId = details ? details.dataset.groupId : "";
+        const currentPathname = window.location.pathname;
+        const isCurrentPage =
+          href &&
+          (currentPathname.endsWith(href.replace(/\/$/, "") + "/") ||
+            currentPathname.endsWith(href));
+
+        // If there's an href and we're not on this page, navigate
+        if (href && !isCurrentPage) {
+          if (groupId) {
+            saveState(groupId, true);
+            // Set animation flag only if group is currently closed
+            if (!details.open) {
+              sessionStorage.setItem("sidebar-animate-group", groupId);
+            }
+          }
+          window.location.href = href;
+        } else {
+          // Otherwise toggle the group (if on current page or no href)
+          if (details) {
+            toggleGroup(details);
+          }
+        }
+        return;
+      }
+    });
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    restoreGroupStates();
+
+    // Re-initialize after Astro view transitions
+    document.addEventListener("astro:after-swap", restoreGroupStates);
+
+    // ========================================
+    // MOBILE DRAWER FUNCTIONALITY
+    // ========================================
+    const sidebar = document.getElementById("starlight__sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const mobileToggle = document.querySelector("starlight-menu-button");
+
+    if (sidebar && backdrop && mobileToggle) {
+      let isOpen = false;
+      let touchStartY = 0;
+      let touchStartX = 0;
+      let currentTranslateY = 0;
+      let isDragging = false;
+      let canDrag = false;
+
+      function openDrawer() {
+        isOpen = true;
+        sidebar.classList.remove("translate-y-[calc(-100%-3rem)]");
+        sidebar.classList.add("translate-y-0");
+        backdrop.classList.remove("invisible", "opacity-0");
+        backdrop.classList.add("visible", "opacity-100");
+        document.body.style.overflow = "hidden";
+        mobileToggle.setAttribute("aria-expanded", "true");
+      }
+
+      function closeDrawer() {
+        isOpen = false;
+        sidebar.classList.add("translate-y-[calc(-100%-3rem)]");
+        sidebar.classList.remove("translate-y-0");
+        backdrop.classList.add("invisible", "opacity-0");
+        backdrop.classList.remove("visible", "opacity-100");
+        document.body.style.overflow = "";
+        mobileToggle.setAttribute("aria-expanded", "false");
+        sidebar.style.transform = "";
+      }
+
+      function toggleDrawer() {
+        if (isOpen) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+      }
+
+      // Touch event handlers for swipe gestures
+      function handleTouchStart(e) {
+        if (window.innerWidth >= 800) return;
+        if (!isOpen) return;
+
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        currentTranslateY = 0;
+        isDragging = false;
+        canDrag = false;
+
+        // Check if sidebar is scrolled to top - only allow drag if at top
+        if (sidebar.scrollTop === 0) {
+          canDrag = true;
+        }
+      }
+
+      function handleTouchMove(e) {
+        if (window.innerWidth >= 800) return;
+        if (!isOpen || !canDrag) return;
+
+        const touchCurrentY = e.touches[0].clientY;
+        const touchCurrentX = e.touches[0].clientX;
+        const diffY = touchCurrentY - touchStartY;
+        const diffX = Math.abs(touchCurrentX - touchStartX);
+
+        // Only drag if vertical movement is greater than horizontal
+        if (Math.abs(diffY) > 10 && Math.abs(diffY) > diffX) {
+          // Allow dragging up (negative diffY) to close
+          if (diffY < 0) {
+            if (!isDragging) {
+              isDragging = true;
+            }
+            currentTranslateY = diffY;
+            sidebar.style.transition = "none";
+            sidebar.style.transform = `translateY(${diffY}px)`;
+
+            // Fade backdrop proportionally
+            const opacity = Math.max(0, 1 - Math.abs(diffY) / 300);
+            backdrop.style.opacity = opacity.toString();
+          }
+        }
+      }
+
+      function handleTouchEnd(e) {
+        if (window.innerWidth >= 800) return;
+        if (!isOpen || !isDragging) {
+          sidebar.style.transition = "";
+          isDragging = false;
+          canDrag = false;
+          return;
+        }
+
+        sidebar.style.transition = "";
+        backdrop.style.opacity = "";
+
+        // If dragged up more than 100px, close the drawer
+        if (Math.abs(currentTranslateY) > 100) {
+          closeDrawer();
+        } else {
+          // Snap back to open position
+          sidebar.style.transform = "";
+        }
+
+        isDragging = false;
+        canDrag = false;
+        currentTranslateY = 0;
+      }
+
+      // Add touch event listeners to sidebar
+      sidebar.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      sidebar.addEventListener("touchmove", handleTouchMove, { passive: true });
+      sidebar.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+      // Listen for Starlight's mobile menu toggle
+      mobileToggle.addEventListener("click", toggleDrawer);
+
+      // Close drawer on backdrop click
+      backdrop.addEventListener("click", closeDrawer);
+
+      // Close drawer on ESC key
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && isOpen) {
+          closeDrawer();
+        }
+      });
+
+      // Close drawer on navigation (when clicking a link)
+      sidebar.addEventListener("click", function (e) {
+        const link = e.target.closest("a");
+        if (link && window.innerWidth < 800) {
+          // Small delay to allow navigation to start
+          setTimeout(closeDrawer, 150);
+        }
+      });
+
+      // Reset drawer state after view transitions
+      document.addEventListener("astro:after-swap", function () {
+        closeDrawer();
+      });
+
+      // Handle window resize - close drawer and reset if resized to desktop
+      let resizeTimer;
+      window.addEventListener("resize", function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          if (window.innerWidth >= 800 && isOpen) {
+            closeDrawer();
+          }
+        }, 150);
+      });
+    }
+  })();
+</script>

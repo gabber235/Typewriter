@@ -16,5 +16,8 @@
     "astro": "^5.6.1",
     "sharp": "^0.34.2",
     "tailwindcss": "^4.1.18"
+  },
+  "prettier": {
+    "bracketSameLine": true
   }
 }
