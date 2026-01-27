@@ -3,7 +3,7 @@ title: Folder Test
 description: A guide in my new Starlight docs site.
 ---
 
-:::caution
+:::warning
 If you are not sure you want an awesome docs site, think twice before using [Starlight](/).
 :::
 

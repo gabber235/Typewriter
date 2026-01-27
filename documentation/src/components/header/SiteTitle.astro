@@ -9,7 +9,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 <a
   href={siteTitleHref}
   style="height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));"
-  class="flex items-center gap-2 max-w-full text-(--sl-text-h4) font-extrabold no-underline whitespace-nowrap min-w-0">
+  class="flex items-center gap-2 max-w-full text-(--sl-text-h4) hover:text-(--color-primary) duration-200 font-extrabold no-underline whitespace-nowrap min-w-0">
   {
     config.logo && logos.dark && (
       <>

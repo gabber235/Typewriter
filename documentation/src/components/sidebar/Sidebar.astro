@@ -1,10 +1,13 @@
 ---
 import SidebarList from "./SidebarList.astro";
+import { processSidebarBadges } from "../badge";
+
 const { sidebar } = Astro.locals.starlightRoute;
+const sidebarWithBadges = await processSidebarBadges(sidebar);
 ---
 
 <nav class="py-2" aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
-  <SidebarList sublist={sidebar} />
+  <SidebarList sublist={sidebarWithBadges} />
 </nav>
 
 <script is:inline>

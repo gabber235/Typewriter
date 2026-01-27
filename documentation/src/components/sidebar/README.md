@@ -96,6 +96,32 @@ The inline script uses these classes to identify elements:
 
 The sidebar script must be `is:inline` to run synchronously before first paint. This prevents a flash of incorrect state (all groups collapsed) while localStorage is read. The trade-off is that this code cannot be extracted to a separate bundled module.
 
+## Badges
+
+You can add badges to sidebar items using frontmatter. When using a string, the badge will display with the default accent color. For more control, pass an object with `text`, `variant`, and optionally `class` fields.
+
+**Simple badge:**
+```yaml
+---
+title: Page with a badge
+sidebar:
+  badge: New
+---
+```
+
+**Custom badge with variant:**
+```yaml
+---
+title: Page with a badge
+sidebar:
+  badge:
+    text: Experimental
+    variant: caution
+---
+```
+
+**Available variants:** `note` (blue), `tip` (purple), `danger` (red), `caution` (orange), `success` (green), `default` (theme accent color).
+
 ## Accessibility
 
 - `aria-label` on the nav element (localized)

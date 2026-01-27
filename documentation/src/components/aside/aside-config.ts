@@ -1,6 +1,6 @@
-export type AsideVariant = 'info' | 'warning' | 'danger' | 'success' | 'tip' | 'note' | 'example' | 'experimental' | 'deprecated' | 'security' | 'bug' | 'performance' | 'quote';
+export type AsideVariant = 'info' | 'warning' | 'danger' | 'success' | 'tip' | 'note' | 'example' | 'experimental' | 'deprecated' | 'bug' | 'performance';
 
-export const variants = new Set<string>(['info', 'warning', 'danger', 'success', 'tip', 'note', 'example', 'experimental', 'deprecated', 'security', 'bug', 'performance', 'quote']);
+export const variants = new Set<string>(['info', 'warning', 'danger', 'success', 'tip', 'note', 'example', 'experimental', 'deprecated', 'bug', 'performance']);
 export const isAsideVariant = (s: string): s is AsideVariant => variants.has(s);
 
 export const defaultTitles: Record<AsideVariant, string> = {
@@ -13,10 +13,8 @@ export const defaultTitles: Record<AsideVariant, string> = {
   example: 'Example',
   experimental: 'Experimental',
   deprecated: 'Deprecated',
-  security: 'Security',
   bug: 'Known Issue',
   performance: 'Performance',
-  quote: 'Quote',
 };
 
 // Icons for each variant
@@ -30,10 +28,8 @@ export const icons: Record<AsideVariant, string> = {
   example: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>`,
   experimental: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8 18.4L14 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81H9.04c-.42 0-.65.48-.39.81L10 6.5v4.17L4.2 18.4c-.49.66-.02 1.6.8 1.6h14c.82 0 1.29-.94.8-1.6z"/></svg>`,
   deprecated: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/></svg>`,
-  security: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>`,
   bug: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z"/></svg>`,
   performance: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>`,
-  quote: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>`,
 };
 
 // Using Material Design colors from colors.css
@@ -59,9 +55,9 @@ export const variantStyles: Record<AsideVariant, { border: string; bg: string; t
     text: 'text-[var(--material-green-500)]',
   },
   tip: {
-    border: 'border-[var(--material-teal-500)]',
-    bg: 'bg-[var(--material-teal-500)]/10',
-    text: 'text-[var(--material-teal-500)]',
+    border: 'border-[var(--material-cyan-500)]',
+    bg: 'bg-[var(--material-cyan-500)]/10',
+    text: 'text-[var(--material-cyan-500)]',
   },
   note: {
     border: 'border-[var(--material-blue-grey-500)]',
@@ -69,24 +65,19 @@ export const variantStyles: Record<AsideVariant, { border: string; bg: string; t
     text: 'text-[var(--material-blue-grey-500)]',
   },
   example: {
-    border: 'border-[var(--material-purple-500)]',
-    bg: 'bg-[var(--material-purple-500)]/10',
-    text: 'text-[var(--material-purple-500)]',
+    border: 'border-[var(--material-purple-400)]',
+    bg: 'bg-[var(--material-purple-400)]/10',
+    text: 'text-[var(--material-purple-400)]',
   },
   experimental: {
-    border: 'border-[var(--material-deep-purple-500)]',
-    bg: 'bg-[var(--material-deep-purple-500)]/10',
-    text: 'text-[var(--material-deep-purple-500)]',
+    border: 'border-[var(--material-orange-700)]',
+    bg: 'bg-[var(--material-orange-700)]/10',
+    text: 'text-[var(--material-orange-700)]',
   },
   deprecated: {
-    border: 'border-[var(--material-brown-500)]',
-    bg: 'bg-[var(--material-brown-500)]/10',
-    text: 'text-[var(--material-brown-500)]',
-  },
-  security: {
-    border: 'border-[var(--material-red-700)]',
-    bg: 'bg-[var(--material-red-700)]/10',
-    text: 'text-[var(--material-red-700)]',
+    border: 'border-[var(--material-brown-200)]',
+    bg: 'bg-[var(--material-brown-300)]/10',
+    text: 'text-[var(--material-brown-200)]',
   },
   bug: {
     border: 'border-[var(--material-pink-500)]',
@@ -97,11 +88,6 @@ export const variantStyles: Record<AsideVariant, { border: string; bg: string; t
     border: 'border-[var(--material-amber-500)]',
     bg: 'bg-[var(--material-amber-500)]/10',
     text: 'text-[var(--material-amber-500)]',
-  },
-  quote: {
-    border: 'border-[var(--material-grey-600)]',
-    bg: 'bg-[var(--material-grey-600)]/10',
-    text: 'text-[var(--material-grey-600)]',
   },
 };
 

@@ -1,4 +1,7 @@
 ---
+import type { Badge } from "../badge";
+import { getBadgeClasses } from "../badge";
+
 const {
   label,
   href,
@@ -8,12 +11,17 @@ const {
   children,
   collapsed = true,
   hasCurrentDescendant = false,
+  badge,
 } = Astro.props;
 
 const paddingLeftValue = (level - 1) * 12; // 12px per level starting at 12px
 const groupId = isGroup
   ? `sidebar-group-${(href || label).replace(/[^a-zA-Z0-9]/g, "-")}`
   : undefined;
+
+// Badge is already normalized from processor
+const badgeData = badge as Badge | undefined;
+const badgeClass = badgeData ? getBadgeClasses(badgeData.variant) : "";
 ---
 
 {
@@ -34,6 +42,12 @@ const groupId = isGroup
         <span class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">
           {label}
         </span>
+        {badgeData && (
+          <span
+            class={`ml-2 px-1.5 py-0.5 text-xs font-medium rounded shrink-0 ${badgeClass}`}>
+            {badgeData.text}
+          </span>
+        )}
         <svg
           width="16"
           height="16"
@@ -67,6 +81,12 @@ const groupId = isGroup
       <span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">
         {label}
       </span>
+      {badgeData && (
+        <span
+          class={`ml-2 px-1.5 py-0.5 text-xs font-medium rounded shrink-0 ${badgeClass}`}>
+          {badgeData.text}
+        </span>
+      )}
     </span>
   ) : (
     <a
@@ -76,6 +96,12 @@ const groupId = isGroup
       <span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">
         {label}
       </span>
+      {badgeData && (
+        <span
+          class={`ml-2 px-1.5 py-0.5 text-xs font-medium rounded shrink-0 ${badgeClass}`}>
+          {badgeData.text}
+        </span>
+      )}
     </a>
   )
 }

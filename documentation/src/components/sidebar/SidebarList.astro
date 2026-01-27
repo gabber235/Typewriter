@@ -1,6 +1,5 @@
 ---
 import SidebarItem from "./SidebarItem.astro";
-import SidebarList from "./SidebarList.astro";
 import type { LinkEntry, GroupEntry, SidebarEntry } from "./types";
 
 interface Props {
@@ -55,6 +54,7 @@ function hasCurrentDescendant(entries: Array<SidebarEntry>): boolean {
               isCurrent={entry.isCurrent}
               level={level}
               isGroup={false}
+              badge={entry.badge}
             />
           </li>
         );
@@ -78,6 +78,7 @@ function hasCurrentDescendant(entries: Array<SidebarEntry>): boolean {
                 isCurrent={indexEntry.isCurrent}
                 level={level}
                 isGroup={false}
+                badge={indexEntry.badge}
               />
             </li>
           );
@@ -94,8 +95,9 @@ function hasCurrentDescendant(entries: Array<SidebarEntry>): boolean {
               level={level}
               isGroup={true}
               hasCurrentDescendant={descendantActive}
-              collapsed={entry.collapsed}>
-              <SidebarList sublist={filteredEntries} nested level={level + 1} />
+              collapsed={entry.collapsed}
+              badge={indexEntry?.badge || entry.badge}>
+              <Astro.self sublist={filteredEntries} nested level={level + 1} />
             </SidebarItem>
           </li>
         );
