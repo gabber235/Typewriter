@@ -1,0 +1,36 @@
+---
+import {
+  type AsideVariant,
+  defaultTitles,
+  variantStyles,
+  icons,
+  asideClasses,
+} from "./aside-config";
+
+interface Props {
+  type?: AsideVariant;
+  title?: string;
+}
+
+const { type = "info", title } = Astro.props;
+
+const styles = variantStyles[type];
+const displayTitle = title ?? defaultTitles[type];
+---
+
+<aside class:list={[asideClasses.container, styles.border, styles.bg]}>
+  <div class={asideClasses.header}>
+    <span
+      class:list={[asideClasses.icon, styles.text]}
+      set:html={icons[type]}
+    />
+    {
+      displayTitle && (
+        <p class:list={[asideClasses.title, styles.text]}>{displayTitle}</p>
+      )
+    }
+  </div>
+  <div class:list={[asideClasses.content, styles.text]}>
+    <slot />
+  </div>
+</aside>

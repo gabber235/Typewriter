@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import remarkDirective from "remark-directive";
+import { remarkAside } from "./src/components/aside/remark-aside";
 
 import tailwindcss from "@tailwindcss/vite";
 import starlightDocSearch from "@astrojs/starlight-docsearch";
@@ -9,7 +11,7 @@ import starlightDocSearch from "@astrojs/starlight-docsearch";
 export default defineConfig({
   prefetch: {
     prefetchAll: true,
-    defaultStrategy: 'hover',
+    defaultStrategy: "hover",
   },
   experimental: {
     clientPrerender: true,
@@ -37,8 +39,14 @@ export default defineConfig({
         SiteTitle: "./src/components/header/SiteTitle.astro",
         ThemeSelect: "./src/components/header/ThemeSelect.astro",
       },
+      markdown: {
+      }
     }),
   ],
+
+  markdown: {
+    remarkPlugins: [remarkDirective, remarkAside],
+  },
 
   vite: {
     plugins: [

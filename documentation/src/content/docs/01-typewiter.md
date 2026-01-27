@@ -25,11 +25,11 @@ Typewriter is a powerful Minecraft plugin that transforms how you create interac
 
 This wiki provides comprehensive guides to help you get the most out of Typewriter:
 
-1. Start with the [Installation Guide](./) to set up Typewriter and the essential `BasicExtension`
-2. Learn how to navigate the [Web Panel Layout](./) to understand the interface
-3. Create your [First Interaction](./) to see Typewriter in action
+1. Start with the [Installation Guide](./..) to set up Typewriter and the essential `BasicExtension`
+2. Learn how to navigate the [Web Panel Layout](./..) to understand the interface
+3. Create your [First Interaction](./..) to see Typewriter in action
 
-:::caution[Beta Release]
+:::warning[Beta Release]
 Typewriter is currently in beta. While stable for most uses, you may encounter occasional bugs. If you find any issues, please report them in our [Discord community](https://discord.gg/HtbKyuDDBw) where you can also get support and share ideas!
 :::
-Ready to enhance your server with interactive experiences? Let's get started with [installation](./)!
+Ready to enhance your server with interactive experiences? Let's get started with [installation](./..)!
