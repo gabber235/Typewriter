@@ -28,7 +28,11 @@ interface CancelableEventEntry : EventEntry {
     val cancel: Var<Boolean>
 
 }
-fun List<CancelableEventEntry>.shouldCancel(player: Player, context: InteractionContext? = player.interactionContext): Boolean {
+
+fun List<CancelableEventEntry>.shouldCancel(
+    player: Player,
+    context: InteractionContext? = player.interactionContext
+): Boolean {
     return any { it.cancel.get(player, context) }
 }
 
@@ -67,6 +71,11 @@ class Event(val player: Player, val context: InteractionContext, val triggers: L
 
     fun distinct(): Event = Event(player, context, triggers.distinct())
     fun filterAllowedTriggers() = Event(player, context, triggers.filter { it.canTriggerFor(player, context) })
+    fun merge(other: Event): Event {
+        require(player.uniqueId == other.player.uniqueId) { "Events can only be combined for the same player" }
+        require(context == other.context) { "Events can only be combined for the same context" }
+        return Event(player, context, triggers + other.triggers)
+    }
 }
 
 interface EventTrigger {
@@ -83,7 +92,8 @@ data class EntryTrigger(val ref: Ref<out TriggerableEntry>) : EventTrigger {
         ref.get()?.criteria?.matches(player, interactionContext) ?: false
 }
 
-inline fun <reified E : TriggerableEntry> Event.entries(): List<E> = triggers.filterIsInstance<EntryTrigger>().mapNotNull { it.ref.get() as? E }
+inline fun <reified E : TriggerableEntry> Event.entries(): List<E> =
+    triggers.filterIsInstance<EntryTrigger>().mapNotNull { it.ref.get() as? E }
 
 data object InteractionEndTrigger : EventTrigger {
     override val id: String

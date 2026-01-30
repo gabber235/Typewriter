@@ -102,13 +102,21 @@ class PlayerSession(val player: Player) : KoinComponent {
 
     private suspend fun runSchedule() {
         if (scheduledEvents.isEmpty()) return
-        val events = scheduledEvents.map(Event::distinct)
+        /// We want to dedupe events as much as possible to prevent auto clickers, etc., from triggering the same event many times.
+        /// Possibly allowing duplication glitches.
+        val mergedEvents = scheduledEvents
+            .filter { it.triggers.isNotEmpty() }
+            .groupBy { it.context }
+            .mapValues {
+                it.value.reduce { acc, event -> acc.merge(event) }.distinct()
+            }
+            .values
         this.scheduledEvents = emptyList()
-        onEvent(events)
+        onEvent(mergedEvents)
     }
 
     /** Handles an event. */
-    private suspend fun onEvent(events: List<Event>) {
+    private suspend fun onEvent(events: Collection<Event>) {
         var interactionLifecycle = InteractionLifecycle.NONE
         var boundLifecycle = InteractionLifecycle.NONE
         val nextInteractions = mutableListOf<Interaction>()
