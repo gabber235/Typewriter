@@ -59,8 +59,14 @@ class CaseFactsPresetApplier(
         onComplete = { state = FactsPresetApplierState.FINISHED }
     )
 
+    override val appliedTriggers: List<EventTrigger>
+        get() = entry.triggers.eventTriggers + controller.currentSelection.flatMap { index ->
+            entry.cases.getOrNull(index)?.triggers?.eventTriggers ?: emptyList()
+        }
+
     override fun init() {
         super.init()
+        modifier.apply(player, entry.presets)
 
         val deserialization = serializer.pop()
         if (!deserialization.isNullOrBlank()) {
@@ -99,9 +105,4 @@ class CaseFactsPresetApplier(
         controller.dispose()
         super.dispose()
     }
-
-    override val appliedTriggers: List<EventTrigger>
-        get() = entry.triggers.eventTriggers + controller.currentSelection.flatMap { index ->
-            entry.cases.getOrNull(index)?.triggers?.eventTriggers ?: emptyList()
-        }
 }

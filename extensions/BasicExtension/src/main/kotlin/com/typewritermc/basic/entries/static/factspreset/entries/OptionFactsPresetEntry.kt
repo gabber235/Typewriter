@@ -54,12 +54,22 @@ class OptionFactsPresetApplier(
 
     private var selectedChildIndices: Set<Int> = emptySet()
 
+    override val appliedChildren: List<Ref<FactsPresetEntry>>
+        get() = selectedChildIndices.mapNotNull { entry.children.getOrNull(it) }
+
+    override val appliedTriggers: List<EventTrigger>
+        get() = entry.triggers.eventTriggers + controller.currentSelection.flatMap { index ->
+            entry.children.getOrNull(index)?.get()?.triggers?.eventTriggers ?: emptyList()
+        }
+
     override fun init() {
         super.init()
+        modifier.apply(player, entry.presets)
 
         val deserialization = serializer.pop()
         if (!deserialization.isNullOrBlank()) {
-            selectedChildIndices = deserialization.trim().split(',').mapNotNull { it.toIntOrNull() }.toSet()
+            selectedChildIndices = deserialization.trim().split(',').mapNotNull { it.toIntOrNull() }
+                .filter { it in 0 until entry.children.size }.toSet()
             state = FactsPresetApplierState.FINISHED
             return
         }
@@ -77,18 +87,10 @@ class OptionFactsPresetApplier(
         controller.handleScroll(event.previousSlot, event.newSlot)
     }
 
-    override val appliedChildren: List<Ref<FactsPresetEntry>>
-        get() = selectedChildIndices.mapNotNull { entry.children.getOrNull(it) }
-
     override fun dispose() {
         selectedChildIndices = controller.currentSelection
         serializer.push(selectedChildIndices.joinToString(","))
         controller.dispose()
         super.dispose()
     }
-
-    override val appliedTriggers: List<EventTrigger>
-        get() = entry.triggers.eventTriggers + controller.currentSelection.flatMap { index ->
-            entry.children.getOrNull(index)?.get()?.triggers?.eventTriggers ?: emptyList()
-        }
 }

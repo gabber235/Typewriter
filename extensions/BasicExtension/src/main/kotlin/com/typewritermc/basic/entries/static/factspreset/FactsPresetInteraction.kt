@@ -91,15 +91,15 @@ class FactsPresetInteraction(
         applier = null
 
         val ref = processingOrder.firstOrNull { unAppliedParents[it]!!.isEmpty() } ?: return false
-        assert(ref.isSet) { "We only add to the unapplied parents if there is a reference" }
+        require(ref.isSet) { "We only add to the unapplied parents if there is a reference" }
 
         processingOrder.remove(ref)
         unAppliedParents.remove(ref)
 
         val entry = ref.get()
-        assert(entry != null) { "We only add an entry that exists." }
+        require(entry != null) { "We only add an entry that exists." }
 
-        applier = entry!!.applier(player, modifier, serializer)
+        applier = entry.applier(player, modifier, serializer)
         applier!!.init()
 
         // If we finish immediately, we can shortcut to the next applier to have them all run quickly in one tick
