@@ -23,9 +23,11 @@ import com.typewritermc.engine.paper.entry.triggerAllFor
 import com.typewritermc.engine.paper.facts.FactListenerSubscription
 import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.interaction.interactionContext
+import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.server
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import lirand.api.extensions.events.unregister
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -63,7 +65,15 @@ data class FactCriteria(
     val value: Var<Int> = ConstVar(0)
 ) {
     fun matches(player: Player, context: InteractionContext?, value: Int): Boolean {
-        return this.value.get(player, context) == value
+        val criteriaValue = this.value.get(player, context)
+        return when (operator) {
+            CriteriaOperator.EQUALS -> value == criteriaValue
+            CriteriaOperator.NOT_EQUALS -> value != criteriaValue
+            CriteriaOperator.GREATER_THAN -> value > criteriaValue
+            CriteriaOperator.LESS_THAN -> value < criteriaValue
+            CriteriaOperator.GREATER_THAN_OR_EQUAL -> value >= criteriaValue
+            CriteriaOperator.LESS_THAN_OR_EQUALS -> value <= criteriaValue
+        }
     }
 }
 
@@ -85,6 +95,8 @@ class FactEventWatcher : Initializable, Listener {
     private var facts = emptyList<Ref<ReadableFactEntry>>()
 
     override suspend fun initialize() {
+        server.pluginManager.registerEvents(this, plugin)
+
         facts = Query.find<FactChangeEventEntry>().map { it.fact }.distinct().toList()
         if (facts.isEmpty()) return
         Dispatchers.UntickedAsync.launch {
@@ -123,5 +135,6 @@ class FactEventWatcher : Initializable, Listener {
             subscription.cancel(player)
         }
         subscriptions.clear()
+        this.unregister()
     }
 }
