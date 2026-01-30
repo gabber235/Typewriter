@@ -7,8 +7,10 @@ import com.typewritermc.engine.paper.entry.StaticEntry
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.dialogue.TickContext
 import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.WritableFactEntry
+import com.typewritermc.engine.paper.entry.eventTriggers
 import com.typewritermc.engine.paper.facts.FactsModifier
 import com.typewritermc.engine.paper.plugin
 import lirand.api.extensions.events.unregister
@@ -52,6 +54,9 @@ open class FactsPresetApplier<FPE : FactsPresetEntry>(
         protected set
 
     open val appliedChildren get() = entry.children
+
+    open val appliedTriggers: List<EventTrigger>
+        get() = entry.triggers.eventTriggers
 
     open fun init() {
         plugin.registerEvents(this)

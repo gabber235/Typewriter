@@ -9,7 +9,6 @@ import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.entry.dialogue.TickContext
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
-import com.typewritermc.engine.paper.entry.eventTriggers
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.facts.FactDatabase
 import com.typewritermc.engine.paper.facts.FactsModifier
@@ -85,7 +84,7 @@ class FactsPresetInteraction(
     fun nextApplier(): Boolean {
         val current = applier?.entry
         if (current != null) {
-            eventTriggers += current.triggers.eventTriggers
+            eventTriggers += applier?.appliedTriggers ?: emptyList()
             applier?.appliedChildren?.forEach { childRef -> unAppliedParents.computeIfPresent(childRef) { _, parents -> (parents - current) } }
         }
         applier?.dispose()
@@ -134,7 +133,7 @@ class FactsPresetInteraction(
         }
         player.sendActionBar("Applied <red>${ref.get()!!.name}</red> preset".asMini())
         player.playSound(Sound.sound().type(Key.key("entity.experience_orb.pickup")).build())
-       
+
         factDatabase.modify(player, modifier.build())
         FactsPresetStopTrigger.triggerFor(player, context)
     }
