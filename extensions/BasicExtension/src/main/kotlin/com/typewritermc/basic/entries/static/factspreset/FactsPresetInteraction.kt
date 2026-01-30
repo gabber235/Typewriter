@@ -48,7 +48,7 @@ class FactsPresetInteraction(
     private val serializer = FactsPresetSerializer(serialized)
 
     init {
-        assert(ref.isSet) { "The Ref to the FactsPreset must be set." }
+        require(ref.isSet) { "The Ref to the FactsPreset must be set." }
     }
 
     override suspend fun initialize(): Result<Unit> {
