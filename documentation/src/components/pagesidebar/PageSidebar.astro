@@ -1,0 +1,19 @@
+---
+import MobileTableOfContents from "./MobileTableOfContents.astro";
+import TableOfContents from "./TableOfContents.astro";
+---
+
+{
+  Astro.locals.starlightRoute.toc && (
+    <>
+      <div class="min-[72em]:hidden">
+        <MobileTableOfContents />
+      </div>
+      <div class="hidden min-[72em]:block px-4 py-4">
+        <div class="w-[calc(var(--sl-sidebar-width,15rem)-2rem)] max-w-full">
+          <TableOfContents />
+        </div>
+      </div>
+    </>
+  )
+}

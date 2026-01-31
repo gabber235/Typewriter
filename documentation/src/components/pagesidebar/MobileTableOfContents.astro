@@ -1,0 +1,497 @@
+---
+import TableOfContentsList from "./TableOfContentsList.astro";
+
+const { toc } = Astro.locals.starlightRoute;
+const pageTitle = Astro.locals.starlightRoute.entry.data.title;
+---
+
+{
+  toc && (
+    <mobile-starlight-toc
+      data-min-h={toc.minHeadingLevel}
+      data-max-h={toc.maxHeadingLevel}>
+      
+      <!-- Mobile TOC Navigation -->
+      <nav
+        aria-labelledby="starlight__on-this-page--mobile"
+        class="mobile-toc-container">
+        
+        <!-- Backdrop for dropdown -->
+        <div class="mobile-toc-backdrop" aria-hidden="true"></div>
+        
+        <!-- Dropdown Panel (appears above the pill) -->
+        <div class="mobile-toc-dropdown">
+          <div class="dropdown-header">
+            <span class="dropdown-title">On this page</span>
+            <button class="close-btn" aria-label="Close table of contents">
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="dropdown-content">
+            <TableOfContentsList toc={toc.items} isMobile />
+          </div>
+        </div>
+        
+        <!-- Pill Indicator (always visible) -->
+        <button class="mobile-toc-pill" id="starlight__on-this-page--mobile" aria-label="Open table of contents" aria-expanded="false">
+          <svg class="pill-progress-ring" viewBox="0 0 36 36">
+            <circle
+              class="pill-progress-bg"
+              cx="18"
+              cy="18"
+              r="15.5"
+              fill="none"
+              stroke-width="3"
+            />
+            <circle
+              class="pill-progress-fill"
+              cx="18"
+              cy="18"
+              r="15.5"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-dasharray="97.39"
+              stroke-dashoffset="97.39"
+              transform="rotate(-90 18 18)"
+            />
+          </svg>
+          <span class="pill-progress-text">0%</span>
+          <span class="pill-current-section"></span>
+          <svg class="pill-expand-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.47 6.47a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 1 1-1.06 1.06L10 8.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06l4.25-4.25Z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </nav>
+    </mobile-starlight-toc>
+  )
+}
+
+<style>
+  .mobile-toc-container {
+    --toc-bg: rgba(25, 25, 28, 0.92);
+    --toc-border: rgba(255, 255, 255, 0.1);
+    --toc-text: rgba(255, 255, 255, 0.9);
+    --toc-text-muted: rgba(255, 255, 255, 0.5);
+    --toc-shadow: 0 4px 32px rgba(0, 0, 0, 0.4), 
+                  0 1px 8px rgba(0, 0, 0, 0.2),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --sidebar-width: 0px;
+    
+    position: fixed;
+    bottom: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    z-index: 50;
+    padding: 16px;
+    pointer-events: none;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Between 768px and 1152px - sidebar is visible, offset the TOC */
+  @media (min-width: 768px) {
+    .mobile-toc-container {
+      --sidebar-width: 20rem;
+    }
+  }
+
+  :root[data-theme="light"] .mobile-toc-container {
+    --toc-bg: rgba(255, 255, 255, 0.95);
+    --toc-border: rgba(0, 0, 0, 0.08);
+    --toc-text: rgba(0, 0, 0, 0.85);
+    --toc-text-muted: rgba(0, 0, 0, 0.5);
+    --toc-shadow: 0 4px 32px rgba(0, 0, 0, 0.12),
+                  0 1px 8px rgba(0, 0, 0, 0.06),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* Backdrop */
+  .mobile-toc-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  :root[data-theme="light"] .mobile-toc-backdrop {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .mobile-toc-container.is-open .mobile-toc-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* ==================== */
+  /* Pill Button          */
+  /* ==================== */
+  .mobile-toc-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 180px;
+    height: 48px;
+    padding: 6px 14px 6px 6px;
+    background: var(--toc-bg);
+    border: 1px solid var(--toc-border);
+    border-radius: 24px;
+    box-shadow: var(--toc-shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+  }
+
+  .mobile-toc-pill:hover {
+    border-color: rgba(var(--color-primary-rgb), 0.4);
+    transform: scale(1.02);
+  }
+
+  .mobile-toc-pill:active {
+    transform: scale(0.98);
+  }
+
+  .mobile-toc-container.is-open .mobile-toc-pill {
+    border-color: var(--color-primary);
+    box-shadow: var(--toc-shadow), 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+  }
+
+  /* Progress Ring in Pill */
+  .pill-progress-ring {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .pill-progress-bg {
+    stroke: rgba(var(--color-primary-rgb), 0.12);
+  }
+
+  .pill-progress-fill {
+    stroke: var(--color-primary);
+    transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 3px rgba(var(--color-primary-rgb), 0.5));
+  }
+
+  .pill-progress-text {
+    position: absolute;
+    left: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: -0.02em;
+  }
+
+  /* Current Section in Pill */
+  .pill-current-section {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--toc-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+
+  .pill-current-section:empty::before {
+    content: "On this page";
+    color: var(--toc-text-muted);
+  }
+
+  /* Expand Icon in Pill */
+  .pill-expand-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--toc-text-muted);
+    flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.2s ease;
+  }
+
+  .mobile-toc-pill:hover .pill-expand-icon {
+    color: var(--color-primary);
+  }
+
+  .mobile-toc-container.is-open .pill-expand-icon {
+    transform: rotate(180deg);
+    color: var(--color-primary);
+  }
+
+  /* ==================== */
+  /* Dropdown Panel       */
+  /* ==================== */
+  .mobile-toc-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 16px;
+    right: 16px;
+    margin-bottom: 8px;
+    background: var(--toc-bg);
+    border: 1px solid var(--toc-border);
+    border-radius: 16px;
+    box-shadow: var(--toc-shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    max-height: 60vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    
+    /* Initial state */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px) scale(0.96);
+    transform-origin: bottom right;
+    transition: opacity 0.25s ease,
+                visibility 0.25s ease,
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mobile-toc-container.is-open .mobile-toc-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+
+  .dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--toc-border);
+    flex-shrink: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(var(--color-primary-rgb), 0.05) 0%,
+      transparent 100%
+    );
+  }
+
+  .dropdown-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--toc-text);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dropdown-title::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.5);
+  }
+
+  .close-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-primary-rgb), 0.1);
+    border: none;
+    border-radius: 8px;
+    color: var(--toc-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+
+  .close-btn:hover {
+    background: rgba(var(--color-primary-rgb), 0.2);
+    color: var(--color-primary);
+  }
+
+  .close-btn:active {
+    transform: scale(0.92);
+  }
+
+  .close-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dropdown-content {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 4px 16px;
+    flex: 1;
+  }
+
+  /* Scrollbar styling */
+  .dropdown-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dropdown-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dropdown-content::-webkit-scrollbar-thumb {
+    background: rgba(var(--color-primary-rgb), 0.2);
+    border-radius: 3px;
+  }
+
+  .dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--color-primary-rgb), 0.3);
+  }
+</style>
+
+<script>
+  import { StarlightTOC } from "./starlight-toc";
+
+  class MobileStarlightTOC extends StarlightTOC {
+    private container: HTMLElement | null = null;
+    private pillBtn: HTMLButtonElement | null = null;
+    private closeBtn: HTMLButtonElement | null = null;
+    private backdrop: HTMLElement | null = null;
+    private currentSection: HTMLSpanElement | null = null;
+    private pillProgressRing: SVGCircleElement | null = null;
+    private pillProgressText: HTMLSpanElement | null = null;
+    private readonly circumference = 2 * Math.PI * 15.5; // r=15.5
+
+    protected override set current(link: HTMLAnchorElement) {
+      super.current = link;
+      if (this.currentSection) {
+        this.currentSection.textContent = link.textContent;
+      }
+    }
+
+    constructor() {
+      super();
+      this.initMobile();
+    }
+
+    private initMobile(): void {
+      this.container = this.querySelector(".mobile-toc-container");
+      this.pillBtn = this.querySelector(".mobile-toc-pill");
+      this.closeBtn = this.querySelector(".close-btn");
+      this.backdrop = this.querySelector(".mobile-toc-backdrop");
+      this.currentSection = this.querySelector(".pill-current-section");
+      this.pillProgressRing = this.querySelector(".pill-progress-fill");
+      this.pillProgressText = this.querySelector(".pill-progress-text");
+
+      if (!this.container || !this.pillBtn) return;
+
+      // Set up scroll progress tracking
+      this.setupProgressTracking();
+
+      // Toggle dropdown from pill
+      this.pillBtn.addEventListener("click", () => this.toggleDropdown());
+      
+      // Close button
+      this.closeBtn?.addEventListener("click", () => this.closeDropdown());
+      
+      // Backdrop click
+      this.backdrop?.addEventListener("click", () => this.closeDropdown());
+
+      // Close when a link is clicked
+      this.querySelectorAll(".mobile-toc-dropdown a").forEach((a) => {
+        a.addEventListener("click", () => {
+          this.closeDropdown();
+        });
+      });
+
+      // Handle Escape key
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && this.container?.classList.contains("is-open")) {
+          this.closeDropdown();
+          this.pillBtn?.focus();
+        }
+      });
+    }
+
+    private setupProgressTracking(): void {
+      const scrollContainer = document.querySelector(".content-pane") as HTMLElement;
+      if (!scrollContainer) return;
+
+      const updateProgress = () => {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+        const maxScroll = scrollHeight - clientHeight;
+        
+        // Check if at absolute bottom
+        if (maxScroll > 0 && scrollTop + clientHeight >= scrollHeight - 5) {
+          this.updatePillProgress(100);
+          return;
+        }
+        
+        const progress = maxScroll > 0 ? Math.round((scrollTop / maxScroll) * 100) : 0;
+        this.updatePillProgress(Math.min(100, Math.max(0, progress)));
+      };
+
+      scrollContainer.addEventListener("scroll", updateProgress, { passive: true });
+      updateProgress();
+    }
+
+    private updatePillProgress(percent: number): void {
+      const visualPercent = Math.min(percent, 95);
+      const offset = this.circumference * (1 - visualPercent / 100);
+      
+      if (this.pillProgressRing) {
+        this.pillProgressRing.style.strokeDashoffset = String(offset);
+      }
+      if (this.pillProgressText) {
+        this.pillProgressText.textContent = `${percent}%`;
+      }
+    }
+
+    private toggleDropdown(): void {
+      if (this.container?.classList.contains("is-open")) {
+        this.closeDropdown();
+      } else {
+        this.openDropdown();
+      }
+    }
+
+    private openDropdown(): void {
+      this.container?.classList.add("is-open");
+      this.pillBtn?.setAttribute("aria-expanded", "true");
+      document.body.style.overflow = "hidden";
+      
+      // Scroll to active item after dropdown opens
+      requestAnimationFrame(() => {
+        const activeLink = this.querySelector('.mobile-toc-dropdown a[aria-current="true"]');
+        if (activeLink) {
+          const dropdownContent = this.querySelector('.dropdown-content');
+          if (dropdownContent) {
+            // Small delay to ensure dropdown animation has started
+            setTimeout(() => {
+              activeLink.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }, 100);
+          }
+        }
+      });
+    }
+
+    private closeDropdown(): void {
+      this.container?.classList.remove("is-open");
+      this.pillBtn?.setAttribute("aria-expanded", "false");
+      document.body.style.overflow = "";
+    }
+  }
+
+  customElements.define("mobile-starlight-toc", MobileStarlightTOC);
+</script>

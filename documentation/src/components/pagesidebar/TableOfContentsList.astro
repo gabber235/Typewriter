@@ -1,0 +1,318 @@
+---
+import type { TocItem } from "./types";
+
+interface Props {
+  toc: TocItem[];
+  depth?: number;
+  isMobile?: boolean;
+}
+
+const { toc, isMobile = false, depth = 0 } = Astro.props;
+const pageTitle = Astro.locals.starlightRoute.entry.data.title;
+
+// Separate the _top item from the rest
+const topItem = toc.find((h) => h.slug === "_top");
+const otherItems = toc.filter((h) => h.slug !== "_top");
+---
+
+<ul
+  class={isMobile ? "is-mobile" : "toc-list p-0 list-none relative m-0"}
+  data-depth={depth}>
+  {
+    topItem && depth === 0 && (
+      <li
+        class="toc-item relative mb-0.5"
+        data-heading-slug={topItem.slug}
+        data-toc-depth={depth}
+        data-has-children="true">
+        {!isMobile ? (
+          <div class="toc-link-wrapper relative">
+            <a
+              href={"#" + topItem.slug}
+              class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10"
+              style="padding-left: 1.25rem;">
+              <span class="relative">{pageTitle}</span>
+            </a>
+          </div>
+        ) : (
+          <a
+            href={"#" + topItem.slug}
+            class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4">
+            <span class="flex-1">{pageTitle}</span>
+          </a>
+        )}
+        {otherItems.length > 0 && (
+          <Astro.self toc={otherItems} depth={depth + 1} isMobile={isMobile} />
+        )}
+      </li>
+    )
+  }
+  {
+    (depth > 0 || !topItem) &&
+      toc
+        .filter((h) => h.slug !== "_top")
+        .map((heading) => {
+          const hasChildren = heading.children.length > 0;
+
+          return (
+            <li
+              class="toc-item relative mb-0.5"
+              data-heading-slug={heading.slug}
+              data-toc-depth={depth}
+              data-has-children={hasChildren}>
+              {!isMobile ? (
+                <div class="toc-link-wrapper relative">
+                  <a
+                    href={"#" + heading.slug}
+                    class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10"
+                    style={`padding-left: calc(${depth}rem + 1.25rem);`}>
+                    <span class="relative">{heading.text}</span>
+                  </a>
+                </div>
+              ) : (
+                <a
+                  href={"#" + heading.slug}
+                  class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4">
+                  <span class="flex-1">{heading.text}</span>
+                </a>
+              )}
+              {hasChildren && (
+                <Astro.self
+                  toc={heading.children}
+                  depth={depth + 1}
+                  isMobile={isMobile}
+                />
+              )}
+            </li>
+          );
+        })
+  }
+</ul>
+
+<style>
+  ul[data-depth="0"] {
+    position: relative;
+  }
+
+  ul[data-depth="0"]::before {
+    content: "";
+    position: absolute;
+    left: 0.25rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(var(--color-primary-rgb), 0.1);
+    border-radius: 1px;
+  }
+
+  .toc-link-wrapper {
+    position: relative;
+  }
+
+  .toc-link-wrapper::before {
+    content: "";
+    position: absolute;
+    left: 0.125rem;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.3);
+    z-index: 1;
+  }
+
+  .toc-link-wrapper:has(> a[aria-current="true"])::before {
+    opacity: 1;
+  }
+
+  a[aria-current="true"] {
+    color: var(--color-primary) !important;
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+  }
+
+  a[data-parent-active="true"] {
+    color: rgba(var(--color-primary-rgb), 0.6) !important;
+    font-weight: 450;
+  }
+
+  .is-mobile {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .is-mobile li {
+    margin: 0;
+  }
+
+  .is-mobile a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 10px;
+    margin: 2px 8px;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+
+  :root[data-theme="light"] .is-mobile a {
+    color: rgba(0, 0, 0, 0.65);
+  }
+
+  .is-mobile a::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(var(--color-primary-rgb), 0.3);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  /* Depth-based styling for mobile */
+  .is-mobile[data-depth="0"] > li > a::before {
+    width: 8px;
+    height: 8px;
+    background: var(--color-primary);
+    box-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.4);
+  }
+
+  .is-mobile[data-depth="1"] a {
+    padding-left: 32px;
+  }
+
+  .is-mobile[data-depth="1"] a::before {
+    width: 5px;
+    height: 5px;
+    background: rgba(var(--color-primary-rgb), 0.4);
+  }
+
+  .is-mobile[data-depth="2"] a {
+    padding-left: 48px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  :root[data-theme="light"] .is-mobile[data-depth="2"] a {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .is-mobile[data-depth="2"] a::before {
+    width: 4px;
+    height: 4px;
+    background: rgba(var(--color-primary-rgb), 0.25);
+  }
+
+  .is-mobile[data-depth="3"] a {
+    padding-left: 64px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  :root[data-theme="light"] .is-mobile[data-depth="3"] a {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .is-mobile[data-depth="3"] a::before {
+    width: 3px;
+    height: 3px;
+    background: rgba(var(--color-primary-rgb), 0.2);
+  }
+
+  /* Hover state */
+  .is-mobile a:hover {
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  :root[data-theme="light"] .is-mobile a:hover {
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  .is-mobile a:hover::before {
+    background: var(--color-primary);
+    transform: scale(1.2);
+  }
+
+  /* Active/Current state */
+  .is-mobile a[aria-current="true"] {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.15) 0%,
+      rgba(var(--color-primary-rgb), 0.08) 100%
+    );
+    color: var(--color-primary) !important;
+    font-weight: 600;
+  }
+
+  .is-mobile a[aria-current="true"]::before {
+    background: var(--color-primary);
+    box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.6);
+    transform: scale(1.3);
+  }
+
+  .is-mobile a[aria-current="true"]::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    width: 18px;
+    height: 18px;
+    background: var(--color-primary);
+    mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyMCAyMCcgZmlsbD0nY3VycmVudENvbG9yJz48cGF0aCBmaWxsLXJ1bGU9J2V2ZW5vZGQnIGQ9J00xNi43MDQgNC4xNTNhLjc1Ljc1IDAgMCAxIC4xNDMgMS4wNTJsLTggMTAuNWEuNzUuNzUgMCAwIDEtMS4xMjcuMDc1bC00LjUtNC41YS43NS43NSAwIDAgMSAxLjA2LTEuMDZsMy44OTQgMy44OTMgNy40OC05LjgxN2EuNzUuNzUgMCAwIDEgMS4wNS0uMTQzWicgY2xpcC1ydWxlPSdldmVub2RkJy8+PC9zdmc+");
+    -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyMCAyMCcgZmlsbD0nY3VycmVudENvbG9yJz48cGF0aCBmaWxsLXJ1bGU9J2V2ZW5vZGQnIGQ9J00xNi43MDQgNC4xNTNhLjc1Ljc1IDAgMCAxIC4xNDMgMS4wNTJsLTggMTAuNWEuNzUuNzUgMCAwIDEtMS4xMjcuMDc1bC00LjUtNC41YS43NS43NSAwIDAgMSAxLjA2LTEuMDZsMy44OTQgMy44OTMgNy40OC05LjgxN2EuNzUuNzUgMCAwIDEgMS4wNS0uMTQzWicgY2xpcC1ydWxlPSdldmVub2RkJy8+PC9zdmc+");
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    opacity: 0.9;
+  }
+
+  /* Parent active state */
+  .is-mobile a[data-parent-active="true"] {
+    color: rgba(var(--color-primary-rgb), 0.7) !important;
+  }
+
+  .is-mobile a[data-parent-active="true"]::before {
+    background: rgba(var(--color-primary-rgb), 0.5);
+  }
+
+  /* Section dividers for top-level items */
+  .is-mobile[data-depth="0"] > li:not(:first-child) > a {
+    margin-top: 4px;
+  }
+
+  .is-mobile[data-depth="0"] > li:not(:first-child)::before {
+    content: "";
+    display: block;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 8px,
+      rgba(255, 255, 255, 0.06) 8px,
+      rgba(255, 255, 255, 0.06) calc(100% - 8px),
+      transparent calc(100% - 8px)
+    );
+    margin: 4px 0;
+  }
+
+  :root[data-theme="light"]
+    .is-mobile[data-depth="0"]
+    > li:not(:first-child)::before {
+    background: linear-gradient(
+      90deg,
+      transparent 8px,
+      rgba(0, 0, 0, 0.06) 8px,
+      rgba(0, 0, 0, 0.06) calc(100% - 8px),
+      transparent calc(100% - 8px)
+    );
+  }
+</style>

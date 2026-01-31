@@ -1,0 +1,27 @@
+---
+interface Props {
+  slug: string;
+  text: string;
+  depth: number;
+}
+
+const { slug, text, depth } = Astro.props;
+---
+
+<button
+  type="button"
+  class="collapse-toggle shrink-0 w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors mr-1 focus:outline-none focus:text-white"
+  aria-label={`Toggle ${text} subsections`}
+  data-slug={slug}
+  style={`margin-left: calc(${depth}rem + 0.25rem);`}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    class="w-3 h-3 transition-transform collapse-icon">
+    <path
+      fill-rule="evenodd"
+      d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+      clip-rule="evenodd"></path>
+  </svg>
+</button>
