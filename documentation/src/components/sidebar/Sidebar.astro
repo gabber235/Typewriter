@@ -516,7 +516,7 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
 
       // Touch event handlers for swipe gestures
       function handleTouchStart(e) {
-        if (window.innerWidth >= 800) return;
+        if (window.innerWidth >= 768) return;
         if (!isOpen) return;
 
         touchStartY = e.touches[0].clientY;
@@ -532,7 +532,7 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
       }
 
       function handleTouchMove(e) {
-        if (window.innerWidth >= 800) return;
+        if (window.innerWidth >= 768) return;
         if (!isOpen || !canDrag) return;
 
         const touchCurrentY = e.touches[0].clientY;
@@ -559,7 +559,7 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
       }
 
       function handleTouchEnd(e) {
-        if (window.innerWidth >= 800) return;
+        if (window.innerWidth >= 768) return;
         if (!isOpen || !isDragging) {
           sidebar.style.transition = "";
           isDragging = false;
@@ -606,7 +606,7 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
       // Close drawer on navigation (when clicking a link)
       sidebar.addEventListener("click", function (e) {
         const link = e.target.closest("a");
-        if (link && window.innerWidth < 800) {
+        if (link && window.innerWidth < 768) {
           // Small delay to allow navigation to start
           setTimeout(closeDrawer, 150);
         }
@@ -622,7 +622,7 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
       window.addEventListener("resize", function () {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function () {
-          if (window.innerWidth >= 800 && isOpen) {
+          if (window.innerWidth >= 768 && isOpen) {
             closeDrawer();
           }
         }, 150);
