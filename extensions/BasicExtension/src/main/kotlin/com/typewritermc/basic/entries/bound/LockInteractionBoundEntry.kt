@@ -103,7 +103,7 @@ class LockInteractionBound(
     }
 
     private suspend fun setup() {
-        assert(playerState == null)
+        require(playerState == null)
         playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT, VISIBLE_PLAYERS, SHOWING_PLAYER)
         player.allowFlight = true
         player.isFlying = true

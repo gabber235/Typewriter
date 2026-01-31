@@ -9,7 +9,6 @@ import com.typewritermc.core.utils.ok
 import com.typewritermc.engine.paper.entry.dialogue.TickContext
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
-import com.typewritermc.engine.paper.entry.eventTriggers
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.facts.FactDatabase
 import com.typewritermc.engine.paper.facts.FactsModifier
@@ -49,7 +48,7 @@ class FactsPresetInteraction(
     private val serializer = FactsPresetSerializer(serialized)
 
     init {
-        assert(ref.isSet) { "The Ref to the FactsPreset must be set." }
+        require(ref.isSet) { "The Ref to the FactsPreset must be set." }
     }
 
     override suspend fun initialize(): Result<Unit> {
@@ -85,22 +84,22 @@ class FactsPresetInteraction(
     fun nextApplier(): Boolean {
         val current = applier?.entry
         if (current != null) {
-            eventTriggers += current.triggers.eventTriggers
+            eventTriggers += applier?.appliedTriggers ?: emptyList()
             applier?.appliedChildren?.forEach { childRef -> unAppliedParents.computeIfPresent(childRef) { _, parents -> (parents - current) } }
         }
         applier?.dispose()
         applier = null
 
         val ref = processingOrder.firstOrNull { unAppliedParents[it]!!.isEmpty() } ?: return false
-        assert(ref.isSet) { "We only add to the unapplied parents if there is a reference" }
+        require(ref.isSet) { "We only add to the unapplied parents if there is a reference" }
 
         processingOrder.remove(ref)
         unAppliedParents.remove(ref)
 
         val entry = ref.get()
-        assert(entry != null) { "We only add an entry that exists." }
+        require(entry != null) { "We only add an entry that exists." }
 
-        applier = entry!!.applier(player, modifier, serializer)
+        applier = entry.applier(player, modifier, serializer)
         applier!!.init()
 
         // If we finish immediately, we can shortcut to the next applier to have them all run quickly in one tick
@@ -134,7 +133,7 @@ class FactsPresetInteraction(
         }
         player.sendActionBar("Applied <red>${ref.get()!!.name}</red> preset".asMini())
         player.playSound(Sound.sound().type(Key.key("entity.experience_orb.pickup")).build())
-       
+
         factDatabase.modify(player, modifier.build())
         FactsPresetStopTrigger.triggerFor(player, context)
     }
