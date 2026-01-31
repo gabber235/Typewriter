@@ -9,6 +9,7 @@ import starlightDocSearch from "@astrojs/starlight-docsearch";
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'static',
   prefetch: {
     prefetchAll: true,
     defaultStrategy: "hover",
@@ -32,12 +33,17 @@ export default defineConfig({
         },
       ],
       customCss: ["./src/styles/global.css"],
+      tableOfContents: {
+        minHeadingLevel: 2,
+        maxHeadingLevel: 4,
+      },
       components: {
         Sidebar: "./src/components/sidebar/Sidebar.astro",
         PageFrame: "./src/components/pageframe/PageFrame.astro",
         Header: "./src/components/header/Header.astro",
         SiteTitle: "./src/components/header/SiteTitle.astro",
         ThemeSelect: "./src/components/header/ThemeSelect.astro",
+        PageSidebar: "./src/components/pagesidebar/PageSidebar.astro",
       },
       markdown: {
       }
