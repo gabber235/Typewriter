@@ -15,16 +15,16 @@ const { hasSidebar } = Astro.locals.starlightRoute;
         {/* Backdrop overlay for mobile drawer */}
         <div
           id="sidebar-backdrop"
-          class="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-10 opacity-0 invisible transition-opacity duration-200 min-[50rem]:hidden"
+          class="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-10 opacity-0 invisible transition-opacity duration-200 md:hidden"
           aria-hidden="true"
         />
         <div
           id="starlight__sidebar"
-          class="fixed top-14 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3rem)] min-[50rem]:top-14 min-[50rem]:bottom-0 min-[50rem]:left-0 min-[50rem]:right-auto min-[50rem]:w-xs min-[50rem]:max-h-none min-[50rem]:h-auto min-[50rem]:translate-y-0 min-[50rem]:translate-x-0 min-[50rem]:rounded-none transition-transform duration-300 min-[50rem]:visible min-[50rem]:z-30">
-          <div class="flex flex-col h-full min-h-max gap-4 pt-1 px-1 pb-1 min-[50rem]:pb-4">
+          class="fixed top-14 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3rem)] md:top-14 md:bottom-0 md:left-0 md:right-auto md:w-xs md:max-h-none md:h-auto md:translate-y-0 md:translate-x-0 md:rounded-none transition-transform duration-300 md:visible md:z-30">
+          <div class="flex flex-col h-full min-h-max gap-4 pt-1 px-1 pb-1 md:pb-4">
             <slot name="sidebar" />
           </div>
-          <div class="flex justify-center py-2 min-[50rem]:hidden sticky bottom-0 bg-(--surface)">
+          <div class="flex justify-center py-2 md:hidden sticky bottom-0 bg-(--surface)">
             <div class="w-12 h-1 bg-gray-400 dark:bg-gray-600 rounded-full" />
           </div>
         </div>
@@ -32,7 +32,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
     )
   }
   <div
-    class="content-pane fixed top-14 right-0 bottom-0 left-0 min-[50rem]:left-80 min-[50rem]:rounded-tl-2xl z-40 bg-(--surface-container-lowest) overflow-y-auto">
+    class="content-pane fixed top-14 right-0 bottom-0 left-0 md:left-80 md:rounded-tl-2xl z-40 bg-(--surface-container-lowest) overflow-y-auto">
     <slot />
   </div>
 </div>
