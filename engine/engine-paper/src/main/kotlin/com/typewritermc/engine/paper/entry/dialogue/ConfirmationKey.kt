@@ -1,6 +1,8 @@
 package com.typewritermc.engine.paper.entry.dialogue
 
 import com.destroystokyo.paper.event.player.PlayerJumpEvent
+import com.typewritermc.engine.paper.interaction.InterceptionBundle
+import com.typewritermc.engine.paper.interaction.interceptPackets
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.reloadable
@@ -18,9 +20,6 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
 import org.bukkit.inventory.EquipmentSlot
-import com.github.retrooper.packetevents.PacketEvents
-import com.github.retrooper.packetevents.event.PacketListenerAbstract
-import com.github.retrooper.packetevents.event.PacketListenerPriority
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
@@ -123,15 +122,44 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
     }
 }
 
-class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler, PacketListenerAbstract(PacketListenerPriority.NORMAL) {
+class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler {
+    private var interceptor: InterceptionBundle? = null
+
     override fun initialize() {
         server.pluginManager.registerEvents(this, plugin)
-        PacketEvents.getAPI().eventManager.registerListener(this)
+        interceptor = player.interceptPackets {
+            fun trigger(event: PacketReceiveEvent) {
+                event.isCancelled = true
+                server.scheduler.runTask(plugin, Runnable { block() })
+            }
+
+            if (isLeft) {
+                PacketType.Play.Client.ANIMATION { event ->
+                    trigger(event)
+                }
+                PacketType.Play.Client.INTERACT_ENTITY { event ->
+                    val wrapper = WrapperPlayClientInteractEntity(event)
+                    if (wrapper.action == WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
+                        trigger(event)
+                    }
+                }
+            } else {
+                PacketType.Play.Client.USE_ITEM { event ->
+                    trigger(event)
+                }
+                PacketType.Play.Client.INTERACT_ENTITY { event ->
+                    val wrapper = WrapperPlayClientInteractEntity(event)
+                    if (wrapper.action != WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
+                        trigger(event)
+                    }
+                }
+            }
+        }
     }
 
     override fun dispose() {
         PlayerInteractEvent.getHandlerList().unregister(this as Listener)
-        PacketEvents.getAPI().eventManager.unregisterListener(this)
+        interceptor?.cancel()
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -144,38 +172,6 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
         if (!isLeft && event.action == Action.RIGHT_CLICK_BLOCK) {
             event.isCancelled = true
             block()
-        }
-    }
-
-    override fun onPacketReceive(event: PacketReceiveEvent) {
-        if (event.user.uuid != player.uniqueId) return
-
-        val type = event.packetType
-
-        var triggered = false
-        if (isLeft) {
-            if (type == PacketType.Play.Client.ANIMATION) {
-                triggered = true
-            } else if (type == PacketType.Play.Client.INTERACT_ENTITY) {
-                val wrapper = WrapperPlayClientInteractEntity(event)
-                if (wrapper.action == WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
-                    triggered = true
-                }
-            }
-        } else {
-            if (type == PacketType.Play.Client.USE_ITEM) {
-                triggered = true
-            } else if (type == PacketType.Play.Client.INTERACT_ENTITY) {
-                val wrapper = WrapperPlayClientInteractEntity(event)
-                if (wrapper.action != WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
-                    triggered = true
-                }
-            }
-        }
-
-        if (triggered) {
-            event.isCancelled = true
-            server.scheduler.runTask(plugin, Runnable { block() })
         }
     }
 }
