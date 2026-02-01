@@ -16,50 +16,52 @@ console.log(toc);
         
         <!-- Progress Pill (always visible at top) -->
         <div class="toc-progress-pill">
-          <div class="pill-progress-ring">
-            <svg viewBox="0 0 36 36">
-              <circle
-                class="pill-ring-bg"
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke-width="3"
-              />
-              <circle
-                class="pill-ring-fill progress-circle"
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-dasharray="97.39"
-                stroke-dashoffset="97.39"
-                transform="rotate(-90 18 18)"
-              />
-            </svg>
+          <span class="pill-title">{Astro.locals.t("tableOfContents.onThisPage")}</span>
+            <div class="pill-progress-ring">
+              <svg viewBox="0 0 36 36">
+                <circle
+                  class="pill-ring-bg"
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke-width="3"
+                />
+                <circle
+                  class="pill-ring-fill progress-circle"
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-dasharray="97.39"
+                  stroke-dashoffset="97.39"
+                  transform="rotate(-90 18 18)"
+                />
+              </svg>
             <span class="pill-ring-text progress-text">0%</span>
           </div>
-          <span class="pill-title">{Astro.locals.t("tableOfContents.onThisPage")}</span>
-          <button
-            class="back-to-top-pill"
-            aria-label="Back to top"
-            type="button">
-            <svg viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fill-rule="evenodd"
-                d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
         </div>
         
         <div class="toc-scroll-container flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2 mt-3">
           <TableOfContentsList toc={toc.items} />
         </div>
       </nav>
+
+      <!-- Back to Top Button (fixed bottom right) -->
+      <button
+        class="back-to-top-pill-fixed"
+        aria-label="Back to top"
+        type="button">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
     </starlight-toc>
   )
 }
@@ -71,15 +73,7 @@ console.log(toc);
     align-items: center;
     gap: 10px;
     padding: 6px 8px 6px 6px;
-    background: rgba(var(--color-primary-rgb), 0.06);
-    border: 1px solid rgba(var(--color-primary-rgb), 0.15);
-    border-radius: 20px;
     transition: all 0.2s ease;
-  }
-
-  .toc-progress-pill:hover {
-    background: rgba(var(--color-primary-rgb), 0.1);
-    border-color: rgba(var(--color-primary-rgb), 0.25);
   }
 
   .pill-progress-ring {
@@ -116,9 +110,8 @@ console.log(toc);
   }
 
   .pill-title {
-    flex: 1;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     color: rgba(255, 255, 255, 0.8);
     white-space: nowrap;
     overflow: hidden;
@@ -163,6 +156,54 @@ console.log(toc);
     outline-offset: 2px;
   }
 
+  .back-to-top-pill-fixed {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-primary-rgb), 0.1);
+    border: none;
+    border-radius: 50%;
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 40;
+  }
+
+  .back-to-top-pill-fixed:hover {
+    background: rgba(var(--color-primary-rgb), 0.2);
+    transform: translateY(-2px);
+  }
+
+  .back-to-top-pill-fixed:active {
+    transform: translateY(0) scale(0.95);
+  }
+
+  .back-to-top-pill-fixed svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .back-to-top-pill-fixed:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .back-to-top-pill-fixed.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .back-to-top-pill-fixed {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
   .toc-scroll-container {
     scrollbar-width: none;
   }
@@ -181,40 +222,3 @@ console.log(toc);
 </style>
 
 <script src="./starlight-toc.ts"></script>
-
-<script>
-  import { getScrollContainer } from "./utils";
-
-  // Back to top functionality
-  document.addEventListener("DOMContentLoaded", () => {
-    const backToTopButton =
-      document.querySelector<HTMLButtonElement>(".back-to-top-pill");
-
-    if (backToTopButton) {
-      backToTopButton.addEventListener("click", () => {
-        // Find the scroll container
-        const scrollContainer = getScrollContainer();
-
-        if (scrollContainer) {
-          // Scroll the container
-          scrollContainer.scrollTo({
-            top: 0,
-            behavior: "smooth",
-          });
-        } else {
-          // Fallback to window scroll
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-          });
-        }
-
-        // Focus the main heading for accessibility
-        const mainHeading = document.querySelector("h1");
-        if (mainHeading) {
-          mainHeading.focus({ preventScroll: true });
-        }
-      });
-    }
-  });
-</script>

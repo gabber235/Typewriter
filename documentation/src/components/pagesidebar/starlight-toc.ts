@@ -59,6 +59,7 @@ export class StarlightTOC extends HTMLElement {
 		this.setupSmoothScroll();
 		this.setupIntersectionObserver();
 		this.setupScrollTracking();
+		this.setupBackToTopButton();
 		setTimeout(() => this.updateProgress(), 100);
 	}
 
@@ -247,6 +248,73 @@ export class StarlightTOC extends HTMLElement {
 		tocScrollContainer.scrollTo({
 			top: Math.max(0, targetScroll),
 			behavior: 'smooth'
+		});
+	}
+
+	protected setupBackToTopButton(): void {
+		const backToTopFixedBtn = document.querySelector<HTMLButtonElement>(
+			'.back-to-top-pill-fixed'
+		);
+
+		if (!backToTopFixedBtn) return;
+
+		let lastScrollY = 0;
+
+		// Hide button initially
+		backToTopFixedBtn.classList.add('hidden');
+
+		// Handle scroll direction for fixed button
+		const handleScroll = () => {
+			const currentScrollY = this.scrollContainer 
+				? this.scrollContainer.scrollTop 
+				: window.scrollY;
+
+			// Only show when scrolling up AND not at top
+			if (currentScrollY < lastScrollY && currentScrollY > 0) {
+				// Scrolling up and not at top
+				backToTopFixedBtn.classList.remove('hidden');
+			} else if (currentScrollY === 0 || currentScrollY > lastScrollY) {
+				// At top or scrolling down
+				backToTopFixedBtn.classList.add('hidden');
+			}
+
+			lastScrollY = currentScrollY;
+		};
+
+		// Use throttled scroll handler for performance
+		const throttledScroll = throttleRAF(handleScroll);
+		
+		const scrollTarget = this.scrollContainer || window;
+		scrollTarget.addEventListener('scroll', throttledScroll, { passive: true });
+
+		// Setup click handlers
+		const backToTopButtons = document.querySelectorAll<HTMLButtonElement>(
+			'.back-to-top-pill, .back-to-top-pill-fixed'
+		);
+
+		backToTopButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				// Hide the button with animation
+				backToTopFixedBtn.classList.add('hidden');
+
+				if (this.scrollContainer) {
+					this.scrollContainer.scrollTo({
+						top: 0,
+						behavior: 'smooth',
+					});
+				} else {
+					window.scrollTo({
+						top: 0,
+						behavior: 'smooth',
+					});
+				}
+
+				// Focus the main heading for accessibility
+				const mainHeading = document.querySelector('h1');
+				if (mainHeading) {
+					mainHeading.focus({ preventScroll: true });
+				}
+			});
 		});
 	}
 
