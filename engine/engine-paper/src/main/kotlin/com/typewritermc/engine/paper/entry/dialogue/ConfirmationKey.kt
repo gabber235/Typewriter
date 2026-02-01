@@ -23,6 +23,8 @@ import org.bukkit.inventory.EquipmentSlot
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
+import java.util.concurrent.atomic.AtomicBoolean
+
 
 
 private val confirmationKeyString by config(
@@ -123,14 +125,17 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
 }
 
 class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler {
-    private var interceptor: InterceptionBundle? = null
+    private val triggered = AtomicBoolean(false)
 
     override fun initialize() {
         server.pluginManager.registerEvents(this, plugin)
         interceptor = player.interceptPackets {
             fun trigger(event: PacketReceiveEvent) {
-                event.isCancelled = true
-                server.scheduler.runTask(plugin, Runnable { block() })
+                if (triggered.compareAndSet(false, true)) {
+                    event.isCancelled = true
+                    server.scheduler.runTask(plugin, Runnable { block() })
+                    server.scheduler.runTaskLater(plugin, Runnable { triggered.set(false) }, 1L)
+                }
             }
 
             if (isLeft) {
