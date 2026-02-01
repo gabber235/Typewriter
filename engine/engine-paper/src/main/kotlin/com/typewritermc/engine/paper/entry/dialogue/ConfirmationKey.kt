@@ -125,9 +125,11 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
 }
 
 class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler {
+    private var interceptor: InterceptionBundle? = null
     private val triggered = AtomicBoolean(false)
 
     override fun initialize() {
+
         server.pluginManager.registerEvents(this, plugin)
         interceptor = player.interceptPackets {
             fun trigger(event: PacketReceiveEvent) {
