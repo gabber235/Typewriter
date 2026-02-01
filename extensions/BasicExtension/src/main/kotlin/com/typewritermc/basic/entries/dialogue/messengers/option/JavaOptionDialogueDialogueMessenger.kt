@@ -109,6 +109,8 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
         confirmationKeyHandler = confirmationKey.handler(player) {
             completeOrFinish()
         }
+        // Set the index here so we ensure that the context value is written into the context.
+        selectedIndex = 0
     }
 
     @EventHandler
