@@ -17,7 +17,10 @@ import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
 import com.typewritermc.entity.entries.data.minecraft.living.applyAgeableData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
-import com.typewritermc.entity.entries.data.minecraft.living.panda.*
+import com.typewritermc.entity.entries.data.minecraft.living.panda.PandaGeneProperty
+import com.typewritermc.entity.entries.data.minecraft.living.panda.PandaPoseProperty
+import com.typewritermc.entity.entries.data.minecraft.living.panda.applyPandaGeneData
+import com.typewritermc.entity.entries.data.minecraft.living.panda.applyPandaPoseData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 

@@ -94,6 +94,7 @@ class StageFactsPresetApplier(
 
     override fun init() {
         super.init()
+        modifier.apply(player, entry.presets)
 
         if (entry.children.isEmpty()) {
             state = FactsPresetApplierState.FINISHED

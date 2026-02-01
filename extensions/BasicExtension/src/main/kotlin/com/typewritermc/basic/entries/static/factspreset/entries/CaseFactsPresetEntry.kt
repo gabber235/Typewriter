@@ -14,17 +14,18 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerItemHeldEvent
 
 @Entry(
-    "option_facts_preset",
-    "Allows you to select the one/multiple of the children to be applied",
+    "case_facts_preset",
+    "Allows selecting inline case definitions instead of child entries",
     Colors.BLUE,
-    "f7:arrow-branch",
+    "ic:round-format-list-bulleted",
 )
-class OptionFactsPresetEntry(
+class CaseFactsPresetEntry(
     override val id: String = "",
     override val name: String = "",
     override val children: List<Ref<FactsPresetEntry>> = emptyList(),
     override val presets: List<FactPreset> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    val cases: List<Case> = emptyList(),
     val multiple: Boolean = false,
 ) : FactsPresetEntry {
     override fun applier(
@@ -32,34 +33,35 @@ class OptionFactsPresetEntry(
         modifier: FactsModifier,
         serializer: FactsPresetSerializer
     ): FactsPresetApplier<*> {
-        return OptionFactsPresetApplier(player, this, modifier, serializer)
+        return CaseFactsPresetApplier(player, this, modifier, serializer)
     }
 }
 
-class OptionFactsPresetApplier(
+data class Case(
+    val label: String = "",
+    val presets: List<FactPreset> = emptyList(),
+    val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+)
+
+class CaseFactsPresetApplier(
     player: Player,
-    entry: OptionFactsPresetEntry,
+    entry: CaseFactsPresetEntry,
     modifier: FactsModifier,
     serializer: FactsPresetSerializer
-) : FactsPresetApplier<OptionFactsPresetEntry>(player, entry, modifier, serializer) {
+) : FactsPresetApplier<CaseFactsPresetEntry>(player, entry, modifier, serializer) {
 
     private val controller = SelectionController(
         player = player,
         title = if (entry.multiple) selectableMultipleTitle else selectableSingleTitle,
-        optionsCount = entry.children.size,
+        optionsCount = entry.cases.size,
         allowMultiple = entry.multiple,
-        optionText = { index -> entry.children.getOrNull(index)?.get()?.name?.formatted ?: "<gray>Unknown" },
+        optionText = { index -> entry.cases.getOrNull(index)?.label?.formatted ?: "<gray>Unknown" },
         onComplete = { state = FactsPresetApplierState.FINISHED }
     )
 
-    private var selectedChildIndices: Set<Int> = emptySet()
-
-    override val appliedChildren: List<Ref<FactsPresetEntry>>
-        get() = selectedChildIndices.mapNotNull { entry.children.getOrNull(it) }
-
     override val appliedTriggers: List<EventTrigger>
         get() = entry.triggers.eventTriggers + controller.currentSelection.flatMap { index ->
-            entry.children.getOrNull(index)?.get()?.triggers?.eventTriggers ?: emptyList()
+            entry.cases.getOrNull(index)?.triggers?.eventTriggers ?: emptyList()
         }
 
     override fun init() {
@@ -68,8 +70,12 @@ class OptionFactsPresetApplier(
 
         val deserialization = serializer.pop()
         if (!deserialization.isNullOrBlank()) {
-            selectedChildIndices = deserialization.trim().split(',').mapNotNull { it.toIntOrNull() }
-                .filter { it in 0 until entry.children.size }.toSet()
+            val indices = deserialization.trim().split(',').mapNotNull { it.toIntOrNull() }.toSet()
+            indices.forEach { index ->
+                entry.cases.getOrNull(index)?.let { case ->
+                    modifier.apply(player, case.presets)
+                }
+            }
             state = FactsPresetApplierState.FINISHED
             return
         }
@@ -88,8 +94,14 @@ class OptionFactsPresetApplier(
     }
 
     override fun dispose() {
-        selectedChildIndices = controller.currentSelection
-        serializer.push(selectedChildIndices.joinToString(","))
+        serializer.push(controller.currentSelection.joinToString(","))
+
+        controller.currentSelection.forEach { index ->
+            entry.cases.getOrNull(index)?.let { case ->
+                modifier.apply(player, case.presets)
+            }
+        }
+
         controller.dispose()
         super.dispose()
     }

@@ -45,6 +45,18 @@ class InteractionContext(
     fun expand(builder: ContextBuilder): InteractionContext {
         return combine(context(builder))
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as InteractionContext
+
+        if (data.keys != other.data.keys) return false
+        return data.entries.all { (key, value) -> other.data[key] == value }
+    }
+
+    override fun hashCode(): Int = data.hashCode()
 }
 
 sealed interface InteractionContextKey<T : Any> {

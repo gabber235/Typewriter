@@ -105,7 +105,7 @@ class Streamer<F : Frame<F>>(private val tape: Tape<F>) {
     private var currentValue: F = tape[currentFrame]!!
 
     init {
-        assert(tape.isNotEmpty())
+        require(tape.isNotEmpty())
     }
 
     fun frame(frame: Int): F {
