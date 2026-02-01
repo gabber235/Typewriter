@@ -55,7 +55,7 @@ class MessageActionEntry(
             messageFormat,
             parsed(
                 "speaker",
-                speakerEntry?.displayName?.get(player, context) ?: ""
+                speakerEntry?.displayName?.get(player, context)?.parsePlaceholders(player) ?: ""
             ),
             parsed(
                 "message",
