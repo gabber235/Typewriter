@@ -309,35 +309,64 @@ class QuestItemAudienceDisplay(
         if (!contains(player)) return
 
         val cursorItem = event.cursor
-        if (event.clickedInventory == null) {
+        val currentItem = event.currentItem
+        val clickedInventory = event.clickedInventory
+
+        // Handle Hotbar Swapping (Number Keys)
+        if (event.click == org.bukkit.event.inventory.ClickType.NUMBER_KEY) {
+            val hotbarItem = player.inventory.getItem(event.hotbarButton)
+            // If the item moving FROM the hotbar is a quest item
+            if (isQuestItem(hotbarItem)) {
+                // Prevent moving into a non-player container
+                if (clickedInventory != null && clickedInventory.type != InventoryType.PLAYER) {
+                    event.isCancelled = true
+                    return
+                }
+            }
+            // Note: If the item moving TO the hotbar (currentItem) is a quest item, standard checks apply below?
+            // Actually, if we swap a quest item meant to stay in inv, it's fine as long as it stays in inv.
+            // But we must block moving IT out if it was in the slot.
+        }
+
+        val isInteractingWithQuestItem = isQuestItem(currentItem) || isQuestItem(cursorItem)
+
+        // Block splitting (Right Click, Pickup Half, Place One, etc.)
+        if (isInteractingWithQuestItem) {
+            if (event.click.isRightClick || event.action == org.bukkit.event.inventory.InventoryAction.PICKUP_HALF ||
+                event.action == org.bukkit.event.inventory.InventoryAction.PLACE_ONE ||
+                event.action == org.bukkit.event.inventory.InventoryAction.PLACE_SOME
+            ) {
+                event.isCancelled = true
+                return
+            }
+        }
+
+        // If clicked outside the window
+        if (clickedInventory == null) {
             if (isQuestItem(cursorItem)) {
                 event.isCancelled = true
             }
             return
         }
 
-        val clickedInventory = event.clickedInventory!!
-        val currentItem = event.currentItem
-
-
         // Block interaction with crafting slots
         if (clickedInventory.type == InventoryType.CRAFTING && event.slot in 1..4) {
-            if (isQuestItem(currentItem) || isQuestItem(cursorItem)) {
+            if (isInteractingWithQuestItem) {
                 event.isCancelled = true
                 return
             }
         }
 
-        if (!isQuestItem(currentItem)) return
+        if (!isInteractingWithQuestItem) return
 
-        // Prevent placing into containers
+        // Prevent placing into containers (non-player)
         if (clickedInventory.type != InventoryType.PLAYER && clickedInventory.type != InventoryType.CRAFTING) {
             event.isCancelled = true
             return
         }
 
-        // Prevent shift-clicking into containers
-        if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER && event.click.isShiftClick) {
+        // Prevent shift-clicking into containers from player inventory
+        if (clickedInventory.type == InventoryType.PLAYER && event.view.topInventory.type != InventoryType.PLAYER && event.isShiftClick) {
             event.isCancelled = true
             return
         }
@@ -348,11 +377,10 @@ class QuestItemAudienceDisplay(
         val player = event.whoClicked as? Player ?: return
         if (!contains(player)) return
 
-        if (!isQuestItem(event.oldCursor)) return
-        if (event.view.topInventory.type == InventoryType.PLAYER || event.view.topInventory.type == InventoryType.CRAFTING) return
-        val topSize = event.view.topInventory.size
-        if (event.rawSlots.none { it < topSize }) return
-        event.isCancelled = true
+        // Strictly disallow dragging quest items
+        if (isQuestItem(event.oldCursor)) {
+            event.isCancelled = true
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
