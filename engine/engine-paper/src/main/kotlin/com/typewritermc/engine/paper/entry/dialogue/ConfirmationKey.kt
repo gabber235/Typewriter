@@ -174,11 +174,12 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
         if (event.player.uniqueId != player.uniqueId) return
         if (event.hand != EquipmentSlot.HAND) return
 
-        // Right Click Block is handled here to ensure we catch block interactions correctly
-        // Left Click is fully handled by packets (Animation)
         if (!isLeft && event.action == Action.RIGHT_CLICK_BLOCK) {
-            event.isCancelled = true
-            block()
+            if (triggered.compareAndSet(false, true)) {
+                event.isCancelled = true
+                block()
+                server.scheduler.runTaskLater(plugin, Runnable { triggered.set(false) }, 1L)
+            }
         }
     }
 }
