@@ -165,7 +165,7 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
     }
 
     override fun dispose() {
-        PlayerInteractEvent.getHandlerList().unregister(this as Listener)
+        super.dispose()
         interceptor?.cancel()
     }
 
