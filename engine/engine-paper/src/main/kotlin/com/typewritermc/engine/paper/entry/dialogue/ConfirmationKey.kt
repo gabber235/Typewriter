@@ -133,8 +133,8 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
         server.pluginManager.registerEvents(this, plugin)
         interceptor = player.interceptPackets {
             fun trigger(event: PacketReceiveEvent) {
+                event.isCancelled = true
                 if (triggered.compareAndSet(false, true)) {
-                    event.isCancelled = true
                     server.scheduler.runTask(plugin, Runnable { block() })
                     server.scheduler.runTaskLater(plugin, Runnable { triggered.set(false) }, 1L)
                 }
@@ -175,8 +175,8 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
         if (event.hand != EquipmentSlot.HAND) return
 
         if (!isLeft && event.action == Action.RIGHT_CLICK_BLOCK) {
+            event.isCancelled = true
             if (triggered.compareAndSet(false, true)) {
-                event.isCancelled = true
                 block()
                 server.scheduler.runTaskLater(plugin, Runnable { triggered.set(false) }, 1L)
             }
