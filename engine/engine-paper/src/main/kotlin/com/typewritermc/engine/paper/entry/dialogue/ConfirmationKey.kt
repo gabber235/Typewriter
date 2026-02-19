@@ -132,7 +132,7 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
 
     override fun initialize() {
 
-        server.pluginManager.registerEvents(this, plugin)
+        super.initialize()
         interceptor = player.interceptPackets {
             fun trigger(event: PacketReceiveEvent) {
                 val now = System.currentTimeMillis()
