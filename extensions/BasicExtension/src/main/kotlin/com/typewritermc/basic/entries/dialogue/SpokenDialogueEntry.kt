@@ -18,7 +18,7 @@ import com.typewritermc.engine.paper.utils.isFloodgate
 import org.bukkit.entity.Player
 import java.time.Duration
 
-@Entry("spoken", "Display a animated message to the player", "#1E88E5", "mingcute:message-4-fill")
+@Entry("spoken", "Display an animated message to the player", "#1E88E5", "mingcute:message-4-fill")
 /**
  * The `Spoken Dialogue Action` is an action that displays an animated message to the player. This action provides you with the ability to display a message with a specified speaker, text, and duration.
  *
