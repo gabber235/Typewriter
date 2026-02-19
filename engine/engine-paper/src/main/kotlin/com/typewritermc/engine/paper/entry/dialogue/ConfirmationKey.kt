@@ -59,7 +59,7 @@ enum class ConfirmationKey(val keybind: String) {
             SWAP_HANDS -> SwapHandsHandler(player, block)
             JUMP -> JumpHandler(player, block)
             SNEAK -> SneakHandler(player, block)
-            LEFT_CLICK -> ClickHandler(player, block, true)
+            LEFT_CLICK -> ClickHandler(player, block)
             RIGHT_CLICK -> ClickHandler(player, block, false)
         }.apply { initialize() }
     }
@@ -126,7 +126,7 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
     }
 }
 
-class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler {
+class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean = true) : ConfirmationKeyHandler {
     private var interceptor: InterceptionBundle? = null
     private var lastTrigger = 0L
 
