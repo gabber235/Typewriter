@@ -23,7 +23,9 @@ import org.bukkit.inventory.EquipmentSlot
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
-import java.util.concurrent.atomic.AtomicBoolean
+import com.typewritermc.core.utils.launch
+import com.typewritermc.engine.paper.utils.Sync
+import kotlinx.coroutines.Dispatchers
 
 
 
@@ -126,17 +128,20 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
 
 class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean) : ConfirmationKeyHandler {
     private var interceptor: InterceptionBundle? = null
-    private val triggered = AtomicBoolean(false)
+    private var lastTrigger = 0L
 
     override fun initialize() {
 
         server.pluginManager.registerEvents(this, plugin)
         interceptor = player.interceptPackets {
             fun trigger(event: PacketReceiveEvent) {
+                val now = System.currentTimeMillis()
+                if (now - lastTrigger < 50) return
+                lastTrigger = now
+
                 event.isCancelled = true
-                if (triggered.compareAndSet(false, true)) {
-                    server.scheduler.runTask(plugin, Runnable { block() })
-                    server.scheduler.runTaskLater(plugin, Runnable { triggered.set(false) }, 1L)
+                Dispatchers.Sync.launch {
+                    block()
                 }
             }
 
@@ -165,7 +170,7 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
     }
 
     override fun dispose() {
-        super.dispose()
+        PlayerInteractEvent.getHandlerList().unregister(this as Listener)
         interceptor?.cancel()
     }
 
@@ -174,12 +179,11 @@ class ClickHandler(override val player: Player, override val block: () -> Unit, 
         if (event.player.uniqueId != player.uniqueId) return
         if (event.hand != EquipmentSlot.HAND) return
 
+        // Right Click Block is handled here to ensure we catch block interactions correctly
+        // Left Click is fully handled by packets (Animation)
         if (!isLeft && event.action == Action.RIGHT_CLICK_BLOCK) {
             event.isCancelled = true
-            if (triggered.compareAndSet(false, true)) {
-                block()
-                server.scheduler.runTaskLater(plugin, Runnable { triggered.set(false) }, 1L)
-            }
+            block()
         }
     }
 }
