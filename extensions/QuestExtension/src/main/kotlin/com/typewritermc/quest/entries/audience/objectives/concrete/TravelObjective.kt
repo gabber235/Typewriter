@@ -19,8 +19,6 @@ import com.typewritermc.quest.entries.interfaces.CacheableFactObjectiveProgressT
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.event.player.PlayerTeleportEvent
 import java.util.Optional
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 enum class TravelType {
     /** Any ground movement that is not sprinting, sneaking, swimming, flying, or gliding. */
@@ -56,15 +54,13 @@ class TravelObjective(
 ) : CachableFactObjective {
 
     override suspend fun display(): AudienceFilter {
-        // Local accumulator — captured by the lambda, not a field on the entry.
-        val accumulator = ConcurrentHashMap<UUID, Double>()
         return ObjectiveAudienceFilter(
             ref(),
             criteria,
         ).listenToEvent(PlayerMoveEvent::class) { event ->
             // Teleports must not count as travelled distance.
             if (event is PlayerTeleportEvent) return@listenToEvent
-            if (!event.hasChangedPosition()) return@listenToEvent
+            if (!event.hasChangedBlock()) return@listenToEvent
 
             if (movementTypes.isNotEmpty()) {
                 val active = when {
@@ -78,15 +74,8 @@ class TravelObjective(
                 if (active !in movementTypes) return@listenToEvent
             }
 
-            val uuid = event.player.uniqueId
-            val newAccum = (accumulator[uuid] ?: 0.0) + event.from.distance(event.to)
-            val blocks = newAccum.toInt()
-            if (blocks > 0) {
-                accumulator[uuid] = newAccum - blocks
-                incrementFact(event.player, blocks)
-            } else {
-                accumulator[uuid] = newAccum
-            }
+            val blocks = event.from.distance(event.to).toInt().coerceAtLeast(1)
+            incrementFact(event.player, blocks)
         }
     }
 }
