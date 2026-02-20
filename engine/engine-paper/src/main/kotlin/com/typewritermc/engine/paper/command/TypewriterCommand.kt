@@ -20,6 +20,7 @@ import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.utils.asMini
+import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.msg
 import com.typewritermc.engine.paper.utils.sendMini
 import com.typewritermc.loader.Extension
@@ -415,6 +416,7 @@ private fun CommandTree.connectCommand() = literal("connect") {
             return@executes
         }
 
+
         val bookTitle = "<blue>Connect to the server</blue>".asMini()
         val bookAuthor = "<blue>Typewriter</blue>".asMini()
 
@@ -427,6 +429,11 @@ private fun CommandTree.connectCommand() = literal("connect") {
 				|
 				|<gray><i>Because of security reasons, this link will expire in 5 minutes.</i></gray>
 			""".trimMargin().asMini()
+
+        if (player.isFloodgate) {
+            sender.sendMessage(bookPage)
+            return@executes
+        }
 
         val book = Book.book(bookTitle, bookAuthor, bookPage)
         player.openBook(book)
