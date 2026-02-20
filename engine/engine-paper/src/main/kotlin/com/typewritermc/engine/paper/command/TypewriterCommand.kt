@@ -29,6 +29,7 @@ import com.typewritermc.loader.ExtensionLoader
 import kotlinx.coroutines.Dispatchers
 import net.kyori.adventure.inventory.Book
 import org.bukkit.command.CommandSender
+import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
 import java.time.format.DateTimeFormatter
@@ -429,6 +430,30 @@ private fun CommandTree.connectCommand() = literal("connect") {
 
         val book = Book.book(bookTitle, bookAuthor, bookPage)
         player.openBook(book)
+    }
+
+    playerResolver("target") { player ->
+        executes {
+            if (source.sender !is ConsoleCommandSender) {
+                sender.msg("You can only connect as other players from the console.")
+                return@executes
+            }
+            val targets = player().resolve(source)
+            if (targets.isEmpty()) {
+                sender.msg("No players found.")
+                return@executes
+            }
+
+            if (targets.size > 1) {
+                sender.msg("You can only connect as one player at a time.")
+                return@executes
+            }
+
+            val target = targets.first()
+
+            val url = communicationHandler.generateUrl(target.uniqueId)
+            sender.msg("Connect to<blue> $url </blue>to start the connection.")
+        }
     }
 }
 
