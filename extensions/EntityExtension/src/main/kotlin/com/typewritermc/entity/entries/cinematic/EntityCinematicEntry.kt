@@ -138,7 +138,7 @@ class EntityCinematicAction(
 
         val prioritizedPropertySuppliers = definition.data.withPriority() +
                 (FakeProvider(PositionProperty::class) { streamer?.currentFrame()?.location?.toProperty(player.world.toWorld()) } to Int.MAX_VALUE) +
-                (FakeProvider(PoseProperty::class) { streamer?.currentFrame()?.pose?.toProperty() } to Int.MAX_VALUE) +
+                (FakeProvider(PoseProperty::class) { streamer?.currentFrame()?.pose?.toProperty() } to 1000) +
                 (FakeProvider(ArmSwingProperty::class) { streamer?.currentFrame()?.swing?.toProperty() } to Int.MAX_VALUE) +
                 (FakeProvider(DamagedProperty::class) { DamagedProperty(streamer?.currentFrame()?.damaged == true) } to Int.MAX_VALUE) +
                 (FakeProvider(UseItemProperty::class) { UseItemProperty(streamer?.currentFrame()?.useItem == true) } to Int.MAX_VALUE) +
@@ -153,7 +153,7 @@ class EntityCinematicAction(
                     streamer?.currentFrame()?.boots?.let { equipment[BOOTS] = it.toPacketItem() }
 
                     EquipmentProperty(equipment)
-                } to Int.MAX_VALUE)
+                } to 1000)
 
         this.collectors = prioritizedPropertySuppliers.toCollectors()
         spawn()
@@ -408,7 +408,10 @@ class EntityCinematicRecording(
 
     override fun applyState(value: EntityFrame) {
         value.location?.let { player.teleport(it.toBukkitLocation(player.world)) }
-        value.pose?.let { player.pose = it.toBukkitPose() }
+        value.pose?.let {
+            player.pose = it.toBukkitPose()
+            player.isGliding = it == EntityPose.SWIMMING
+        }
         value.swing?.let { swing ->
             when (swing to player.mainHand) {
                 ArmSwing.RIGHT to MainHand.RIGHT -> player.swingMainHand()

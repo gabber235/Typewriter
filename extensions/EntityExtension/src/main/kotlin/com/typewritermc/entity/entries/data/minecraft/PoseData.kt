@@ -29,7 +29,8 @@ class PoseData(
 }
 
 data class PoseProperty(val pose: EntityPose) : EntityProperty {
-    companion object : SinglePropertyCollectorSupplier<PoseProperty>(PoseProperty::class, PoseProperty(EntityPose.STANDING))
+    companion object :
+        SinglePropertyCollectorSupplier<PoseProperty>(PoseProperty::class, PoseProperty(EntityPose.STANDING))
 }
 
 fun Pose.toEntityPose() = when (this) {
@@ -46,7 +47,12 @@ fun EntityPose.toProperty() = PoseProperty(this)
 
 fun applyPoseData(entity: WrapperEntity, property: PoseProperty) {
     entity.metas {
-        meta<EntityMeta> { pose = property.pose }
+        meta<EntityMeta> {
+            pose = property.pose
+            isSneaking = property.pose == EntityPose.CROUCHING
+            isSwimming = property.pose == EntityPose.SWIMMING
+            isFlyingWithElytra = property.pose == EntityPose.FALL_FLYING
+        }
         error("Could not apply PoseData to ${entity.entityType} entity.")
     }
 }
