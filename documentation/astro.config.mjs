@@ -9,6 +9,8 @@ import starlightDocSearch from "@astrojs/starlight-docsearch";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://docs.typewritermc.com",
+  base: process.env.DOCS_BASE_PATH || "/",
   output: 'static',
   prefetch: {
     prefetchAll: true,

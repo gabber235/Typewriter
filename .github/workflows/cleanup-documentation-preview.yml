@@ -1,0 +1,61 @@
+name: Cleanup Documentation Preview
+
+on:
+  pull_request:
+    types: [closed]
+  delete:
+  workflow_dispatch:
+    inputs:
+      path_to_clean:
+        description: "Subdirectory to remove from gh-pages (e.g. branches/features/v1 or branches/pr-42)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    name: Cleanup Preview Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine cleanup path
+        id: path
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            CLEANUP_PATH="${{ inputs.path_to_clean }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CLEANUP_PATH="branches/pr-${{ github.event.pull_request.number }}"
+          elif [[ "${{ github.event_name }}" == "delete" && "${{ github.event.ref_type }}" == "branch" ]]; then
+            BRANCH_NAME="${{ github.event.ref }}"
+            CLEANUP_PATH="branches/${BRANCH_NAME}"
+          else
+            echo "Nothing to clean up"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "cleanup_path=${CLEANUP_PATH}" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "Cleaning up: ${CLEANUP_PATH}"
+
+      - name: Checkout gh-pages branch
+        if: steps.path.outputs.skip != 'true'
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+
+      - name: Remove preview directory
+        if: steps.path.outputs.skip != 'true'
+        run: |
+          TARGET_DIR="${{ steps.path.outputs.cleanup_path }}"
+          if [ -d "${TARGET_DIR}" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm -rf "${TARGET_DIR}"
+            git commit -m "docs: cleanup preview for ${TARGET_DIR}"
+            git push origin gh-pages
+            echo "Removed ${TARGET_DIR}"
+          else
+            echo "Directory ${TARGET_DIR} does not exist, nothing to clean up"
+          fi
