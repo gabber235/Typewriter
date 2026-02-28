@@ -28,8 +28,8 @@ pub fn handle_status(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         r#"
         BEGIN TRANSACTION;
 
-        LET $service = SELECT 
-            id, 
+        LET $service = SELECT
+            id,
             IF organization THEN {id: organization.id, name: organization.name} ELSE null END AS organization,
             registration.token AS existing_token
         FROM type::thing('service', $service_id)
@@ -104,7 +104,7 @@ pub fn handle_status(msg: BrokerMessage, params: HashMap<String, String>) -> Res
                         binding: Some(typewriter::api::v1::service_status::Binding::Bound(
                             typewriter::api::v1::BoundStatus {
                                 organization_id: org.id.id.to_string(),
-                                organization_name: org.name,
+                                organization_name: Some(org.name),
                             },
                         )),
                     },
@@ -124,7 +124,7 @@ pub fn handle_status(msg: BrokerMessage, params: HashMap<String, String>) -> Res
                 typewriter::api::v1::ServiceStatus {
                     binding: Some(typewriter::api::v1::service_status::Binding::Unbound(
                         typewriter::api::v1::UnboundStatus {
-                            registration_token: token,
+                            registration_token: Some(token),
                         },
                     )),
                 },

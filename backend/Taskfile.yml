@@ -12,50 +12,78 @@ tasks:
       TASK_CMD: '{{default "" .TASK_CMD}}'
     cmds:
       - |
+        # Color definitions using bash $'...' syntax
+        C_RESET=$'\033[0m'
+        C_BOLD=$'\033[1m'
+        C_DIM=$'\033[2m'
+        C_GREEN=$'\033[32m'
+        C_RED=$'\033[31m'
+        C_YELLOW=$'\033[33m'
+        C_BLUE=$'\033[34m'
+        C_CYAN=$'\033[36m'
+
         if [ -z "{{.TASK_CMD}}" ]; then
-          echo "Usage: task all TASK_CMD=<task-name>"
-          echo "Example: task all TASK_CMD=deploy"
+          echo "${C_BOLD}${C_RED}Error: TASK_CMD is required${C_RESET}"
+          echo ""
+          echo "${C_DIM}Usage:${C_RESET} task all TASK_CMD=<task-name>"
+          echo "${C_DIM}Example:${C_RESET} task all TASK_CMD=deploy"
           exit 1
         fi
 
-        # Find all Taskfile.yml files in subdirectories (excluding this one and Taskfile.single.yml)
         TASKFILES=$(find . -mindepth 2 -name "Taskfile.yml" -type f | sort)
 
         if [ -z "$TASKFILES" ]; then
-          echo "No sub-Taskfiles found"
+          echo "${C_YELLOW}⊘ No sub-Taskfiles found${C_RESET}"
           exit 0
         fi
 
-        echo "Running '{{.TASK_CMD}}' on all components..."
-        echo "=========================================="
+        echo "${C_BOLD}${C_BLUE}▶ Running '{{.TASK_CMD}}' across all components${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+        echo ""
 
+        TOTAL=0
+        SUCCESS=0
         FAILED=""
+        SKIPPED=0
+
         for taskfile in $TASKFILES; do
           DIR=$(dirname "$taskfile")
+          TOTAL=$((TOTAL + 1))
 
           if ! (cd "$DIR" && task --list 2>/dev/null | grep -q "^\* {{.TASK_CMD}}:"); then
-            echo "⊘ $DIR (task '{{.TASK_CMD}}' not found, skipping)"
+            echo "${C_DIM}• $DIR (no '{{.TASK_CMD}}' task, skipping)${C_RESET}"
+            SKIPPED=$((SKIPPED + 1))
             continue
           fi
 
-          echo ""
-          echo ">>> $DIR"
-          echo "-------------------------------------------"
-          if (cd "$DIR" && task {{.TASK_CMD}} ENV={{.ENV}}); then
-            echo "<<< $DIR completed"
+          echo "${C_BOLD}→ $DIR${C_RESET}"
+
+          if (cd "$DIR" && task {{.TASK_CMD}} ENV={{.ENV}} 2>&1 | sed 's/^/  /'); then
+            echo "  ${C_GREEN}✓ Success${C_RESET}"
+            SUCCESS=$((SUCCESS + 1))
           else
-            echo "<<< $DIR FAILED"
-            FAILED="$FAILED $DIR"
+            echo "  ${C_RED}✗ Failed${C_RESET}"
+            FAILED="$FAILED\n  ${C_RED}✗ $DIR${C_RESET}"
           fi
+          echo ""
         done
 
-        echo ""
-        echo "=========================================="
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+        echo "${C_BOLD}Summary${C_RESET}"
+        echo "  ${C_GREEN}✓ $SUCCESS successful${C_RESET}"
+        FAILED_COUNT=$(echo -e "$FAILED" | grep -c '✗' || echo 0)
+        echo "  ${C_RED}✗ $FAILED_COUNT failed${C_RESET}"
+        echo "  ${C_YELLOW}⊘ $SKIPPED skipped${C_RESET}"
+        echo "  ${C_DIM}• $TOTAL total${C_RESET}"
+
         if [ -n "$FAILED" ]; then
-          echo "Failed components:$FAILED"
+          echo ""
+          echo "${C_BOLD}${C_RED}Failed components:${C_RESET}"
+          echo -e "$FAILED"
           exit 1
         else
-          echo "All components completed successfully"
+          echo ""
+          echo "${C_GREEN}✓ All components completed successfully${C_RESET}"
         fi
 
   deploy:all:
@@ -99,7 +127,13 @@ tasks:
       - build:all
     cmds:
       - |
-        echo "Pre-compiling WASM components..."
+        C_BOLD=$'\033[1m'
+        C_CYAN=$'\033[36m'
+        C_RESET=$'\033[0m'
+        C_DIM=$'\033[2m'
+
+        echo "${C_BOLD}${C_CYAN}▶ Pre-compiling WASM components...${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         cargo run --manifest-path tests/Cargo.toml --bin precompile --release -- .
 
   setup:all:
@@ -127,23 +161,46 @@ tasks:
     desc: List all sub-Taskfiles
     cmds:
       - |
-        echo "Sub-Taskfiles found:"
+        C_BOLD=$'\033[1m'
+        C_BLUE=$'\033[34m'
+        C_CYAN=$'\033[36m'
+        C_RESET=$'\033[0m'
+        C_DIM=$'\033[2m'
+
+        echo "${C_BOLD}${C_BLUE}▶ Sub-Taskfiles${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         find . -mindepth 2 -name "Taskfile.yml" -type f | sort | while read taskfile; do
           DIR=$(dirname "$taskfile")
-          echo "  - $DIR"
+          echo "  ${C_CYAN}• $DIR${C_RESET}"
         done
 
   test:
     desc: "Run integration tests (builds components if needed)"
     cmds:
       - task: compile:cwasm:all
-      - cd tests && cargo test {{.CLI_ARGS}}
+      - |
+        C_BOLD=$'\033[1m'
+        C_CYAN=$'\033[36m'
+        C_RESET=$'\033[0m'
+        C_DIM=$'\033[2m'
+
+        echo "${C_BOLD}${C_CYAN}▶ Running integration tests${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+        cd tests && cargo test {{.CLI_ARGS}}
 
   test:all:
     desc: "Run all integration tests in single binary (fastest)"
     cmds:
       - task: compile:cwasm:all
-      - cd tests && cargo test --test integration {{.CLI_ARGS}}
+      - |
+        C_BOLD=$'\033[1m'
+        C_CYAN=$'\033[36m'
+        C_RESET=$'\033[0m'
+        C_DIM=$'\033[2m'
+
+        echo "${C_BOLD}${C_CYAN}▶ Running integration tests (single binary)${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+        cd tests && cargo test --test integration {{.CLI_ARGS}}
 
   test:flaky:
     desc: "Detect flaky tests by running the suite multiple times (run build:all first)"
@@ -153,9 +210,19 @@ tasks:
       FILTER: '{{default "" .FILTER}}'
     cmds:
       - |
-        echo "Checking for cargo-nextest..."
+        C_BOLD=$'\033[1m'
+        C_CYAN=$'\033[36m'
+        C_RESET=$'\033[0m'
+        C_DIM=$'\033[2m'
+        C_GREEN=$'\033[32m'
+        C_RED=$'\033[31m'
+        C_YELLOW=$'\033[33m'
+
+        echo "${C_BOLD}${C_CYAN}▶ Detecting flaky tests${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+
         if ! command -v cargo-nextest >/dev/null 2>&1; then
-          echo "Installing cargo-nextest..."
+          echo "${C_YELLOW}→ Installing cargo-nextest...${C_RESET}"
           cargo install cargo-nextest
         fi
 
@@ -164,29 +231,25 @@ tasks:
         if [ -z "$FILTER_DESC" ]; then
           FILTER_DESC="all tests"
         fi
-        echo "Running $FILTER_DESC {{.ITERATIONS}} times with {{.RETRIES}} retries each..."
-        echo "This will identify tests that fail intermittently."
-        echo "(Run 'task build:all' first if components are not built)"
-        echo "=================================================="
+        echo "Running: ${C_BOLD}$FILTER_DESC${C_RESET}"
+        echo "Iterations: ${C_BOLD}{{.ITERATIONS}}${C_RESET}"
+        echo "Retries per test: ${C_BOLD}{{.RETRIES}}${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
 
-        # Track failures across all iterations
         declare -A failure_counts
         total_runs=0
 
         for i in $(seq 1 {{.ITERATIONS}}); do
           echo ""
-          echo ">>> Iteration $i/{{.ITERATIONS}}"
+          echo "${C_BOLD}→ Iteration $i/{{.ITERATIONS}}${C_RESET}"
           total_runs=$((total_runs + 1))
 
-          # Run tests with retries, capture output
-          # Tests that pass on retry are marked FLAKY
           if [ -z "{{.FILTER}}" ]; then
             output=$(cd tests && cargo nextest run --retries {{.RETRIES}} --no-fail-fast 2>&1) || true
           else
             output=$(cd tests && cargo nextest run --retries {{.RETRIES}} --no-fail-fast -E "test({{.FILTER}})" 2>&1) || true
           fi
 
-          # Extract failed tests (after all retries exhausted)
           while IFS= read -r line; do
             if [[ "$line" =~ FAIL.*[[:space:]]([a-zA-Z0-9_:]+) ]]; then
               test_name="${BASH_REMATCH[1]}"
@@ -194,7 +257,6 @@ tasks:
             fi
           done <<< "$output"
 
-          # Extract flaky tests (failed then passed on retry)
           while IFS= read -r line; do
             if [[ "$line" =~ FLAKY.*[[:space:]]([a-zA-Z0-9_:]+) ]]; then
               test_name="${BASH_REMATCH[1]}"
@@ -204,24 +266,32 @@ tasks:
         done
 
         echo ""
-        echo "=================================================="
-        echo "FLAKINESS REPORT (after {{.ITERATIONS}} iterations)"
-        echo "=================================================="
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+        echo "${C_BOLD}Flakiness Report${C_RESET}"
+        echo "${C_DIM}After {{.ITERATIONS}} iterations${C_RESET}"
+        echo "${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
 
         if [ ${#failure_counts[@]} -eq 0 ]; then
-          echo "No flaky tests detected!"
+          echo "${C_GREEN}✓ No flaky tests detected!${C_RESET}"
         else
-          printf "%-60s | %8s | %6s\n" "Test Name" "Failures" "Rate"
-          echo "-------------------------------------------------------------+----------+-------"
+          printf "  ${C_BOLD}%-50s${C_RESET} | ${C_BOLD}%6s${C_RESET} | ${C_BOLD}%5s${C_RESET}\n" "Test Name" "Fails" "Rate"
+          echo "  ${C_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_DIM}|${C_DIM}━━━━━━━━━━━━━━${C_DIM}|${C_DIM}━━━━━━━━━━${C_RESET}"
           for test in "${!failure_counts[@]}"; do
             count=${failure_counts[$test]}
             rate=$((count * 100 / total_runs))
-            printf "%-60s | %8d | %5d%%\n" "$test" "$count" "$rate"
+            if [ $rate -gt 50 ]; then
+              COLOR="${C_RED}"
+            elif [ $rate -gt 20 ]; then
+              COLOR="${C_YELLOW}"
+            else
+              COLOR="${C_CYAN}"
+            fi
+            printf "  %-50s | %6d | ${COLOR}%5d%%${C_RESET}\n" "$test" "$count" "$rate"
           done | sort -t'|' -k3 -rn
         fi
 
         echo ""
-        echo "Total iterations: $total_runs"
+        echo "${C_DIM}Total iterations: $total_runs${C_RESET}"
 
   default:
     desc: Show available tasks

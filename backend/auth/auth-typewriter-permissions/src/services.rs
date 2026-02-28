@@ -7,8 +7,8 @@ use wasmcloud_utils::wasmcloud::messaging::consumer;
 
 use crate::common::build_nats_permissions;
 use crate::typewriter::api::v1::{
-    get_service_status_response, service_status, GetServiceStatusRequest,
-    GetServiceStatusResponse, ServiceStatus,
+    get_service_status_response, service_status, GetServiceStatusRequest, GetServiceStatusResponse,
+    ServiceStatus,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -31,9 +31,11 @@ fn query_service_status(service_id: &str) -> Result<ServiceStatus> {
 
     match status_response.result {
         Some(get_service_status_response::Result::Status(status)) => Ok(status),
-        Some(get_service_status_response::Result::Error(err)) => {
-            Err(anyhow!("service status error: {} - {}", err.code, err.message))
-        }
+        Some(get_service_status_response::Result::Error(err)) => Err(anyhow!(
+            "service status error: {} - {}",
+            err.code,
+            err.message
+        )),
         None => Err(anyhow!("empty response from service status")),
     }
 }
@@ -42,9 +44,7 @@ pub fn handle_service(
     claims: jose::jwt::Claims<ServiceClaims>,
     _organization_id: Option<String>,
 ) -> Result<(NatsPermissions, Vec<String>)> {
-    let service_id = claims
-        .subject
-        .ok_or(anyhow!("No subject in claims"))?;
+    let service_id = claims.subject.ok_or(anyhow!("No subject in claims"))?;
 
     let service_name = claims
         .additional
@@ -63,7 +63,11 @@ pub fn handle_service(
     let mut allow_subscribe = vec![];
     let mut tags = vec![format!("service:{}", service_id)];
 
+    tags.push(format!("service:{}", service_id));
+
     allow_subscribe.push(format!("_INBOX.{}.>", service_id));
+    allow_publish.push(format!("_INBOX.>"));
+
     allow_publish.push(format!("cloud.out.service.{}.status", service_id));
     allow_publish.push(format!("cloud.out.service.{}.heartbeat", service_id));
     allow_publish.push(format!("cloud.out.service.{}.shutdown", service_id));
@@ -83,9 +87,18 @@ pub fn handle_service(
                 "cloud.in.service.{}.organization.{}.>",
                 service_id, org_id
             ));
+
+            allow_publish.push(format!(
+                "realm.from.{}.organization.{}.>",
+                service_id, org_id
+            ));
+            allow_subscribe.push(format!("realm.to.{}.organization.{}.>", service_id, org_id));
         }
         Some(service_status::Binding::Unbound(_)) => {
-            debug!("service {} is unbound, granting minimal permissions", service_id);
+            debug!(
+                "service {} is unbound, granting minimal permissions",
+                service_id
+            );
 
             allow_subscribe.push(format!(
                 "cloud.in.service.{}.registration.bound",

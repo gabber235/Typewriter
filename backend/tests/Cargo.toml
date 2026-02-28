@@ -51,7 +51,7 @@ uuid = { version = "1", features = ["v4"] }
 # For recursive file walking in rebuild detection
 walkdir = "2"
 # Wasmtime for pre-compilation binary (must match wash-runtime version)
-wasmtime = { version = "38", features = ["component-model"] }
+wasmtime = { version = "41", features = ["component-model"] }
 wash-runtime = { path = "/Users/thijs/Bestanden/wash/crates/wash-runtime", features = [
   "washlet",
   "wasi-config",

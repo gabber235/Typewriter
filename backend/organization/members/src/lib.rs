@@ -54,14 +54,14 @@ pub struct DeleteMemberResult {
 impl From<RoleRecord> for typewriter::models::v1::Role {
     fn from(record: RoleRecord) -> Self {
         typewriter::models::v1::Role {
-            id: record.id.id.to_string(),
-            name: record.name,
+            role_id: record.id.id.to_string(),
+            name: Some(record.name),
             color: Some(typewriter::models::v1::Color {
-                value: record.color as u32,
+                value: Some(record.color as u32),
             }),
-            default_role: record.default_role,
-            assignable: record.assignable,
-            deletable: record.deletable,
+            default_role: Some(record.default_role),
+            assignable: Some(record.assignable),
+            deletable: Some(record.deletable),
         }
     }
 }
@@ -85,10 +85,10 @@ pub struct MemberWithRolesRecord {
 impl From<MemberWithRolesRecord> for typewriter::models::v1::OrganizationMember {
     fn from(record: MemberWithRolesRecord) -> Self {
         typewriter::models::v1::OrganizationMember {
-            id: record.user.id.id.to_string(),
-            name: record.user.name.unwrap_or_default(),
-            email: record.user.email.unwrap_or_default(),
-            avatar_url: record.user.avatar_url.unwrap_or_default(),
+            user_id: record.user.id.id.to_string(),
+            name: Some(record.user.name.unwrap_or_default()),
+            email: Some(record.user.email.unwrap_or_default()),
+            avatar_url: Some(record.user.avatar_url.unwrap_or_default()),
             roles: record.roles.into_iter().map(|r| r.into()).collect(),
             joined_at: record.joined_at.into(),
         }
@@ -106,11 +106,11 @@ pub struct JoinRequestRecord {
 impl Into<typewriter::models::v1::JoinRequest> for JoinRequestRecord {
     fn into(self) -> typewriter::models::v1::JoinRequest {
         typewriter::models::v1::JoinRequest {
-            id: self.id.id.to_string(),
+            join_request_id: self.id.id.to_string(),
             user_id: self.user.id.id.to_string(),
-            user_name: self.user.name.unwrap_or_default(),
-            user_email: self.user.email.unwrap_or_default(),
-            user_avatar_url: self.user.avatar_url.unwrap_or_default(),
+            user_name: Some(self.user.name.unwrap_or_default()),
+            user_email: Some(self.user.email.unwrap_or_default()),
+            user_avatar_url: Some(self.user.avatar_url.unwrap_or_default()),
             requested_at: self.requested_at.into(),
             expires_at: self.expires_at.into(),
         }

@@ -20,7 +20,7 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
 
     let result = query(
         r#"
-        SELECT * FROM service 
+        SELECT * FROM service
         WHERE organization = type::thing('organization', $org_id)
         ORDER BY name ASC
         "#,
@@ -40,8 +40,8 @@ pub fn handle_list(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
             let metadata = record.metadata.as_ref();
             let state = record.state.as_ref();
             typewriter::models::v1::Service {
-                id: record.id.id.to_string(),
-                name: record.name,
+                service_id: record.id.id.to_string(),
+                name: Some(record.name),
                 service_types: utils::map_service_types(&record.service_types),
                 created_at: Some(record.created_at.into()),
                 state: state.map(|s| typewriter::models::v1::ServiceState {

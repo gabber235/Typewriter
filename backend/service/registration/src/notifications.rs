@@ -12,7 +12,7 @@ pub fn publish_bound_notification(
 ) -> Result<(), String> {
     let notification = ServiceBoundNotification {
         organization_id: organization_id.to_string(),
-        organization_name: organization_name.to_string(),
+        organization_name: Some(organization_name.to_string()),
     };
 
     send(

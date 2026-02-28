@@ -31,8 +31,8 @@ pub fn handle_bind(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
         r#"
         BEGIN TRANSACTION;
 
-        LET $service = SELECT * FROM service 
-            WHERE registration.token = $registration_token 
+        LET $service = SELECT * FROM service
+            WHERE registration.token = $registration_token
             AND registration.expires_at > time::now();
 
         IF array::is_empty($service) {
@@ -68,7 +68,9 @@ pub fn handle_bind(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
         Ok(r) => r,
         Err(e) => {
             let error_msg = e.to_string();
-            if error_msg.contains("Invalid or expired") || error_msg.contains("Organization not found") {
+            if error_msg.contains("Invalid or expired")
+                || error_msg.contains("Organization not found")
+            {
                 return reply(
                     msg,
                     error_response_bytes!(
@@ -112,7 +114,7 @@ pub fn handle_bind(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
         result: Some(typewriter::api::v1::bind_service_response::Result::Service(
             typewriter::api::v1::BoundService {
                 service_id: service_id.clone(),
-                service_name: service.name,
+                service_name: Some(service.name),
                 service_types: utils::map_service_types(&service.service_types),
             },
         )),
@@ -122,7 +124,10 @@ pub fn handle_bind(msg: BrokerMessage, params: HashMap<String, String>) -> Resul
 
     notifications::publish_bound_notification(&service_id, &org.id.id.to_string(), &org.name)?;
 
-    notifications::refresh_organization_services_list(&org.id.id.to_string(), params.get("user_id"))?;
+    notifications::refresh_organization_services_list(
+        &org.id.id.to_string(),
+        params.get("user_id"),
+    )?;
 
     Ok(())
 }

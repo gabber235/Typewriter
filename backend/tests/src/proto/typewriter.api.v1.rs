@@ -39,10 +39,8 @@ pub mod get_sentinel_credentials_response {
 /// the account during NATS auth callout.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SentinelCredentials {
-    /// The sentinel user JWT token.
     #[prost(string, tag = "1")]
     pub jwt: ::prost::alloc::string::String,
-    /// The sentinel user NKEY seed.
     #[prost(string, tag = "2")]
     pub seed: ::prost::alloc::string::String,
 }
@@ -71,7 +69,7 @@ pub struct ListBooks {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetBookRequest {
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub book_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetBookResponse {
@@ -112,14 +110,14 @@ pub mod update_book_response {
 pub struct CreatePageRequest {
     #[prost(string, tag = "1")]
     pub book_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(enumeration = "super::super::models::v1::PageType", tag = "3")]
     pub r#type: i32,
-    #[prost(string, tag = "4")]
-    pub chapter: ::prost::alloc::string::String,
-    #[prost(int32, tag = "5")]
-    pub priority: i32,
+    #[prost(string, optional, tag = "4")]
+    pub chapter: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "5")]
+    pub priority: ::core::option::Option<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreatePageResponse {
@@ -176,6 +174,32 @@ pub mod change_pages_chapters_response {
     pub enum Result {
         #[prost(bool, tag = "1")]
         Success(bool),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateBookRequest {
+    #[prost(string, optional, tag = "1")]
+    pub title: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "2")]
+    pub icon: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "3")]
+    pub color: ::core::option::Option<super::super::models::v1::Color>,
+    #[prost(string, repeated, tag = "4")]
+    pub tag_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateBookResponse {
+    #[prost(oneof = "create_book_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<create_book_response::Result>,
+}
+/// Nested message and enum types in `CreateBookResponse`.
+pub mod create_book_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Book(super::super::super::models::v1::Book),
         #[prost(message, tag = "2")]
         Error(super::super::super::models::v1::Error),
     }
@@ -455,8 +479,8 @@ pub struct ListRoles {
 pub struct SearchPagesRequest {
     #[prost(string, tag = "1")]
     pub book_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub search: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub search: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SearchPagesResult {
@@ -481,7 +505,7 @@ pub mod search_pages_response {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetPageRequest {
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub page_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetPageResponse {
@@ -625,14 +649,14 @@ pub mod service_status {
 pub struct BoundStatus {
     #[prost(string, tag = "1")]
     pub organization_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub organization_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub organization_name: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// UnboundStatus indicates the service needs registration.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UnboundStatus {
-    #[prost(string, tag = "1")]
-    pub registration_token: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "1")]
+    pub registration_token: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// BindServiceRequest binds a service to the organization using a token.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -661,8 +685,8 @@ pub mod bind_service_response {
 pub struct BoundService {
     #[prost(string, tag = "1")]
     pub service_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub service_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub service_name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(enumeration = "super::super::models::v1::ServiceType", repeated, tag = "3")]
     pub service_types: ::prost::alloc::vec::Vec<i32>,
 }
@@ -697,8 +721,8 @@ pub struct OrganizationServicesList {
 pub struct ServiceBoundNotification {
     #[prost(string, tag = "1")]
     pub organization_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub organization_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub organization_name: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// UpdateServiceRequest updates a service's metadata.
 /// Service must be bound to the organization specified in the NATS subject.
@@ -706,8 +730,8 @@ pub struct ServiceBoundNotification {
 pub struct UpdateServiceRequest {
     #[prost(string, tag = "1")]
     pub service_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// UpdateServiceResponse returns the updated service or an error.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -783,7 +807,6 @@ pub mod issue_service_identity_response {
     }
 }
 /// ServiceCredentials contains the authentication credentials for a service.
-/// IMPORTANT: The token is only shown once and cannot be retrieved again.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ServiceCredentials {
     /// Service identifier (SurrealDB record ID, which is the Authentik user ID).
@@ -792,9 +815,165 @@ pub struct ServiceCredentials {
     /// Authentik username for the service.
     #[prost(string, tag = "2")]
     pub username: ::prost::alloc::string::String,
-    /// Authentik authentication token (shown once only!).
+    /// Authentik authentication token.
     #[prost(string, tag = "3")]
     pub token: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ListTagsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListTagsResponse {
+    #[prost(oneof = "list_tags_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<list_tags_response::Result>,
+}
+/// Nested message and enum types in `ListTagsResponse`.
+pub mod list_tags_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Tags(super::ListTags),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListTags {
+    #[prost(message, repeated, tag = "1")]
+    pub tags: ::prost::alloc::vec::Vec<super::super::models::v1::Tag>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetTagRequest {
+    #[prost(string, tag = "1")]
+    pub tag_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetTagResponse {
+    #[prost(oneof = "get_tag_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<get_tag_response::Result>,
+}
+/// Nested message and enum types in `GetTagResponse`.
+pub mod get_tag_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Tag(super::super::super::models::v1::Tag),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateTagRequest {
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub color: ::core::option::Option<super::super::models::v1::Color>,
+    #[prost(string, repeated, tag = "3")]
+    pub parent_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "4")]
+    pub placement: ::core::option::Option<super::super::models::v1::Placement>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateTagResponse {
+    #[prost(oneof = "create_tag_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<create_tag_response::Result>,
+}
+/// Nested message and enum types in `CreateTagResponse`.
+pub mod create_tag_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Tag(super::super::super::models::v1::Tag),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdateTagRequest {
+    #[prost(message, optional, tag = "1")]
+    pub tag: ::core::option::Option<super::super::models::v1::Tag>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdateTagResponse {
+    #[prost(oneof = "update_tag_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<update_tag_response::Result>,
+}
+/// Nested message and enum types in `UpdateTagResponse`.
+pub mod update_tag_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(message, tag = "1")]
+        Tag(super::super::super::models::v1::Tag),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DeleteTagRequest {
+    #[prost(string, tag = "1")]
+    pub tag_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DeleteTagResponse {
+    #[prost(oneof = "delete_tag_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<delete_tag_response::Result>,
+}
+/// Nested message and enum types in `DeleteTagResponse`.
+pub mod delete_tag_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(bool, tag = "1")]
+        Success(bool),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MoveTagRequest {
+    #[prost(string, tag = "1")]
+    pub tag_id: ::prost::alloc::string::String,
+    #[prost(int32, optional, tag = "2")]
+    pub x: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "3")]
+    pub y: ::core::option::Option<i32>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MoveTagResponse {
+    #[prost(oneof = "move_tag_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<move_tag_response::Result>,
+}
+/// Nested message and enum types in `MoveTagResponse`.
+pub mod move_tag_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(bool, tag = "1")]
+        Success(bool),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ResizeTagRequest {
+    #[prost(string, tag = "1")]
+    pub tag_id: ::prost::alloc::string::String,
+    #[prost(int32, optional, tag = "2")]
+    pub width: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "3")]
+    pub height: ::core::option::Option<i32>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ResizeTagResponse {
+    #[prost(oneof = "resize_tag_response::Result", tags = "1, 2")]
+    pub result: ::core::option::Option<resize_tag_response::Result>,
+}
+/// Nested message and enum types in `ResizeTagResponse`.
+pub mod resize_tag_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Result {
+        #[prost(bool, tag = "1")]
+        Success(bool),
+        #[prost(message, tag = "2")]
+        Error(super::super::super::models::v1::Error),
+    }
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ListOrganizationsRequest {}
@@ -824,8 +1003,8 @@ pub struct ListOrganizations {
 pub struct CreateOrganizationRequest {
     #[prost(string, tag = "1")]
     pub name: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub icon_url: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub icon_url: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateOrganizationResponse {
@@ -870,8 +1049,8 @@ pub struct ListUserJoinRequests {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RequestToJoinRequest {
     /// The join code (e.g., "abc123")
-    #[prost(string, tag = "1")]
-    pub code: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "1")]
+    pub code: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// RequestToJoinResponse returns either a pending request, auto-accepted membership, or an error.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -914,11 +1093,11 @@ pub struct AutoAcceptedMember {
     #[prost(string, tag = "1")]
     pub organization_id: ::prost::alloc::string::String,
     /// Organization name
-    #[prost(string, tag = "2")]
-    pub organization_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub organization_name: ::core::option::Option<::prost::alloc::string::String>,
     /// Organization icon URL
-    #[prost(string, tag = "3")]
-    pub organization_icon_url: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub organization_icon_url: ::core::option::Option<::prost::alloc::string::String>,
     /// Roles assigned to the user
     #[prost(message, repeated, tag = "4")]
     pub roles: ::prost::alloc::vec::Vec<super::super::models::v1::Role>,

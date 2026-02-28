@@ -82,7 +82,7 @@ tasks:
         IMAGE="{{.HARBOR_URL}}/wasmcloud/{{.COMPONENT_NAME}}:{{.VERSION}}"
         echo "Pushing {{.WASM_PATH}} to $IMAGE..."
         wash oci push $INSECURE_FLAG "$IMAGE" "{{.WASM_PATH}}"
-        echo "✅ Pushed $IMAGE"
+        echo "✅ Pushed {{.WASM_PATH}} to $IMAGE"
 
   terraform:init:
     desc: Initialize terraform for the component

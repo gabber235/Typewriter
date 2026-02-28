@@ -2,16 +2,16 @@
 
 use anyhow::Result;
 use backend_tests::proto::typewriter::api::v1::{
-    list_organization_services_response, ListOrganizationServicesResponse, ServiceHeartbeatRequest,
-    ServiceShutdownRequest,
+    ListOrganizationServicesResponse, ServiceHeartbeatRequest, ServiceShutdownRequest,
+    list_organization_services_response,
 };
-use backend_tests::{get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient};
+use backend_tests::{OrganizationBuilder, ServiceBuilder, TestNatsClient, get_fixtures};
 use futures::StreamExt;
 use prost::Message;
 use repeated_assert::that_async;
 use std::time::Duration;
-use surrealdb::sql::Datetime;
 use surrealdb::Surreal;
+use surrealdb::sql::Datetime;
 
 #[derive(Debug, Clone, serde::Deserialize)]
 struct ServiceState {
@@ -246,7 +246,11 @@ async fn test_shutdown_triggers_services_list_refresh() -> Result<()> {
     .await;
 
     let refresh_subject = format!("typewriter.out.organization.{}.services.list", org.id);
-    let mut subscription = fixtures.infra.nats_client().subscribe(refresh_subject).await?;
+    let mut subscription = fixtures
+        .infra
+        .nats_client()
+        .subscribe(refresh_subject)
+        .await?;
 
     let shutdown_subject = format!("typewriter.in.service.{}.shutdown", service.id);
     nats.publish(&shutdown_subject, &ServiceShutdownRequest {})
@@ -268,7 +272,7 @@ async fn test_shutdown_triggers_services_list_refresh() -> Result<()> {
     match &response.result {
         Some(list_organization_services_response::Result::Services(list)) => {
             assert!(
-                list.services.iter().any(|s| s.id == service.id),
+                list.services.iter().any(|s| s.service_id == service.id),
                 "Refresh should include the service that was shut down"
             );
         }

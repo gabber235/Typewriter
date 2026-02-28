@@ -1,1 +1,1 @@
-kubernetes_context = "docker-desktop"
+kubernetes_context = "minikube"

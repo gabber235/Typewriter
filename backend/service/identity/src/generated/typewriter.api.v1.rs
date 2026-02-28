@@ -26,7 +26,6 @@ pub mod issue_service_identity_response {
     }
 }
 /// ServiceCredentials contains the authentication credentials for a service.
-/// IMPORTANT: The token is only shown once and cannot be retrieved again.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ServiceCredentials {
     /// Service identifier (SurrealDB record ID, which is the Authentik user ID).
@@ -35,7 +34,7 @@ pub struct ServiceCredentials {
     /// Authentik username for the service.
     #[prost(string, tag = "2")]
     pub username: ::prost::alloc::string::String,
-    /// Authentik authentication token (shown once only!).
+    /// Authentik authentication token.
     #[prost(string, tag = "3")]
     pub token: ::prost::alloc::string::String,
 }
@@ -79,10 +78,8 @@ pub mod get_sentinel_credentials_response {
 /// the account during NATS auth callout.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SentinelCredentials {
-    /// The sentinel user JWT token.
     #[prost(string, tag = "1")]
     pub jwt: ::prost::alloc::string::String,
-    /// The sentinel user NKEY seed.
     #[prost(string, tag = "2")]
     pub seed: ::prost::alloc::string::String,
 }

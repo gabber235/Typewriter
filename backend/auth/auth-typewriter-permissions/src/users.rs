@@ -69,6 +69,7 @@ pub fn handle_panel_user(
     // ########### PERMISSIONS ###########
     {
         allow_subscribe.push(format!("_INBOX.{}.>", &user_id));
+        allow_publish.push(format!("_INBOX.>"));
 
         add_user_organizations_permissions(&user_id, &mut allow_publish, &mut allow_subscribe);
 
@@ -93,6 +94,7 @@ pub fn handle_panel_user(
                 &mut allow_publish,
                 &mut allow_subscribe,
             );
+            add_organization_realm_permissions(org_id, &mut allow_publish, &mut allow_subscribe);
         }
     }
     // ######### END PERMISSIONS #########
@@ -103,6 +105,8 @@ pub fn handle_panel_user(
     if let Some(organization_id) = organization_id {
         tags.push(format!("org:{}", organization_id));
     }
+
+    tags.push(format!("user:{}", user_id));
 
     debug!("finished handling permissions request for user {}", name);
 
@@ -236,4 +240,14 @@ fn add_organization_services_permissions(
         "cloud.out.user.{}.organization.{}.services.unbind",
         user_id, org_id
     ));
+}
+
+/// Adds permissions for the organization/realm component
+fn add_organization_realm_permissions(
+    org_id: &str,
+    allow_publish: &mut Vec<String>,
+    allow_subscribe: &mut Vec<String>,
+) {
+    allow_publish.push(format!("realm.to.*.organization.{}.>", org_id));
+    allow_subscribe.push(format!("realm.from.*.organization.{}.>", org_id));
 }

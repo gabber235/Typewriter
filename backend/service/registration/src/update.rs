@@ -58,14 +58,16 @@ pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Res
         result: Some(
             typewriter::api::v1::update_service_response::Result::Service(
                 typewriter::models::v1::Service {
-                    id: service.id.id.to_string(),
-                    name: service.name.clone(),
+                    service_id: service.id.id.to_string(),
+                    name: Some(service.name.clone()),
                     service_types: utils::map_service_types(&service.service_types),
                     created_at: Some(service.created_at.clone().into()),
                     state: state.map(|s| typewriter::models::v1::ServiceState {
                         status: match s.status.as_deref() {
                             Some("ONLINE") => typewriter::models::v1::ServiceStatus::Online as i32,
-                            Some("OFFLINE") => typewriter::models::v1::ServiceStatus::Offline as i32,
+                            Some("OFFLINE") => {
+                                typewriter::models::v1::ServiceStatus::Offline as i32
+                            }
                             _ => typewriter::models::v1::ServiceStatus::Unspecified as i32,
                         },
                         last_seen: s.last_seen.clone().map(|dt| dt.into()),

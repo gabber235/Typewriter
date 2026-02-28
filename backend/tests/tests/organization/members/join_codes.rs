@@ -5,15 +5,14 @@
 //! - Listing active join codes
 //! - Revoking join codes
 
-use backend_tests::{
-    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
-};
 use backend_tests::proto::typewriter::api::v1::{
     GenerateJoinCodeRequest, GenerateJoinCodeResponse, JoinCodeAutoAcceptConfig,
     JoinCodeExpiration, ListJoinCodesRequest, ListJoinCodesResponse, RevokeJoinCodeRequest,
-    RevokeJoinCodeResponse,
-    generate_join_code_response, join_code_expiration, list_join_codes_response,
-    revoke_join_code_response,
+    RevokeJoinCodeResponse, generate_join_code_response, join_code_expiration,
+    list_join_codes_response, revoke_join_code_response,
+};
+use backend_tests::{
+    MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 // ============================================================================
@@ -273,8 +272,14 @@ async fn generate_code_with_duration_expiration() {
             );
 
             // Verify the expiration is approximately 1 hour in the future
-            let created = join_code.created_at.as_ref().expect("created_at should be set");
-            let expires = join_code.expires_at.as_ref().expect("expires_at should be set");
+            let created = join_code
+                .created_at
+                .as_ref()
+                .expect("created_at should be set");
+            let expires = join_code
+                .expires_at
+                .as_ref()
+                .expect("expires_at should be set");
             let duration_secs = expires.seconds - created.seconds;
             // Allow some tolerance for processing time
             assert!(
@@ -349,9 +354,7 @@ async fn generate_code_with_auto_accept() {
     match response.result {
         Some(generate_join_code_response::Result::JoinCode(join_code)) => {
             assert!(!join_code.code.is_empty(), "Join code should not be empty");
-            let auto_accept = join_code
-                .auto_accept
-                .expect("auto_accept should be set");
+            let auto_accept = join_code.auto_accept.expect("auto_accept should be set");
             assert_eq!(
                 auto_accept.role_ids.len(),
                 1,
@@ -485,7 +488,6 @@ async fn verify_generated_code_fields() {
         .await
         .expect("Failed to send request");
 
-    // Assert: All fields are correctly populated
     match response.result {
         Some(generate_join_code_response::Result::JoinCode(join_code)) => {
             // Verify code field
@@ -495,14 +497,15 @@ async fn verify_generated_code_fields() {
                 "code should be at least 6 characters"
             );
 
-            // Verify created_at field
             let created_at = join_code
                 .created_at
                 .as_ref()
                 .expect("created_at should be set");
-            assert!(created_at.seconds > 0, "created_at should have valid timestamp");
+            assert!(
+                created_at.seconds > 0,
+                "created_at should have valid timestamp"
+            );
 
-            // Verify expires_at field
             let expires_at = join_code
                 .expires_at
                 .as_ref()
@@ -544,7 +547,6 @@ async fn generate_code_invalid_role_ids() {
     let db = &fixtures.infra.db;
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
 
-    // Setup
     let user = UserBuilder::new("gen_inv_role_user")
         .email("gen_inv_role@example.com")
         .create(db)
@@ -568,7 +570,6 @@ async fn generate_code_invalid_role_ids() {
         .await
         .expect("Failed to create membership");
 
-    // Request: Generate a code with non-existent role ID
     let subject = format!(
         "typewriter.in.user.{}.organization.{}.members.join_codes.generate",
         user.id, org.id
@@ -749,18 +750,11 @@ async fn list_multiple_codes() {
     // Assert: All 3 codes are returned
     match response.result {
         Some(list_join_codes_response::Result::JoinCodes(codes)) => {
-            assert_eq!(
-                codes.join_codes.len(),
-                3,
-                "Should have 3 join codes"
-            );
+            assert_eq!(codes.join_codes.len(), 3, "Should have 3 join codes");
 
             // Verify all generated codes are in the list
-            let listed_codes: Vec<String> = codes
-                .join_codes
-                .iter()
-                .map(|c| c.code.clone())
-                .collect();
+            let listed_codes: Vec<String> =
+                codes.join_codes.iter().map(|c| c.code.clone()).collect();
 
             for generated in &generated_codes {
                 assert!(
@@ -867,11 +861,8 @@ async fn list_codes_excludes_expired() {
     // Assert: Both non-expired codes are in the list
     match response.result {
         Some(list_join_codes_response::Result::JoinCodes(codes)) => {
-            let listed_codes: Vec<String> = codes
-                .join_codes
-                .iter()
-                .map(|c| c.code.clone())
-                .collect();
+            let listed_codes: Vec<String> =
+                codes.join_codes.iter().map(|c| c.code.clone()).collect();
 
             assert!(
                 listed_codes.contains(&never_expires_code),
@@ -1069,11 +1060,8 @@ async fn revoked_code_not_in_list() {
     // Assert: Revoked code is not in list, remaining code is
     match response.result {
         Some(list_join_codes_response::Result::JoinCodes(codes)) => {
-            let listed_codes: Vec<String> = codes
-                .join_codes
-                .iter()
-                .map(|c| c.code.clone())
-                .collect();
+            let listed_codes: Vec<String> =
+                codes.join_codes.iter().map(|c| c.code.clone()).collect();
 
             assert!(
                 !listed_codes.contains(&code_to_revoke),
@@ -1140,11 +1128,17 @@ async fn revoke_code_not_found() {
     // Assert: Should return Success(false) for non-existent code (idempotent DELETE)
     match response.result {
         Some(revoke_join_code_response::Result::Success(success)) => {
-            assert!(!success, "Revoking non-existent code should return Success(false)");
+            assert!(
+                !success,
+                "Revoking non-existent code should return Success(false)"
+            );
         }
         Some(revoke_join_code_response::Result::Error(e)) => {
             // Also acceptable - error for not found
-            assert!(e.code > 0 || !e.message.is_empty(), "Should have error details");
+            assert!(
+                e.code > 0 || !e.message.is_empty(),
+                "Should have error details"
+            );
         }
         None => panic!("No result in response"),
     }
@@ -1189,11 +1183,11 @@ async fn revoke_code_invalid_format() {
     // Test various malicious inputs
     let long_string = "a".repeat(10000);
     let malicious_inputs: Vec<&str> = vec![
-        "", // Empty string
-        "'; DROP TABLE join_codes; --", // SQL injection attempt
+        "",                              // Empty string
+        "'; DROP TABLE join_codes; --",  // SQL injection attempt
         "<script>alert('xss')</script>", // XSS attempt
-        "../../../etc/passwd", // Path traversal attempt
-        &long_string, // Very long string
+        "../../../etc/passwd",           // Path traversal attempt
+        &long_string,                    // Very long string
     ];
 
     for malicious_input in malicious_inputs {

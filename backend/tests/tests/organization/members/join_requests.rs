@@ -6,13 +6,13 @@
 //! - Decline join request: typewriter.in.user.<user_id>.organization.<org_id>.members.join_requests.decline
 
 use backend_tests::proto::typewriter::api::v1::{
-    approve_join_request_response, decline_join_request_response, list_join_requests_response,
     ApproveJoinRequestRequest, ApproveJoinRequestResponse, DeclineJoinRequestRequest,
     DeclineJoinRequestResponse, ListJoinRequestsRequest, ListJoinRequestsResponse,
+    approve_join_request_response, decline_join_request_response, list_join_requests_response,
 };
 use backend_tests::{
-    get_fixtures, JoinRequestBuilder, MemberBuilder, OrganizationBuilder, RoleBuilder,
-    TestNatsClient, UserBuilder,
+    JoinRequestBuilder, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient,
+    UserBuilder, get_fixtures,
 };
 use serde::Deserialize;
 use surrealdb::RecordId;
@@ -168,18 +168,9 @@ async fn list_join_requests_with_pending() {
 
             let join_request = &requests.requests[0];
             assert_eq!(join_request.user_id, requester.id);
-            assert_eq!(
-                join_request.user_name,
-                requester.name.clone().unwrap_or_default()
-            );
-            assert_eq!(
-                join_request.user_email,
-                requester.email.clone().unwrap_or_default()
-            );
-            assert_eq!(
-                join_request.user_avatar_url,
-                requester.avatar_url.clone().unwrap_or_default()
-            );
+            assert_eq!(join_request.user_name, requester.name.clone());
+            assert_eq!(join_request.user_email, requester.email.clone());
+            assert_eq!(join_request.user_avatar_url, requester.avatar_url.clone());
             assert!(join_request.requested_at.is_some());
             assert!(join_request.expires_at.is_some());
         }
@@ -351,16 +342,10 @@ async fn approve_join_request_success() {
     // Verify member was created
     match response.result {
         Some(approve_join_request_response::Result::Member(member)) => {
-            assert_eq!(
-                member.name,
-                requester.name.clone().unwrap_or_default()
-            );
-            assert_eq!(
-                member.email,
-                requester.email.clone().unwrap_or_default()
-            );
+            assert_eq!(member.name, requester.name.clone());
+            assert_eq!(member.email, requester.email.clone());
             assert_eq!(member.roles.len(), 1);
-            assert_eq!(member.roles[0].id, member_role.id);
+            assert_eq!(member.roles[0].role_id, member_role.id);
             assert!(member.joined_at.is_some());
         }
         Some(approve_join_request_response::Result::Error(e)) => {
@@ -422,8 +407,7 @@ async fn approve_join_request_user_becomes_member() {
         .query(&check_query)
         .await
         .expect("Failed to check membership");
-    let members_before: Vec<MemberOfCheck> =
-        check_result.take(0).expect("Failed to get result");
+    let members_before: Vec<MemberOfCheck> = check_result.take(0).expect("Failed to get result");
     assert!(
         members_before.is_empty(),
         "User should not be a member before approval"
@@ -524,8 +508,7 @@ async fn approve_join_request_deletes_request() {
         .query(&check_query)
         .await
         .expect("Failed to check requests");
-    let requests_after: Vec<JoinRequestCheck> =
-        check_result.take(0).expect("Failed to get result");
+    let requests_after: Vec<JoinRequestCheck> = check_result.take(0).expect("Failed to get result");
     assert!(
         requests_after.is_empty(),
         "Join request should be deleted after approval"
@@ -1037,8 +1020,7 @@ async fn decline_join_request_deletes_request() {
         .query(&check_query)
         .await
         .expect("Failed to check requests");
-    let requests_after: Vec<JoinRequestCheck> =
-        check_result.take(0).expect("Failed to get result");
+    let requests_after: Vec<JoinRequestCheck> = check_result.take(0).expect("Failed to get result");
     assert!(
         requests_after.is_empty(),
         "Join request should be deleted after decline"
@@ -1162,10 +1144,7 @@ async fn decline_join_request_invalid_format() {
 
     // Verify user table still has data (injection didn't work)
     let check_query = format!("SELECT id FROM user:`{}`", admin.id);
-    let mut check_result = db
-        .query(&check_query)
-        .await
-        .expect("Failed to check user");
+    let mut check_result = db.query(&check_query).await.expect("Failed to check user");
     let users: Vec<UserCheck> = check_result.take(0).expect("Failed to get result");
     assert!(
         !users.is_empty(),

@@ -1,1 +1,1 @@
-kubernetes_context = "production"
+kubernetes_context = "k3s-prod"

@@ -2,14 +2,17 @@
 
 use anyhow::Result;
 use backend_tests::proto::typewriter::api::v1::{
-    get_service_status_response, service_status, GetServiceStatusRequest, GetServiceStatusResponse,
+    GetServiceStatusRequest, GetServiceStatusResponse, get_service_status_response, service_status,
 };
-use backend_tests::{get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient};
+use backend_tests::{OrganizationBuilder, ServiceBuilder, TestNatsClient, get_fixtures};
 use repeated_assert::that_async;
 use std::time::Duration;
 
 /// Helper to get service status.
-async fn get_status(nats: &TestNatsClient<'_>, service_id: &str) -> Result<GetServiceStatusResponse> {
+async fn get_status(
+    nats: &TestNatsClient<'_>,
+    service_id: &str,
+) -> Result<GetServiceStatusResponse> {
     let subject = format!("typewriter.in.service.{}.status", service_id);
     let request = GetServiceStatusRequest {};
     nats.request(&subject, &request).await
@@ -18,12 +21,16 @@ async fn get_status(nats: &TestNatsClient<'_>, service_id: &str) -> Result<GetSe
 /// Extract the registration token from an unbound status response.
 fn extract_token(response: &GetServiceStatusResponse) -> String {
     match &response.result {
-        Some(get_service_status_response::Result::Status(status)) => match &status.binding {
-            Some(service_status::Binding::Unbound(unbound)) => {
-                unbound.registration_token.clone()
-            }
-            _ => panic!("Expected unbound status"),
-        },
+        Some(get_service_status_response::Result::Status(
+            backend_tests::proto::typewriter::api::v1::ServiceStatus {
+                binding:
+                    Some(service_status::Binding::Unbound(
+                        backend_tests::proto::typewriter::api::v1::UnboundStatus {
+                            registration_token: Some(registration_token),
+                        },
+                    )),
+            },
+        )) => registration_token.clone(),
         _ => panic!("Expected status response"),
     }
 }
@@ -40,25 +47,18 @@ async fn test_status_unbound_service_returns_token() -> Result<()> {
 
     let response = get_status(&nats, &service.id).await?;
 
-    match &response.result {
-        Some(get_service_status_response::Result::Status(status)) => {
-            match &status.binding {
-                Some(service_status::Binding::Unbound(unbound)) => {
-                    let token = &unbound.registration_token;
-                    assert_eq!(token.len(), 10, "Token should be 10 characters");
-                    assert!(
-                        token.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()),
-                        "Token should be uppercase alphanumeric"
-                    );
-                }
-                _ => panic!("Expected unbound status, got bound"),
-            }
-        }
-        Some(get_service_status_response::Result::Error(err)) => {
-            panic!("Unexpected error: {} - {}", err.code, err.message);
-        }
-        None => panic!("Empty response"),
-    }
+    let registration_token = extract_token(&response);
+    assert_eq!(
+        registration_token.len(),
+        10,
+        "Token should be 10 characters"
+    );
+    assert!(
+        registration_token
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()),
+        "Token should be uppercase alphanumeric"
+    );
 
     Ok(())
 }
@@ -97,7 +97,9 @@ async fn test_status_extends_existing_token() -> Result<()> {
 
     // Verify the registration was stored in the database
     let service_id_clone = service.id.clone();
-    let db_check: Option<serde_json::Value> = fixtures.infra.db
+    let db_check: Option<serde_json::Value> = fixtures
+        .infra
+        .db
         .query("SELECT registration FROM type::thing('service', $id)")
         .bind(("id", service_id_clone))
         .await?
@@ -130,15 +132,16 @@ async fn test_status_bound_service_returns_org_info() -> Result<()> {
     let response = get_status(&nats, &service.id).await?;
 
     match &response.result {
-        Some(get_service_status_response::Result::Status(status)) => {
-            match &status.binding {
-                Some(service_status::Binding::Bound(bound)) => {
-                    assert_eq!(bound.organization_id, org.id);
-                    assert_eq!(bound.organization_name, "status_bound_org");
-                }
-                _ => panic!("Expected bound status, got unbound"),
+        Some(get_service_status_response::Result::Status(status)) => match &status.binding {
+            Some(service_status::Binding::Bound(bound)) => {
+                assert_eq!(bound.organization_id, org.id);
+                assert_eq!(
+                    bound.organization_name,
+                    Some("status_bound_org".to_string())
+                );
             }
-        }
+            _ => panic!("Expected bound status, got unbound"),
+        },
         Some(get_service_status_response::Result::Error(err)) => {
             panic!("Unexpected error: {} - {}", err.code, err.message);
         }
@@ -197,10 +200,22 @@ async fn test_status_token_remains_constant_across_multiple_queries() -> Result<
     let response5 = get_status(&nats, &service.id).await?;
     let token5 = extract_token(&response5);
 
-    assert_eq!(token1, token2, "Token should remain constant (query 1 vs 2)");
-    assert_eq!(token2, token3, "Token should remain constant (query 2 vs 3)");
-    assert_eq!(token3, token4, "Token should remain constant (query 3 vs 4)");
-    assert_eq!(token4, token5, "Token should remain constant (query 4 vs 5)");
+    assert_eq!(
+        token1, token2,
+        "Token should remain constant (query 1 vs 2)"
+    );
+    assert_eq!(
+        token2, token3,
+        "Token should remain constant (query 2 vs 3)"
+    );
+    assert_eq!(
+        token3, token4,
+        "Token should remain constant (query 3 vs 4)"
+    );
+    assert_eq!(
+        token4, token5,
+        "Token should remain constant (query 4 vs 5)"
+    );
 
     Ok(())
 }

@@ -9,9 +9,9 @@
 //! - Rejection of malicious input (XSS, injection attempts)
 
 use backend_tests::proto::typewriter::api::v1::{
-    create_organization_response, CreateOrganizationRequest, CreateOrganizationResponse,
-    ListMembersRequest, ListMembersResponse, ListRolesRequest, ListRolesResponse,
-    list_members_response, list_roles_response,
+    CreateOrganizationRequest, CreateOrganizationResponse, ListMembersRequest, ListMembersResponse,
+    ListRolesRequest, ListRolesResponse, create_organization_response, list_members_response,
+    list_roles_response,
 };
 use backend_tests::{TestNatsClient, UserBuilder, get_fixtures};
 
@@ -25,7 +25,7 @@ async fn create_organization(
     let subject = format!("typewriter.in.user.{}.organization.create", user_id);
     let request = CreateOrganizationRequest {
         name: name.to_string(),
-        icon_url: icon_url.to_string(),
+        icon_url: Some(icon_url.to_string()),
     };
     client
         .request::<_, CreateOrganizationResponse>(&subject, &request)
@@ -92,7 +92,9 @@ fn assert_error_response(response: &CreateOrganizationResponse, expected_code: O
 }
 
 /// Helper to assert that the response contains a successful organization.
-fn assert_success_response(response: &CreateOrganizationResponse) -> &backend_tests::proto::typewriter::models::v1::OrganizationData {
+fn assert_success_response(
+    response: &CreateOrganizationResponse,
+) -> &backend_tests::proto::typewriter::models::v1::OrganizationData {
     match &response.result {
         Some(create_organization_response::Result::Organization(org)) => org,
         Some(create_organization_response::Result::Error(error)) => {
@@ -136,9 +138,20 @@ async fn test_create_organization_happy_path() {
 
     let org = assert_success_response(&response);
 
-    assert_eq!(org.name, org_name, "Organization name should match");
-    assert_eq!(org.icon_url, icon_url, "Icon URL should match");
-    assert!(!org.id.is_empty(), "Organization ID should not be empty");
+    assert_eq!(
+        org.name,
+        Some(org_name.to_string()),
+        "Organization name should match"
+    );
+    assert_eq!(
+        org.icon_url,
+        Some(icon_url.to_string()),
+        "Icon URL should match"
+    );
+    assert!(
+        !org.organization_id.is_empty(),
+        "Organization ID should not be empty"
+    );
     assert!(org.created_at.is_some(), "Created timestamp should be set");
 }
 
@@ -162,7 +175,11 @@ async fn test_create_organization_with_underscores() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.name, org_name, "Organization name with underscores should be accepted");
+    assert_eq!(
+        org.name,
+        Some(org_name.to_string()),
+        "Organization name with underscores should be accepted"
+    );
 }
 
 /// Test: Create organization with numbers in name.
@@ -184,7 +201,11 @@ async fn test_create_organization_with_numbers() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.name, org_name, "Organization name with numbers should be accepted");
+    assert_eq!(
+        org.name,
+        Some(org_name.to_string()),
+        "Organization name with numbers should be accepted"
+    );
 }
 
 // =============================================================================
@@ -213,7 +234,7 @@ async fn test_creator_becomes_member() {
     let org = assert_success_response(&create_response);
 
     // List members to verify the creator is a member
-    let members_response = list_members(&client, &user.id, &org.id).await;
+    let members_response = list_members(&client, &user.id, &org.organization_id).await;
 
     match &members_response.result {
         Some(list_members_response::Result::Members(members_list)) => {
@@ -224,11 +245,7 @@ async fn test_creator_becomes_member() {
             );
 
             let member = &members_list.members[0];
-            assert_eq!(
-                member.name,
-                user.name.unwrap_or_default(),
-                "Member name should match user name"
-            );
+            assert_eq!(member.name, user.name, "Member name should match user name");
         }
         Some(list_members_response::Result::Error(error)) => {
             panic!("Failed to list members: {}", error.message);
@@ -265,7 +282,7 @@ async fn test_founder_and_writer_roles_created() {
     let org = assert_success_response(&create_response);
 
     // List roles to verify founder and writer roles exist
-    let roles_response = list_roles(&client, &user.id, &org.id).await;
+    let roles_response = list_roles(&client, &user.id, &org.organization_id).await;
 
     match &roles_response.result {
         Some(list_roles_response::Result::Roles(roles_list)) => {
@@ -275,41 +292,53 @@ async fn test_founder_and_writer_roles_created() {
                 "Should have exactly two roles (founder and writer)"
             );
 
-            let role_names: Vec<&str> = roles_list.roles.iter().map(|r| r.name.as_str()).collect();
+            let role_names: Vec<String> = roles_list
+                .roles
+                .iter()
+                .filter_map(|r| r.name.clone())
+                .collect();
             assert!(
-                role_names.contains(&"founder"),
+                role_names.contains(&"founder".to_string()),
                 "Should have 'founder' role, got: {:?}",
                 role_names
             );
             assert!(
-                role_names.contains(&"writer"),
+                role_names.contains(&"writer".to_string()),
                 "Should have 'writer' role, got: {:?}",
                 role_names
             );
 
             // Verify founder role properties
-            let founder_role = roles_list.roles.iter().find(|r| r.name == "founder").unwrap();
+            let founder_role = roles_list
+                .roles
+                .iter()
+                .find(|r| r.name == Some("founder".to_string()))
+                .unwrap();
             assert!(
-                !founder_role.assignable,
+                !founder_role.assignable.unwrap_or_default(),
                 "Founder role should not be assignable"
             );
             assert!(
-                !founder_role.deletable,
+                !founder_role.deletable.unwrap_or_default(),
                 "Founder role should not be deletable"
             );
 
             // Verify writer role properties
-            let writer_role = roles_list.roles.iter().find(|r| r.name == "writer").unwrap();
+            let writer_role = roles_list
+                .roles
+                .iter()
+                .find(|r| r.name == Some("writer".to_string()))
+                .unwrap();
             assert!(
-                writer_role.assignable,
+                writer_role.assignable.unwrap_or_default(),
                 "Writer role should be assignable"
             );
             assert!(
-                !writer_role.deletable,
+                !writer_role.deletable.unwrap_or_default(),
                 "Writer role should not be deletable"
             );
             assert!(
-                writer_role.default_role,
+                writer_role.default_role.unwrap_or_default(),
                 "Writer role should be the default role"
             );
         }
@@ -342,17 +371,21 @@ async fn test_creator_has_founder_role() {
     let org = assert_success_response(&create_response);
 
     // List members to verify the creator has the founder role
-    let members_response = list_members(&client, &user.id, &org.id).await;
+    let members_response = list_members(&client, &user.id, &org.organization_id).await;
 
     match &members_response.result {
         Some(list_members_response::Result::Members(members_list)) => {
-            assert!(!members_list.members.is_empty(), "Should have at least one member");
+            assert!(
+                !members_list.members.is_empty(),
+                "Should have at least one member"
+            );
 
             let member = &members_list.members[0];
-            let role_names: Vec<&str> = member.roles.iter().map(|r| r.name.as_str()).collect();
+            let role_names: Vec<String> =
+                member.roles.iter().filter_map(|r| r.name.clone()).collect();
 
             assert!(
-                role_names.contains(&"founder"),
+                role_names.contains(&"founder".to_string()),
                 "Creator should have 'founder' role, got: {:?}",
                 role_names
             );
@@ -401,7 +434,8 @@ async fn test_create_organization_uppercase_name() {
         .await
         .expect("Failed to create test user");
 
-    let response = create_organization(&client, &user.id, "MyOrg", "https://example.com/icon.png").await;
+    let response =
+        create_organization(&client, &user.id, "MyOrg", "https://example.com/icon.png").await;
 
     assert_error_response(&response, None);
 }
@@ -421,17 +455,18 @@ async fn test_create_organization_special_chars_name() {
 
     // Test various special characters
     let invalid_names = [
-        "org-name",      // hyphen not allowed
-        "org.name",      // dot not allowed
-        "org@name",      // at sign not allowed
-        "org name",      // space not allowed
-        "org!name",      // exclamation not allowed
-        "org#name",      // hash not allowed
-        "org$name",      // dollar not allowed
+        "org-name", // hyphen not allowed
+        "org.name", // dot not allowed
+        "org@name", // at sign not allowed
+        "org name", // space not allowed
+        "org!name", // exclamation not allowed
+        "org#name", // hash not allowed
+        "org$name", // dollar not allowed
     ];
 
     for name in invalid_names {
-        let response = create_organization(&client, &user.id, name, "https://example.com/icon.png").await;
+        let response =
+            create_organization(&client, &user.id, name, "https://example.com/icon.png").await;
         assert_error_response(&response, None);
     }
 }
@@ -453,7 +488,8 @@ async fn test_create_organization_name_too_short() {
     let short_names = ["a", "ab"];
 
     for name in short_names {
-        let response = create_organization(&client, &user.id, name, "https://example.com/icon.png").await;
+        let response =
+            create_organization(&client, &user.id, name, "https://example.com/icon.png").await;
         assert_error_response(&response, None);
     }
 }
@@ -471,7 +507,8 @@ async fn test_create_organization_name_starts_with_underscore() {
         .await
         .expect("Failed to create test user");
 
-    let response = create_organization(&client, &user.id, "_myorg", "https://example.com/icon.png").await;
+    let response =
+        create_organization(&client, &user.id, "_myorg", "https://example.com/icon.png").await;
 
     assert_error_response(&response, None);
 }
@@ -489,7 +526,8 @@ async fn test_create_organization_name_ends_with_underscore() {
         .await
         .expect("Failed to create test user");
 
-    let response = create_organization(&client, &user.id, "myorg_", "https://example.com/icon.png").await;
+    let response =
+        create_organization(&client, &user.id, "myorg_", "https://example.com/icon.png").await;
 
     assert_error_response(&response, None);
 }
@@ -532,7 +570,7 @@ async fn test_create_organization_invalid_icon_url() {
     let invalid_urls = [
         "not-a-url",
         "just text",
-        "ftp://invalid",  // might be invalid depending on validation
+        "ftp://invalid", // might be invalid depending on validation
         "/path/to/file",
     ];
 
@@ -569,7 +607,8 @@ async fn test_create_organization_xss_in_name() {
     ];
 
     for payload in xss_payloads {
-        let response = create_organization(&client, &user.id, payload, "https://example.com/icon.png").await;
+        let response =
+            create_organization(&client, &user.id, payload, "https://example.com/icon.png").await;
         assert_error_response(&response, None);
     }
 }
@@ -627,7 +666,8 @@ async fn test_create_organization_sql_injection_in_name() {
     ];
 
     for payload in injection_payloads {
-        let response = create_organization(&client, &user.id, payload, "https://example.com/icon.png").await;
+        let response =
+            create_organization(&client, &user.id, payload, "https://example.com/icon.png").await;
         assert_error_response(&response, None);
     }
 }
@@ -654,7 +694,8 @@ async fn test_create_organization_surrealdb_injection_in_name() {
     ];
 
     for payload in injection_payloads {
-        let response = create_organization(&client, &user.id, payload, "https://example.com/icon.png").await;
+        let response =
+            create_organization(&client, &user.id, payload, "https://example.com/icon.png").await;
         assert_error_response(&response, None);
     }
 }
@@ -687,7 +728,7 @@ async fn test_create_organization_injection_in_icon_url() {
             Some(create_organization_response::Result::Organization(org)) => {
                 // If accepted, the URL should be stored exactly as provided (escaped properly)
                 assert!(
-                    !org.icon_url.is_empty(),
+                    !org.icon_url.clone().is_none_or(|s| s.is_empty()),
                     "Icon URL should not be empty if organization was created"
                 );
             }
@@ -724,7 +765,11 @@ async fn test_create_organization_minimum_valid_length() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.name, org_name, "Minimum length name should be accepted");
+    assert_eq!(
+        org.name,
+        Some(org_name.to_string()),
+        "Minimum length name should be accepted"
+    );
 }
 
 /// Test: Organization name with only numbers.
@@ -746,7 +791,11 @@ async fn test_create_organization_numeric_name() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.name, org_name, "All-numeric name should be accepted");
+    assert_eq!(
+        org.name,
+        Some(org_name.to_string()),
+        "All-numeric name should be accepted"
+    );
 }
 
 /// Test: Organization name with mixed underscores.
@@ -768,7 +817,11 @@ async fn test_create_organization_multiple_underscores() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.name, org_name, "Name with multiple underscores should be accepted");
+    assert_eq!(
+        org.name,
+        Some(org_name.to_string()),
+        "Name with multiple underscores should be accepted"
+    );
 }
 
 /// Test: Valid HTTPS icon URL.
@@ -790,7 +843,11 @@ async fn test_create_organization_https_icon_url() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.icon_url, icon_url, "HTTPS URL should be accepted");
+    assert_eq!(
+        org.icon_url,
+        Some(icon_url.to_string()),
+        "HTTPS URL should be accepted"
+    );
 }
 
 /// Test: Valid HTTP icon URL.
@@ -812,5 +869,9 @@ async fn test_create_organization_http_icon_url() {
     let response = create_organization(&client, &user.id, org_name, icon_url).await;
 
     let org = assert_success_response(&response);
-    assert_eq!(org.icon_url, icon_url, "HTTP URL should be accepted");
+    assert_eq!(
+        org.icon_url,
+        Some(icon_url.to_string()),
+        "HTTP URL should be accepted"
+    );
 }

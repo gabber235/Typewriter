@@ -7,7 +7,7 @@ pub use types::{Datetime, RecordId, RecordIdKey};
 use crate::seamlezz::surrealdb::call;
 use anyhow::{anyhow, Context, Result};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 pub trait SingleQueryResultExtractor: Sized {
     fn from_bytes(bytes: &[u8]) -> Result<Self>;
@@ -144,7 +144,8 @@ impl<'a> Query<'a> {
             }
             Err(e) => {
                 self.bind_error = Some(
-                    anyhow!(e.to_string()).context(format!("CBOR serialization failed for key '{}'", key)),
+                    anyhow!(e.to_string())
+                        .context(format!("CBOR serialization failed for key '{}'", key)),
                 );
             }
         }

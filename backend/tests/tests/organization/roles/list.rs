@@ -8,7 +8,7 @@ use anyhow::Result;
 
 use backend_tests::proto::typewriter::api::v1::{self, list_roles_response};
 use backend_tests::{
-    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
+    MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Helper to create the NATS subject for listing roles.
@@ -44,9 +44,7 @@ async fn test_list_roles_empty_organization() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -105,9 +103,7 @@ async fn test_list_roles_single_role_all_fields() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -120,39 +116,51 @@ async fn test_list_roles_single_role_all_fields() -> Result<()> {
 
             let returned_role = &list.roles[0];
 
-            // Verify ID
             assert_eq!(
-                returned_role.id, role.id,
+                returned_role.role_id, role.id,
                 "Role ID mismatch: expected '{}', got '{}'",
-                role.id, returned_role.id
+                role.id, returned_role.role_id
             );
 
-            // Verify name
             assert_eq!(
-                returned_role.name, "test_admin_role",
+                returned_role.name,
+                Some("test_admin_role".to_string()),
                 "Role name mismatch: expected 'test_admin_role', got '{}'",
-                returned_role.name
+                returned_role
+                    .name
+                    .clone()
+                    .unwrap_or("Unknown Role".to_string())
             );
 
-            // Verify color
             assert!(
                 returned_role.color.is_some(),
                 "Expected color to be present"
             );
             let color = returned_role.color.as_ref().unwrap();
             assert_eq!(
-                color.value, test_color,
-                "Color mismatch: expected 0x{:08X}, got 0x{:08X}",
-                test_color, color.value
+                color.value,
+                Some(test_color),
+                "Color mismatch: expected 0x{:08X}, got {}",
+                test_color,
+                color
+                    .value
+                    .map(|v| format!("0x{:08X}", v))
+                    .unwrap_or("Unknown Color".to_string())
             );
 
             // Verify flags (default values from RoleBuilder)
             assert!(
-                !returned_role.default_role,
+                !returned_role.default_role.unwrap_or_default(),
                 "Expected default_role to be false"
             );
-            assert!(returned_role.assignable, "Expected assignable to be true");
-            assert!(returned_role.deletable, "Expected deletable to be true");
+            assert!(
+                returned_role.assignable.unwrap_or_default(),
+                "Expected assignable to be true"
+            );
+            assert!(
+                returned_role.deletable.unwrap_or_default(),
+                "Expected deletable to be true"
+            );
         }
         Some(list_roles_response::Result::Error(e)) => {
             panic!("Expected roles list, got error: {:?}", e);
@@ -209,9 +217,7 @@ async fn test_list_roles_multiple_roles() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -223,25 +229,26 @@ async fn test_list_roles_multiple_roles() -> Result<()> {
             );
 
             // Verify all role names are present
-            let role_names: Vec<&str> = list.roles.iter().map(|r| r.name.as_str()).collect();
+            let role_names: Vec<String> =
+                list.roles.iter().filter_map(|r| r.name.clone()).collect();
             assert!(
-                role_names.contains(&"multi_admin"),
+                role_names.contains(&"multi_admin".to_string()),
                 "Expected 'multi_admin' role in list, got: {:?}",
                 role_names
             );
             assert!(
-                role_names.contains(&"multi_editor"),
+                role_names.contains(&"multi_editor".to_string()),
                 "Expected 'multi_editor' role in list, got: {:?}",
                 role_names
             );
             assert!(
-                role_names.contains(&"multi_viewer"),
+                role_names.contains(&"multi_viewer".to_string()),
                 "Expected 'multi_viewer' role in list, got: {:?}",
                 role_names
             );
 
             // Verify role IDs are unique
-            let role_ids: Vec<&str> = list.roles.iter().map(|r| r.id.as_str()).collect();
+            let role_ids: Vec<&str> = list.roles.iter().map(|r| r.role_id.as_str()).collect();
             let unique_ids: std::collections::HashSet<&str> = role_ids.iter().copied().collect();
             assert_eq!(
                 role_ids.len(),
@@ -292,7 +299,6 @@ async fn test_list_roles_ordered_by_priority() -> Result<()> {
         .create(&fixtures.infra.db)
         .await?;
 
-    // Add user as member
     MemberBuilder::new(&user, &org)
         .with_role(&high_priority)
         .create(&fixtures.infra.db)
@@ -301,19 +307,21 @@ async fn test_list_roles_ordered_by_priority() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
             assert_eq!(list.roles.len(), 3, "Expected 3 roles");
 
             // Verify order: highest priority first
-            let role_names: Vec<&str> = list.roles.iter().map(|r| r.name.as_str()).collect();
+            let role_names: Vec<String> =
+                list.roles.iter().filter_map(|r| r.name.clone()).collect();
             assert_eq!(
                 role_names,
-                vec!["order_high", "order_mid", "order_low"],
+                vec!["order_high", "order_mid", "order_low"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>(),
                 "Roles should be ordered by priority (highest first), got: {:?}",
                 role_names
             );
@@ -365,9 +373,7 @@ async fn test_list_roles_default_role_flag() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -377,10 +383,11 @@ async fn test_list_roles_default_role_flag() -> Result<()> {
             let default = list
                 .roles
                 .iter()
-                .find(|r| r.name == "flag_default_role")
+                .find(|r| r.name == Some("flag_default_role".to_string()))
                 .expect("Default role should be in list");
+
             assert!(
-                default.default_role,
+                default.default_role.unwrap_or_default(),
                 "Role 'flag_default_role' should have default_role=true"
             );
 
@@ -388,10 +395,10 @@ async fn test_list_roles_default_role_flag() -> Result<()> {
             let regular = list
                 .roles
                 .iter()
-                .find(|r| r.name == "flag_regular_role")
+                .find(|r| r.name == Some("flag_regular_role".to_string()))
                 .expect("Regular role should be in list");
             assert!(
-                !regular.default_role,
+                !regular.default_role.unwrap_or_default(),
                 "Role 'flag_regular_role' should have default_role=false"
             );
         }
@@ -443,9 +450,7 @@ async fn test_list_roles_non_assignable_flag() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -455,10 +460,10 @@ async fn test_list_roles_non_assignable_flag() -> Result<()> {
             let owner = list
                 .roles
                 .iter()
-                .find(|r| r.name == "assign_owner")
+                .find(|r| r.name == Some("assign_owner".to_string()))
                 .expect("Owner role should be in list");
             assert!(
-                !owner.assignable,
+                !owner.assignable.unwrap_or_default(),
                 "Role 'assign_owner' should have assignable=false"
             );
 
@@ -466,10 +471,10 @@ async fn test_list_roles_non_assignable_flag() -> Result<()> {
             let member = list
                 .roles
                 .iter()
-                .find(|r| r.name == "assign_member")
+                .find(|r| r.name == Some("assign_member".to_string()))
                 .expect("Member role should be in list");
             assert!(
-                member.assignable,
+                member.assignable.unwrap_or_default(),
                 "Role 'assign_member' should have assignable=true"
             );
         }
@@ -521,9 +526,7 @@ async fn test_list_roles_non_deletable_flag() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -533,10 +536,10 @@ async fn test_list_roles_non_deletable_flag() -> Result<()> {
             let system = list
                 .roles
                 .iter()
-                .find(|r| r.name == "delete_system")
+                .find(|r| r.name == Some("delete_system".to_string()))
                 .expect("System role should be in list");
             assert!(
-                !system.deletable,
+                !system.deletable.unwrap_or_default(),
                 "Role 'delete_system' should have deletable=false"
             );
 
@@ -544,10 +547,10 @@ async fn test_list_roles_non_deletable_flag() -> Result<()> {
             let custom = list
                 .roles
                 .iter()
-                .find(|r| r.name == "delete_custom")
+                .find(|r| r.name == Some("delete_custom".to_string()))
                 .expect("Custom role should be in list");
             assert!(
-                custom.deletable,
+                custom.deletable.unwrap_or_default(),
                 "Role 'delete_custom' should have deletable=true"
             );
         }
@@ -596,9 +599,7 @@ async fn test_list_roles_all_flags_configured() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -606,17 +607,34 @@ async fn test_list_roles_all_flags_configured() -> Result<()> {
 
             let role = &list.roles[0];
 
-            assert_eq!(role.name, "allflags_special", "Role name mismatch");
-            assert!(role.default_role, "Expected default_role=true");
-            assert!(!role.assignable, "Expected assignable=false");
-            assert!(!role.deletable, "Expected deletable=false");
+            assert_eq!(
+                role.name,
+                Some("allflags_special".to_string()),
+                "Role name mismatch"
+            );
+            assert!(
+                role.default_role.unwrap_or_default(),
+                "Expected default_role=true"
+            );
+            assert!(
+                !role.assignable.unwrap_or_default(),
+                "Expected assignable=false"
+            );
+            assert!(
+                !role.deletable.unwrap_or_default(),
+                "Expected deletable=false"
+            );
 
             // Verify color
             let color = role.color.as_ref().expect("Color should be present");
             assert_eq!(
-                color.value, 0xFFE91E63,
-                "Color mismatch: expected 0xFFE91E63, got 0x{:08X}",
-                color.value
+                color.value,
+                Some(0xFFE91E63),
+                "Color mismatch: expected 0xFFE91E63, got {}",
+                color
+                    .value
+                    .map(|v| format!("0x{:08X}", v))
+                    .unwrap_or("Unkown Color".to_string())
             );
         }
         Some(list_roles_response::Result::Error(e)) => {
@@ -673,9 +691,7 @@ async fn test_list_roles_color_values() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -685,10 +701,10 @@ async fn test_list_roles_color_values() -> Result<()> {
             let red = list
                 .roles
                 .iter()
-                .find(|r| r.name == "color_red")
+                .find(|r| r.name == Some("color_red".to_string()))
                 .expect("Red role should be in list");
             assert_eq!(
-                red.color.as_ref().map(|c| c.value),
+                red.color.as_ref().and_then(|c| c.value),
                 Some(0xFFFF0000),
                 "Red color mismatch"
             );
@@ -697,10 +713,10 @@ async fn test_list_roles_color_values() -> Result<()> {
             let transparent = list
                 .roles
                 .iter()
-                .find(|r| r.name == "color_transparent")
+                .find(|r| r.name == Some("color_transparent".to_string()))
                 .expect("Transparent role should be in list");
             assert_eq!(
-                transparent.color.as_ref().map(|c| c.value),
+                transparent.color.as_ref().and_then(|c| c.value),
                 Some(0x80FFFFFF),
                 "Transparent color mismatch"
             );
@@ -709,11 +725,11 @@ async fn test_list_roles_color_values() -> Result<()> {
             let black = list
                 .roles
                 .iter()
-                .find(|r| r.name == "color_black")
+                .find(|r| r.name == Some("color_black".to_string()))
                 .expect("Black role should be in list");
             assert_eq!(
-                black.color.as_ref().map(|c| c.value),
-                Some(0xFF000000),
+                black.color.as_ref().and_then(|c| c.value),
+                Some(0xFF000000u32),
                 "Black color mismatch"
             );
         }
@@ -756,9 +772,7 @@ async fn test_list_roles_user_not_member() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&non_member_user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     // Document the actual behavior - may return roles or an error
     match response.result {
@@ -770,7 +784,7 @@ async fn test_list_roles_user_not_member() -> Result<()> {
                 1,
                 "Expected 1 role when non-member access is allowed"
             );
-            assert_eq!(list.roles[0].name, "nonmember_test_role");
+            assert_eq!(list.roles[0].name, Some("nonmember_test_role".to_string()));
         }
         Some(list_roles_response::Result::Error(e)) => {
             // If error is returned, this documents that membership is required
@@ -831,9 +845,7 @@ async fn test_list_roles_organization_isolation() -> Result<()> {
 
     // List roles for org1
     let subject = list_roles_subject(&user.id, &org1.id);
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -845,14 +857,18 @@ async fn test_list_roles_organization_isolation() -> Result<()> {
                 list.roles.len()
             );
             assert_eq!(
-                list.roles[0].name, "iso_org1_role",
+                list.roles[0].name,
+                Some("iso_org1_role".to_string()),
                 "Expected org1's role, got '{}'",
-                list.roles[0].name
+                list.roles[0].name.clone().unwrap_or("Unknown".to_string())
             );
 
             // Verify org2's role is NOT included
             assert!(
-                !list.roles.iter().any(|r| r.name == "iso_org2_role"),
+                !list
+                    .roles
+                    .iter()
+                    .any(|r| r.name == Some("iso_org2_role".to_string())),
                 "Org2's role should NOT be in org1's role list"
             );
         }
@@ -897,9 +913,7 @@ async fn test_list_roles_default_color() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_roles_subject(&user.id, &org.id);
 
-    let response: v1::ListRolesResponse = nats
-        .request(&subject, &v1::ListRolesRequest {})
-        .await?;
+    let response: v1::ListRolesResponse = nats.request(&subject, &v1::ListRolesRequest {}).await?;
 
     match response.result {
         Some(list_roles_response::Result::Roles(list)) => {
@@ -910,9 +924,13 @@ async fn test_list_roles_default_color() -> Result<()> {
 
             // Default gray color from RoleBuilder
             assert_eq!(
-                color.value, 0xFF9E9E9E,
-                "Expected default gray color 0xFF9E9E9E, got 0x{:08X}",
-                color.value
+                color.value,
+                Some(0xFF9E9E9E),
+                "Expected default gray color 0xFF9E9E9E, got {:?}",
+                color
+                    .value
+                    .map(|v| format!("0x{:08X}", v))
+                    .unwrap_or("None".to_string())
             );
         }
         Some(list_roles_response::Result::Error(e)) => {

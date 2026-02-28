@@ -6,7 +6,7 @@ wit_bindgen::generate!({
     generate_all,
 });
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use anyhow::{anyhow, Result};
 use config::IssuerConfig;
@@ -20,8 +20,10 @@ use nats_jwt_rs::{
 use nkeys::KeyPair;
 use prost::Message;
 use serde::{Deserialize, Serialize};
-use wasmcloud_component::{debug, error, info, trace};
+use wasmcloud_component::{debug, error, trace};
 use wasmcloud_utils::wasmcloud::messaging::{consumer, handler::Guest, reply, types};
+
+use crate::typewriter::api::v1::PermissionResponse;
 
 mod typewriter {
     pub mod models {
@@ -249,8 +251,9 @@ fn create_user_claims(
 
     let response = request_permissions(&jwt, issuer.id.as_str(), organization_id)?;
     debug!(
-        "Received permission response, tags count {}",
-        response.tags.len()
+        "Permission for ({}): [{}]",
+        response.tags.join(", "),
+        response.to_string(),
     );
 
     let nats_permissions = response
@@ -298,7 +301,6 @@ fn request_permissions(
     );
 
     let permission_response = typewriter::api::v1::PermissionResponse::decode(&response.body[..])?;
-    debug!("Decoded PermissionResponse successfully");
 
     Ok(permission_response)
 }
@@ -341,7 +343,7 @@ impl From<&typewriter::models::v1::Permissions> for NatsPermissions {
             .resp
             .as_ref()
             .map(|r| NatsResponsePermission {
-                max_messages: r.max_messages as i64,
+                max_messages: r.max_messages.map(|m| m as i64).unwrap_or(1),
                 ttl: r
                     .ttl
                     .as_ref()
@@ -461,4 +463,43 @@ fn validate_auth_request_claims(claims: &Claims<AuthRequest>) -> Result<()> {
 
     debug!("Auth request claims passed all checks");
     Ok(())
+}
+
+impl Display for typewriter::models::v1::Permissions {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let publish_allow = self
+            .publish
+            .as_ref()
+            .map(|p| p.allow.clone())
+            .unwrap_or_default();
+        let publish_deny = self
+            .publish
+            .as_ref()
+            .map(|p| p.deny.clone())
+            .unwrap_or_default();
+        let subscribe_allow = self
+            .subscribe
+            .as_ref()
+            .map(|p| p.allow.clone())
+            .unwrap_or_default();
+        let subscribe_deny = self
+            .subscribe
+            .as_ref()
+            .map(|p| p.deny.clone())
+            .unwrap_or_default();
+        write!(
+            f,
+            "pub[allow={:?}, deny={:?}] sub[allow={:?}, deny={:?}]",
+            publish_allow, publish_deny, subscribe_allow, subscribe_deny
+        )
+    }
+}
+
+impl Display for PermissionResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Some(permissions) = &self.permissions else {
+            return write!(f, "None");
+        };
+        write!(f, "{}", permissions)
+    }
 }

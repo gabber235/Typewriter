@@ -12,14 +12,14 @@
 //! - Security/malicious input handling
 
 use backend_tests::proto::typewriter::api::v1::{
+    CancelJoinRequestRequest, CancelJoinRequestResponse, ListUserJoinRequestsRequest,
+    ListUserJoinRequestsResponse, RequestToJoinRequest, RequestToJoinResponse,
     cancel_join_request_response, list_user_join_requests_response, request_to_join_response,
-    request_to_join_result, CancelJoinRequestRequest, CancelJoinRequestResponse,
-    ListUserJoinRequestsRequest, ListUserJoinRequestsResponse, RequestToJoinRequest,
-    RequestToJoinResponse,
+    request_to_join_result,
 };
 use backend_tests::{
-    get_fixtures, JoinRequestBuilder, MemberBuilder, OrganizationBuilder, RoleBuilder,
-    TestNatsClient, User, UserBuilder,
+    JoinRequestBuilder, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, User,
+    UserBuilder, get_fixtures,
 };
 use serde::Deserialize;
 use surrealdb::RecordId;
@@ -210,7 +210,11 @@ async fn test_list_with_pending_requests() {
             );
 
             // Verify organization data is present
-            let request_ids: Vec<&str> = data.requests.iter().map(|r| r.id.as_str()).collect();
+            let request_ids: Vec<&str> = data
+                .requests
+                .iter()
+                .map(|r| r.join_request_id.as_str())
+                .collect();
             assert!(
                 request_ids.contains(&request_id1.as_str())
                     || request_ids
@@ -223,7 +227,7 @@ async fn test_list_with_pending_requests() {
             for req in &data.requests {
                 assert!(!req.organization_id.is_empty(), "Organization ID is empty");
                 assert!(
-                    !req.organization_name.is_empty(),
+                    !req.organization_name.clone().is_none_or(|s| s.is_empty()),
                     "Organization name is empty"
                 );
             }
@@ -278,7 +282,7 @@ async fn test_request_valid_code_manual_approval() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: code.to_string(),
+        code: Some(code.to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -287,21 +291,22 @@ async fn test_request_valid_code_manual_approval() {
 
     // Verify a pending request is created
     match response.result {
-        Some(request_to_join_response::Result::Success(result)) => {
-            match result.outcome {
-                Some(request_to_join_result::Outcome::Request(join_request)) => {
-                    assert_eq!(join_request.organization_id, org.id);
-                    assert_eq!(join_request.organization_name, org.name);
-                    assert!(!join_request.id.is_empty(), "Request ID should not be empty");
-                }
-                Some(request_to_join_result::Outcome::Member(_)) => {
-                    panic!("Expected pending request but got auto-accepted member");
-                }
-                None => {
-                    panic!("Success result had no outcome");
-                }
+        Some(request_to_join_response::Result::Success(result)) => match result.outcome {
+            Some(request_to_join_result::Outcome::Request(join_request)) => {
+                assert_eq!(join_request.organization_id, org.id);
+                assert_eq!(join_request.organization_name, Some(org.name));
+                assert!(
+                    !join_request.join_request_id.is_empty(),
+                    "Request ID should not be empty"
+                );
             }
-        }
+            Some(request_to_join_result::Outcome::Member(_)) => {
+                panic!("Expected pending request but got auto-accepted member");
+            }
+            None => {
+                panic!("Success result had no outcome");
+            }
+        },
         Some(request_to_join_response::Result::Error(e)) => {
             panic!("Unexpected error response: {} - {}", e.code, e.message);
         }
@@ -354,7 +359,7 @@ async fn test_request_valid_code_auto_accept() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: code.to_string(),
+        code: Some(code.to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -363,21 +368,22 @@ async fn test_request_valid_code_auto_accept() {
 
     // Verify user is immediately a member
     match response.result {
-        Some(request_to_join_response::Result::Success(result)) => {
-            match result.outcome {
-                Some(request_to_join_result::Outcome::Member(member)) => {
-                    assert_eq!(member.organization_id, org.id);
-                    assert_eq!(member.organization_name, org.name);
-                    assert!(!member.roles.is_empty(), "Member should have at least one role");
-                }
-                Some(request_to_join_result::Outcome::Request(_)) => {
-                    panic!("Expected auto-accepted member but got pending request");
-                }
-                None => {
-                    panic!("Success result had no outcome");
-                }
+        Some(request_to_join_response::Result::Success(result)) => match result.outcome {
+            Some(request_to_join_result::Outcome::Member(member)) => {
+                assert_eq!(member.organization_id, org.id);
+                assert_eq!(member.organization_name, Some(org.name));
+                assert!(
+                    !member.roles.is_empty(),
+                    "Member should have at least one role"
+                );
             }
-        }
+            Some(request_to_join_result::Outcome::Request(_)) => {
+                panic!("Expected auto-accepted member but got pending request");
+            }
+            None => {
+                panic!("Success result had no outcome");
+            }
+        },
         Some(request_to_join_response::Result::Error(e)) => {
             panic!("Unexpected error response: {} - {}", e.code, e.message);
         }
@@ -413,7 +419,7 @@ async fn test_request_invalid_code() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: "nonexistent_code_12345".to_string(),
+        code: Some("nonexistent_code_12345".to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -484,7 +490,7 @@ async fn test_request_expired_code() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: code.to_string(),
+        code: Some(code.to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -553,7 +559,7 @@ async fn test_request_single_use_code_deleted() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: code.to_string(),
+        code: Some(code.to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -624,7 +630,7 @@ async fn test_request_already_member() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: code.to_string(),
+        code: Some(code.to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -692,7 +698,7 @@ async fn test_request_already_pending() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: code.to_string(),
+        code: Some(code.to_string()),
     };
     let response: RequestToJoinResponse = nats
         .request(&subject, &request)
@@ -918,11 +924,7 @@ async fn test_cancel_other_users_request() {
 
     match list_response.result {
         Some(list_user_join_requests_response::Result::Requests(data)) => {
-            assert_eq!(
-                data.requests.len(),
-                1,
-                "User1's request should still exist"
-            );
+            assert_eq!(data.requests.len(), 1, "User1's request should still exist");
         }
         _ => {
             panic!("Failed to verify request still exists");
@@ -964,7 +966,7 @@ async fn test_malicious_sql_injection_in_code() {
             user.id
         );
         let request = RequestToJoinRequest {
-            code: malicious_code.to_string(),
+            code: Some(malicious_code.to_string()),
         };
 
         // This should not crash or cause database corruption
@@ -1020,11 +1022,13 @@ async fn test_malicious_extremely_long_code() {
         user.id
     );
     let request = RequestToJoinRequest {
-        code: very_long_code,
+        code: Some(very_long_code),
     };
 
     // This should not crash or hang
-    let result = nats.request::<_, RequestToJoinResponse>(&subject, &request).await;
+    let result = nats
+        .request::<_, RequestToJoinResponse>(&subject, &request)
+        .await;
 
     // Either returns a response (error) or times out gracefully
     match result {
@@ -1069,15 +1073,15 @@ async fn test_malicious_special_characters_in_code() {
 
     // Various special character codes
     let special_codes = vec![
-        "\0\0\0",           // Null bytes
-        "\x00\x01\x02",     // Control characters
-        "\n\r\t",           // Whitespace
-        "$$$$",             // Dollar signs (SurrealDB variable syntax)
-        "{{}}",             // Braces
-        "`,`",              // Backticks
+        "\0\0\0",       // Null bytes
+        "\x00\x01\x02", // Control characters
+        "\n\r\t",       // Whitespace
+        "$$$$",         // Dollar signs (SurrealDB variable syntax)
+        "{{}}",         // Braces
+        "`,`",          // Backticks
         "code with spaces",
-        "\u{FEFF}code",     // BOM
-        "cafe\u{0301}",     // Unicode combining characters
+        "\u{FEFF}code", // BOM
+        "cafe\u{0301}", // Unicode combining characters
     ];
 
     for special_code in special_codes {
@@ -1086,11 +1090,13 @@ async fn test_malicious_special_characters_in_code() {
             user.id
         );
         let request = RequestToJoinRequest {
-            code: special_code.to_string(),
+            code: Some(special_code.to_string()),
         };
 
         // This should not crash
-        let result = nats.request::<_, RequestToJoinResponse>(&subject, &request).await;
+        let result = nats
+            .request::<_, RequestToJoinResponse>(&subject, &request)
+            .await;
 
         match result {
             Ok(response) => {
@@ -1153,7 +1159,9 @@ async fn test_malicious_cancel_request_id() {
         };
 
         // This should not crash
-        let result = nats.request::<_, CancelJoinRequestResponse>(&subject, &request).await;
+        let result = nats
+            .request::<_, CancelJoinRequestResponse>(&subject, &request)
+            .await;
 
         match result {
             Ok(response) => {

@@ -10,7 +10,7 @@ use anyhow::Result;
 
 use backend_tests::proto::typewriter::api::v1::{self, update_member_roles_response};
 use backend_tests::{
-    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
+    MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Helper to create the NATS subject for updating member roles.
@@ -83,10 +83,11 @@ async fn test_update_member_different_role() -> Result<()> {
 
     match response.result {
         Some(update_member_roles_response::Result::Member(member)) => {
-            assert_eq!(member.name, "Update Target User");
+            assert_eq!(member.name, Some("Update Target User".to_string()));
             assert_eq!(member.roles.len(), 1, "Expected exactly one role");
             assert_eq!(
-                member.roles[0].name, "update_new_role",
+                member.roles[0].name,
+                Some("update_new_role".to_string()),
                 "Role should be updated to new role"
             );
         }
@@ -159,17 +160,18 @@ async fn test_update_member_multiple_roles() -> Result<()> {
         Some(update_member_roles_response::Result::Member(member)) => {
             assert_eq!(member.roles.len(), 3, "Expected three roles");
 
-            let role_names: Vec<&str> = member.roles.iter().map(|r| r.name.as_str()).collect();
+            let role_names: Vec<String> =
+                member.roles.iter().filter_map(|r| r.name.clone()).collect();
             assert!(
-                role_names.contains(&"update_multi_role1"),
+                role_names.contains(&"update_multi_role1".to_string()),
                 "Should have role1"
             );
             assert!(
-                role_names.contains(&"update_multi_role2"),
+                role_names.contains(&"update_multi_role2".to_string()),
                 "Should have role2"
             );
             assert!(
-                role_names.contains(&"update_multi_role3"),
+                role_names.contains(&"update_multi_role3".to_string()),
                 "Should have role3"
             );
         }
@@ -245,19 +247,24 @@ async fn test_update_member_preserve_non_assignable_roles() -> Result<()> {
 
     match response.result {
         Some(update_member_roles_response::Result::Member(member)) => {
-            assert_eq!(member.roles.len(), 2, "Expected two roles (preserved + new)");
+            assert_eq!(
+                member.roles.len(),
+                2,
+                "Expected two roles (preserved + new)"
+            );
 
-            let role_names: Vec<&str> = member.roles.iter().map(|r| r.name.as_str()).collect();
+            let role_names: Vec<String> =
+                member.roles.iter().filter_map(|r| r.name.clone()).collect();
             assert!(
-                role_names.contains(&"update_na_owner"),
+                role_names.contains(&"update_na_owner".to_string()),
                 "Non-assignable role should be preserved"
             );
             assert!(
-                role_names.contains(&"update_na_role2"),
+                role_names.contains(&"update_na_role2".to_string()),
                 "New assignable role should be added"
             );
             assert!(
-                !role_names.contains(&"update_na_role1"),
+                !role_names.contains(&"update_na_role1".to_string()),
                 "Old assignable role should be removed"
             );
         }

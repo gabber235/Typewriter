@@ -2,10 +2,10 @@
 
 use anyhow::Result;
 use backend_tests::proto::typewriter::api::v1::{
-    bind_service_response, BindServiceRequest, BindServiceResponse,
+    BindServiceRequest, BindServiceResponse, bind_service_response,
 };
 use backend_tests::{
-    get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient, UserBuilder,
+    OrganizationBuilder, ServiceBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Helper to bind a service.
@@ -30,8 +30,12 @@ async fn test_bind_service_with_valid_token() -> Result<()> {
     let fixtures = get_fixtures().await;
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
 
-    let user = UserBuilder::new("bind_user").create(&fixtures.infra.db).await?;
-    let org = OrganizationBuilder::new("bind_org").create(&fixtures.infra.db).await?;
+    let user = UserBuilder::new("bind_user")
+        .create(&fixtures.infra.db)
+        .await?;
+    let org = OrganizationBuilder::new("bind_org")
+        .create(&fixtures.infra.db)
+        .await?;
 
     let service = ServiceBuilder::new("bind_test_service")
         .service_type("engine")
@@ -44,7 +48,7 @@ async fn test_bind_service_with_valid_token() -> Result<()> {
     match &response.result {
         Some(bind_service_response::Result::Service(bound)) => {
             assert_eq!(bound.service_id, service.id);
-            assert_eq!(bound.service_name, "bind_test_service");
+            assert_eq!(bound.service_name, Some("bind_test_service".to_string()));
             assert!(!bound.service_types.is_empty());
         }
         Some(bind_service_response::Result::Error(err)) => {

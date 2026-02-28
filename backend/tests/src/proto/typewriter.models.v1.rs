@@ -8,8 +8,8 @@ pub struct Permission {
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ResponsePermission {
-    #[prost(int32, tag = "1")]
-    pub max_messages: i32,
+    #[prost(int32, optional, tag = "1")]
+    pub max_messages: ::core::option::Option<i32>,
     #[prost(message, optional, tag = "2")]
     pub ttl: ::core::option::Option<::prost_types::Duration>,
 }
@@ -24,8 +24,8 @@ pub struct Permissions {
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct Color {
-    #[prost(uint32, tag = "1")]
-    pub value: u32,
+    #[prost(uint32, optional, tag = "1")]
+    pub value: ::core::option::Option<u32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Error {
@@ -39,41 +39,54 @@ pub struct Error {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Book {
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub title: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub icon: ::prost::alloc::string::String,
+    pub book_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub title: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "3")]
+    pub icon: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(message, optional, tag = "4")]
     pub color: ::core::option::Option<Color>,
-    #[prost(message, repeated, tag = "5")]
-    pub tags: ::prost::alloc::vec::Vec<Tag>,
+    #[prost(string, repeated, tag = "5")]
+    pub tag_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Tag {
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    pub tag_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(message, optional, tag = "3")]
     pub color: ::core::option::Option<Color>,
-    #[prost(message, repeated, tag = "4")]
-    pub parents: ::prost::alloc::vec::Vec<Tag>,
+    #[prost(string, repeated, tag = "4")]
+    pub parent_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "5")]
+    pub placement: ::core::option::Option<Placement>,
+}
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct Placement {
+    #[prost(int32, optional, tag = "1")]
+    pub x: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "2")]
+    pub y: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "3")]
+    pub width: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "4")]
+    pub height: ::core::option::Option<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Page {
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub page_id: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub book_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(enumeration = "PageType", tag = "4")]
     pub r#type: i32,
-    #[prost(string, tag = "5")]
-    pub chapter: ::prost::alloc::string::String,
-    #[prost(int32, tag = "6")]
-    pub priority: i32,
+    #[prost(string, optional, tag = "5")]
+    pub chapter: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "6")]
+    pub priority: ::core::option::Option<i32>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -113,38 +126,38 @@ impl PageType {
 pub struct Role {
     /// Unique identifier for the role
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub role_id: ::prost::alloc::string::String,
     /// Display name of the role (e.g., "Admin", "Editor", "Viewer")
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     /// Color for the role in ARGB format
     #[prost(message, optional, tag = "3")]
     pub color: ::core::option::Option<Color>,
     /// Whether this is the default role assigned to new members
-    #[prost(bool, tag = "4")]
-    pub default_role: bool,
+    #[prost(bool, optional, tag = "4")]
+    pub default_role: ::core::option::Option<bool>,
     /// Whether this role can be assigned by administrators
-    #[prost(bool, tag = "5")]
-    pub assignable: bool,
+    #[prost(bool, optional, tag = "5")]
+    pub assignable: ::core::option::Option<bool>,
     /// Whether this role can be deleted by administrators
-    #[prost(bool, tag = "6")]
-    pub deletable: bool,
+    #[prost(bool, optional, tag = "6")]
+    pub deletable: ::core::option::Option<bool>,
 }
 /// OrganizationMember represents a user who is a member of an organization.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OrganizationMember {
-    /// Unique identifier for the member (the member_of relation ID)
+    /// Unique identifier for the user.
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub user_id: ::prost::alloc::string::String,
     /// Display name of the member
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     /// Email address of the member
-    #[prost(string, tag = "3")]
-    pub email: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub email: ::core::option::Option<::prost::alloc::string::String>,
     /// URL to the member's avatar image
-    #[prost(string, tag = "4")]
-    pub avatar_url: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "4")]
+    pub avatar_url: ::core::option::Option<::prost::alloc::string::String>,
     /// Roles assigned to this member
     #[prost(message, repeated, tag = "5")]
     pub roles: ::prost::alloc::vec::Vec<Role>,
@@ -157,19 +170,19 @@ pub struct OrganizationMember {
 pub struct JoinRequest {
     /// Unique identifier for the join request (the requests_to_join relation ID)
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub join_request_id: ::prost::alloc::string::String,
     /// Unique identifier of the requesting user
     #[prost(string, tag = "2")]
     pub user_id: ::prost::alloc::string::String,
     /// Display name of the requesting user
-    #[prost(string, tag = "3")]
-    pub user_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub user_name: ::core::option::Option<::prost::alloc::string::String>,
     /// Email address of the requesting user
-    #[prost(string, tag = "4")]
-    pub user_email: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "4")]
+    pub user_email: ::core::option::Option<::prost::alloc::string::String>,
     /// URL to the requesting user's avatar image
-    #[prost(string, tag = "5")]
-    pub user_avatar_url: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "5")]
+    pub user_avatar_url: ::core::option::Option<::prost::alloc::string::String>,
     /// Timestamp when the request was created
     #[prost(message, optional, tag = "6")]
     pub requested_at: ::core::option::Option<::prost_types::Timestamp>,
@@ -183,16 +196,16 @@ pub struct JoinRequest {
 pub struct UserJoinRequest {
     /// Unique identifier for the join request (the requests_to_join relation ID)
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub join_request_id: ::prost::alloc::string::String,
     /// Organization ID the user is requesting to join
     #[prost(string, tag = "2")]
     pub organization_id: ::prost::alloc::string::String,
     /// Organization name
-    #[prost(string, tag = "3")]
-    pub organization_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub organization_name: ::core::option::Option<::prost::alloc::string::String>,
     /// Organization icon URL
-    #[prost(string, tag = "4")]
-    pub organization_icon_url: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "4")]
+    pub organization_icon_url: ::core::option::Option<::prost::alloc::string::String>,
     /// Timestamp when the request was created
     #[prost(message, optional, tag = "5")]
     pub requested_at: ::core::option::Option<::prost_types::Timestamp>,
@@ -251,10 +264,10 @@ pub struct ServiceMetadata {
 pub struct Service {
     /// Service identifier (authentik_user_id as record ID).
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+    pub service_id: ::prost::alloc::string::String,
     /// Name of the service.
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     /// List of service types (engine and/or realm).
     #[prost(enumeration = "ServiceType", repeated, tag = "3")]
     pub service_types: ::prost::alloc::vec::Vec<i32>,
@@ -340,11 +353,11 @@ impl ServiceStatus {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OrganizationData {
     #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub icon_url: ::prost::alloc::string::String,
+    pub organization_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "3")]
+    pub icon_url: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(message, optional, tag = "4")]
     pub created_at: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(message, optional, tag = "5")]

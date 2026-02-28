@@ -2,11 +2,11 @@
 
 use anyhow::Result;
 use backend_tests::proto::typewriter::api::v1::{
-    list_organization_services_response, ListOrganizationServicesRequest,
-    ListOrganizationServicesResponse,
+    ListOrganizationServicesRequest, ListOrganizationServicesResponse,
+    list_organization_services_response,
 };
 use backend_tests::{
-    get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient, UserBuilder,
+    OrganizationBuilder, ServiceBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Helper to list organization services.
@@ -28,7 +28,9 @@ async fn test_list_returns_all_org_services() -> Result<()> {
     let fixtures = get_fixtures().await;
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
 
-    let user = UserBuilder::new("list_all_user").create(&fixtures.infra.db).await?;
+    let user = UserBuilder::new("list_all_user")
+        .create(&fixtures.infra.db)
+        .await?;
     let org = OrganizationBuilder::new("list_all_org")
         .create(&fixtures.infra.db)
         .await?;
@@ -122,7 +124,10 @@ async fn test_list_only_returns_org_services() -> Result<()> {
             assert_eq!(list.services.len(), 2, "Org1 should have 2 services");
             for service in &list.services {
                 assert!(
-                    service.name.contains("org1"),
+                    service
+                        .name
+                        .clone()
+                        .is_some_and(|name| name.contains("org1")),
                     "Service should belong to org1"
                 );
             }
@@ -135,7 +140,10 @@ async fn test_list_only_returns_org_services() -> Result<()> {
             assert_eq!(list.services.len(), 3, "Org2 should have 3 services");
             for service in &list.services {
                 assert!(
-                    service.name.contains("org2"),
+                    service
+                        .name
+                        .clone()
+                        .is_some_and(|name| name.contains("org2")),
                     "Service should belong to org2"
                 );
             }

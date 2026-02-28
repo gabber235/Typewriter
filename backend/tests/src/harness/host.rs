@@ -13,11 +13,11 @@ use tracing::Instrument;
 
 use wash_runtime::engine::Engine;
 use wash_runtime::host::{Host, HostApi, HostBuilder};
-use wash_runtime::plugin::wasi_config::WasiConfig;
-use wash_runtime::plugin::wasi_logging::WasiLogging;
+use wash_runtime::plugin::wasi_config::DynamicConfig;
+use wash_runtime::plugin::wasi_logging::TracingLogger;
 use wash_runtime::types::{Component, LocalResources, Workload, WorkloadStartRequest};
-use wash_runtime::washlet::plugins::surrealdb::{Auth, SurrealdbConfig, WasiSurrealdb};
-use wash_runtime::washlet::plugins::wasmcloud_messaging::WasmcloudMessaging;
+use wash_runtime::plugin::surrealdb::{Auth, SurrealdbConfig, WasiSurrealdb};
+use wash_runtime::plugin::wasmcloud_messaging::NatsMessaging;
 use wash_runtime::wit::WitInterface;
 
 use super::components::{ComponentRegistry, DiscoveredComponent};
@@ -75,7 +75,7 @@ impl TestHost {
         .await?;
         tracing::info!("Created SurrealDB plugin");
 
-        let messaging_plugin = WasmcloudMessaging::new(Arc::new(nats_client.clone()));
+        let messaging_plugin = NatsMessaging::new(Arc::new(nats_client.clone()));
         tracing::info!("Created NATS messaging plugin");
 
         let engine = Engine::builder()
@@ -88,9 +88,9 @@ impl TestHost {
             .context("Failed to add messaging plugin")?
             .with_plugin(Arc::new(surrealdb_plugin))
             .context("Failed to add SurrealDB plugin")?
-            .with_plugin(Arc::new(WasiConfig::default()))
+            .with_plugin(Arc::new(DynamicConfig::default()))
             .context("Failed to add config plugin")?
-            .with_plugin(Arc::new(WasiLogging))
+            .with_plugin(Arc::new(TracingLogger::default()))
             .context("Failed to add logging plugin")?
             .build()
             .context("Failed to build host")?;
@@ -206,6 +206,8 @@ impl TestHost {
         let workload_id = uuid::Uuid::new_v4().to_string();
 
         let component = Component {
+            name: discovered.name.clone(),
+            digest: None,
             bytes: Bytes::from(discovered.bytes.as_bytes().to_vec()),
             local_resources: LocalResources {
                 environment,

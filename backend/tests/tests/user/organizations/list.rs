@@ -4,10 +4,10 @@
 //! This endpoint returns all organizations that a user is a member of.
 
 use backend_tests::proto::typewriter::api::v1::{
-    list_organizations_response, ListOrganizationsRequest, ListOrganizationsResponse,
+    ListOrganizationsRequest, ListOrganizationsResponse, list_organizations_response,
 };
 use backend_tests::{
-    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
+    MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Helper function to build the NATS subject for listing organizations.
@@ -67,15 +67,17 @@ async fn test_list_organizations_single_org() {
 
             let org_data = &orgs.organizations[0];
             assert_eq!(
-                org_data.id, org.id,
+                org_data.organization_id, org.id,
                 "Organization ID should match the created organization"
             );
             assert_eq!(
-                org_data.name, org.name,
+                org_data.name,
+                Some(org.name),
                 "Organization name should match the created organization"
             );
             assert_eq!(
-                org_data.icon_url, org.icon_url,
+                org_data.icon_url,
+                Some(org.icon_url),
                 "Organization icon_url should match the created organization"
             );
         }
@@ -178,7 +180,11 @@ async fn test_list_organizations_multiple_orgs() {
             );
 
             // Collect organization IDs from response
-            let org_ids: Vec<&str> = orgs.organizations.iter().map(|o| o.id.as_str()).collect();
+            let org_ids: Vec<&str> = orgs
+                .organizations
+                .iter()
+                .map(|o| o.organization_id.as_str())
+                .collect();
 
             // Verify all created organizations are in the response
             assert!(
@@ -337,31 +343,33 @@ async fn test_list_organizations_data_fields() {
 
             // Verify ID field
             assert!(
-                !org_data.id.is_empty(),
+                !org_data.organization_id.is_empty(),
                 "Organization ID should not be empty"
             );
             assert_eq!(
-                org_data.id, org.id,
+                org_data.organization_id, org.id,
                 "Organization ID should match the expected value"
             );
 
             // Verify name field
             assert!(
-                !org_data.name.is_empty(),
+                !org_data.name.clone().is_none_or(|s| s.is_empty()),
                 "Organization name should not be empty"
             );
             assert_eq!(
-                org_data.name, expected_name,
+                org_data.name,
+                Some(expected_name.to_string()),
                 "Organization name should match the expected value"
             );
 
             // Verify icon_url field
             assert!(
-                !org_data.icon_url.is_empty(),
+                !org_data.icon_url.clone().is_none_or(|s| s.is_empty()),
                 "Organization icon_url should not be empty"
             );
             assert_eq!(
-                org_data.icon_url, expected_icon_url,
+                org_data.icon_url,
+                Some(expected_icon_url.to_string()),
                 "Organization icon_url should match the expected value"
             );
 
@@ -460,11 +468,11 @@ async fn test_list_organizations_excludes_non_member_orgs() {
 
             let org_data = &orgs.organizations[0];
             assert_eq!(
-                org_data.id, org_for_user1.id,
+                org_data.organization_id, org_for_user1.id,
                 "User1 should only see org_for_user1"
             );
             assert_ne!(
-                org_data.id, org_for_user2.id,
+                org_data.organization_id, org_for_user2.id,
                 "User1 should not see org_for_user2"
             );
         }

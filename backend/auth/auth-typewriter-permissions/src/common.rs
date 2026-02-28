@@ -1,9 +1,4 @@
-use std::time::Duration;
-
-use nats_jwt_rs::types::{
-    Permission as NatsPermission, Permissions as NatsPermissions,
-    ResponsePermission as NatsResponsePermission,
-};
+use nats_jwt_rs::types::{Permission as NatsPermission, Permissions as NatsPermissions};
 use serde::{Deserialize, Serialize};
 
 use crate::typewriter;
@@ -68,10 +63,7 @@ pub fn build_nats_permissions(
             allow: allow_subscribe,
             deny: vec![],
         },
-        resp: Some(NatsResponsePermission {
-            max_messages: 1,
-            ttl: Duration::from_secs(60),
-        }),
+        resp: None,
     }
 }
 
@@ -94,7 +86,7 @@ impl From<&NatsPermissions> for typewriter::models::v1::Permissions {
             let nanos = r.ttl.subsec_nanos();
 
             typewriter::models::v1::ResponsePermission {
-                max_messages: r.max_messages as i32,
+                max_messages: Some(r.max_messages as i32),
                 ttl: Some(Duration {
                     seconds: total_seconds as i64,
                     nanos: nanos as i32,

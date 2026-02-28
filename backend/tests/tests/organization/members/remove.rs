@@ -1,11 +1,11 @@
 //! Tests for removing organization members.
 
 use backend_tests::proto::typewriter::api::v1::{
-    list_members_response, remove_member_response, ListMembersRequest, ListMembersResponse,
-    RemoveMemberRequest, RemoveMemberResponse,
+    ListMembersRequest, ListMembersResponse, RemoveMemberRequest, RemoveMemberResponse,
+    list_members_response, remove_member_response,
 };
 use backend_tests::{
-    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
+    MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Test successfully removing a member from an organization.
@@ -146,9 +146,15 @@ async fn test_removed_member_not_in_list() {
 
     match &list_response.result {
         Some(list_members_response::Result::Members(list)) => {
-            assert_eq!(list.members.len(), 3, "Expected three members before removal");
+            assert_eq!(
+                list.members.len(),
+                3,
+                "Expected three members before removal"
+            );
             assert!(
-                list.members.iter().any(|m| m.name == "Remove Verify Target"),
+                list.members
+                    .iter()
+                    .any(|m| m.name == Some("Remove Verify Target".to_string())),
                 "Target should be in member list before removal"
             );
         }
@@ -189,27 +195,28 @@ async fn test_removed_member_not_in_list() {
 
     match final_list_response.result {
         Some(list_members_response::Result::Members(list)) => {
-            assert_eq!(
-                list.members.len(),
-                2,
-                "Expected two members after removal"
-            );
+            assert_eq!(list.members.len(), 2, "Expected two members after removal");
 
             // Verify target is not in the list
             assert!(
-                !list.members.iter().any(|m| m.name == "Remove Verify Target"),
+                !list
+                    .members
+                    .iter()
+                    .any(|m| m.name == Some("Remove Verify Target".to_string())),
                 "Removed member should not appear in list"
             );
 
             // Verify other members are still present
             assert!(
-                list.members.iter().any(|m| m.name == "Remove Verify Admin"),
+                list.members
+                    .iter()
+                    .any(|m| m.name == Some("Remove Verify Admin".to_string())),
                 "Admin should still be in list"
             );
             assert!(
                 list.members
                     .iter()
-                    .any(|m| m.name == "Remove Verify Remaining"),
+                    .any(|m| m.name == Some("Remove Verify Remaining".to_string())),
                 "Remaining member should still be in list"
             );
         }
@@ -466,7 +473,11 @@ async fn test_remove_multiple_members() {
 
     match list1.result {
         Some(list_members_response::Result::Members(list)) => {
-            assert_eq!(list.members.len(), 3, "Expected 3 members after first removal");
+            assert_eq!(
+                list.members.len(),
+                3,
+                "Expected 3 members after first removal"
+            );
         }
         _ => panic!("Expected members list"),
     }
@@ -502,14 +513,12 @@ async fn test_remove_multiple_members() {
             );
 
             // Verify remaining members
-            let names: Vec<&str> = list.members.iter().map(|m| m.name.as_str()).collect();
-            assert!(names.contains(&"Remove Multi Admin"));
-            assert!(names.contains(&"Remove Multi User3"));
-            assert!(!names.contains(&"Remove Multi User1"));
-            assert!(!names.contains(&"Remove Multi User2"));
+            let names: Vec<String> = list.members.iter().filter_map(|m| m.name.clone()).collect();
+            assert!(names.contains(&"Remove Multi Admin".to_string()));
+            assert!(names.contains(&"Remove Multi User3".to_string()));
+            assert!(!names.contains(&"Remove Multi User1".to_string()));
+            assert!(!names.contains(&"Remove Multi User2".to_string()));
         }
         _ => panic!("Expected members list"),
     }
 }
-
-

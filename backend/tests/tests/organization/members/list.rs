@@ -8,7 +8,7 @@ use anyhow::Result;
 
 use backend_tests::proto::typewriter::api::v1::{self, list_members_response};
 use backend_tests::{
-    get_fixtures, MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder,
+    MemberBuilder, OrganizationBuilder, RoleBuilder, TestNatsClient, UserBuilder, get_fixtures,
 };
 
 /// Helper to create the NATS subject for listing members.
@@ -48,20 +48,22 @@ async fn test_list_members_single_member() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_members_subject(&user.id, &org.id);
 
-    let response: v1::ListMembersResponse = nats
-        .request(&subject, &v1::ListMembersRequest {})
-        .await?;
+    let response: v1::ListMembersResponse =
+        nats.request(&subject, &v1::ListMembersRequest {}).await?;
 
     match response.result {
         Some(list_members_response::Result::Members(list)) => {
             assert_eq!(list.members.len(), 1, "Expected exactly one member");
 
             let member = &list.members[0];
-            assert_eq!(member.name, "Single Member User");
-            assert_eq!(member.email, "single.member@example.com");
-            assert_eq!(member.avatar_url, "https://example.com/single-avatar.png");
+            assert_eq!(member.name, Some("Single Member User".to_string()));
+            assert_eq!(member.email, Some("single.member@example.com".to_string()));
+            assert_eq!(
+                member.avatar_url,
+                Some("https://example.com/single-avatar.png".to_string())
+            );
             assert_eq!(member.roles.len(), 1, "Expected exactly one role");
-            assert_eq!(member.roles[0].name, "list_single_role");
+            assert_eq!(member.roles[0].name, Some("list_single_role".to_string()));
             assert!(member.joined_at.is_some(), "Expected joined_at to be set");
         }
         Some(list_members_response::Result::Error(err)) => {
@@ -129,26 +131,25 @@ async fn test_list_members_multiple_members() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_members_subject(&user1.id, &org.id);
 
-    let response: v1::ListMembersResponse = nats
-        .request(&subject, &v1::ListMembersRequest {})
-        .await?;
+    let response: v1::ListMembersResponse =
+        nats.request(&subject, &v1::ListMembersRequest {}).await?;
 
     match response.result {
         Some(list_members_response::Result::Members(list)) => {
             assert_eq!(list.members.len(), 3, "Expected three members");
 
-            // Check that all users are present
-            let names: Vec<&str> = list.members.iter().map(|m| m.name.as_str()).collect();
+            let names: Vec<String> = list.members.iter().filter_map(|m| m.name.clone()).collect();
+
             assert!(
-                names.contains(&"Multi Admin User"),
+                names.contains(&"Multi Admin User".to_string()),
                 "Expected Multi Admin User"
             );
             assert!(
-                names.contains(&"Multi Member User"),
+                names.contains(&"Multi Member User".to_string()),
                 "Expected Multi Member User"
             );
             assert!(
-                names.contains(&"Multi Roles User"),
+                names.contains(&"Multi Roles User".to_string()),
                 "Expected Multi Roles User"
             );
 
@@ -156,7 +157,7 @@ async fn test_list_members_multiple_members() -> Result<()> {
             let multi_role_member = list
                 .members
                 .iter()
-                .find(|m| m.name == "Multi Roles User")
+                .find(|m| m.name == Some("Multi Roles User".to_string()))
                 .expect("Should find multi-role user");
             assert_eq!(
                 multi_role_member.roles.len(),
@@ -203,9 +204,8 @@ async fn test_list_members_verify_member_data() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_members_subject(&user.id, &org.id);
 
-    let response: v1::ListMembersResponse = nats
-        .request(&subject, &v1::ListMembersRequest {})
-        .await?;
+    let response: v1::ListMembersResponse =
+        nats.request(&subject, &v1::ListMembersRequest {}).await?;
 
     match response.result {
         Some(list_members_response::Result::Members(list)) => {
@@ -213,31 +213,43 @@ async fn test_list_members_verify_member_data() -> Result<()> {
 
             let member = &list.members[0];
 
-            // Verify member ID is set (should be the member_of relation ID)
-            assert!(!member.id.is_empty(), "Member ID should be set");
+            assert!(!member.user_id.is_empty(), "Member ID should be set");
 
-            // Verify user data
-            assert_eq!(member.name, "Data Verification User");
-            assert_eq!(member.email, "data.verify@example.com");
-            assert_eq!(member.avatar_url, "https://example.com/data-avatar.png");
+            assert_eq!(member.name, Some("Data Verification User".to_string()));
+            assert_eq!(member.email, Some("data.verify@example.com".to_string()));
+            assert_eq!(
+                member.avatar_url,
+                Some("https://example.com/data-avatar.png".to_string())
+            );
 
-            // Verify role data
             assert_eq!(member.roles.len(), 1);
             let role = &member.roles[0];
-            assert_eq!(role.name, "list_data_role");
-            assert!(role.default_role, "Role should be marked as default");
-            assert!(role.assignable, "Role should be assignable by default");
-            assert!(role.deletable, "Role should be deletable by default");
+            assert_eq!(role.name, Some("list_data_role".to_string()));
+            assert!(
+                role.default_role.is_some_and(|b| b),
+                "Role should be marked as default"
+            );
+            assert!(
+                role.assignable.is_some_and(|b| b),
+                "Role should be assignable by default"
+            );
+            assert!(
+                role.deletable.is_some_and(|b| b),
+                "Role should be deletable by default"
+            );
 
             // Verify role color
             assert!(role.color.is_some(), "Role color should be set");
             let color = role.color.as_ref().unwrap();
-            assert_eq!(color.value, 0xFF4287F5, "Role color should match");
+            assert_eq!(color.value, Some(0xFF4287F5), "Role color should match");
 
             // Verify joined_at timestamp
             assert!(member.joined_at.is_some(), "joined_at should be set");
             let joined_at = member.joined_at.as_ref().unwrap();
-            assert!(joined_at.seconds > 0, "joined_at seconds should be positive");
+            assert!(
+                joined_at.seconds > 0,
+                "joined_at seconds should be positive"
+            );
         }
         Some(list_members_response::Result::Error(err)) => {
             panic!("Unexpected error: {} - {}", err.code, err.message);
@@ -275,9 +287,8 @@ async fn test_list_members_optional_fields() -> Result<()> {
     let nats = TestNatsClient::new(fixtures.infra.nats_client());
     let subject = list_members_subject(&user.id, &org.id);
 
-    let response: v1::ListMembersResponse = nats
-        .request(&subject, &v1::ListMembersRequest {})
-        .await?;
+    let response: v1::ListMembersResponse =
+        nats.request(&subject, &v1::ListMembersRequest {}).await?;
 
     // Verify response handles optional fields gracefully
     match response.result {
@@ -285,14 +296,13 @@ async fn test_list_members_optional_fields() -> Result<()> {
             assert_eq!(list.members.len(), 1, "Expected one member");
 
             let member = &list.members[0];
-            assert_eq!(member.name, "Optional Fields User");
-            // Email and avatar_url should be empty strings when not set
+            assert_eq!(member.name, Some("Optional Fields User".to_string()));
             assert!(
-                member.email.is_empty(),
+                member.email.clone().is_none_or(|s| s.is_empty()),
                 "Email should be empty when not set"
             );
             assert!(
-                member.avatar_url.is_empty(),
+                member.avatar_url.clone().is_none_or(|s| s.is_empty()),
                 "Avatar URL should be empty when not set"
             );
         }

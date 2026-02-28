@@ -2,15 +2,15 @@
 
 use anyhow::Result;
 use backend_tests::proto::typewriter::api::v1::{
-    list_organization_services_response, ListOrganizationServicesResponse, ServiceHeartbeatRequest,
+    ListOrganizationServicesResponse, ServiceHeartbeatRequest, list_organization_services_response,
 };
-use backend_tests::{get_fixtures, OrganizationBuilder, ServiceBuilder, TestNatsClient};
+use backend_tests::{OrganizationBuilder, ServiceBuilder, TestNatsClient, get_fixtures};
 use futures::StreamExt;
 use prost::Message;
 use repeated_assert::that_async;
 use std::time::Duration;
-use surrealdb::sql::Datetime;
 use surrealdb::Surreal;
+use surrealdb::sql::Datetime;
 
 #[derive(Debug, Clone, serde::Deserialize)]
 struct ServiceState {
@@ -39,10 +39,7 @@ async fn get_last_seen(
 }
 
 #[allow(dead_code)]
-async fn get_status(
-    db: &Surreal<surrealdb::engine::any::Any>,
-    service_id: &str,
-) -> Option<String> {
+async fn get_status(db: &Surreal<surrealdb::engine::any::Any>, service_id: &str) -> Option<String> {
     get_state(db, service_id).await.and_then(|s| s.status)
 }
 
@@ -62,10 +59,7 @@ async fn test_heartbeat_updates_last_seen_timestamp() -> Result<()> {
         .await?;
 
     let before = get_state(&fixtures.infra.db, &service.id).await;
-    assert!(
-        before.is_none(),
-        "state should be None before heartbeat"
-    );
+    assert!(before.is_none(), "state should be None before heartbeat");
 
     let subject = format!("typewriter.in.service.{}.heartbeat", service.id);
     let request = ServiceHeartbeatRequest {};
@@ -229,7 +223,11 @@ async fn test_heartbeat_triggers_services_list_refresh() -> Result<()> {
         .await?;
 
     let refresh_subject = format!("typewriter.out.organization.{}.services.list", org.id);
-    let mut subscription = fixtures.infra.nats_client().subscribe(refresh_subject).await?;
+    let mut subscription = fixtures
+        .infra
+        .nats_client()
+        .subscribe(refresh_subject)
+        .await?;
 
     let subject = format!("typewriter.in.service.{}.heartbeat", service.id);
     let request = ServiceHeartbeatRequest {};
@@ -251,7 +249,7 @@ async fn test_heartbeat_triggers_services_list_refresh() -> Result<()> {
     match &response.result {
         Some(list_organization_services_response::Result::Services(list)) => {
             assert!(
-                list.services.iter().any(|s| s.id == service.id),
+                list.services.iter().any(|s| s.service_id == service.id),
                 "Refresh should include the service that sent the heartbeat"
             );
         }
