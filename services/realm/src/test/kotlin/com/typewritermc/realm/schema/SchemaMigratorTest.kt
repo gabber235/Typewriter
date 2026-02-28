@@ -1,12 +1,14 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class SchemaMigratorTest : FunSpec({
 
     lateinit var db: Surreal
+    val tracer = MockTelemetry.createMockTracer()
 
     beforeEach {
         db = Surreal()
@@ -21,7 +23,7 @@ class SchemaMigratorTest : FunSpec({
     context("Schema Application") {
 
         test("schema can be applied without errors") {
-            val migrator = SchemaMigrator(db)
+            val migrator = SchemaMigrator(db, tracer)
 
             migrator.migrate()
 
@@ -31,7 +33,7 @@ class SchemaMigratorTest : FunSpec({
         }
 
         test("schema application is idempotent") {
-            val migrator = SchemaMigrator(db)
+            val migrator = SchemaMigrator(db, tracer)
 
             migrator.migrate()
             migrator.migrate()
@@ -46,7 +48,7 @@ class SchemaMigratorTest : FunSpec({
     context("Patch Execution") {
 
         test("patches run only once") {
-            val migrator = SchemaMigrator(db)
+            val migrator = SchemaMigrator(db, tracer)
 
             migrator.migrate()
             migrator.migrate()

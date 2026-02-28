@@ -1,33 +1,35 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
-import io.github.oshai.kotlinlogging.KotlinLogging
+import com.typewritermc.services.libs.telemetry.withSpan
+import io.opentelemetry.api.trace.Tracer
 
-private val logger = KotlinLogging.logger {}
+class SchemaMigrator(
+    private val db: Surreal,
+    private val tracer: Tracer,
+) {
 
-class SchemaMigrator(private val db: Surreal) {
+    private val patchRunner = PatchRunner(db, tracer)
 
-    private val patchRunner = PatchRunner(db)
+    fun migrate() = tracer.withSpan("realm.migrate") { s ->
+        s.addEvent("Starting schema migration")
 
-    fun migrate() {
-        logger.info { "Starting schema migration..." }
+        applySchema(s)
+        patchRunner.runPendingPatches(s)
 
-        applySchema()
-        patchRunner.runPendingPatches()
-
-        logger.info { "Schema migration complete" }
+        s.addEvent("Schema migration complete")
     }
 
-    private fun applySchema() {
+    private fun applySchema(s: io.opentelemetry.api.trace.Span) {
         val schema = loadResource("schema/realm.surql")
         if (schema.isBlank()) {
-            logger.warn { "Empty schema file, skipping schema application" }
+            s.addEvent("Empty schema file, skipping schema application")
             return
         }
 
-        logger.info { "Applying schema..." }
+        s.addEvent("Applying schema")
         db.query(schema)
-        logger.info { "Schema applied successfully" }
+        s.addEvent("Schema applied successfully")
     }
 
     private fun loadResource(path: String): String {

@@ -7,10 +7,13 @@ import com.typewritermc.realm.RealmQualifier.*
 import com.typewritermc.realm.registrar.RealmCredentialStorage
 import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
 import com.typewritermc.realm.routes.NatsDispatcherFactory
+import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.communicator.SERVICE_COMMUNICATOR_MODULE
 import com.typewritermc.services.libs.registrar.*
+import com.typewritermc.services.libs.telemetry.SERVICE_TELEMETRY_MODULE
+import com.typewritermc.services.libs.telemetry.TelemetryQualifier
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -39,7 +42,25 @@ fun main() {
     logger.trace { "Starting Koin" }
 
     val module = module {
-        single { Realm(get(named(DATABASE))) } onClose { it?.shutdown() }
+        single(named(TelemetryQualifier.SERVICE_NAME)) { "realm" }
+        single(named(TelemetryQualifier.SERVICE_VERSION)) { REALM_VERSION }
+
+        single(named(DB_URL)) { getProperty("REALM_DB_URL", "") }
+        single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "") }
+        single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "") }
+        single(named(DB_NAMESPACE)) { getProperty("REALM_DB_NAMESPACE", "typewriter") }
+        single(named(DB_DATABASE)) { getProperty("REALM_DB_DATABASE", "realm") }
+        single {
+            DatabaseProvider(
+                url = get(named(DB_URL)),
+                username = get(named(DB_USERNAME)),
+                password = get(named(DB_PASSWORD)),
+                namespace = get(named(DB_NAMESPACE)),
+                database = get(named(DB_DATABASE)),
+                tracer = get(),
+            )
+        }
+        single { Realm(get(named(DATABASE)), get(), get()) } onClose { it?.shutdown() }
         single {
             Cbor {
                 ignoreUnknownKeys = true
@@ -82,7 +103,7 @@ fun main() {
 
     val application = startKoin {
         environmentProperties()
-        modules(module, REALM_ROUTES_MODULE, SERVICE_REGISTRAR_MODULE, SERVICE_COMMUNICATOR_MODULE)
+        modules(module, SERVICE_TELEMETRY_MODULE, REALM_ROUTES_MODULE, SERVICE_REGISTRAR_MODULE, SERVICE_COMMUNICATOR_MODULE)
     }
     logger.trace { "Koin started" }
 

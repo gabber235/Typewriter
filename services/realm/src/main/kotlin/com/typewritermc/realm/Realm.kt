@@ -1,30 +1,27 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
-import com.typewritermc.realm.schema.SchemaMigrator
+import com.typewritermc.realm.schema.DatabaseProvider
+import com.typewritermc.services.libs.telemetry.withSpan
 import com.typewritermc.services.libs.utils.DeferredProvider
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import io.opentelemetry.api.trace.Tracer
 
 class Realm(
-    val database: DeferredProvider<Surreal>
+    val database: DeferredProvider<Surreal>,
+    private val databaseProvider: DatabaseProvider,
+    private val tracer: Tracer,
 ) {
-    private val logger: KLogger = logger {}
 
-    fun initialize() {
-        logger.info { "Initializing Realm" }
+    fun initialize(): Unit = tracer.withSpan("realm.initialize") { s ->
+        s.addEvent("Initializing Realm")
 
-        val db = Surreal()
-        db.connect("surrealkv+versioned://database")
-        db.useNs("typewriter").useDb("realm")
-
-        SchemaMigrator(db).migrate()
-
+        val db = databaseProvider.connect()
         database.set(db)
-        logger.info { "Realm initialized with database connection" }
+
+        s.addEvent("Realm initialized")
     }
 
-    fun shutdown() {
-        logger.info { "Shutting down Realm" }
+    fun shutdown(): Unit = tracer.withSpan("realm.shutdown") { s ->
+        s.addEvent("Shutting down Realm")
     }
 }

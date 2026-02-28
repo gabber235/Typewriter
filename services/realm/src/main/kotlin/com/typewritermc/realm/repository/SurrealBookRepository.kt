@@ -3,15 +3,17 @@ package com.typewritermc.realm.repository
 import com.surrealdb.Surreal
 import com.typewritermc.realm.repository.utils.BookRecord
 import com.typewritermc.realm.repository.utils.requireValidId
+import com.typewritermc.realm.repository.utils.takeTransaction
+import com.typewritermc.services.libs.utils.DeferredProvider
 import protokt.v1.typewriter.models.v1.Book
 
 class SurrealBookRepository(
-    private val db: Surreal
+    private val db: DeferredProvider<Surreal>
 ) : BookRepository {
 
     override suspend fun listBooks(): List<Book> {
-        val result = db.query("SELECT * FROM book")
-            .take(0)
+        val result = db.get().query("SELECT * FROM book")
+            .takeTransaction(0)
 
         if (result.isNone) return emptyList()
 
@@ -21,40 +23,62 @@ class SurrealBookRepository(
     override suspend fun getBook(id: String): Book? {
         requireValidId("Book", id)
 
-        val result = db.queryBind(
+        val result = db.get().queryBind(
             $$"SELECT * FROM type::thing('book', $id)",
             mapOf("id" to id)
-        ).take(0)
+        ).takeTransaction(0)
 
         if (result.isNone) return null
 
         return BookRecord.parseList(result).firstOrNull()?.toBook()
     }
 
-    override suspend fun createBook(title: String, icon: String, color: Int): Book {
+    override suspend fun createBook(
+        title: String,
+        icon: String,
+        color: Int,
+        tagIds: List<String>
+    ): Book {
         val colorLong = color.toUInt().toLong()
-        val result = db.queryBind(
+
+        // Create book and relationships in a single transaction
+        val result = db.get().queryBind(
             $$"""
-            CREATE book SET
+            BEGIN TRANSACTION;
+            LET $book = CREATE book SET
                 title = $title, 
                 icon = $icon, 
-                color = $color
+                color = $color;
+            
+            LET $tags = $tag_ids.map(|$id| type::thing('tag', $id));
+            FOR $tag IN $tags {
+                IF record::exists($tag) {
+                    RELATE $book->bears->$tag;
+                };
+            };
+            
+            RETURN SELECT * FROM $book.id;
+            COMMIT TRANSACTION;
             """.trimIndent(),
-            mapOf("title" to title, "icon" to icon, "color" to colorLong)
-        ).take(0)
+            mapOf("title" to title, "icon" to icon, "color" to colorLong, "tag_ids" to tagIds)
+        ).takeTransaction(0)
+
+        if (result.isNone) {
+            throw IllegalStateException("Failed to create book: no result returned")
+        }
 
         val records = BookRecord.parseList(result)
-        val record = records.firstOrNull() ?: throw IllegalStateException("Failed to create book")
+        return records.firstOrNull()?.toBook()
+            ?: throw IllegalStateException("Failed to create book: no book record returned")
 
-        return record.toBook()
     }
 
     override suspend fun updateBook(book: Book): Book {
         val colorLong = (book.color?.value ?: 0u).toLong()
 
-        requireValidId("Book", book.id)
+        requireValidId("Book", book.bookId)
 
-        val result = db.queryBind(
+        val result = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $book_record = type::thing('book', $id);
@@ -82,12 +106,13 @@ class SurrealBookRepository(
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf(
-                "id" to book.id,
-                "title" to book.title,
-                "icon" to book.icon,
+                "id" to book.bookId,
+                "title" to book.title.orEmpty(),
+                "icon" to book.icon.orEmpty(),
                 "color" to colorLong,
-                "tag_ids" to book.tags.map { it.id })
-        ).take(0)
+                "tag_ids" to book.tagIds
+            )
+        ).takeTransaction(0)
         return BookRecord.parseList(result).firstOrNull()?.toBook()
             ?: throw IllegalStateException("Failed to update book")
     }
@@ -95,7 +120,7 @@ class SurrealBookRepository(
     override suspend fun deleteBook(id: String): Boolean {
         requireValidId("Book", id)
 
-        return db.queryBind(
+        return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $book_record = type::thing('book', $id);
@@ -109,14 +134,14 @@ class SurrealBookRepository(
                 COMMIT TRANSACTION;
                 """.trimIndent(),
             mapOf("id" to id)
-        ).take(0).boolean
+        ).takeTransaction(0).boolean
     }
 
     override suspend fun addTagToBook(bookId: String, tagId: String): Boolean {
         requireValidId("Book", bookId)
         requireValidId("Tag", tagId)
 
-        return db.queryBind(
+        return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $book_record = type::thing('book', $bookId);
@@ -130,14 +155,14 @@ class SurrealBookRepository(
             """.trimIndent(),
             mapOf("bookId" to bookId, "tagId" to tagId)
         )
-            .take(0).boolean
+            .takeTransaction(0).boolean
     }
 
     override suspend fun removeTagFromBook(bookId: String, tagId: String): Boolean {
         requireValidId("Book", bookId)
         requireValidId("Tag", tagId)
 
-        return db.queryBind(
+        return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $book_record = type::thing('book', $bookId);
@@ -154,6 +179,6 @@ class SurrealBookRepository(
                 COMMIT TRANSACTION;
                 """.trimIndent(),
             mapOf("bookId" to bookId, "tagId" to tagId)
-        ).take(0).boolean
+        ).takeTransaction(0).boolean
     }
 }

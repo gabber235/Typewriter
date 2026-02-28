@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
     implementation("com.typewritermc:service-utils")
+    implementation("com.typewritermc:service-telemetry")
     implementation("com.typewritermc:service-registrar")
     implementation("com.typewritermc:service-communicator")
 
@@ -24,6 +25,7 @@ dependencies {
     implementation(libs.surrealdb)
     
     testImplementation(testFixtures("com.typewritermc:service-communicator"))
+    testImplementation(testFixtures("com.typewritermc:service-telemetry"))
 }
 
 buildConfig {

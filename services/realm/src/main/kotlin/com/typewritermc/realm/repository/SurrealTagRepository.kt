@@ -3,15 +3,17 @@ package com.typewritermc.realm.repository
 import com.surrealdb.Surreal
 import com.typewritermc.realm.repository.utils.TagRecord
 import com.typewritermc.realm.repository.utils.requireValidId
+import com.typewritermc.realm.repository.utils.takeTransaction
+import com.typewritermc.services.libs.utils.DeferredProvider
 import protokt.v1.typewriter.models.v1.Placement
 import protokt.v1.typewriter.models.v1.Tag
 
 class SurrealTagRepository(
-    private val db: Surreal
+    private val db: DeferredProvider<Surreal>
 ) : TagRepository {
 
     override suspend fun listTags(): List<Tag> {
-        val result = db.query("SELECT * FROM tag")
+        val result = db.get().query("SELECT * FROM tag")
             .take(0)
 
         return TagRecord.parseList(result).map { it.toTag() }
@@ -20,7 +22,7 @@ class SurrealTagRepository(
     override suspend fun getTag(id: String): Tag? {
         requireValidId("Tag", id)
 
-        val result = db.queryBind(
+        val result = db.get().queryBind(
             $$"SELECT * FROM type::thing('tag', $id)",
             mapOf("id" to id)
         ).take(0)
@@ -34,14 +36,13 @@ class SurrealTagRepository(
         }
         val colorLong = color.toUInt().toLong()
 
-        val createResult = db.queryBind(
+        val createResult = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $tag_record = CREATE tag SET 
                     name = $name, 
                     color = $color, 
-                    placement = { x: $x, y: $y, width: $width, height: $height };
-                    
+                    placement = { x: $x ?? NONE, y: $y ?? NONE, width: $width ?? NONE, height: $height ?? NONE };
                 
                 LET $parent_records = $parent_ids.map(|$pid| type::thing('tag', $pid));
                 FOR $parent IN $parent_records {
@@ -60,7 +61,7 @@ class SurrealTagRepository(
                 "height" to placement.height,
                 "parent_ids" to parentIds
             )
-        ).take(0)
+        ).takeTransaction(0)
 
         val records = TagRecord.parseList(createResult)
         val record = records.firstOrNull() ?: throw IllegalStateException("Failed to create tag")
@@ -68,21 +69,28 @@ class SurrealTagRepository(
     }
 
     override suspend fun updateTag(tag: Tag): Tag {
-        requireValidId("Tag", tag.id)
-        val colorLong = (tag.color?.value ?: 0u).toLong()
-        val placement = tag.placement ?: Placement { x = 0; y = 0; width = 1; height = 1 }
+        requireValidId("Tag", tag.tagId)
+        val colorLong = tag.color?.value?.toLong()
+        val placement = tag.placement
 
-        val result = db.queryBind(
+        println("Updating tag with ID: ${tag.tagId}: $tag")
+
+        val result = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $tag_record = type::thing('tag', $id);
+                
+                IF !record::exists($tag_record) {
+                    THROW 'Tag not found';
+                };
+                
                 UPDATE $tag_record SET 
                     name = $name, 
                     color = $color, 
                     placement = { x: $x, y: $y, width: $width, height: $height };
                     
-                LET $target_parents = $parent_ids.map(|$pid| type::thing('tag', $pid));
-                LET $current_parents = SELECT VALUE ->inherits->tag FROM ONLY $tag_record;
+                LET $target_parents = ($parent_ids.map(|$pid| type::thing('tag', $pid))) ?? [];
+                LET $current_parents = (SELECT VALUE ->inherits->tag FROM ONLY $tag_record) ?? [];
                 
                 LET $new_parents = array::complement($target_parents, $current_parents);
                 LET $remove_parents = array::complement($current_parents, $target_parents);
@@ -99,25 +107,25 @@ class SurrealTagRepository(
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf(
-                "id" to tag.id,
-                "name" to tag.name,
+                "id" to tag.tagId,
+                "name" to tag.name.orEmpty(),
                 "color" to colorLong,
-                "x" to placement.x,
-                "y" to placement.y,
-                "width" to placement.width,
-                "height" to placement.height,
-                "parent_ids" to tag.parents.map { it.id }
+                "x" to placement?.x,
+                "y" to placement?.y,
+                "width" to placement?.width,
+                "height" to placement?.height,
+                "parent_ids" to tag.parentIds
             )
-        ).take(0)
+        ).takeTransaction(0)
 
         return TagRecord.parseList(result).firstOrNull()?.toTag()
-            ?: throw IllegalStateException("Failed to update tag")
+            ?: throw IllegalStateException("Failed to update tag: $result")
     }
 
     override suspend fun deleteTag(id: String): Boolean {
         requireValidId("Tag", id)
 
-        return db.queryBind(
+        return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $tag_record = type::thing('tag', $id);
@@ -132,13 +140,13 @@ class SurrealTagRepository(
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf("id" to id)
-        ).take(0).boolean
+        ).takeTransaction(0).boolean
     }
 
-    override suspend fun moveTag(id: String, x: Int, y: Int): Boolean {
+    override suspend fun moveTag(id: String, x: Int?, y: Int?): Boolean {
         requireValidId("Tag", id)
 
-        return db.queryBind(
+        return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $tag_record = type::thing('tag', $id);
@@ -147,18 +155,18 @@ class SurrealTagRepository(
                     RETURN false;
                 };
                 
-                UPDATE $tag_record SET placement.x = $x, placement.y = $y;
+                UPDATE $tag_record SET placement.x = $x ?? $tag_record.placement.x, placement.y = $y ?? $tag_record.placement.y;
                 RETURN true;
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf("id" to id, "x" to x, "y" to y)
-        ).take(0).boolean
+        ).takeTransaction(0).boolean
     }
 
-    override suspend fun resizeTag(id: String, width: Int, height: Int): Boolean {
+    override suspend fun resizeTag(id: String, width: Int?, height: Int?): Boolean {
         requireValidId("Tag", id)
 
-        return db.queryBind(
+        return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
                 LET $tag_record = type::thing('tag', $id);
@@ -167,11 +175,11 @@ class SurrealTagRepository(
                     RETURN false;
                 };
                 
-                UPDATE $tag_record SET placement.width = $width, placement.height = $height;
+                UPDATE $tag_record SET placement.width = $width ?? $tag_record.placement.width, placement.height = $height ?? $tag_record.placement.height;
                 RETURN true;
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf("id" to id, "width" to width, "height" to height)
-        ).take(0).boolean
+        ).takeTransaction(0).boolean
     }
 }

@@ -1,61 +1,80 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
-import io.github.oshai.kotlinlogging.KotlinLogging
+import com.typewritermc.services.libs.telemetry.withSpan
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 
-private val logger = KotlinLogging.logger {}
+class PatchRunner(
+    private val db: Surreal,
+    private val tracer: Tracer,
+) {
 
-class PatchRunner(private val db: Surreal) {
+    fun runPendingPatches(parentSpan: Span? = null) {
+        val span = parentSpan ?: tracer.spanBuilder("realm.patch.apply").startSpan()
+        span.makeCurrent().use { _ ->
+            val allPatches = loadPatches(span)
+            if (allPatches.isEmpty()) {
+                span.addEvent("No patches found")
+                span.end()
+                return
+            }
 
-    fun runPendingPatches() {
-        val allPatches = loadPatches()
-        if (allPatches.isEmpty()) {
-            logger.debug { "No patches found" }
-            return
+            val appliedIds = getAppliedPatchIds(span)
+            val pending = allPatches.filter { it.id !in appliedIds }
+
+            if (pending.isEmpty()) {
+                span.addEvent("All patches already applied", io.opentelemetry.api.common.Attributes.builder()
+                    .put("patch.count", allPatches.size.toLong())
+                    .build())
+                span.end()
+                return
+            }
+
+            span.addEvent("Running pending patches", io.opentelemetry.api.common.Attributes.builder()
+                .put("patch.pending_count", pending.size.toLong())
+                .put("patch.total_count", allPatches.size.toLong())
+                .build())
+            pending.forEach { applyPatch(it, span) }
+            span.addEvent("All patches applied successfully")
+            span.end()
         }
-
-        val appliedIds = getAppliedPatchIds()
-        val pending = allPatches.filter { it.id !in appliedIds }
-
-        if (pending.isEmpty()) {
-            logger.debug { "All ${allPatches.size} patches already applied" }
-            return
-        }
-
-        logger.info { "Running ${pending.size} pending patches..." }
-        pending.forEach { applyPatch(it) }
-        logger.info { "All patches applied successfully" }
     }
 
-    private fun applyPatch(patch: Patch) {
+    private fun applyPatch(patch: Patch, parentSpan: Span) = tracer.withSpan("realm.patch.apply_single") { s ->
+        s.setAttribute("patch.id", patch.id)
+
         require(patch.id.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
             "Invalid patch id format: ${patch.id}"
         }
-        logger.info { "Applying patch: ${patch.id}" }
+        s.addEvent("Applying patch")
 
         try {
             db.query(patch.content)
             db.queryBind($$"CREATE _patch SET id = $id", mapOf("id" to patch.id))
-            logger.info { "Patch ${patch.id} applied successfully" }
+            s.addEvent("Patch applied successfully")
         } catch (e: Exception) {
-            logger.error(e) { "Failed to apply patch ${patch.id}" }
+            s.setStatus(StatusCode.ERROR, "Failed to apply patch: ${patch.id}")
             throw PatchFailedException(patch.id, e)
         }
     }
 
-    private fun getAppliedPatchIds(): Set<String> {
+    private fun getAppliedPatchIds(parentSpan: Span): Set<String> {
         return try {
             val result = db.query("SELECT id FROM _patch")
                 .take(0)
             require(result.isArray) { "Expected array result from query, got: ${result.javaClass.name}" }
             result.array.mapNotNull { it.thing.id.string }.toSet()
         } catch (e: Exception) {
-            logger.debug { "Could not query _patch table (may not exist yet): ${e.message}" }
+            parentSpan.addEvent("Could not query _patch table (may not exist yet)", io.opentelemetry.api.common.Attributes.builder()
+                .put("error.message", e.message ?: "Unknown error")
+                .build())
             emptySet()
         }
     }
 
-    private fun loadPatches(): List<Patch> {
+    private fun loadPatches(parentSpan: Span): List<Patch> {
         val index = loadResourceOrNull("schema/patches/_index.txt")
             ?.lines()
             ?.filter { it.isNotBlank() }
@@ -64,7 +83,9 @@ class PatchRunner(private val db: Surreal) {
         return index.mapNotNull { filename ->
             val content = loadResourceOrNull("schema/patches/$filename")
             if (content == null) {
-                logger.warn { "Patch file not found: $filename" }
+                parentSpan.addEvent("Patch file not found", io.opentelemetry.api.common.Attributes.builder()
+                    .put("patch.filename", filename)
+                    .build())
                 return@mapNotNull null
             }
             Patch(
