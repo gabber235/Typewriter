@@ -121,11 +121,6 @@ const config: Config = {
       theme: {
         customCss: require.resolve("./src/css/custom.css"),
       },
-      announcementBar: {
-        id: "support_us",
-        content: "Typewriter 0.8.0 is out!",
-        isCloseable: true,
-      },
       mermaid: {
         theme: { light: "base", dark: "base" },
         options: {
