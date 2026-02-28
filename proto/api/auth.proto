@@ -36,9 +36,6 @@ message GetSentinelCredentialsResponse {
 // These credentials have no permissions and are only used to identify
 // the account during NATS auth callout.
 message SentinelCredentials {
-  // The sentinel user JWT token.
   string jwt = 1;
-
-  // The sentinel user NKEY seed.
   string seed = 2;
 }

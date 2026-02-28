@@ -8,20 +8,20 @@ import "models/common.proto";
 // Roles define permissions and access levels within the organization.
 message Role {
   // Unique identifier for the role
-  string id = 1;
+  string role_id = 1;
 
   // Display name of the role (e.g., "Admin", "Editor", "Viewer")
-  string name = 2;
+  optional string name = 2;
 
   // Color for the role in ARGB format
   Color color = 3;
 
   // Whether this is the default role assigned to new members
-  bool default_role = 4;
+  optional bool default_role = 4;
 
   // Whether this role can be assigned by administrators
-  bool assignable = 5;
+  optional bool assignable = 5;
 
   // Whether this role can be deleted by administrators
-  bool deletable = 6;
+  optional bool deletable = 6;
 }

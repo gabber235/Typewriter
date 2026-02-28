@@ -10,7 +10,7 @@ message Permission {
 }
 
 message ResponsePermission {
-  int32 max_messages = 1;
+  optional int32 max_messages = 1;
   google.protobuf.Duration ttl = 2;
 }
 

@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package typewriter.api.v1;
 
+import "models/common.proto";
 import "models/organization.proto";
 import "models/organization/member.proto";
 import "models/organization/role.proto";
-import "models/common.proto";
 
 // =============================================================================
 // Organizations
@@ -26,7 +26,7 @@ message ListOrganizations {
 
 message CreateOrganizationRequest {
   string name = 1;
-  string icon_url = 2;
+  optional string icon_url = 2;
 }
 
 message CreateOrganizationResponse {
@@ -58,7 +58,7 @@ message ListUserJoinRequests {
 // RequestToJoinRequest creates a join request using a code.
 message RequestToJoinRequest {
   // The join code (e.g., "abc123")
-  string code = 1;
+  optional string code = 1;
 }
 
 // RequestToJoinResponse returns either a pending request, auto-accepted membership, or an error.
@@ -84,9 +84,9 @@ message AutoAcceptedMember {
   // Organization ID the user joined
   string organization_id = 1;
   // Organization name
-  string organization_name = 2;
+  optional string organization_name = 2;
   // Organization icon URL
-  string organization_icon_url = 3;
+  optional string organization_icon_url = 3;
   // Roles assigned to the user
   repeated typewriter.models.v1.Role roles = 4;
 }
@@ -104,4 +104,3 @@ message CancelJoinRequestResponse {
     typewriter.models.v1.Error error = 2;
   }
 }
-

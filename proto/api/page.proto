@@ -7,22 +7,22 @@ import "models/common.proto";
 
 message SearchPagesRequest {
   string book_id = 1;
-  string search = 2;
+  optional string search = 2;
 }
 
 message SearchPagesResult {
-    repeated typewriter.models.v1.Page pages = 1;
+  repeated typewriter.models.v1.Page pages = 1;
 }
 
 message SearchPagesResponse {
-    oneof result {
-        SearchPagesResult pages = 1;
-        typewriter.models.v1.Error error = 2;
-    }
+  oneof result {
+    SearchPagesResult pages = 1;
+    typewriter.models.v1.Error error = 2;
+  }
 }
 
 message GetPageRequest {
-  string id = 1;
+  string page_id = 1;
 }
 
 message GetPageResponse {

@@ -19,7 +19,7 @@ message ListBooks {
 }
 
 message GetBookRequest {
-  string id = 1;
+  string book_id = 1;
 }
 
 message GetBookResponse {
@@ -42,10 +42,10 @@ message UpdateBookResponse {
 
 message CreatePageRequest {
   string book_id = 1;
-  string name = 2;
+  optional string name = 2;
   typewriter.models.v1.PageType type = 3;
-  string chapter = 4;
-  int32 priority = 5;
+  optional string chapter = 4;
+  optional int32 priority = 5;
 }
 
 message CreatePageResponse {
@@ -75,6 +75,20 @@ message ChangePagesChaptersRequest {
 message ChangePagesChaptersResponse {
   oneof result {
     bool success = 1;
+    typewriter.models.v1.Error error = 2;
+  }
+}
+
+message CreateBookRequest {
+  optional string title = 1;
+  optional string icon = 2;
+  typewriter.models.v1.Color color = 3;
+  repeated string tag_ids = 4;
+}
+
+message CreateBookResponse {
+  oneof result {
+    typewriter.models.v1.Book book = 1;
     typewriter.models.v1.Error error = 2;
   }
 }

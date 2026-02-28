@@ -7,17 +7,17 @@ import "models/organization/role.proto";
 
 // OrganizationMember represents a user who is a member of an organization.
 message OrganizationMember {
-  // Unique identifier for the member (the member_of relation ID)
-  string id = 1;
+  // Unique identifier for the user.
+  string user_id = 1;
 
   // Display name of the member
-  string name = 2;
+  optional string name = 2;
 
   // Email address of the member
-  string email = 3;
+  optional string email = 3;
 
   // URL to the member's avatar image
-  string avatar_url = 4;
+  optional string avatar_url = 4;
 
   // Roles assigned to this member
   repeated Role roles = 5;
@@ -29,19 +29,19 @@ message OrganizationMember {
 // JoinRequest represents a pending request from a user to join an organization.
 message JoinRequest {
   // Unique identifier for the join request (the requests_to_join relation ID)
-  string id = 1;
+  string join_request_id = 1;
 
   // Unique identifier of the requesting user
   string user_id = 2;
 
   // Display name of the requesting user
-  string user_name = 3;
+  optional string user_name = 3;
 
   // Email address of the requesting user
-  string user_email = 4;
+  optional string user_email = 4;
 
   // URL to the requesting user's avatar image
-  string user_avatar_url = 5;
+  optional string user_avatar_url = 5;
 
   // Timestamp when the request was created
   google.protobuf.Timestamp requested_at = 6;
@@ -54,16 +54,16 @@ message JoinRequest {
 // This is from the user's perspective, showing which organizations they've requested to join.
 message UserJoinRequest {
   // Unique identifier for the join request (the requests_to_join relation ID)
-  string id = 1;
+  string join_request_id = 1;
 
   // Organization ID the user is requesting to join
   string organization_id = 2;
 
   // Organization name
-  string organization_name = 3;
+  optional string organization_name = 3;
 
   // Organization icon URL
-  string organization_icon_url = 4;
+  optional string organization_icon_url = 4;
 
   // Timestamp when the request was created
   google.protobuf.Timestamp requested_at = 5;

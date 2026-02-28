@@ -49,10 +49,10 @@ message ServiceMetadata {
 // Service represents a service identity stored in SurrealDB.
 message Service {
   // Service identifier (authentik_user_id as record ID).
-  string id = 1;
+  string service_id = 1;
 
   // Name of the service.
-  string name = 2;
+  optional string name = 2;
 
   // List of service types (engine and/or realm).
   repeated ServiceType service_types = 3;

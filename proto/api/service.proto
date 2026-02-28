@@ -23,7 +23,6 @@ message IssueServiceIdentityResponse {
 }
 
 // ServiceCredentials contains the authentication credentials for a service.
-// IMPORTANT: The token is only shown once and cannot be retrieved again.
 message ServiceCredentials {
   // Service identifier (SurrealDB record ID, which is the Authentik user ID).
   string service_id = 1;
@@ -31,6 +30,6 @@ message ServiceCredentials {
   // Authentik username for the service.
   string username = 2;
 
-  // Authentik authentication token (shown once only!).
+  // Authentik authentication token.
   string token = 3;
 }

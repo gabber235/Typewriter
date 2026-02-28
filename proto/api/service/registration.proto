@@ -34,12 +34,12 @@ message ServiceStatus {
 // BoundStatus indicates the service is bound to an organization.
 message BoundStatus {
   string organization_id = 1;
-  string organization_name = 2;
+  optional string organization_name = 2;
 }
 
 // UnboundStatus indicates the service needs registration.
 message UnboundStatus {
-  string registration_token = 1;
+  optional string registration_token = 1;
 }
 
 // =============================================================================
@@ -64,7 +64,7 @@ message BindServiceResponse {
 // BoundService contains info about the newly bound service.
 message BoundService {
   string service_id = 1;
-  string service_name = 2;
+  optional string service_name = 2;
   repeated typewriter.models.v1.ServiceType service_types = 3;
 }
 
@@ -100,7 +100,7 @@ message OrganizationServicesList {
 // ServiceBoundNotification is published when binding completes.
 message ServiceBoundNotification {
   string organization_id = 1;
-  string organization_name = 2;
+  optional string organization_name = 2;
 }
 
 // =============================================================================
@@ -113,7 +113,7 @@ message ServiceBoundNotification {
 // Service must be bound to the organization specified in the NATS subject.
 message UpdateServiceRequest {
   string service_id = 1;
-  string name = 2;
+  optional string name = 2;
 }
 
 // UpdateServiceResponse returns the updated service or an error.

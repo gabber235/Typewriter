@@ -19,7 +19,7 @@ message ListTags {
 }
 
 message GetTagRequest {
-  string id = 1;
+  string tag_id = 1;
 }
 
 message GetTagResponse {
@@ -55,7 +55,7 @@ message UpdateTagResponse {
 }
 
 message DeleteTagRequest {
-  string id = 1;
+  string tag_id = 1;
 }
 
 message DeleteTagResponse {
@@ -66,9 +66,9 @@ message DeleteTagResponse {
 }
 
 message MoveTagRequest {
-  string id = 1;
-  int32 x = 2;
-  int32 y = 3;
+  string tag_id = 1;
+  optional int32 x = 2;
+  optional int32 y = 3;
 }
 
 message MoveTagResponse {
@@ -79,9 +79,9 @@ message MoveTagResponse {
 }
 
 message ResizeTagRequest {
-  string id = 1;
-  int32 width = 2;
-  int32 height = 3;
+  string tag_id = 1;
+  optional int32 width = 2;
+  optional int32 height = 3;
 }
 
 message ResizeTagResponse {
