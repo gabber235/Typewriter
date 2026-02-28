@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.jline)
     implementation(libs.clikt)
     implementation(libs.surrealdb)
+    
+    testImplementation(testFixtures("com.typewritermc:service-communicator"))
 }
 
 buildConfig {

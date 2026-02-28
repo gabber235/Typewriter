@@ -5,16 +5,17 @@ import com.typewritermc.services.libs.utils.require
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.time.Duration
 
 class NatsMessageBus(private val natsClientProvider: StateProvider<NatsClient?>) : MessageBus {
 
     override suspend fun request(
         subject: String,
         data: ByteArray,
-        timeoutMs: Long
+        timeout: Duration
     ): Message {
         val client = natsClientProvider.require()
-        val response = client.request(subject, data, timeoutMs = timeoutMs)
+        val response = client.request(subject, data, timeoutMs = timeout.inWholeMilliseconds)
         return Message(
             subject = response.subject.toString(),
             data = response.data,

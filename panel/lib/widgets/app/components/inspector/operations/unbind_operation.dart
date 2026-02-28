@@ -57,7 +57,7 @@ class UnbindOperation extends Operation {
     for (final (selectable, callback) in callbacks) {
       try {
         await callback();
-      } on Error catch (e) {
+      } on Object catch (e) {
         errors.add((selectable, e));
       }
     }
@@ -69,13 +69,13 @@ class UnbindOperation extends Operation {
         .toList();
     ref.read(selectionProvider.notifier).unselectAll(removed);
     if (errors.isEmpty) return;
-    await _showErrorsPopup(ref.context, errors);
+    await showOperationErrorsPopup(ref.context, errors, "Unbind");
   }
 
   @override
   MenuItem menuItem(WidgetRef ref) {
     return MenuItem(
-      icon: Icon(Icons.link_off),
+      icon: const Icon(Icons.link_off),
       label: "Unbind",
       color: Colors.deepOrange,
       onPressed: () => executeOn(ref),
@@ -125,76 +125,4 @@ class UnbindOperationButton extends HookConsumerWidget {
       ),
     );
   }
-}
-
-Future<void> _showErrorsPopup(
-  BuildContext context,
-  List<(Selectable, Object)> errors,
-) async {
-  await showDialog<void>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        titlePadding: const EdgeInsets.only(
-          left: 24,
-          top: 16,
-          right: 8,
-          bottom: 0,
-        ),
-        title: Row(
-          children: [
-            const Expanded(child: Text("Unbind errors")),
-            IconButton(
-              autofocus: true,
-              splashRadius: 18,
-              icon: const Icon(Icons.close),
-              tooltip: "Close",
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 8,
-              children: [
-                Text(
-                  "Failed to unbind ${errors.length} item(s). Others were unbound successfully.",
-                ),
-                for (final (selectable, err) in errors)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 2,
-                      children: [
-                        Text(
-                          selectable.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          err.toString(),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const Divider(height: 8),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
 }

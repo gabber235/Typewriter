@@ -5,6 +5,8 @@ package com.typewritermc.realm
 import com.surrealdb.Surreal
 import com.typewritermc.realm.RealmQualifier.*
 import com.typewritermc.realm.registrar.RealmCredentialStorage
+import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
+import com.typewritermc.realm.routes.NatsDispatcherFactory
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.communicator.SERVICE_COMMUNICATOR_MODULE
@@ -80,7 +82,7 @@ fun main() {
 
     val application = startKoin {
         environmentProperties()
-        modules(module, SERVICE_REGISTRAR_MODULE, SERVICE_COMMUNICATOR_MODULE)
+        modules(module, REALM_ROUTES_MODULE, SERVICE_REGISTRAR_MODULE, SERVICE_COMMUNICATOR_MODULE)
     }
     logger.trace { "Koin started" }
 
@@ -89,6 +91,9 @@ fun main() {
         application.koin.get<ServiceRegistrar>().initialize()
     }
     application.koin.get<Realm>().initialize()
+
+    val dispatcher = application.koin.get<NatsDispatcherFactory>().create()
+    dispatcher.start()
 
     val shell = application.koin.get<RealmShell>()
     shell.run()

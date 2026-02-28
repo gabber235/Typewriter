@@ -56,13 +56,14 @@ class OpenOperation extends Operation {
         in selection
             .collectOperationsWithSelectables<OpenSelectableOperation>()) {
       await op.onOpen();
+      if (!ref.context.mounted) return;
     }
   }
 
   @override
   MenuItem menuItem(WidgetRef ref) {
     return MenuItem(
-      icon: Icon(Icons.open_in_new),
+      icon: const Icon(Icons.open_in_new),
       label: "Open",
       onPressed: () => executeOn(ref),
     );

@@ -114,6 +114,16 @@ class OrganizationSidebarContent extends HookConsumerWidget {
           ],
         ),
       ),
+      SidebarLink(
+        icon: Icones(MaterialSymbols.label),
+        text: "Tags",
+        route: OrganizationRoute(
+          organizationId: organizationId,
+          children: [
+            RealmRoute(realmId: realmId, children: [TagsRoute()]),
+          ],
+        ),
+      ),
     ];
   }
 

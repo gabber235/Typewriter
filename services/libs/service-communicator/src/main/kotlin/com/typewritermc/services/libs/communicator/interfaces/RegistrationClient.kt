@@ -1,6 +1,5 @@
 package com.typewritermc.services.libs.communicator.interfaces
 
-import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import kotlinx.coroutines.Job
 
 interface RegistrationClient {

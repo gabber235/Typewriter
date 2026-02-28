@@ -2,20 +2,16 @@ package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
-import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.communicator.interfaces.ServiceStatusResult
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.Runs
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.just
-import io.mockk.mockk
+import io.mockk.*
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -4,6 +4,7 @@ plugins {
     id("com.typewritermc.basic-conventions")
     alias(libs.plugins.protokt)
     alias(libs.plugins.kotlin.serialize)
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -12,6 +13,10 @@ dependencies {
     implementation(libs.nats.core)
     implementation(libs.nats.jetstream)
     implementation(libs.kotlin.serialize.json)
+    
+    testFixturesImplementation("com.typewritermc:service-utils")
+    testFixturesImplementation(libs.nats.core)
+    testFixturesImplementation(libs.kotlin.coroutines.core)
 }
 
 protokt {

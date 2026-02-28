@@ -1,7 +1,8 @@
 package com.typewritermc.services.libs.communicator.interfaces
 
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class Message(
     val subject: String,
@@ -32,7 +33,7 @@ interface MessageBus {
     suspend fun request(
         subject: String,
         data: ByteArray,
-        timeoutMs: Long = 10_000
+        timeout: Duration = 10.seconds
     ): Message
 
     suspend fun subscribe(subject: String): Subscription

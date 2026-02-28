@@ -21,6 +21,8 @@ import 'package:widgetbook_workspace/stories/app/components/graph/graph.stories.
     as _widgetbook_workspace_stories_app_components_graph_graph_stories;
 import 'package:widgetbook_workspace/stories/app/components/graph/resizable_element.stories.dart'
     as _widgetbook_workspace_stories_app_components_graph_resizable_element_stories;
+import 'package:widgetbook_workspace/stories/app/components/graph/tag_graph.stories.dart'
+    as _widgetbook_workspace_stories_app_components_graph_tag_graph_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/boolean_editor.stories.dart'
     as _widgetbook_workspace_stories_app_components_inspector_editors_boolean_editor_stories;
 import 'package:widgetbook_workspace/stories/app/components/inspector/editors/editors.stories.dart'
@@ -43,8 +45,8 @@ import 'package:widgetbook_workspace/stories/app/components/realm_selector.stori
     as _widgetbook_workspace_stories_app_components_realm_selector_stories;
 import 'package:widgetbook_workspace/stories/app/components/selectable.stories.dart'
     as _widgetbook_workspace_stories_app_components_selectable_stories;
-import 'package:widgetbook_workspace/stories/app/components/tag.stories.dart'
-    as _widgetbook_workspace_stories_app_components_tag_stories;
+import 'package:widgetbook_workspace/stories/app/components/tags/tag_node.stories.dart'
+    as _widgetbook_workspace_stories_app_components_tags_tag_node_stories;
 import 'package:widgetbook_workspace/stories/generic/components/blur_reveal.stories.dart'
     as _widgetbook_workspace_stories_generic_components_blur_reveal_stories;
 import 'package:widgetbook_workspace/stories/generic/components/color_swatch.dart'
@@ -95,6 +97,8 @@ import 'package:widgetbook_workspace/stories/generic/components/type_link.storie
     as _widgetbook_workspace_stories_generic_components_type_link_stories;
 import 'package:widgetbook_workspace/stories/generic/components/version_filter_bar.stories.dart'
     as _widgetbook_workspace_stories_generic_components_version_filter_bar_stories;
+import 'package:widgetbook_workspace/stories/routes/organization/tags/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organization_tags_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/book/page/route.stories.dart'
     as _widgetbook_workspace_stories_routes_organizations_book_page_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organizations/book/route.stories.dart'
@@ -220,6 +224,22 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_routes_organizations_services_route_stories
                             .servicesPageUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'tags',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'TagsPage',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'TagsPage',
+                    builder:
+                        _widgetbook_workspace_stories_routes_organization_tags_route_stories
+                            .tagsPageUseCase,
                   ),
                 ],
               ),
@@ -517,6 +537,29 @@ final directories = <_widgetbook.WidgetbookNode>[
                       ),
                     ],
                   ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'TagGraph',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_tag_graph_stories
+                                .tagGraphUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Empty',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_tag_graph_stories
+                                .tagGraphEmptyUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Loading',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_graph_tag_graph_stories
+                                .tagGraphLoadingUseCase,
+                      ),
+                    ],
+                  ),
                 ],
               ),
               _widgetbook.WidgetbookFolder(
@@ -641,6 +684,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                         builder:
                             _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories
                                 .modeDisplayChipNormal,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'tags',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'TagNode',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_tags_tag_node_stories
+                                .tagNodeUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Multiple Colors',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_tags_tag_node_stories
+                                .tagNodeColorsUseCase,
                       ),
                     ],
                   ),
@@ -1048,17 +1113,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_generic_components_shortcut_display_stories
                             .singleShortcutDisplayUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'TagWidget',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
-                    builder:
-                        _widgetbook_workspace_stories_app_components_tag_stories
-                            .tagUseCase,
                   ),
                 ],
               ),

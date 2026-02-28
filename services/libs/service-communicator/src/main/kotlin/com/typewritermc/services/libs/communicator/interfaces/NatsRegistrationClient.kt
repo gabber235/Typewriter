@@ -1,22 +1,22 @@
 package com.typewritermc.services.libs.communicator.interfaces
 
-import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import protokt.v1.typewriter.api.v1.GetServiceStatusRequest
-import protokt.v1.typewriter.api.v1.GetServiceStatusResponse
-import protokt.v1.typewriter.api.v1.ServiceBoundNotification
-import protokt.v1.typewriter.api.v1.ServiceHeartbeatRequest
-import protokt.v1.typewriter.api.v1.ServiceShutdownRequest
-import protokt.v1.typewriter.api.v1.ServiceStatus
+import protokt.v1.typewriter.api.v1.*
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
+
+sealed interface ServiceStatusResult {
+    data class Bound(val organizationId: String, val organizationName: String) : ServiceStatusResult
+    data class Unbound(val token: String) : ServiceStatusResult
+    data class Error(val code: Int, val message: String) : ServiceStatusResult
+}
 
 class NatsRegistrationClient(private val messageBus: MessageBus) : RegistrationClient {
 
@@ -31,7 +31,7 @@ class NatsRegistrationClient(private val messageBus: MessageBus) : RegistrationC
         logger.debug { "Querying service status on subject: $subject" }
 
         val response = try {
-            messageBus.request(subject, requestBytes, timeoutMs = 10.seconds.inWholeMilliseconds)
+            messageBus.request(subject, requestBytes, timeout = 10.seconds)
         } catch (e: Exception) {
             logger.error(e) { "Failed to query service status" }
             return ServiceStatusResult.Error(-1, "NATS request failed: ${e.message}")
@@ -57,16 +57,20 @@ class NatsRegistrationClient(private val messageBus: MessageBus) : RegistrationC
                         organizationId = binding.bound.organizationId,
                         organizationName = binding.bound.organizationName
                     )
+
                     is ServiceStatus.Binding.Unbound -> ServiceStatusResult.Unbound(
                         token = binding.unbound.registrationToken
                     )
+
                     null -> ServiceStatusResult.Error(-1, "Status has no binding information")
                 }
             }
+
             is GetServiceStatusResponse.Result.Error -> ServiceStatusResult.Error(
                 code = result.error.code.toInt(),
                 message = result.error.message
             )
+
             null -> ServiceStatusResult.Error(-1, "Empty response result")
         }
     }
@@ -80,7 +84,7 @@ class NatsRegistrationClient(private val messageBus: MessageBus) : RegistrationC
 
         val subscription = messageBus.subscribe(subject)
 
-        return kotlinx.coroutines.CoroutineScope(coroutineContext).launch {
+        return kotlinx.coroutines.CoroutineScope(currentCoroutineContext()).launch {
             try {
                 val message = subscription.messages.first()
                 val messageData = message.data ?: return@launch
@@ -103,7 +107,7 @@ class NatsRegistrationClient(private val messageBus: MessageBus) : RegistrationC
         request.serialize(outputStream)
         val requestBytes = outputStream.toByteArray()
 
-        logger.debug { "Sending heartbeat on subject: $subject" }
+        logger.trace { "Sending heartbeat on subject: $subject" }
 
         try {
             messageBus.publish(subject, requestBytes)

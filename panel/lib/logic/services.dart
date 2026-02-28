@@ -309,12 +309,10 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
     if (service.isOnline)
       OpenSelectableOperation(
         onOpen: () async {
-          final organizationId = ref.read(organizationIdProvider);
-          if (organizationId == null) return;
           final router = ref.read(appRouterProvider);
           await router.navigate(
             OrganizationRoute(
-              organizationId: organizationId,
+              organizationId: service.organizationId,
               children: [RealmRoute(realmId: service.id)],
             ),
           );

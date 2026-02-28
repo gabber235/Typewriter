@@ -8,6 +8,7 @@ import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
 import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/books.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/utils/animation.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/fonts.dart";
@@ -16,7 +17,6 @@ import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/outline_decorator.dart";
-import "package:typewriter_panel/widgets/generic/components/tag.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 
 const bookWidth = 175.0;
@@ -392,11 +392,27 @@ class _TagsList extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           itemBuilder: (context, index) {
             final tag = tags[index];
-            return TagWidget(tag: tag, isExpanded: false, key: Key(tag.id));
+            return _TagChip(tag: tag, key: Key(tag.id));
           },
           separatorBuilder: (context, index) => const SizedBox(height: 5),
         ),
       ),
+    );
+  }
+}
+
+class _TagChip extends HookWidget {
+  const _TagChip({required this.tag, super.key});
+
+  final Tag tag;
+
+  @override
+  Widget build(BuildContext context) {
+    final tagColor = tag.color.toFlutterColor();
+
+    return Container(
+      decoration: ShapeDecoration(color: tagColor, shape: StadiumBorder()),
+      height: 8,
     );
   }
 }

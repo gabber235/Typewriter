@@ -1,0 +1,26 @@
+import "package:flutter/material.dart";
+import "package:typewriter_panel/routes/organization/route.dart";
+import "package:typewriter_panel/routes/organization/tags/route.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
+import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/widgetbook_utils.dart";
+
+@widgetbook.UseCase(name: "TagsPage", type: TagsPage)
+Widget tagsPageUseCase(BuildContext context) {
+  final tagsState = context.knobs.displayState(
+    label: "Tags State",
+    initialOption: DisplayState.fewItems,
+  );
+
+  return FakeApp(
+    overrides: [
+      ...organizationProviderOverrides(),
+      ...organizationsProviderOverrides(state: DisplayState.fewItems),
+      ...tagsProviderOverrides(state: tagsState),
+      ...authProviderOverrides(),
+      ...appearanceProviderOverrides(),
+    ],
+    child: OrganizationScaffold(child: TagsPage()),
+  );
+}

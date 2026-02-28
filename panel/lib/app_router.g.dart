@@ -160,7 +160,7 @@ final class RouteParamProvider
   }
 }
 
-String _$routeParamHash() => r'9489070b7de3726c978b4fc1c975464af842be81';
+String _$routeParamHash() => r'8c4dfa29f3ca899f30f1b754f79b73a38dbb6f3f';
 
 final class RouteParamFamily extends $Family
     with $FunctionalFamilyOverride<String?, String> {

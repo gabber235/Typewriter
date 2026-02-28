@@ -13,6 +13,7 @@ import "package:typewriter_panel/widgets/app/components/inspector/operations/ope
 import "package:typewriter_panel/widgets/app/components/inspector/operations/unbind_operation.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 
+export "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 export "package:typewriter_panel/widgets/app/components/inspector/operations/open_operation.dart";
 export "package:typewriter_panel/widgets/app/components/inspector/operations/unbind_operation.dart";
 
@@ -205,4 +206,79 @@ class GlobalOperationShortcuts extends ConsumerWidget {
 class _OperationIntent extends Intent {
   const _OperationIntent({required this.operation});
   final Operation operation;
+}
+
+/// Shows a dialog displaying errors that occurred during a batch operation.
+/// Reusable across Delete, Unbind, and similar operations.
+Future<void> showOperationErrorsPopup(
+  BuildContext context,
+  List<(Selectable, Object)> errors,
+  String operationName,
+) async {
+  await showDialog<void>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        titlePadding: const EdgeInsets.only(
+          left: 24,
+          top: 16,
+          right: 8,
+          bottom: 0,
+        ),
+        title: Row(
+          children: [
+            Expanded(child: Text("$operationName errors")),
+            IconButton(
+              autofocus: true,
+              splashRadius: 18,
+              icon: const Icon(Icons.close),
+              tooltip: "Close",
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 8,
+              children: [
+                Text(
+                  "Failed to ${operationName.toLowerCase()} ${errors.length} item(s). Others were ${operationName.toLowerCase()}d successfully.",
+                ),
+                for (final (selectable, err) in errors)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 2,
+                      children: [
+                        Text(
+                          selectable.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          err.toString(),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const Divider(height: 8),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

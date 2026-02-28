@@ -27,7 +27,7 @@ class SchemaMigratorTest : FunSpec({
 
             val response = db.query("INFO FOR DB")
             val info = response.take(0)
-            info.toString().contains("_patches") shouldBe true
+            info.toString().contains("_patch") shouldBe true
         }
 
         test("schema application is idempotent") {
@@ -39,7 +39,7 @@ class SchemaMigratorTest : FunSpec({
 
             val response = db.query("INFO FOR DB")
             val info = response.take(0)
-            info.toString().contains("_patches") shouldBe true
+            info.toString().contains("_patch") shouldBe true
         }
     }
 
@@ -51,7 +51,7 @@ class SchemaMigratorTest : FunSpec({
             migrator.migrate()
             migrator.migrate()
 
-            val response = db.query("SELECT count() as cnt FROM _patches GROUP ALL")
+            val response = db.query("SELECT count() as cnt FROM _patch GROUP ALL")
             val result = response.take(0)
             result.toString().contains("cnt") shouldBe true
         }

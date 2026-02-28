@@ -3,18 +3,14 @@ package com.typewritermc.services.libs.registrar
 import com.github.ajalt.mordant.rendering.TextColors.blue
 import com.github.ajalt.mordant.rendering.TextColors.gray
 import com.github.ajalt.mordant.rendering.TextStyles.bold
-import com.typewritermc.services.libs.communicator.ServiceStatusResult
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.communicator.interfaces.ServiceStatusResult
 import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
 class RegistrationProtocol(

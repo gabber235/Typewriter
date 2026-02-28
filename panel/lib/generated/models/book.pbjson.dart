@@ -85,6 +85,14 @@ const Tag$json = {
       '6': '.typewriter.models.v1.Tag',
       '10': 'parents'
     },
+    {
+      '1': 'placement',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Placement',
+      '10': 'placement'
+    },
   ],
 };
 
@@ -92,7 +100,24 @@ const Tag$json = {
 final $typed_data.Uint8List tagDescriptor = $convert.base64Decode(
     'CgNUYWcSDgoCaWQYASABKAlSAmlkEhIKBG5hbWUYAiABKAlSBG5hbWUSMQoFY29sb3IYAyABKA'
     'syGy50eXBld3JpdGVyLm1vZGVscy52MS5Db2xvclIFY29sb3ISMwoHcGFyZW50cxgEIAMoCzIZ'
-    'LnR5cGV3cml0ZXIubW9kZWxzLnYxLlRhZ1IHcGFyZW50cw==');
+    'LnR5cGV3cml0ZXIubW9kZWxzLnYxLlRhZ1IHcGFyZW50cxI9CglwbGFjZW1lbnQYBSABKAsyHy'
+    '50eXBld3JpdGVyLm1vZGVscy52MS5QbGFjZW1lbnRSCXBsYWNlbWVudA==');
+
+@$core.Deprecated('Use placementDescriptor instead')
+const Placement$json = {
+  '1': 'Placement',
+  '2': [
+    {'1': 'x', '3': 1, '4': 1, '5': 5, '10': 'x'},
+    {'1': 'y', '3': 2, '4': 1, '5': 5, '10': 'y'},
+    {'1': 'width', '3': 3, '4': 1, '5': 5, '10': 'width'},
+    {'1': 'height', '3': 4, '4': 1, '5': 5, '10': 'height'},
+  ],
+};
+
+/// Descriptor for `Placement`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List placementDescriptor = $convert.base64Decode(
+    'CglQbGFjZW1lbnQSDAoBeBgBIAEoBVIBeBIMCgF5GAIgASgFUgF5EhQKBXdpZHRoGAMgASgFUg'
+    'V3aWR0aBIWCgZoZWlnaHQYBCABKAVSBmhlaWdodA==');
 
 @$core.Deprecated('Use pageDescriptor instead')
 const Page$json = {

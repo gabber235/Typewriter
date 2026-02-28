@@ -33,8 +33,7 @@ class SchemaMigrator(private val db: Surreal) {
     private fun loadResource(path: String): String {
         return this::class.java.classLoader
             .getResourceAsStream(path)
-            ?.bufferedReader()
-            ?.readText()
+            ?.use { it.bufferedReader().readText() }
             ?: throw IllegalStateException("Resource not found: $path")
     }
 }

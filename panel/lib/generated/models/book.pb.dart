@@ -126,12 +126,14 @@ class Tag extends $pb.GeneratedMessage {
     $core.String? name,
     $0.Color? color,
     $core.Iterable<Tag>? parents,
+    Placement? placement,
   }) {
     final result = create();
     if (id != null) result.id = id;
     if (name != null) result.name = name;
     if (color != null) result.color = color;
     if (parents != null) result.parents.addAll(parents);
+    if (placement != null) result.placement = placement;
     return result;
   }
 
@@ -154,6 +156,8 @@ class Tag extends $pb.GeneratedMessage {
     ..aOM<$0.Color>(3, _omitFieldNames ? '' : 'color',
         subBuilder: $0.Color.create)
     ..pPM<Tag>(4, _omitFieldNames ? '' : 'parents', subBuilder: Tag.create)
+    ..aOM<Placement>(5, _omitFieldNames ? '' : 'placement',
+        subBuilder: Placement.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -205,6 +209,107 @@ class Tag extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(4)
   $pb.PbList<Tag> get parents => $_getList(3);
+
+  @$pb.TagNumber(5)
+  Placement get placement => $_getN(4);
+  @$pb.TagNumber(5)
+  set placement(Placement value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPlacement() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPlacement() => $_clearField(5);
+  @$pb.TagNumber(5)
+  Placement ensurePlacement() => $_ensure(4);
+}
+
+class Placement extends $pb.GeneratedMessage {
+  factory Placement({
+    $core.int? x,
+    $core.int? y,
+    $core.int? width,
+    $core.int? height,
+  }) {
+    final result = create();
+    if (x != null) result.x = x;
+    if (y != null) result.y = y;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    return result;
+  }
+
+  Placement._();
+
+  factory Placement.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Placement.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Placement',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'typewriter.models.v1'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'x')
+    ..aI(2, _omitFieldNames ? '' : 'y')
+    ..aI(3, _omitFieldNames ? '' : 'width')
+    ..aI(4, _omitFieldNames ? '' : 'height')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Placement clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Placement copyWith(void Function(Placement) updates) =>
+      super.copyWith((message) => updates(message as Placement)) as Placement;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Placement create() => Placement._();
+  @$core.override
+  Placement createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Placement getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Placement>(create);
+  static Placement? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get x => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set x($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasX() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearX() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get y => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set y($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasY() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearY() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get width => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set width($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasWidth() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearWidth() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get height => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set height($core.int value) => $_setSignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasHeight() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearHeight() => $_clearField(4);
 }
 
 class Page extends $pb.GeneratedMessage {

@@ -1,0 +1,177 @@
+package com.typewritermc.realm.repository
+
+import com.surrealdb.Surreal
+import com.typewritermc.realm.repository.utils.TagRecord
+import com.typewritermc.realm.repository.utils.requireValidId
+import protokt.v1.typewriter.models.v1.Placement
+import protokt.v1.typewriter.models.v1.Tag
+
+class SurrealTagRepository(
+    private val db: Surreal
+) : TagRepository {
+
+    override suspend fun listTags(): List<Tag> {
+        val result = db.query("SELECT * FROM tag")
+            .take(0)
+
+        return TagRecord.parseList(result).map { it.toTag() }
+    }
+
+    override suspend fun getTag(id: String): Tag? {
+        requireValidId("Tag", id)
+
+        val result = db.queryBind(
+            $$"SELECT * FROM type::thing('tag', $id)",
+            mapOf("id" to id)
+        ).take(0)
+
+        return TagRecord.parseList(result).firstOrNull()?.toTag()
+    }
+
+    override suspend fun createTag(name: String, color: Int, parentIds: List<String>, placement: Placement): Tag {
+        for (parentId in parentIds) {
+            requireValidId("Tag", parentId)
+        }
+        val colorLong = color.toUInt().toLong()
+
+        val createResult = db.queryBind(
+            $$"""
+                BEGIN TRANSACTION;
+                LET $tag_record = CREATE tag SET 
+                    name = $name, 
+                    color = $color, 
+                    placement = { x: $x, y: $y, width: $width, height: $height };
+                    
+                
+                LET $parent_records = $parent_ids.map(|$pid| type::thing('tag', $pid));
+                FOR $parent IN $parent_records {
+                    RELATE $tag_record->inherits->$parent;
+                };
+                
+                RETURN SELECT * FROM $tag_record.id;
+                COMMIT TRANSACTION;
+            """.trimIndent(),
+            mapOf(
+                "name" to name,
+                "color" to colorLong,
+                "x" to placement.x,
+                "y" to placement.y,
+                "width" to placement.width,
+                "height" to placement.height,
+                "parent_ids" to parentIds
+            )
+        ).take(0)
+
+        val records = TagRecord.parseList(createResult)
+        val record = records.firstOrNull() ?: throw IllegalStateException("Failed to create tag")
+        return record.toTag()
+    }
+
+    override suspend fun updateTag(tag: Tag): Tag {
+        requireValidId("Tag", tag.id)
+        val colorLong = (tag.color?.value ?: 0u).toLong()
+        val placement = tag.placement ?: Placement { x = 0; y = 0; width = 1; height = 1 }
+
+        val result = db.queryBind(
+            $$"""
+                BEGIN TRANSACTION;
+                LET $tag_record = type::thing('tag', $id);
+                UPDATE $tag_record SET 
+                    name = $name, 
+                    color = $color, 
+                    placement = { x: $x, y: $y, width: $width, height: $height };
+                    
+                LET $target_parents = $parent_ids.map(|$pid| type::thing('tag', $pid));
+                LET $current_parents = SELECT VALUE ->inherits->tag FROM ONLY $tag_record;
+                
+                LET $new_parents = array::complement($target_parents, $current_parents);
+                LET $remove_parents = array::complement($current_parents, $target_parents);
+                
+                FOR $parent IN $new_parents {
+                    RELATE $tag_record->inherits->$parent;
+                };
+                
+                FOR $parent IN $remove_parents {
+                    DELETE inherits WHERE in = $tag_record AND out = $parent;
+                };
+                
+                RETURN SELECT * FROM $tag_record FETCH parents;
+                COMMIT TRANSACTION;
+            """.trimIndent(),
+            mapOf(
+                "id" to tag.id,
+                "name" to tag.name,
+                "color" to colorLong,
+                "x" to placement.x,
+                "y" to placement.y,
+                "width" to placement.width,
+                "height" to placement.height,
+                "parent_ids" to tag.parents.map { it.id }
+            )
+        ).take(0)
+
+        return TagRecord.parseList(result).firstOrNull()?.toTag()
+            ?: throw IllegalStateException("Failed to update tag")
+    }
+
+    override suspend fun deleteTag(id: String): Boolean {
+        requireValidId("Tag", id)
+
+        return db.queryBind(
+            $$"""
+                BEGIN TRANSACTION;
+                LET $tag_record = type::thing('tag', $id);
+                
+                IF !record::exists($tag_record) {
+                    RETURN false;
+                };
+                
+                DELETE inherits WHERE in = $tag_record OR out = $tag_record;
+                DELETE $tag_record;
+                RETURN true;
+                COMMIT TRANSACTION;
+            """.trimIndent(),
+            mapOf("id" to id)
+        ).take(0).boolean
+    }
+
+    override suspend fun moveTag(id: String, x: Int, y: Int): Boolean {
+        requireValidId("Tag", id)
+
+        return db.queryBind(
+            $$"""
+                BEGIN TRANSACTION;
+                LET $tag_record = type::thing('tag', $id);
+                
+                IF !record::exists($tag_record) {
+                    RETURN false;
+                };
+                
+                UPDATE $tag_record SET placement.x = $x, placement.y = $y;
+                RETURN true;
+                COMMIT TRANSACTION;
+            """.trimIndent(),
+            mapOf("id" to id, "x" to x, "y" to y)
+        ).take(0).boolean
+    }
+
+    override suspend fun resizeTag(id: String, width: Int, height: Int): Boolean {
+        requireValidId("Tag", id)
+
+        return db.queryBind(
+            $$"""
+                BEGIN TRANSACTION;
+                LET $tag_record = type::thing('tag', $id);
+                
+                IF !record::exists($tag_record) {
+                    RETURN false;
+                };
+                
+                UPDATE $tag_record SET placement.width = $width, placement.height = $height;
+                RETURN true;
+                COMMIT TRANSACTION;
+            """.trimIndent(),
+            mapOf("id" to id, "width" to width, "height" to height)
+        ).take(0).boolean
+    }
+}

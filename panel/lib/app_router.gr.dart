@@ -335,3 +335,19 @@ class ServicesRoute extends PageRouteInfo<void> {
     },
   );
 }
+
+/// generated route for
+/// [TagsPage]
+class TagsRoute extends PageRouteInfo<void> {
+  const TagsRoute({List<PageRouteInfo>? children})
+    : super(TagsRoute.name, initialChildren: children);
+
+  static const String name = 'TagsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const TagsPage();
+    },
+  );
+}

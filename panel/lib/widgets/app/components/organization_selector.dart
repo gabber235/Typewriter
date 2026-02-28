@@ -173,7 +173,7 @@ class _OrganizationActions extends HookConsumerWidget {
             onDismiss();
             ref
                 .read(appRouterProvider)
-                .push(
+                .navigate(
                   OrganizationRoute(
                     organizationId: organization.id,
                     children: [MembersRoute()],

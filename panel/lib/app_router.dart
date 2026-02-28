@@ -10,6 +10,7 @@ import "package:typewriter_panel/routes/organization/members/route.dart";
 import "package:typewriter_panel/routes/organization/realm/route.dart";
 import "package:typewriter_panel/routes/organization/route.dart";
 import "package:typewriter_panel/routes/organization/services/route.dart";
+import "package:typewriter_panel/routes/organization/tags/route.dart";
 import "package:typewriter_panel/routes/route.dart";
 
 part "app_router.g.dart";
@@ -49,6 +50,7 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(ref)],
           children: [
             AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
+            AutoRoute(page: TagsRoute.page, path: "tags"),
           ],
         ),
       ],

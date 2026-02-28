@@ -37,13 +37,12 @@ class DeleteOperation extends Operation {
       selection.allHaveOperation<DeleteSelectableOperation>();
 
   @override
-  FutureOr<void> executeOn(
-    WidgetRef ref,
-  ) async {
+  FutureOr<void> executeOn(WidgetRef ref) async {
     final selection = ref.read(selectedProvider).requireValue;
     final callbacks = <(Selectable, Future<void> Function())>[];
-    for (final (s, op) in selection
-        .collectOperationsWithSelectables<DeleteSelectableOperation>()) {
+    for (final (s, op)
+        in selection
+            .collectOperationsWithSelectables<DeleteSelectableOperation>()) {
       callbacks.add((s, () async => await op.onDelete()));
     }
 
@@ -51,7 +50,7 @@ class DeleteOperation extends Operation {
     for (final (selectable, callback) in callbacks) {
       try {
         await callback();
-      } on Error catch (e) {
+      } on Object catch (e) {
         errors.add((selectable, e));
       }
     }
@@ -63,13 +62,13 @@ class DeleteOperation extends Operation {
         .toList();
     ref.read(selectionProvider.notifier).unselectAll(removed);
     if (errors.isEmpty) return;
-    await _showErrorsPopup(ref.context, errors);
+    await showOperationErrorsPopup(ref.context, errors, "Delete");
   }
 
   @override
   MenuItem menuItem(WidgetRef ref) {
     return MenuItem(
-      icon: Icon(Icons.delete),
+      icon: const Icon(Icons.delete),
       label: "Delete",
       color: Theme.of(ref.context).colorScheme.error,
       onPressed: () => executeOn(ref),
@@ -113,10 +112,7 @@ class DeleteOperationButton extends HookConsumerWidget {
           foregroundColor: Theme.of(context).colorScheme.onError,
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
-        icon: const Icon(
-          Icons.delete_outline,
-          size: 16,
-        ),
+        icon: const Icon(Icons.delete_outline, size: 16),
         label: Row(
           children: [
             Text(
@@ -124,83 +120,11 @@ class DeleteOperationButton extends HookConsumerWidget {
             ),
             if (operation.shortcutActivators.isEmpty) ...[
               const SizedBox(width: 8),
-              RotatingShortcuts(
-                shortcuts: operation.shortcutActivators,
-              ),
+              RotatingShortcuts(shortcuts: operation.shortcutActivators),
             ],
           ],
         ),
       ),
     );
   }
-}
-
-Future<void> _showErrorsPopup(
-  BuildContext context,
-  List<(Selectable, Object)> errors,
-) async {
-  await showDialog<void>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        titlePadding:
-            const EdgeInsets.only(left: 24, top: 16, right: 8, bottom: 0),
-        title: Row(
-          children: [
-            const Expanded(
-              child: Text("Delete errors"),
-            ),
-            IconButton(
-              autofocus: true,
-              splashRadius: 18,
-              icon: const Icon(Icons.close),
-              tooltip: "Close",
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 8,
-              children: [
-                Text(
-                  "Failed to delete ${errors.length} item(s). Others were deleted successfully.",
-                ),
-                for (final (selectable, err) in errors)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 2,
-                      children: [
-                        Text(
-                          selectable.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          err.toString(),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const Divider(height: 8),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
 }

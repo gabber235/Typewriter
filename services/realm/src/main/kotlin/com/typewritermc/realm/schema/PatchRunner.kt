@@ -28,11 +28,14 @@ class PatchRunner(private val db: Surreal) {
     }
 
     private fun applyPatch(patch: Patch) {
+        require(patch.id.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
+            "Invalid patch id format: ${patch.id}"
+        }
         logger.info { "Applying patch: ${patch.id}" }
 
         try {
             db.query(patch.content)
-            db.query("CREATE _patches SET id = '${patch.id}'")
+            db.queryBind($$"CREATE _patch SET id = $id", mapOf("id" to patch.id))
             logger.info { "Patch ${patch.id} applied successfully" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to apply patch ${patch.id}" }
@@ -42,12 +45,12 @@ class PatchRunner(private val db: Surreal) {
 
     private fun getAppliedPatchIds(): Set<String> {
         return try {
-            val records = db.query("SELECT id FROM _patches")
+            val result = db.query("SELECT id FROM _patch")
                 .take(0)
-                .get(Array<PatchRecord>::class.java)
-            records.mapNotNull { it.id }.toSet()
+            require(result.isArray) { "Expected array result from query, got: ${result.javaClass.name}" }
+            result.array.mapNotNull { it.thing.id.string }.toSet()
         } catch (e: Exception) {
-            logger.debug { "Could not query _patches table (may not exist yet): ${e.message}" }
+            logger.debug { "Could not query _patch table (may not exist yet): ${e.message}" }
             emptySet()
         }
     }
@@ -74,14 +77,9 @@ class PatchRunner(private val db: Surreal) {
     private fun loadResourceOrNull(path: String): String? {
         return this::class.java.classLoader
             .getResourceAsStream(path)
-            ?.bufferedReader()
-            ?.readText()
+            ?.use { it.bufferedReader().readText() }
     }
 }
-
-data class PatchRecord(
-    val id: String? = null
-)
 
 data class Patch(
     val id: String,

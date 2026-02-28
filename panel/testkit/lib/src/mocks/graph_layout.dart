@@ -1,9 +1,11 @@
-import 'dart:math' as math;
-import 'dart:math';
+import "dart:math" as math;
+import "dart:math";
 
-import 'package:collection/collection.dart';
-import 'package:typewriter_panel/logic/pages/entries.dart';
-import 'package:typewriter_panel/logic/pages/graph_direction.dart';
+import "package:typewriter_panel/logic/pages/graph_direction.dart";
+
+export "package:typewriter_panel/logic/pages/graph_direction.dart";
+
+// ============ DATA TYPES ============
 
 class Point<T> {
   final T x, y;
@@ -52,23 +54,36 @@ class GraphBounds {
   }
 }
 
-class LocalGraphLayout {
-  final List<List<EntryDefinition>> layers;
-  final GraphDirection direction;
-  final GraphBounds bounds;
+/// Result of placing an item in the graph
+class PlacementResult {
+  final int x, y, width, height;
+  const PlacementResult(this.x, this.y, this.width, this.height);
 
-  const LocalGraphLayout(this.layers, this.direction, this.bounds);
+  PlacementResult offset(int offsetX, int offsetY) =>
+      PlacementResult(x + offsetX, y + offsetY, width, height);
 }
 
-List<int> generateGroupSizes(int totalEntries) {
-  if (totalEntries <= 3) return [totalEntries];
+/// Result of laying out a single group
+class GroupLayout<T> {
+  final List<List<T>> layers;
+  final Map<String, PlacementResult> placements;
+  final GraphBounds bounds;
+
+  const GroupLayout(this.layers, this.placements, this.bounds);
+}
+
+// ============ UTILITY FUNCTIONS ============
+
+/// Generates random group sizes for splitting items
+List<int> generateGroupSizes(int totalItems) {
+  if (totalItems <= 3) return [totalItems];
 
   final random = math.Random();
   final numGroups = random.nextInt(3) + 2;
   final splitPoints = <int>[];
 
   for (int i = 0; i < numGroups - 1; i++) {
-    splitPoints.add(random.nextInt(totalEntries - 1) + 1);
+    splitPoints.add(random.nextInt(totalItems - 1) + 1);
   }
   splitPoints.sort();
 
@@ -78,132 +93,50 @@ List<int> generateGroupSizes(int totalEntries) {
     sizes.add(point - prev);
     prev = point;
   }
-  sizes.add(totalEntries - prev);
+  sizes.add(totalItems - prev);
 
   return sizes.where((size) => size > 0).toList();
 }
 
-List<List<EntryDefinition>> splitIntoGroups(
-  List<EntryDefinition> entries,
-  List<int> groupSizes,
-) {
-  final groups = <List<EntryDefinition>>[];
-  int entryIndex = 0;
+/// Splits items into groups based on sizes
+List<List<T>> splitIntoGroups<T>(List<T> items, List<int> groupSizes) {
+  final groups = <List<T>>[];
+  int index = 0;
 
   for (final size in groupSizes) {
-    groups.add(entries.sublist(entryIndex, entryIndex + size));
-    entryIndex += size;
+    groups.add(items.sublist(index, index + size));
+    index += size;
   }
 
   return groups;
 }
 
-List<List<EntryDefinition>> distributeIntoLayers(
-  List<EntryDefinition> entries,
-  int numLayers,
-) {
-  final layers = <List<EntryDefinition>>[];
+/// Distributes items randomly into layers
+List<List<T>> distributeIntoLayers<T>(List<T> items, int numLayers) {
+  final layers = List.generate(numLayers, (_) => <T>[]);
   final random = math.Random();
 
-  for (int i = 0; i < numLayers; i++) {
-    layers.add(<EntryDefinition>[]);
-  }
-
-  for (final entry in entries) {
-    final layerIndex = random.nextInt(numLayers);
-    layers[layerIndex].add(entry);
+  for (final item in items) {
+    layers[random.nextInt(numLayers)].add(item);
   }
 
   return layers.where((layer) => layer.isNotEmpty).toList();
 }
 
-LocalGraphLayout layoutSingleGraph(
-  List<EntryDefinition> groupEntries,
-  GraphDirection direction,
-) {
-  const entryWidth = 3;
-  const entryHeight = 1;
-  const mainAxisSpacing = 2;
-  const crossAxisSpacing = 1;
-
-  final numLayers = math.max(2, math.min(20, (groupEntries.length / 2).ceil()));
-  final layers = distributeIntoLayers(groupEntries, numLayers);
-  final newLayers = <List<EntryDefinition>>[];
-
-  final maxEntriesInALayer =
-      layers.map((layer) => layer.length).reduce(math.max);
-
-  final maxLayerCross = maxEntriesInALayer *
-          (direction.cross(entryWidth, entryHeight) + crossAxisSpacing) +
-      crossAxisSpacing;
-
-  var mainAxisPosition = switch (direction) {
-    GraphDirection.leftToRight => 0,
-    GraphDirection.rightToLeft => numLayers * (entryWidth + mainAxisSpacing),
-    GraphDirection.topToBottom => 0,
-    GraphDirection.bottomToTop => numLayers * (entryHeight + mainAxisSpacing),
-  };
-
-  for (int layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-    final layer = layers[layerIndex];
-
-    final points = crossPoints(
-        layer.length, direction.cross(entryWidth, entryHeight), maxLayerCross);
-    assert(
-      points.length == layer.length,
-      "The cross points should be the equal to the number of layers",
-    );
-
-    final newLayer = <EntryDefinition>[];
-
-    for (int entryIndex = 0; entryIndex < layer.length; entryIndex++) {
-      final main = mainAxisPosition;
-      final cross = points[entryIndex];
-
-      final positioned = layer[entryIndex].copyWith(
-        placement: EntryPlacement(
-          x: direction.main(main, cross),
-          y: direction.cross(main, cross),
-          width: entryWidth,
-          height: entryHeight,
-        ),
-      );
-      newLayer.add(positioned);
-    }
-
-    newLayers.add(newLayer);
-    mainAxisPosition += entryWidth + mainAxisSpacing;
-  }
-  final positionedEntries = newLayers.expand((layer) => layer).toList();
-
-  final minX = positionedEntries.map((e) => e.placement.x).reduce(min);
-  final minY = positionedEntries.map((e) => e.placement.y).reduce(min);
-  final maxX = positionedEntries
-      .map((e) => e.placement.x + e.placement.width)
-      .reduce(max);
-  final maxY = positionedEntries
-      .map((e) => e.placement.y + e.placement.height)
-      .reduce(max);
-
-  return LocalGraphLayout(
-    newLayers,
-    direction,
-    GraphBounds(minX, minY, maxX, maxY),
-  );
-}
-
+/// Calculates evenly spaced cross-axis positions
 List<int> crossPoints(int count, int size, int maxTotalSize) {
   final emptySpace = maxTotalSize - count * size;
   final emptySpacePerPoint = emptySpace / (count + 1);
-  final crossPoints = <int>[];
+  final points = <int>[];
 
   for (int i = 0; i < count; i++) {
-    crossPoints.add((emptySpacePerPoint * (i + 1) + size * i).round());
+    points.add((emptySpacePerPoint * (i + 1) + size * i).round());
   }
 
-  return crossPoints;
+  return points;
 }
 
+/// Finds non-overlapping position for a new group
 Point<int> findNonOverlappingPosition(
   GraphBounds newGraph,
   List<GraphBounds> existingGraphs,
@@ -215,124 +148,167 @@ Point<int> findNonOverlappingPosition(
     return const Point(0, 0);
   }
 
-  final maxCross =
-      existingGraphs.map((g) => direction.cross(g.maxX, g.maxY)).reduce(max);
-
+  final maxCross = existingGraphs
+      .map((g) => direction.cross(g.maxX, g.maxY))
+      .reduce(max);
   final cross = maxCross + padding;
 
   return Point(direction.main(0, cross), direction.cross(0, cross));
 }
 
-List<EntryEdge> generateEdgesForLayers(
-  List<List<EntryDefinition>> layers,
-) {
-  final random = math.Random();
-  final edges = <EntryEdge>[];
+// ============ CORE LAYOUT FUNCTIONS ============
 
-  if (layers.length < 2) {
-    return edges;
-  }
+/// Lays out items within layers, returns placement map
+Map<String, PlacementResult> layoutLayers<T>({
+  required List<List<T>> layers,
+  required String Function(T) getId,
+  required GraphDirection direction,
+  int itemWidth = 3,
+  int itemHeight = 1,
+  int mainAxisSpacing = 2,
+  int crossAxisSpacing = 1,
+}) {
+  final placements = <String, PlacementResult>{};
+  if (layers.isEmpty) return placements;
 
-  for (int layerIndex = 0; layerIndex < layers.length - 1; layerIndex++) {
-    final currentLayer = layers[layerIndex];
-    final nextLayer = layers[layerIndex + 1];
+  final maxEntriesInALayer = layers.map((l) => l.length).reduce(max);
+  final maxLayerCross =
+      maxEntriesInALayer *
+          (direction.cross(itemWidth, itemHeight) + crossAxisSpacing) +
+      crossAxisSpacing;
 
-    if (currentLayer.isEmpty || nextLayer.isEmpty) continue;
+  var mainPos = switch (direction) {
+    GraphDirection.leftToRight => 0,
+    GraphDirection.rightToLeft => layers.length * (itemWidth + mainAxisSpacing),
+    GraphDirection.topToBottom => 0,
+    GraphDirection.bottomToTop =>
+      layers.length * (itemHeight + mainAxisSpacing),
+  };
 
-    for (final entry in currentLayer) {
-      final connectionsCount = random.nextInt(nextLayer.length) + 1;
+  for (final layer in layers) {
+    if (layer.isEmpty) continue;
 
-      final targets = nextLayer.sorted(
-        (a, b) {
-          final distanceA = entry.placement.distanceSquaredTo(a.placement);
-          final distanceB = entry.placement.distanceSquaredTo(b.placement);
-          return distanceA.compareTo(distanceB);
-        },
-      ).sublist(0, connectionsCount);
+    final points = crossPoints(
+      layer.length,
+      direction.cross(itemWidth, itemHeight),
+      maxLayerCross,
+    );
 
-      for (final target in targets) {
-        final edge = EntryEdge(
-          id: "${entry.id}_${target.id}",
-          otherId: target.id,
-          path: "connections",
-        );
-        edges.add(edge);
-      }
+    for (int i = 0; i < layer.length; i++) {
+      final main = mainPos;
+      final cross = points[i];
+
+      placements[getId(layer[i])] = PlacementResult(
+        direction.main(main, cross),
+        direction.cross(main, cross),
+        itemWidth,
+        itemHeight,
+      );
     }
+
+    mainPos += direction.main(itemWidth, itemHeight) + mainAxisSpacing;
   }
 
-  return edges;
+  return placements;
 }
 
-List<EntryDefinition> applyEdgesToEntries(
-  List<EntryDefinition> entries,
-  List<EntryEdge> edges,
-) {
-  final entryIds = entries.map((e) => e.id).toSet();
-  final validEdges = edges.where((edge) {
-    final sourceId = edge.id.split('_').first;
-    return entryIds.contains(sourceId) && entryIds.contains(edge.otherId);
-  }).toList();
+/// Calculates bounds from placements
+GraphBounds boundsFromPlacements(Map<String, PlacementResult> placements) {
+  if (placements.isEmpty) return const GraphBounds(0, 0, 0, 0);
 
-  final outwardEdgeMap = <String, List<EntryEdge>>{};
-  final inwardEdgeMap = <String, List<EntryEdge>>{};
-
-  for (final edge in validEdges) {
-    final sourceId = edge.id.split('_').first;
-    outwardEdgeMap.putIfAbsent(sourceId, () => []).add(edge);
-
-    final inwardEdge = EntryEdge(
-      id: edge.id,
-      otherId: sourceId,
-      path: edge.path,
-    );
-    inwardEdgeMap.putIfAbsent(edge.otherId, () => []).add(inwardEdge);
-  }
-
-  return entries.map((entry) {
-    return entry.copyWith(
-      outwardEdges: outwardEdgeMap[entry.id] ?? [],
-      inwardEdges: inwardEdgeMap[entry.id] ?? [],
-    );
-  }).toList();
+  final values = placements.values.toList();
+  return GraphBounds(
+    values.map((p) => p.x).reduce(min),
+    values.map((p) => p.y).reduce(min),
+    values.map((p) => p.x + p.width).reduce(max),
+    values.map((p) => p.y + p.height).reduce(max),
+  );
 }
 
-List<EntryDefinition> generateDynamicGraphLayout(
-  List<EntryDefinition> entries,
+/// Layouts a single group of items
+GroupLayout<T> layoutSingleGroup<T>({
+  required List<T> items,
+  required String Function(T) getId,
+  required GraphDirection direction,
+  required List<List<T>> Function(List<T> items) organizeIntoLayers,
+  int itemWidth = 3,
+  int itemHeight = 1,
+  int mainAxisSpacing = 2,
+  int crossAxisSpacing = 1,
+}) {
+  final layers = organizeIntoLayers(items);
+
+  final placements = layoutLayers(
+    layers: layers,
+    getId: getId,
+    direction: direction,
+    itemWidth: itemWidth,
+    itemHeight: itemHeight,
+    mainAxisSpacing: mainAxisSpacing,
+    crossAxisSpacing: crossAxisSpacing,
+  );
+
+  return GroupLayout(layers, placements, boundsFromPlacements(placements));
+}
+
+/// Main layout function: splits into groups, layouts each, positions without overlap
+/// Returns a map of item ID to PlacementResult
+///
+/// [groupBy] allows custom grouping logic. If provided, it should return a list
+/// of groups where items within the same group should stay together visually.
+/// If not provided, items are split into random groups by position.
+Map<String, PlacementResult> generateDynamicLayout<T>({
+  required List<T> items,
+  required String Function(T) getId,
+  required List<List<T>> Function(List<T> items) organizeIntoLayers,
+  List<List<T>> Function(List<T> items)? groupBy,
   GraphDirection? direction,
-) {
+  int itemWidth = 3,
+  int itemHeight = 1,
+  int mainAxisSpacing = 2,
+  int crossAxisSpacing = 1,
+}) {
+  if (items.isEmpty) return {};
+
   final random = math.Random();
   direction ??= GraphDirection.values[random.nextInt(4)];
-  final groupSizes = generateGroupSizes(entries.length);
-  final groups = splitIntoGroups(entries, groupSizes);
 
-  final allEntries = <EntryDefinition>[];
-  final placedGraphBounds = <GraphBounds>[];
-  final allEdges = <EntryEdge>[];
-
-  for (final group in groups) {
-    final localLayout = layoutSingleGraph(group, direction);
-
-    final offset = findNonOverlappingPosition(
-        localLayout.bounds, placedGraphBounds, direction);
-
-    final offsetLayers = localLayout.layers.map((layer) {
-      return layer.map((entry) {
-        return entry.copyWith(
-          placement: entry.placement.copyWith(
-            x: entry.placement.x + offset.x,
-            y: entry.placement.y + offset.y,
-          ),
-        );
-      }).toList();
-    }).toList();
-
-    final groupEdges = generateEdgesForLayers(offsetLayers);
-    allEdges.addAll(groupEdges);
-    allEntries.addAll(offsetLayers.expand((layer) => layer));
-
-    placedGraphBounds.add(localLayout.bounds.offset(offset.x, offset.y));
+  final List<List<T>> groups;
+  if (groupBy != null) {
+    groups = groupBy(items);
+  } else {
+    final groupSizes = generateGroupSizes(items.length);
+    groups = splitIntoGroups(items, groupSizes);
   }
 
-  return applyEdgesToEntries(allEntries, allEdges);
+  final allPlacements = <String, PlacementResult>{};
+  final placedBounds = <GraphBounds>[];
+
+  for (final group in groups) {
+    final layout = layoutSingleGroup(
+      items: group,
+      getId: getId,
+      direction: direction,
+      organizeIntoLayers: organizeIntoLayers,
+      itemWidth: itemWidth,
+      itemHeight: itemHeight,
+      mainAxisSpacing: mainAxisSpacing,
+      crossAxisSpacing: crossAxisSpacing,
+    );
+
+    final offset = findNonOverlappingPosition(
+      layout.bounds,
+      placedBounds,
+      direction,
+    );
+
+    // Apply offset to placements
+    for (final entry in layout.placements.entries) {
+      allPlacements[entry.key] = entry.value.offset(offset.x, offset.y);
+    }
+
+    placedBounds.add(layout.bounds.offset(offset.x, offset.y));
+  }
+
+  return allPlacements;
 }

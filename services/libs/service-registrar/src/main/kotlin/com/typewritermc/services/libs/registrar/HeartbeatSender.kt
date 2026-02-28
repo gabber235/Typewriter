@@ -3,11 +3,7 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.seconds
 
 class HeartbeatSender(
@@ -31,7 +27,7 @@ class HeartbeatSender(
             while (isActive) {
                 try {
                     registrationClient.sendHeartbeat(serviceId)
-                    logger.debug { "Heartbeat sent" }
+                    logger.trace { "Heartbeat sent" }
                 } catch (e: Exception) {
                     logger.warn(e) { "Failed to send heartbeat" }
                 }
