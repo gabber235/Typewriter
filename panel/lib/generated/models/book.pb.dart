@@ -23,18 +23,18 @@ export 'book.pbenum.dart';
 
 class Book extends $pb.GeneratedMessage {
   factory Book({
-    $core.String? id,
+    $core.String? bookId,
     $core.String? title,
     $core.String? icon,
     $0.Color? color,
-    $core.Iterable<Tag>? tags,
+    $core.Iterable<$core.String>? tagIds,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (bookId != null) result.bookId = bookId;
     if (title != null) result.title = title;
     if (icon != null) result.icon = icon;
     if (color != null) result.color = color;
-    if (tags != null) result.tags.addAll(tags);
+    if (tagIds != null) result.tagIds.addAll(tagIds);
     return result;
   }
 
@@ -52,12 +52,12 @@ class Book extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'bookId')
     ..aOS(2, _omitFieldNames ? '' : 'title')
     ..aOS(3, _omitFieldNames ? '' : 'icon')
     ..aOM<$0.Color>(4, _omitFieldNames ? '' : 'color',
         subBuilder: $0.Color.create)
-    ..pPM<Tag>(5, _omitFieldNames ? '' : 'tags', subBuilder: Tag.create)
+    ..pPS(5, _omitFieldNames ? '' : 'tagIds', protoName: 'tagIds')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -79,13 +79,13 @@ class Book extends $pb.GeneratedMessage {
   static Book? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get bookId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set bookId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasBookId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearBookId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get title => $_getSZ(1);
@@ -117,22 +117,22 @@ class Book extends $pb.GeneratedMessage {
   $0.Color ensureColor() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  $pb.PbList<Tag> get tags => $_getList(4);
+  $pb.PbList<$core.String> get tagIds => $_getList(4);
 }
 
 class Tag extends $pb.GeneratedMessage {
   factory Tag({
-    $core.String? id,
+    $core.String? tagId,
     $core.String? name,
     $0.Color? color,
-    $core.Iterable<Tag>? parents,
+    $core.Iterable<$core.String>? parentIds,
     Placement? placement,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (tagId != null) result.tagId = tagId;
     if (name != null) result.name = name;
     if (color != null) result.color = color;
-    if (parents != null) result.parents.addAll(parents);
+    if (parentIds != null) result.parentIds.addAll(parentIds);
     if (placement != null) result.placement = placement;
     return result;
   }
@@ -151,11 +151,11 @@ class Tag extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'tagId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOM<$0.Color>(3, _omitFieldNames ? '' : 'color',
         subBuilder: $0.Color.create)
-    ..pPM<Tag>(4, _omitFieldNames ? '' : 'parents', subBuilder: Tag.create)
+    ..pPS(4, _omitFieldNames ? '' : 'parentIds', protoName: 'parentIds')
     ..aOM<Placement>(5, _omitFieldNames ? '' : 'placement',
         subBuilder: Placement.create)
     ..hasRequiredFields = false;
@@ -179,13 +179,13 @@ class Tag extends $pb.GeneratedMessage {
   static Tag? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get tagId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set tagId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasTagId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearTagId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get name => $_getSZ(1);
@@ -208,7 +208,7 @@ class Tag extends $pb.GeneratedMessage {
   $0.Color ensureColor() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $pb.PbList<Tag> get parents => $_getList(3);
+  $pb.PbList<$core.String> get parentIds => $_getList(3);
 
   @$pb.TagNumber(5)
   Placement get placement => $_getN(4);
@@ -314,7 +314,7 @@ class Placement extends $pb.GeneratedMessage {
 
 class Page extends $pb.GeneratedMessage {
   factory Page({
-    $core.String? id,
+    $core.String? pageId,
     $core.String? bookId,
     $core.String? name,
     PageType? type,
@@ -322,7 +322,7 @@ class Page extends $pb.GeneratedMessage {
     $core.int? priority,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (pageId != null) result.pageId = pageId;
     if (bookId != null) result.bookId = bookId;
     if (name != null) result.name = name;
     if (type != null) result.type = type;
@@ -345,7 +345,7 @@ class Page extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'pageId')
     ..aOS(2, _omitFieldNames ? '' : 'bookId')
     ..aOS(3, _omitFieldNames ? '' : 'name')
     ..aE<PageType>(4, _omitFieldNames ? '' : 'type',
@@ -373,13 +373,13 @@ class Page extends $pb.GeneratedMessage {
   static Page? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get pageId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set pageId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasPageId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearPageId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get bookId => $_getSZ(1);

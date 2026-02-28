@@ -228,10 +228,10 @@ class SearchPagesResponse extends $pb.GeneratedMessage {
 
 class GetPageRequest extends $pb.GeneratedMessage {
   factory GetPageRequest({
-    $core.String? id,
+    $core.String? pageId,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (pageId != null) result.pageId = pageId;
     return result;
   }
 
@@ -249,7 +249,7 @@ class GetPageRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'pageId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -272,13 +272,13 @@ class GetPageRequest extends $pb.GeneratedMessage {
   static GetPageRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get pageId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set pageId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasPageId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearPageId() => $_clearField(1);
 }
 
 enum GetPageResponse_Result { page, error, notSet }

@@ -102,15 +102,21 @@ const BoundStatus$json = {
       '3': 2,
       '4': 1,
       '5': 9,
-      '10': 'organizationName'
+      '9': 0,
+      '10': 'organizationName',
+      '17': true
     },
+  ],
+  '8': [
+    {'1': '_organization_name'},
   ],
 };
 
 /// Descriptor for `BoundStatus`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List boundStatusDescriptor = $convert.base64Decode(
-    'CgtCb3VuZFN0YXR1cxInCg9vcmdhbml6YXRpb25faWQYASABKAlSDm9yZ2FuaXphdGlvbklkEi'
-    'sKEW9yZ2FuaXphdGlvbl9uYW1lGAIgASgJUhBvcmdhbml6YXRpb25OYW1l');
+    'CgtCb3VuZFN0YXR1cxInCg9vcmdhbml6YXRpb25faWQYASABKAlSDm9yZ2FuaXphdGlvbklkEj'
+    'AKEW9yZ2FuaXphdGlvbl9uYW1lGAIgASgJSABSEG9yZ2FuaXphdGlvbk5hbWWIAQFCFAoSX29y'
+    'Z2FuaXphdGlvbl9uYW1l');
 
 @$core.Deprecated('Use unboundStatusDescriptor instead')
 const UnboundStatus$json = {
@@ -121,15 +127,20 @@ const UnboundStatus$json = {
       '3': 1,
       '4': 1,
       '5': 9,
-      '10': 'registrationToken'
+      '9': 0,
+      '10': 'registrationToken',
+      '17': true
     },
+  ],
+  '8': [
+    {'1': '_registration_token'},
   ],
 };
 
 /// Descriptor for `UnboundStatus`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List unboundStatusDescriptor = $convert.base64Decode(
-    'Cg1VbmJvdW5kU3RhdHVzEi0KEnJlZ2lzdHJhdGlvbl90b2tlbhgBIAEoCVIRcmVnaXN0cmF0aW'
-    '9uVG9rZW4=');
+    'Cg1VbmJvdW5kU3RhdHVzEjIKEnJlZ2lzdHJhdGlvbl90b2tlbhgBIAEoCUgAUhFyZWdpc3RyYX'
+    'Rpb25Ub2tlbogBAUIVChNfcmVnaXN0cmF0aW9uX3Rva2Vu');
 
 @$core.Deprecated('Use bindServiceRequestDescriptor instead')
 const BindServiceRequest$json = {
@@ -189,7 +200,15 @@ const BoundService$json = {
   '1': 'BoundService',
   '2': [
     {'1': 'service_id', '3': 1, '4': 1, '5': 9, '10': 'serviceId'},
-    {'1': 'service_name', '3': 2, '4': 1, '5': 9, '10': 'serviceName'},
+    {
+      '1': 'service_name',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'serviceName',
+      '17': true
+    },
     {
       '1': 'service_types',
       '3': 3,
@@ -199,13 +218,17 @@ const BoundService$json = {
       '10': 'serviceTypes'
     },
   ],
+  '8': [
+    {'1': '_service_name'},
+  ],
 };
 
 /// Descriptor for `BoundService`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List boundServiceDescriptor = $convert.base64Decode(
-    'CgxCb3VuZFNlcnZpY2USHQoKc2VydmljZV9pZBgBIAEoCVIJc2VydmljZUlkEiEKDHNlcnZpY2'
-    'VfbmFtZRgCIAEoCVILc2VydmljZU5hbWUSRgoNc2VydmljZV90eXBlcxgDIAMoDjIhLnR5cGV3'
-    'cml0ZXIubW9kZWxzLnYxLlNlcnZpY2VUeXBlUgxzZXJ2aWNlVHlwZXM=');
+    'CgxCb3VuZFNlcnZpY2USHQoKc2VydmljZV9pZBgBIAEoCVIJc2VydmljZUlkEiYKDHNlcnZpY2'
+    'VfbmFtZRgCIAEoCUgAUgtzZXJ2aWNlTmFtZYgBARJGCg1zZXJ2aWNlX3R5cGVzGAMgAygOMiEu'
+    'dHlwZXdyaXRlci5tb2RlbHMudjEuU2VydmljZVR5cGVSDHNlcnZpY2VUeXBlc0IPCg1fc2Vydm'
+    'ljZV9uYW1l');
 
 @$core.Deprecated('Use listOrganizationServicesRequestDescriptor instead')
 const ListOrganizationServicesRequest$json = {
@@ -283,30 +306,38 @@ const ServiceBoundNotification$json = {
       '3': 2,
       '4': 1,
       '5': 9,
-      '10': 'organizationName'
+      '9': 0,
+      '10': 'organizationName',
+      '17': true
     },
+  ],
+  '8': [
+    {'1': '_organization_name'},
   ],
 };
 
 /// Descriptor for `ServiceBoundNotification`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List serviceBoundNotificationDescriptor = $convert.base64Decode(
     'ChhTZXJ2aWNlQm91bmROb3RpZmljYXRpb24SJwoPb3JnYW5pemF0aW9uX2lkGAEgASgJUg5vcm'
-    'dhbml6YXRpb25JZBIrChFvcmdhbml6YXRpb25fbmFtZRgCIAEoCVIQb3JnYW5pemF0aW9uTmFt'
-    'ZQ==');
+    'dhbml6YXRpb25JZBIwChFvcmdhbml6YXRpb25fbmFtZRgCIAEoCUgAUhBvcmdhbml6YXRpb25O'
+    'YW1liAEBQhQKEl9vcmdhbml6YXRpb25fbmFtZQ==');
 
 @$core.Deprecated('Use updateServiceRequestDescriptor instead')
 const UpdateServiceRequest$json = {
   '1': 'UpdateServiceRequest',
   '2': [
     {'1': 'service_id', '3': 1, '4': 1, '5': 9, '10': 'serviceId'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
+  ],
+  '8': [
+    {'1': '_name'},
   ],
 };
 
 /// Descriptor for `UpdateServiceRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateServiceRequestDescriptor = $convert.base64Decode(
-    'ChRVcGRhdGVTZXJ2aWNlUmVxdWVzdBIdCgpzZXJ2aWNlX2lkGAEgASgJUglzZXJ2aWNlSWQSEg'
-    'oEbmFtZRgCIAEoCVIEbmFtZQ==');
+    'ChRVcGRhdGVTZXJ2aWNlUmVxdWVzdBIdCgpzZXJ2aWNlX2lkGAEgASgJUglzZXJ2aWNlSWQSFw'
+    'oEbmFtZRgCIAEoCUgAUgRuYW1liAEBQgcKBV9uYW1l');
 
 @$core.Deprecated('Use updateServiceResponseDescriptor instead')
 const UpdateServiceResponse$json = {

@@ -23,7 +23,7 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 /// OrganizationMember represents a user who is a member of an organization.
 class OrganizationMember extends $pb.GeneratedMessage {
   factory OrganizationMember({
-    $core.String? id,
+    $core.String? userId,
     $core.String? name,
     $core.String? email,
     $core.String? avatarUrl,
@@ -31,7 +31,7 @@ class OrganizationMember extends $pb.GeneratedMessage {
     $1.Timestamp? joinedAt,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (userId != null) result.userId = userId;
     if (name != null) result.name = name;
     if (email != null) result.email = email;
     if (avatarUrl != null) result.avatarUrl = avatarUrl;
@@ -54,7 +54,7 @@ class OrganizationMember extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'email')
     ..aOS(4, _omitFieldNames ? '' : 'avatarUrl')
@@ -83,15 +83,15 @@ class OrganizationMember extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<OrganizationMember>(create);
   static OrganizationMember? _defaultInstance;
 
-  /// Unique identifier for the member (the member_of relation ID)
+  /// Unique identifier for the user.
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get userId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set userId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearUserId() => $_clearField(1);
 
   /// Display name of the member
   @$pb.TagNumber(2)
@@ -143,7 +143,7 @@ class OrganizationMember extends $pb.GeneratedMessage {
 /// JoinRequest represents a pending request from a user to join an organization.
 class JoinRequest extends $pb.GeneratedMessage {
   factory JoinRequest({
-    $core.String? id,
+    $core.String? joinRequestId,
     $core.String? userId,
     $core.String? userName,
     $core.String? userEmail,
@@ -152,7 +152,7 @@ class JoinRequest extends $pb.GeneratedMessage {
     $1.Timestamp? expiresAt,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (joinRequestId != null) result.joinRequestId = joinRequestId;
     if (userId != null) result.userId = userId;
     if (userName != null) result.userName = userName;
     if (userEmail != null) result.userEmail = userEmail;
@@ -176,7 +176,7 @@ class JoinRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'joinRequestId')
     ..aOS(2, _omitFieldNames ? '' : 'userId')
     ..aOS(3, _omitFieldNames ? '' : 'userName')
     ..aOS(4, _omitFieldNames ? '' : 'userEmail')
@@ -208,13 +208,13 @@ class JoinRequest extends $pb.GeneratedMessage {
 
   /// Unique identifier for the join request (the requests_to_join relation ID)
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get joinRequestId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set joinRequestId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasJoinRequestId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearJoinRequestId() => $_clearField(1);
 
   /// Unique identifier of the requesting user
   @$pb.TagNumber(2)
@@ -285,7 +285,7 @@ class JoinRequest extends $pb.GeneratedMessage {
 /// This is from the user's perspective, showing which organizations they've requested to join.
 class UserJoinRequest extends $pb.GeneratedMessage {
   factory UserJoinRequest({
-    $core.String? id,
+    $core.String? joinRequestId,
     $core.String? organizationId,
     $core.String? organizationName,
     $core.String? organizationIconUrl,
@@ -293,7 +293,7 @@ class UserJoinRequest extends $pb.GeneratedMessage {
     $1.Timestamp? expiresAt,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (joinRequestId != null) result.joinRequestId = joinRequestId;
     if (organizationId != null) result.organizationId = organizationId;
     if (organizationName != null) result.organizationName = organizationName;
     if (organizationIconUrl != null)
@@ -317,7 +317,7 @@ class UserJoinRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'joinRequestId')
     ..aOS(2, _omitFieldNames ? '' : 'organizationId')
     ..aOS(3, _omitFieldNames ? '' : 'organizationName')
     ..aOS(4, _omitFieldNames ? '' : 'organizationIconUrl')
@@ -348,13 +348,13 @@ class UserJoinRequest extends $pb.GeneratedMessage {
 
   /// Unique identifier for the join request (the requests_to_join relation ID)
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get joinRequestId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set joinRequestId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasJoinRequestId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearJoinRequestId() => $_clearField(1);
 
   /// Organization ID the user is requesting to join
   @$pb.TagNumber(2)

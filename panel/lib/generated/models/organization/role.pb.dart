@@ -22,7 +22,7 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 /// Roles define permissions and access levels within the organization.
 class Role extends $pb.GeneratedMessage {
   factory Role({
-    $core.String? id,
+    $core.String? roleId,
     $core.String? name,
     $0.Color? color,
     $core.bool? defaultRole,
@@ -30,7 +30,7 @@ class Role extends $pb.GeneratedMessage {
     $core.bool? deletable,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (roleId != null) result.roleId = roleId;
     if (name != null) result.name = name;
     if (color != null) result.color = color;
     if (defaultRole != null) result.defaultRole = defaultRole;
@@ -53,7 +53,7 @@ class Role extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'roleId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOM<$0.Color>(3, _omitFieldNames ? '' : 'color',
         subBuilder: $0.Color.create)
@@ -82,13 +82,13 @@ class Role extends $pb.GeneratedMessage {
 
   /// Unique identifier for the role
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get roleId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set roleId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasRoleId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearRoleId() => $_clearField(1);
 
   /// Display name of the role (e.g., "Admin", "Editor", "Viewer")
   @$pb.TagNumber(2)

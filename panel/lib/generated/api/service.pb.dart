@@ -188,7 +188,6 @@ class IssueServiceIdentityResponse extends $pb.GeneratedMessage {
 }
 
 /// ServiceCredentials contains the authentication credentials for a service.
-/// IMPORTANT: The token is only shown once and cannot be retrieved again.
 class ServiceCredentials extends $pb.GeneratedMessage {
   factory ServiceCredentials({
     $core.String? serviceId,
@@ -260,7 +259,7 @@ class ServiceCredentials extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearUsername() => $_clearField(2);
 
-  /// Authentik authentication token (shown once only!).
+  /// Authentik authentication token.
   @$pb.TagNumber(3)
   $core.String get token => $_getSZ(2);
   @$pb.TagNumber(3)

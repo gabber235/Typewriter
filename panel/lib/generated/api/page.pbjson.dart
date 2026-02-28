@@ -20,14 +20,17 @@ const SearchPagesRequest$json = {
   '1': 'SearchPagesRequest',
   '2': [
     {'1': 'book_id', '3': 1, '4': 1, '5': 9, '10': 'bookId'},
-    {'1': 'search', '3': 2, '4': 1, '5': 9, '10': 'search'},
+    {'1': 'search', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'search', '17': true},
+  ],
+  '8': [
+    {'1': '_search'},
   ],
 };
 
 /// Descriptor for `SearchPagesRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List searchPagesRequestDescriptor = $convert.base64Decode(
-    'ChJTZWFyY2hQYWdlc1JlcXVlc3QSFwoHYm9va19pZBgBIAEoCVIGYm9va0lkEhYKBnNlYXJjaB'
-    'gCIAEoCVIGc2VhcmNo');
+    'ChJTZWFyY2hQYWdlc1JlcXVlc3QSFwoHYm9va19pZBgBIAEoCVIGYm9va0lkEhsKBnNlYXJjaB'
+    'gCIAEoCUgAUgZzZWFyY2iIAQFCCQoHX3NlYXJjaA==');
 
 @$core.Deprecated('Use searchPagesResultDescriptor instead')
 const SearchPagesResult$json = {
@@ -87,13 +90,13 @@ final $typed_data.Uint8List searchPagesResponseDescriptor = $convert.base64Decod
 const GetPageRequest$json = {
   '1': 'GetPageRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'page_id', '3': 1, '4': 1, '5': 9, '10': 'pageId'},
   ],
 };
 
 /// Descriptor for `GetPageRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getPageRequestDescriptor =
-    $convert.base64Decode('Cg5HZXRQYWdlUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+final $typed_data.Uint8List getPageRequestDescriptor = $convert
+    .base64Decode('Cg5HZXRQYWdlUmVxdWVzdBIXCgdwYWdlX2lkGAEgASgJUgZwYWdlSWQ=');
 
 @$core.Deprecated('Use getPageResponseDescriptor instead')
 const GetPageResponse$json = {

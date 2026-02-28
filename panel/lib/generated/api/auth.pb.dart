@@ -341,7 +341,6 @@ class SentinelCredentials extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<SentinelCredentials>(create);
   static SentinelCredentials? _defaultInstance;
 
-  /// The sentinel user JWT token.
   @$pb.TagNumber(1)
   $core.String get jwt => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -351,7 +350,6 @@ class SentinelCredentials extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearJwt() => $_clearField(1);
 
-  /// The sentinel user NKEY seed.
   @$pb.TagNumber(2)
   $core.String get seed => $_getSZ(1);
   @$pb.TagNumber(2)

@@ -82,13 +82,13 @@ final $typed_data.Uint8List listTagsDescriptor = $convert.base64Decode(
 const GetTagRequest$json = {
   '1': 'GetTagRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'tag_id', '3': 1, '4': 1, '5': 9, '10': 'tagId'},
   ],
 };
 
 /// Descriptor for `GetTagRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getTagRequestDescriptor =
-    $convert.base64Decode('Cg1HZXRUYWdSZXF1ZXN0Eg4KAmlkGAEgASgJUgJpZA==');
+final $typed_data.Uint8List getTagRequestDescriptor = $convert
+    .base64Decode('Cg1HZXRUYWdSZXF1ZXN0EhUKBnRhZ19pZBgBIAEoCVIFdGFnSWQ=');
 
 @$core.Deprecated('Use getTagResponseDescriptor instead')
 const GetTagResponse$json = {
@@ -248,13 +248,13 @@ final $typed_data.Uint8List updateTagResponseDescriptor = $convert.base64Decode(
 const DeleteTagRequest$json = {
   '1': 'DeleteTagRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'tag_id', '3': 1, '4': 1, '5': 9, '10': 'tagId'},
   ],
 };
 
 /// Descriptor for `DeleteTagRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List deleteTagRequestDescriptor =
-    $convert.base64Decode('ChBEZWxldGVUYWdSZXF1ZXN0Eg4KAmlkGAEgASgJUgJpZA==');
+final $typed_data.Uint8List deleteTagRequestDescriptor = $convert
+    .base64Decode('ChBEZWxldGVUYWdSZXF1ZXN0EhUKBnRhZ19pZBgBIAEoCVIFdGFnSWQ=');
 
 @$core.Deprecated('Use deleteTagResponseDescriptor instead')
 const DeleteTagResponse$json = {
@@ -285,16 +285,20 @@ final $typed_data.Uint8List deleteTagResponseDescriptor = $convert.base64Decode(
 const MoveTagRequest$json = {
   '1': 'MoveTagRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'x', '3': 2, '4': 1, '5': 5, '10': 'x'},
-    {'1': 'y', '3': 3, '4': 1, '5': 5, '10': 'y'},
+    {'1': 'tag_id', '3': 1, '4': 1, '5': 9, '10': 'tagId'},
+    {'1': 'x', '3': 2, '4': 1, '5': 5, '9': 0, '10': 'x', '17': true},
+    {'1': 'y', '3': 3, '4': 1, '5': 5, '9': 1, '10': 'y', '17': true},
+  ],
+  '8': [
+    {'1': '_x'},
+    {'1': '_y'},
   ],
 };
 
 /// Descriptor for `MoveTagRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List moveTagRequestDescriptor = $convert.base64Decode(
-    'Cg5Nb3ZlVGFnUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQSDAoBeBgCIAEoBVIBeBIMCgF5GAMgAS'
-    'gFUgF5');
+    'Cg5Nb3ZlVGFnUmVxdWVzdBIVCgZ0YWdfaWQYASABKAlSBXRhZ0lkEhEKAXgYAiABKAVIAFIBeI'
+    'gBARIRCgF5GAMgASgFSAFSAXmIAQFCBAoCX3hCBAoCX3k=');
 
 @$core.Deprecated('Use moveTagResponseDescriptor instead')
 const MoveTagResponse$json = {
@@ -325,16 +329,21 @@ final $typed_data.Uint8List moveTagResponseDescriptor = $convert.base64Decode(
 const ResizeTagRequest$json = {
   '1': 'ResizeTagRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'width', '3': 2, '4': 1, '5': 5, '10': 'width'},
-    {'1': 'height', '3': 3, '4': 1, '5': 5, '10': 'height'},
+    {'1': 'tag_id', '3': 1, '4': 1, '5': 9, '10': 'tagId'},
+    {'1': 'width', '3': 2, '4': 1, '5': 5, '9': 0, '10': 'width', '17': true},
+    {'1': 'height', '3': 3, '4': 1, '5': 5, '9': 1, '10': 'height', '17': true},
+  ],
+  '8': [
+    {'1': '_width'},
+    {'1': '_height'},
   ],
 };
 
 /// Descriptor for `ResizeTagRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resizeTagRequestDescriptor = $convert.base64Decode(
-    'ChBSZXNpemVUYWdSZXF1ZXN0Eg4KAmlkGAEgASgJUgJpZBIUCgV3aWR0aBgCIAEoBVIFd2lkdG'
-    'gSFgoGaGVpZ2h0GAMgASgFUgZoZWlnaHQ=');
+    'ChBSZXNpemVUYWdSZXF1ZXN0EhUKBnRhZ19pZBgBIAEoCVIFdGFnSWQSGQoFd2lkdGgYAiABKA'
+    'VIAFIFd2lkdGiIAQESGwoGaGVpZ2h0GAMgASgFSAFSBmhlaWdodIgBAUIICgZfd2lkdGhCCQoH'
+    'X2hlaWdodA==');
 
 @$core.Deprecated('Use resizeTagResponseDescriptor instead')
 const ResizeTagResponse$json = {

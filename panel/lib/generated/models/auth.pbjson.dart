@@ -32,7 +32,15 @@ final $typed_data.Uint8List permissionDescriptor = $convert.base64Decode(
 const ResponsePermission$json = {
   '1': 'ResponsePermission',
   '2': [
-    {'1': 'max_messages', '3': 1, '4': 1, '5': 5, '10': 'maxMessages'},
+    {
+      '1': 'max_messages',
+      '3': 1,
+      '4': 1,
+      '5': 5,
+      '9': 0,
+      '10': 'maxMessages',
+      '17': true
+    },
     {
       '1': 'ttl',
       '3': 2,
@@ -42,12 +50,16 @@ const ResponsePermission$json = {
       '10': 'ttl'
     },
   ],
+  '8': [
+    {'1': '_max_messages'},
+  ],
 };
 
 /// Descriptor for `ResponsePermission`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List responsePermissionDescriptor = $convert.base64Decode(
-    'ChJSZXNwb25zZVBlcm1pc3Npb24SIQoMbWF4X21lc3NhZ2VzGAEgASgFUgttYXhNZXNzYWdlcx'
-    'IrCgN0dGwYAiABKAsyGS5nb29nbGUucHJvdG9idWYuRHVyYXRpb25SA3R0bA==');
+    'ChJSZXNwb25zZVBlcm1pc3Npb24SJgoMbWF4X21lc3NhZ2VzGAEgASgFSABSC21heE1lc3NhZ2'
+    'VziAEBEisKA3R0bBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvblIDdHRsQg8KDV9t'
+    'YXhfbWVzc2FnZXM=');
 
 @$core.Deprecated('Use permissionsDescriptor instead')
 const Permissions$json = {

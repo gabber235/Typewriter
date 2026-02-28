@@ -82,13 +82,13 @@ final $typed_data.Uint8List listBooksDescriptor = $convert.base64Decode(
 const GetBookRequest$json = {
   '1': 'GetBookRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'book_id', '3': 1, '4': 1, '5': 9, '10': 'bookId'},
   ],
 };
 
 /// Descriptor for `GetBookRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getBookRequestDescriptor =
-    $convert.base64Decode('Cg5HZXRCb29rUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+final $typed_data.Uint8List getBookRequestDescriptor = $convert
+    .base64Decode('Cg5HZXRCb29rUmVxdWVzdBIXCgdib29rX2lkGAEgASgJUgZib29rSWQ=');
 
 @$core.Deprecated('Use getBookResponseDescriptor instead')
 const GetBookResponse$json = {
@@ -183,7 +183,7 @@ const CreatePageRequest$json = {
   '1': 'CreatePageRequest',
   '2': [
     {'1': 'book_id', '3': 1, '4': 1, '5': 9, '10': 'bookId'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
     {
       '1': 'type',
       '3': 3,
@@ -192,17 +192,38 @@ const CreatePageRequest$json = {
       '6': '.typewriter.models.v1.PageType',
       '10': 'type'
     },
-    {'1': 'chapter', '3': 4, '4': 1, '5': 9, '10': 'chapter'},
-    {'1': 'priority', '3': 5, '4': 1, '5': 5, '10': 'priority'},
+    {
+      '1': 'chapter',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'chapter',
+      '17': true
+    },
+    {
+      '1': 'priority',
+      '3': 5,
+      '4': 1,
+      '5': 5,
+      '9': 2,
+      '10': 'priority',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_name'},
+    {'1': '_chapter'},
+    {'1': '_priority'},
   ],
 };
 
 /// Descriptor for `CreatePageRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List createPageRequestDescriptor = $convert.base64Decode(
-    'ChFDcmVhdGVQYWdlUmVxdWVzdBIXCgdib29rX2lkGAEgASgJUgZib29rSWQSEgoEbmFtZRgCIA'
-    'EoCVIEbmFtZRIyCgR0eXBlGAMgASgOMh4udHlwZXdyaXRlci5tb2RlbHMudjEuUGFnZVR5cGVS'
-    'BHR5cGUSGAoHY2hhcHRlchgEIAEoCVIHY2hhcHRlchIaCghwcmlvcml0eRgFIAEoBVIIcHJpb3'
-    'JpdHk=');
+    'ChFDcmVhdGVQYWdlUmVxdWVzdBIXCgdib29rX2lkGAEgASgJUgZib29rSWQSFwoEbmFtZRgCIA'
+    'EoCUgAUgRuYW1liAEBEjIKBHR5cGUYAyABKA4yHi50eXBld3JpdGVyLm1vZGVscy52MS5QYWdl'
+    'VHlwZVIEdHlwZRIdCgdjaGFwdGVyGAQgASgJSAFSB2NoYXB0ZXKIAQESHwoIcHJpb3JpdHkYBS'
+    'ABKAVIAlIIcHJpb3JpdHmIAQFCBwoFX25hbWVCCgoIX2NoYXB0ZXJCCwoJX3ByaW9yaXR5');
 
 @$core.Deprecated('Use createPageResponseDescriptor instead')
 const CreatePageResponse$json = {
@@ -309,3 +330,66 @@ final $typed_data.Uint8List changePagesChaptersResponseDescriptor =
         'ChtDaGFuZ2VQYWdlc0NoYXB0ZXJzUmVzcG9uc2USGgoHc3VjY2VzcxgBIAEoCEgAUgdzdWNjZX'
         'NzEjMKBWVycm9yGAIgASgLMhsudHlwZXdyaXRlci5tb2RlbHMudjEuRXJyb3JIAFIFZXJyb3JC'
         'CAoGcmVzdWx0');
+
+@$core.Deprecated('Use createBookRequestDescriptor instead')
+const CreateBookRequest$json = {
+  '1': 'CreateBookRequest',
+  '2': [
+    {'1': 'title', '3': 1, '4': 1, '5': 9, '9': 0, '10': 'title', '17': true},
+    {'1': 'icon', '3': 2, '4': 1, '5': 9, '9': 1, '10': 'icon', '17': true},
+    {
+      '1': 'color',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Color',
+      '10': 'color'
+    },
+    {'1': 'tag_ids', '3': 4, '4': 3, '5': 9, '10': 'tagIds'},
+  ],
+  '8': [
+    {'1': '_title'},
+    {'1': '_icon'},
+  ],
+};
+
+/// Descriptor for `CreateBookRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createBookRequestDescriptor = $convert.base64Decode(
+    'ChFDcmVhdGVCb29rUmVxdWVzdBIZCgV0aXRsZRgBIAEoCUgAUgV0aXRsZYgBARIXCgRpY29uGA'
+    'IgASgJSAFSBGljb26IAQESMQoFY29sb3IYAyABKAsyGy50eXBld3JpdGVyLm1vZGVscy52MS5D'
+    'b2xvclIFY29sb3ISFwoHdGFnX2lkcxgEIAMoCVIGdGFnSWRzQggKBl90aXRsZUIHCgVfaWNvbg'
+    '==');
+
+@$core.Deprecated('Use createBookResponseDescriptor instead')
+const CreateBookResponse$json = {
+  '1': 'CreateBookResponse',
+  '2': [
+    {
+      '1': 'book',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Book',
+      '9': 0,
+      '10': 'book'
+    },
+    {
+      '1': 'error',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.typewriter.models.v1.Error',
+      '9': 0,
+      '10': 'error'
+    },
+  ],
+  '8': [
+    {'1': 'result'},
+  ],
+};
+
+/// Descriptor for `CreateBookResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createBookResponseDescriptor = $convert.base64Decode(
+    'ChJDcmVhdGVCb29rUmVzcG9uc2USMAoEYm9vaxgBIAEoCzIaLnR5cGV3cml0ZXIubW9kZWxzLn'
+    'YxLkJvb2tIAFIEYm9vaxIzCgVlcnJvchgCIAEoCzIbLnR5cGV3cml0ZXIubW9kZWxzLnYxLkVy'
+    'cm9ySABSBWVycm9yQggKBnJlc3VsdA==');

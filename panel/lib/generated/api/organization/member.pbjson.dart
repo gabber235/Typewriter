@@ -324,7 +324,15 @@ final $typed_data.Uint8List declineJoinRequestResponseDescriptor =
 const GenerateJoinCodeRequest$json = {
   '1': 'GenerateJoinCodeRequest',
   '2': [
-    {'1': 'single_use', '3': 1, '4': 1, '5': 8, '10': 'singleUse'},
+    {
+      '1': 'single_use',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'singleUse',
+      '17': true
+    },
     {
       '1': 'expiration',
       '3': 2,
@@ -342,14 +350,18 @@ const GenerateJoinCodeRequest$json = {
       '10': 'autoAccept'
     },
   ],
+  '8': [
+    {'1': '_single_use'},
+  ],
 };
 
 /// Descriptor for `GenerateJoinCodeRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List generateJoinCodeRequestDescriptor = $convert.base64Decode(
-    'ChdHZW5lcmF0ZUpvaW5Db2RlUmVxdWVzdBIdCgpzaW5nbGVfdXNlGAEgASgIUglzaW5nbGVVc2'
-    'USRQoKZXhwaXJhdGlvbhgCIAEoCzIlLnR5cGV3cml0ZXIuYXBpLnYxLkpvaW5Db2RlRXhwaXJh'
-    'dGlvblIKZXhwaXJhdGlvbhJMCgthdXRvX2FjY2VwdBgDIAEoCzIrLnR5cGV3cml0ZXIuYXBpLn'
-    'YxLkpvaW5Db2RlQXV0b0FjY2VwdENvbmZpZ1IKYXV0b0FjY2VwdA==');
+    'ChdHZW5lcmF0ZUpvaW5Db2RlUmVxdWVzdBIiCgpzaW5nbGVfdXNlGAEgASgISABSCXNpbmdsZV'
+    'VzZYgBARJFCgpleHBpcmF0aW9uGAIgASgLMiUudHlwZXdyaXRlci5hcGkudjEuSm9pbkNvZGVF'
+    'eHBpcmF0aW9uUgpleHBpcmF0aW9uEkwKC2F1dG9fYWNjZXB0GAMgASgLMisudHlwZXdyaXRlci'
+    '5hcGkudjEuSm9pbkNvZGVBdXRvQWNjZXB0Q29uZmlnUgphdXRvQWNjZXB0Qg0KC19zaW5nbGVf'
+    'dXNl');
 
 @$core.Deprecated('Use joinCodeExpirationDescriptor instead')
 const JoinCodeExpiration$json = {

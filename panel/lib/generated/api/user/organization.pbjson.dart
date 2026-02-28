@@ -84,15 +84,26 @@ const CreateOrganizationRequest$json = {
   '1': 'CreateOrganizationRequest',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'icon_url', '3': 2, '4': 1, '5': 9, '10': 'iconUrl'},
+    {
+      '1': 'icon_url',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'iconUrl',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_icon_url'},
   ],
 };
 
 /// Descriptor for `CreateOrganizationRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List createOrganizationRequestDescriptor =
     $convert.base64Decode(
-        'ChlDcmVhdGVPcmdhbml6YXRpb25SZXF1ZXN0EhIKBG5hbWUYASABKAlSBG5hbWUSGQoIaWNvbl'
-        '91cmwYAiABKAlSB2ljb25Vcmw=');
+        'ChlDcmVhdGVPcmdhbml6YXRpb25SZXF1ZXN0EhIKBG5hbWUYASABKAlSBG5hbWUSHgoIaWNvbl'
+        '91cmwYAiABKAlIAFIHaWNvblVybIgBAUILCglfaWNvbl91cmw=');
 
 @$core.Deprecated('Use createOrganizationResponseDescriptor instead')
 const CreateOrganizationResponse$json = {
@@ -196,13 +207,17 @@ final $typed_data.Uint8List listUserJoinRequestsDescriptor = $convert.base64Deco
 const RequestToJoinRequest$json = {
   '1': 'RequestToJoinRequest',
   '2': [
-    {'1': 'code', '3': 1, '4': 1, '5': 9, '10': 'code'},
+    {'1': 'code', '3': 1, '4': 1, '5': 9, '9': 0, '10': 'code', '17': true},
+  ],
+  '8': [
+    {'1': '_code'},
   ],
 };
 
 /// Descriptor for `RequestToJoinRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List requestToJoinRequestDescriptor = $convert
-    .base64Decode('ChRSZXF1ZXN0VG9Kb2luUmVxdWVzdBISCgRjb2RlGAEgASgJUgRjb2Rl');
+final $typed_data.Uint8List requestToJoinRequestDescriptor = $convert.base64Decode(
+    'ChRSZXF1ZXN0VG9Kb2luUmVxdWVzdBIXCgRjb2RlGAEgASgJSABSBGNvZGWIAQFCBwoFX2NvZG'
+    'U=');
 
 @$core.Deprecated('Use requestToJoinResponseDescriptor instead')
 const RequestToJoinResponse$json = {
@@ -282,14 +297,18 @@ const AutoAcceptedMember$json = {
       '3': 2,
       '4': 1,
       '5': 9,
-      '10': 'organizationName'
+      '9': 0,
+      '10': 'organizationName',
+      '17': true
     },
     {
       '1': 'organization_icon_url',
       '3': 3,
       '4': 1,
       '5': 9,
-      '10': 'organizationIconUrl'
+      '9': 1,
+      '10': 'organizationIconUrl',
+      '17': true
     },
     {
       '1': 'roles',
@@ -300,14 +319,19 @@ const AutoAcceptedMember$json = {
       '10': 'roles'
     },
   ],
+  '8': [
+    {'1': '_organization_name'},
+    {'1': '_organization_icon_url'},
+  ],
 };
 
 /// Descriptor for `AutoAcceptedMember`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List autoAcceptedMemberDescriptor = $convert.base64Decode(
     'ChJBdXRvQWNjZXB0ZWRNZW1iZXISJwoPb3JnYW5pemF0aW9uX2lkGAEgASgJUg5vcmdhbml6YX'
-    'Rpb25JZBIrChFvcmdhbml6YXRpb25fbmFtZRgCIAEoCVIQb3JnYW5pemF0aW9uTmFtZRIyChVv'
-    'cmdhbml6YXRpb25faWNvbl91cmwYAyABKAlSE29yZ2FuaXphdGlvbkljb25VcmwSMAoFcm9sZX'
-    'MYBCADKAsyGi50eXBld3JpdGVyLm1vZGVscy52MS5Sb2xlUgVyb2xlcw==');
+    'Rpb25JZBIwChFvcmdhbml6YXRpb25fbmFtZRgCIAEoCUgAUhBvcmdhbml6YXRpb25OYW1liAEB'
+    'EjcKFW9yZ2FuaXphdGlvbl9pY29uX3VybBgDIAEoCUgBUhNvcmdhbml6YXRpb25JY29uVXJsiA'
+    'EBEjAKBXJvbGVzGAQgAygLMhoudHlwZXdyaXRlci5tb2RlbHMudjEuUm9sZVIFcm9sZXNCFAoS'
+    'X29yZ2FuaXphdGlvbl9uYW1lQhgKFl9vcmdhbml6YXRpb25faWNvbl91cmw=');
 
 @$core.Deprecated('Use cancelJoinRequestRequestDescriptor instead')
 const CancelJoinRequestRequest$json = {

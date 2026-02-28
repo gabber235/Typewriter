@@ -20,14 +20,14 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class OrganizationData extends $pb.GeneratedMessage {
   factory OrganizationData({
-    $core.String? id,
+    $core.String? organizationId,
     $core.String? name,
     $core.String? iconUrl,
     $0.Timestamp? createdAt,
     $0.Timestamp? updatedAt,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (organizationId != null) result.organizationId = organizationId;
     if (name != null) result.name = name;
     if (iconUrl != null) result.iconUrl = iconUrl;
     if (createdAt != null) result.createdAt = createdAt;
@@ -49,7 +49,7 @@ class OrganizationData extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'organizationId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'iconUrl')
     ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'createdAt',
@@ -78,13 +78,13 @@ class OrganizationData extends $pb.GeneratedMessage {
   static OrganizationData? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get organizationId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set organizationId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasOrganizationId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearOrganizationId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get name => $_getSZ(1);

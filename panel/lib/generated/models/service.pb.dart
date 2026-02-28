@@ -169,7 +169,7 @@ class ServiceMetadata extends $pb.GeneratedMessage {
 /// Service represents a service identity stored in SurrealDB.
 class Service extends $pb.GeneratedMessage {
   factory Service({
-    $core.String? id,
+    $core.String? serviceId,
     $core.String? name,
     $core.Iterable<ServiceType>? serviceTypes,
     $0.Timestamp? createdAt,
@@ -178,7 +178,7 @@ class Service extends $pb.GeneratedMessage {
     $core.String? organizationId,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (serviceId != null) result.serviceId = serviceId;
     if (name != null) result.name = name;
     if (serviceTypes != null) result.serviceTypes.addAll(serviceTypes);
     if (createdAt != null) result.createdAt = createdAt;
@@ -202,7 +202,7 @@ class Service extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'typewriter.models.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'serviceId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..pc<ServiceType>(
         3, _omitFieldNames ? '' : 'serviceTypes', $pb.PbFieldType.KE,
@@ -238,13 +238,13 @@ class Service extends $pb.GeneratedMessage {
 
   /// Service identifier (authentik_user_id as record ID).
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get serviceId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set serviceId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasServiceId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearServiceId() => $_clearField(1);
 
   /// Name of the service.
   @$pb.TagNumber(2)

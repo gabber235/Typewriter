@@ -19,13 +19,16 @@ import 'dart:typed_data' as $typed_data;
 const Color$json = {
   '1': 'Color',
   '2': [
-    {'1': 'value', '3': 1, '4': 1, '5': 13, '10': 'value'},
+    {'1': 'value', '3': 1, '4': 1, '5': 13, '9': 0, '10': 'value', '17': true},
+  ],
+  '8': [
+    {'1': '_value'},
   ],
 };
 
 /// Descriptor for `Color`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List colorDescriptor =
-    $convert.base64Decode('CgVDb2xvchIUCgV2YWx1ZRgBIAEoDVIFdmFsdWU=');
+final $typed_data.Uint8List colorDescriptor = $convert.base64Decode(
+    'CgVDb2xvchIZCgV2YWx1ZRgBIAEoDUgAUgV2YWx1ZYgBAUIICgZfdmFsdWU=');
 
 @$core.Deprecated('Use errorDescriptor instead')
 const Error$json = {

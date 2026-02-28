@@ -199,10 +199,10 @@ class ListBooks extends $pb.GeneratedMessage {
 
 class GetBookRequest extends $pb.GeneratedMessage {
   factory GetBookRequest({
-    $core.String? id,
+    $core.String? bookId,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (bookId != null) result.bookId = bookId;
     return result;
   }
 
@@ -220,7 +220,7 @@ class GetBookRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'bookId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -243,13 +243,13 @@ class GetBookRequest extends $pb.GeneratedMessage {
   static GetBookRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get bookId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set bookId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasBookId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearBookId() => $_clearField(1);
 }
 
 enum GetBookResponse_Result { book, error, notSet }
@@ -978,6 +978,183 @@ class ChangePagesChaptersResponse extends $pb.GeneratedMessage {
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
   void clearSuccess() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $0.Error get error => $_getN(1);
+  @$pb.TagNumber(2)
+  set error($0.Error value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasError() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearError() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $0.Error ensureError() => $_ensure(1);
+}
+
+class CreateBookRequest extends $pb.GeneratedMessage {
+  factory CreateBookRequest({
+    $core.String? title,
+    $core.String? icon,
+    $0.Color? color,
+    $core.Iterable<$core.String>? tagIds,
+  }) {
+    final result = create();
+    if (title != null) result.title = title;
+    if (icon != null) result.icon = icon;
+    if (color != null) result.color = color;
+    if (tagIds != null) result.tagIds.addAll(tagIds);
+    return result;
+  }
+
+  CreateBookRequest._();
+
+  factory CreateBookRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateBookRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateBookRequest',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'title')
+    ..aOS(2, _omitFieldNames ? '' : 'icon')
+    ..aOM<$0.Color>(3, _omitFieldNames ? '' : 'color',
+        subBuilder: $0.Color.create)
+    ..pPS(4, _omitFieldNames ? '' : 'tagIds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateBookRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateBookRequest copyWith(void Function(CreateBookRequest) updates) =>
+      super.copyWith((message) => updates(message as CreateBookRequest))
+          as CreateBookRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateBookRequest create() => CreateBookRequest._();
+  @$core.override
+  CreateBookRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateBookRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateBookRequest>(create);
+  static CreateBookRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get title => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set title($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTitle() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTitle() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get icon => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set icon($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIcon() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIcon() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $0.Color get color => $_getN(2);
+  @$pb.TagNumber(3)
+  set color($0.Color value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasColor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearColor() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $0.Color ensureColor() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<$core.String> get tagIds => $_getList(3);
+}
+
+enum CreateBookResponse_Result { book, error, notSet }
+
+class CreateBookResponse extends $pb.GeneratedMessage {
+  factory CreateBookResponse({
+    $1.Book? book,
+    $0.Error? error,
+  }) {
+    final result = create();
+    if (book != null) result.book = book;
+    if (error != null) result.error = error;
+    return result;
+  }
+
+  CreateBookResponse._();
+
+  factory CreateBookResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateBookResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, CreateBookResponse_Result>
+      _CreateBookResponse_ResultByTag = {
+    1: CreateBookResponse_Result.book,
+    2: CreateBookResponse_Result.error,
+    0: CreateBookResponse_Result.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateBookResponse',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOM<$1.Book>(1, _omitFieldNames ? '' : 'book', subBuilder: $1.Book.create)
+    ..aOM<$0.Error>(2, _omitFieldNames ? '' : 'error',
+        subBuilder: $0.Error.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateBookResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateBookResponse copyWith(void Function(CreateBookResponse) updates) =>
+      super.copyWith((message) => updates(message as CreateBookResponse))
+          as CreateBookResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateBookResponse create() => CreateBookResponse._();
+  @$core.override
+  CreateBookResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateBookResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateBookResponse>(create);
+  static CreateBookResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  CreateBookResponse_Result whichResult() =>
+      _CreateBookResponse_ResultByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearResult() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $1.Book get book => $_getN(0);
+  @$pb.TagNumber(1)
+  set book($1.Book value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBook() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBook() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $1.Book ensureBook() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $0.Error get error => $_getN(1);

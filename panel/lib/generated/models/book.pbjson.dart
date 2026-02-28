@@ -35,9 +35,9 @@ final $typed_data.Uint8List pageTypeDescriptor = $convert.base64Decode(
 const Book$json = {
   '1': 'Book',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
-    {'1': 'icon', '3': 3, '4': 1, '5': 9, '10': 'icon'},
+    {'1': 'book_id', '3': 1, '4': 1, '5': 9, '10': 'bookId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'title', '17': true},
+    {'1': 'icon', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'icon', '17': true},
     {
       '1': 'color',
       '3': 4,
@@ -46,29 +46,27 @@ const Book$json = {
       '6': '.typewriter.models.v1.Color',
       '10': 'color'
     },
-    {
-      '1': 'tags',
-      '3': 5,
-      '4': 3,
-      '5': 11,
-      '6': '.typewriter.models.v1.Tag',
-      '10': 'tags'
-    },
+    {'1': 'tagIds', '3': 5, '4': 3, '5': 9, '10': 'tagIds'},
+  ],
+  '8': [
+    {'1': '_title'},
+    {'1': '_icon'},
   ],
 };
 
 /// Descriptor for `Book`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List bookDescriptor = $convert.base64Decode(
-    'CgRCb29rEg4KAmlkGAEgASgJUgJpZBIUCgV0aXRsZRgCIAEoCVIFdGl0bGUSEgoEaWNvbhgDIA'
-    'EoCVIEaWNvbhIxCgVjb2xvchgEIAEoCzIbLnR5cGV3cml0ZXIubW9kZWxzLnYxLkNvbG9yUgVj'
-    'b2xvchItCgR0YWdzGAUgAygLMhkudHlwZXdyaXRlci5tb2RlbHMudjEuVGFnUgR0YWdz');
+    'CgRCb29rEhcKB2Jvb2tfaWQYASABKAlSBmJvb2tJZBIZCgV0aXRsZRgCIAEoCUgAUgV0aXRsZY'
+    'gBARIXCgRpY29uGAMgASgJSAFSBGljb26IAQESMQoFY29sb3IYBCABKAsyGy50eXBld3JpdGVy'
+    'Lm1vZGVscy52MS5Db2xvclIFY29sb3ISFgoGdGFnSWRzGAUgAygJUgZ0YWdJZHNCCAoGX3RpdG'
+    'xlQgcKBV9pY29u');
 
 @$core.Deprecated('Use tagDescriptor instead')
 const Tag$json = {
   '1': 'Tag',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'tag_id', '3': 1, '4': 1, '5': 9, '10': 'tagId'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
     {
       '1': 'color',
       '3': 3,
@@ -77,14 +75,7 @@ const Tag$json = {
       '6': '.typewriter.models.v1.Color',
       '10': 'color'
     },
-    {
-      '1': 'parents',
-      '3': 4,
-      '4': 3,
-      '5': 11,
-      '6': '.typewriter.models.v1.Tag',
-      '10': 'parents'
-    },
+    {'1': 'parentIds', '3': 4, '4': 3, '5': 9, '10': 'parentIds'},
     {
       '1': 'placement',
       '3': 5,
@@ -94,38 +85,48 @@ const Tag$json = {
       '10': 'placement'
     },
   ],
+  '8': [
+    {'1': '_name'},
+  ],
 };
 
 /// Descriptor for `Tag`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List tagDescriptor = $convert.base64Decode(
-    'CgNUYWcSDgoCaWQYASABKAlSAmlkEhIKBG5hbWUYAiABKAlSBG5hbWUSMQoFY29sb3IYAyABKA'
-    'syGy50eXBld3JpdGVyLm1vZGVscy52MS5Db2xvclIFY29sb3ISMwoHcGFyZW50cxgEIAMoCzIZ'
-    'LnR5cGV3cml0ZXIubW9kZWxzLnYxLlRhZ1IHcGFyZW50cxI9CglwbGFjZW1lbnQYBSABKAsyHy'
-    '50eXBld3JpdGVyLm1vZGVscy52MS5QbGFjZW1lbnRSCXBsYWNlbWVudA==');
+    'CgNUYWcSFQoGdGFnX2lkGAEgASgJUgV0YWdJZBIXCgRuYW1lGAIgASgJSABSBG5hbWWIAQESMQ'
+    'oFY29sb3IYAyABKAsyGy50eXBld3JpdGVyLm1vZGVscy52MS5Db2xvclIFY29sb3ISHAoJcGFy'
+    'ZW50SWRzGAQgAygJUglwYXJlbnRJZHMSPQoJcGxhY2VtZW50GAUgASgLMh8udHlwZXdyaXRlci'
+    '5tb2RlbHMudjEuUGxhY2VtZW50UglwbGFjZW1lbnRCBwoFX25hbWU=');
 
 @$core.Deprecated('Use placementDescriptor instead')
 const Placement$json = {
   '1': 'Placement',
   '2': [
-    {'1': 'x', '3': 1, '4': 1, '5': 5, '10': 'x'},
-    {'1': 'y', '3': 2, '4': 1, '5': 5, '10': 'y'},
-    {'1': 'width', '3': 3, '4': 1, '5': 5, '10': 'width'},
-    {'1': 'height', '3': 4, '4': 1, '5': 5, '10': 'height'},
+    {'1': 'x', '3': 1, '4': 1, '5': 5, '9': 0, '10': 'x', '17': true},
+    {'1': 'y', '3': 2, '4': 1, '5': 5, '9': 1, '10': 'y', '17': true},
+    {'1': 'width', '3': 3, '4': 1, '5': 5, '9': 2, '10': 'width', '17': true},
+    {'1': 'height', '3': 4, '4': 1, '5': 5, '9': 3, '10': 'height', '17': true},
+  ],
+  '8': [
+    {'1': '_x'},
+    {'1': '_y'},
+    {'1': '_width'},
+    {'1': '_height'},
   ],
 };
 
 /// Descriptor for `Placement`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List placementDescriptor = $convert.base64Decode(
-    'CglQbGFjZW1lbnQSDAoBeBgBIAEoBVIBeBIMCgF5GAIgASgFUgF5EhQKBXdpZHRoGAMgASgFUg'
-    'V3aWR0aBIWCgZoZWlnaHQYBCABKAVSBmhlaWdodA==');
+    'CglQbGFjZW1lbnQSEQoBeBgBIAEoBUgAUgF4iAEBEhEKAXkYAiABKAVIAVIBeYgBARIZCgV3aW'
+    'R0aBgDIAEoBUgCUgV3aWR0aIgBARIbCgZoZWlnaHQYBCABKAVIA1IGaGVpZ2h0iAEBQgQKAl94'
+    'QgQKAl95QggKBl93aWR0aEIJCgdfaGVpZ2h0');
 
 @$core.Deprecated('Use pageDescriptor instead')
 const Page$json = {
   '1': 'Page',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'page_id', '3': 1, '4': 1, '5': 9, '10': 'pageId'},
     {'1': 'book_id', '3': 2, '4': 1, '5': 9, '10': 'bookId'},
-    {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'name', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
     {
       '1': 'type',
       '3': 4,
@@ -134,14 +135,36 @@ const Page$json = {
       '6': '.typewriter.models.v1.PageType',
       '10': 'type'
     },
-    {'1': 'chapter', '3': 5, '4': 1, '5': 9, '10': 'chapter'},
-    {'1': 'priority', '3': 6, '4': 1, '5': 5, '10': 'priority'},
+    {
+      '1': 'chapter',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'chapter',
+      '17': true
+    },
+    {
+      '1': 'priority',
+      '3': 6,
+      '4': 1,
+      '5': 5,
+      '9': 2,
+      '10': 'priority',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_name'},
+    {'1': '_chapter'},
+    {'1': '_priority'},
   ],
 };
 
 /// Descriptor for `Page`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List pageDescriptor = $convert.base64Decode(
-    'CgRQYWdlEg4KAmlkGAEgASgJUgJpZBIXCgdib29rX2lkGAIgASgJUgZib29rSWQSEgoEbmFtZR'
-    'gDIAEoCVIEbmFtZRIyCgR0eXBlGAQgASgOMh4udHlwZXdyaXRlci5tb2RlbHMudjEuUGFnZVR5'
-    'cGVSBHR5cGUSGAoHY2hhcHRlchgFIAEoCVIHY2hhcHRlchIaCghwcmlvcml0eRgGIAEoBVIIcH'
-    'Jpb3JpdHk=');
+    'CgRQYWdlEhcKB3BhZ2VfaWQYASABKAlSBnBhZ2VJZBIXCgdib29rX2lkGAIgASgJUgZib29rSW'
+    'QSFwoEbmFtZRgDIAEoCUgAUgRuYW1liAEBEjIKBHR5cGUYBCABKA4yHi50eXBld3JpdGVyLm1v'
+    'ZGVscy52MS5QYWdlVHlwZVIEdHlwZRIdCgdjaGFwdGVyGAUgASgJSAFSB2NoYXB0ZXKIAQESHw'
+    'oIcHJpb3JpdHkYBiABKAVIAlIIcHJpb3JpdHmIAQFCBwoFX25hbWVCCgoIX2NoYXB0ZXJCCwoJ'
+    'X3ByaW9yaXR5');

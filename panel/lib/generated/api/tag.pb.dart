@@ -198,10 +198,10 @@ class ListTags extends $pb.GeneratedMessage {
 
 class GetTagRequest extends $pb.GeneratedMessage {
   factory GetTagRequest({
-    $core.String? id,
+    $core.String? tagId,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (tagId != null) result.tagId = tagId;
     return result;
   }
 
@@ -219,7 +219,7 @@ class GetTagRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'tagId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -242,13 +242,13 @@ class GetTagRequest extends $pb.GeneratedMessage {
   static GetTagRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get tagId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set tagId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasTagId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearTagId() => $_clearField(1);
 }
 
 enum GetTagResponse_Result { tag, error, notSet }
@@ -668,10 +668,10 @@ class UpdateTagResponse extends $pb.GeneratedMessage {
 
 class DeleteTagRequest extends $pb.GeneratedMessage {
   factory DeleteTagRequest({
-    $core.String? id,
+    $core.String? tagId,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (tagId != null) result.tagId = tagId;
     return result;
   }
 
@@ -689,7 +689,7 @@ class DeleteTagRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'tagId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -712,13 +712,13 @@ class DeleteTagRequest extends $pb.GeneratedMessage {
   static DeleteTagRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get tagId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set tagId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasTagId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearTagId() => $_clearField(1);
 }
 
 enum DeleteTagResponse_Result { success, error, notSet }
@@ -810,12 +810,12 @@ class DeleteTagResponse extends $pb.GeneratedMessage {
 
 class MoveTagRequest extends $pb.GeneratedMessage {
   factory MoveTagRequest({
-    $core.String? id,
+    $core.String? tagId,
     $core.int? x,
     $core.int? y,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (tagId != null) result.tagId = tagId;
     if (x != null) result.x = x;
     if (y != null) result.y = y;
     return result;
@@ -835,7 +835,7 @@ class MoveTagRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'tagId')
     ..aI(2, _omitFieldNames ? '' : 'x')
     ..aI(3, _omitFieldNames ? '' : 'y')
     ..hasRequiredFields = false;
@@ -860,13 +860,13 @@ class MoveTagRequest extends $pb.GeneratedMessage {
   static MoveTagRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get tagId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set tagId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasTagId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearTagId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get x => $_getIZ(1);
@@ -976,12 +976,12 @@ class MoveTagResponse extends $pb.GeneratedMessage {
 
 class ResizeTagRequest extends $pb.GeneratedMessage {
   factory ResizeTagRequest({
-    $core.String? id,
+    $core.String? tagId,
     $core.int? width,
     $core.int? height,
   }) {
     final result = create();
-    if (id != null) result.id = id;
+    if (tagId != null) result.tagId = tagId;
     if (width != null) result.width = width;
     if (height != null) result.height = height;
     return result;
@@ -1001,7 +1001,7 @@ class ResizeTagRequest extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'typewriter.api.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(1, _omitFieldNames ? '' : 'tagId')
     ..aI(2, _omitFieldNames ? '' : 'width')
     ..aI(3, _omitFieldNames ? '' : 'height')
     ..hasRequiredFields = false;
@@ -1026,13 +1026,13 @@ class ResizeTagRequest extends $pb.GeneratedMessage {
   static ResizeTagRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
+  $core.String get tagId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
+  set tagId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
+  $core.bool hasTagId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
+  void clearTagId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get width => $_getIZ(1);

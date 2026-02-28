@@ -113,8 +113,8 @@ final $typed_data.Uint8List serviceMetadataDescriptor = $convert.base64Decode(
 const Service$json = {
   '1': 'Service',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'service_id', '3': 1, '4': 1, '5': 9, '10': 'serviceId'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
     {
       '1': 'service_types',
       '3': 3,
@@ -152,22 +152,24 @@ const Service$json = {
       '3': 7,
       '4': 1,
       '5': 9,
-      '9': 0,
+      '9': 1,
       '10': 'organizationId',
       '17': true
     },
   ],
   '8': [
+    {'1': '_name'},
     {'1': '_organization_id'},
   ],
 };
 
 /// Descriptor for `Service`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List serviceDescriptor = $convert.base64Decode(
-    'CgdTZXJ2aWNlEg4KAmlkGAEgASgJUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEkYKDXNlcnZpY2'
-    'VfdHlwZXMYAyADKA4yIS50eXBld3JpdGVyLm1vZGVscy52MS5TZXJ2aWNlVHlwZVIMc2Vydmlj'
-    'ZVR5cGVzEjkKCmNyZWF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wUg'
-    'ljcmVhdGVkQXQSOAoFc3RhdGUYBSABKAsyIi50eXBld3JpdGVyLm1vZGVscy52MS5TZXJ2aWNl'
-    'U3RhdGVSBXN0YXRlEkEKCG1ldGFkYXRhGAYgASgLMiUudHlwZXdyaXRlci5tb2RlbHMudjEuU2'
-    'VydmljZU1ldGFkYXRhUghtZXRhZGF0YRIsCg9vcmdhbml6YXRpb25faWQYByABKAlIAFIOb3Jn'
-    'YW5pemF0aW9uSWSIAQFCEgoQX29yZ2FuaXphdGlvbl9pZA==');
+    'CgdTZXJ2aWNlEh0KCnNlcnZpY2VfaWQYASABKAlSCXNlcnZpY2VJZBIXCgRuYW1lGAIgASgJSA'
+    'BSBG5hbWWIAQESRgoNc2VydmljZV90eXBlcxgDIAMoDjIhLnR5cGV3cml0ZXIubW9kZWxzLnYx'
+    'LlNlcnZpY2VUeXBlUgxzZXJ2aWNlVHlwZXMSOQoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS'
+    '5wcm90b2J1Zi5UaW1lc3RhbXBSCWNyZWF0ZWRBdBI4CgVzdGF0ZRgFIAEoCzIiLnR5cGV3cml0'
+    'ZXIubW9kZWxzLnYxLlNlcnZpY2VTdGF0ZVIFc3RhdGUSQQoIbWV0YWRhdGEYBiABKAsyJS50eX'
+    'Bld3JpdGVyLm1vZGVscy52MS5TZXJ2aWNlTWV0YWRhdGFSCG1ldGFkYXRhEiwKD29yZ2FuaXph'
+    'dGlvbl9pZBgHIAEoCUgBUg5vcmdhbml6YXRpb25JZIgBAUIHCgVfbmFtZUISChBfb3JnYW5pem'
+    'F0aW9uX2lk');
