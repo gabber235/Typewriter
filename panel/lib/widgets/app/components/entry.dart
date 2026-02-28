@@ -10,6 +10,7 @@ import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class EntryNode extends HookConsumerWidget {
   const EntryNode({required this.entry, super.key});
@@ -151,7 +152,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
     final backgroundColor = isDeprecated
         ? Color.alphaBlend(
             definition.blueprint.color.withValues(alpha: 0.7),
-            Theme.of(context).colorScheme.surfaceContainerLowest,
+            Surface.colorOf(context),
           )
         : definition.blueprint.color;
 
@@ -227,8 +228,8 @@ class _ReferenceEntryNode extends HookConsumerWidget {
       selectableId: entryIdentifier,
       builder: (isSelected, isFocused, isHovered) {
         final backgroundColor = Color.alphaBlend(
-          blueprint.color.withValues(alpha: isFocused ? 0.7 : 0.2),
-          Theme.of(context).colorScheme.surfaceContainerLowest,
+          blueprint.color.withValues(alpha: 0.05),
+          Surface.colorOf(context),
         );
 
         final highlightColor = isFocused ? Colors.white : blueprint.color;
@@ -845,23 +846,28 @@ class _PlaceholderEntryNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surfaceContainerLowest,
-      child: DottedBorder(
-        options: RoundedRectDottedBorderOptions(
-          color: blueprint.color,
-          strokeWidth: 2,
-          dashPattern: const [5, 5],
-          radius: const Radius.circular(6),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: _InnerEntryNode(
-            name: name,
-            blueprint: blueprint,
+    final color = Surface.colorOf(context);
+
+    return Surface(
+      color: color,
+      child: ColoredBox(
+        color: color,
+        child: DottedBorder(
+          options: RoundedRectDottedBorderOptions(
             color: blueprint.color,
-            isDeprecated: isDeprecated,
-            isReference: isReference,
+            strokeWidth: 2,
+            dashPattern: const [5, 5],
+            radius: const Radius.circular(6),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: _InnerEntryNode(
+              name: name,
+              blueprint: blueprint,
+              color: blueprint.color,
+              isDeprecated: isDeprecated,
+              isReference: isReference,
+            ),
           ),
         ),
       ),

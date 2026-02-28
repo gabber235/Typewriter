@@ -33,7 +33,7 @@ final class ServicesProvider
   Services create() => Services();
 }
 
-String _$servicesHash() => r'71e1e6069a7417ff7632fd5851834749ae6ba65d';
+String _$servicesHash() => r'e6a988e1759be7c3d7372e67f802a05554f2733d';
 
 abstract class _$Services extends $StreamNotifier<List<Service>> {
   Stream<List<Service>> build();
@@ -104,7 +104,7 @@ final class ServiceProvider
   }
 }
 
-String _$serviceHash() => r'7a4ead8774e8b685645674076617a3af63e04f66';
+String _$serviceHash() => r'733a3e79fd93f72b899b5187c08646c59422cbbd';
 
 final class ServiceFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Service?>, String> {

@@ -240,7 +240,7 @@ class _MembersTabletList extends HookConsumerWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
+              color: Surface.colorOf(context),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(8),
               ),
@@ -316,7 +316,7 @@ class _MemberTabletCard extends HookConsumerWidget {
                         ? theme.colorScheme.primaryContainer.withValues(
                             alpha: 0.3,
                           )
-                        : theme.colorScheme.surfaceContainer,
+                        : Surface.colorOf(context),
                     borderRadius: BorderRadius.circular(8),
                     clipBehavior: Clip.antiAlias,
                     child: Column(

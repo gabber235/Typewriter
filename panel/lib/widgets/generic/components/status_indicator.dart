@@ -2,13 +2,13 @@ import "package:flutter/material.dart";
 
 class StatusIndicator extends StatelessWidget {
   const StatusIndicator({
-    super.key,
     required this.isOnline,
     this.lastSeen,
     this.dotColor,
     this.textColor,
     this.dotSize = 8,
     this.fontSize = 11,
+    super.key,
   });
 
   final bool isOnline;

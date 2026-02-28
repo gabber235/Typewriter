@@ -82,7 +82,7 @@ final class SelectedRealmProvider
   }
 }
 
-String _$selectedRealmHash() => r'e055476b9d4b56ca9dfede2f3cbeed28c8752b63';
+String _$selectedRealmHash() => r'52c7cdbcd54e832ff7316e07bad84f4ec27c9a32';
 
 @ProviderFor(realms)
 const realmsProvider = RealmsProvider._();

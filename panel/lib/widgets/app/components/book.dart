@@ -17,6 +17,7 @@ import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/outline_decorator.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 
 const bookWidth = 175.0;
@@ -49,26 +50,30 @@ class BookWidget extends HookConsumerWidget {
       selectableId: selectableId,
       focusNode: focusNode,
       builder: (isSelected, isFocused, isHovered) {
-        return OutlineDecorator(
-              show: isFocused,
-              outerColor: color,
-              innerColor: Theme.of(context).colorScheme.surface,
-              builder: (context) => SizedBox(
-                width: bookWidth,
-                height: bookHeight,
-                child: _BookStack(
-                  key: const ValueKey("content"),
-                  color: color,
-                  icon: icon,
-                  title: title,
-                  tags: tags,
-                  isSelected: isSelected,
-                ),
-              ),
-            )
-            .animate(target: isHovered ? 1 : 0)
-            .hoverScale(isHovered)
-            .hoverRotate(isHovered);
+        return Surface(
+          color: Theme.of(context).colorScheme.surface,
+          child:
+              OutlineDecorator(
+                    show: isFocused,
+                    outerColor: color,
+                    innerColor: Surface.colorOf(context),
+                    builder: (context) => SizedBox(
+                      width: bookWidth,
+                      height: bookHeight,
+                      child: _BookStack(
+                        key: const ValueKey("content"),
+                        color: color,
+                        icon: icon,
+                        title: title,
+                        tags: tags,
+                        isSelected: isSelected,
+                      ),
+                    ),
+                  )
+                  .animate(target: isHovered ? 1 : 0)
+                  .hoverScale(isHovered)
+                  .hoverRotate(isHovered),
+        );
       },
     );
   }
@@ -392,7 +397,7 @@ class _TagsList extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           itemBuilder: (context, index) {
             final tag = tags[index];
-            return _TagChip(tag: tag, key: Key(tag.id));
+            return _TagChip(tag: tag, key: Key(tag.tagId));
           },
           separatorBuilder: (context, index) => const SizedBox(height: 5),
         ),

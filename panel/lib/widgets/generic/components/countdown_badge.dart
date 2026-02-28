@@ -4,6 +4,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class CountdownBadge extends HookWidget {
   const CountdownBadge({
@@ -44,30 +45,33 @@ class CountdownBadge extends HookWidget {
         ? colorScheme.onErrorContainer
         : colorScheme.onSurface;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icones(
-            MaterialSymbols.timer_rounded,
-            size: 14,
-            color: foregroundColor,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            _formatDuration(remaining.value),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+    return Surface(
+      color: backgroundColor,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icones(
+              MaterialSymbols.timer_rounded,
+              size: 14,
               color: foregroundColor,
-              fontWeight: FontWeight.w500,
-              fontFeatures: const [FontFeature.tabularFigures()],
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Text(
+              _formatDuration(remaining.value),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: foregroundColor,
+                fontWeight: FontWeight.w500,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

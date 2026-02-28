@@ -30,9 +30,9 @@ class ConfirmationDialogue extends HookWidget {
     this.onCancel,
     super.key,
   }) : assert(
-          content != null || body != null,
-          "Either content or body must be provided",
-        );
+         content != null || body != null,
+         "Either content or body must be provided",
+       );
 
   /// The title of the dialogue.
   final String title;
@@ -79,15 +79,12 @@ class ConfirmationDialogue extends HookWidget {
     final secondsLeft = useState(delayConfirm.inSeconds);
     final canConfirm = secondsLeft.value <= 0;
 
-    useTimer(
-      1.seconds,
-      (timer) {
-        secondsLeft.value--;
-        if (secondsLeft.value <= 0) {
-          timer.cancel();
-        }
-      },
-    );
+    useTimer(1.seconds, (timer) {
+      secondsLeft.value--;
+      if (secondsLeft.value <= 0) {
+        timer.cancel();
+      }
+    });
 
     return AlertDialog(
       title: Text(title, style: TextStyle(color: titleColor)),
@@ -149,10 +146,13 @@ Future<bool> showConfirmationDialogue({
 }) async {
   // If the user has its shift key pressed, we skip the confirmation dialogue.
   // But only if the delay is 0.
-  final hasShiftDown = HardwareKeyboard.instance
-          .isLogicalKeyPressed(LogicalKeyboardKey.shiftLeft) ||
-      HardwareKeyboard.instance
-          .isLogicalKeyPressed(LogicalKeyboardKey.shiftRight);
+  final hasShiftDown =
+      HardwareKeyboard.instance.isLogicalKeyPressed(
+        LogicalKeyboardKey.shiftLeft,
+      ) ||
+      HardwareKeyboard.instance.isLogicalKeyPressed(
+        LogicalKeyboardKey.shiftRight,
+      );
   if (hasShiftDown && delayConfirm.inSeconds == 0) {
     await onConfirm();
     return true;
@@ -194,33 +194,28 @@ Future<T?> showAdvancedDialog<T>({
   bool fullscreenDialog = false,
   bool? requestFocus,
   AnimationStyle? animationStyle,
-}) =>
-    showDialog<T>(
-      context: context,
-      builder: (ctx) => UncontrolledProviderScope(
-        container: ProviderScope.containerOf(context),
-        child: Consumer(
-          builder: (context, ref, child) {
-            return Shortcuts(
-              shortcuts: TypewriterPanel.typewriterShortcuts,
-              child: GlobalModeShortcut(
-                child: Responsive(
-                  child: builder(context),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-      barrierDismissible: barrierDismissible,
-      barrierColor: barrierColor,
-      barrierLabel: barrierLabel,
-      useSafeArea: useSafeArea,
-      useRootNavigator: useRootNavigator,
-      routeSettings: routeSettings,
-      anchorPoint: anchorPoint,
-      traversalEdgeBehavior: traversalEdgeBehavior,
-      fullscreenDialog: fullscreenDialog,
-      requestFocus: requestFocus,
-      animationStyle: animationStyle,
-    );
+}) => showDialog<T>(
+  context: context,
+  builder: (ctx) => UncontrolledProviderScope(
+    container: ProviderScope.containerOf(context),
+    child: Consumer(
+      builder: (context, ref, child) {
+        return Shortcuts(
+          shortcuts: TypewriterPanel.typewriterShortcuts,
+          child: GlobalModeShortcut(child: Responsive(child: builder(context))),
+        );
+      },
+    ),
+  ),
+  barrierDismissible: barrierDismissible,
+  barrierColor: barrierColor,
+  barrierLabel: barrierLabel,
+  useSafeArea: useSafeArea,
+  useRootNavigator: useRootNavigator,
+  routeSettings: routeSettings,
+  anchorPoint: anchorPoint,
+  traversalEdgeBehavior: traversalEdgeBehavior,
+  fullscreenDialog: fullscreenDialog,
+  requestFocus: requestFocus,
+  animationStyle: animationStyle,
+);

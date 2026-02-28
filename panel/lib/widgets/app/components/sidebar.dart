@@ -20,6 +20,7 @@ import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 import "package:url_launcher/url_launcher.dart";
 
 part "sidebar.g.dart";
@@ -142,7 +143,10 @@ class Sidebar extends HookConsumerWidget {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: child,
+                    child: Surface(
+                      color: Theme.of(context).colorScheme.surface,
+                      child: child,
+                    ),
                   ),
                 ),
               ),
@@ -215,35 +219,41 @@ class SidebarLink extends HookConsumerWidget {
         ? Theme.of(context).colorScheme.surfaceContainerHighest
         : Colors.transparent;
 
-    return Material(
+    return Surface(
       color: backgroundColor,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        focusNode: focusNode,
-        onTap: router != null
-            ? () {
-                if (!selected) {
-                  router.navigate(route);
-                }
-              }
-            : null,
-        hoverColor: Theme.of(
-          context,
-        ).colorScheme.onSurface.withValues(alpha: 0.1),
+      child: Material(
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-          child: Row(
-            children: [
-              IconTheme(
-                data: IconThemeData(color: color, size: 20),
-                child: icon,
-              ),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Text(text, style: TextStyle(color: color, fontSize: 14)),
-              ),
-            ],
+        child: InkWell(
+          focusNode: focusNode,
+          onTap: router != null
+              ? () {
+                  if (!selected) {
+                    router.navigate(route);
+                  }
+                }
+              : null,
+          hoverColor: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            child: Row(
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 20),
+                  child: icon,
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    text,
+                    style: TextStyle(color: color, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -156,16 +156,15 @@ class InputFieldContainer extends HookConsumerWidget {
             },
             child: Actions(
               actions: {
-                DismissIntent: CallbackAction<DismissIntent>(
-                  onInvoke: (intent) {
-                    if (inputFocusNode.hasPrimaryFocus) {
+                if (inputFocusNode.hasPrimaryFocus)
+                  DismissIntent: CallbackAction<DismissIntent>(
+                    onInvoke: (intent) {
                       ref
                           .read(currentInteractionModeProvider.notifier)
                           .setMode(NormalMode());
-                    }
-                    return null;
-                  },
-                ),
+                      return null;
+                    },
+                  ),
               },
               child: child,
             ),

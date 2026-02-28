@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/graph/graph_identifier.dart";
@@ -8,11 +7,10 @@ import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/tags/tags.dart";
+import "package:typewriter_panel/utils/map.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/tags/tag_header.dart";
-
-part "tag_selectable.g.dart";
 
 class TagIdentifier extends SelectableIdentifier implements GraphDragData {
   const TagIdentifier(this.id);
@@ -25,11 +23,13 @@ class TagIdentifier extends SelectableIdentifier implements GraphDragData {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final tag = ref.watch(tagProvider(id));
-    if (tag == null) {
-      throw SelectableNotFoundException(this);
-    }
-    return AsyncValue.data(TagSelectable(ref: ref, id: this, tag: tag));
+    final tagAsync = ref.watch(tagProvider(id));
+    return tagAsync.whenData((value) {
+      if (value == null) {
+        throw SelectableNotFoundException(this);
+      }
+      return TagSelectable(ref: ref, id: this, tag: value);
+    });
   }
 
   @override
@@ -45,17 +45,9 @@ class TagIdentifier extends SelectableIdentifier implements GraphDragData {
   String toString() => "TagIdentifier(id: $id)";
 }
 
-@riverpod
-TagSelectable? tagSelectable(Ref ref, String tagId) {
-  final tag = ref.watch(tagProvider(tagId));
-  if (tag == null) return null;
-
-  return TagSelectable(ref: ref, id: TagIdentifier(tagId), tag: tag);
-}
-
 class TagSelectable extends Selectable<TagIdentifier> {
   TagSelectable({required this.ref, required this.id, required this.tag})
-    : _data = DynamicData(tag.toProto3Json() as Map<String, dynamic>);
+    : _data = DynamicData(stringMap(tag.toProto3Json()));
 
   @override
   final TagIdentifier id;
@@ -71,13 +63,17 @@ class TagSelectable extends Selectable<TagIdentifier> {
 
   @override
   ObjectBlueprint get objectBlueprint {
-    return ObjectBlueprint(fields: {"name": DataBlueprint.string()});
+    return ObjectBlueprint(
+      fields: {
+        "name": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
+      },
+    );
   }
 
   @override
   List<SelectableOperation> get operations => [
     DeleteSelectableOperation(
-      onDelete: () => ref.read(tagsProvider.notifier).deleteTag(tag.id),
+      onDelete: () => ref.read(tagsProvider.notifier).deleteTag(tag.tagId),
     ),
   ];
 

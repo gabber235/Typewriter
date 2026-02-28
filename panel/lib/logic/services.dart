@@ -95,12 +95,14 @@ class Services extends _$Services {
 
     final currentState = state.value ?? [];
     state = AsyncData(
-      currentState.map((s) => s.id == service.id ? service : s).toList(),
+      currentState
+          .map((s) => s.serviceId == service.serviceId ? service : s)
+          .toList(),
     );
 
     try {
       final request = UpdateServiceRequest()
-        ..serviceId = service.id
+        ..serviceId = service.serviceId
         ..name = service.name;
       final response = await ref
           .read(natsProvider)
@@ -133,7 +135,7 @@ class Services extends _$Services {
     final previousState = state;
 
     state = AsyncData(
-      state.requireValue.where((s) => s.id != serviceId).toList(),
+      state.requireValue.where((s) => s.serviceId != serviceId).toList(),
     );
 
     try {
@@ -159,7 +161,7 @@ class Services extends _$Services {
 @riverpod
 Future<Service?> service(Ref ref, String id) async {
   final services = await ref.watch(servicesProvider.future);
-  return services.firstWhereOrNull((service) => service.id == id);
+  return services.firstWhereOrNull((service) => service.serviceId == id);
 }
 
 extension ServiceExtension on Service {
@@ -313,7 +315,7 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
           await router.navigate(
             OrganizationRoute(
               organizationId: service.organizationId,
-              children: [RealmRoute(realmId: service.id)],
+              children: [RealmRoute(realmId: service.serviceId)],
             ),
           );
         },
@@ -321,13 +323,13 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
       ),
     UnbindSelectableOperation(
       onUnbind: () =>
-          ref.read(servicesProvider.notifier).deleteService(service.id),
+          ref.read(servicesProvider.notifier).deleteService(service.serviceId),
     ),
   ];
 
   @override
   Widget? header() => ServiceHeader(
-    id: service.id,
+    id: service.serviceId,
     name: service.displayName,
     color: service.color,
   );

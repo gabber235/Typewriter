@@ -17,6 +17,7 @@ import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 part "inspector.g.dart";
 
@@ -142,30 +143,35 @@ class MobileInspector extends HookConsumerWidget {
             controller: controller,
             snapAnimationDuration: 200.ms,
             builder: (context, scrollController) {
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Section(
-                  child: CustomScrollView(
-                    controller: scrollController,
-                    slivers: [
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _MobileDragHandleDelegate(),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 12,
-                            right: 12,
-                            bottom: 12,
-                          ),
-                          child: _InspectorContent(),
+              final surfaceColor = Theme.of(context).colorScheme.surface;
+
+              return Surface(
+                color: surfaceColor,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Section(
+                    child: CustomScrollView(
+                      controller: scrollController,
+                      slivers: [
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _MobileDragHandleDelegate(),
                         ),
-                      ),
-                    ],
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: 12,
+                              right: 12,
+                              bottom: 12,
+                            ),
+                            child: _InspectorContent(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

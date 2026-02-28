@@ -14,7 +14,6 @@ import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/app/components/tags/tag_node.dart";
 import "package:typewriter_panel/widgets/generic/components/empty_screen.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
-import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 
 const tagGraphCellSize = 50.0;
 
@@ -23,29 +22,29 @@ class TagGraph extends HookConsumerWidget {
 
   GraphElement _elementFromTag(Tag tag) {
     return GraphElement(
-      id: GraphIdentifier(tag.id),
+      id: GraphIdentifier(tag.tagId),
       x: tag.placement.x,
       y: tag.placement.y,
-      width: tag.placement.width.clamp(2, 20),
-      height: tag.placement.height.clamp(1, 10),
-      builder: (context) => SizedBox.expand(child: TagNode(tagId: tag.id)),
+      width: tag.placement.width,
+      height: tag.placement.height,
+      builder: (context) => SizedBox.expand(child: TagNode(tagId: tag.tagId)),
     );
   }
 
   List<GraphEdge> _edgesFromTags(List<Tag> tags) {
     final edges = <GraphEdge>[];
-    final tagMap = {for (final tag in tags) tag.id: tag};
+    final tagMap = {for (final tag in tags) tag.tagId: tag};
 
     for (final tag in tags) {
-      for (final parent in tag.parents) {
-        final parentTag = tagMap[parent.id];
+      for (final parentId in tag.parentIds) {
+        final parentTag = tagMap[parentId];
         if (parentTag == null) continue;
 
         edges.add(
           GraphEdge(
-            id: "${parent.id}-${tag.id}",
-            source: GraphIdentifier(parent.id),
-            target: GraphIdentifier(tag.id),
+            id: "$parentId-${tag.tagId}",
+            source: GraphIdentifier(parentId),
+            target: GraphIdentifier(tag.tagId),
             color: parentTag.color.value != 0
                 ? Color(parentTag.color.value)
                 : Colors.grey,
@@ -100,11 +99,6 @@ class TagGraph extends HookConsumerWidget {
           },
         );
       },
-      loading: (_) => ShimmerBox.rectangle(
-        width: double.infinity,
-        height: double.infinity,
-        borderRadius: BorderRadius.circular(12),
-      ),
     );
   }
 }

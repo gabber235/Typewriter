@@ -479,8 +479,7 @@ class _Error extends HookConsumerWidget {
       builder: (context, child) => Responsive(child: child!),
       home: ErrorScreen(
         title: "Error",
-        message:
-            "Something went wrong, please report this to the Typewriter discord. $error",
+        message: "$error",
         child: SignOutButton(),
       ),
     );

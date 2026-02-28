@@ -160,7 +160,7 @@ class _OrganizationsSelector extends HookConsumerWidget {
                               onTap: () {
                                 context.pushRoute(
                                   OrganizationRoute(
-                                    organizationId: organization.id,
+                                    organizationId: organization.organizationId,
                                   ),
                                   onFailure: (error) {
                                     debugPrint(

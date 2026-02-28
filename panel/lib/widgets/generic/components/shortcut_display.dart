@@ -7,12 +7,10 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/timer.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/widgets/generic/components/elastic_switcher.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class _KeyDisplay extends StatelessWidget {
-  const _KeyDisplay({
-    required this.child,
-    this.size = 12,
-  });
+  const _KeyDisplay({required this.child, this.size = 12});
   final Widget child;
   final double size;
 
@@ -22,27 +20,32 @@ class _KeyDisplay extends StatelessWidget {
       Text(:final data) => (data?.length ?? 0) <= 1,
       _ => false,
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      ),
-      height: size + 8,
-      width: fixedWidth ? size + 8 : null,
-      child: DefaultTextStyle(
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: size,
-          fontWeight: FontWeight.w700,
-          height: 1,
+    final color = Theme.of(context).colorScheme.surfaceContainerHighest;
+
+    return Surface(
+      color: color,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: color,
         ),
-        child: IconTheme(
-          data: IconThemeData(
+        height: size + 8,
+        width: fixedWidth ? size + 8 : null,
+        child: DefaultTextStyle(
+          style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
-            size: size,
+            fontSize: size,
+            fontWeight: FontWeight.w700,
+            height: 1,
           ),
-          child: Center(child: child),
+          child: IconTheme(
+            data: IconThemeData(
+              color: Theme.of(context).colorScheme.onSurface,
+              size: size,
+            ),
+            child: Center(child: child),
+          ),
         ),
       ),
     );
@@ -112,8 +115,9 @@ class LogicalKeyBoardDisplay extends HookWidget {
     // If the trigger is a Unicode-character-producing key, then use the character
     if (keyBoardKey.keyId & LogicalKeyboardKey.planeMask == 0x0) {
       return Text(
-        String.fromCharCode(keyBoardKey.keyId & LogicalKeyboardKey.valueMask)
-            .toUpperCase(),
+        String.fromCharCode(
+          keyBoardKey.keyId & LogicalKeyboardKey.valueMask,
+        ).toUpperCase(),
       );
     }
     // Fallback to key label if no specific case is matched
@@ -122,10 +126,7 @@ class LogicalKeyBoardDisplay extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _KeyDisplay(
-      size: size,
-      child: _buildKey(),
-    );
+    return _KeyDisplay(size: size, child: _buildKey());
   }
 }
 
@@ -139,11 +140,7 @@ const double _kLabelItemMinSpacing = 4;
 
 /// Displays a single shortcut (label with optional icon) in a pill style.
 class ShortcutDisplay extends StatelessWidget {
-  const ShortcutDisplay({
-    required this.shortcut,
-    this.size = 12,
-    super.key,
-  });
+  const ShortcutDisplay({required this.shortcut, this.size = 12, super.key});
 
   final ShortcutActivator shortcut;
   final double size;
@@ -163,8 +160,10 @@ class ShortcutDisplay extends StatelessWidget {
         for (final key in shortcut.keys)
           LogicalKeyBoardDisplay(keyBoardKey: key, size: size),
         switch (shortcut) {
-          CharacterActivator(:final character) =>
-            _KeyDisplay(size: size, child: Text(character)),
+          CharacterActivator(:final character) => _KeyDisplay(
+            size: size,
+            child: Text(character),
+          ),
           _ => SizedBox(),
         },
       ],
@@ -191,10 +190,7 @@ class RotatingShortcuts extends HookWidget {
       return const SizedBox.shrink();
     }
     if (shortcuts.length == 1) {
-      return ShortcutDisplay(
-        shortcut: shortcuts.first,
-        size: size,
-      );
+      return ShortcutDisplay(shortcut: shortcuts.first, size: size);
     }
 
     final index = useState(0);

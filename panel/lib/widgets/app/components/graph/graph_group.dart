@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class GraphGroup extends StatelessWidget {
   const GraphGroup({
@@ -23,6 +24,10 @@ class GraphGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final backgroundColor = Theme.of(
+          context,
+        ).colorScheme.surfaceContainerLowest;
+
         final child = SizedBox(
           width: constraints.maxWidth,
           height: constraints.maxHeight,
@@ -30,9 +35,7 @@ class GraphGroup extends StatelessWidget {
             painter: GraphGroupPainter(
               title: title,
               color: color,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerLowest,
+              backgroundColor: backgroundColor,
               titleStyle:
                   titleStyle ??
                   Theme.of(context).textTheme.labelSmall!.copyWith(
@@ -61,7 +64,7 @@ class GraphGroup extends StatelessWidget {
                   : Opacity(opacity: 0.5, child: themes.wrap(child));
             },
           ),
-          child: child,
+          child: Surface(color: backgroundColor, child: child),
         );
       },
     );

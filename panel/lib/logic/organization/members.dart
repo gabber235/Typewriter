@@ -121,7 +121,7 @@ abstract class JoinCodeOptions with _$JoinCodeOptions {
 /// Converts a proto Role to a dart MemberRole.
 MemberRole _protoToMemberRole(role_models.Role proto) {
   return MemberRole(
-    id: proto.id,
+    id: proto.roleId,
     name: proto.name,
     color: proto.color.toFlutterColor(),
     defaultRole: proto.defaultRole,
@@ -135,7 +135,7 @@ OrganizationMember _protoToOrganizationMember(
   member_models.OrganizationMember proto,
 ) {
   return OrganizationMember(
-    id: proto.id,
+    id: proto.userId,
     name: proto.name,
     email: proto.email,
     avatarUrl: proto.avatarUrl,
@@ -147,7 +147,7 @@ OrganizationMember _protoToOrganizationMember(
 /// Converts a proto JoinRequest to a dart JoinRequest.
 JoinRequest _protoToJoinRequest(member_models.JoinRequest proto) {
   return JoinRequest(
-    id: proto.id,
+    id: proto.joinRequestId,
     userId: proto.userId,
     userName: proto.userName,
     userEmail: proto.userEmail,

@@ -3,6 +3,8 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/page.pb.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 
 part "pages.g.dart";
@@ -11,13 +13,28 @@ part "pages.g.dart";
 class BookPages extends _$BookPages {
   @override
   FutureOr<List<Page>> build(String bookId, String search) async {
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    assert(
+      realmId != null,
+      "realmId must not be null when fetching book pages",
+    );
+    assert(
+      organizationId != null,
+      "organizationId must not be null when fetching book pages",
+    );
+
     final request = SearchPagesRequest()
       ..bookId = bookId
       ..search = search;
 
     final response = await ref
-        .watch(natsProvider)
-        .requestProto("pages.search", request, SearchPagesResponse.new);
+        .read(natsProvider)
+        .requestProto(
+          "realm.to.$realmId.organization.$organizationId.page.search",
+          request,
+          SearchPagesResponse.new,
+        );
 
     if (response.hasError()) {
       throw Exception("Failed to search pages: ${response.error.message}");
@@ -36,11 +53,21 @@ class BookPages extends _$BookPages {
 class Pages extends _$Pages {
   @override
   FutureOr<Page> build(String pageId) async {
-    final request = GetPageRequest()..id = pageId;
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (realmId == null || organizationId == null) {
+      throw Exception("No realm selected");
+    }
+
+    final request = GetPageRequest()..pageId = pageId;
 
     final response = await ref
-        .watch(natsProvider)
-        .requestProto("pages.get", request, GetPageResponse.new);
+        .read(natsProvider)
+        .requestProto(
+          "realm.to.$realmId.organization.$organizationId.page.get",
+          request,
+          GetPageResponse.new,
+        );
 
     if (response.hasError()) {
       throw Exception("Failed to get page: ${response.error.message}");
@@ -57,6 +84,14 @@ class Pages extends _$Pages {
   Future<void> changeChapter(String chapter) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when changing chapter");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when changing chapter",
+    );
+
     final currentPage = state.requireValue;
 
     final optimisticUpdate = currentPage.deepCopy()..chapter = chapter;
@@ -64,13 +99,13 @@ class Pages extends _$Pages {
 
     try {
       final request = ChangePageChapterRequest()
-        ..pageId = currentPage.id
+        ..pageId = currentPage.pageId
         ..chapter = chapter;
 
       final response = await ref
-          .watch(natsProvider)
+          .read(natsProvider)
           .requestProto(
-            "pages.change_chapter",
+            "realm.to.$realmId.organization.$organizationId.page.chapter",
             request,
             ChangePageChapterResponse.new,
           );
@@ -89,6 +124,14 @@ class Pages extends _$Pages {
   Future<void> changePriority(int priority) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when changing priority");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when changing priority",
+    );
+
     final currentPage = state.value;
     if (currentPage == null) return;
 
@@ -97,13 +140,13 @@ class Pages extends _$Pages {
 
     try {
       final request = ChangePagePriorityRequest()
-        ..pageId = currentPage.id
+        ..pageId = currentPage.pageId
         ..priority = priority;
 
       final response = await ref
-          .watch(natsProvider)
+          .read(natsProvider)
           .requestProto(
-            "pages.change_priority",
+            "realm.to.$realmId.organization.$organizationId.page.priority",
             request,
             ChangePagePriorityResponse.new,
           );
@@ -122,6 +165,14 @@ class Pages extends _$Pages {
   Future<void> renamePage(String name) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when renaming page");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when renaming page",
+    );
+
     final currentPage = state.value;
     if (currentPage == null) return;
 
@@ -130,12 +181,16 @@ class Pages extends _$Pages {
 
     try {
       final request = RenamePageRequest()
-        ..pageId = currentPage.id
+        ..pageId = currentPage.pageId
         ..name = name;
 
       final response = await ref
-          .watch(natsProvider)
-          .requestProto("pages.rename", request, RenamePageResponse.new);
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.page.rename",
+            request,
+            RenamePageResponse.new,
+          );
 
       if (response.hasError()) {
         throw Exception("Failed to rename page: ${response.error.message}");

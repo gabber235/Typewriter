@@ -32,7 +32,7 @@ final class BooksProvider extends $StreamNotifierProvider<Books, List<Book>> {
   Books create() => Books();
 }
 
-String _$booksHash() => r'744083c673ebc702985637728c90a5ce96da2818';
+String _$booksHash() => r'9945b253cdd58cfa79c45eee262f4482297c5336';
 
 abstract class _$Books extends $StreamNotifier<List<Book>> {
   Stream<List<Book>> build();
@@ -107,7 +107,7 @@ final class FilteredBooksProvider
   }
 }
 
-String _$filteredBooksHash() => r'1a99f1e7485cf15f30abf8398df62a297b4a0c94';
+String _$filteredBooksHash() => r'a92cfb7fc28f666129d71306550ced5d675c5cc6';
 
 final class FilteredBooksFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Book>>, String> {
@@ -217,7 +217,7 @@ final class BookProvider
   }
 }
 
-String _$bookHash() => r'6224bd11964a019166ea5dfd33c52e810deb0a56';
+String _$bookHash() => r'e2f0b487e94df7c1a25de9490706f22331985450';
 
 final class BookFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Book?>, String> {

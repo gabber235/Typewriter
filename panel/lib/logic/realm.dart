@@ -16,7 +16,7 @@ Future<Service?> selectedRealm(Ref ref) async {
   final id = ref.watch(realmIdProvider);
   if (id == null) return null;
   final services = await ref.watch(servicesProvider.future);
-  return services.firstWhereOrNull((s) => s.id == id);
+  return services.firstWhereOrNull((s) => s.serviceId == id);
 }
 
 @riverpod

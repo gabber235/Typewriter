@@ -1,14 +1,19 @@
+import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/tags/tag_selectable.dart";
 import "package:typewriter_panel/logic/tags/tags.dart";
 import "package:typewriter_panel/utils/color.dart";
+import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
+import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class TagNode extends HookConsumerWidget {
   const TagNode({required this.tagId, super.key});
@@ -17,67 +22,98 @@ class TagNode extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tag = ref.watch(tagProvider(tagId));
+    final asyncTag = ref.watch(tagProvider(tagId));
+
+    return asyncTag(
+      name: "Tag",
+      shrink: true,
+      builder: (tag) {
+        if (tag == null) return const SizedBox.shrink();
+        return _TagNode(tag: tag);
+      },
+      loading: (_) =>
+          ShimmerBox.rectangle(width: double.infinity, height: double.infinity),
+    );
+  }
+}
+
+class _TagNode extends HookWidget {
+  const _TagNode({required this.tag});
+
+  final Tag tag;
+
+  @override
+  Widget build(BuildContext context) {
     final focusNode = useFocusNode();
 
-    if (tag == null) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     final tagColor = tag.color.value != 0
-        ? Color(tag.color.value)
+        ? tag.color.value.toFlutterColor()
         : Colors.grey;
 
-    final graphDrag = GraphDrag.maybeOf(context);
+    final graphDrag = GraphDrag.of(context);
+    useListenable(graphDrag.draggingInsideGraph);
 
-    return Selector(
-      selectableId: TagIdentifier(tagId),
-      focusNode: focusNode,
-      builder: (isSelected, isFocused, isHovered) {
-        final content = _TagNodeContent(
-          tag: tag,
-          tagColor: tagColor,
-          colorScheme: colorScheme,
-          theme: theme,
-          isSelected: isSelected,
-          isFocused: isFocused,
-          isHovered: isHovered,
-        );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Selector(
+          selectableId: TagIdentifier(tag.tagId),
+          focusNode: focusNode,
+          builder: (isSelected, isFocused, isHovered) {
+            final content = _TagNodeContent(
+              tag: tag,
+              tagColor: tagColor,
+              isSelected: isSelected,
+              isFocused: isFocused,
+              isHovered: isHovered,
+            );
 
-        return Draggable<TagIdentifier>(
-          data: TagIdentifier(tagId),
-          feedback: FeedbackTagNode(tag: tag, tagColor: tagColor),
-          childWhenDragging: PlaceholderTagNode(tagColor: tagColor),
-          onDragStarted: () {
-            graphDrag?.draggingInsideGraph.value = true;
+            return Draggable<TagIdentifier>(
+              data: TagIdentifier(tag.tagId),
+              onDragStarted: () {
+                // Because we initially start dragging over itself, we know that we are dragging inside the graph.
+                // And want to prevent the feedback from being shown.
+                // However the graph doesn't know that we are dragging on it yet.
+                graphDrag.draggingInsideGraph.value = true;
+              },
+              feedback: HookBuilder(
+                builder: (context) {
+                  useListenable(graphDrag.draggingInsideGraph);
+                  return graphDrag.draggingInsideGraph.value
+                      ? SizedBox()
+                      : SizedBox(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight,
+                          child: FeedbackTagNode(tag: tag, tagColor: tagColor),
+                        );
+                },
+              ),
+              childWhenDragging: graphDrag.draggingInsideGraph.value
+                  ? content
+                  : PlaceholderTagNode(name: tag.name, color: tagColor),
+              child: DragTarget<TagIdentifier>(
+                onWillAcceptWithDetails: (details) {
+                  // TODO: Must check that this will not create a cycle
+                  return details.data.id != tag.tagId;
+                },
+                onAcceptWithDetails: (details) {
+                  // TODO: Implement tag linking/grouping when dropped on another tag
+                },
+                builder: (context, candidateData, rejectedData) {
+                  final isDropTarget = candidateData.isNotEmpty;
+                  if (isDropTarget) {
+                    return _TagNodeContent(
+                      tag: tag,
+                      tagColor: tagColor,
+                      isSelected: true,
+                      isFocused: true,
+                      isHovered: true,
+                    );
+                  }
+                  return content;
+                },
+              ),
+            );
           },
-          onDragEnd: (_) {
-            graphDrag?.draggingInsideGraph.value = false;
-          },
-          child: DragTarget<TagIdentifier>(
-            onWillAcceptWithDetails: (details) {
-              return details.data.id != tagId;
-            },
-            onAcceptWithDetails: (details) {
-              // TODO: Implement tag linking/grouping when dropped on another tag
-            },
-            builder: (context, candidateData, rejectedData) {
-              final isDropTarget = candidateData.isNotEmpty;
-              if (isDropTarget) {
-                return _TagNodeContent(
-                  tag: tag,
-                  tagColor: tagColor,
-                  colorScheme: colorScheme,
-                  theme: theme,
-                  isSelected: true,
-                  isFocused: true,
-                  isHovered: true,
-                );
-              }
-              return content;
-            },
-          ),
         );
       },
     );
@@ -88,8 +124,6 @@ class _TagNodeContent extends StatelessWidget {
   const _TagNodeContent({
     required this.tag,
     required this.tagColor,
-    required this.colorScheme,
-    required this.theme,
     required this.isSelected,
     required this.isFocused,
     required this.isHovered,
@@ -97,14 +131,14 @@ class _TagNodeContent extends StatelessWidget {
 
   final Tag tag;
   final Color tagColor;
-  final ColorScheme colorScheme;
-  final ThemeData theme;
   final bool isSelected;
   final bool isFocused;
   final bool isHovered;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     final backgroundColor = Color.alphaBlend(
       tagColor.withValues(
         alpha: switch ((isHovered, isSelected)) {
@@ -114,7 +148,7 @@ class _TagNodeContent extends StatelessWidget {
           (true, true) => 0.7,
         },
       ),
-      colorScheme.surface,
+      Surface.colorOf(context),
     );
 
     final textColor = isHovered
@@ -179,15 +213,17 @@ class FeedbackTagNode extends StatelessWidget {
               ),
             ],
           ),
-          child: Text(
-            tag.name.formatted,
-            style: TextStyle(
-              color:
-                  ThemeData.estimateBrightnessForColor(tagColor) ==
-                      Brightness.dark
-                  ? Colors.white
-                  : Colors.black,
-              fontWeight: FontWeight.w500,
+          child: Center(
+            child: Text(
+              tag.name.formatted,
+              style: TextStyle(
+                color:
+                    ThemeData.estimateBrightnessForColor(tagColor) ==
+                        Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
@@ -197,20 +233,44 @@ class FeedbackTagNode extends StatelessWidget {
 }
 
 class PlaceholderTagNode extends StatelessWidget {
-  const PlaceholderTagNode({required this.tagColor, super.key});
+  const PlaceholderTagNode({
+    required this.name,
+    required this.color,
+    super.key,
+  });
 
-  final Color tagColor;
+  final String name;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: tagColor.withValues(alpha: 0.5),
-          width: 2,
-          strokeAlign: BorderSide.strokeAlignInside,
+    final surfaceColor = Theme.of(context).colorScheme.surfaceContainerLowest;
+
+    return Surface(
+      color: surfaceColor,
+      child: ColoredBox(
+        color: surfaceColor,
+        child: DottedBorder(
+          options: RoundedRectDottedBorderOptions(
+            color: color,
+            strokeWidth: 2,
+            dashPattern: const [5, 5],
+            radius: const Radius.circular(12),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Center(
+              child: Text(
+                name.formatted,
+                style: TextStyle(color: color, fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
         ),
       ),
     );

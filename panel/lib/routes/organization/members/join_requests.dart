@@ -237,8 +237,8 @@ class _JoinRequestCard extends HookConsumerWidget {
     final isDesktop = context.isDesktop;
 
     final backgroundColor = isSelected
-        ? theme.colorScheme.surfaceContainerLow
-        : theme.colorScheme.surfaceContainer;
+        ? Surface.colorOf(context)
+        : Surface.colorOf(context);
 
     return AnimatedSize(
       duration: 300.ms,

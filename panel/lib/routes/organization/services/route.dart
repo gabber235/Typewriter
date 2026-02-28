@@ -20,6 +20,7 @@ import "package:typewriter_panel/widgets/generic/components/loading_button.dart"
 import "package:typewriter_panel/widgets/generic/components/page_heading.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/status_indicator.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 import "package:typewriter_panel/widgets/generic/components/vertical_clipper.dart";
 
 const double _serviceCardWidth = 180;
@@ -51,7 +52,7 @@ class ServicesPage extends HookConsumerWidget {
               const PageHeading(
                 title: "Services",
                 subtext:
-                    "Connect your Minecraft servers to this organization. Enter a registration token to bind a service.",
+                    "Services are your connected Typewriter instances: Minecraft servers running the Typewriter plugin (engines), content containers (realms), or both. Enter the registration token displayed in your server console to connect a service to your organization.",
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -140,55 +141,58 @@ class _TokenInput extends HookConsumerWidget {
       }
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Connect a Service",
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+    return Surface(
+      color: Surface.colorOf(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Connect a Service",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "When you start a Typewriter server, it will display a registration token. Enter it here to bind the service to this organization.",
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 8),
+            Text(
+              "When you start a Typewriter server, it will display a registration token. Enter it here to bind the service to this organization.",
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: DecoratedTextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration: InputDecoration(
-                    hintText: "Enter registration token",
-                    prefixIcon: const Icon(Icons.key),
-                    errorText: error.value,
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: DecoratedTextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: InputDecoration(
+                      hintText: "Enter registration token",
+                      prefixIcon: const Icon(Icons.key),
+                      errorText: error.value,
+                    ),
+                    onChanged: handleChange,
+                    onSubmitted: loadingButtonController.canTrigger
+                        ? (_) => loadingButtonController.trigger()
+                        : null,
                   ),
-                  onChanged: handleChange,
-                  onSubmitted: loadingButtonController.canTrigger
-                      ? (_) => loadingButtonController.trigger()
-                      : null,
                 ),
-              ),
-              const SizedBox(width: 12),
-              LoadingButton(
-                controller: loadingButtonController,
-                onPressed: handleBind,
-                child: const Text("Connect"),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 12),
+                LoadingButton(
+                  controller: loadingButtonController,
+                  onPressed: handleBind,
+                  child: const Text("Connect"),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -202,7 +206,7 @@ class _ServiceCard extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
-    final selectableId = ServiceIdentifier(service.id);
+    final selectableId = ServiceIdentifier(service.serviceId);
     final scope = StackRouterScope.of(context);
 
     return Selector(
@@ -213,7 +217,7 @@ class _ServiceCard extends HookConsumerWidget {
               scope.controller.navigate(
                 OrganizationRoute(
                   organizationId: service.organizationId,
-                  children: [RealmRoute(realmId: service.id)],
+                  children: [RealmRoute(realmId: service.serviceId)],
                 ),
               );
             }
@@ -251,12 +255,11 @@ class _ServiceCard extends HookConsumerWidget {
 }
 
 Color _statusDotColor(BuildContext context, bool isOnline, bool isSelected) {
-  final theme = Theme.of(context);
   return switch ((isOnline, isSelected)) {
     (true, false) => Colors.green,
     (true, true) => Colors.white,
     (false, false) => Colors.grey,
-    (false, true) => theme.colorScheme.surface.withValues(alpha: 0.7),
+    (false, true) => Surface.colorOf(context).withValues(alpha: 0.7),
   };
 }
 
@@ -265,6 +268,6 @@ Color _statusTextColor(BuildContext context, bool isOnline, bool isSelected) {
   return switch ((isOnline, isSelected)) {
     (true, _) => Colors.white.withValues(alpha: 0.7),
     (false, false) => theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-    (false, true) => theme.colorScheme.surface.withValues(alpha: 0.5),
+    (false, true) => Surface.colorOf(context).withValues(alpha: 0.5),
   };
 }

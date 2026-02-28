@@ -3,6 +3,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 /// A customizable app bar for flexible layouts, always including the organization selector if available.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
@@ -25,6 +26,11 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final color =
+        backgroundColor ??
+        Theme.of(context).appBarTheme.backgroundColor ??
+        Theme.of(context).colorScheme.surface;
+
     return Pane(
       id: "appbar",
       margin: EdgeInsets.only(top: 2, left: 2, right: 2),
@@ -34,33 +40,34 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
         child: SizedBox(
           height: height,
           child: Material(
-            color: backgroundColor ??
-                Theme.of(context).appBarTheme.backgroundColor ??
-                Theme.of(context).colorScheme.surface,
+            color: color,
             borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 8,
-                children: [
-                  ...row,
-                  if (context.isMobile)
-                    IconButton(
-                      icon: const Icon(Icons.menu),
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (ctx) => UncontrolledProviderScope(
-                            container: ProviderScope.containerOf(context),
-                            child: _MobileSidebarMenu(child: sidebar),
-                          ),
-                        );
-                      },
-                    ),
-                ],
+            child: Surface(
+              color: color,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  spacing: 8,
+                  children: [
+                    ...row,
+                    if (context.isMobile)
+                      IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (ctx) => UncontrolledProviderScope(
+                              container: ProviderScope.containerOf(context),
+                              child: _MobileSidebarMenu(child: sidebar),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

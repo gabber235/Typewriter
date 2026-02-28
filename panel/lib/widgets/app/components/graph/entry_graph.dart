@@ -6,28 +6,87 @@ import "package:typewriter_panel/logic/graph/graph_element.dart";
 import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/graph_direction.dart";
+import "package:typewriter_panel/logic/pages/page_elements.dart";
 
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/app/components/entry.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
+import "package:typewriter_panel/widgets/app/components/graph/graph_group.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/empty_screen.dart";
 
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 
+class _GroupIdentifier implements GraphDragData, GraphIdentifier {
+  const _GroupIdentifier(this.id);
+
+  @override
+  final String id;
+
+  @override
+  GraphIdentifier get graphId => this;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is _GroupIdentifier && other.id == id);
+
+  @override
+  String toString() => "_GroupIdentifier($id)";
+}
+
 const entryGraphCellSize = 50.0;
 
 class EntryGraph extends HookConsumerWidget {
   const EntryGraph({
     required this.pageId,
-    this.direction = GraphDirection.leftToRight,
+    this.graphDirection = GraphDirection.leftToRight,
     super.key,
   });
 
   final String pageId;
-  final GraphDirection direction;
+  final GraphDirection graphDirection;
+
+  (GraphElement, List<GraphEdge>) _graphFromElement(PageElement element) {
+    return switch (element) {
+      PageElementEntry(:final entry) => _graphFromEntry(entry),
+      PageElementGroup(:final id, :final name, :final placement) => (
+        GraphElement(
+          id: _GroupIdentifier(id),
+          x: placement.x,
+          y: placement.y,
+          width: placement.width,
+          height: placement.height,
+          builder: (context) {
+            return SizedBox.expand(
+              child: GraphGroup(
+                title: name,
+                color: Theme.of(context).colorScheme.primary,
+                data: _GroupIdentifier(id),
+              ),
+            );
+          },
+        ),
+        <GraphEdge>[],
+      ),
+      _ => (
+        GraphElement(
+          id: GraphIdentifier(element.id),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          builder: (context) => const SizedBox(),
+        ),
+        <GraphEdge>[],
+      ),
+    };
+  }
 
   (GraphElement, List<GraphEdge>) _graphFromEntry(PageEntry entry) {
     return entry.maybeWhen(
@@ -49,15 +108,14 @@ class EntryGraph extends HookConsumerWidget {
               source: EntryIdentifier(definition.id),
               target: EntryIdentifier(edge.otherId),
               color: definition.blueprint.color,
-              sourceSide: direction.sourceSide,
-              targetSide: direction.targetSide,
+              sourceSide: graphDirection.sourceSide,
+              targetSide: graphDirection.targetSide,
             ),
         ],
       ),
       orElse: () => (
         GraphElement(
           id: GraphIdentifier(entry.id),
-          // TODO: Do placement correctly
           x: 0,
           y: 0,
           width: 5,
@@ -71,46 +129,46 @@ class EntryGraph extends HookConsumerWidget {
     );
   }
 
-  GraphData _graphFromEntries(List<PageEntry> entries) {
-    final elements = <GraphElement>[];
+  GraphData _graphFromElements(List<PageElement> elements) {
+    final graphElements = <GraphElement>[];
     final edges = <GraphEdge>[];
 
-    for (final entry in entries) {
-      final (element, graphEdges) = _graphFromEntry(entry);
-      elements.add(element);
+    for (final element in elements) {
+      final (graphElement, graphEdges) = _graphFromElement(element);
+      graphElements.add(graphElement);
       edges.addAll(graphEdges);
     }
 
     return GraphData(
       cellSize: entryGraphCellSize,
-      elements: elements,
+      elements: graphElements,
       edges: edges,
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entries = ref.watch(pageEntriesProvider(pageId));
+    final elements = ref.watch(pageElementsProvider(pageId));
 
-    return entries(
-      name: "entries",
-      builder: (entries) {
-        if (entries.isEmpty) {
+    return elements(
+      name: "elements",
+      builder: (elements) {
+        if (elements.isEmpty) {
           return EmptyGraphPage();
         }
         return Graph(
-          data: _graphFromEntries(entries),
+          data: _graphFromElements(elements),
           onElementsDragged: (changes) {
             final changed = changes
                 .map((entry) => (entry.$1.id, entry.$2, entry.$3))
                 .toList(growable: false);
-            ref.read(pageEntriesProvider(pageId).notifier).moveAll(changed);
+            ref.read(pageElementsProvider(pageId).notifier).moveAll(changed);
           },
           onElementsResize: (changes) {
             final changed = changes
                 .map((entry) => (entry.$1.id, entry.$2, entry.$3))
                 .toList(growable: false);
-            ref.read(pageEntriesProvider(pageId).notifier).resizeAll(changed);
+            ref.read(pageElementsProvider(pageId).notifier).resizeAll(changed);
           },
         );
       },

@@ -9,6 +9,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:iconify_flutter_plus/icons/mingcute.dart";
@@ -48,6 +49,7 @@ import "package:typewriter_panel/widgets/generic/components/loading_button.dart"
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 part "route.g.dart";
 
@@ -104,12 +106,21 @@ class BookScaffold extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
     return Scaffold(
       appBar: CustomAppBar(
         row: [
-          if (ref.watch(organizationIdProvider) != null) ...[
+          if (organizationId != null) ...[
             const OrganizationSelector(),
-            const RealmSelector(),
+            if (realmId != null) ...[
+              Iconify(
+                MaterialSymbols.chevron_right,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const RealmSelector(),
+            ],
           ],
           const Spacer(),
           if (!context.isMobile) const ModeDisplayWidget(),
@@ -452,15 +463,18 @@ class _TreeCategory extends HookConsumerWidget {
                       ),
                       child: Draggable<ChapterDrag>(
                         data: ChapterDrag(chapter: chapter),
-                        feedback: Material(
-                          color: Theme.of(context).colorScheme.surfaceContainer,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: _buildHeader(
-                            context,
-                            expand: false,
-                            isExpanded: isExpanded.value,
+                        feedback: Surface(
+                          color: Surface.colorOf(context),
+                          child: Material(
+                            color: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _buildHeader(
+                              context,
+                              expand: false,
+                              isExpanded: isExpanded.value,
+                            ),
                           ),
                         ),
                         child: InkWell(
@@ -488,9 +502,7 @@ class _TreeCategory extends HookConsumerWidget {
               ? _TreeBarLayout(
                   barWidth: 3,
                   barMargin: EdgeInsets.only(left: expanded ? 14 : 10),
-                  barColor: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.2),
+                  barColor: Surface.colorOf(context).withValues(alpha: 0.2),
                   borderRadius: Radius.circular(2),
                   child: _TreeChildren(
                     children: node.children,
@@ -552,7 +564,7 @@ class _PageTile extends HookConsumerWidget {
   const _PageTile({required this.page});
   final Page page;
 
-  String get pageId => page.id;
+  String get pageId => page.pageId;
   String get name => page.name;
   String get chapter => page.chapter;
 
@@ -710,43 +722,47 @@ class _PageTile extends HookConsumerWidget {
                 entryCandidateData.isNotEmpty || pageCandidateData.isNotEmpty;
             final isRejecting =
                 entryRejectedData.isNotEmpty || rejectedData.isNotEmpty;
-            return Material(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.surfaceContainer
-                  : Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: isAccepting || isRejecting
-                    ? BorderSide(
-                        color: isAccepting
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.error,
-                        width: 2,
-                      )
-                    : BorderSide.none,
-              ),
-              child: ManagedActionSet(
-                shortcuts: _shortcuts(ref),
-                child: ContextMenuRegion(
-                  items: _contextMenuItems(ref),
-                  child: Draggable<PageDrag>(
-                    data: PageDrag(pageId: pageId),
-                    feedback: Material(
-                      color: Theme.of(context).colorScheme.surfaceContainer,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+            return Surface(
+              color: isSelected ? Surface.colorOf(context) : Colors.transparent,
+              child: Material(
+                color: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: isAccepting || isRejecting
+                      ? BorderSide(
+                          color: isAccepting
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.error,
+                          width: 2,
+                        )
+                      : BorderSide.none,
+                ),
+                child: ManagedActionSet(
+                  shortcuts: _shortcuts(ref),
+                  child: ContextMenuRegion(
+                    items: _contextMenuItems(ref),
+                    child: Draggable<PageDrag>(
+                      data: PageDrag(pageId: pageId),
+                      feedback: Surface(
+                        color: Surface.colorOf(context),
+                        child: Material(
+                          color: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: child,
+                        ),
                       ),
-                      child: child,
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        if (isSelected) return;
-                        ref
-                            .read(appRouterProvider)
-                            .push(RouteRoute(pageId: pageId));
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: child,
+                      child: InkWell(
+                        onTap: () {
+                          if (isSelected) return;
+                          ref
+                              .read(appRouterProvider)
+                              .push(RouteRoute(pageId: pageId));
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: child,
+                      ),
                     ),
                   ),
                 ),
@@ -764,7 +780,7 @@ class _SmallPageTile extends HookConsumerWidget {
 
   final Page page;
 
-  String get pageId => page.id;
+  String get pageId => page.pageId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

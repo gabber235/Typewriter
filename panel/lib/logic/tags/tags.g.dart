@@ -32,7 +32,7 @@ final class TagsProvider extends $StreamNotifierProvider<Tags, List<Tag>> {
   Tags create() => Tags();
 }
 
-String _$tagsHash() => r'217448042bc10481ca67fc4338cf01c9e26ee4ec';
+String _$tagsHash() => r'0454523d69a7dbd158a20f5820a636d1f7fe35ea';
 
 abstract class _$Tags extends $StreamNotifier<List<Tag>> {
   Stream<List<Tag>> build();
@@ -56,8 +56,9 @@ abstract class _$Tags extends $StreamNotifier<List<Tag>> {
 @ProviderFor(tag)
 const tagProvider = TagFamily._();
 
-final class TagProvider extends $FunctionalProvider<Tag?, Tag?, Tag?>
-    with $Provider<Tag?> {
+final class TagProvider
+    extends $FunctionalProvider<AsyncValue<Tag?>, Tag?, FutureOr<Tag?>>
+    with $FutureModifier<Tag?>, $FutureProvider<Tag?> {
   const TagProvider._({
     required TagFamily super.from,
     required String super.argument,
@@ -81,21 +82,13 @@ final class TagProvider extends $FunctionalProvider<Tag?, Tag?, Tag?>
 
   @$internal
   @override
-  $ProviderElement<Tag?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $FutureProviderElement<Tag?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
 
   @override
-  Tag? create(Ref ref) {
+  FutureOr<Tag?> create(Ref ref) {
     final argument = this.argument as String;
     return tag(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Tag? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Tag?>(value),
-    );
   }
 
   @override
@@ -109,10 +102,10 @@ final class TagProvider extends $FunctionalProvider<Tag?, Tag?, Tag?>
   }
 }
 
-String _$tagHash() => r'a05613f08953704bdedab1fd9b05431ffe5db5c9';
+String _$tagHash() => r'ee3ea41098b35219090fc57dc2280616cabeb701';
 
 final class TagFamily extends $Family
-    with $FunctionalFamilyOverride<Tag?, String> {
+    with $FunctionalFamilyOverride<FutureOr<Tag?>, String> {
   const TagFamily._()
     : super(
         retry: null,

@@ -178,7 +178,7 @@ class _JoinCodesTable extends HookConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
+        color: Surface.colorOf(context),
         borderRadius: BorderRadius.circular(8),
       ),
       clipBehavior: Clip.antiAlias,
@@ -193,9 +193,7 @@ class _JoinCodesTable extends HookConsumerWidget {
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
         children: [
           TableRow(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHigh,
-            ),
+            decoration: BoxDecoration(color: Surface.colorOf(context)),
             children: [
               TableCell(
                 verticalAlignment: TableCellVerticalAlignment.middle,
@@ -409,7 +407,7 @@ class _JoinCodeTypeBadges extends StatelessWidget {
             icon: Icons.all_inclusive_rounded,
             label: "Multi-use",
             color: theme.colorScheme.onSurfaceVariant,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            backgroundColor: Surface.colorOf(context),
           ),
         if (code.autoAccept != null)
           _TypeBadge(
@@ -548,7 +546,7 @@ class _JoinCodesCardList extends HookConsumerWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
+              color: Surface.colorOf(context),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(8),
               ),
@@ -625,7 +623,7 @@ class _JoinCodeCard extends HookConsumerWidget {
                         ? theme.colorScheme.primaryContainer.withValues(
                             alpha: 0.3,
                           )
-                        : theme.colorScheme.surfaceContainer,
+                        : Surface.colorOf(context),
                     borderRadius: BorderRadius.circular(8),
                     clipBehavior: Clip.antiAlias,
                     child: Column(
@@ -915,7 +913,7 @@ class _JoinCodeSettings extends HookConsumerWidget {
                   margin: const EdgeInsets.only(top: 8),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHigh,
+                    color: Surface.colorOf(context),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -1109,7 +1107,7 @@ class _PresetChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
+              : Surface.colorOf(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? theme.colorScheme.primary : Colors.transparent,

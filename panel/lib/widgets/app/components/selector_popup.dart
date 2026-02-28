@@ -8,6 +8,7 @@ import "package:typewriter_panel/widgets/app/components/inspector/operations.dar
 import "package:typewriter_panel/widgets/app/components/interaction_mode/global_mode_shortcut.dart";
 import "package:typewriter_panel/widgets/generic/components/modal_header.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 typedef SelectorItemBuilder<T> = Widget Function(T item);
 typedef SelectorContentBuilder<T> =
@@ -244,9 +245,11 @@ class _PopupRoute<T> extends PopupRoute<void> {
               opacity: animation,
               child: Builder(
                 builder: (context) {
+                  final color = Theme.of(context).colorScheme.surfaceContainer;
+
                   return Material(
                     elevation: 4,
-                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    color: color,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -255,7 +258,7 @@ class _PopupRoute<T> extends PopupRoute<void> {
                         maxWidth: 420,
                         maxHeight: 420,
                       ),
-                      child: child,
+                      child: Surface(color: color, child: child),
                     ),
                   );
                 },

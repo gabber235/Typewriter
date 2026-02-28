@@ -34,6 +34,7 @@ import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 part "join_codes.dart";
@@ -75,7 +76,7 @@ class MembersPage extends HookConsumerWidget {
               PageHeading(
                 title: "Organization Members",
                 subtext:
-                    "Manage who has access to your organization. Invite new members and approve requests.",
+                    "Manage who can access and edit content in your organization. Invite team members by creating join codes or approving incoming requests, and assign roles to control what each person can view or modify across your books and realms.",
                 padding: EdgeInsets.all(paddingAmount),
               ),
               Padding(
@@ -132,57 +133,60 @@ class _MembersTabBar extends HookWidget {
 
     final showCount = context.responsive(mobile: false, tablet: true);
 
-    return Material(
-      color: theme.colorScheme.surfaceContainerLow,
-      shape: StadiumBorder(
-        side: FocusHighlight.focusBorder(
-          context,
-          hasFocus.value ? FocusType.focus : FocusType.none,
+    return Surface(
+      color: Surface.colorOf(context),
+      child: Material(
+        color: Colors.transparent,
+        shape: StadiumBorder(
+          side: FocusHighlight.focusBorder(
+            context,
+            hasFocus.value ? FocusType.focus : FocusType.none,
+          ),
         ),
-      ),
-      animationDuration: 200.ms,
-      child: Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: TabBar(
-          controller: controller,
-          onFocusChange: (focused, index) => hasFocus.value = focused,
-          tabs: [
-            const Tab(text: "Members"),
-            Tab(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(text: "Join Requests"),
-                    if (joinRequestCount > 0 && showCount)
-                      TextSpan(
-                        text: " [$joinRequestCount]",
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.secondary,
+        animationDuration: 200.ms,
+        child: Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: TabBar(
+            controller: controller,
+            onFocusChange: (focused, index) => hasFocus.value = focused,
+            tabs: [
+              const Tab(text: "Members"),
+              Tab(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: "Join Requests"),
+                      if (joinRequestCount > 0 && showCount)
+                        TextSpan(
+                          text: " [$joinRequestCount]",
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.secondary,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-            Tab(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(text: "Active Links"),
-                    if (joinCodeCount > 0 && showCount)
-                      TextSpan(
-                        text: " [$joinCodeCount]",
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.secondary,
+              Tab(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: "Active Links"),
+                      if (joinCodeCount > 0 && showCount)
+                        TextSpan(
+                          text: " [$joinCodeCount]",
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.secondary,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -249,92 +253,93 @@ class _MembersTable extends HookConsumerWidget {
         selectedIds.value.isNotEmpty &&
         selectedIds.value.length < members.length;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Table(
-        columnWidths: const {
-          0: FixedColumnWidth(48),
-          1: IntrinsicColumnWidth(),
-          2: FlexColumnWidth(1),
-          3: FixedColumnWidth(80),
-        },
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [
-          TableRow(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHigh,
-            ),
-            children: [
-              TableCell(
-                verticalAlignment: TableCellVerticalAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Checkbox(
-                    value: allSelected ? true : (someSelected ? null : false),
-                    tristate: true,
-                    onChanged: (value) {
-                      if (allSelected || someSelected) {
-                        selectedIds.value = {};
-                      } else {
-                        selectedIds.value = members.map((m) => m.id).toSet();
-                      }
-                    },
-                  ),
-                ),
-              ),
-              TableCell(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Text(
-                    "Member",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
+    return Surface(
+      color: Surface.colorOf(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Table(
+          columnWidths: const {
+            0: FixedColumnWidth(48),
+            1: IntrinsicColumnWidth(),
+            2: FlexColumnWidth(1),
+            3: FixedColumnWidth(80),
+          },
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          children: [
+            TableRow(
+              decoration: BoxDecoration(color: Surface.colorOf(context)),
+              children: [
+                TableCell(
+                  verticalAlignment: TableCellVerticalAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Checkbox(
+                      value: allSelected ? true : (someSelected ? null : false),
+                      tristate: true,
+                      onChanged: (value) {
+                        if (allSelected || someSelected) {
+                          selectedIds.value = {};
+                        } else {
+                          selectedIds.value = members.map((m) => m.id).toSet();
+                        }
+                      },
                     ),
                   ),
                 ),
-              ),
-              TableCell(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Text(
-                    "Roles",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
+                TableCell(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      "Member",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const TableCell(child: SizedBox.shrink()),
-            ],
-          ),
-          for (final (index, member) in members.indexed)
-            _buildMemberRow(
-              context,
-              ref,
-              member,
-              index,
-              selectedIds.value.contains(member.id),
-              focusedRowIndex,
-              theme,
+                TableCell(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      "Roles",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+                const TableCell(child: SizedBox.shrink()),
+              ],
             ),
-        ],
+            for (final (index, member) in members.indexed)
+              _buildMemberRow(
+                context,
+                ref,
+                member,
+                index,
+                selectedIds.value.contains(member.id),
+                focusedRowIndex,
+                theme,
+              ),
+          ],
+        ),
       ),
     );
   }

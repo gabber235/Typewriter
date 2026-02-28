@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class DepthContainer extends InheritedWidget {
   const DepthContainer({required this.depth, required super.child, super.key});
@@ -34,16 +35,18 @@ class DepthBox extends HookWidget {
     final parent = DepthContainer.maybeOf(context);
     final depth = this.depth ?? (parent?.depth ?? -1) + 1;
 
+    final color = enabled
+        ? depth.isEven
+              ? Theme.of(context).colorScheme.surfaceContainerLowest
+              : Theme.of(context).colorScheme.surface
+        : Colors.transparent;
+
     final widget = Material(
-      color: enabled
-          ? depth.isEven
-                ? Theme.of(context).colorScheme.surfaceContainerLowest
-                : Theme.of(context).colorScheme.surface
-          : Colors.transparent,
+      color: color,
       shape:
           shape ??
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      child: child,
+      child: Surface(color: color, child: child),
     );
 
     if (!enabled) {

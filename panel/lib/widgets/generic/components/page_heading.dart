@@ -43,17 +43,14 @@ class PageHeading extends StatelessWidget {
           ),
           if (subtext != null && subtext!.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 8.0),
+              padding: const EdgeInsets.only(top: 6.0),
               child: Text(
                 subtext!,
                 textAlign: TextAlign.start,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: context.responsive(
-                    mobile: 12,
-                    tablet: 14,
-                    desktop: 16,
-                  ),
+                  fontSize: context.responsive(mobile: 10, tablet: 12),
+                  fontVariations: [FontVariation.weight(50)],
                 ),
               ),
             ),

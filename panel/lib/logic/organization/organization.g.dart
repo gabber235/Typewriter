@@ -33,7 +33,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'e3247ebb73dbb0a3c1b3ceee6e140ec8620161a7';
+String _$organizationsHash() => r'695aa57856e5466c30e02f83392cebbee0704f78';
 
 abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
   Stream<List<OrganizationData>> build();
@@ -124,7 +124,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'40519d95c10a41ce876b04fadacb4afe3ed553af';
+String _$organizationHash() => r'51da4d3467d6f731373e0d8cabc5de68057a369f';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

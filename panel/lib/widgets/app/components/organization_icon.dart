@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class OrganizationIcon extends StatelessWidget {
   const OrganizationIcon({
@@ -33,17 +34,22 @@ class OrganizationIcon extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      child: Icon(
-        Icons.business,
-        size: size * 0.6,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+    final color = Theme.of(context).colorScheme.surfaceContainerHighest;
+
+    return Surface(
+      color: color,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        child: Icon(
+          Icons.business,
+          size: size * 0.6,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

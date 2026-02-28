@@ -1,6 +1,9 @@
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" hide Title;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/generic/components/identifier.dart";
+import "package:typewriter_panel/widgets/generic/components/title.dart";
 
 class TagHeader extends HookConsumerWidget {
   const TagHeader({required this.tag, super.key});
@@ -13,31 +16,12 @@ class TagHeader extends HookConsumerWidget {
         ? Color(tag.color.value)
         : Colors.grey;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: tagColor,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outline.withValues(alpha: 0.3),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            tag.name,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        Title(title: tag.name.formatted, color: tagColor),
+        const SizedBox(height: 8),
+        Identifier(id: tag.tagId),
       ],
     );
   }

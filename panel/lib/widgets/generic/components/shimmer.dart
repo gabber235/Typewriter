@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 LinearGradient createShimmerGradient(
   BuildContext context, {
@@ -39,11 +40,7 @@ class _SlidingGradientTransform extends GradientTransform {
 /// Wrap this around a section of your UI where you want to apply
 /// shimmer effects to loading states.
 class Shimmer extends StatefulWidget {
-  const Shimmer({
-    super.key,
-    this.linearGradient,
-    this.child,
-  });
+  const Shimmer({super.key, this.linearGradient, this.child});
 
   static ShimmerState? of(BuildContext context) {
     return context.findAncestorStateOfType<ShimmerState>();
@@ -171,10 +168,7 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
 /// The child should contain shapes with solid colors that will be
 /// replaced by the shimmer gradient.
 class ShimmerLoading extends HookWidget {
-  const ShimmerLoading({
-    required this.child,
-    super.key,
-  });
+  const ShimmerLoading({required this.child, super.key});
 
   final Widget child;
 
@@ -183,29 +177,23 @@ class ShimmerLoading extends HookWidget {
     final shimmerChanges = useState<Listenable?>(null);
     final childKey = useMemoized(Object.new, []);
 
-    useEffect(
-      () {
-        final shimmer = Shimmer.of(context);
-        if (shimmer != null) {
-          shimmer._addListener();
-          shimmerChanges.value = shimmer.shimmerChanges;
-          return shimmer._removeListener;
-        }
-        return null;
-      },
-      [],
-    );
+    useEffect(() {
+      final shimmer = Shimmer.of(context);
+      if (shimmer != null) {
+        shimmer._addListener();
+        shimmerChanges.value = shimmer.shimmerChanges;
+        return shimmer._removeListener;
+      }
+      return null;
+    }, []);
 
-    useEffect(
-      () {
-        final shimmer = Shimmer.of(context);
-        if (shimmer != null) {
-          return () => shimmer._unregisterChild(childKey);
-        }
-        return null;
-      },
-      [childKey],
-    );
+    useEffect(() {
+      final shimmer = Shimmer.of(context);
+      if (shimmer != null) {
+        return () => shimmer._unregisterChild(childKey);
+      }
+      return null;
+    }, [childKey]);
 
     useListenable(shimmerChanges.value);
 
@@ -269,24 +257,16 @@ class ShimmerBox extends HookWidget {
     BorderRadius? borderRadius,
     this.color,
   }) : shape = RoundedRectangleBorder(
-          borderRadius: borderRadius ?? BorderRadius.circular(8),
-        );
+         borderRadius: borderRadius ?? BorderRadius.circular(8),
+       );
 
   /// Creates a circular shimmer box.
-  const ShimmerBox.circle({
-    super.key,
-    this.width,
-    this.height,
-    this.color,
-  }) : shape = const CircleBorder();
+  const ShimmerBox.circle({super.key, this.width, this.height, this.color})
+    : shape = const CircleBorder();
 
   /// Creates a stadium-shaped shimmer box.
-  const ShimmerBox.stadium({
-    super.key,
-    this.width,
-    this.height,
-    this.color,
-  }) : shape = const StadiumBorder();
+  const ShimmerBox.stadium({super.key, this.width, this.height, this.color})
+    : shape = const StadiumBorder();
 
   final double? width;
   final double? height;
@@ -306,6 +286,7 @@ class ShimmerBox extends HookWidget {
         child: Material(
           color: baseColor,
           shape: shape ?? const RoundedRectangleBorder(),
+          child: Surface(color: baseColor, child: const SizedBox()),
         ),
       ),
     );

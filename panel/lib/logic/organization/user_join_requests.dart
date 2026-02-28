@@ -40,7 +40,7 @@ class UserJoinRequest {
 /// Converts a proto UserJoinRequest to a dart UserJoinRequest.
 UserJoinRequest _protoToUserJoinRequest(models.UserJoinRequest proto) {
   return UserJoinRequest(
-    id: proto.id,
+    id: proto.joinRequestId,
     organizationId: proto.organizationId,
     organizationName: proto.organizationName,
     organizationIconUrl: proto.organizationIconUrl,

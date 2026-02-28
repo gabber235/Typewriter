@@ -83,12 +83,14 @@ class Organizations extends _$Organizations {
       "When creating an organization, we didn't have an error but also didn't receive an organization",
     );
 
-    debugPrint("Organization created with ID: ${response.organization.id}");
+    debugPrint(
+      "Organization created with ID: ${response.organization.organizationId}",
+    );
 
     final newOrganization = response.organization;
     state = AsyncValue.data([...state.requireValue, newOrganization]);
 
-    return newOrganization.id;
+    return newOrganization.organizationId;
   }
 }
 
@@ -106,7 +108,7 @@ class Organization extends _$Organization {
       return null;
     }
     final organizations = await ref.watch(organizationsProvider.future);
-    return organizations.firstWhereOrNull((org) => org.id == id);
+    return organizations.firstWhereOrNull((org) => org.organizationId == id);
   }
 
   /// Generates an invite link (join code) for the current organization.

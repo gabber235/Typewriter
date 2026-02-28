@@ -118,7 +118,6 @@ class Auth extends _$Auth {
     await manager.loginAuthorizationCodeFlow();
     ref
       ..invalidateSelf()
-      ..invalidate(isAuthenticatedProvider)
       ..invalidate(accessTokenProvider)
       ..invalidate(authUserInfoProvider)
       ..invalidate(userIdProvider);

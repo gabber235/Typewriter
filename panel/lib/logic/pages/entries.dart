@@ -11,7 +11,6 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
-import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
@@ -22,76 +21,6 @@ import "package:typewriter_panel/widgets/generic/components/title.dart";
 
 part "entries.freezed.dart";
 part "entries.g.dart";
-
-@riverpod
-class PageEntries extends _$PageEntries {
-  @override
-  Future<List<PageEntry>> build(String pageId) async {
-    // TODO: Fetch entries for this page from the backend
-    throw UnimplementedError();
-  }
-
-  void optimisticMoveAll(List<(String, int, int)> changed) {
-    final data = state.requireValue;
-    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
-    final newData = data.map((pageEntry) {
-      if (!map.containsKey(pageEntry.id)) return pageEntry;
-      final (x, y) = map[pageEntry.id]!;
-      return switch (pageEntry) {
-        DefinitionPageEntry() => pageEntry.copyWith.definition.placement(
-          x: x,
-          y: y,
-        ),
-        NoBlueprintPageEntry() => pageEntry.copyWith.placement(x: x, y: y),
-        _ => pageEntry,
-      };
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-
-  void optimisticResizeAll(List<(String, int, int)> changed) {
-    final data = state.requireValue;
-    final map = changed.map((e) => MapEntry(e.$1, (e.$2, e.$3))).toMap();
-    final newData = data.map((pageEntry) {
-      if (!map.containsKey(pageEntry.id)) return pageEntry;
-      final (width, height) = map[pageEntry.id]!;
-      return switch (pageEntry) {
-        DefinitionPageEntry() => pageEntry.copyWith.definition.placement(
-          width: width,
-          height: height,
-        ),
-        NoBlueprintPageEntry() => pageEntry.copyWith.placement(
-          width: width,
-          height: height,
-        ),
-        _ => pageEntry,
-      };
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-
-  Future<void> moveAll(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    optimisticMoveAll(changed);
-
-    // TODO: Add way to debounce request
-
-    // TODO: Make backend call to move all entries in the page
-    throw UnimplementedError();
-  }
-
-  Future<void> resizeAll(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    optimisticResizeAll(changed);
-
-    // TODO: Add way to debounce request
-
-    // TODO: Make backend call to resize all entries in the page
-    throw UnimplementedError();
-  }
-}
 
 @riverpod
 class Entry extends _$Entry {

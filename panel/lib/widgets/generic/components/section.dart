@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class Section extends StatelessWidget {
   const Section({
@@ -15,15 +16,15 @@ class Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color =
+        backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
+
     return Card(
       elevation: 0,
-      color: backgroundColor ??
-          Theme.of(context).colorScheme.surfaceContainerLowest,
+      color: color,
       margin: margin,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: child,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Surface(color: color, child: child),
     );
   }
 }

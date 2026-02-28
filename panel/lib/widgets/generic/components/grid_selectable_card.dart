@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/utils/animation.dart";
+import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 /// A reusable, presentation-only grid card used to display a selectable item
 /// with an optional badge and a title.
@@ -107,7 +108,7 @@ class GridSelectableCard extends StatelessWidget {
         (titleStyle ?? TextStyle(fontSize: 16, fontVariations: [.weight(600)]))
             .copyWith(color: isSelected ? onBase : baseColor);
 
-    return AnimatedContainer(
+    final card = AnimatedContainer(
       duration: animationDuration,
       curve: animationCurve,
       width: width,
@@ -149,6 +150,8 @@ class GridSelectableCard extends StatelessWidget {
         ),
       ),
     ).animate(target: isHovered ? 1 : 0).hoverScale(isHovered);
+
+    return Surface(color: _backgroundColor(), child: card);
   }
 }
 

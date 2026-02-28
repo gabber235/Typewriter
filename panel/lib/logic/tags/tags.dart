@@ -4,6 +4,7 @@ import "package:typewriter_panel/generated/api/tag.pb.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/generated/models/common.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -14,16 +15,18 @@ part "tags.g.dart";
 class Tags extends _$Tags {
   @override
   Stream<List<Tag>> build() async* {
+    final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
-    if (realmId == null) {
+    if (realmId == null || organizationId == null) {
       yield [];
       return;
     }
 
     final request = ListTagsRequest();
     final stream = ref.requestProtoThenListen(
-      subject: "realm.$realmId.tag.list",
-      listenSubject: "realm.$realmId.tag.list",
+      subject: "realm.to.$realmId.organization.$organizationId.tag.list",
+      listenSubject:
+          "realm.from.$realmId.organization.$organizationId.tag.list",
       request: request,
       responseBuilder: ListTagsResponse.new,
     );
@@ -36,7 +39,7 @@ class Tags extends _$Tags {
     }
   }
 
-  Future<Tag?> createTag({
+  Future<Tag> createTag({
     required String name,
     Color? color,
     List<String> parentIds = const [],
@@ -45,8 +48,15 @@ class Tags extends _$Tags {
     int width = 4,
     int height = 1,
   }) async {
+    state.ensureReady();
+    final previousState = state;
+    final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    if (realmId == null) return null;
+    assert(realmId != null, "realmId must not be null when creating a tag");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when creating a tag",
+    );
 
     final placement = Placement()
       ..x = x
@@ -63,113 +73,198 @@ class Tags extends _$Tags {
       request.color = color;
     }
 
-    final response = await ref
-        .read(natsProvider)
-        .requestProto(
-          "realm.$realmId.tag.create",
-          request,
-          CreateTagResponse.new,
-        );
+    try {
+      final response = await ref
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.tag.create",
+            request,
+            CreateTagResponse.new,
+          );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      final current = state.value ?? [];
+      state = AsyncData([...current, response.tag]);
+      return response.tag;
+    } catch (e) {
+      state = previousState;
+      rethrow;
     }
-
-    ref.invalidateSelf();
-    return response.tag;
   }
 
   Future<void> updateTag(Tag tag) async {
+    state.ensureReady();
+    final previousState = state;
+    final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    if (realmId == null) return;
+    assert(realmId != null, "realmId must not be null when updating a tag");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when updating a tag",
+    );
+
+    final current = state.requireValue;
+    state = AsyncData(
+      current.map((t) => t.tagId == tag.tagId ? tag : t).toList(),
+    );
 
     final request = UpdateTagRequest()..tag = tag;
 
-    final response = await ref
-        .read(natsProvider)
-        .requestProto(
-          "realm.$realmId.tag.update",
-          request,
-          UpdateTagResponse.new,
-        );
+    try {
+      final response = await ref
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.tag.update",
+            request,
+            UpdateTagResponse.new,
+          );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+
+      final updated = state.requireValue;
+      state = AsyncData(
+        updated
+            .map((t) => t.tagId == response.tag.tagId ? response.tag : t)
+            .toList(),
+      );
+    } catch (e) {
+      state = previousState;
+      rethrow;
     }
-
-    ref.invalidateSelf();
   }
 
   Future<void> deleteTag(String tagId) async {
+    state.ensureReady();
+    final previousState = state;
+    final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    if (realmId == null) return;
+    assert(realmId != null, "realmId must not be null when deleting a tag");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when deleting a tag",
+    );
 
-    final request = DeleteTagRequest()..id = tagId;
+    final current = state.value ?? [];
+    state = AsyncData(current.where((t) => t.tagId != tagId).toList());
 
-    final response = await ref
-        .read(natsProvider)
-        .requestProto(
-          "realm.$realmId.tag.delete",
-          request,
-          DeleteTagResponse.new,
-        );
+    final request = DeleteTagRequest()..tagId = tagId;
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    try {
+      final response = await ref
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.tag.delete",
+            request,
+            DeleteTagResponse.new,
+          );
+
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+    } catch (e) {
+      state = previousState;
+      rethrow;
     }
-
-    ref.invalidateSelf();
   }
 
   Future<void> moveTag(String tagId, int x, int y) async {
+    state.ensureReady();
+    final previousState = state;
+    final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    if (realmId == null) return;
+    assert(realmId != null, "realmId must not be null when moving a tag");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when moving a tag",
+    );
+
+    final current = state.value ?? [];
+    state = AsyncData(
+      current.map((t) {
+        if (t.tagId != tagId) return t;
+        return t.deepCopy()
+          ..placement = (t.placement.deepCopy()
+            ..x = x
+            ..y = y);
+      }).toList(),
+    );
 
     final request = MoveTagRequest()
-      ..id = tagId
+      ..tagId = tagId
       ..x = x
       ..y = y;
 
-    final response = await ref
-        .read(natsProvider)
-        .requestProto("realm.$realmId.tag.move", request, MoveTagResponse.new);
+    try {
+      final response = await ref
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.tag.move",
+            request,
+            MoveTagResponse.new,
+          );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+    } catch (e) {
+      state = previousState;
+      rethrow;
     }
-
-    ref.invalidateSelf();
   }
 
   Future<void> resizeTag(String tagId, int width, int height) async {
+    state.ensureReady();
+    final previousState = state;
+    final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    if (realmId == null) return;
+    assert(realmId != null, "realmId must not be null when resizing a tag");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when resizing a tag",
+    );
+
+    final current = state.value ?? [];
+    state = AsyncData(
+      current.map((t) {
+        if (t.tagId != tagId) return t;
+        return t.deepCopy()
+          ..placement = (t.placement.deepCopy()
+            ..width = width
+            ..height = height);
+      }).toList(),
+    );
 
     final request = ResizeTagRequest()
-      ..id = tagId
+      ..tagId = tagId
       ..width = width
       ..height = height;
 
-    final response = await ref
-        .read(natsProvider)
-        .requestProto(
-          "realm.$realmId.tag.resize",
-          request,
-          ResizeTagResponse.new,
-        );
+    try {
+      final response = await ref
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.tag.resize",
+            request,
+            ResizeTagResponse.new,
+          );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+      if (response.hasError()) {
+        throw ApiException.fromProto(response.error);
+      }
+    } catch (e) {
+      state = previousState;
+      rethrow;
     }
-
-    ref.invalidateSelf();
   }
 }
 
 @riverpod
-Tag? tag(Ref ref, String tagId) {
-  final tagsAsync = ref.watch(tagsProvider);
-  return tagsAsync.whenOrNull(
-    data: (tags) => tags.firstWhereOrNull((t) => t.id == tagId),
-  );
+Future<Tag?> tag(Ref ref, String tagId) async {
+  final tags = await ref.watch(tagsProvider.future);
+  return tags.firstWhereOrNull((t) => t.tagId == tagId);
 }

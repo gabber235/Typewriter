@@ -5,12 +5,15 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/book.pb.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
+import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/logic/tags/tags.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/book.dart";
@@ -22,10 +25,18 @@ part "books.g.dart";
 class Books extends _$Books {
   @override
   Stream<List<Book>> build() async* {
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (realmId == null || organizationId == null) {
+      yield [];
+      return;
+    }
+
     final request = ListBooksRequest();
     final stream = ref.requestProtoThenListen(
-      subject: "books.list",
-      listenSubject: "books.list",
+      subject: "realm.to.$realmId.organization.$organizationId.book.list",
+      listenSubject:
+          "realm.from.$realmId.organization.$organizationId.book.list",
       request: request,
       responseBuilder: ListBooksResponse.new,
     );
@@ -39,20 +50,71 @@ class Books extends _$Books {
     }
   }
 
+  Future<Book> createBook({
+    required String title,
+    String? icon,
+    Color? color,
+    List<String> tagIds = const [],
+  }) async {
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when creating a book");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when creating a book",
+    );
+
+    final request = CreateBookRequest()
+      ..title = title
+      ..icon = icon ?? "book";
+
+    if (color != null) {
+      request.color = color.toProtoColor();
+    }
+    request.tagIds.addAll(tagIds);
+
+    final response = await ref
+        .read(natsProvider)
+        .requestProto(
+          "realm.to.$realmId.organization.$organizationId.book.create",
+          request,
+          CreateBookResponse.new,
+        );
+
+    if (response.hasError()) {
+      throw ApiException.fromProto(response.error);
+    }
+
+    ref.invalidateSelf();
+    return response.book;
+  }
+
   Future<void> updateBook(Book book) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when updating a book");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when updating a book",
+    );
+
     final currentState = state.value ?? [];
     final optimisticState = currentState
-        .map((b) => b.id == book.id ? book : b)
+        .map((b) => b.bookId == book.bookId ? book : b)
         .toList();
     state = AsyncData(optimisticState);
 
     try {
       final request = UpdateBookRequest()..book = book;
       final response = await ref
-          .watch(natsProvider)
-          .requestProto("books.update", request, UpdateBookResponse.new);
+          .read(natsProvider)
+          .requestProto(
+            "realm.to.$realmId.organization.$organizationId.book.update",
+            request,
+            UpdateBookResponse.new,
+          );
 
       if (response.hasError()) {
         state = AsyncData(currentState);
@@ -75,6 +137,14 @@ class Books extends _$Books {
   ) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when creating a page");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when creating a page",
+    );
+
     final request = CreatePageRequest()
       ..bookId = bookId
       ..name = name
@@ -83,8 +153,12 @@ class Books extends _$Books {
       ..priority = priority;
 
     final response = await ref
-        .watch(natsProvider)
-        .requestProto("pages.create", request, CreatePageResponse.new);
+        .read(natsProvider)
+        .requestProto(
+          "realm.to.$realmId.organization.$organizationId.page.create",
+          request,
+          CreatePageResponse.new,
+        );
 
     if (response.hasError()) {
       throw ApiException.fromProto(response.error);
@@ -99,10 +173,22 @@ class Books extends _$Books {
   Future<void> deletePage(String pageId) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(realmId != null, "realmId must not be null when deleting a page");
+    assert(
+      organizationId != null,
+      "organizationId must not be null when deleting a page",
+    );
+
     final request = DeletePageRequest()..pageId = pageId;
     final response = await ref
-        .watch(natsProvider)
-        .requestProto("pages.delete", request, DeletePageResponse.new);
+        .read(natsProvider)
+        .requestProto(
+          "realm.to.$realmId.organization.$organizationId.page.delete",
+          request,
+          DeletePageResponse.new,
+        );
 
     if (response.hasError()) {
       throw ApiException.fromProto(response.error);
@@ -117,15 +203,26 @@ class Books extends _$Books {
   ) async {
     state.ensureReady();
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    assert(
+      realmId != null,
+      "realmId must not be null when changing page chapters",
+    );
+    assert(
+      organizationId != null,
+      "organizationId must not be null when changing page chapters",
+    );
+
     final request = ChangePagesChaptersRequest()
       ..bookId = bookId
       ..oldChapter = oldChapter
       ..newChapter = newChapter;
 
     final response = await ref
-        .watch(natsProvider)
+        .read(natsProvider)
         .requestProto(
-          "pages.changeChapters",
+          "realm.to.$realmId.organization.$organizationId.pages.chapters",
           request,
           ChangePagesChaptersResponse.new,
         );
@@ -141,12 +238,15 @@ Future<List<Book>> filteredBooks(Ref ref, String query) async {
   final books = await ref.watch(booksProvider.future);
   if (query.isEmpty) return books;
 
+  final tags = await ref.watch(tagsProvider.future);
+
   final lowercaseQuery = query.toLowerCase();
   return books.where((book) {
     if (book.title.toLowerCase().contains(lowercaseQuery)) return true;
-    return book.tags.any(
-      (tag) => tag.name.toLowerCase().contains(lowercaseQuery),
-    );
+    return book.tagIds
+        .map((tagId) => tags.firstWhereOrNull((tag) => tag.tagId == tagId))
+        .nonNulls
+        .any((tag) => tag.name.toLowerCase().contains(lowercaseQuery));
   }).toList();
 }
 
@@ -158,7 +258,7 @@ String? bookId(Ref ref) {
 @riverpod
 Future<Book?> book(Ref ref, String id) async {
   final books = await ref.watch(booksProvider.future);
-  return books.firstWhereOrNull((book) => book.id == id);
+  return books.firstWhereOrNull((book) => book.bookId == id);
 }
 
 /// Extension on Book proto to add utility methods
@@ -237,7 +337,7 @@ class BookSelection extends Selectable<BookIdentifier> {
 
   @override
   Widget? header() => BookHeader(
-    id: book.id,
+    id: book.bookId,
     name: book.title.formatted,
     color: book.flutterColor,
   );

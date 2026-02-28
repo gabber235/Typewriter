@@ -40,7 +40,7 @@ class PagePage extends HookConsumerWidget {
                 PageType.PAGE_TYPE_SEQUENCE ||
                 PageType.PAGE_TYPE_MANIFEST => EntryGraph(
                   pageId: pageId,
-                  direction: page.type.direction!,
+                  graphDirection: page.type.direction!,
                 ),
                 PageType.PAGE_TYPE_SCENE => Text("Scene"),
                 _ => Text("Unknown page type"),

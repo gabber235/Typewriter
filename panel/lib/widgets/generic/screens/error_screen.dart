@@ -68,7 +68,7 @@ class ErrorScreen extends HookWidget {
                     .fadeIn(duration: 300.ms, delay: 100.ms)
                     .slideY(begin: 0.1, end: 0),
                 Text(
-                      message,
+                      "Something went wrong, please report this to the Typewriter discord.",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: context.responsive(
@@ -76,11 +76,26 @@ class ErrorScreen extends HookWidget {
                           tablet: 16,
                           desktop: 20,
                         ),
-                        color: Colors.grey,
+                        color: Colors.white,
                       ),
                     )
                     .animate()
                     .fadeIn(duration: 300.ms, delay: 200.ms)
+                    .slideY(begin: 0.1, end: 0),
+                Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: context.responsive(
+                          mobile: 12,
+                          tablet: 14,
+                          desktop: 18,
+                        ),
+                        color: Colors.grey,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: 300.ms)
                     .slideY(begin: 0.1, end: 0),
               ],
             ),
