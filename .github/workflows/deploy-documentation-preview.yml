@@ -1,6 +1,7 @@
 name: Deploy Documentation Preview
 
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
       - develop
@@ -10,8 +11,6 @@ on:
     types: [opened, reopened, synchronize]
     paths:
       - "documentation/**"
-  workflow_dispatch:
-
 permissions:
   contents: write
   pull-requests: write
