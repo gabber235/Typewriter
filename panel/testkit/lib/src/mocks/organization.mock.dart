@@ -13,7 +13,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 OrganizationData generateRandomOrganization() {
   return OrganizationData()
-    ..id = faker.guid.guid()
+    ..organizationId = faker.guid.guid()
     ..name = faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")
@@ -57,8 +57,9 @@ class OrganizationProviderMock extends Organization {
     await Future<void>.delayed(2500.ms);
     final expiresAt = switch (options.expiration) {
       JoinCodeExpirationNever() => null,
-      JoinCodeExpirationDuration(:final duration) =>
-        DateTime.now().add(duration),
+      JoinCodeExpirationDuration(:final duration) => DateTime.now().add(
+        duration,
+      ),
     };
     return SecretFieldRevealed(
       value: "Roft9n2cgVEypNBanD23",
@@ -78,8 +79,10 @@ List<Override> organizationsProviderOverrides({
 List<Override> organizationProviderOverrides() => [
   organizationProvider.overrideWith(() => OrganizationProviderMock()),
   organizationIdProvider.overrideWith(
-    (ref) =>
-        ref.watch(organizationProvider).whenData((value) => value?.id).value,
+    (ref) => ref
+        .watch(organizationProvider)
+        .whenData((value) => value?.organizationId)
+        .value,
   ),
 ];
 

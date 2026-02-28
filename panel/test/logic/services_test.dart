@@ -12,11 +12,11 @@ void main() {
     final timestamp = Timestamp()
       ..seconds = Int64(lastSeenTime.millisecondsSinceEpoch ~/ 1000);
     final state = ServiceState(status: status, lastSeen: timestamp);
-    return Service(id: "test-id", state: state);
+    return Service(serviceId: "test-id", state: state);
   }
 
   Service createServiceWithoutState() {
-    return Service(id: "test-id");
+    return Service(serviceId: "test-id");
   }
 
   group("ServiceExtension.isOnline", () {
@@ -172,19 +172,19 @@ void main() {
 
   group("ServiceExtension.displayName", () {
     test("returns name when set", () {
-      final service = Service(id: "test-id", name: "My Server");
+      final service = Service(serviceId: "test-id", name: "My Server");
 
       expect(service.displayName, equals("My Server"));
     });
 
     test('returns "Unnamed Service" when name is empty', () {
-      final service = Service(id: "test-id", name: "");
+      final service = Service(serviceId: "test-id", name: "");
 
       expect(service.displayName, equals("Unnamed Service"));
     });
 
     test('returns "Unnamed Service" when name is not set', () {
-      final service = Service(id: "test-id");
+      final service = Service(serviceId: "test-id");
 
       expect(service.displayName, equals("Unnamed Service"));
     });
@@ -193,7 +193,7 @@ void main() {
   group("ServiceExtension.typeLabel", () {
     test('returns "Engine" for engine type', () {
       final service = Service(
-        id: "test-id",
+        serviceId: "test-id",
         serviceTypes: [ServiceType.SERVICE_TYPE_ENGINE],
       );
 
@@ -202,7 +202,7 @@ void main() {
 
     test('returns "Realm" for realm type', () {
       final service = Service(
-        id: "test-id",
+        serviceId: "test-id",
         serviceTypes: [ServiceType.SERVICE_TYPE_REALM],
       );
 
@@ -211,7 +211,7 @@ void main() {
 
     test('returns "Engine & Realm" for both types', () {
       final service = Service(
-        id: "test-id",
+        serviceId: "test-id",
         serviceTypes: [
           ServiceType.SERVICE_TYPE_ENGINE,
           ServiceType.SERVICE_TYPE_REALM,
@@ -222,7 +222,7 @@ void main() {
     });
 
     test('returns "Unknown" for no types', () {
-      final service = Service(id: "test-id");
+      final service = Service(serviceId: "test-id");
 
       expect(service.typeLabel, equals("Unknown"));
     });

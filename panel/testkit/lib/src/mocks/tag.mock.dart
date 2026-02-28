@@ -1,64 +1,49 @@
 import "dart:math" as math;
 
 import "package:faker/faker.dart" hide Color;
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
+import "package:flutter_animate/flutter_animate.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/generated/models/common.pb.dart";
-import "package:typewriter_panel/logic/pages/graph_direction.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/tags/tags.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/color.dart";
-import "package:typewriter_panel/utils/number.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_testkit/src/mocks/graph_layout.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-// ============ TAG GENERATION ============
+const _tagWidth = 4;
+const _tagHeight = 1;
+const _horizontalSpacing = 2;
+const _verticalSpacing = 2;
 
-const _targetTagsPerSubgraph = 10;
-const _minSubgraphCount = 3;
-const _maxSubgraphCount = 8;
 const _probNoParents = 0.2;
 const _probOneParent = 0.85;
 const _recentParentWindow = 5;
 
-/// Generates a list of tags distributed across multiple separate subgraphs.
-/// Each subgraph is completely independent with no edges connecting them.
+/// Generates a batch of tags with proper hierarchical layout using the
+/// Sugiyama algorithm for DAG visualization.
 List<Tag> generateTagBatch(int count) {
   if (count <= 0) return [];
 
-  if (count <= 3) return _generateSubgraph(count);
+  final rawTags = _generateRawTags(count);
+  final layerMap = _calculateLayers(rawTags);
 
-  final subgraphCount = (count / _targetTagsPerSubgraph).ceil().clamp(
-    _minSubgraphCount,
-    _maxSubgraphCount,
+  final maxLayer = layerMap.values.fold(0, math.max);
+  final layers = List.generate(
+    maxLayer + 1,
+    (i) => rawTags.where((t) => layerMap[t.tagId] == i).toList(),
   );
-  final tagsPerSubgraph = count ~/ subgraphCount;
-  final remainder = count % subgraphCount;
+  final orderedLayers = _orderLayersForMinimalCrossing(layers);
 
-  final allTags = <Tag>[];
-
-  for (var g = 0; g < subgraphCount; g++) {
-    final subgraphSize = tagsPerSubgraph + (g < remainder ? 1 : 0);
-    final subgraphTags = _generateSubgraph(subgraphSize);
-    allTags.addAll(subgraphTags);
-  }
-
-  return allTags;
+  return _assignCoordinates(orderedLayers);
 }
 
-/// Generates a single subgraph with the specified number of tags.
-/// Parent selection is limited to tags within this subgraph only.
-/// Parent distribution: 20% roots, 65% single parent, 15% dual parents.
-/// Max 2 parents keeps graph structure manageable for visualization.
-List<Tag> _generateSubgraph(int count) {
-  if (count <= 0) return [];
+List<Tag> _generateRawTags(int count) {
   final tags = <Tag>[];
 
   for (int i = 0; i < count; i++) {
-    final parentRefs = <Tag>[];
+    final parentIds = <String>[];
 
     if (i > 0 && tags.isNotEmpty) {
       final prob = random.decimal();
@@ -74,19 +59,19 @@ List<Tag> _generateSubgraph(int count) {
         final offset = random.integer(recentWindow, min: 0);
         final parentIndex = available.length - 1 - offset;
         final parent = available.removeAt(parentIndex);
-        parentRefs.add(Tag(id: parent.id));
+        parentIds.add(parent.tagId);
       }
     }
 
     tags.add(
       Tag(
-        id: faker.guid.guid(),
+        tagId: faker.guid.guid(),
         name: faker.lorem
             .words(random.integer(3, min: 1))
             .join(" ")
             .snakeCase(),
         color: safeColors.randomElement().toProtoColor(),
-        parents: parentRefs,
+        parentIds: parentIds,
       ),
     );
   }
@@ -94,82 +79,31 @@ List<Tag> _generateSubgraph(int count) {
   return tags;
 }
 
-// ============ TAG LAYOUT ============
-
-/// Groups tags by connected components (parent-child relationships).
-/// Tags that are connected via parent-child edges stay in the same group.
-List<List<Tag>> groupTagsByConnectedComponents(List<Tag> tags) {
-  if (tags.isEmpty) return [];
-
-  final tagMap = {for (final t in tags) t.id: t};
-  final adjacency = <String, Set<String>>{};
-
-  for (final tag in tags) {
-    adjacency.putIfAbsent(tag.id, () => {});
-    for (final parent in tag.parents) {
-      if (tagMap.containsKey(parent.id)) {
-        adjacency[tag.id]!.add(parent.id);
-        adjacency.putIfAbsent(parent.id, () => {}).add(tag.id);
-      }
-    }
-  }
-
-  final visited = <String>{};
-  final components = <List<Tag>>[];
-
-  for (final tag in tags) {
-    if (visited.contains(tag.id)) continue;
-
-    final component = <Tag>[];
-    final queue = [tag.id];
-
-    while (queue.isNotEmpty) {
-      final id = queue.removeAt(0);
-      if (visited.contains(id)) continue;
-      visited.add(id);
-
-      if (tagMap.containsKey(id)) component.add(tagMap[id]!);
-      queue.addAll(adjacency[id]?.where((x) => !visited.contains(x)) ?? []);
-    }
-
-    if (component.isNotEmpty) components.add(component);
-  }
-
-  return components;
-}
-
-/// Organizes tags into layers by depth level
-/// Layer 0 = root tags (no parents), Layer 1 = their children, etc.
-List<List<Tag>> organizeTagsByDepth(List<Tag> tags) {
-  if (tags.isEmpty) return [];
-
-  final tagById = {for (final t in tags) t.id: t};
+Map<String, int> _calculateLayers(List<Tag> tags) {
+  final tagById = {for (final t in tags) t.tagId: t};
   final depthCache = <String, int>{};
 
   int calculateDepth(String tagId, [Set<String>? visiting]) {
     visiting ??= {};
 
-    if (visiting.contains(tagId)) {
-      return 0;
-    }
-
+    if (visiting.contains(tagId)) return 0;
     if (depthCache.containsKey(tagId)) return depthCache[tagId]!;
 
     visiting.add(tagId);
 
     final tag = tagById[tagId];
-    if (tag == null || tag.parents.isEmpty) {
+    if (tag == null || tag.parentIds.isEmpty) {
       depthCache[tagId] = 0;
       visiting.remove(tagId);
       return 0;
     }
 
     var maxParentDepth = -1;
-    for (final parent in tag.parents) {
-      if (tagById.containsKey(parent.id)) {
+    for (final parentId in tag.parentIds) {
+      if (tagById.containsKey(parentId)) {
         maxParentDepth = math.max(
           maxParentDepth,
-          calculateDepth(parent.id, visiting),
+          calculateDepth(parentId, visiting),
         );
       }
     }
@@ -180,62 +114,89 @@ List<List<Tag>> organizeTagsByDepth(List<Tag> tags) {
   }
 
   for (final tag in tags) {
-    calculateDepth(tag.id);
+    calculateDepth(tag.tagId);
   }
 
-  final maxDepth = depthCache.values.fold(0, math.max);
-  return List.generate(
-    maxDepth + 1,
-    (level) => tags.where((t) => depthCache[t.id] == level).toList(),
-  ).where((layer) => layer.isNotEmpty).toList();
+  return depthCache;
 }
 
-/// Apply layout using generic graph layout functions
-List<Tag> applyTagLayout(List<Tag> tags) {
-  if (tags.isEmpty) return tags;
+List<List<Tag>> _orderLayersForMinimalCrossing(List<List<Tag>> layers) {
+  if (layers.isEmpty) return layers;
 
-  final placements = generateDynamicLayout(
-    items: tags,
-    getId: (t) => t.id,
-    organizeIntoLayers: organizeTagsByDepth,
-    groupBy: groupTagsByConnectedComponents,
-    direction: GraphDirection.topToBottom,
-    itemWidth: 3,
-    itemHeight: 1,
-    mainAxisSpacing: 2,
-    crossAxisSpacing: 2,
-  );
+  final positionInLayer = <String, int>{};
 
-  return tags.map((tag) {
-    final p = placements[tag.id];
-    if (p == null) return tag;
-    return Tag(
-      id: tag.id,
-      name: tag.name,
-      color: tag.color,
-      parents: tag.parents,
-      placement: Placement(x: p.x, y: p.y, width: p.width, height: p.height),
-    );
-  }).toList();
-}
-
-// ============ LEGACY HELPERS (for backwards compatibility) ============
-
-Tag? generateRandomTag([double change = 1, double decrease = 0.6]) {
-  if (change <= epsilon) return null;
-  final r = random.decimal();
-  if (r > change) return null;
-  final parents = <Tag>[];
-  while (true) {
-    final parent = generateRandomTag(change * decrease, decrease);
-    if (parent == null) break;
-    parents.add(parent);
+  for (int i = 0; i < layers.first.length; i++) {
+    positionInLayer[layers.first[i].tagId] = i;
   }
+
+  final result = <List<Tag>>[layers.first];
+
+  for (int layerIdx = 1; layerIdx < layers.length; layerIdx++) {
+    final layer = layers[layerIdx].toList();
+
+    layer.sort((a, b) {
+      final aBarycenter = _calculateBarycenter(a, positionInLayer);
+      final bBarycenter = _calculateBarycenter(b, positionInLayer);
+      return aBarycenter.compareTo(bBarycenter);
+    });
+
+    for (int i = 0; i < layer.length; i++) {
+      positionInLayer[layer[i].tagId] = i;
+    }
+
+    result.add(layer);
+  }
+
+  return result;
+}
+
+double _calculateBarycenter(Tag tag, Map<String, int> positionInLayer) {
+  if (tag.parentIds.isEmpty) return 0;
+
+  var sum = 0;
+  var count = 0;
+  for (final parentId in tag.parentIds) {
+    if (positionInLayer.containsKey(parentId)) {
+      sum += positionInLayer[parentId]!;
+      count++;
+    }
+  }
+
+  return count > 0 ? sum / count : 0;
+}
+
+List<Tag> _assignCoordinates(List<List<Tag>> orderedLayers) {
+  final result = <Tag>[];
+
+  for (int layerIdx = 0; layerIdx < orderedLayers.length; layerIdx++) {
+    final layer = orderedLayers[layerIdx];
+    final y = layerIdx * (_tagHeight + _verticalSpacing);
+
+    for (int posIdx = 0; posIdx < layer.length; posIdx++) {
+      final tag = layer[posIdx];
+      final x = posIdx * (_tagWidth + _horizontalSpacing);
+
+      result.add(
+        tag.deepCopy()
+          ..placement = Placement(
+            x: x,
+            y: y,
+            width: _tagWidth,
+            height: _tagHeight,
+          ),
+      );
+    }
+  }
+
+  return result;
+}
+
+/// Generates a random standalone tag with no parent relationships.
+Tag generateRandomTag() {
   return Tag(
-    id: faker.guid.guid(),
+    tagId: faker.guid.guid(),
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
     color: safeColors.randomElement().toProtoColor(),
-    parents: parents,
     placement: Placement(
       x: random.integer(20),
       y: random.integer(10),
@@ -244,34 +205,6 @@ Tag? generateRandomTag([double change = 1, double decrease = 0.6]) {
     ),
   );
 }
-
-Tag ensureRandomTag([double change = 1, double decrease = 0.6]) {
-  var tag = generateRandomTag(change, decrease);
-  while (tag == null) {
-    tag = generateRandomTag(change, decrease);
-  }
-  return tag;
-}
-
-Tag createTagWithId(String id, {String? name, int? colorValue}) {
-  return Tag(
-    id: id,
-    name:
-        name ??
-        faker.lorem.words(random.integer(3, min: 1)).join(" ").snakeCase(),
-    color: colorValue != null
-        ? (Color()..value = colorValue)
-        : safeColors.randomElement().toProtoColor(),
-    placement: Placement(
-      x: random.integer(10),
-      y: random.integer(5),
-      width: random.integer(4, min: 2),
-      height: 1,
-    ),
-  );
-}
-
-// ============ MOCK CLASS ============
 
 class TagsMock extends Tags {
   TagsMock({required this.displayState, this.specificTags});
@@ -287,11 +220,11 @@ class TagsMock extends Tags {
     }
 
     final tags = await displayState.generateBatch(generateTagBatch);
-    yield applyTagLayout(tags);
+    yield tags;
   }
 
   @override
-  Future<Tag?> createTag({
+  Future<Tag> createTag({
     required String name,
     Color? color,
     List<String> parentIds = const [],
@@ -300,35 +233,69 @@ class TagsMock extends Tags {
     int width = 4,
     int height = 1,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future.delayed(500.ms);
     final tags = await future;
-    final newTag = ensureRandomTag();
+
+    final newTag = Tag(
+      tagId: faker.guid.guid(),
+      name: name,
+      color: color ?? safeColors.randomElement().toProtoColor(),
+      parentIds: parentIds,
+      placement: Placement(x: x, y: y, width: width, height: height),
+    );
+
     state = AsyncData([...tags, newTag]);
     return newTag;
   }
 
   @override
   Future<void> updateTag(Tag tag) async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future.delayed(500.ms);
     final tags = await future;
-    state = AsyncData(tags.map((t) => t.id == tag.id ? tag : t).toList());
+    state = AsyncData(tags.map((t) => t.tagId == tag.tagId ? tag : t).toList());
   }
 
   @override
   Future<void> deleteTag(String tagId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future.delayed(500.ms);
     final tags = await future;
-    state = AsyncData(tags.where((t) => t.id != tagId).toList());
+    state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
   }
 
   @override
-  Future<void> moveTag(String tagId, int x, int y) async {}
+  Future<void> moveTag(String tagId, int x, int y) async {
+    final tags = await future;
+    state = AsyncData(
+      tags.map((t) {
+        if (t.tagId != tagId) return t;
+        return t.deepCopy()
+          ..placement = Placement(
+            x: x,
+            y: y,
+            width: t.placement.width,
+            height: t.placement.height,
+          );
+      }).toList(),
+    );
+  }
 
   @override
-  Future<void> resizeTag(String tagId, int width, int height) async {}
+  Future<void> resizeTag(String tagId, int width, int height) async {
+    final tags = await future;
+    state = AsyncData(
+      tags.map((t) {
+        if (t.tagId != tagId) return t;
+        return t.deepCopy()
+          ..placement = Placement(
+            x: t.placement.x,
+            y: t.placement.y,
+            width: width,
+            height: height,
+          );
+      }).toList(),
+    );
+  }
 }
-
-// ============ PROVIDER OVERRIDES ============
 
 List<Override> tagsProviderOverrides({
   DisplayState state = DisplayState.loading,

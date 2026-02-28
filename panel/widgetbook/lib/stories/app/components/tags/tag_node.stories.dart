@@ -1,15 +1,13 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/widgets/app/components/tags/tag_node.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 @widgetbook.UseCase(name: "Default", type: TagNode)
 Widget tagNodeUseCase(BuildContext context) {
-  final previewTag = createTagWithId(
-    "preview-tag",
-    name: "sample_tag",
-    colorValue: Colors.blue.toARGB32(),
-  );
+  final previewTag = generateRandomTag();
 
   return FakeApp(
     overrides: [
@@ -19,7 +17,7 @@ Widget tagNodeUseCase(BuildContext context) {
       child: SizedBox(
         width: 150,
         height: 50,
-        child: TagNode(tagId: "preview-tag"),
+        child: TagNode(tagId: previewTag.tagId),
       ),
     ),
   );
@@ -37,10 +35,10 @@ Widget tagNodeColorsUseCase(BuildContext context) {
   ];
 
   final tags = colors.asMap().entries.map((entry) {
-    return createTagWithId(
-      "tag-${entry.key}",
+    return Tag(
+      tagId: "tag-${entry.key}",
       name: "tag_${entry.key}",
-      colorValue: entry.value.toARGB32(),
+      color: entry.value.toProtoColor(),
     );
   }).toList();
 
@@ -54,7 +52,7 @@ Widget tagNodeColorsUseCase(BuildContext context) {
           return SizedBox(
             width: 120,
             height: 40,
-            child: TagNode(tagId: tag.id),
+            child: TagNode(tagId: tag.tagId),
           );
         }).toList(),
       ),

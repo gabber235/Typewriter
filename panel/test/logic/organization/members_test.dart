@@ -1155,7 +1155,7 @@ void main() {
         (data) {
           final response = member_api.UpdateMemberRolesResponse()
             ..member = (member_models.OrganizationMember()
-              ..id = "m1"
+              ..userId = "m1"
               ..name = "Updated Name"
               ..email = "test@test.com"
               ..avatarUrl = "");

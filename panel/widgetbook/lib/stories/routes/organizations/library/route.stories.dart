@@ -13,6 +13,7 @@ Widget libraryPageUseCase(BuildContext context) {
   return FakeApp(
     overrides: [
       ...booksProviderOverrides(state: displayState),
+      ...tagsProviderOverrides(state: DisplayState.manyItems),
       ...servicesProviderOverrides(state: DisplayState.manyItems),
       ...realmProviderOverrides(),
       ...organizationProviderOverrides(),

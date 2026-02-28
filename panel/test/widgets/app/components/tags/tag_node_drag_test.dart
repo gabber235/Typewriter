@@ -24,7 +24,7 @@ void main() {
 
     testWidgets("TagNode is wrapped in Draggable", (tester) async {
       final tag = Tag()
-        ..id = "test-tag"
+        ..tagId = "test-tag"
         ..name = "Test Tag"
         ..placement = (Placement()
           ..x = 0
@@ -59,7 +59,7 @@ void main() {
       const cell = tagGraphCellSize;
 
       final tag = Tag()
-        ..id = "test-tag"
+        ..tagId = "test-tag"
         ..name = "Test Tag"
         ..placement = (Placement()
           ..x = 2
@@ -119,7 +119,7 @@ void main() {
 
     testWidgets("dragging TagNode shows feedback widget", (tester) async {
       final tag = Tag()
-        ..id = "test-tag"
+        ..tagId = "test-tag"
         ..name = "Test Tag"
         ..placement = (Placement()
           ..x = 0
@@ -162,7 +162,7 @@ void main() {
       tester,
     ) async {
       final tag = Tag()
-        ..id = "test-tag"
+        ..tagId = "test-tag"
         ..name = "Test Tag"
         ..placement = (Placement()
           ..x = 0
@@ -208,7 +208,7 @@ void main() {
       tester,
     ) async {
       final tag = Tag()
-        ..id = "test-tag"
+        ..tagId = "test-tag"
         ..name = "Test Tag"
         ..placement = (Placement()
           ..x = 0

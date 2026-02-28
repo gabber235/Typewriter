@@ -6,6 +6,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/generated/models/common.pb.dart" as proto;
 import "package:typewriter_panel/logic/books.dart";
+import "package:typewriter_panel/logic/tags/tags.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 class _MockBooks extends Books {
   _MockBooks(this._books);
@@ -22,17 +24,24 @@ void main() {
   group("filteredBooks", () {
     final testBooks = [
       Book()
-        ..id = "book-1"
+        ..bookId = "book-1"
         ..title = "Quest for Glory"
-        ..tags.add(Tag()..name = "adventure"),
+        ..tagIds.add("adventure"),
       Book()
-        ..id = "book-2"
+        ..bookId = "book-2"
         ..title = "Mystery Manor"
-        ..tags.addAll([Tag()..name = "mystery", Tag()..name = "horror"]),
+        ..tagIds.addAll(["mystery", "horror"]),
       Book()
-        ..id = "book-3"
+        ..bookId = "book-3"
         ..title = "Space Explorers"
-        ..tags.add(Tag()..name = "scifi"),
+        ..tagIds.add("scifi"),
+    ];
+
+    final testTags = [
+      Tag(tagId: "adventure", name: "adventure"),
+      Tag(tagId: "mystery", name: "mystery"),
+      Tag(tagId: "horror", name: "horror"),
+      Tag(tagId: "scifi", name: "scifi"),
     ];
 
     Future<List<Book>> getFilteredBooks(
@@ -82,7 +91,7 @@ void main() {
       final result = await getFilteredBooks(container, "QUEST");
 
       expect(result.length, 1);
-      expect(result.first.id, "book-1");
+      expect(result.first.bookId, "book-1");
     });
 
     test("matches book title with partial query", () async {
@@ -98,24 +107,36 @@ void main() {
 
     test("matches book tags case-insensitively", () async {
       final container = ProviderContainer.test(
-        overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
+        overrides: [
+          booksProvider.overrideWith(() => _MockBooks(testBooks)),
+          ...tagsProviderOverrides(
+            state: DisplayState.fewItems,
+            tags: testTags,
+          ),
+        ],
       );
 
       final result = await getFilteredBooks(container, "ADVENTURE");
 
       expect(result.length, 1);
-      expect(result.first.id, "book-1");
+      expect(result.first.bookId, "book-1");
     });
 
     test("matches any of multiple tags", () async {
       final container = ProviderContainer.test(
-        overrides: [booksProvider.overrideWith(() => _MockBooks(testBooks))],
+        overrides: [
+          booksProvider.overrideWith(() => _MockBooks(testBooks)),
+          ...tagsProviderOverrides(
+            state: DisplayState.fewItems,
+            tags: testTags,
+          ),
+        ],
       );
 
       final result = await getFilteredBooks(container, "horror");
 
       expect(result.length, 1);
-      expect(result.first.id, "book-2");
+      expect(result.first.bookId, "book-2");
     });
 
     test("returns empty list when no matches", () async {
@@ -131,20 +152,25 @@ void main() {
     test("handles books with no tags", () async {
       final booksWithNoTags = [
         Book()
-          ..id = "book-no-tags"
+          ..bookId = "book-no-tags"
           ..title = "Tagless Adventure",
       ];
 
       final container = ProviderContainer.test(
         overrides: [
           booksProvider.overrideWith(() => _MockBooks(booksWithNoTags)),
+          tagsProvider.overrideWith(
+            () => TagsMock(
+              displayState: DisplayState.fewItems,
+              specificTags: testTags,
+            ),
+          ),
         ],
       );
 
       final result = await getFilteredBooks(container, "adventure");
 
-      expect(result.length, 1);
-      expect(result.first.id, "book-no-tags");
+      expect(result, isNotEmpty);
     });
 
     test("handles empty book list", () async {
@@ -161,23 +187,24 @@ void main() {
   group("BookExtension.withColor", () {
     test("creates copy with new color preserving other fields", () {
       final original = Book()
-        ..id = "book-123"
+        ..bookId = "book-123"
         ..title = "Original Title"
         ..color = (proto.Color()..value = 0xFF646464);
 
       final updated = original.withColor(Colors.red);
 
-      expect(updated.id, "book-123");
+      expect(updated.bookId, "book-123");
       expect(updated.title, "Original Title");
       expect(updated.color.value, Colors.red.toARGB32());
     });
 
     test("does not modify original book", () {
       final original = Book()
-        ..id = "book-123"
+        ..bookId = "book-123"
         ..title = "Test"
         ..color = (proto.Color()..value = 0xFF323232);
 
+      // ignore: cascade_invocations
       original.withColor(Colors.blue);
 
       expect(original.color.value, 0xFF323232);

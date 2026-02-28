@@ -18,10 +18,15 @@ Widget _buildPagePageUseCase(BuildContext context, PageType pageType) {
     initialOption: DisplayState.manyItems,
   );
 
+  final servicesState = context.knobs.displayState(
+    label: "Services State",
+    initialOption: DisplayState.manyItems,
+  );
+
   return FakeApp(
     overrides: [
       ...entryProviderOverrides(),
-      ...pageEntriesProviderOverrides(
+      ...pageElementsProviderOverrides(
         state: entriesState,
         direction: pageType.direction,
       ),
@@ -30,6 +35,8 @@ Widget _buildPagePageUseCase(BuildContext context, PageType pageType) {
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: pagesState),
+      ...servicesProviderOverrides(state: servicesState),
+      ...realmProviderOverrides(),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),

@@ -12,3 +12,5 @@ PRODUCT_BUNDLE_IDENTIFIER = com.example.widgetbook
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+
+DEVELOPMENT_TEAM = 23XK76KXH3

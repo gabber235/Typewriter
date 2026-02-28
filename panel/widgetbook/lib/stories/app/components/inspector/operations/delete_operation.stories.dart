@@ -7,7 +7,6 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/app/components/inspector/operations/operations.stories.dart";
 

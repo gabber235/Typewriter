@@ -127,9 +127,10 @@ void main() {
       final statuses = <Status>[];
       final subscription = mockClient.statusStream.listen(statuses.add);
 
-      mockClient.setStatus(Status.disconnected);
-      mockClient.setStatus(Status.reconnecting);
-      mockClient.setStatus(Status.connected);
+      mockClient
+        ..setStatus(Status.disconnected)
+        ..setStatus(Status.reconnecting)
+        ..setStatus(Status.connected);
 
       await Future<void>.delayed(Duration.zero);
 

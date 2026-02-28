@@ -39,7 +39,7 @@ Service generateRandomService() {
     ..lastSeen = lastSeen.toTimestamp();
 
   return Service()
-    ..id = faker.guid.guid()
+    ..serviceId = faker.guid.guid()
     ..name = faker.lorem
         .words(faker.randomGenerator.integer(3, min: 1))
         .join("_")
@@ -71,7 +71,9 @@ class ServicesMock extends Services {
     final services = await future;
 
     state = AsyncData(
-      services.map((s) => s.id == service.id ? service : s).toList(),
+      services
+          .map((s) => s.serviceId == service.serviceId ? service : s)
+          .toList(),
     );
   }
 
@@ -80,7 +82,7 @@ class ServicesMock extends Services {
     await Future.delayed(const Duration(milliseconds: 100));
     final services = await future;
 
-    state = AsyncData(services.where((s) => s.id != serviceId).toList());
+    state = AsyncData(services.where((s) => s.serviceId != serviceId).toList());
   }
 }
 
@@ -92,7 +94,7 @@ List<Override> realmProviderOverrides() => [
   realmIdProvider.overrideWith(
     (ref) => ref
         .watch(realmsProvider)
-        .whenData((realms) => realms.firstOrNull?.id)
+        .whenData((realms) => realms.firstOrNull?.serviceId)
         .value,
   ),
   selectedRealmProvider.overrideWith((ref) async {

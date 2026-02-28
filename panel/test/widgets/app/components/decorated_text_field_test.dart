@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
@@ -177,6 +178,42 @@ void main() {
       );
 
       expect(done, "xyz");
+    });
+  });
+
+  group("DecoratedTextField - external value changes", () {
+    testWidgets("focus is not lost when text value changes externally", (
+      tester,
+    ) async {
+      final innerFocus = FocusNode(debugLabel: "inner");
+      late ValueNotifier<String> notifier;
+
+      final widget = HookBuilder(
+        builder: (context) {
+          final state = useState("initial");
+          notifier = state;
+          return DecoratedTextField(focusNode: innerFocus, text: state.value);
+        },
+      );
+
+      await tester.pumpTestApp(child: widget);
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      expect(innerFocus.hasPrimaryFocus, isTrue);
+      expect(
+        tester.container().read(currentInteractionModeProvider),
+        isA<InsertMode>(),
+      );
+
+      notifier.value = "updated externally";
+      await tester.pumpAndSettle();
+
+      expect(innerFocus.hasPrimaryFocus, isTrue);
+      expect(
+        tester.container().read(currentInteractionModeProvider),
+        isA<InsertMode>(),
+      );
     });
   });
 }

@@ -8,7 +8,6 @@ import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
-import "package:typewriter_panel/widgets/app/components/inspector/operations/delete_operation.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
 import "package:typewriter_panel/widgets/generic/components/title.dart";
 
@@ -67,7 +66,8 @@ class TestSelectableIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final data = ref.watch(testDataProvider(id)) ??
+    final data =
+        ref.watch(testDataProvider(id)) ??
         DynamicData({...dataBlueprint.defaultValue(), "name": id.formatted});
 
     return AsyncValue.data(
@@ -114,8 +114,8 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
 
   @override
   List<SelectableOperation> get operations => [
-        if (onDelete != null) DeleteSelectableOperation(onDelete: onDelete!),
-      ];
+    if (onDelete != null) DeleteSelectableOperation(onDelete: onDelete!),
+  ];
 
   @override
   int get hashCode => Object.hash(id, objectBlueprint, data, color);

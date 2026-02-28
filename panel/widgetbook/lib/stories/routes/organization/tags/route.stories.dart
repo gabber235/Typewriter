@@ -15,9 +15,11 @@ Widget tagsPageUseCase(BuildContext context) {
 
   return FakeApp(
     overrides: [
+      ...tagsProviderOverrides(state: tagsState),
+      ...servicesProviderOverrides(state: DisplayState.manyItems),
+      ...realmProviderOverrides(),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.fewItems),
-      ...tagsProviderOverrides(state: tagsState),
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],

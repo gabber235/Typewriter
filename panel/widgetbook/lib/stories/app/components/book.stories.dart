@@ -15,35 +15,36 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 Book generateRandomBook() {
   final icon = Fa6Solid.iconsList.randomOrNull();
 
-  final tags = <Tag>[];
-  var chance = 0.9;
-  while (random.decimal() < chance) {
-    chance *= 0.7;
-    final tag = generateRandomTag();
-    if (tag == null) break;
-    tags.add(tag);
-  }
-
-  final title =
-      faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase();
+  final title = faker.lorem
+      .words(random.integer(4, min: 1))
+      .join(" ")
+      .snakeCase();
   return Book()
-    ..id = title
+    ..bookId = title
     ..title = title
     ..icon = icon ?? "book"
-    ..color = safeColors.randomElement().toProtoColor()
-    ..tags.addAll(tags);
+    ..color = safeColors.randomElement().toProtoColor();
 }
 
 @widgetbook.UseCase(name: "Default", type: BookWidget)
 Widget bookUseCase(BuildContext context) {
   final book = generateRandomBook();
+
+  final tags = <Tag>[];
+  var chance = 0.9;
+  while (random.decimal() < chance) {
+    chance *= 0.7;
+    final tag = generateRandomTag();
+    tags.add(tag);
+  }
+
   return FakeApp(
     child: BookWidget(
-      id: book.id,
+      id: book.bookId,
       title: book.title,
       icon: Icones(book.icon),
       color: book.flutterColor,
-      tags: book.tags.toList(),
+      tags: tags,
     ),
   );
 }
