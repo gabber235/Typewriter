@@ -9,3 +9,12 @@ extension FutureExt<T> on Future<T> {
     }, test: (error) => error is ApiException);
   }
 }
+
+extension IterableFutureExt<T> on Iterable<Future<T>> {
+  Future<List<T>> awaitAll({
+    bool eagerError = false,
+    void Function(T)? cleanUp,
+  }) {
+    return Future.wait(this, eagerError: eagerError, cleanUp: cleanUp);
+  }
+}
