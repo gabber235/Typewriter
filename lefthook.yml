@@ -1,0 +1,4 @@
+commit-msg:
+  commands:
+    conventional-commit:
+      run: npx --yes --package @commitlint/cli commitlint --config commitlint.config.cjs --edit {1}

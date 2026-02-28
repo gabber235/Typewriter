@@ -86,3 +86,47 @@ Before you begin, ensure you have the following installed and configured:
 
 *   **Pulumi Errors during `./docker/setup.sh`:** Check the error message. Ensure you ran `pulumi login` and have access to the `seamlezz/development/typewriter` stack. Check your network connection.
 *   **Docker Errors:** Ensure the Docker daemon is running. Check Docker's resource allocation (CPU/memory) if builds fail or containers crash. `docker compose logs <service_name>` can show logs for a specific container (e.g., `docker compose logs marketplace-frontend`).
+
+## Commit Message Convention
+
+This repository enforces Conventional Commits in local hooks and in GitHub Actions.
+
+Use this format:
+
+```text
+type(scope): subject
+```
+
+Valid commit types:
+
+`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+Scopes are auto discovered from the repository structure.
+
+- Top level product scopes like `backend`, `panel`, `engine`, `extensions`, `services`, `proto`, `documentation`, `module-plugin`, `marketplace`, `discord_bot`, `code_generator`
+- Path scopes for selected domains, for example `backend/tests`, `backend/auth`, `services/realm`
+- Operational scopes: `repo`, `ci`, `deps`
+
+Multiple scopes are supported with commas.
+
+```text
+feat(backend/auth,backend/tests): add auth endpoint coverage
+```
+
+Scope requirement policy:
+
+- Scope is required for `feat`, `fix`, `refactor`, `perf`
+- Scope is optional for `docs`, `style`, `test`, `build`, `ci`, `chore`, `revert`
+
+Examples:
+
+- `feat(panel): add route search`
+- `test(backend/tests): add permission integration test`
+- `fix(services/realm): handle empty title`
+- `docs: update setup steps`
+
+Install local commit message checks:
+
+```bash
+npx --yes lefthook install
+```

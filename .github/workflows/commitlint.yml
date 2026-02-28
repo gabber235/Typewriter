@@ -1,0 +1,34 @@
+name: Commitlint
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lint pull request commits
+        if: github.event_name == 'pull_request'
+        run: >-
+          npx --yes --package @commitlint/cli
+          commitlint --config commitlint.config.cjs
+          --from "${{ github.event.pull_request.base.sha }}"
+          --to "${{ github.event.pull_request.head.sha }}" --verbose
+      - name: Lint push commits
+        if: github.event_name == 'push'
+        run: |
+          FROM_SHA="${{ github.event.before }}"
+          if [ "$FROM_SHA" = "0000000000000000000000000000000000000000" ]; then
+            FROM_SHA="$(git rev-list --max-parents=0 HEAD)"
+          fi
+          npx --yes --package @commitlint/cli \
+            commitlint --config commitlint.config.cjs \
+            --from "$FROM_SHA" \
+            --to "${{ github.sha }}" --verbose
