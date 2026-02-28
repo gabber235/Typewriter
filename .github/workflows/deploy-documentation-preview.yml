@@ -70,6 +70,21 @@ jobs:
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
           commit_message: "docs: deploy preview for ${{ steps.path.outputs.deploy_path }}"
 
+      - name: Job summary
+        run: |
+          DEPLOY_URL="https://docs.typewritermc.com/${{ steps.path.outputs.deploy_path }}/"
+          echo "## :book: Documentation Preview Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Detail | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch/PR** | \`${{ steps.path.outputs.deploy_path }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Base path** | \`${{ steps.path.outputs.base_path }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Preview URL** | ${DEPLOY_URL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trigger** | \`${{ github.event_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo ":link: **[Open preview](${DEPLOY_URL})**" >> $GITHUB_STEP_SUMMARY
+
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7

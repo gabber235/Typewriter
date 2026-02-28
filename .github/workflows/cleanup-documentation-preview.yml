@@ -46,6 +46,7 @@ jobs:
           fetch-depth: 1
 
       - name: Remove preview directory
+        id: remove
         if: steps.path.outputs.skip != 'true'
         run: |
           TARGET_DIR="${{ steps.path.outputs.cleanup_path }}"
@@ -55,7 +56,24 @@ jobs:
             git rm -rf "${TARGET_DIR}"
             git commit -m "docs: cleanup preview for ${TARGET_DIR}"
             git push origin gh-pages
+            echo "removed=true" >> "$GITHUB_OUTPUT"
             echo "Removed ${TARGET_DIR}"
           else
+            echo "removed=false" >> "$GITHUB_OUTPUT"
             echo "Directory ${TARGET_DIR} does not exist, nothing to clean up"
+          fi
+
+      - name: Job summary
+        if: steps.path.outputs.skip != 'true'
+        run: |
+          echo "## :broom: Documentation Preview Cleanup" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Detail | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Path** | \`${{ steps.path.outputs.cleanup_path }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trigger** | \`${{ github.event_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.remove.outputs.removed }}" == "true" ]]; then
+            echo "| **Result** | :white_check_mark: Removed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| **Result** | :information_source: Directory did not exist (already clean) |" >> $GITHUB_STEP_SUMMARY
           fi
