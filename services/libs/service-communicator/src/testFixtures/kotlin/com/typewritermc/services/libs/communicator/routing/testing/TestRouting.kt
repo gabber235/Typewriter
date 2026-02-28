@@ -4,6 +4,7 @@ import com.typewritermc.services.libs.communicator.interfaces.Message
 import com.typewritermc.services.libs.communicator.routing.NatsContext
 import com.typewritermc.services.libs.communicator.routing.NatsRouting
 import com.typewritermc.services.libs.communicator.routing.SubjectParams
+import io.opentelemetry.api.trace.Span
 import protokt.v1.AbstractDeserializer
 import protokt.v1.AbstractMessage
 import java.io.ByteArrayInputStream
@@ -13,7 +14,8 @@ import kotlin.time.Duration
 class TestNatsContext(
     override val message: Message,
     override val params: SubjectParams,
-    private val mockBus: MockMessageBus
+    private val mockBus: MockMessageBus,
+    override val span: Span = Span.getInvalid()
 ) : NatsContext {
     private val _replies = mutableListOf<ByteArray>()
     private val _sent = mutableListOf<Pair<String, ByteArray>>()

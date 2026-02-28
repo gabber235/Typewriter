@@ -5,6 +5,8 @@ koin-bom = "4.2.0-beta2"
 kotlin-logging = "7.0.4"
 logback = "1.5.23"
 mordant = "3.0.2"
+opentelemetry = "1.58.0"
+opentelemetry-semconv = "1.39.0"
 
 protokt = "1.0.0-beta.8"
 protobuf-java = "4.33.2"
@@ -52,6 +54,14 @@ kotlin-serialize-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-
 
 kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
+
+opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
+opentelemetry-api = { module = "io.opentelemetry:opentelemetry-api" }
+opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
+opentelemetry-kotlin = { module = "io.opentelemetry:opentelemetry-extension-kotlin" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
+opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
+opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semconv", version.ref = "opentelemetry-semconv" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

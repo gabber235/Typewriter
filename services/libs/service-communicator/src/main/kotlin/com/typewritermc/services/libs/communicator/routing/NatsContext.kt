@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.routing
 
 import com.typewritermc.services.libs.communicator.interfaces.Message
+import io.opentelemetry.api.trace.Span
 import protokt.v1.AbstractDeserializer
 import protokt.v1.AbstractMessage
 import kotlin.time.Duration
@@ -9,6 +10,7 @@ import kotlin.time.Duration.Companion.seconds
 interface NatsContext {
     val message: Message
     val params: SubjectParams
+    val span: Span
 
     suspend fun reply(data: ByteArray)
 

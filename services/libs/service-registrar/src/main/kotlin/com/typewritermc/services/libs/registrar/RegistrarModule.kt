@@ -1,12 +1,7 @@
 package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.CommunicatorQualifier.*
-import com.typewritermc.services.libs.communicator.JwtProvider
-import com.typewritermc.services.libs.communicator.interfaces.HttpClient
-import com.typewritermc.services.libs.communicator.interfaces.MessageBus
-import com.typewritermc.services.libs.communicator.interfaces.Reconnector
-import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
-import com.typewritermc.services.libs.communicator.interfaces.SimpleHttpClient
+import com.typewritermc.services.libs.communicator.interfaces.*
 import com.typewritermc.services.libs.registrar.RegistrarQualifier.*
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
@@ -37,9 +32,11 @@ val SERVICE_REGISTRAR_MODULE = module {
             registrationClientProvider = get(named(REGISTRATION_CLIENT)),
             reconnectorProvider = get(named(RECONNECTOR)),
             registrationStateProvider = get<StateProvider<RegistrationState>>(),
-            coroutineScope = get<CoroutineScope>()
+            coroutineScope = get<CoroutineScope>(),
+            tracer = get()
         )
     } onClose { it?.let { registrar -> runBlocking { registrar.shutdown() } } }
+
 
     single<HttpClient> { SimpleHttpClient() }
 
@@ -47,7 +44,8 @@ val SERVICE_REGISTRAR_MODULE = module {
         BackendCredentialIssuer(
             httpClient = get(),
             serviceIssueUrl = get(named(SERVICE_ISSUE_URL)),
-            servicesInfo = get()
+            servicesInfo = get(),
+            tracer = get()
         )
     }
 
@@ -56,7 +54,8 @@ val SERVICE_REGISTRAR_MODULE = module {
             httpClient = get(),
             tokenEndpoint = get(named(JWT_TOKEN_ENDPOINT)),
             clientId = get(named(JWT_CLIENT_ID)),
-            scopes = get(named(JWT_SCOPES))
+            scopes = get(named(JWT_SCOPES)),
+            tracer = get()
         )
     }
 

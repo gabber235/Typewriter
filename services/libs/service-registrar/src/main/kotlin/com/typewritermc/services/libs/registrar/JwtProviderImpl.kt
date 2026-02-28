@@ -29,8 +29,6 @@ class JwtProviderImpl(
         val credential = credentialProvider()
             ?: throw JwtProvisionException("Credentials not initialized. ServiceRegistrar.initialize() must be called first.")
 
-        logger.debug { "Exchanging credential for JWT: ${credential.name}" }
-
         return try {
             val response = jwtExchanger.exchangeForJwt(credential)
             TokenInfo(

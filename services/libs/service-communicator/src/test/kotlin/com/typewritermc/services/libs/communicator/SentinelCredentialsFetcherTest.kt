@@ -9,11 +9,28 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.Tracer
 import protokt.v1.typewriter.api.v1.GetSentinelCredentialsResponse
 import protokt.v1.typewriter.api.v1.SentinelCredentials as ProtoSentinelCredentials
 import protokt.v1.typewriter.models.v1.Error
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+
+private fun createMockTracer(): Tracer {
+    val span = mockk<Span>(relaxed = true)
+    val spanBuilder = mockk<SpanBuilder>(relaxed = true) {
+        every { setParent(any()) } returns this
+        every { setSpanKind(any()) } returns this
+        every { setAttribute(any<String>(), any<String>()) } returns this
+        every { setAttribute(any<String>(), any<Long>()) } returns this
+        every { startSpan() } returns span
+    }
+    return mockk<Tracer>(relaxed = true) {
+        every { spanBuilder(any()) } returns spanBuilder
+    }
+}
 
 class SentinelCredentialsFetcherTest : FunSpec({
 
@@ -38,7 +55,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
             val result = fetcher.fetchCredentials()
 
             result.jwt shouldBe "sentinel-jwt-token"
@@ -63,7 +80,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
             fetcher.fetchCredentials()
 
             headersSlot.captured["Accept"] shouldBe "application/x-protobuf"
@@ -87,7 +104,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
             fetcher.fetchCredentials()
 
             urlSlot.captured shouldBe sentinelUrl
@@ -104,7 +121,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream("Service unavailable".toByteArray())
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
 
             val exception = shouldThrow<SentinelCredentialsException> {
                 fetcher.fetchCredentials()
@@ -129,7 +146,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
 
             val exception = shouldThrow<SentinelCredentialsException> {
                 fetcher.fetchCredentials()
@@ -147,7 +164,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream("not valid protobuf".toByteArray())
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
 
             val exception = shouldThrow<SentinelCredentialsException> {
                 fetcher.fetchCredentials()
@@ -174,7 +191,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 )
             }
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
 
             val exception = shouldThrow<SentinelCredentialsException> {
                 fetcher.fetchCredentials()
@@ -188,7 +205,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
 
             every { httpClient.get(any(), any()) } throws RuntimeException("Connection refused")
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
 
             val exception = shouldThrow<SentinelCredentialsException> {
                 fetcher.fetchCredentials()
@@ -219,7 +236,7 @@ class SentinelCredentialsFetcherTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl)
+            val fetcher = SentinelCredentialsFetcher(httpClient, sentinelUrl, createMockTracer())
             val result = fetcher.fetchCredentials()
 
             result.jwt shouldBe longJwt

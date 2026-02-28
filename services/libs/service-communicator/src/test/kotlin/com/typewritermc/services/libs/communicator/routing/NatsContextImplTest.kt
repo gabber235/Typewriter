@@ -6,6 +6,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.*
+import io.opentelemetry.api.trace.Span
 import protokt.v1.typewriter.api.v1.GetServiceStatusRequest
 import protokt.v1.typewriter.api.v1.GetServiceStatusResponse
 import protokt.v1.typewriter.api.v1.ServiceStatus
@@ -16,6 +17,8 @@ import kotlin.time.Duration.Companion.seconds
 
 class NatsContextImplTest : FunSpec({
 
+    fun createMockSpan(): Span = mockk(relaxed = true)
+
     context("reply") {
         test("publishes to replyTo subject when present") {
             val messageBus = mockk<MessageBus>()
@@ -24,7 +27,7 @@ class NatsContextImplTest : FunSpec({
                 data = byteArrayOf(1, 2, 3),
                 replyTo = "inbox.reply.123"
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
             val responseData = "response".toByteArray()
 
             coEvery { messageBus.publish(any(), any()) } returns Unit
@@ -41,7 +44,7 @@ class NatsContextImplTest : FunSpec({
                 data = byteArrayOf(1, 2, 3),
                 replyTo = null
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             context.reply("response".toByteArray())
 
@@ -53,7 +56,7 @@ class NatsContextImplTest : FunSpec({
         test("publishes to specified subject") {
             val messageBus = mockk<MessageBus>()
             val message = Message(subject = "original", data = null, replyTo = null)
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
             val data = "notification".toByteArray()
 
             coEvery { messageBus.publish(any(), any()) } returns Unit
@@ -68,7 +71,7 @@ class NatsContextImplTest : FunSpec({
         test("forwards request to messageBus with correct timeout") {
             val messageBus = mockk<MessageBus>()
             val message = Message(subject = "original", data = null, replyTo = null)
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
             val requestData = "query".toByteArray()
             val responseMessage = Message(subject = "response", data = "result".toByteArray(), replyTo = null)
 
@@ -90,7 +93,7 @@ class NatsContextImplTest : FunSpec({
                 data = "data".toByteArray(),
                 replyTo = "reply.to"
             )
-            val context = NatsContextImpl(originalMessage, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(originalMessage, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             context.message shouldBe originalMessage
         }
@@ -99,7 +102,7 @@ class NatsContextImplTest : FunSpec({
             val messageBus = mockk<MessageBus>()
             val params = SubjectParams(mapOf("id" to "123"))
             val message = Message(subject = "test", data = null, replyTo = null)
-            val context = NatsContextImpl(message, params, messageBus)
+            val context = NatsContextImpl(message, params, messageBus, createMockSpan())
 
             context.params.require("id") shouldBe "123"
         }
@@ -115,7 +118,7 @@ class NatsContextImplTest : FunSpec({
                 data = serializedData,
                 replyTo = null
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             val received = context.receive(GetServiceStatusRequest)
 
@@ -129,7 +132,7 @@ class NatsContextImplTest : FunSpec({
                 data = null,
                 replyTo = null
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             shouldThrow<IllegalStateException> {
                 context.receive(GetServiceStatusRequest)
@@ -143,7 +146,7 @@ class NatsContextImplTest : FunSpec({
                 data = byteArrayOf(),
                 replyTo = null
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             val received = context.receive(GetServiceStatusRequest)
 
@@ -157,7 +160,7 @@ class NatsContextImplTest : FunSpec({
                 data = byteArrayOf(0x7F, 0x45, 0x4C, 0x46),
                 replyTo = null
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             shouldThrow<Exception> {
                 context.receive(GetServiceStatusRequest)
@@ -173,7 +176,7 @@ class NatsContextImplTest : FunSpec({
                 data = byteArrayOf(),
                 replyTo = "inbox.reply.123"
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
             val unboundStatus = ServiceStatus {
                 binding = ServiceStatus.Binding.Unbound(UnboundStatus {
                     registrationToken = "token123"
@@ -200,7 +203,7 @@ class NatsContextImplTest : FunSpec({
                 data = byteArrayOf(),
                 replyTo = null
             )
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
             val response = GetServiceStatusResponse {}
 
             context.reply(response)
@@ -213,7 +216,7 @@ class NatsContextImplTest : FunSpec({
         test("serializes and sends protobuf message to subject") {
             val messageBus = mockk<MessageBus>()
             val message = Message(subject = "original", data = null, replyTo = null)
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
             val notification = GetServiceStatusRequest {}
             val expectedBytes = ByteArrayOutputStream().also { notification.serialize(it) }.toByteArray()
 
@@ -231,7 +234,7 @@ class NatsContextImplTest : FunSpec({
         test("serializes request and deserializes response") {
             val messageBus = mockk<MessageBus>()
             val message = Message(subject = "original", data = null, replyTo = null)
-            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus)
+            val context = NatsContextImpl(message, SubjectParams(emptyMap()), messageBus, createMockSpan())
 
             val request = GetServiceStatusRequest {}
             val requestBytes = ByteArrayOutputStream().also { request.serialize(it) }.toByteArray()

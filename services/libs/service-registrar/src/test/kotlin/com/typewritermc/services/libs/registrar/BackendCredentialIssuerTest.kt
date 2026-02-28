@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.HttpResponse
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -39,8 +40,10 @@ class BackendCredentialIssuerTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val servicesInfo =
+                ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0.0"), engine = null)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
             val credential = issuer.issueCredential()
 
             credential.id shouldBe "svc-123"
@@ -68,7 +71,8 @@ class BackendCredentialIssuerTest : FunSpec({
             )
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
             issuer.issueCredential()
 
             headersSlot.captured["Content-Type"] shouldBe "application/x-protobuf"
@@ -94,7 +98,8 @@ class BackendCredentialIssuerTest : FunSpec({
             )
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
             issuer.issueCredential()
 
             urlSlot.captured shouldBe serviceIssueUrl
@@ -112,7 +117,8 @@ class BackendCredentialIssuerTest : FunSpec({
             )
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<IssueException> {
                 issuer.issueCredential()
@@ -138,7 +144,8 @@ class BackendCredentialIssuerTest : FunSpec({
             )
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<IssueException> {
                 issuer.issueCredential()
@@ -157,7 +164,8 @@ class BackendCredentialIssuerTest : FunSpec({
             )
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<IssueException> {
                 issuer.issueCredential()
@@ -185,7 +193,8 @@ class BackendCredentialIssuerTest : FunSpec({
             }
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<IssueException> {
                 issuer.issueCredential()
@@ -198,7 +207,8 @@ class BackendCredentialIssuerTest : FunSpec({
             every { httpClient.post(any(), any(), any()) } throws RuntimeException("Connection refused")
 
             val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "1.0"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<IssueException> {
                 issuer.issueCredential()
@@ -230,8 +240,10 @@ class BackendCredentialIssuerTest : FunSpec({
                 body = ByteArrayInputStream(responseBytes)
             )
 
-            val servicesInfo = ServicesInfo(realm = ServiceInformation.RealmInformation(version = "2.5.3"), engine = null)
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val servicesInfo =
+                ServicesInfo(realm = ServiceInformation.RealmInformation(version = "2.5.3"), engine = null)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
             issuer.issueCredential()
 
             bodySlot.captured.isNotEmpty() shouldBe true
@@ -259,7 +271,8 @@ class BackendCredentialIssuerTest : FunSpec({
                 realm = ServiceInformation.RealmInformation(version = "1.0.0"),
                 engine = ServiceInformation.EngineInformation(version = "2.0.0", platform = "paper")
             )
-            val issuer = BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo)
+            val issuer =
+                BackendCredentialIssuer(httpClient, serviceIssueUrl, servicesInfo, MockTelemetry.createMockTracer())
             val credential = issuer.issueCredential()
 
             credential.id shouldBe "combined-svc"

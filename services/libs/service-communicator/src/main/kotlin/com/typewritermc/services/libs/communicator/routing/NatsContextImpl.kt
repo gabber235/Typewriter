@@ -3,6 +3,7 @@ package com.typewritermc.services.libs.communicator.routing
 import com.typewritermc.services.libs.communicator.interfaces.Message
 import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.trace.Span
 import protokt.v1.AbstractDeserializer
 import protokt.v1.AbstractMessage
 import java.io.ByteArrayInputStream
@@ -14,13 +15,15 @@ private val logger = KotlinLogging.logger {}
 class NatsContextImpl(
     override val message: Message,
     override val params: SubjectParams,
-    private val messageBus: MessageBus
+    private val messageBus: MessageBus,
+    override val span: Span
 ) : NatsContext {
 
     override suspend fun reply(data: ByteArray) {
         val replyTo = message.replyTo
         if (replyTo == null) {
-            logger.warn { "Cannot reply: no replyTo subject in message for ${message.subject}" }
+            span.addEvent("reply_failed_no_replyTo")
+            span.setAttribute("error.reason", "no replyTo subject")
             return
         }
         messageBus.publish(replyTo, data)

@@ -1,6 +1,6 @@
 package com.typewritermc.services.libs.communicator.routing
 
-class SubjectPattern(private val pattern: String) {
+class SubjectPattern(val pattern: String) {
     private val paramRegex = Regex("""\{([^}]+)\}""")
 
     private val paramNames: List<String> = paramRegex.findAll(pattern)

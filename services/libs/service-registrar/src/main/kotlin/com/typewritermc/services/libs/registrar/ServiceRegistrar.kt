@@ -2,17 +2,16 @@ package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.JwtProvider
 import com.typewritermc.services.libs.communicator.NatsCommunicator
-import com.typewritermc.services.libs.communicator.interfaces.MessageBus
-import com.typewritermc.services.libs.communicator.interfaces.NatsMessageBus
-import com.typewritermc.services.libs.communicator.interfaces.NatsRegistrationClient
-import com.typewritermc.services.libs.communicator.interfaces.Reconnector
-import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.communicator.interfaces.*
+import com.typewritermc.services.libs.telemetry.withSuspendSpan
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import com.typewritermc.services.libs.utils.awaitNonNull
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.api.NatsClient
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.CoroutineScope
 
 class ServiceRegistrar(
@@ -28,114 +27,118 @@ class ServiceRegistrar(
     private val reconnectorProvider: DeferredProvider<Reconnector>,
     private val registrationStateProvider: StateProvider<RegistrationState>,
     private val coroutineScope: CoroutineScope,
+    private val tracer: Tracer,
 ) {
     private val logger: KLogger = logger {}
 
     private var credential: Credential? = null
     private var heartbeatSender: HeartbeatSender? = null
 
-    suspend fun initialize() {
-        logger.info { "Initializing service registrar" }
+    suspend fun initialize() = tracer.withSuspendSpan("registrar.initialize") { s ->
+        s.addEvent("loading_credentials")
 
         var cred = credentialStorage.credential()
         if (cred == null) {
-            logger.info { "No credentials found, generating new credentials" }
+            s.addEvent("credentials_missing")
+            s.addEvent("issuing_credential")
             cred = credentialIssuer.issueCredential()
 
             credentialStorage.storeCredential(cred)
-            logger.info { "New credentials generated: $cred" }
-        } else {
-            logger.debug { "Found credentials: $cred" }
+            s.setAttribute("credentials.generated", true)
         }
 
         this.credential = cred
         credentialProvider.set(cred)
 
+        s.addEvent("registering_jwt_provider")
         registerJwtProvider()
-        setupNatsConnection()
+        s.addEvent("connecting_nats")
+        setupNatsConnection(s)
+        s.addEvent("registering_interface_bindings")
         registerInterfaceBindings()
 
         val registrationClient = registrationClientProvider.get()
         val reconnector = reconnectorProvider.get()
+        s.addEvent("checking_registration")
         val registrationProtocol = RegistrationProtocol(
-            registrationClient, cred, reconnector, registrationStateProvider
+            registrationClient, cred, reconnector, registrationStateProvider, tracer
         )
         val state = registrationProtocol.checkAndRegister()
         when (state) {
             is RegistrationState.Bound -> {
-                logger.info { "Service bound to organization: ${state.organizationName}" }
+                s.addEvent("registration_bound")
+                s.setAttribute("organization.id", state.organizationId)
+                s.setAttribute("organization.name", state.organizationName)
+                s.addEvent("starting_heartbeat")
                 startHeartbeat(cred.id, registrationClient)
             }
 
             is RegistrationState.Failed -> {
                 logger.error { "Registration failed: ${state.message}" }
+                s.setStatus(StatusCode.ERROR, "Registration failed: ${state.message}")
                 throw IllegalStateException("Registration failed: ${state.message}")
             }
 
             else -> {
+                s.setStatus(StatusCode.ERROR, "Unexpected registration state: $state")
                 throw IllegalStateException("Unexpected registration state: $state")
             }
         }
 
-        logger.info { "Service registrar initialized" }
+        s.setStatus(StatusCode.OK)
     }
 
     private fun registerJwtProvider() {
-        logger.debug { "Registering JwtProvider implementation" }
-
         val jwtProvider = JwtProviderImpl(
             credentialProvider = { credential },
             jwtExchanger = jwtExchanger
         )
 
         jwtProviderHolder.set(jwtProvider)
-        logger.debug { "JwtProvider registered" }
     }
 
-    private suspend fun setupNatsConnection() {
-        logger.info { "Setting up NATS connection" }
+    private suspend fun setupNatsConnection(s: io.opentelemetry.api.trace.Span) {
+        s.addEvent("nats_connecting")
         communicator.connect()
-        logger.info { "NATS connection established" }
+        s.addEvent("nats_connected")
     }
 
     private suspend fun registerInterfaceBindings() {
-        logger.debug { "Registering interface bindings" }
-
         natsClientProvider.awaitNonNull()
         val messageBus = NatsMessageBus(natsClientProvider)
         messageBusProvider.trySet(messageBus)
 
-        val registrationClient = NatsRegistrationClient(messageBus)
+        val registrationClient = NatsRegistrationClient(messageBus, tracer)
         registrationClientProvider.trySet(registrationClient)
 
         reconnectorProvider.trySet(communicator)
-
-        logger.debug { "Interface bindings registered" }
     }
 
-    suspend fun shutdown() {
-        logger.info { "Shutting down service registrar" }
-
+    suspend fun shutdown() = tracer.withSuspendSpan("registrar.shutdown") { s ->
         val cred = credential
         if (cred != null) {
             try {
                 val registrationClient = registrationClientProvider.get()
+                s.addEvent("sending_shutdown_notification")
                 registrationClient.sendShutdown(cred.id)
-                logger.info { "Shutdown notification sent for service: ${cred.id}" }
+                s.addEvent("shutdown_notification_sent")
             } catch (e: Exception) {
+                s.recordException(e)
                 logger.warn(e) { "Failed to send shutdown notification" }
             }
         }
 
+        s.addEvent("stopping_heartbeat")
         heartbeatSender?.stop()
-        logger.info { "Service registrar shut down" }
+        s.setStatus(StatusCode.OK)
     }
 
     private fun startHeartbeat(serviceId: String, registrationClient: RegistrationClient) {
         heartbeatSender = HeartbeatSender(
             serviceId = serviceId,
             registrationClient = registrationClient,
-            scope = coroutineScope
+            scope = coroutineScope,
+            tracer = tracer
         )
         heartbeatSender?.start()
     }

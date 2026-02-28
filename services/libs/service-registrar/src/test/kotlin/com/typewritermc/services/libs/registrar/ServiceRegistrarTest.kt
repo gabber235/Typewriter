@@ -6,12 +6,15 @@ import com.typewritermc.services.libs.communicator.interfaces.MessageBus
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.ServiceStatusResult
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import io.natskt.api.NatsClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -57,7 +60,7 @@ class ServiceRegistrarTest : FunSpec({
 
             coEvery { credentialStorage.credential() } returns null
             coEvery { credentialIssuer.issueCredential() } returns newCredential
-            coEvery { credentialStorage.storeCredential(newCredential) } just Runs
+            coEvery { credentialStorage.storeCredential(newCredential) } returns Unit
 
             val credentialProvider = DeferredProvider<Credential>()
             val registrar = createServiceRegistrar(
@@ -172,7 +175,7 @@ class ServiceRegistrarTest : FunSpec({
                 organizationId = "org-id",
                 organizationName = "Test Org"
             )
-            coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
+            coEvery { mockRegistrationClient.sendHeartbeat(any()) } returns Unit
 
             val registrationClientProvider = DeferredProvider<RegistrationClient>()
             registrationClientProvider.set(mockRegistrationClient)
@@ -202,8 +205,8 @@ class ServiceRegistrarTest : FunSpec({
                 organizationId = "org-id",
                 organizationName = "Test Org"
             )
-            coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
-            coEvery { mockRegistrationClient.sendShutdown(any()) } just Runs
+            coEvery { mockRegistrationClient.sendHeartbeat(any()) } returns Unit
+            coEvery { mockRegistrationClient.sendShutdown(any()) } returns Unit
 
             val registrationClientProvider = DeferredProvider<RegistrationClient>()
             registrationClientProvider.set(mockRegistrationClient)
@@ -243,8 +246,8 @@ class ServiceRegistrarTest : FunSpec({
                 organizationId = "org-id",
                 organizationName = "Test Org"
             )
-            coEvery { mockRegistrationClient.sendHeartbeat(any()) } just Runs
-            coEvery { mockRegistrationClient.sendShutdown(any()) } just Runs
+            coEvery { mockRegistrationClient.sendHeartbeat(any()) } returns Unit
+            coEvery { mockRegistrationClient.sendShutdown(any()) } returns Unit
 
             val registrationClientProvider = DeferredProvider<RegistrationClient>()
             registrationClientProvider.set(mockRegistrationClient)
@@ -286,7 +289,8 @@ private fun createServiceRegistrar(
     reconnectorProvider: DeferredProvider<Reconnector>? = null,
     registrationStateProvider: StateProvider<RegistrationState>? = null,
     coroutineScope: CoroutineScope? = null,
-    preSetRegistrationClient: Boolean = true
+    preSetRegistrationClient: Boolean = true,
+    tracer: io.opentelemetry.api.trace.Tracer = MockTelemetry.createMockTracer()
 ): ServiceRegistrar {
     val storedCredential = Credential(id = "default-id", name = "default", token = "token")
 
@@ -301,25 +305,25 @@ private fun createServiceRegistrar(
     val natsProvider = natsClientProvider ?: StateProvider<NatsClient?>(natsClient)
 
     val comm = communicator ?: mockk<NatsCommunicator>().also {
-        coEvery { it.connect() } just Runs
+        coEvery { it.connect() } returns Unit
     }
 
     val credProvider = credentialProvider ?: DeferredProvider()
     val jwtHolder = jwtProviderHolder ?: DeferredProvider()
     val msgBusProvider = messageBusProvider ?: DeferredProvider()
 
-    val regClientProvider = registrationClientProvider ?: DeferredProvider<RegistrationClient>()
+    val regClientProvider = registrationClientProvider ?: DeferredProvider()
     if (preSetRegistrationClient && !regClientProvider.isSet) {
         val mockRegClient = mockk<RegistrationClient>()
         coEvery { mockRegClient.queryServiceStatus(any()) } returns ServiceStatusResult.Bound(
             organizationId = "org-id",
             organizationName = "Test Organization"
         )
-        coEvery { mockRegClient.sendHeartbeat(any()) } just Runs
+        coEvery { mockRegClient.sendHeartbeat(any()) } returns Unit
         regClientProvider.set(mockRegClient)
     }
 
-    val reconProvider = reconnectorProvider ?: DeferredProvider<Reconnector>()
+    val reconProvider = reconnectorProvider ?: DeferredProvider()
     if (preSetRegistrationClient && !reconProvider.isSet) {
         reconProvider.set(mockk())
     }
@@ -341,6 +345,7 @@ private fun createServiceRegistrar(
         registrationClientProvider = regClientProvider,
         reconnectorProvider = reconProvider,
         registrationStateProvider = stateProvider,
-        coroutineScope = scope
+        coroutineScope = scope,
+        tracer = tracer
     )
 }

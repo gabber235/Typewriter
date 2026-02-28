@@ -6,9 +6,13 @@ import com.github.ajalt.mordant.rendering.TextStyles.bold
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.ServiceStatusResult
+import com.typewritermc.services.libs.telemetry.withSuspendSpan
 import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlin.time.Duration.Companion.minutes
@@ -18,6 +22,7 @@ class RegistrationProtocol(
     private val credential: Credential,
     private val reconnector: Reconnector,
     private val stateProvider: StateProvider<RegistrationState>,
+    private val tracer: Tracer,
 ) {
     private val logger: KLogger = logger {}
 
@@ -25,58 +30,75 @@ class RegistrationProtocol(
     private var requeryJob: Job? = null
     private var subscriptionJob: Job? = null
 
-    suspend fun checkAndRegister(): RegistrationState {
-        val serviceId = credential.id
+    suspend fun checkAndRegister(): RegistrationState =
+        tracer.withSuspendSpan("registration.check_and_register", SpanKind.CLIENT) { s ->
+            val serviceId = credential.id
+            s.setAttribute("service.id", serviceId)
 
-        when (val status = registrationClient.queryServiceStatus(serviceId)) {
-            is ServiceStatusResult.Bound -> {
-                logger.info { "Service already bound to organization: ${status.organizationName}" }
-                val state = RegistrationState.Bound(status.organizationId, status.organizationName)
-                stateProvider.set(state)
-                return state
-            }
+            when (val status = registrationClient.queryServiceStatus(serviceId)) {
+                is ServiceStatusResult.Bound -> {
+                    s.addEvent("already_bound")
+                    val state = RegistrationState.Bound(status.organizationId, status.organizationName)
+                    stateProvider.set(state)
+                    s.setAttribute("organization.id", status.organizationId)
+                    s.setAttribute("organization.name", status.organizationName)
+                    s.setStatus(StatusCode.OK)
+                    state
+                }
 
-            is ServiceStatusResult.Unbound -> {
-                val pendingState = RegistrationState.Pending(status.token)
-                stateProvider.set(pendingState)
-                return handleUnboundState(serviceId, status.token)
-            }
+                is ServiceStatusResult.Unbound -> {
+                    val pendingState = RegistrationState.Pending(status.token)
+                    stateProvider.set(pendingState)
+                    s.addEvent("service_unbound")
+                    handleUnboundState(serviceId, status.token)
+                }
 
-            is ServiceStatusResult.Error -> {
-                logger.error { "Failed to query status: ${status.message} (code: ${status.code})" }
-                val state = RegistrationState.Failed(status.message)
-                stateProvider.set(state)
-                return state
+                is ServiceStatusResult.Error -> {
+                    logger.error { "Failed to query status: ${status.message} (code: ${status.code})" }
+                    s.setAttribute("error.code", status.code.toLong())
+                    s.setStatus(StatusCode.ERROR, status.message)
+                    val state = RegistrationState.Failed(status.message)
+                    stateProvider.set(state)
+                    state
+                }
             }
         }
-    }
 
-    private suspend fun handleUnboundState(serviceId: String, token: String): RegistrationState {
-        displayToken(token)
+    private suspend fun handleUnboundState(serviceId: String, token: String): RegistrationState =
+        tracer.withSuspendSpan("registration.handle_unbound") { s ->
+            s.setAttribute("service.id", serviceId)
 
-        subscriptionJob = registrationClient.subscribeToBoundNotification(serviceId) { orgId, orgName ->
-            boundChannel.send(orgId to orgName)
+            s.addEvent("displaying_registration_token")
+            displayToken(token)
+
+            s.addEvent("subscribing_to_bound_notification")
+            subscriptionJob = registrationClient.subscribeToBoundNotification(serviceId) { orgId, orgName ->
+                boundChannel.send(orgId to orgName)
+            }
+
+            scheduleRequery(serviceId)
+
+            s.addEvent("waiting_for_binding")
+            val (orgId, orgName) = boundChannel.receive()
+
+            cleanup()
+
+            s.addEvent("service_bound_reconnecting")
+            s.addEvent("reconnecting")
+            reconnector.reconnect()
+
+            val boundState = RegistrationState.Bound(orgId, orgName)
+            stateProvider.set(boundState)
+            s.setAttribute("organization.id", orgId)
+            s.setAttribute("organization.name", orgName)
+            s.setStatus(StatusCode.OK)
+            boundState
         }
-
-        scheduleRequery(serviceId)
-
-        val (orgId, orgName) = boundChannel.receive()
-
-        cleanup()
-
-        logger.info { "Service bound! Reconnecting to get full permissions..." }
-        reconnector.reconnect()
-
-        val boundState = RegistrationState.Bound(orgId, orgName)
-        stateProvider.set(boundState)
-        return boundState
-    }
 
     private suspend fun scheduleRequery(serviceId: String) {
-        requeryJob = kotlinx.coroutines.CoroutineScope(currentCoroutineContext()).launch {
+        requeryJob = CoroutineScope(currentCoroutineContext()).launch {
             while (isActive) {
                 delay(2.minutes)
-                logger.debug { "Requerying status to refresh token..." }
 
                 when (val status = registrationClient.queryServiceStatus(serviceId)) {
                     is ServiceStatusResult.Bound -> {

@@ -5,11 +5,28 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.*
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import protokt.v1.typewriter.api.v1.*
 import protokt.v1.typewriter.models.v1.Error
 import java.io.ByteArrayOutputStream
+
+private fun createMockTracer(): Tracer {
+    val span = mockk<Span>(relaxed = true)
+    val spanBuilder = mockk<SpanBuilder>(relaxed = true) {
+        every { setParent(any()) } returns this
+        every { setSpanKind(any()) } returns this
+        every { setAttribute(any<String>(), any<String>()) } returns this
+        every { setAttribute(any<String>(), any<Long>()) } returns this
+        every { startSpan() } returns span
+    }
+    return mockk<Tracer>(relaxed = true) {
+        every { spanBuilder(any()) } returns spanBuilder
+    }
+}
 
 class NatsRegistrationClientTest : FunSpec({
 
@@ -34,7 +51,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = responseBytes
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("my-service")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Bound>()
@@ -60,7 +77,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = responseBytes
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc-1")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Unbound>()
@@ -83,7 +100,7 @@ class NatsRegistrationClientTest : FunSpec({
 
             val callbackResult = CompletableDeferred<Pair<String, String>>()
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val job = client.subscribeToBoundNotification("svc") { orgId, orgName ->
                 callbackResult.complete(orgId to orgName)
             }
@@ -115,7 +132,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = responseBytes
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -131,7 +148,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = null
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -146,7 +163,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = byteArrayOf()
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -161,7 +178,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = byteArrayOf(0x00, 0xFF.toByte(), 0x01, 0x02)
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -173,7 +190,7 @@ class NatsRegistrationClientTest : FunSpec({
 
             coEvery { messageBus.request(any(), any(), any()) } throws RuntimeException("Request timed out")
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -194,7 +211,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = responseBytes
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -219,7 +236,7 @@ class NatsRegistrationClientTest : FunSpec({
                 )
             }
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val result = client.queryServiceStatus("svc")
 
             result.shouldBeInstanceOf<ServiceStatusResult.Error>()
@@ -248,7 +265,7 @@ class NatsRegistrationClientTest : FunSpec({
                 data = responseBytes
             )
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             client.queryServiceStatus("my-unique-service-123")
 
             subjectSlot.captured shouldBe "cloud.out.service.my-unique-service-123.status"
@@ -263,7 +280,7 @@ class NatsRegistrationClientTest : FunSpec({
             coEvery { subscription.unsubscribe() } just runs
             coEvery { messageBus.subscribe(capture(subjectSlot)) } returns subscription
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val job = client.subscribeToBoundNotification("svc-xyz-789") { _, _ -> }
 
             job.join()
@@ -281,7 +298,7 @@ class NatsRegistrationClientTest : FunSpec({
 
             var callbackInvoked = false
 
-            val client = NatsRegistrationClient(messageBus)
+            val client = NatsRegistrationClient(messageBus, createMockTracer())
             val job = client.subscribeToBoundNotification("svc") { _, _ ->
                 callbackInvoked = true
             }

@@ -3,6 +3,7 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
 import com.typewritermc.services.libs.communicator.interfaces.ServiceStatusResult
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import com.typewritermc.services.libs.utils.StateProvider
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -25,7 +26,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
                     ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -55,7 +56,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -82,7 +83,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             protocol.checkAndRegister()
 
             coVerify(exactly = 1) { reconnector.reconnect() }
@@ -100,7 +101,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("test-service-id") } returns
                     ServiceStatusResult.Error(code = 404, message = "Service not found")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Failed>()
@@ -118,7 +119,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                     ServiceStatusResult.Error(code = 500, message = "Internal server error: database unavailable")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Failed>()
@@ -137,7 +138,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("my-unique-service-id") } returns
                     ServiceStatusResult.Bound(organizationId = "org", organizationName = "Org")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             protocol.checkAndRegister()
 
             coVerify { registrationClient.queryServiceStatus("my-unique-service-id") }
@@ -162,7 +163,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             protocol.checkAndRegister()
 
             coVerify { registrationClient.subscribeToBoundNotification("svc-xyz", any()) }
@@ -180,7 +181,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                     ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -196,7 +197,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                     ServiceStatusResult.Bound(organizationId = "org", organizationName = "日本語組織 🎮")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             val result = protocol.checkAndRegister()
 
             result.shouldBeInstanceOf<RegistrationState.Bound>()
@@ -215,7 +216,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                     ServiceStatusResult.Bound(organizationId = "org-123", organizationName = "Test Org")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             protocol.checkAndRegister()
 
             stateProvider.get().shouldBeInstanceOf<RegistrationState.Bound>()
@@ -240,7 +241,7 @@ class RegistrationProtocolTest : FunSpec({
 
             coEvery { reconnector.reconnect() } just runs
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             protocol.checkAndRegister()
 
             stateProvider.get().shouldBeInstanceOf<RegistrationState.Bound>()
@@ -255,7 +256,7 @@ class RegistrationProtocolTest : FunSpec({
             coEvery { registrationClient.queryServiceStatus("svc") } returns
                     ServiceStatusResult.Error(code = 500, message = "Server error")
 
-            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider)
+            val protocol = RegistrationProtocol(registrationClient, credential, reconnector, stateProvider, MockTelemetry.createMockTracer())
             protocol.checkAndRegister()
 
             stateProvider.get().shouldBeInstanceOf<RegistrationState.Failed>()

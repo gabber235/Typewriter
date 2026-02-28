@@ -1,11 +1,10 @@
 package com.typewritermc.services.libs.communicator.routing
 
 import com.typewritermc.services.libs.communicator.routing.testing.MockMessageBus
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
@@ -21,7 +20,7 @@ class NatsDispatcherTest : FunSpec({
                     handle("route.b") { }
                     handle("route.c") { }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
 
                 dispatcher.start()
                 advanceUntilIdle()
@@ -40,7 +39,7 @@ class NatsDispatcherTest : FunSpec({
                         received = true
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -67,7 +66,7 @@ class NatsDispatcherTest : FunSpec({
                         secondHandlerCalled = true
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -95,7 +94,7 @@ class NatsDispatcherTest : FunSpec({
                         }
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -123,7 +122,7 @@ class NatsDispatcherTest : FunSpec({
                         extractedRealmId = params.require("realmId")
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -147,7 +146,7 @@ class NatsDispatcherTest : FunSpec({
                         extractedPlayerId = params.require("playerId")
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -172,7 +171,7 @@ class NatsDispatcherTest : FunSpec({
                         receivedData = message.data
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -193,7 +192,7 @@ class NatsDispatcherTest : FunSpec({
                         reply("response".toByteArray())
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 
@@ -216,7 +215,7 @@ class NatsDispatcherTest : FunSpec({
                         send("notify.b", "msg2".toByteArray())
                     }
                 }
-                val dispatcher = NatsDispatcher(routing, this)
+                val dispatcher = NatsDispatcher(routing, this, MockTelemetry.createMockTracer())
                 dispatcher.start()
                 advanceUntilIdle()
 

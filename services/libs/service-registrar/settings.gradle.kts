@@ -10,3 +10,4 @@ rootProject.name = "service-registrar"
 
 includeBuild("../service-utils")
 includeBuild("../service-communicator")
+includeBuild("../service-telemetry")

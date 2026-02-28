@@ -17,9 +17,9 @@ class NatsMessageBus(private val natsClientProvider: StateProvider<NatsClient?>)
         val client = natsClientProvider.require()
         val response = client.request(subject, data, timeoutMs = timeout.inWholeMilliseconds)
         return Message(
-            subject = response.subject.toString(),
+            subject = response.subject.raw,
             data = response.data,
-            replyTo = response.replyTo?.toString()
+            replyTo = response.replyTo?.raw
         )
     }
 
@@ -41,9 +41,9 @@ private class NatsSubscription(
 
     override val messages: Flow<Message> = subscription.messages.map { msg ->
         Message(
-            subject = msg.subject.toString(),
+            subject = msg.subject.raw,
             data = msg.data,
-            replyTo = msg.replyTo?.toString()
+            replyTo = msg.replyTo?.raw
         )
     }
 

@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.natskt.api.NatsClient
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.serialization.json.Json
 
 class NatsCommunicatorTest : FunSpec({
@@ -28,13 +29,15 @@ class NatsCommunicatorTest : FunSpec({
             val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
+            val tracer = mockk<Tracer>(relaxed = true)
 
             val communicator = NatsCommunicator(
                 natsUrl = natsUrl,
                 jwtProvider = jwtProvider,
                 sentinelCredentialsFetcher = credentialsFetcher,
                 json = json,
-                natsClientProvider = natsClientProvider
+                natsClientProvider = natsClientProvider,
+                tracer = tracer
             )
 
             communicator shouldNotBe null
@@ -48,6 +51,7 @@ class NatsCommunicatorTest : FunSpec({
             val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
+            val tracer = mockk<Tracer>(relaxed = true)
 
             val mockJwtProviderImpl = mockk<JwtProvider>()
             every { mockJwtProviderImpl.getTokenInfo() } returns TokenInfo(
@@ -62,7 +66,8 @@ class NatsCommunicatorTest : FunSpec({
                 jwtProvider = jwtProvider,
                 sentinelCredentialsFetcher = credentialsFetcher,
                 json = json,
-                natsClientProvider = natsClientProvider
+                natsClientProvider = natsClientProvider,
+                tracer = tracer
             )
 
             shouldThrow<IllegalArgumentException> {
@@ -75,6 +80,7 @@ class NatsCommunicatorTest : FunSpec({
             val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
+            val tracer = mockk<Tracer>(relaxed = true)
 
             val jwtWithoutSub = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
                 java.util.Base64.getUrlEncoder().withoutPadding()
@@ -94,7 +100,8 @@ class NatsCommunicatorTest : FunSpec({
                 jwtProvider = jwtProvider,
                 sentinelCredentialsFetcher = credentialsFetcher,
                 json = json,
-                natsClientProvider = natsClientProvider
+                natsClientProvider = natsClientProvider,
+                tracer = tracer
             )
 
             shouldThrow<IllegalArgumentException> {
@@ -110,13 +117,15 @@ class NatsCommunicatorTest : FunSpec({
             val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
+            val tracer = mockk<Tracer>(relaxed = true)
 
             val communicator = NatsCommunicator(
                 natsUrl = natsUrl,
                 jwtProvider = jwtProvider,
                 sentinelCredentialsFetcher = credentialsFetcher,
                 json = json,
-                natsClientProvider = natsClientProvider
+                natsClientProvider = natsClientProvider,
+                tracer = tracer
             )
 
             jwtProvider.isSet shouldBe false
@@ -131,13 +140,15 @@ class NatsCommunicatorTest : FunSpec({
             val natsClientProvider = StateProvider<NatsClient?>(null)
             val credentialsFetcher = mockk<SentinelCredentialsFetcher>()
             val json = Json { ignoreUnknownKeys = true }
+            val tracer = mockk<Tracer>(relaxed = true)
 
             val communicator = NatsCommunicator(
                 natsUrl = natsUrl,
                 jwtProvider = jwtProvider,
                 sentinelCredentialsFetcher = credentialsFetcher,
                 json = json,
-                natsClientProvider = natsClientProvider
+                natsClientProvider = natsClientProvider,
+                tracer = tracer
             )
 
             communicator.disconnect()

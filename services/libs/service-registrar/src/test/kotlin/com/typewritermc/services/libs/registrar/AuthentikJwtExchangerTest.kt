@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.interfaces.HttpClient
 import com.typewritermc.services.libs.communicator.interfaces.HttpResponse
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -9,7 +10,6 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import java.io.ByteArrayInputStream
 
 class AuthentikJwtExchangerTest : FunSpec({
@@ -30,7 +30,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             val response = exchanger.exchangeForJwt(defaultCredential)
 
             response.accessToken shouldBe "jwt-token"
@@ -47,7 +47,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             val response = exchanger.exchangeForJwt(defaultCredential)
 
             response.refreshToken shouldBe "refresh-xyz"
@@ -63,7 +63,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             exchanger.exchangeForJwt(defaultCredential)
 
             val formData = String(bodySlot.captured)
@@ -84,7 +84,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             exchanger.exchangeForJwt(defaultCredential)
 
             urlSlot.captured shouldBe tokenEndpoint
@@ -100,7 +100,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             exchanger.exchangeForJwt(defaultCredential)
 
             headersSlot.captured["Content-Type"] shouldBe "application/x-www-form-urlencoded"
@@ -117,7 +117,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream("Invalid credentials".toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<JwtExchangeException> {
                 exchanger.exchangeForJwt(defaultCredential)
@@ -135,7 +135,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream("Forbidden".toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<JwtExchangeException> {
                 exchanger.exchangeForJwt(defaultCredential)
@@ -152,7 +152,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream("Internal server error".toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<JwtExchangeException> {
                 exchanger.exchangeForJwt(defaultCredential)
@@ -169,7 +169,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream("not valid json".toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<JwtExchangeException> {
                 exchanger.exchangeForJwt(defaultCredential)
@@ -187,7 +187,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<JwtExchangeException> {
                 exchanger.exchangeForJwt(defaultCredential)
@@ -201,7 +201,7 @@ class AuthentikJwtExchangerTest : FunSpec({
 
             every { httpClient.post(any(), any(), any()) } throws RuntimeException("Connection refused")
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
 
             val exception = shouldThrow<JwtExchangeException> {
                 exchanger.exchangeForJwt(defaultCredential)
@@ -230,7 +230,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 token = "p@ss=word&special"
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             exchanger.exchangeForJwt(specialCredential)
 
             val formData = String(bodySlot.captured)
@@ -248,7 +248,7 @@ class AuthentikJwtExchangerTest : FunSpec({
                 body = ByteArrayInputStream(jsonResponse.toByteArray())
             )
 
-            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes)
+            val exchanger = AuthentikJwtExchanger(httpClient, tokenEndpoint, clientId, scopes, MockTelemetry.createMockTracer())
             val response = exchanger.exchangeForJwt(defaultCredential)
 
             response.accessToken shouldBe longToken

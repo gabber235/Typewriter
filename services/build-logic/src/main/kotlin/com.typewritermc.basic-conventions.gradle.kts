@@ -1,5 +1,3 @@
-import java.util.concurrent.TimeUnit
-
 plugins {
     id("org.jetbrains.kotlin.jvm")
 }
@@ -24,6 +22,10 @@ repositories {
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+        freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+    }
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")

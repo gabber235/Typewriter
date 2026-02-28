@@ -22,7 +22,8 @@ val SERVICE_COMMUNICATOR_MODULE = module {
             jwtProvider = get(named(JWT_PROVIDER)),
             sentinelCredentialsFetcher = get(),
             json = get(),
-            natsClientProvider = get(named(NATS_CLIENT))
+            natsClientProvider = get(named(NATS_CLIENT)),
+            tracer = get()
         )
     } onClose {
         runBlocking {
@@ -32,7 +33,7 @@ val SERVICE_COMMUNICATOR_MODULE = module {
 
     single<HttpClient> { SimpleHttpClient() }
 
-    single { SentinelCredentialsFetcher(get(), get(named(SENTINEL_URL))) }
+    single { SentinelCredentialsFetcher(get(), get(named(SENTINEL_URL)), get()) }
 
     single { Json { ignoreUnknownKeys = true } }
 

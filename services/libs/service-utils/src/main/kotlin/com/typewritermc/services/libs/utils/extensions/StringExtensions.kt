@@ -1,4 +1,3 @@
 package com.typewritermc.services.libs.utils.extensions
 
-class StringExtensions {
-}
+fun String.nullIfBlank() = ifBlank { null }

@@ -1,15 +1,18 @@
 package com.typewritermc.services.libs.communicator
 
 import com.typewritermc.services.libs.communicator.interfaces.Reconnector
+import com.typewritermc.services.libs.telemetry.withSuspendSpan
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.natskt.NatsClient
 import io.natskt.api.AuthPayload
-import io.natskt.api.AuthProvider
 import io.natskt.api.Credentials
 import io.natskt.api.NatsClient
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -27,6 +30,7 @@ class NatsCommunicator(
     private val sentinelCredentialsFetcher: SentinelCredentialsFetcher,
     private val json: Json,
     private val natsClientProvider: StateProvider<NatsClient?>,
+    private val tracer: Tracer
 ) : Reconnector {
     private val logger: KLogger = logger {}
 
@@ -39,39 +43,47 @@ class NatsCommunicator(
      * The token is embedded in the connection URL.
      */
     suspend fun connect() {
-        logger.info { "Connecting to NATS at $natsUrl" }
+        tracer.withSuspendSpan(
+            name = "nats.connect",
+            kind = SpanKind.CLIENT
+        ) { span ->
+            span.addEvent("connecting")
+            span.setAttribute("messaging.system", "nats")
+            span.setAttribute("server.address", natsUrl)
 
-        val jwt = jwtProvider.get()
-        val tokenInfo = jwt.getTokenInfo()
-        val token = tokenInfo.accessToken
-        val serviceId = extractServiceId(token)
-        val sentinelCredentials = sentinelCredentialsFetcher.fetchCredentials()
+            val jwt = jwtProvider.get()
+            val tokenInfo = jwt.getTokenInfo()
+            val token = tokenInfo.accessToken
+            val serviceId = extractServiceId(token)
+            val sentinelCredentials = sentinelCredentialsFetcher.fetchCredentials()
 
-        val natsClient = NatsClient {
-            server = natsUrl
-            inboxPrefix = "_INBOX.$serviceId."
-            authentication = Credentials.Custom(
-                provider = AuthProvider { info ->
-                    AuthPayload(
-                        jwt = sentinelCredentials.jwt,
-                        signature = signNonce(sentinelCredentials.seed, info),
-                        username = serviceId,
-                        password = token
-                    )
-                }
-            )
+            val natsClient = NatsClient {
+                server = natsUrl
+                inboxPrefix = "_INBOX.$serviceId."
+                authentication = Credentials.Custom(
+                    provider = { info ->
+                        AuthPayload(
+                            jwt = sentinelCredentials.jwt,
+                            signature = signNonce(sentinelCredentials.seed, info),
+                            username = serviceId,
+                            password = token
+                        )
+                    }
+                )
+            }
+
+            val result = natsClient.connect()
+            result.onFailure {
+                span.recordException(it)
+                span.setStatus(StatusCode.ERROR, "Failed to connect to NATS: ${it.message}")
+                throw it
+            }
+
+            natsClientProvider.set(natsClient)
+
+            this._client = natsClient
+            span.addEvent("connected")
         }
-
-        val result = natsClient.connect()
-        result.onFailure {
-            logger.error { "Failed to connect to NATS: ${it.message}" }
-            throw it
-        }
-
-        natsClientProvider.set(natsClient)
-
-        this._client = natsClient
-        logger.info { "Connected to NATS successfully" }
     }
 
     /**
@@ -107,12 +119,15 @@ class NatsCommunicator(
     /**
      * Disconnect from NATS server.
      */
-    suspend fun disconnect() {
-        logger.info { "Disconnecting from NATS" }
+    suspend fun disconnect() = tracer.withSuspendSpan(
+        name = "nats.disconnect",
+        kind = SpanKind.CLIENT
+    ) { span ->
+        span.addEvent("disconnecting")
         _client?.disconnect()
         _client = null
         natsClientProvider.set(null)
-        logger.info { "Disconnected from NATS" }
+        span.addEvent("disconnected")
     }
 }
 

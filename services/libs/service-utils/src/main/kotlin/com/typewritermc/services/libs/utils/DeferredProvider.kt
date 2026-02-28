@@ -26,6 +26,9 @@ class DeferredProvider<T> {
 
     fun getOrNull(): T? = if (deferred.isCompleted) deferred.getCompleted() else null
 
+    fun require(message: () -> String) =
+        if (deferred.isCompleted) deferred.getCompleted() else throw IllegalStateException(message())
+
     fun set(value: T) {
         if (!deferred.complete(value)) {
             throw IllegalStateException("DeferredProvider value already set")
@@ -33,4 +36,10 @@ class DeferredProvider<T> {
     }
 
     fun trySet(value: T): Boolean = deferred.complete(value)
+}
+
+fun <T> T.asDeferredProvider(): DeferredProvider<T> {
+    val provider = DeferredProvider<T>()
+    provider.set(this)
+    return provider
 }

@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.interfaces.RegistrationClient
+import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -30,6 +31,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 
@@ -51,6 +53,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 
@@ -87,6 +90,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 
@@ -114,6 +118,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 
@@ -144,6 +149,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 
@@ -170,6 +176,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 
@@ -189,6 +196,7 @@ class HeartbeatSenderTest : FunSpec({
                     serviceId = serviceId,
                     registrationClient = registrationClient,
                     scope = this,
+                    tracer = MockTelemetry.createMockTracer(),
                     intervalMs = intervalMs
                 )
 

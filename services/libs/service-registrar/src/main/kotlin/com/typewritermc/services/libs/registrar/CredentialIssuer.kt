@@ -1,8 +1,9 @@
 package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.interfaces.HttpClient
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import com.typewritermc.services.libs.telemetry.withSpan
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 import protokt.v1.typewriter.api.v1.IssueServiceIdentityRequest
 import protokt.v1.typewriter.api.v1.IssueServiceIdentityResponse
 import protokt.v1.typewriter.models.v1.ServiceMetadata
@@ -16,12 +17,14 @@ interface CredentialIssuer {
 class BackendCredentialIssuer(
     private val httpClient: HttpClient,
     private val serviceIssueUrl: String,
-    private val servicesInfo: ServicesInfo
+    private val servicesInfo: ServicesInfo,
+    private val tracer: Tracer,
 ) : CredentialIssuer {
-    private val logger: KLogger = logger {}
+    override fun issueCredential(): Credential = tracer.withSpan("credential.issue") { s ->
+        s.setAttribute("http.url", serviceIssueUrl)
 
-    override fun issueCredential(): Credential {
-        logger.debug { "Issuing new service credential from $serviceIssueUrl" }
+        servicesInfo.realm?.let { s.setAttribute("service.realm.version", it.version) }
+        servicesInfo.engine?.let { s.setAttribute("service.engine.version", it.version) }
 
         val request = IssueServiceIdentityRequest {
             metadata = ServiceMetadata {
@@ -40,41 +43,49 @@ class BackendCredentialIssuer(
         val response = try {
             httpClient.post(serviceIssueUrl, requestBytes, headers)
         } catch (e: Exception) {
-            logger.error(e) { "Failed to issue credential: connection error" }
             throw IssueException("Failed to issue credential: ${e.message}", e)
         }
 
+        s.setAttribute("http.status_code", response.statusCode.toLong())
+
         if (!response.isSuccessful) {
+            val errorCode = response.statusCode
             val errorBody = response.body.bufferedReader().readText()
-            logger.error { "Credential issuance failed: HTTP ${response.statusCode} - $errorBody" }
+            s.setAttribute("http.response.status_code", errorCode.toLong())
+            s.setAttribute("http.response.body", errorBody)
             throw IssueException("Failed to issue credential: HTTP ${response.statusCode}")
         }
 
         val protoResponse = try {
             IssueServiceIdentityResponse.deserialize(response.body)
         } catch (e: Exception) {
-            logger.error(e) { "Failed to parse credential response" }
-            throw IssueException("Failed to parse credential response", e)
+            throw IssueException("Failed to parse credential response: ${e.message}", e)
         }
 
-        return when (val result = protoResponse.result) {
+        when (val result = protoResponse.result) {
             is IssueServiceIdentityResponse.Result.Credentials -> {
-                logger.info { "Credential issued successfully: ${result.credentials.serviceId}" }
-                Credential(
-                    id = result.credentials.serviceId,
-                    name = result.credentials.username,
-                    token = result.credentials.token
-                )
+                val id = result.credentials.serviceId
+                val name = result.credentials.username
+                val token = result.credentials.token
+                s.setAttribute("result.service.id", id)
+                    .setAttribute("result.service.name", name)
+                    .setStatus(StatusCode.OK)
+                Credential(id = id, name = name, token = token)
             }
 
             is IssueServiceIdentityResponse.Result.Error -> {
-                logger.error { "Backend returned error: ${result.error.code} - ${result.error.message}" }
+                val code = result.error.code ?: 0u
+                val message = result.error.message ?: "Unknown error"
+                s.setAttribute("result.error.code", code.toLong())
+                s.setAttribute("result.error.message", message)
                 throw IssueException(
-                    "Service returned error (${result.error.code}): ${result.error.message}"
+                    "Service returned error ($code): $message"
                 )
             }
 
-            null -> throw IssueException("Empty response from identity service")
+            null -> {
+                throw IssueException("Empty response from identity service")
+            }
         }
     }
 }
