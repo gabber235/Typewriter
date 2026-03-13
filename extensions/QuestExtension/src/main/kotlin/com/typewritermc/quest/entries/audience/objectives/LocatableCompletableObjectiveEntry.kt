@@ -60,6 +60,7 @@ class LocatableCompletableObjectiveEntry(
     override val criteria: List<Criteria> get() = showCriteria
 
     override fun parser(): PlaceholderParser = placeholderParser {
+        include(super.parser())
         literal("location") {
             string("format") { format ->
                 supply {
