@@ -369,12 +369,12 @@ void main() {
     });
 
     test("NoBlueprintPageEntry id returns entry id", () {
-      const pageEntry = PageEntry.noBlueprint(
+      final pageEntry = PageEntry.noBlueprint(
         id: "no-bp-101",
         name: "No Blueprint Entry",
         placement: EntryPlacement(x: 0, y: 0, width: 100, height: 100),
-        inwardEdges: [],
-        outwardEdges: [],
+        inwardLinks: [],
+        outwardLinks: [],
       );
       expect(pageEntry.id, "no-bp-101");
     });

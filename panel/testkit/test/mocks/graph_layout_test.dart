@@ -5,6 +5,7 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/logic/pages/graph_direction.dart";
+import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_testkit/src/mocks/graph_layout.dart";
 
 EntryDefinition createTestEntry() {
@@ -169,7 +170,7 @@ void main() {
       expect(edges.isNotEmpty, isTrue);
 
       for (final edge in edges) {
-        expect(edge.id.contains("_"), isTrue);
+        expect(edge.linkId.contains("_"), isTrue);
         expect(edge.otherId.isNotEmpty, isTrue);
         expect(edge.path, equals("connections"));
       }
@@ -188,8 +189,8 @@ void main() {
       final entry2 = createTestEntry();
       final entries = [entry1, entry2];
 
-      final edge = EntryEdge(
-        id: "${entry1.id}_${entry2.id}",
+      final edge = ElementLink(
+        linkId: "${entry1.id}_${entry2.id}",
         otherId: entry2.id,
         path: "connections",
       );

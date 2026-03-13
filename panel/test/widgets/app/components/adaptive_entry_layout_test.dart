@@ -296,12 +296,12 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
-                  entry: const PageEntry.noBlueprint(
+                  entry: PageEntry.noBlueprint(
                     id: "no-blueprint",
                     name: "Entry Without Blueprint",
                     placement: EntryPlacement(x: 0, y: 0, width: 6, height: 1),
-                    inwardEdges: [],
-                    outwardEdges: [],
+                    inwardLinks: [],
+                    outwardLinks: [],
                   ),
                 ),
               ),

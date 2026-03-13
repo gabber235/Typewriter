@@ -10,11 +10,11 @@ part of 'test_selectable.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(TestSelectableData)
-const testSelectableDataProvider = TestSelectableDataProvider._();
+final testSelectableDataProvider = TestSelectableDataProvider._();
 
 final class TestSelectableDataProvider
     extends $NotifierProvider<TestSelectableData, Map<String, DynamicData>> {
-  const TestSelectableDataProvider._()
+  TestSelectableDataProvider._()
     : super(
         from: null,
         argument: null,
@@ -50,7 +50,6 @@ abstract class _$TestSelectableData
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<Map<String, DynamicData>, Map<String, DynamicData>>;
     final element =
@@ -61,17 +60,17 @@ abstract class _$TestSelectableData
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(testData)
-const testDataProvider = TestDataFamily._();
+final testDataProvider = TestDataFamily._();
 
 final class TestDataProvider
     extends $FunctionalProvider<DynamicData?, DynamicData?, DynamicData?>
     with $Provider<DynamicData?> {
-  const TestDataProvider._({
+  TestDataProvider._({
     required TestDataFamily super.from,
     required String super.argument,
   }) : super(
@@ -126,7 +125,7 @@ String _$testDataHash() => r'da0cfaf005696101290c07062ae208fab95f1042';
 
 final class TestDataFamily extends $Family
     with $FunctionalFamilyOverride<DynamicData?, String> {
-  const TestDataFamily._()
+  TestDataFamily._()
     : super(
         retry: null,
         name: r'testDataProvider',

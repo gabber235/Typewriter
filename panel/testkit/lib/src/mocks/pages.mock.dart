@@ -173,24 +173,24 @@ class EntryMock extends Entry {
 List<Override> bookPagesProviderOverrides({
   DisplayState state = DisplayState.loading,
 }) => [
-  bookPagesProvider.overrideWith(() => BookPagesMock(displayState: state)),
+  bookPagesProvider.overrideWith2((_) => BookPagesMock(displayState: state)),
 ];
 
 List<Override> pagesProviderOverrides({Page? page, PageType? pageType}) => [
-  pagesProvider.overrideWith(() => PagesMock(page: page, pageType: pageType)),
+  pagesProvider.overrideWith2((_) => PagesMock(page: page, pageType: pageType)),
 ];
 
 List<Override> pageElementsProviderOverrides({
   DisplayState state = DisplayState.loading,
   GraphDirection? direction,
 }) => [
-  pageElementsProvider.overrideWith(
-    () => PageElementsMock(displayState: state, direction: direction),
+  pageElementsProvider.overrideWith2(
+    (_) => PageElementsMock(displayState: state, direction: direction),
   ),
 ];
 
 List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
-  entryProvider.overrideWith(() => EntryMock(definition: definition)),
+  entryProvider.overrideWith2((_) => EntryMock(definition: definition)),
 ];
 
 List<Override> pageIdProviderOverrides({String? pageId}) => [

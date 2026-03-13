@@ -4,6 +4,7 @@ import "dart:math";
 import "package:collection/collection.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/graph_direction.dart";
+import "package:typewriter_panel/logic/pages/page_elements.dart";
 
 class Point<T> {
   final T x, y;
@@ -229,9 +230,9 @@ Point<int> findNonOverlappingPosition(
   return Point(direction.main(0, cross), direction.cross(0, cross));
 }
 
-List<EntryEdge> generateEdgesForLayers(List<List<EntryDefinition>> layers) {
+List<ElementLink> generateEdgesForLayers(List<List<EntryDefinition>> layers) {
   final random = math.Random();
-  final edges = <EntryEdge>[];
+  final edges = <ElementLink>[];
 
   if (layers.length < 2) {
     return edges;
@@ -255,8 +256,8 @@ List<EntryEdge> generateEdgesForLayers(List<List<EntryDefinition>> layers) {
           .sublist(0, connectionsCount);
 
       for (final target in targets) {
-        final edge = EntryEdge(
-          id: "${entry.id}_${target.id}",
+        final edge = ElementLink(
+          linkId: "${entry.id}_${target.id}",
           otherId: target.id,
           path: "connections",
         );
@@ -270,23 +271,23 @@ List<EntryEdge> generateEdgesForLayers(List<List<EntryDefinition>> layers) {
 
 List<EntryDefinition> applyEdgesToEntries(
   List<EntryDefinition> entries,
-  List<EntryEdge> edges,
+  List<ElementLink> edges,
 ) {
   final entryIds = entries.map((e) => e.id).toSet();
   final validEdges = edges.where((edge) {
-    final sourceId = edge.id.split("_").first;
+    final sourceId = edge.linkId.split("_").first;
     return entryIds.contains(sourceId) && entryIds.contains(edge.otherId);
   }).toList();
 
-  final outwardEdgeMap = <String, List<EntryEdge>>{};
-  final inwardEdgeMap = <String, List<EntryEdge>>{};
+  final outwardEdgeMap = <String, List<ElementLink>>{};
+  final inwardEdgeMap = <String, List<ElementLink>>{};
 
   for (final edge in validEdges) {
-    final sourceId = edge.id.split("_").first;
+    final sourceId = edge.linkId.split("_").first;
     outwardEdgeMap.putIfAbsent(sourceId, () => []).add(edge);
 
-    final inwardEdge = EntryEdge(
-      id: edge.id,
+    final inwardEdge = ElementLink(
+      linkId: edge.linkId,
       otherId: sourceId,
       path: edge.path,
     );
@@ -312,7 +313,7 @@ List<EntryDefinition> generateDynamicGraphLayout(
 
   final allEntries = <EntryDefinition>[];
   final placedGraphBounds = <GraphBounds>[];
-  final allEdges = <EntryEdge>[];
+  final allEdges = <ElementLink>[];
 
   for (final group in groups) {
     final localLayout = layoutSingleGraph(group, direction);
