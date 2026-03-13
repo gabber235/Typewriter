@@ -10,11 +10,11 @@ part of 'pages.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(BookPages)
-const bookPagesProvider = BookPagesFamily._();
+final bookPagesProvider = BookPagesFamily._();
 
 final class BookPagesProvider
     extends $AsyncNotifierProvider<BookPages, List<Page>> {
-  const BookPagesProvider._({
+  BookPagesProvider._({
     required BookPagesFamily super.from,
     required (String, String) super.argument,
   }) : super(
@@ -61,7 +61,7 @@ final class BookPagesFamily extends $Family
           FutureOr<List<Page>>,
           (String, String)
         > {
-  const BookPagesFamily._()
+  BookPagesFamily._()
     : super(
         retry: null,
         name: r'bookPagesProvider',
@@ -86,7 +86,6 @@ abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args.$1, _$args.$2);
     final ref = this.ref as $Ref<AsyncValue<List<Page>>, List<Page>>;
     final element =
         ref.element
@@ -96,15 +95,15 @@ abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, () => build(_$args.$1, _$args.$2));
   }
 }
 
 @ProviderFor(Pages)
-const pagesProvider = PagesFamily._();
+final pagesProvider = PagesFamily._();
 
 final class PagesProvider extends $AsyncNotifierProvider<Pages, Page> {
-  const PagesProvider._({
+  PagesProvider._({
     required PagesFamily super.from,
     required String super.argument,
   }) : super(
@@ -151,7 +150,7 @@ final class PagesFamily extends $Family
           FutureOr<Page>,
           String
         > {
-  const PagesFamily._()
+  PagesFamily._()
     : super(
         retry: null,
         name: r'pagesProvider',
@@ -175,7 +174,6 @@ abstract class _$Pages extends $AsyncNotifier<Page> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args);
     final ref = this.ref as $Ref<AsyncValue<Page>, Page>;
     final element =
         ref.element
@@ -185,17 +183,17 @@ abstract class _$Pages extends $AsyncNotifier<Page> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, () => build(_$args));
   }
 }
 
 @ProviderFor(pageId)
-const pageIdProvider = PageIdProvider._();
+final pageIdProvider = PageIdProvider._();
 
 final class PageIdProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
-  const PageIdProvider._()
+  PageIdProvider._()
     : super(
         from: null,
         argument: null,

@@ -10,12 +10,12 @@ part of 'app_router.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(appRouter)
-const appRouterProvider = AppRouterProvider._();
+final appRouterProvider = AppRouterProvider._();
 
 final class AppRouterProvider
     extends $FunctionalProvider<Raw<AppRouter>, Raw<AppRouter>, Raw<AppRouter>>
     with $Provider<Raw<AppRouter>> {
-  const AppRouterProvider._()
+  AppRouterProvider._()
     : super(
         from: null,
         argument: null,
@@ -51,11 +51,11 @@ final class AppRouterProvider
 String _$appRouterHash() => r'babffb8e22cefce44520192b1132c6d68d9f20a5';
 
 @ProviderFor(CurrentRoute)
-const currentRouteProvider = CurrentRouteProvider._();
+final currentRouteProvider = CurrentRouteProvider._();
 
 final class CurrentRouteProvider
     extends $NotifierProvider<CurrentRoute, String> {
-  const CurrentRouteProvider._()
+  CurrentRouteProvider._()
     : super(
         from: null,
         argument: null,
@@ -89,7 +89,6 @@ abstract class _$CurrentRoute extends $Notifier<String> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<String, String>;
     final element =
         ref.element
@@ -99,17 +98,17 @@ abstract class _$CurrentRoute extends $Notifier<String> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(routeParam)
-const routeParamProvider = RouteParamFamily._();
+final routeParamProvider = RouteParamFamily._();
 
 final class RouteParamProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
-  const RouteParamProvider._({
+  RouteParamProvider._({
     required RouteParamFamily super.from,
     required String super.argument,
   }) : super(
@@ -164,7 +163,7 @@ String _$routeParamHash() => r'8c4dfa29f3ca899f30f1b754f79b73a38dbb6f3f';
 
 final class RouteParamFamily extends $Family
     with $FunctionalFamilyOverride<String?, String> {
-  const RouteParamFamily._()
+  RouteParamFamily._()
     : super(
         retry: null,
         name: r'routeParamProvider',

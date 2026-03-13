@@ -10,10 +10,10 @@ part of 'route.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(_PageSearch)
-const _pageSearchProvider = _PageSearchProvider._();
+final _pageSearchProvider = _PageSearchProvider._();
 
 final class _PageSearchProvider extends $NotifierProvider<_PageSearch, String> {
-  const _PageSearchProvider._()
+  _PageSearchProvider._()
     : super(
         from: null,
         argument: null,
@@ -47,7 +47,6 @@ abstract class _$PageSearch extends $Notifier<String> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<String, String>;
     final element =
         ref.element
@@ -57,12 +56,12 @@ abstract class _$PageSearch extends $Notifier<String> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(_viewingPages)
-const _viewingPagesProvider = _ViewingPagesProvider._();
+final _viewingPagesProvider = _ViewingPagesProvider._();
 
 final class _ViewingPagesProvider
     extends
@@ -72,7 +71,7 @@ final class _ViewingPagesProvider
           FutureOr<List<Page>>
         >
     with $FutureModifier<List<Page>>, $FutureProvider<List<Page>> {
-  const _ViewingPagesProvider._()
+  _ViewingPagesProvider._()
     : super(
         from: null,
         argument: null,

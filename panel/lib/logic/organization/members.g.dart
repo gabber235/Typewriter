@@ -11,13 +11,13 @@ part of 'members.dart';
 /// Provider for the list of available roles in the current organization.
 
 @ProviderFor(OrganizationRoles)
-const organizationRolesProvider = OrganizationRolesProvider._();
+final organizationRolesProvider = OrganizationRolesProvider._();
 
 /// Provider for the list of available roles in the current organization.
 final class OrganizationRolesProvider
     extends $StreamNotifierProvider<OrganizationRoles, List<MemberRole>> {
   /// Provider for the list of available roles in the current organization.
-  const OrganizationRolesProvider._()
+  OrganizationRolesProvider._()
     : super(
         from: null,
         argument: null,
@@ -45,7 +45,6 @@ abstract class _$OrganizationRoles extends $StreamNotifier<List<MemberRole>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<AsyncValue<List<MemberRole>>, List<MemberRole>>;
     final element =
@@ -56,21 +55,21 @@ abstract class _$OrganizationRoles extends $StreamNotifier<List<MemberRole>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 /// Provider for the list of members in the current organization.
 
 @ProviderFor(OrganizationMembers)
-const organizationMembersProvider = OrganizationMembersProvider._();
+final organizationMembersProvider = OrganizationMembersProvider._();
 
 /// Provider for the list of members in the current organization.
 final class OrganizationMembersProvider
     extends
         $StreamNotifierProvider<OrganizationMembers, List<OrganizationMember>> {
   /// Provider for the list of members in the current organization.
-  const OrganizationMembersProvider._()
+  OrganizationMembersProvider._()
     : super(
         from: null,
         argument: null,
@@ -100,7 +99,6 @@ abstract class _$OrganizationMembers
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref
             as $Ref<
@@ -118,21 +116,21 @@ abstract class _$OrganizationMembers
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 /// Provider for the list of pending join requests to the current organization.
 
 @ProviderFor(OrganizationJoinRequests)
-const organizationJoinRequestsProvider = OrganizationJoinRequestsProvider._();
+final organizationJoinRequestsProvider = OrganizationJoinRequestsProvider._();
 
 /// Provider for the list of pending join requests to the current organization.
 final class OrganizationJoinRequestsProvider
     extends
         $StreamNotifierProvider<OrganizationJoinRequests, List<JoinRequest>> {
   /// Provider for the list of pending join requests to the current organization.
-  const OrganizationJoinRequestsProvider._()
+  OrganizationJoinRequestsProvider._()
     : super(
         from: null,
         argument: null,
@@ -162,7 +160,6 @@ abstract class _$OrganizationJoinRequests
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<AsyncValue<List<JoinRequest>>, List<JoinRequest>>;
     final element =
@@ -173,21 +170,21 @@ abstract class _$OrganizationJoinRequests
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 /// Provider for the count of pending join requests.
 
 @ProviderFor(joinRequestCount)
-const joinRequestCountProvider = JoinRequestCountProvider._();
+final joinRequestCountProvider = JoinRequestCountProvider._();
 
 /// Provider for the count of pending join requests.
 
 final class JoinRequestCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
   /// Provider for the count of pending join requests.
-  const JoinRequestCountProvider._()
+  JoinRequestCountProvider._()
     : super(
         from: null,
         argument: null,
@@ -225,13 +222,13 @@ String _$joinRequestCountHash() => r'297dcfa4f5bd0b642bcc4f3b163ee3ac79fac7bd';
 /// Provider for the list of active join codes in the current organization.
 
 @ProviderFor(OrganizationJoinCodes)
-const organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
+final organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
 
 /// Provider for the list of active join codes in the current organization.
 final class OrganizationJoinCodesProvider
     extends $StreamNotifierProvider<OrganizationJoinCodes, List<JoinCode>> {
   /// Provider for the list of active join codes in the current organization.
-  const OrganizationJoinCodesProvider._()
+  OrganizationJoinCodesProvider._()
     : super(
         from: null,
         argument: null,
@@ -260,7 +257,6 @@ abstract class _$OrganizationJoinCodes extends $StreamNotifier<List<JoinCode>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<JoinCode>>, List<JoinCode>>;
     final element =
         ref.element
@@ -270,21 +266,21 @@ abstract class _$OrganizationJoinCodes extends $StreamNotifier<List<JoinCode>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 /// Provider for the count of active join codes.
 
 @ProviderFor(joinCodeCount)
-const joinCodeCountProvider = JoinCodeCountProvider._();
+final joinCodeCountProvider = JoinCodeCountProvider._();
 
 /// Provider for the count of active join codes.
 
 final class JoinCodeCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
   /// Provider for the count of active join codes.
-  const JoinCodeCountProvider._()
+  JoinCodeCountProvider._()
     : super(
         from: null,
         argument: null,

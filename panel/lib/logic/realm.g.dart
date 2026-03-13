@@ -10,12 +10,12 @@ part of 'realm.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(realmId)
-const realmIdProvider = RealmIdProvider._();
+final realmIdProvider = RealmIdProvider._();
 
 final class RealmIdProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
-  const RealmIdProvider._()
+  RealmIdProvider._()
     : super(
         from: null,
         argument: null,
@@ -51,13 +51,13 @@ final class RealmIdProvider
 String _$realmIdHash() => r'ee46801e3cec3a492b4f6f9f7f980b73682fde01';
 
 @ProviderFor(selectedRealm)
-const selectedRealmProvider = SelectedRealmProvider._();
+final selectedRealmProvider = SelectedRealmProvider._();
 
 final class SelectedRealmProvider
     extends
         $FunctionalProvider<AsyncValue<Service?>, Service?, FutureOr<Service?>>
     with $FutureModifier<Service?>, $FutureProvider<Service?> {
-  const SelectedRealmProvider._()
+  SelectedRealmProvider._()
     : super(
         from: null,
         argument: null,
@@ -85,7 +85,7 @@ final class SelectedRealmProvider
 String _$selectedRealmHash() => r'52c7cdbcd54e832ff7316e07bad84f4ec27c9a32';
 
 @ProviderFor(realms)
-const realmsProvider = RealmsProvider._();
+final realmsProvider = RealmsProvider._();
 
 final class RealmsProvider
     extends
@@ -95,7 +95,7 @@ final class RealmsProvider
           FutureOr<List<Service>>
         >
     with $FutureModifier<List<Service>>, $FutureProvider<List<Service>> {
-  const RealmsProvider._()
+  RealmsProvider._()
     : super(
         from: null,
         argument: null,

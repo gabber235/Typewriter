@@ -13,7 +13,7 @@ part of 'operations.dart';
 /// Keep ordering meaningful; it will be used for presentation where applicable.
 
 @ProviderFor(operations)
-const operationsProvider = OperationsProvider._();
+final operationsProvider = OperationsProvider._();
 
 /// Provides the complete registry of available [Operation] implementations.
 /// Add new operations here to expose them to the UI
@@ -26,7 +26,7 @@ final class OperationsProvider
   /// Provides the complete registry of available [Operation] implementations.
   /// Add new operations here to expose them to the UI
   /// Keep ordering meaningful; it will be used for presentation where applicable.
-  const OperationsProvider._()
+  OperationsProvider._()
     : super(
         from: null,
         argument: null,
@@ -66,7 +66,7 @@ String _$operationsHash() => r'c61f2985c999f192256c4bbcbb4d8c95c6b4f998';
 /// no selection or nothing applicable, allowing the UI to hide controls.
 
 @ProviderFor(availableOperations)
-const availableOperationsProvider = AvailableOperationsProvider._();
+final availableOperationsProvider = AvailableOperationsProvider._();
 
 /// Computes the subset of registered [Operation]s that are currently
 /// executable for the active selection. Emits an empty list when there is
@@ -79,7 +79,7 @@ final class AvailableOperationsProvider
   /// Computes the subset of registered [Operation]s that are currently
   /// executable for the active selection. Emits an empty list when there is
   /// no selection or nothing applicable, allowing the UI to hide controls.
-  const AvailableOperationsProvider._()
+  AvailableOperationsProvider._()
     : super(
         from: null,
         argument: null,

@@ -10,10 +10,10 @@ part of 'tags.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Tags)
-const tagsProvider = TagsProvider._();
+final tagsProvider = TagsProvider._();
 
 final class TagsProvider extends $StreamNotifierProvider<Tags, List<Tag>> {
-  const TagsProvider._()
+  TagsProvider._()
     : super(
         from: null,
         argument: null,
@@ -39,7 +39,6 @@ abstract class _$Tags extends $StreamNotifier<List<Tag>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<Tag>>, List<Tag>>;
     final element =
         ref.element
@@ -49,26 +48,24 @@ abstract class _$Tags extends $StreamNotifier<List<Tag>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(tag)
-const tagProvider = TagFamily._();
+final tagProvider = TagFamily._();
 
 final class TagProvider
     extends $FunctionalProvider<AsyncValue<Tag?>, Tag?, FutureOr<Tag?>>
     with $FutureModifier<Tag?>, $FutureProvider<Tag?> {
-  const TagProvider._({
-    required TagFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'tagProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  TagProvider._({required TagFamily super.from, required String super.argument})
+    : super(
+        retry: null,
+        name: r'tagProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$tagHash();
@@ -106,7 +103,7 @@ String _$tagHash() => r'ee3ea41098b35219090fc57dc2280616cabeb701';
 
 final class TagFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Tag?>, String> {
-  const TagFamily._()
+  TagFamily._()
     : super(
         retry: null,
         name: r'tagProvider',

@@ -10,11 +10,11 @@ part of 'inspector.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(InspectorSize)
-const inspectorSizeProvider = InspectorSizeProvider._();
+final inspectorSizeProvider = InspectorSizeProvider._();
 
 final class InspectorSizeProvider
     extends $NotifierProvider<InspectorSize, double> {
-  const InspectorSizeProvider._()
+  InspectorSizeProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,7 +48,6 @@ abstract class _$InspectorSize extends $Notifier<double> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<double, double>;
     final element =
         ref.element
@@ -58,6 +57,6 @@ abstract class _$InspectorSize extends $Notifier<double> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

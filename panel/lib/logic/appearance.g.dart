@@ -10,11 +10,11 @@ part of 'appearance.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Appearance)
-const appearanceProvider = AppearanceProvider._();
+final appearanceProvider = AppearanceProvider._();
 
 final class AppearanceProvider
     extends $NotifierProvider<Appearance, ThemeMode> {
-  const AppearanceProvider._()
+  AppearanceProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,7 +48,6 @@ abstract class _$Appearance extends $Notifier<ThemeMode> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<ThemeMode, ThemeMode>;
     final element =
         ref.element
@@ -58,6 +57,6 @@ abstract class _$Appearance extends $Notifier<ThemeMode> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

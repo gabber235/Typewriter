@@ -11,7 +11,7 @@ part of 'nats.dart';
 /// Fetches the sentinel credentials from the API.
 
 @ProviderFor(sentinelCredentials)
-const sentinelCredentialsProvider = SentinelCredentialsProvider._();
+final sentinelCredentialsProvider = SentinelCredentialsProvider._();
 
 /// Fetches the sentinel credentials from the API.
 
@@ -26,7 +26,7 @@ final class SentinelCredentialsProvider
         $FutureModifier<SentinelCredentials>,
         $FutureProvider<SentinelCredentials> {
   /// Fetches the sentinel credentials from the API.
-  const SentinelCredentialsProvider._()
+  SentinelCredentialsProvider._()
     : super(
         from: null,
         argument: null,
@@ -56,10 +56,10 @@ String _$sentinelCredentialsHash() =>
     r'7af6d56b5446a8f989d1b063756203ce7ae1229d';
 
 @ProviderFor(Nats)
-const natsProvider = NatsProvider._();
+final natsProvider = NatsProvider._();
 
 final class NatsProvider extends $NotifierProvider<Nats, Client> {
-  const NatsProvider._()
+  NatsProvider._()
     : super(
         from: null,
         argument: null,
@@ -93,7 +93,6 @@ abstract class _$Nats extends $Notifier<Client> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<Client, Client>;
     final element =
         ref.element
@@ -103,15 +102,15 @@ abstract class _$Nats extends $Notifier<Client> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(NatsStatus)
-const natsStatusProvider = NatsStatusProvider._();
+final natsStatusProvider = NatsStatusProvider._();
 
 final class NatsStatusProvider extends $NotifierProvider<NatsStatus, Status> {
-  const NatsStatusProvider._()
+  NatsStatusProvider._()
     : super(
         from: null,
         argument: null,
@@ -145,7 +144,6 @@ abstract class _$NatsStatus extends $Notifier<Status> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<Status, Status>;
     final element =
         ref.element
@@ -155,6 +153,6 @@ abstract class _$NatsStatus extends $Notifier<Status> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

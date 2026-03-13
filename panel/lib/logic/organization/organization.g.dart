@@ -10,11 +10,11 @@ part of 'organization.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Organizations)
-const organizationsProvider = OrganizationsProvider._();
+final organizationsProvider = OrganizationsProvider._();
 
 final class OrganizationsProvider
     extends $StreamNotifierProvider<Organizations, List<OrganizationData>> {
-  const OrganizationsProvider._()
+  OrganizationsProvider._()
     : super(
         from: null,
         argument: null,
@@ -40,7 +40,6 @@ abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref
             as $Ref<AsyncValue<List<OrganizationData>>, List<OrganizationData>>;
@@ -55,17 +54,17 @@ abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(organizationId)
-const organizationIdProvider = OrganizationIdProvider._();
+final organizationIdProvider = OrganizationIdProvider._();
 
 final class OrganizationIdProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
-  const OrganizationIdProvider._()
+  OrganizationIdProvider._()
     : super(
         from: null,
         argument: null,
@@ -101,11 +100,11 @@ final class OrganizationIdProvider
 String _$organizationIdHash() => r'f6f5c4b016f460787d6e45f57e4728b708016496';
 
 @ProviderFor(Organization)
-const organizationProvider = OrganizationProvider._();
+final organizationProvider = OrganizationProvider._();
 
 final class OrganizationProvider
     extends $AsyncNotifierProvider<Organization, OrganizationData?> {
-  const OrganizationProvider._()
+  OrganizationProvider._()
     : super(
         from: null,
         argument: null,
@@ -131,7 +130,6 @@ abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<AsyncValue<OrganizationData?>, OrganizationData?>;
     final element =
@@ -142,6 +140,6 @@ abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

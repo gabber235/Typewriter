@@ -10,10 +10,10 @@ part of 'sidebar.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(SidebarSize)
-const sidebarSizeProvider = SidebarSizeProvider._();
+final sidebarSizeProvider = SidebarSizeProvider._();
 
 final class SidebarSizeProvider extends $NotifierProvider<SidebarSize, double> {
-  const SidebarSizeProvider._()
+  SidebarSizeProvider._()
     : super(
         from: null,
         argument: null,
@@ -47,7 +47,6 @@ abstract class _$SidebarSize extends $Notifier<double> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<double, double>;
     final element =
         ref.element
@@ -57,6 +56,6 @@ abstract class _$SidebarSize extends $Notifier<double> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

@@ -10,11 +10,11 @@ part of 'user_join_requests.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(UserJoinRequests)
-const userJoinRequestsProvider = UserJoinRequestsProvider._();
+final userJoinRequestsProvider = UserJoinRequestsProvider._();
 
 final class UserJoinRequestsProvider
     extends $StreamNotifierProvider<UserJoinRequests, List<UserJoinRequest>> {
-  const UserJoinRequestsProvider._()
+  UserJoinRequestsProvider._()
     : super(
         from: null,
         argument: null,
@@ -41,7 +41,6 @@ abstract class _$UserJoinRequests
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref
             as $Ref<AsyncValue<List<UserJoinRequest>>, List<UserJoinRequest>>;
@@ -56,6 +55,6 @@ abstract class _$UserJoinRequests
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

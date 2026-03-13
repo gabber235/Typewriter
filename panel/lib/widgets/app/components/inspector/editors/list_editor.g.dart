@@ -10,11 +10,11 @@ part of 'list_editor.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(_listValueLength)
-const _listValueLengthProvider = _ListValueLengthFamily._();
+final _listValueLengthProvider = _ListValueLengthFamily._();
 
 final class _ListValueLengthProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
-  const _ListValueLengthProvider._({
+  _ListValueLengthProvider._({
     required _ListValueLengthFamily super.from,
     required String super.argument,
   }) : super(
@@ -69,7 +69,7 @@ String _$_listValueLengthHash() => r'4bdfc95cdc6ccd08b67e737bd861f57e80b9a9bc';
 
 final class _ListValueLengthFamily extends $Family
     with $FunctionalFamilyOverride<int, String> {
-  const _ListValueLengthFamily._()
+  _ListValueLengthFamily._()
     : super(
         retry: null,
         name: r'_listValueLengthProvider',

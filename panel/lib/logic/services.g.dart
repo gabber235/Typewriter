@@ -10,11 +10,11 @@ part of 'services.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Services)
-const servicesProvider = ServicesProvider._();
+final servicesProvider = ServicesProvider._();
 
 final class ServicesProvider
     extends $StreamNotifierProvider<Services, List<Service>> {
-  const ServicesProvider._()
+  ServicesProvider._()
     : super(
         from: null,
         argument: null,
@@ -40,7 +40,6 @@ abstract class _$Services extends $StreamNotifier<List<Service>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<Service>>, List<Service>>;
     final element =
         ref.element
@@ -50,18 +49,18 @@ abstract class _$Services extends $StreamNotifier<List<Service>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(service)
-const serviceProvider = ServiceFamily._();
+final serviceProvider = ServiceFamily._();
 
 final class ServiceProvider
     extends
         $FunctionalProvider<AsyncValue<Service?>, Service?, FutureOr<Service?>>
     with $FutureModifier<Service?>, $FutureProvider<Service?> {
-  const ServiceProvider._({
+  ServiceProvider._({
     required ServiceFamily super.from,
     required String super.argument,
   }) : super(
@@ -108,7 +107,7 @@ String _$serviceHash() => r'733a3e79fd93f72b899b5187c08646c59422cbbd';
 
 final class ServiceFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Service?>, String> {
-  const ServiceFamily._()
+  ServiceFamily._()
     : super(
         retry: null,
         name: r'serviceProvider',

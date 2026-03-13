@@ -10,11 +10,11 @@ part of 'panes.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Panes)
-const panesProvider = PanesProvider._();
+final panesProvider = PanesProvider._();
 
 final class PanesProvider
     extends $NotifierProvider<Panes, Map<String, PaneInfo>> {
-  const PanesProvider._()
+  PanesProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,7 +48,6 @@ abstract class _$Panes extends $Notifier<Map<String, PaneInfo>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<Map<String, PaneInfo>, Map<String, PaneInfo>>;
     final element =
         ref.element
@@ -58,6 +57,6 @@ abstract class _$Panes extends $Notifier<Map<String, PaneInfo>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

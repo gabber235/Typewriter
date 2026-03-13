@@ -10,11 +10,11 @@ part of 'cursor_controller.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(CursorController)
-const cursorControllerProvider = CursorControllerProvider._();
+final cursorControllerProvider = CursorControllerProvider._();
 
 final class CursorControllerProvider
     extends $NotifierProvider<CursorController, MouseCursor> {
-  const CursorControllerProvider._()
+  CursorControllerProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,7 +48,6 @@ abstract class _$CursorController extends $Notifier<MouseCursor> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<MouseCursor, MouseCursor>;
     final element =
         ref.element
@@ -58,6 +57,6 @@ abstract class _$CursorController extends $Notifier<MouseCursor> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

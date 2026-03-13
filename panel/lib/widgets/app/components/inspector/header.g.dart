@@ -10,7 +10,7 @@ part of 'header.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(currentHeaderActions)
-const currentHeaderActionsProvider = CurrentHeaderActionsFamily._();
+final currentHeaderActionsProvider = CurrentHeaderActionsFamily._();
 
 final class CurrentHeaderActionsProvider
     extends
@@ -20,7 +20,7 @@ final class CurrentHeaderActionsProvider
           Map<String, HeaderActions>
         >
     with $Provider<Map<String, HeaderActions>> {
-  const CurrentHeaderActionsProvider._({
+  CurrentHeaderActionsProvider._({
     required CurrentHeaderActionsFamily super.from,
     required EditorMode super.argument,
   }) : super(
@@ -77,7 +77,7 @@ String _$currentHeaderActionsHash() =>
 
 final class CurrentHeaderActionsFamily extends $Family
     with $FunctionalFamilyOverride<Map<String, HeaderActions>, EditorMode> {
-  const CurrentHeaderActionsFamily._()
+  CurrentHeaderActionsFamily._()
     : super(
         retry: null,
         name: r'currentHeaderActionsProvider',
@@ -94,12 +94,12 @@ final class CurrentHeaderActionsFamily extends $Family
 }
 
 @ProviderFor(_actions)
-const _actionsProvider = _ActionsFamily._();
+final _actionsProvider = _ActionsFamily._();
 
 final class _ActionsProvider
     extends $FunctionalProvider<HeaderActions, HeaderActions, HeaderActions>
     with $Provider<HeaderActions> {
-  const _ActionsProvider._({
+  _ActionsProvider._({
     required _ActionsFamily super.from,
     required (String, EditorMode) super.argument,
   }) : super(
@@ -154,7 +154,7 @@ String _$_actionsHash() => r'67c26626e08138467847823c96e9cc5704a90188';
 
 final class _ActionsFamily extends $Family
     with $FunctionalFamilyOverride<HeaderActions, (String, EditorMode)> {
-  const _ActionsFamily._()
+  _ActionsFamily._()
     : super(
         retry: null,
         name: r'_actionsProvider',
@@ -171,7 +171,7 @@ final class _ActionsFamily extends $Family
 }
 
 @ProviderFor(headerActions)
-const headerActionsProvider = HeaderActionsProvider._();
+final headerActionsProvider = HeaderActionsProvider._();
 
 final class HeaderActionsProvider
     extends
@@ -181,7 +181,7 @@ final class HeaderActionsProvider
           List<HeaderAction>
         >
     with $Provider<List<HeaderAction>> {
-  const HeaderActionsProvider._()
+  HeaderActionsProvider._()
     : super(
         from: null,
         argument: null,

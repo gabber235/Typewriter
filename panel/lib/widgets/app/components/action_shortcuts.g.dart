@@ -10,11 +10,11 @@ part of 'action_shortcuts.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ActionShortcuts)
-const actionShortcutsProvider = ActionShortcutsProvider._();
+final actionShortcutsProvider = ActionShortcutsProvider._();
 
 final class ActionShortcutsProvider
     extends $NotifierProvider<ActionShortcuts, Map<String, ActionShortcut>> {
-  const ActionShortcutsProvider._()
+  ActionShortcutsProvider._()
     : super(
         from: null,
         argument: null,
@@ -49,7 +49,6 @@ abstract class _$ActionShortcuts
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref
             as $Ref<Map<String, ActionShortcut>, Map<String, ActionShortcut>>;
@@ -64,6 +63,6 @@ abstract class _$ActionShortcuts
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

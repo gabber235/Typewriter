@@ -10,10 +10,10 @@ part of 'books.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Books)
-const booksProvider = BooksProvider._();
+final booksProvider = BooksProvider._();
 
 final class BooksProvider extends $StreamNotifierProvider<Books, List<Book>> {
-  const BooksProvider._()
+  BooksProvider._()
     : super(
         from: null,
         argument: null,
@@ -39,7 +39,6 @@ abstract class _$Books extends $StreamNotifier<List<Book>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<Book>>, List<Book>>;
     final element =
         ref.element
@@ -49,12 +48,12 @@ abstract class _$Books extends $StreamNotifier<List<Book>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(filteredBooks)
-const filteredBooksProvider = FilteredBooksFamily._();
+final filteredBooksProvider = FilteredBooksFamily._();
 
 final class FilteredBooksProvider
     extends
@@ -64,7 +63,7 @@ final class FilteredBooksProvider
           FutureOr<List<Book>>
         >
     with $FutureModifier<List<Book>>, $FutureProvider<List<Book>> {
-  const FilteredBooksProvider._({
+  FilteredBooksProvider._({
     required FilteredBooksFamily super.from,
     required String super.argument,
   }) : super(
@@ -111,7 +110,7 @@ String _$filteredBooksHash() => r'a92cfb7fc28f666129d71306550ced5d675c5cc6';
 
 final class FilteredBooksFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Book>>, String> {
-  const FilteredBooksFamily._()
+  FilteredBooksFamily._()
     : super(
         retry: null,
         name: r'filteredBooksProvider',
@@ -128,12 +127,12 @@ final class FilteredBooksFamily extends $Family
 }
 
 @ProviderFor(bookId)
-const bookIdProvider = BookIdProvider._();
+final bookIdProvider = BookIdProvider._();
 
 final class BookIdProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
-  const BookIdProvider._()
+  BookIdProvider._()
     : super(
         from: null,
         argument: null,
@@ -169,12 +168,12 @@ final class BookIdProvider
 String _$bookIdHash() => r'd84a340bc2c2d1d02b27b5a7d4b8ea2abdb05918';
 
 @ProviderFor(book)
-const bookProvider = BookFamily._();
+final bookProvider = BookFamily._();
 
 final class BookProvider
     extends $FunctionalProvider<AsyncValue<Book?>, Book?, FutureOr<Book?>>
     with $FutureModifier<Book?>, $FutureProvider<Book?> {
-  const BookProvider._({
+  BookProvider._({
     required BookFamily super.from,
     required String super.argument,
   }) : super(
@@ -221,7 +220,7 @@ String _$bookHash() => r'e2f0b487e94df7c1a25de9490706f22331985450';
 
 final class BookFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Book?>, String> {
-  const BookFamily._()
+  BookFamily._()
     : super(
         retry: null,
         name: r'bookProvider',

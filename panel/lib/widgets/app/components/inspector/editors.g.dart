@@ -10,12 +10,12 @@ part of 'editors.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(editors)
-const editorsProvider = EditorsProvider._();
+final editorsProvider = EditorsProvider._();
 
 final class EditorsProvider
     extends $FunctionalProvider<List<Editor>, List<Editor>, List<Editor>>
     with $Provider<List<Editor>> {
-  const EditorsProvider._()
+  EditorsProvider._()
     : super(
         from: null,
         argument: null,
@@ -51,12 +51,12 @@ final class EditorsProvider
 String _$editorsHash() => r'f38c2fef4a7bd1f699db349b377d5b461eeacde4';
 
 @ProviderFor(pathDisplayName)
-const pathDisplayNameProvider = PathDisplayNameFamily._();
+final pathDisplayNameProvider = PathDisplayNameFamily._();
 
 final class PathDisplayNameProvider
     extends $FunctionalProvider<String, String, String>
     with $Provider<String> {
-  const PathDisplayNameProvider._({
+  PathDisplayNameProvider._({
     required PathDisplayNameFamily super.from,
     required String super.argument,
   }) : super(
@@ -111,7 +111,7 @@ String _$pathDisplayNameHash() => r'4cb4a7c76014fdfb5b467087fff861b000a9b4f2';
 
 final class PathDisplayNameFamily extends $Family
     with $FunctionalFamilyOverride<String, String> {
-  const PathDisplayNameFamily._()
+  PathDisplayNameFamily._()
     : super(
         retry: null,
         name: r'pathDisplayNameProvider',

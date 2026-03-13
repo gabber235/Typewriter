@@ -17,7 +17,7 @@ part of 'current_interaction_mode.dart';
 /// - Access mode-specific functionality in a type-safe manner
 
 @ProviderFor(CurrentInteractionMode)
-const currentInteractionModeProvider = CurrentInteractionModeProvider._();
+final currentInteractionModeProvider = CurrentInteractionModeProvider._();
 
 /// Riverpod notifier that manages the current active interaction mode.
 ///
@@ -35,7 +35,7 @@ final class CurrentInteractionModeProvider
   /// - Watch the current active mode
   /// - Transition between modes
   /// - Access mode-specific functionality in a type-safe manner
-  const CurrentInteractionModeProvider._()
+  CurrentInteractionModeProvider._()
     : super(
         from: null,
         argument: null,
@@ -78,7 +78,6 @@ abstract class _$CurrentInteractionMode extends $Notifier<InteractionMode> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<InteractionMode, InteractionMode>;
     final element =
         ref.element
@@ -88,6 +87,6 @@ abstract class _$CurrentInteractionMode extends $Notifier<InteractionMode> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
