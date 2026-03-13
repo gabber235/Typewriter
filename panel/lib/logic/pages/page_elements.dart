@@ -1,6 +1,7 @@
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
+import "package:typewriter_panel/logic/pages/scene.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 
 part "page_elements.freezed.dart";
@@ -67,6 +68,8 @@ abstract class PageElement with _$PageElement {
     required EntryPlacement placement,
   }) = PageElementGroup;
 
+  const factory PageElement.cue({required Cue cue}) = PageElementCue;
+
   factory PageElement.fromJson(Map<String, dynamic> json) =>
       _$PageElementFromJson(json);
 }
@@ -124,4 +127,16 @@ extension PageElementExtension on PageElement {
       _ => this,
     };
   }
+}
+
+@freezed
+abstract class ElementLink with _$ElementLink {
+  const factory ElementLink({
+    required String linkId,
+    required String otherId,
+    required String path,
+  }) = _ElementLink;
+
+  factory ElementLink.fromJson(Map<String, dynamic> json) =>
+      _$ElementLinkFromJson(json);
 }

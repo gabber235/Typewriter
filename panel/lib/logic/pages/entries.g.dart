@@ -64,11 +64,11 @@ NoBlueprintPageEntry _$NoBlueprintPageEntryFromJson(
   id: json['id'] as String,
   name: json['name'] as String,
   placement: EntryPlacement.fromJson(json['placement'] as Map<String, dynamic>),
-  inwardEdges: (json['inwardEdges'] as List<dynamic>)
-      .map((e) => EntryEdge.fromJson(e as Map<String, dynamic>))
+  inwardLinks: (json['inwardLinks'] as List<dynamic>)
+      .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
       .toList(),
-  outwardEdges: (json['outwardEdges'] as List<dynamic>)
-      .map((e) => EntryEdge.fromJson(e as Map<String, dynamic>))
+  outwardLinks: (json['outwardLinks'] as List<dynamic>)
+      .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
       .toList(),
   metadata:
       (json['metadata'] as List<dynamic>?)
@@ -84,8 +84,8 @@ Map<String, dynamic> _$NoBlueprintPageEntryToJson(
   'id': instance.id,
   'name': instance.name,
   'placement': instance.placement.toJson(),
-  'inwardEdges': instance.inwardEdges.map((e) => e.toJson()).toList(),
-  'outwardEdges': instance.outwardEdges.map((e) => e.toJson()).toList(),
+  'inwardLinks': instance.inwardLinks.map((e) => e.toJson()).toList(),
+  'outwardLinks': instance.outwardLinks.map((e) => e.toJson()).toList(),
   'metadata': instance.metadata.map((e) => e.toJson()).toList(),
   '_kind': instance.$type,
 };
@@ -99,10 +99,10 @@ _EntryDefinition _$EntryDefinitionFromJson(
   placement: EntryPlacement.fromJson(json['placement'] as Map<String, dynamic>),
   data: DynamicData.fromJson(json['data'] as Map<String, dynamic>),
   inwardEdges: (json['inwardEdges'] as List<dynamic>)
-      .map((e) => EntryEdge.fromJson(e as Map<String, dynamic>))
+      .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
       .toList(),
   outwardEdges: (json['outwardEdges'] as List<dynamic>)
-      .map((e) => EntryEdge.fromJson(e as Map<String, dynamic>))
+      .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
       .toList(),
   metadata:
       (json['metadata'] as List<dynamic>?)
@@ -223,19 +223,6 @@ DeprecatedModifier _$DeprecatedModifierFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$DeprecatedModifierToJson(DeprecatedModifier instance) =>
     <String, dynamic>{'reason': instance.reason, 'kind': instance.$type};
 
-_EntryEdge _$EntryEdgeFromJson(Map<String, dynamic> json) => _EntryEdge(
-  id: json['id'] as String,
-  otherId: json['otherId'] as String,
-  path: json['path'] as String,
-);
-
-Map<String, dynamic> _$EntryEdgeToJson(_EntryEdge instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'otherId': instance.otherId,
-      'path': instance.path,
-    };
-
 CustomEntryMetadata _$CustomEntryMetadataFromJson(Map<String, dynamic> json) =>
     CustomEntryMetadata(name: json['name'] as String, data: json['data']);
 
@@ -251,11 +238,11 @@ Map<String, dynamic> _$CustomEntryMetadataToJson(
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Entry)
-const entryProvider = EntryFamily._();
+final entryProvider = EntryFamily._();
 
 final class EntryProvider
     extends $AsyncNotifierProvider<Entry, EntryDefinition?> {
-  const EntryProvider._({
+  EntryProvider._({
     required EntryFamily super.from,
     required String super.argument,
   }) : super(
@@ -302,7 +289,7 @@ final class EntryFamily extends $Family
           FutureOr<EntryDefinition?>,
           String
         > {
-  const EntryFamily._()
+  EntryFamily._()
     : super(
         retry: null,
         name: r'entryProvider',
@@ -326,7 +313,6 @@ abstract class _$Entry extends $AsyncNotifier<EntryDefinition?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args);
     final ref =
         this.ref as $Ref<AsyncValue<EntryDefinition?>, EntryDefinition?>;
     final element =
@@ -337,6 +323,6 @@ abstract class _$Entry extends $AsyncNotifier<EntryDefinition?> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, () => build(_$args));
   }
 }

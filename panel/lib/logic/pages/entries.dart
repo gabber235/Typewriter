@@ -6,6 +6,7 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/graph/graph_identifier.dart";
+import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -74,8 +75,8 @@ abstract class PageEntry with _$PageEntry {
     required String id,
     required String name,
     required EntryPlacement placement,
-    required List<EntryEdge> inwardEdges,
-    required List<EntryEdge> outwardEdges,
+    required List<ElementLink> inwardLinks,
+    required List<ElementLink> outwardLinks,
     @Default([]) List<EntryMetadata> metadata,
   }) = NoBlueprintPageEntry;
 
@@ -91,8 +92,8 @@ abstract class EntryDefinition with _$EntryDefinition {
     required EntryBlueprint blueprint,
     required EntryPlacement placement,
     required DynamicData data,
-    required List<EntryEdge> inwardEdges,
-    required List<EntryEdge> outwardEdges,
+    required List<ElementLink> inwardEdges,
+    required List<ElementLink> outwardEdges,
     @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
 
@@ -155,18 +156,6 @@ abstract class EntryModifier with _$EntryModifier {
 
   factory EntryModifier.fromJson(Map<String, dynamic> json) =>
       _$EntryModifierFromJson(json);
-}
-
-@freezed
-abstract class EntryEdge with _$EntryEdge {
-  const factory EntryEdge({
-    required String id,
-    required String otherId,
-    required String path,
-  }) = _EntryEdge;
-
-  factory EntryEdge.fromJson(Map<String, dynamic> json) =>
-      _$EntryEdgeFromJson(json);
 }
 
 @Freezed(unionKey: "_kind")

@@ -36,6 +36,28 @@ Map<String, dynamic> _$PageElementGroupToJson(PageElementGroup instance) =>
       '_kind': instance.$type,
     };
 
+PageElementCue _$PageElementCueFromJson(Map<String, dynamic> json) =>
+    PageElementCue(
+      cue: Cue.fromJson(json['cue'] as Map<String, dynamic>),
+      $type: json['_kind'] as String?,
+    );
+
+Map<String, dynamic> _$PageElementCueToJson(PageElementCue instance) =>
+    <String, dynamic>{'cue': instance.cue.toJson(), '_kind': instance.$type};
+
+_ElementLink _$ElementLinkFromJson(Map<String, dynamic> json) => _ElementLink(
+  linkId: json['linkId'] as String,
+  otherId: json['otherId'] as String,
+  path: json['path'] as String,
+);
+
+Map<String, dynamic> _$ElementLinkToJson(_ElementLink instance) =>
+    <String, dynamic>{
+      'linkId': instance.linkId,
+      'otherId': instance.otherId,
+      'path': instance.path,
+    };
+
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
@@ -44,11 +66,11 @@ Map<String, dynamic> _$PageElementGroupToJson(PageElementGroup instance) =>
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(PageElements)
-const pageElementsProvider = PageElementsFamily._();
+final pageElementsProvider = PageElementsFamily._();
 
 final class PageElementsProvider
     extends $AsyncNotifierProvider<PageElements, List<PageElement>> {
-  const PageElementsProvider._({
+  PageElementsProvider._({
     required PageElementsFamily super.from,
     required String super.argument,
   }) : super(
@@ -84,7 +106,7 @@ final class PageElementsProvider
   }
 }
 
-String _$pageElementsHash() => r'77530f8d0c8317b8c70868251499c58ebd7b64dc';
+String _$pageElementsHash() => r'581cfa40cc2cd3d8cce0bfb88ffb03beda4527e6';
 
 final class PageElementsFamily extends $Family
     with
@@ -95,7 +117,7 @@ final class PageElementsFamily extends $Family
           FutureOr<List<PageElement>>,
           String
         > {
-  const PageElementsFamily._()
+  PageElementsFamily._()
     : super(
         retry: null,
         name: r'pageElementsProvider',
@@ -119,7 +141,6 @@ abstract class _$PageElements extends $AsyncNotifier<List<PageElement>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args);
     final ref =
         this.ref as $Ref<AsyncValue<List<PageElement>>, List<PageElement>>;
     final element =
@@ -130,6 +151,6 @@ abstract class _$PageElements extends $AsyncNotifier<List<PageElement>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, () => build(_$args));
   }
 }
