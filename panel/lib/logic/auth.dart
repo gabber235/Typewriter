@@ -1,5 +1,3 @@
-import "dart:io";
-
 import "package:flutter/foundation.dart";
 import "package:oidc/oidc.dart";
 import "package:oidc_default_store/oidc_default_store.dart";
@@ -7,6 +5,30 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/utils/app_config.dart";
 
 part "auth.g.dart";
+
+bool _usesCustomSchemeRedirect() {
+  if (kIsWeb) {
+    return false;
+  }
+
+  return switch (defaultTargetPlatform) {
+    TargetPlatform.android ||
+    TargetPlatform.iOS ||
+    TargetPlatform.macOS => true,
+    _ => false,
+  };
+}
+
+bool _usesLoopbackRedirect() {
+  if (kIsWeb) {
+    return false;
+  }
+
+  return switch (defaultTargetPlatform) {
+    TargetPlatform.windows || TargetPlatform.linux => true,
+    _ => false,
+  };
+}
 
 class UserInfo {
   const UserInfo({
@@ -63,17 +85,17 @@ class Auth extends _$Auth {
 
     final redirectUri = kIsWeb
         ? Uri.parse(config.redirectUri)
-        : Platform.isAndroid || Platform.isIOS || Platform.isMacOS
+        : _usesCustomSchemeRedirect()
         ? Uri.parse("com.typewritermc.panel:/oauth2redirect")
-        : Platform.isWindows || Platform.isLinux
+        : _usesLoopbackRedirect()
         ? Uri.parse("http://localhost:0")
         : Uri.parse(config.redirectUri);
 
     final postLogoutRedirectUri = kIsWeb
         ? Uri.parse(config.postLogoutRedirectUri)
-        : Platform.isAndroid || Platform.isIOS || Platform.isMacOS
+        : _usesCustomSchemeRedirect()
         ? Uri.parse("com.typewritermc.panel:/endsessionredirect")
-        : Platform.isWindows || Platform.isLinux
+        : _usesLoopbackRedirect()
         ? Uri.parse("http://localhost:0")
         : null;
 
