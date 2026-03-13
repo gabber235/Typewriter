@@ -13,10 +13,11 @@ import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.quest.entries.interfaces.LocatableObjectivePathStreams
 import org.bukkit.entity.Player
 import java.util.*
 
-@Entry("location_objective", "A location objective definition", Colors.BLUE_VIOLET, "streamline:target-solid")
+@Entry("locatable_objective", "A location objective definition", Colors.BLUE_VIOLET, "streamline:target-solid")
 /**
  * The `LocationObjective` entry is a task that the player can complete by reaching a specific location.
  * It is mainly for displaying the progress to a player.
@@ -33,17 +34,16 @@ import java.util.*
  * This could be used to guide the players to a specific location.
  * Showing the players where they need to go with a path stream.
  */
-@Deprecated("Use LocatableObjectiveEntry")
-class LocationObjectiveEntry(
+class LocatableObjectiveEntry(
     override val id: String = "",
     override val name: String = "",
     override val quest: Ref<QuestEntry> = emptyRef(),
     override val children: List<Ref<AudienceEntry>> = emptyList(),
     override val criteria: List<Criteria> = emptyList(),
     override val display: Var<String> = ConstVar(""),
-    val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
+    override val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
     override val priorityOverride: Optional<Int> = Optional.empty(),
-) : LocatableObjective {
+) : LocatableObjectivePathStreams {
     override fun parser(): PlaceholderParser = placeholderParser {
         include(super.parser())
 

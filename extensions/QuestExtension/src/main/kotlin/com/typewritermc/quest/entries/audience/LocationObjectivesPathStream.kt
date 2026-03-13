@@ -30,6 +30,7 @@ import com.typewritermc.roadnetwork.entries.highestPathStreamDisplayEntry
  * ## How could this be used?
  * This could be used to show a path to each location objective in a quest.
  */
+@Deprecated("Use LocatableObjectivesPathStream")
 class LocationObjectivesPathStream(
     override val id: String = "",
     override val name: String = "",

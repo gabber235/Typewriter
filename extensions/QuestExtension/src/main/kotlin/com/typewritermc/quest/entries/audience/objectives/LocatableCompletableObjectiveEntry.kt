@@ -15,10 +15,9 @@ import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
-import com.typewritermc.quest.entries.ObjectiveEntry
 import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.interfaces.LocatableObjectivePathStreams
 import com.typewritermc.quest.entries.inactiveObjectiveDisplay
-import com.typewritermc.quest.entries.interfaces.LocatableObjective
 import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
 import java.util.*
@@ -29,7 +28,7 @@ private val completedObjectiveDisplay by snippet(
 )
 
 @Entry(
-    "location_completable_objective",
+    "locatable_completable_objective",
     "A location objective definition that can show a completed stage",
     Colors.BLUE_VIOLET,
     "streamline:target-solid"
@@ -44,7 +43,7 @@ private val completedObjectiveDisplay by snippet(
  * The order in which the player collects the items does not matter.
  * But you want to show the player which items they have collected.
  */
-class LocationCompletableObjectiveEntry(
+class LocatableCompletableObjectiveEntry(
     override val id: String = "",
     override val name: String = "",
     override val quest: Ref<QuestEntry> = emptyRef(),
@@ -52,17 +51,15 @@ class LocationCompletableObjectiveEntry(
     @Help("The criteria need to be met for the objective to be able to be shown.")
     val showCriteria: List<Criteria> = emptyList(),
     @Help("The criteria to display the objective as completed.")
-    val completedCriteria: List<Criteria> = emptyList(),
+    override val completedCriteria: List<Criteria> = emptyList(),
     override val display: Var<String> = ConstVar(""),
     override val priorityOverride: Optional<Int> = Optional.empty(),
-    val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
-) : LocatableObjective, ObjectiveEntry {
+    override val targetLocation: Var<Position> = ConstVar(Position.ORIGIN),
+) : LocatableObjectivePathStreams {
 
     override val criteria: List<Criteria> get() = showCriteria
 
     override fun parser(): PlaceholderParser = placeholderParser {
-        include(super<LocatableObjective>.parser())
-
         literal("location") {
             string("format") { format ->
                 supply {
