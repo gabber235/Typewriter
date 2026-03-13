@@ -104,7 +104,7 @@ class EntryGraph extends HookConsumerWidget {
         [
           for (final edge in definition.outwardEdges)
             GraphEdge(
-              id: edge.id,
+              id: edge.linkId,
               source: EntryIdentifier(definition.id),
               target: EntryIdentifier(edge.otherId),
               color: definition.blueprint.color,

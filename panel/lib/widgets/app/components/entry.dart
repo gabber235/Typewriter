@@ -742,7 +742,7 @@ class _RenderAdaptiveEntryLayout extends RenderBox
     for (final child in [
       if (_showSuffix && suffixChild != null) suffixChild,
       if (_showCenter && centerChild != null) centerChild,
-      if (leadingChild != null) leadingChild,
+      ?leadingChild,
     ]) {
       final childParentData = child.parentData! as BoxParentData;
       final isHit = result.addWithPaintOffset(

@@ -37,12 +37,7 @@ class SortedLogicalKeyActivator
     LogicalKeyboardKey? key2,
     LogicalKeyboardKey? key3,
     LogicalKeyboardKey? key4,
-  ]) : _orderedKeys = <LogicalKeyboardKey>[
-          key1,
-          if (key2 != null) key2,
-          if (key3 != null) key3,
-          if (key4 != null) key4,
-        ] {
+  ]) : _orderedKeys = <LogicalKeyboardKey>[key1, ?key2, ?key3, ?key4] {
     _validateUnique();
   }
 
@@ -52,8 +47,8 @@ class SortedLogicalKeyActivator
   ///
   /// The `keys` list must not be empty and must not contain duplicates.
   SortedLogicalKeyActivator.fromList(List<LogicalKeyboardKey> keys)
-      : assert(keys.isNotEmpty, "The list of keys must not be empty."),
-        _orderedKeys = List<LogicalKeyboardKey>.unmodifiable(keys) {
+    : assert(keys.isNotEmpty, "The list of keys must not be empty."),
+      _orderedKeys = List<LogicalKeyboardKey>.unmodifiable(keys) {
     _validateUnique();
   }
 
@@ -77,9 +72,7 @@ class SortedLogicalKeyActivator
   @override
   Iterable<LogicalKeyboardKey> get triggers => _triggers;
   late final Set<LogicalKeyboardKey> _triggers = _keySet
-      .expand(
-        (key) => _unmapSynonyms[key] ?? <LogicalKeyboardKey>[key],
-      )
+      .expand((key) => _unmapSynonyms[key] ?? <LogicalKeyboardKey>[key])
       .toSet();
 
   bool _checkKeyRequirements(Set<LogicalKeyboardKey> pressed) {
@@ -99,7 +92,7 @@ class SortedLogicalKeyActivator
   }
 
   static final Map<LogicalKeyboardKey, List<LogicalKeyboardKey>>
-      _unmapSynonyms = <LogicalKeyboardKey, List<LogicalKeyboardKey>>{
+  _unmapSynonyms = <LogicalKeyboardKey, List<LogicalKeyboardKey>>{
     LogicalKeyboardKey.control: <LogicalKeyboardKey>[
       LogicalKeyboardKey.controlLeft,
       LogicalKeyboardKey.controlRight,
@@ -122,9 +115,7 @@ class SortedLogicalKeyActivator
   String debugDescribeKeys() {
     final displayKeys = List<LogicalKeyboardKey>.from(_orderedKeys);
     return displayKeys
-        .map<String>(
-          (key) => key.debugName ?? key.toString(),
-        )
+        .map<String>((key) => key.debugName ?? key.toString())
         .join(" + ");
   }
 
@@ -183,36 +174,29 @@ class SortedLogicalKeyActivator
 
 extension ShortcutActivatorX on ShortcutActivator {
   List<LogicalKeyboardKey> get keys => switch (this) {
-        SingleActivator(
-          :final alt,
-          :final control,
-          :final meta,
-          :final shift,
-          :final trigger
-        ) =>
-          [
-            if (alt) LogicalKeyboardKey.alt,
-            if (control) LogicalKeyboardKey.control,
-            if (meta) LogicalKeyboardKey.meta,
-            if (shift) LogicalKeyboardKey.shift,
-            trigger,
-          ],
-        CharacterActivator(
-          :final alt,
-          :final control,
-          :final meta,
-        ) =>
-          [
-            if (alt) LogicalKeyboardKey.alt,
-            if (control) LogicalKeyboardKey.control,
-            if (meta) LogicalKeyboardKey.meta,
-          ],
-        LogicalKeySet(:final keys) => keys.toList(),
-        SortedLogicalKeyActivator(:final orderedKeys) => orderedKeys.toList(),
-        _ => throw UnsupportedError(
-            "Unsupported shortcut type $runtimeType",
-          ),
-      };
+    SingleActivator(
+      :final alt,
+      :final control,
+      :final meta,
+      :final shift,
+      :final trigger,
+    ) =>
+      [
+        if (alt) LogicalKeyboardKey.alt,
+        if (control) LogicalKeyboardKey.control,
+        if (meta) LogicalKeyboardKey.meta,
+        if (shift) LogicalKeyboardKey.shift,
+        trigger,
+      ],
+    CharacterActivator(:final alt, :final control, :final meta) => [
+      if (alt) LogicalKeyboardKey.alt,
+      if (control) LogicalKeyboardKey.control,
+      if (meta) LogicalKeyboardKey.meta,
+    ],
+    LogicalKeySet(:final keys) => keys.toList(),
+    SortedLogicalKeyActivator(:final orderedKeys) => orderedKeys.toList(),
+    _ => throw UnsupportedError("Unsupported shortcut type $runtimeType"),
+  };
 
   int get length => keys.length;
 }

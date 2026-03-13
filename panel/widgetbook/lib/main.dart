@@ -46,7 +46,6 @@ class TypewriterWidgetbook extends StatelessWidget {
         ),
         AlignmentAddon(),
         ZoomAddon(),
-        TimeDilationAddon(),
       ],
       lightTheme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),

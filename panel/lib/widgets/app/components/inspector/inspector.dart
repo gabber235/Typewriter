@@ -392,7 +392,7 @@ class _InspectorContent extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 12,
       children: [
-        if (selectedHeader != null) selectedHeader,
+        ?selectedHeader,
         if (selectedDataBlueprint != null)
           ObjectEditorWidget(
             path: "",
