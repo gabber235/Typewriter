@@ -24,7 +24,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner:
-  custom_lint:
   flutter_lints:
   riverpod_generator:
   riverpod_lint:

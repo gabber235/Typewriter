@@ -10,13 +10,13 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  hooks_riverpod: ^3.0.0
-  riverpod_annotation: ^3.0.0
+  hooks_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
   flutter_hooks: ^0.21.2
   auto_route: ^11.0.0
-  oidc: ^0.13.0
-  oidc_default_store: ^0.5.0
-  oidc_core: ^0.15.0
+  oidc: ^0.14.0
+  oidc_default_store: ^0.6.0
+  oidc_core: ^0.16.0
   localstorage: ^6.0.0
   freezed_annotation:
   json_annotation:
@@ -46,10 +46,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  riverpod_generator:
+  riverpod_generator: ^4.0.3
   build_runner:
-  custom_lint:
-  riverpod_lint:
+  riverpod_lint: ^3.1.3
   flutter_lints:
   auto_route_generator:
   icons_launcher:

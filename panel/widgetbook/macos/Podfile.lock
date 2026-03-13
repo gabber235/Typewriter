@@ -8,6 +8,9 @@ PODS:
   - flutter_appauth (0.0.1):
     - AppAuth (= 2.0.0)
     - FlutterMacOS
+  - flutter_secure_storage_darwin (10.0.0):
+    - Flutter
+    - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - oidc_macos (0.0.1):
     - FlutterMacOS
@@ -16,26 +19,19 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - simple_secure_storage_darwin (0.0.1):
-    - Flutter
-    - FlutterMacOS
   - url_launcher_macos (0.0.1):
-    - FlutterMacOS
-  - webcrypto (0.1.1):
-    - Flutter
     - FlutterMacOS
   - window_to_front (0.0.1):
     - FlutterMacOS
 
 DEPENDENCIES:
   - flutter_appauth (from `Flutter/ephemeral/.symlinks/plugins/flutter_appauth/macos`)
+  - flutter_secure_storage_darwin (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - oidc_macos (from `Flutter/ephemeral/.symlinks/plugins/oidc_macos/macos`)
   - rive_native (from `Flutter/ephemeral/.symlinks/plugins/rive_native/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - simple_secure_storage_darwin (from `Flutter/ephemeral/.symlinks/plugins/simple_secure_storage_darwin/darwin`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
-  - webcrypto (from `Flutter/ephemeral/.symlinks/plugins/webcrypto/darwin`)
   - window_to_front (from `Flutter/ephemeral/.symlinks/plugins/window_to_front/macos`)
 
 SPEC REPOS:
@@ -45,6 +41,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   flutter_appauth:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_appauth/macos
+  flutter_secure_storage_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin
   FlutterMacOS:
     :path: Flutter/ephemeral
   oidc_macos:
@@ -53,25 +51,20 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/rive_native/macos
   shared_preferences_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
-  simple_secure_storage_darwin:
-    :path: Flutter/ephemeral/.symlinks/plugins/simple_secure_storage_darwin/darwin
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
-  webcrypto:
-    :path: Flutter/ephemeral/.symlinks/plugins/webcrypto/darwin
   window_to_front:
     :path: Flutter/ephemeral/.symlinks/plugins/window_to_front/macos
 
 SPEC CHECKSUMS:
   AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
   flutter_appauth: bc92007a251e52781d7aae70e210427d3628f533
+  flutter_secure_storage_darwin: 557817588b80e60213cbecb573c45c76b788018d
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   oidc_macos: 972700560d342ffc6ac9306495c1d8fe53c7a9cb
-  rive_native: c97de90db882c095f7e69393608f0b8b3dad49e9
+  rive_native: d9fb401f23900cab8070847f2eb2f27b77e03b65
   shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
-  simple_secure_storage_darwin: a0ae551f37462248ee6693eac8c9be1f12a16899
   url_launcher_macos: 175a54c831f4375a6cf895875f716ee5af3888ce
-  webcrypto: aa788ff6b0a956e5d6e613b35b99c13e220ca2d0
   window_to_front: 4cdc24ddd8461ad1a55fa06286d6a79d8b29e8d8
 
 PODFILE CHECKSUM: 3fca807e9e804a619eedcb22f744797e03054a3c

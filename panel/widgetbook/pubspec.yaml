@@ -28,7 +28,6 @@ dev_dependencies:
   flutter_lints:
   widgetbook_generator:
   build_runner:
-  custom_lint:
   riverpod_lint:
 
 flutter:
