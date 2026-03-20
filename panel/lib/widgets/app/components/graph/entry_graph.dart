@@ -8,16 +8,12 @@ import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/graph_direction.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 
-import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/widgets/app/components/empty_entry_page.dart";
 import "package:typewriter_panel/widgets/app/components/entry.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_group.dart";
-import "package:typewriter_panel/widgets/app/components/panes.dart";
-import "package:typewriter_panel/widgets/generic/components/empty_screen.dart";
-
-import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 
 class _GroupIdentifier implements GraphDragData, GraphIdentifier {
@@ -154,7 +150,7 @@ class EntryGraph extends HookConsumerWidget {
       name: "elements",
       builder: (elements) {
         if (elements.isEmpty) {
-          return EmptyGraphPage();
+          return EmptyEntryPage();
         }
         return Graph(
           data: _graphFromElements(elements),
@@ -176,30 +172,6 @@ class EntryGraph extends HookConsumerWidget {
         width: double.infinity,
         height: double.infinity,
         borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-}
-
-class EmptyGraphPage extends StatelessWidget {
-  const EmptyGraphPage({super.key});
-
-  Future<String?> _showAddEntryDialog(BuildContext context) async =>
-      throw UnimplementedError();
-
-  @override
-  Widget build(BuildContext context) {
-    return Pane(
-      id: "empty_graph_page",
-      borderRadius: BorderRadius.circular(12),
-      margin: EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
-      child: Section(
-        margin: EdgeInsets.zero,
-        child: EmptyScreen(
-          title: "Add an entry",
-          buttonText: "Add Entry",
-          onPressed: () => _showAddEntryDialog(context),
-        ),
       ),
     );
   }

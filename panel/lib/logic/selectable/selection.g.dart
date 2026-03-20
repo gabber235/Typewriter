@@ -10,11 +10,11 @@ part of 'selection.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Selection)
-const selectionProvider = SelectionProvider._();
+final selectionProvider = SelectionProvider._();
 
 final class SelectionProvider
     extends $NotifierProvider<Selection, List<SelectableIdentifier>> {
-  const SelectionProvider._()
+  SelectionProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,7 +48,6 @@ abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref
             as $Ref<List<SelectableIdentifier>, List<SelectableIdentifier>>;
@@ -63,16 +62,16 @@ abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(hasSelection)
-const hasSelectionProvider = HasSelectionProvider._();
+final hasSelectionProvider = HasSelectionProvider._();
 
 final class HasSelectionProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
-  const HasSelectionProvider._()
+  HasSelectionProvider._()
     : super(
         from: null,
         argument: null,
@@ -108,11 +107,11 @@ final class HasSelectionProvider extends $FunctionalProvider<bool, bool, bool>
 String _$hasSelectionHash() => r'7cdf141b65386b5998eafaac1335fa4d897f6223';
 
 @ProviderFor(isSelected)
-const isSelectedProvider = IsSelectedFamily._();
+final isSelectedProvider = IsSelectedFamily._();
 
 final class IsSelectedProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
-  const IsSelectedProvider._({
+  IsSelectedProvider._({
     required IsSelectedFamily super.from,
     required SelectableIdentifier super.argument,
   }) : super(
@@ -167,7 +166,7 @@ String _$isSelectedHash() => r'12ed0fbd15b765b16a5b9e3afdb645cd81ea914d';
 
 final class IsSelectedFamily extends $Family
     with $FunctionalFamilyOverride<bool, SelectableIdentifier> {
-  const IsSelectedFamily._()
+  IsSelectedFamily._()
     : super(
         retry: null,
         name: r'isSelectedProvider',
@@ -184,7 +183,7 @@ final class IsSelectedFamily extends $Family
 }
 
 @ProviderFor(Selected)
-const selectedProvider = SelectedProvider._();
+final selectedProvider = SelectedProvider._();
 
 final class SelectedProvider
     extends
@@ -192,7 +191,7 @@ final class SelectedProvider
           Selected,
           AsyncValue<List<Selectable<SelectableIdentifier>>>
         > {
-  const SelectedProvider._()
+  SelectedProvider._()
     : super(
         from: null,
         argument: null,
@@ -232,7 +231,6 @@ abstract class _$Selected
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref
             as $Ref<
@@ -250,17 +248,17 @@ abstract class _$Selected
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(fieldValue)
-const fieldValueProvider = FieldValueFamily._();
+final fieldValueProvider = FieldValueFamily._();
 
 final class FieldValueProvider
     extends $FunctionalProvider<SelectedValue, SelectedValue, SelectedValue>
     with $Provider<SelectedValue> {
-  const FieldValueProvider._({
+  FieldValueProvider._({
     required FieldValueFamily super.from,
     required String super.argument,
   }) : super(
@@ -315,7 +313,7 @@ String _$fieldValueHash() => r'88e46cdafdbe694db5524d12915cdf9a9265ee29';
 
 final class FieldValueFamily extends $Family
     with $FunctionalFamilyOverride<SelectedValue, String> {
-  const FieldValueFamily._()
+  FieldValueFamily._()
     : super(
         retry: null,
         name: r'fieldValueProvider',
@@ -331,60 +329,13 @@ final class FieldValueFamily extends $Family
   String toString() => r'fieldValueProvider';
 }
 
-@ProviderFor(selectedDataBlueprint)
-const selectedDataBlueprintProvider = SelectedDataBlueprintProvider._();
-
-final class SelectedDataBlueprintProvider
-    extends
-        $FunctionalProvider<
-          ObjectBlueprint?,
-          ObjectBlueprint?,
-          ObjectBlueprint?
-        >
-    with $Provider<ObjectBlueprint?> {
-  const SelectedDataBlueprintProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'selectedDataBlueprintProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$selectedDataBlueprintHash();
-
-  @$internal
-  @override
-  $ProviderElement<ObjectBlueprint?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  ObjectBlueprint? create(Ref ref) {
-    return selectedDataBlueprint(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ObjectBlueprint? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ObjectBlueprint?>(value),
-    );
-  }
-}
-
-String _$selectedDataBlueprintHash() =>
-    r'2f96a34451bc57ff90a879d78150ddd175cd55e1';
-
 @ProviderFor(selectedHeader)
-const selectedHeaderProvider = SelectedHeaderProvider._();
+final selectedHeaderProvider = SelectedHeaderProvider._();
 
 final class SelectedHeaderProvider
     extends $FunctionalProvider<Widget?, Widget?, Widget?>
     with $Provider<Widget?> {
-  const SelectedHeaderProvider._()
+  SelectedHeaderProvider._()
     : super(
         from: null,
         argument: null,

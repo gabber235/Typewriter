@@ -1,20 +1,16 @@
-import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/graph/graph_identifier.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
-import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
-import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
-import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/graph/graph_drag.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/identifier.dart";
@@ -63,7 +59,7 @@ abstract class PageEntry with _$PageEntry {
   const factory PageEntry.reference({
     required String id,
     required String name,
-    required EntryBlueprint blueprint,
+    required ElementBlueprint blueprint,
     required String pageId,
     @Default([]) List<EntryMetadata> metadata,
   }) = ReferencePageEntry;
@@ -89,7 +85,7 @@ abstract class EntryDefinition with _$EntryDefinition {
   const factory EntryDefinition({
     required String id,
     required String name,
-    required EntryBlueprint blueprint,
+    required ElementBlueprint blueprint,
     required EntryPlacement placement,
     required DynamicData data,
     required List<ElementLink> inwardEdges,
@@ -114,50 +110,6 @@ abstract class EntryPlacement with _$EntryPlacement {
       _$EntryPlacementFromJson(json);
 }
 
-@freezed
-abstract class EntryBlueprint with _$EntryBlueprint {
-  const factory EntryBlueprint({
-    required String id,
-    required String name,
-    required String description,
-    required String extension,
-    required ObjectBlueprint dataBlueprint,
-    @ColorConverter() @Default(Colors.grey) Color color,
-    @Default("fa-solid:question-circle") String icon,
-    @Default(<String>[]) List<String> tags,
-    @Default(null) List<DataBlueprint>? genericConstraints,
-    @Default(null) DataBlueprint? variableDataBlueprint,
-    @Default([]) List<ContextKey> contextKeys,
-    @Default([]) List<EntryModifier> modifiers,
-  }) = _EntryBlueprint;
-
-  factory EntryBlueprint.fromJson(Map<String, dynamic> json) =>
-      _$EntryBlueprintFromJson(json);
-}
-
-@freezed
-abstract class ContextKey with _$ContextKey {
-  const factory ContextKey({
-    required String name,
-    required String klassName,
-    required DataBlueprint blueprint,
-  }) = _ContextKey;
-
-  factory ContextKey.fromJson(Map<String, dynamic> json) =>
-      _$ContextKeyFromJson(json);
-}
-
-@Freezed(unionKey: "kind")
-abstract class EntryModifier with _$EntryModifier {
-  const factory EntryModifier() = _EmptyModifier;
-
-  const factory EntryModifier.deprecated({@Default("") String reason}) =
-      DeprecatedModifier;
-
-  factory EntryModifier.fromJson(Map<String, dynamic> json) =>
-      _$EntryModifierFromJson(json);
-}
-
 @Freezed(unionKey: "_kind")
 abstract class EntryMetadata with _$EntryMetadata {
   const factory EntryMetadata.custom({
@@ -177,76 +129,6 @@ extension PageEntryExtension on PageEntry {
     NoBlueprintPageEntry(:final id) => id,
     _ => throw UnimplementedError(),
   };
-}
-
-extension EntryBlueprintExt on EntryBlueprint {
-  bool get isGeneric => genericConstraints != null;
-
-  bool allowsGeneric(DataBlueprint? genericBlueprint) {
-    final blueprints = genericConstraints;
-    if (blueprints == null) return true;
-    if (genericBlueprint == null) return false;
-    if (blueprints.isEmpty) return true;
-    for (final blueprint in blueprints) {
-      if (blueprint.matches(genericBlueprint)) return true;
-    }
-    return blueprints.any((e) => e.matches(genericBlueprint));
-  }
-
-  Map<String, List<M>> fieldsWithModifier<M extends Modifier>() =>
-      _fieldsWithModifier<M>("", dataBlueprint);
-
-  Map<String, List<M>> _fieldsWithModifier<M extends Modifier>(
-    String path,
-    DataBlueprint blueprint,
-  ) {
-    final fields = <String, List<M>>{
-      if (blueprint.hasModifier<M>())
-        path: blueprint.getModifiers<M>().toList(),
-    };
-
-    if (blueprint is ObjectBlueprint) {
-      for (final field in blueprint.fields.entries) {
-        fields.addAll(_fieldsWithModifier(path.join(field.key), field.value));
-      }
-    } else if (blueprint is ListBlueprint) {
-      fields.addAll(_fieldsWithModifier(path.join("*"), blueprint.type));
-    } else if (blueprint is MapBlueprint) {
-      fields
-        ..addAll(_fieldsWithModifier(path, blueprint.key))
-        ..addAll(_fieldsWithModifier(path.join("*"), blueprint.value));
-    }
-
-    return fields;
-  }
-
-  DataBlueprint? getField(String path) {
-    final parts = path.split(".");
-    DataBlueprint? info = dataBlueprint;
-    for (final part in parts) {
-      if (info is ObjectBlueprint) {
-        info = info.fields[part];
-      } else if (info is ListBlueprint) {
-        info = info.type;
-      } else if (info is MapBlueprint) {
-        info = info.value;
-      }
-    }
-    return info;
-  }
-
-  PageType get pageType {
-    final pageType = PageType.values.firstWhereOrNull(
-      (type) => tags.contains(type.tag),
-    );
-    if (pageType == null) {
-      // TODO: Properly show this toast to a user.
-      throw Exception(
-        "No page type found for blueprint $name, make sure it has one of the following tags: ${PageType.values.map((type) => type.tag).join(", ")}",
-      );
-    }
-    return pageType;
-  }
 }
 
 extension EntryPlacementExtension on EntryPlacement {

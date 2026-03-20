@@ -15,6 +15,7 @@ import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_testkit/src/mocks/graph_layout.dart";
+import "package:typewriter_testkit/src/mocks/scene.mock.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 Page generateRandomPage([PageType? pageType]) {
@@ -95,14 +96,19 @@ class PagesMock extends Pages {
 }
 
 class PageElementsMock extends PageElements {
-  PageElementsMock({required this.displayState, this.direction});
+  PageElementsMock({required this.displayState, this.direction, this.pageType});
 
   final DisplayState displayState;
   final GraphDirection? direction;
+  final PageType? pageType;
 
   @override
   Future<List<PageElement>> build(String pageId) async {
     await Future<void>.delayed(100.ms);
+    if (pageType == PageType.PAGE_TYPE_SCENE) {
+      return displayState.generateBatch(generateRandomScenePageElements);
+    }
+
     final definitions = await displayState.generate(
       generateRandomEntryDefinition,
     );
@@ -182,10 +188,15 @@ List<Override> pagesProviderOverrides({Page? page, PageType? pageType}) => [
 
 List<Override> pageElementsProviderOverrides({
   DisplayState state = DisplayState.loading,
+  PageType? pageType,
   GraphDirection? direction,
 }) => [
   pageElementsProvider.overrideWith2(
-    (_) => PageElementsMock(displayState: state, direction: direction),
+    (_) => PageElementsMock(
+      displayState: state,
+      direction: direction,
+      pageType: pageType,
+    ),
   ),
 ];
 

@@ -9,6 +9,7 @@ import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/widgets/app/components/graph/entry_graph.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
+import "package:typewriter_panel/widgets/app/components/scene/scene.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 
 @RoutePage()
@@ -42,7 +43,7 @@ class PagePage extends HookConsumerWidget {
                   pageId: pageId,
                   graphDirection: page.type.direction!,
                 ),
-                PageType.PAGE_TYPE_SCENE => Text("Scene"),
+                PageType.PAGE_TYPE_SCENE => EntryScene(pageId: pageId),
                 _ => Text("Unknown page type"),
               };
             },

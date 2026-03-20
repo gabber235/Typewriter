@@ -50,8 +50,8 @@ class _TagNode extends HookWidget {
         ? tag.color.value.toFlutterColor()
         : Colors.grey;
 
-    final graphDrag = GraphDrag.of(context);
-    useListenable(graphDrag.draggingInsideGraph);
+    final graphDrag = GraphDrag.maybeOf(context);
+    useListenable(graphDrag?.draggingInsideGraph);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -73,12 +73,12 @@ class _TagNode extends HookWidget {
                 // Because we initially start dragging over itself, we know that we are dragging inside the graph.
                 // And want to prevent the feedback from being shown.
                 // However the graph doesn't know that we are dragging on it yet.
-                graphDrag.draggingInsideGraph.value = true;
+                graphDrag?.draggingInsideGraph.value = true;
               },
               feedback: HookBuilder(
                 builder: (context) {
-                  useListenable(graphDrag.draggingInsideGraph);
-                  return graphDrag.draggingInsideGraph.value
+                  useListenable(graphDrag?.draggingInsideGraph);
+                  return graphDrag?.draggingInsideGraph.value ?? false
                       ? SizedBox()
                       : SizedBox(
                           width: constraints.maxWidth,
@@ -87,7 +87,7 @@ class _TagNode extends HookWidget {
                         );
                 },
               ),
-              childWhenDragging: graphDrag.draggingInsideGraph.value
+              childWhenDragging: graphDrag?.draggingInsideGraph.value ?? false
                   ? content
                   : PlaceholderTagNode(name: tag.name, color: tagColor),
               child: DragTarget<TagIdentifier>(

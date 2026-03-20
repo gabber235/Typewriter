@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
-import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/routes/organization/book/page/route.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
@@ -26,10 +25,7 @@ Widget _buildPagePageUseCase(BuildContext context, PageType pageType) {
   return FakeApp(
     overrides: [
       ...entryProviderOverrides(),
-      ...pageElementsProviderOverrides(
-        state: entriesState,
-        direction: pageType.direction,
-      ),
+      ...pageElementsProviderOverrides(state: entriesState, pageType: pageType),
       ...bookPagesProviderOverrides(state: pagesState),
       ...pagesProviderOverrides(pageType: pageType),
       ...pageIdProviderOverrides(pageId: "example-page-id"),

@@ -97,18 +97,18 @@ import 'package:widgetbook_workspace/stories/generic/components/type_link.storie
     as _widgetbook_workspace_stories_generic_components_type_link_stories;
 import 'package:widgetbook_workspace/stories/generic/components/version_filter_bar.stories.dart'
     as _widgetbook_workspace_stories_generic_components_version_filter_bar_stories;
+import 'package:widgetbook_workspace/stories/routes/organization/book/page/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organization_book_page_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organization/book/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organization_book_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organization/library/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organization_library_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organization/members/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organization_members_route_stories;
+import 'package:widgetbook_workspace/stories/routes/organization/services/route.stories.dart'
+    as _widgetbook_workspace_stories_routes_organization_services_route_stories;
 import 'package:widgetbook_workspace/stories/routes/organization/tags/route.stories.dart'
     as _widgetbook_workspace_stories_routes_organization_tags_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/book/page/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_book_page_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/book/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_book_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/library/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_library_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/members/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_members_route_stories;
-import 'package:widgetbook_workspace/stories/routes/organizations/services/route.stories.dart'
-    as _widgetbook_workspace_stories_routes_organizations_services_route_stories;
 import 'package:widgetbook_workspace/stories/routes/route.stories.dart'
     as _widgetbook_workspace_stories_routes_route_stories;
 import 'package:widgetbook_workspace/stories/screens/error_screen.stories.dart'
@@ -140,7 +140,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'BookPage',
                     builder:
-                        _widgetbook_workspace_stories_routes_organizations_book_route_stories
+                        _widgetbook_workspace_stories_routes_organization_book_route_stories
                             .bookPageUseCase,
                   ),
                 ],
@@ -154,25 +154,25 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook.WidgetbookUseCase(
                         name: 'Manifest',
                         builder:
-                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                            _widgetbook_workspace_stories_routes_organization_book_page_route_stories
                                 .pagePageManifestUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'Scene',
                         builder:
-                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                            _widgetbook_workspace_stories_routes_organization_book_page_route_stories
                                 .pagePageSceneUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'Sequence',
                         builder:
-                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                            _widgetbook_workspace_stories_routes_organization_book_page_route_stories
                                 .pagePageSequenceUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'Static',
                         builder:
-                            _widgetbook_workspace_stories_routes_organizations_book_page_route_stories
+                            _widgetbook_workspace_stories_routes_organization_book_page_route_stories
                                 .pagePageStaticUseCase,
                       ),
                     ],
@@ -190,7 +190,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'LibraryPage',
                     builder:
-                        _widgetbook_workspace_stories_routes_organizations_library_route_stories
+                        _widgetbook_workspace_stories_routes_organization_library_route_stories
                             .libraryPageUseCase,
                   ),
                 ],
@@ -206,7 +206,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'MembersPage',
                     builder:
-                        _widgetbook_workspace_stories_routes_organizations_members_route_stories
+                        _widgetbook_workspace_stories_routes_organization_members_route_stories
                             .membersPageUseCase,
                   ),
                 ],
@@ -222,7 +222,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'ServicesPage',
                     builder:
-                        _widgetbook_workspace_stories_routes_organizations_services_route_stories
+                        _widgetbook_workspace_stories_routes_organization_services_route_stories
                             .servicesPageUseCase,
                   ),
                 ],

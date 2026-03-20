@@ -1,5 +1,6 @@
 import "package:faker/faker.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -12,7 +13,7 @@ EntryDefinition createTestEntry() {
   return EntryDefinition(
     id: faker.guid.guid(),
     name: faker.lorem.words(2).join(" "),
-    blueprint: EntryBlueprint(
+    blueprint: ElementBlueprint(
       id: faker.guid.guid(),
       name: faker.lorem.word(),
       description: faker.lorem.sentence(),

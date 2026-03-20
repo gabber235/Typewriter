@@ -18,13 +18,17 @@ class Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final color =
         backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
+    final radius = BorderRadius.circular(12);
 
     return Card(
       elevation: 0,
       color: color,
       margin: margin,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Surface(color: color, child: child),
+      shape: RoundedRectangleBorder(borderRadius: radius),
+      child: Surface(
+        color: color,
+        child: ClipRRect(borderRadius: radius, child: child),
+      ),
     );
   }
 }

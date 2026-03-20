@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -11,10 +12,10 @@ import "../../../test_utils.dart";
 
 void main() {
   group("AdaptiveEntryLayout via _InnerEntryNode", () {
-    late EntryBlueprint testBlueprint;
+    late ElementBlueprint testBlueprint;
 
     setUp(() {
-      testBlueprint = EntryBlueprint(
+      testBlueprint = ElementBlueprint(
         id: "test_blueprint",
         name: "Test Blueprint",
         description: "A test blueprint",

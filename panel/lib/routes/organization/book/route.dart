@@ -20,6 +20,7 @@ import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/hooks/loading_button_controller.dart";
 import "package:typewriter_panel/logic/books.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_type_extensions.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";

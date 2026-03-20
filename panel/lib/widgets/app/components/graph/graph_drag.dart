@@ -25,13 +25,7 @@ class GraphDrag extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<GraphDrag>();
   }
 
-  static GraphDrag of(BuildContext context) {
-    final graphDrag = context.dependOnInheritedWidgetOfExactType<GraphDrag>();
-    assert(graphDrag != null, "GraphDrag was not a parent in the widget tree");
-    return graphDrag!;
-  }
-
   static bool isDraggingInsideGraph(BuildContext context) {
-    return of(context).draggingInsideGraph.value;
+    return maybeOf(context)?.draggingInsideGraph.value ?? false;
   }
 }

@@ -63,7 +63,7 @@ Widget _node<D extends GraphDragData>(
             to: Navigator.of(context, rootNavigator: true).context,
           );
 
-          final graphDrag = GraphDrag.of(context);
+          final graphDrag = GraphDrag.maybeOf(context);
 
           return Draggable(
             data: data,
@@ -71,12 +71,12 @@ Widget _node<D extends GraphDragData>(
               // Because we initially start dragging over itself, we know that we are dragging inside the graph.
               // And want to prevent the feedback from being shown.
               // However the graph doesn't know that we are dragging on it yet.
-              graphDrag.draggingInsideGraph.value = true;
+              graphDrag?.draggingInsideGraph.value = true;
             },
             feedback: HookBuilder(
               builder: (context) {
-                useListenable(graphDrag.draggingInsideGraph);
-                return graphDrag.draggingInsideGraph.value
+                useListenable(graphDrag?.draggingInsideGraph);
+                return graphDrag?.draggingInsideGraph.value ?? false
                     ? SizedBox()
                     : Opacity(opacity: 0.5, child: themes.wrap(child));
               },

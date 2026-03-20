@@ -55,6 +55,59 @@ class PageElements extends _$PageElements {
 
     throw UnimplementedError();
   }
+
+  void optimisticMoveCues(List<(String, int, int)> changed) {
+    final data = state.requireValue;
+    final map = <String, (int, int)>{
+      for (final entry in changed) entry.$1: (entry.$2, entry.$3),
+    };
+    final newData = data.map((element) {
+      final frameRange = map[element.id];
+      if (frameRange == null) return element;
+      return element.moveCueTo(frameRange.$1, frameRange.$2);
+    }).toList();
+
+    state = AsyncValue.data(newData);
+  }
+
+  void optimisticResizeCues(List<(String, int, int)> changed) {
+    final data = state.requireValue;
+    final map = <String, (int, int)>{
+      for (final entry in changed) entry.$1: (entry.$2, entry.$3),
+    };
+    final newData = data.map((element) {
+      final frameRange = map[element.id];
+      if (frameRange == null) return element;
+      return element.resizeCueTo(frameRange.$1, frameRange.$2);
+    }).toList();
+
+    state = AsyncValue.data(newData);
+  }
+
+  Future<void> moveCues(List<(String, int, int)> changed) async {
+    state.ensureReady();
+    optimisticMoveCues(changed);
+  }
+
+  Future<void> resizeCues(List<(String, int, int)> changed) async {
+    state.ensureReady();
+    optimisticResizeCues(changed);
+  }
+
+  Future<void> updateCueFieldValue(
+    String cueId,
+    String path,
+    dynamic value,
+  ) async {
+    state.ensureReady();
+    final data = state.requireValue;
+    final newData = data.map((element) {
+      if (element.id != cueId) return element;
+      return element.updateCueFieldValue(path, value);
+    }).toList();
+
+    state = AsyncValue.data(newData);
+  }
 }
 
 @Freezed(unionKey: "_kind")
@@ -78,6 +131,7 @@ extension PageElementExtension on PageElement {
   String get id => switch (this) {
     PageElementEntry(:final entry) => entry.id,
     PageElementGroup(:final id) => id,
+    PageElementCue(:final cue) => cue.id,
     _ => throw StateError("Unknown page element type"),
   };
 
@@ -124,6 +178,44 @@ extension PageElementExtension on PageElement {
           name: name,
           placement: placement.copyWith(width: width, height: height),
         ),
+      _ => this,
+    };
+  }
+
+  PageElement moveCueTo(int startFrame, int endFrame) {
+    return switch (this) {
+      PageElementCue(:final cue) => PageElement.cue(
+        cue: switch (cue) {
+          Segment() => cue.copyWith(startFrame: startFrame, endFrame: endFrame),
+          Keyframe() => cue.copyWith(frame: startFrame),
+          _ => cue,
+        },
+      ),
+      _ => this,
+    };
+  }
+
+  PageElement resizeCueTo(int startFrame, int endFrame) {
+    return switch (this) {
+      PageElementCue(:final cue) => PageElement.cue(
+        cue: switch (cue) {
+          Segment() => cue.copyWith(startFrame: startFrame, endFrame: endFrame),
+          _ => cue,
+        },
+      ),
+      _ => this,
+    };
+  }
+
+  PageElement updateCueFieldValue(String path, dynamic value) {
+    return switch (this) {
+      PageElementCue(:final cue) => PageElement.cue(
+        cue: switch (cue) {
+          Segment() => cue.copyWith(data: cue.data.copyWith(path, value)),
+          Keyframe() => cue.copyWith(data: cue.data.copyWith(path, value)),
+          _ => cue,
+        },
+      ),
       _ => this,
     };
   }

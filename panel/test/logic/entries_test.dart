@@ -1,12 +1,13 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 
 void main() {
-  group("EntryBlueprint.getField", () {
+  group("ElementBlueprint.getField", () {
     test("returns field for simple path", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -21,7 +22,7 @@ void main() {
     });
 
     test("returns field for nested object path", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -40,7 +41,7 @@ void main() {
     });
 
     test("returns list element type for list path", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -55,7 +56,7 @@ void main() {
     });
 
     test("returns map value type for map path", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -75,7 +76,7 @@ void main() {
     });
 
     test("returns null for non-existent path", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -87,7 +88,7 @@ void main() {
     });
 
     test("handles deeply nested paths", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -111,9 +112,9 @@ void main() {
     });
   });
 
-  group("EntryBlueprint.fieldsWithModifier", () {
+  group("ElementBlueprint.fieldsWithModifier", () {
     test("finds fields with read-only modifier", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -131,7 +132,7 @@ void main() {
     });
 
     test("finds nested fields with modifiers", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -153,7 +154,7 @@ void main() {
     });
 
     test("finds fields in lists with modifiers", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -173,7 +174,7 @@ void main() {
     });
 
     test("returns empty map when no modifiers found", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -187,9 +188,9 @@ void main() {
     });
   });
 
-  group("EntryBlueprint.isGeneric", () {
+  group("ElementBlueprint.isGeneric", () {
     test("returns false when genericConstraints is null", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -201,7 +202,7 @@ void main() {
     });
 
     test("returns true when genericConstraints is not null", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -213,7 +214,7 @@ void main() {
     });
 
     test("returns true when genericConstraints has items", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -225,9 +226,9 @@ void main() {
     });
   });
 
-  group("EntryBlueprint.allowsGeneric", () {
+  group("ElementBlueprint.allowsGeneric", () {
     test("allows any when genericConstraints is null", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -240,7 +241,7 @@ void main() {
     });
 
     test("allows any when genericConstraints is empty", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -252,7 +253,7 @@ void main() {
     });
 
     test("allows matching blueprint", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -264,7 +265,7 @@ void main() {
     });
 
     test("rejects non-matching blueprint", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -276,7 +277,7 @@ void main() {
     });
 
     test("rejects null blueprint when constraints exist", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -288,7 +289,7 @@ void main() {
     });
 
     test("allows when any constraint matches", () {
-      final blueprint = EntryBlueprint(
+      final blueprint = ElementBlueprint(
         id: "test",
         name: "Test",
         description: "Test entry",
@@ -331,7 +332,7 @@ void main() {
         definition: EntryDefinition(
           id: "entry-123",
           name: "Test Entry",
-          blueprint: EntryBlueprint(
+          blueprint: ElementBlueprint(
             id: "blueprint-id",
             name: "Test",
             description: "",
@@ -351,7 +352,7 @@ void main() {
       const pageEntry = PageEntry.reference(
         id: "ref-456",
         name: "Referenced Entry",
-        blueprint: EntryBlueprint(
+        blueprint: ElementBlueprint(
           id: "blueprint-id",
           name: "Test",
           description: "",

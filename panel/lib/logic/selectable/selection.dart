@@ -2,6 +2,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
@@ -149,13 +150,14 @@ extension SelectedValueExtension on SelectedValue {
   }
 }
 
-@riverpod
-ObjectBlueprint? selectedDataBlueprint(Ref ref) {
+/// Because the [ObjectBlueprint] is generated, we cannot make this a generated provider.
+/// So we make this a manual provider instead.
+final selectedDataBlueprintProvider = Provider<ObjectBlueprint?>((ref) {
   final selected = ref.watch(selectedProvider).value;
   if (selected == null) return null;
   if (selected.isEmpty) return null;
   return selected.map((s) => s.objectBlueprint).toList().overlap;
-}
+});
 
 @riverpod
 Widget? selectedHeader(Ref ref) {

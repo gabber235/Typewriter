@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
@@ -16,7 +17,7 @@ Widget entryNodeDefinitionUseCase(BuildContext context) {
   final definition = EntryDefinition(
     id: "test-entry-id",
     name: "Test Entry",
-    blueprint: EntryBlueprint(
+    blueprint: ElementBlueprint(
       id: "test-blueprint",
       name: "Test Blueprint",
       description: "A test blueprint for the story",
@@ -72,7 +73,7 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
   final definition = EntryDefinition(
     id: "deprecated-entry-id",
     name: "Deprecated Entry",
-    blueprint: EntryBlueprint(
+    blueprint: ElementBlueprint(
       id: "deprecated-blueprint",
       name: "Deprecated Blueprint",
       description: "A deprecated blueprint for the story",
@@ -84,7 +85,7 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
       icon: "fa-solid:exclamation-triangle",
       tags: const ["deprecated"],
       modifiers: const [
-        EntryModifier.deprecated(reason: "This entry type is deprecated"),
+        ElementModifier.deprecated(reason: "This entry type is deprecated"),
       ],
     ),
     placement: EntryPlacement(
@@ -125,7 +126,7 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
 
 @widgetbook.UseCase(name: "Reference Entry", type: EntryNode)
 Widget entryNodeReferenceUseCase(BuildContext context) {
-  final blueprint = EntryBlueprint(
+  final blueprint = ElementBlueprint(
     id: "reference-blueprint",
     name: "Reference Blueprint",
     description: "A blueprint for reference entries",
@@ -268,7 +269,7 @@ Widget entryNodeMultipleEntriesUseCase(BuildContext context) {
     EntryDefinition(
       id: "quest-entry",
       name: "Main Quest",
-      blueprint: EntryBlueprint(
+      blueprint: ElementBlueprint(
         id: "quest-blueprint",
         name: "Quest",
         description: "A quest entry",
@@ -292,7 +293,7 @@ Widget entryNodeMultipleEntriesUseCase(BuildContext context) {
     EntryDefinition(
       id: "npc-entry",
       name: "Village Elder",
-      blueprint: EntryBlueprint(
+      blueprint: ElementBlueprint(
         id: "npc-blueprint",
         name: "NPC",
         description: "A non-player character",
@@ -316,7 +317,7 @@ Widget entryNodeMultipleEntriesUseCase(BuildContext context) {
     EntryDefinition(
       id: "dialogue-entry",
       name: "Welcome Message",
-      blueprint: EntryBlueprint(
+      blueprint: ElementBlueprint(
         id: "dialogue-blueprint",
         name: "Dialogue",
         description: "A dialogue entry",
@@ -326,7 +327,7 @@ Widget entryNodeMultipleEntriesUseCase(BuildContext context) {
         icon: "fa-solid:comment",
         tags: const ["dialogue"],
         modifiers: const [
-          EntryModifier.deprecated(reason: "This entry type is deprecated"),
+          ElementModifier.deprecated(reason: "This entry type is deprecated"),
         ],
       ),
       placement: EntryPlacement(x: 0, y: 0, width: bigWidth, height: bigHeight),
@@ -362,7 +363,7 @@ Widget entryNodeMultipleEntriesUseCase(BuildContext context) {
                   entry: PageEntry.reference(
                     id: "external-entry",
                     name: "External Entry",
-                    blueprint: EntryBlueprint(
+                    blueprint: ElementBlueprint(
                       id: "external-blueprint",
                       name: "External",
                       description: "An external entry",

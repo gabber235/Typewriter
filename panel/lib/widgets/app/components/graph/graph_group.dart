@@ -52,14 +52,14 @@ class GraphGroup extends StatelessWidget {
           to: Navigator.of(context, rootNavigator: true).context,
         );
 
-        final graphDrag = GraphDrag.of(context);
+        final graphDrag = GraphDrag.maybeOf(context);
 
         return Draggable(
           data: data,
           feedback: HookBuilder(
             builder: (context) {
-              useListenable(graphDrag.draggingInsideGraph);
-              return graphDrag.draggingInsideGraph.value
+              useListenable(graphDrag?.draggingInsideGraph);
+              return graphDrag?.draggingInsideGraph.value ?? false
                   ? SizedBox()
                   : Opacity(opacity: 0.5, child: themes.wrap(child));
             },
