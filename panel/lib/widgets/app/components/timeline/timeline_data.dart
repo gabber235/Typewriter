@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
@@ -67,7 +68,7 @@ sealed class TimelineElement implements Comparable<TimelineElement> {
 }
 
 class TimelineSegment extends TimelineElement {
-  const TimelineSegment({
+  TimelineSegment({
     required this.startFrame,
     required this.endFrame,
     required this.builder,
@@ -76,7 +77,9 @@ class TimelineSegment extends TimelineElement {
     required super.color,
   }) : assert(startFrame >= 0),
        assert(endFrame >= 0),
-       assert(endFrame >= startFrame);
+       assert(endFrame >= startFrame),
+       assert(children.none((element) => element.startFrame < startFrame)),
+       assert(children.none((element) => element.endFrame > endFrame));
 
   @override
   final int startFrame;

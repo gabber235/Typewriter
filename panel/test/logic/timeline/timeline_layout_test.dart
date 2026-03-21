@@ -1,12 +1,11 @@
+import "dart:math";
+
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
-import "package:typewriter_panel/logic/scene/scene_timeline_builder.dart";
-import "package:typewriter_panel/logic/scene/scene_timeline_data.dart";
-import "package:typewriter_panel/logic/scene/scene_timeline_item.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
@@ -20,13 +19,10 @@ void main() {
     testWidgets("keeps overlapping sibling subtrees in separate branch lanes", (
       tester,
     ) async {
-      final baseData = buildSceneTimelineData(_layoutSceneElements());
-      final layout = buildSceneTimelineLayout(
-        data: _timelineData(baseData),
-        baseData: baseData,
-        previewData: baseData,
+      final data = _timelineDataFromElements(_layoutSceneElements());
+      final layout = _buildLayout(
+        data: data,
         viewport: _viewport(),
-        style: TimelineStyle.fallback(ThemeData()),
         preview: null,
       );
 
@@ -44,7 +40,7 @@ void main() {
     testWidgets(
       "keeps subtree lanes stable during preview and marks descendants as related",
       (tester) async {
-        final baseData = buildSceneTimelineData(_layoutSceneElements());
+        final data = _timelineDataFromElements(_layoutSceneElements());
         final preview = const TimelinePreview(
           id: "parent",
           mode: TimelineInteractionMode.move,
@@ -53,30 +49,24 @@ void main() {
           startFrame: 12,
           endFrame: 32,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _layoutSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "parent",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 12,
             endFrame: 32,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -97,7 +87,7 @@ void main() {
     testWidgets(
       "keeps a moved child subtree in its stream and evicts siblings",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _childReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -108,30 +98,24 @@ void main() {
           startFrame: 24,
           endFrame: 34,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _childReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "active_child",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 24,
             endFrame: 34,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -153,9 +137,7 @@ void main() {
     testWidgets(
       "keeps a moved root subtree in its stream and evicts other roots",
       (tester) async {
-        final baseData = buildSceneTimelineData(
-          _rootReservationSceneElements(),
-        );
+        final data = _timelineDataFromElements(_rootReservationSceneElements());
         final preview = const TimelinePreview(
           id: "root_a",
           mode: TimelineInteractionMode.move,
@@ -164,30 +146,24 @@ void main() {
           startFrame: 24,
           endFrame: 44,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _rootReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "root_a",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 24,
             endFrame: 44,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -209,7 +185,7 @@ void main() {
     testWidgets("moves a competing root subtree as a preserved block", (
       tester,
     ) async {
-      final baseData = buildSceneTimelineData(_rootReservationSceneElements());
+      final data = _timelineDataFromElements(_rootReservationSceneElements());
       final preview = const TimelinePreview(
         id: "root_a",
         mode: TimelineInteractionMode.move,
@@ -218,30 +194,24 @@ void main() {
         startFrame: 24,
         endFrame: 44,
       );
-      final previewData = buildSceneTimelineData(
+      final previewData = _timelineDataFromElements(
         _rootReservationSceneElements(),
-        override: const SceneTimelineOverride(
+        override: const _TimelineOverride(
           cueId: "root_a",
-          mode: SceneTimelineOverrideMode.move,
+          mode: TimelineInteractionMode.move,
           startFrame: 24,
           endFrame: 44,
         ),
       );
 
-      final baseLayout = buildSceneTimelineLayout(
-        data: _timelineData(baseData),
-        baseData: baseData,
-        previewData: baseData,
+      final baseLayout = _buildLayout(
+        data: data,
         viewport: _viewport(),
-        style: TimelineStyle.fallback(ThemeData()),
         preview: null,
       );
-      final previewLayout = buildSceneTimelineLayout(
-        data: _timelineData(baseData),
-        baseData: baseData,
-        previewData: previewData,
+      final previewLayout = _buildLayout(
+        data: data,
         viewport: _viewport(),
-        style: TimelineStyle.fallback(ThemeData()),
         preview: preview,
       );
 
@@ -260,7 +230,7 @@ void main() {
     testWidgets(
       "keeps a moved child segment stream when a sibling keyframe overlaps",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _childSegmentVsKeyframeReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -271,30 +241,24 @@ void main() {
           startFrame: 24,
           endFrame: 34,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _childSegmentVsKeyframeReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "active_child",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 24,
             endFrame: 34,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -319,7 +283,7 @@ void main() {
     testWidgets(
       "keeps a moved child keyframe stream and moves a sibling segment subtree as a block",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _childKeyframeVsSegmentReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -330,30 +294,24 @@ void main() {
           startFrame: 24,
           endFrame: 24,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _childKeyframeVsSegmentReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "active_keyframe",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 24,
             endFrame: 24,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -380,7 +338,7 @@ void main() {
     testWidgets(
       "keeps a moved root segment subtree stream when a sibling root keyframe overlaps",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _rootSegmentVsKeyframeReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -391,30 +349,24 @@ void main() {
           startFrame: 24,
           endFrame: 44,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _rootSegmentVsKeyframeReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "root_a",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 24,
             endFrame: 44,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -439,7 +391,7 @@ void main() {
     testWidgets(
       "clears full active stream so trailing sibling keyframes cannot block continued drag",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _trailingKeyframesReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -450,30 +402,24 @@ void main() {
           startFrame: 18,
           endFrame: 28,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _trailingKeyframesReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "active_child",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 18,
             endFrame: 28,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -497,7 +443,7 @@ void main() {
     testWidgets(
       "reserves child stream during resize start and evicts touching sibling",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _resizeStartChildReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -508,30 +454,24 @@ void main() {
           startFrame: 9,
           endFrame: 20,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _resizeStartChildReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "active_child",
-            mode: SceneTimelineOverrideMode.resizeStart,
+            mode: TimelineInteractionMode.resizeStart,
             startFrame: 9,
             endFrame: 20,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -556,7 +496,7 @@ void main() {
     testWidgets(
       "reserves root stream during resize end and evicts overlapping roots",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _resizeEndRootReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -567,30 +507,24 @@ void main() {
           startFrame: 0,
           endFrame: 24,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _resizeEndRootReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "root_a",
-            mode: SceneTimelineOverrideMode.resizeEnd,
+            mode: TimelineInteractionMode.resizeEnd,
             startFrame: 0,
             endFrame: 24,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -616,7 +550,7 @@ void main() {
     testWidgets(
       "treats touching segment boundaries as inclusive overlap during move preview",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _inclusiveBoundaryCollisionSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -627,30 +561,24 @@ void main() {
           startFrame: 1,
           endFrame: 5,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _inclusiveBoundaryCollisionSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "active",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 1,
             endFrame: 5,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -667,7 +595,7 @@ void main() {
     testWidgets(
       "keeps unaffected track lane assignment stable during preview reservation",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _multiTrackIsolationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -675,33 +603,27 @@ void main() {
           mode: TimelineInteractionMode.move,
           originalStartFrame: 0,
           originalEndFrame: 10,
-          startFrame: 16,
-          endFrame: 26,
+          startFrame: 10,
+          endFrame: 20,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _multiTrackIsolationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "track_a_active_child",
-            mode: SceneTimelineOverrideMode.move,
-            startFrame: 16,
-            endFrame: 26,
+            mode: TimelineInteractionMode.move,
+            startFrame: 10,
+            endFrame: 20,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -740,7 +662,7 @@ void main() {
     testWidgets(
       "evicts root keyframe when moved root subtree lands on keyframe frame",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _rootKeyframeCompetitionSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -751,30 +673,24 @@ void main() {
           startFrame: 14,
           endFrame: 34,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _rootKeyframeCompetitionSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "root_a",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 14,
             endFrame: 34,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -797,7 +713,7 @@ void main() {
     testWidgets(
       "keeps dense layout lane allocation deterministic during reservation preview",
       (tester) async {
-        final baseData = buildSceneTimelineData(
+        final data = _timelineDataFromElements(
           _denseDeterministicReservationSceneElements(),
         );
         final preview = const TimelinePreview(
@@ -808,30 +724,24 @@ void main() {
           startFrame: 12,
           endFrame: 32,
         );
-        final previewData = buildSceneTimelineData(
+        final previewData = _timelineDataFromElements(
           _denseDeterministicReservationSceneElements(),
-          override: const SceneTimelineOverride(
+          override: const _TimelineOverride(
             cueId: "root_a",
-            mode: SceneTimelineOverrideMode.move,
+            mode: TimelineInteractionMode.move,
             startFrame: 12,
             endFrame: 32,
           ),
         );
 
-        final baseLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: baseData,
+        final baseLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: null,
         );
-        final previewLayout = buildSceneTimelineLayout(
-          data: _timelineData(baseData),
-          baseData: baseData,
-          previewData: previewData,
+        final previewLayout = _buildLayout(
+          data: data,
           viewport: _viewport(),
-          style: TimelineStyle.fallback(ThemeData()),
           preview: preview,
         );
 
@@ -841,9 +751,9 @@ void main() {
           "root_a_child_two": 1,
           "root_b": 2,
           "root_b_child": 3,
-          "root_c_keyframe": 4,
+          "root_c_keyframe": 5,
           "root_d": 4,
-          "root_e_keyframe": 4,
+          "root_e_keyframe": 6,
           "root_f": 0,
         });
         _expectLaneIndices(previewLayout, {
@@ -852,9 +762,9 @@ void main() {
           "root_a_child_two": 1,
           "root_b": 2,
           "root_b_child": 3,
-          "root_c_keyframe": 4,
+          "root_c_keyframe": 5,
           "root_d": 4,
-          "root_e_keyframe": 4,
+          "root_e_keyframe": 6,
           "root_f": 2,
         });
       },
@@ -863,11 +773,9 @@ void main() {
     testWidgets("applies overscan visibility and minimum segment width", (
       tester,
     ) async {
-      final baseData = buildSceneTimelineData(_viewportSceneElements());
-      final layout = buildSceneTimelineLayout(
-        data: _timelineData(baseData),
-        baseData: baseData,
-        previewData: baseData,
+      final data = _timelineDataFromElements(_viewportSceneElements());
+      final layout = _buildLayout(
+        data: data,
         viewport: const TimelineViewport(
           headerWidth: 200,
           planeWidth: 800,
@@ -877,7 +785,6 @@ void main() {
           pixelsPerFrame: 10,
           overscanFrames: 3,
         ),
-        style: TimelineStyle.fallback(ThemeData()),
         preview: null,
       );
 
@@ -891,7 +798,7 @@ void main() {
     testWidgets("expands content width for far preview geometry", (
       tester,
     ) async {
-      final baseData = buildSceneTimelineData(_layoutSceneElements());
+      final data = _timelineDataFromElements(_layoutSceneElements());
       final preview = const TimelinePreview(
         id: "parent",
         mode: TimelineInteractionMode.move,
@@ -900,76 +807,565 @@ void main() {
         startFrame: 240,
         endFrame: 260,
       );
-      final previewData = buildSceneTimelineData(
+      final previewData = _timelineDataFromElements(
         _layoutSceneElements(),
-        override: const SceneTimelineOverride(
+        override: const _TimelineOverride(
           cueId: "parent",
-          mode: SceneTimelineOverrideMode.move,
+          mode: TimelineInteractionMode.move,
           startFrame: 240,
           endFrame: 260,
         ),
       );
 
-      final layout = buildSceneTimelineLayout(
-        data: _timelineData(baseData),
-        baseData: baseData,
-        previewData: previewData,
+      final layout = _buildLayout(
+        data: data,
         viewport: _viewport(),
-        style: TimelineStyle.fallback(ThemeData()),
         preview: preview,
       );
 
       expect(layout.contentWidth, greaterThan(2400));
     });
+
+    testWidgets(
+      "keeps containment when move preview tries to go past parent end",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _containmentStressSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.move,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 55,
+          endFrame: 65,
+        );
+
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(layout, data);
+      },
+    );
+
+    testWidgets(
+      "keeps containment when move preview tries to go before parent start",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _containmentStressSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.move,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 15,
+          endFrame: 25,
+        );
+
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(layout, data);
+      },
+    );
+
+    testWidgets(
+      "keeps containment when resizeStart preview tries to go before parent start",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _containmentStressSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.resizeStart,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 15,
+          endFrame: 40,
+        );
+
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(layout, data);
+      },
+    );
+
+    testWidgets(
+      "keeps containment when resizeEnd preview tries to go past parent end",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _containmentStressSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.resizeEnd,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 30,
+          endFrame: 70,
+        );
+
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(layout, data);
+      },
+    );
+
+    testWidgets("keeps containment for in-bounds previews in all modes", (
+      tester,
+    ) async {
+      final data = _timelineDataFromElements(_containmentStressSceneElements());
+      final previews = [
+        const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.move,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 35,
+          endFrame: 45,
+        ),
+        const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.resizeStart,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 25,
+          endFrame: 40,
+        ),
+        const TimelinePreview(
+          id: "active_child",
+          mode: TimelineInteractionMode.resizeEnd,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 30,
+          endFrame: 45,
+        ),
+      ];
+
+      for (final preview in previews) {
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+        _expectContainmentInLayout(layout, data);
+      }
+    });
+
+    testWidgets(
+      "keeps containment for nested descendants under aggressive preview",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _nestedContainmentStressSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "nested_child",
+          mode: TimelineInteractionMode.move,
+          originalStartFrame: 25,
+          originalEndFrame: 45,
+          startFrame: 55,
+          endFrame: 75,
+        );
+
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(layout, data);
+      },
+    );
+
+    testWidgets(
+      "keeps containment local to active track under aggressive preview",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _multiTrackContainmentStressSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "track_a_active_child",
+          mode: TimelineInteractionMode.move,
+          originalStartFrame: 30,
+          originalEndFrame: 40,
+          startFrame: 55,
+          endFrame: 65,
+        );
+
+        final baseLayout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: null,
+        );
+        final previewLayout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(previewLayout, data);
+
+        expect(
+          _placed(previewLayout, "track_b_root").laneIndex,
+          _placed(baseLayout, "track_b_root").laneIndex,
+        );
+        expect(
+          _placed(previewLayout, "track_b_child").laneIndex,
+          _placed(baseLayout, "track_b_child").laneIndex,
+        );
+      },
+    );
   });
 }
 
-TimelineData _timelineData(SceneTimelineData sceneData) {
-  return TimelineData(
-    tracks: [
-      for (final track in sceneData.tracks)
-        TimelineTrack(
-          id: TimelineIdentifier(track.id.id),
-          header: (_) => const SizedBox.shrink(),
-          elements: [
-            for (final item in track.rootItems) _timelineElement(item),
-          ],
-        ),
-    ],
-  );
+class _TimelineOverride {
+  const _TimelineOverride({
+    required this.cueId,
+    required this.mode,
+    required this.startFrame,
+    required this.endFrame,
+  });
+
+  final String cueId;
+  final TimelineInteractionMode mode;
+  final int startFrame;
+  final int endFrame;
 }
 
-TimelineLayoutResult buildSceneTimelineLayout({
+TimelineLayoutResult _buildLayout({
   required TimelineData data,
-  required SceneTimelineData baseData,
-  required SceneTimelineData previewData,
   required TimelineViewport viewport,
-  required TimelineStyle style,
   required TimelinePreview? preview,
 }) {
-  assert(baseData.tracks.length == data.tracks.length);
-  assert(previewData.tracks.length == data.tracks.length);
   return TimelineLayoutEngine(
-    style: style,
+    style: TimelineStyle.fallback(ThemeData()),
   ).build(data: data, viewport: viewport, preview: preview);
 }
 
-TimelineElement _timelineElement(SceneTimelineItem item) {
-  return switch (item) {
-    SceneSegmentItem() => TimelineSegment(
-      id: TimelineIdentifier(item.cueId),
-      startFrame: item.absoluteStartFrame,
-      endFrame: item.absoluteEndFrame,
-      builder: (_, data) => const SizedBox.shrink(),
-      children: [for (final child in item.children) _timelineElement(child)],
-      color: Colors.blue,
+TimelineData _timelineDataFromElements(
+  List<PageElement> elements, {
+  _TimelineOverride? override,
+}) {
+  final entries = <PageEntry>[];
+  final entriesById = <String, PageEntry>{};
+  final cuesById = <String, Cue>{};
+  final childrenByCueId = <String, List<String>>{};
+
+  for (final element in elements) {
+    switch (element) {
+      case PageElementEntry(entry: final entry):
+        entries.add(entry);
+        entriesById[entry.id] = entry;
+      case PageElementCue(cue: final cue):
+        cuesById[cue.id] = cue;
+
+        if (cue case Segment(outwardLinks: final outwardLinks)) {
+          childrenByCueId[cue.id] = _childIds(outwardLinks);
+        }
+      case PageElementGroup():
+    }
+  }
+
+  final rootCueIdsByEntryId = <String, List<String>>{};
+  for (final element in elements) {
+    if (element case PageElementEntry(entry: final entry)) {
+      rootCueIdsByEntryId[entry.id] = _childIds(_entryOutwardLinks(entry));
+    }
+  }
+
+  final tracks = <TimelineTrack>[];
+  for (final entry in entries) {
+    final rootCueIds = rootCueIdsByEntryId[entry.id] ?? const <String>[];
+    final trackElements = <TimelineElement>[];
+
+    for (final rootCueId in rootCueIds) {
+      final element = _buildTimelineElement(
+        cueId: rootCueId,
+        cuesById: cuesById,
+        childrenByCueId: childrenByCueId,
+        override: override,
+        parentAbsoluteStartFrame: 0,
+        parentLocalStartFrame: 0,
+        parentDuration: null,
+      );
+      if (element != null) {
+        trackElements.add(element);
+      }
+    }
+
+    trackElements.sort(_compareTimelineElements);
+
+    tracks.add(
+      TimelineTrack(
+        id: TimelineIdentifier(entry.id),
+        header: (_) => const SizedBox.shrink(),
+        elements: trackElements,
+      ),
+    );
+  }
+
+  return TimelineData(tracks: tracks);
+}
+
+TimelineElement? _buildTimelineElement({
+  required String cueId,
+  required Map<String, Cue> cuesById,
+  required Map<String, List<String>> childrenByCueId,
+  required _TimelineOverride? override,
+  required int parentAbsoluteStartFrame,
+  required int parentLocalStartFrame,
+  required int? parentDuration,
+}) {
+  final cue = cuesById[cueId];
+  if (cue == null) return null;
+
+  final localFrames = _resolveLocalFrames(
+    cueId: cueId,
+    cue: cue,
+    cuesById: cuesById,
+    childrenByCueId: childrenByCueId,
+    override: override,
+    parentLocalStartFrame: parentLocalStartFrame,
+    parentDuration: parentDuration,
+  );
+
+  final absoluteStartFrame = parentAbsoluteStartFrame + localFrames.startFrame;
+
+  switch (cue) {
+    case Keyframe():
+      return TimelineKeyframe(
+        id: TimelineIdentifier(cueId),
+        frame: absoluteStartFrame,
+        builder: (_, __) => const SizedBox.shrink(),
+        color: Colors.orange,
+      );
+    case Segment():
+      final absoluteEndFrame = parentAbsoluteStartFrame + localFrames.endFrame;
+      final segmentDuration = localFrames.endFrame - localFrames.startFrame;
+      final childElements = <TimelineElement>[];
+      final childIds = childrenByCueId[cueId] ?? const <String>[];
+      for (final childId in childIds) {
+        final childElement = _buildTimelineElement(
+          cueId: childId,
+          cuesById: cuesById,
+          childrenByCueId: childrenByCueId,
+          override: override,
+          parentAbsoluteStartFrame: absoluteStartFrame,
+          parentLocalStartFrame: cue.startFrame,
+          parentDuration: segmentDuration,
+        );
+        if (childElement != null) {
+          childElements.add(childElement);
+        }
+      }
+      childElements.sort(_compareTimelineElements);
+
+      return TimelineSegment(
+        id: TimelineIdentifier(cueId),
+        startFrame: absoluteStartFrame,
+        endFrame: absoluteEndFrame,
+        builder: (_, __) => const SizedBox.shrink(),
+        children: childElements,
+        color: Colors.blue,
+      );
+    case _:
+      return null;
+  }
+}
+
+({int startFrame, int endFrame}) _resolveLocalFrames({
+  required String cueId,
+  required Cue cue,
+  required Map<String, Cue> cuesById,
+  required Map<String, List<String>> childrenByCueId,
+  required _TimelineOverride? override,
+  required int parentLocalStartFrame,
+  required int? parentDuration,
+}) {
+  final baseFrames = switch (cue) {
+    Segment(startFrame: final startFrame, endFrame: final endFrame) => (
+      startFrame: startFrame,
+      endFrame: endFrame,
     ),
-    SceneKeyframeItem() => TimelineKeyframe(
-      id: TimelineIdentifier(item.cueId),
-      frame: item.absoluteStartFrame,
-      builder: (_, data) => const SizedBox.shrink(),
-      color: Colors.orange,
-    ),
+    Keyframe(frame: final frame) => (startFrame: frame, endFrame: frame),
+    _ => (startFrame: 0, endFrame: 0),
+  };
+
+  if (override == null || override.cueId != cueId) {
+    return _normalizeBaseFrames(baseFrames, parentDuration);
+  }
+
+  final duration = baseFrames.endFrame - baseFrames.startFrame;
+  final requiredDuration = _requiredDurationForChildren(
+    cueId: cueId,
+    cuesById: cuesById,
+    childrenByCueId: childrenByCueId,
+  );
+  final desiredLocalStart = override.startFrame - parentLocalStartFrame;
+
+  switch (override.mode) {
+    case TimelineInteractionMode.move:
+      if (parentDuration == null) {
+        return (
+          startFrame: override.startFrame,
+          endFrame: override.startFrame + duration,
+        );
+      }
+
+      final maxStartFrame = parentDuration - duration;
+      final clampedStartFrame = _clampInt(desiredLocalStart, 0, maxStartFrame);
+      return (
+        startFrame: clampedStartFrame,
+        endFrame: clampedStartFrame + duration,
+      );
+    case TimelineInteractionMode.resizeStart:
+      if (cue is! Segment) return baseFrames;
+
+      final baseLocalStart = cue.startFrame;
+      final baseLocalEnd = cue.endFrame;
+
+      if (parentDuration == null) {
+        final newDuration = override.endFrame - override.startFrame;
+        final newLocalStart = baseLocalEnd - newDuration;
+        final clampedLocalStart = _clampInt(newLocalStart, 0, baseLocalEnd);
+        return (startFrame: clampedLocalStart, endFrame: baseLocalEnd);
+      }
+
+      final maxStart = baseLocalEnd - requiredDuration;
+      final newLocalStart = override.startFrame - parentLocalStartFrame;
+      final clampedLocalStart = _clampInt(newLocalStart, 0, max(0, maxStart));
+      return (startFrame: clampedLocalStart, endFrame: baseLocalEnd);
+    case TimelineInteractionMode.resizeEnd:
+      if (cue is! Segment) return baseFrames;
+
+      final baseLocalStart = cue.startFrame;
+
+      if (parentDuration == null) {
+        return (startFrame: baseLocalStart, endFrame: override.endFrame);
+      }
+
+      final desiredLocalEnd = override.endFrame - parentLocalStartFrame;
+      final minLocalEnd = baseLocalStart + requiredDuration;
+      final clampedLocalEnd = _clampInt(
+        desiredLocalEnd,
+        minLocalEnd,
+        parentDuration,
+      );
+      return (startFrame: baseLocalStart, endFrame: clampedLocalEnd);
+  }
+}
+
+({int startFrame, int endFrame}) _normalizeBaseFrames(
+  ({int startFrame, int endFrame}) frames,
+  int? parentDuration,
+) {
+  if (parentDuration == null) {
+    return frames;
+  }
+
+  final duration = frames.endFrame - frames.startFrame;
+  final clampedDuration = _clampInt(duration, 0, parentDuration);
+  final maxStartFrame = parentDuration - clampedDuration;
+  final clampedStartFrame = _clampInt(frames.startFrame, 0, maxStartFrame);
+  return (
+    startFrame: clampedStartFrame,
+    endFrame: clampedStartFrame + clampedDuration,
+  );
+}
+
+int _requiredDurationForChildren({
+  required String cueId,
+  required Map<String, Cue> cuesById,
+  required Map<String, List<String>> childrenByCueId,
+}) {
+  final childIds = childrenByCueId[cueId] ?? const <String>[];
+  var requiredDuration = 0;
+
+  for (final childId in childIds) {
+    final childCue = cuesById[childId];
+    if (childCue == null) continue;
+
+    final childEndFrame = switch (childCue) {
+      Segment(endFrame: final endFrame) => endFrame,
+      Keyframe(frame: final frame) => frame,
+      _ => 0,
+    };
+    requiredDuration = max(requiredDuration, childEndFrame);
+  }
+
+  return requiredDuration;
+}
+
+int _clampInt(int value, int minValue, int maxValue) {
+  if (maxValue < minValue) {
+    return minValue;
+  }
+  return value.clamp(minValue, maxValue) as int;
+}
+
+int _compareTimelineElements(TimelineElement left, TimelineElement right) {
+  final startCompare = left.startFrame.compareTo(right.startFrame);
+  if (startCompare != 0) return startCompare;
+
+  final endCompare = right.endFrame.compareTo(left.endFrame);
+  if (endCompare != 0) return endCompare;
+
+  return left.id.id.compareTo(right.id.id);
+}
+
+List<String> _childIds(List<ElementLink> links) {
+  final ids = <String>[];
+  final seenIds = <String>{};
+
+  for (final link in links) {
+    if (link.path != "children") continue;
+    if (!seenIds.add(link.otherId)) continue;
+    ids.add(link.otherId);
+  }
+
+  return ids;
+}
+
+List<String> _parentIds(Cue cue) {
+  final inwardLinks = switch (cue) {
+    Segment(:final inwardLinks) => inwardLinks,
+    Keyframe(:final inwardLinks) => inwardLinks,
+    _ => const <ElementLink>[],
+  };
+
+  final ids = <String>[];
+  final seenIds = <String>{};
+
+  for (final link in inwardLinks) {
+    if (link.path != "parent") continue;
+    if (!seenIds.add(link.otherId)) continue;
+    ids.add(link.otherId);
+  }
+
+  return ids;
+}
+
+List<ElementLink> _entryOutwardLinks(PageEntry entry) {
+  return switch (entry) {
+    DefinitionPageEntry(definition: final definition) =>
+      definition.outwardEdges,
+    NoBlueprintPageEntry(:final outwardLinks) => outwardLinks,
+    _ => const <ElementLink>[],
   };
 }
 
@@ -995,8 +1391,47 @@ void _expectLaneIndices(
   TimelineLayoutResult layout,
   Map<String, int> expected,
 ) {
+  final actual = <String, int>{
+    for (final key in expected.keys) key: _placed(layout, key).laneIndex,
+  };
   for (final entry in expected.entries) {
-    expect(_placed(layout, entry.key).laneIndex, entry.value);
+    expect(
+      actual[entry.key],
+      entry.value,
+      reason: "${entry.key} actual: $actual",
+    );
+  }
+}
+
+void _expectContainmentInLayout(
+  TimelineLayoutResult layout,
+  TimelineData data,
+) {
+  for (final track in data.tracks) {
+    for (final root in track.elements) {
+      final placedRoot = _placed(layout, root.id.id);
+      _expectContainedElement(placedRoot.element);
+    }
+  }
+}
+
+void _expectContainedElement(TimelineElement element) {
+  if (element is! TimelineSegment) return;
+
+  for (final child in element.children) {
+    expect(
+      child.startFrame,
+      greaterThanOrEqualTo(element.startFrame),
+      reason:
+          "${child.id.id} starts before parent ${element.id.id} (${child.startFrame} < ${element.startFrame})",
+    );
+    expect(
+      child.endFrame,
+      lessThanOrEqualTo(element.endFrame),
+      reason:
+          "${child.id.id} ends after parent ${element.id.id} (${child.endFrame} > ${element.endFrame})",
+    );
+    _expectContainedElement(child);
   }
 }
 
@@ -1687,7 +2122,7 @@ List<PageElement> _trailingKeyframesReservationSceneElements() {
       cue: Cue.segment(
         id: "root",
         startFrame: 0,
-        endFrame: 80,
+        endFrame: 40,
         blueprint: _blueprint("root_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -1736,7 +2171,7 @@ List<PageElement> _trailingKeyframesReservationSceneElements() {
     PageElement.cue(
       cue: Cue.keyframe(
         id: "near_keyframe",
-        frame: 24,
+        frame: 20,
         blueprint: _blueprint("near_keyframe_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -1751,7 +2186,7 @@ List<PageElement> _trailingKeyframesReservationSceneElements() {
     PageElement.cue(
       cue: Cue.keyframe(
         id: "far_keyframe",
-        frame: 52,
+        frame: 35,
         blueprint: _blueprint("far_keyframe_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -1808,7 +2243,7 @@ List<PageElement> _resizeStartChildReservationSceneElements() {
             path: "children",
           ),
           const ElementLink(
-            linkId: "root_touching_sibling_child",
+            linkId: "root_touching_sibling",
             otherId: "touching_sibling_child",
             path: "children",
           ),
@@ -1841,7 +2276,7 @@ List<PageElement> _resizeStartChildReservationSceneElements() {
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "root_touching_sibling_child",
+            linkId: "root_touching_sibling",
             otherId: "root",
             path: "parent",
           ),
@@ -1904,7 +2339,7 @@ List<PageElement> _resizeEndRootReservationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "root_a_child",
-        startFrame: 4,
+        startFrame: 5,
         endFrame: 10,
         blueprint: _blueprint("root_a_child_blueprint"),
         data: const DynamicData({}),
@@ -1921,8 +2356,8 @@ List<PageElement> _resizeEndRootReservationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "root_b",
-        startFrame: 24,
-        endFrame: 30,
+        startFrame: 21,
+        endFrame: 31,
         blueprint: _blueprint("root_b_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -1945,7 +2380,7 @@ List<PageElement> _resizeEndRootReservationSceneElements() {
       cue: Cue.segment(
         id: "root_b_child",
         startFrame: 2,
-        endFrame: 8,
+        endFrame: 10,
         blueprint: _blueprint("root_b_child_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -2037,7 +2472,7 @@ List<PageElement> _multiTrackIsolationSceneElements() {
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
-              linkId: "entry_a_root_link",
+              linkId: "entry_a_root",
               otherId: "track_a_root",
               path: "children",
             ),
@@ -2051,12 +2486,12 @@ List<PageElement> _multiTrackIsolationSceneElements() {
           id: "entry_b",
           name: "Track B Entry",
           blueprint: _blueprint("entry_b_blueprint"),
-          placement: const EntryPlacement(x: 0, y: 80, width: 100, height: 60),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
           data: const DynamicData({}),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
-              linkId: "entry_b_root_link",
+              linkId: "entry_b_root",
               otherId: "track_b_root",
               path: "children",
             ),
@@ -2068,24 +2503,24 @@ List<PageElement> _multiTrackIsolationSceneElements() {
       cue: Cue.segment(
         id: "track_a_root",
         startFrame: 0,
-        endFrame: 40,
+        endFrame: 20,
         blueprint: _blueprint("track_a_root_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "entry_a_root_link",
+            linkId: "entry_a_root",
             otherId: "entry_a",
             path: "parent",
           ),
         ],
         outwardLinks: [
           const ElementLink(
-            linkId: "track_a_active_child_link",
+            linkId: "track_a_root_active_child",
             otherId: "track_a_active_child",
             path: "children",
           ),
           const ElementLink(
-            linkId: "track_a_competing_child_link",
+            linkId: "track_a_root_competing_child",
             otherId: "track_a_competing_child",
             path: "children",
           ),
@@ -2101,7 +2536,7 @@ List<PageElement> _multiTrackIsolationSceneElements() {
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "track_a_active_child_link",
+            linkId: "track_a_root_active_child",
             otherId: "track_a_root",
             path: "parent",
           ),
@@ -2112,13 +2547,13 @@ List<PageElement> _multiTrackIsolationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "track_a_competing_child",
-        startFrame: 16,
-        endFrame: 22,
+        startFrame: 11,
+        endFrame: 20,
         blueprint: _blueprint("track_a_competing_child_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "track_a_competing_child_link",
+            linkId: "track_a_root_competing_child",
             otherId: "track_a_root",
             path: "parent",
           ),
@@ -2135,24 +2570,24 @@ List<PageElement> _multiTrackIsolationSceneElements() {
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "entry_b_root_link",
+            linkId: "entry_b_root",
             otherId: "entry_b",
             path: "parent",
           ),
         ],
         outwardLinks: [
           const ElementLink(
-            linkId: "track_b_left_link",
+            linkId: "track_b_root_left",
             otherId: "track_b_left",
             path: "children",
           ),
           const ElementLink(
-            linkId: "track_b_right_link",
+            linkId: "track_b_root_right",
             otherId: "track_b_right",
             path: "children",
           ),
           const ElementLink(
-            linkId: "track_b_keyframe_link",
+            linkId: "track_b_root_keyframe",
             otherId: "track_b_keyframe",
             path: "children",
           ),
@@ -2162,13 +2597,13 @@ List<PageElement> _multiTrackIsolationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "track_b_left",
-        startFrame: 0,
+        startFrame: 5,
         endFrame: 10,
         blueprint: _blueprint("track_b_left_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "track_b_left_link",
+            linkId: "track_b_root_left",
             otherId: "track_b_root",
             path: "parent",
           ),
@@ -2179,13 +2614,13 @@ List<PageElement> _multiTrackIsolationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "track_b_right",
-        startFrame: 12,
-        endFrame: 18,
+        startFrame: 15,
+        endFrame: 20,
         blueprint: _blueprint("track_b_right_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "track_b_right_link",
+            linkId: "track_b_root_right",
             otherId: "track_b_root",
             path: "parent",
           ),
@@ -2196,12 +2631,12 @@ List<PageElement> _multiTrackIsolationSceneElements() {
     PageElement.cue(
       cue: Cue.keyframe(
         id: "track_b_keyframe",
-        frame: 24,
+        frame: 25,
         blueprint: _blueprint("track_b_keyframe_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "track_b_keyframe_link",
+            linkId: "track_b_root_keyframe",
             otherId: "track_b_root",
             path: "parent",
           ),
@@ -2263,7 +2698,7 @@ List<PageElement> _rootKeyframeCompetitionSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "root_a_child",
-        startFrame: 4,
+        startFrame: 5,
         endFrame: 10,
         blueprint: _blueprint("root_a_child_blueprint"),
         data: const DynamicData({}),
@@ -2280,7 +2715,7 @@ List<PageElement> _rootKeyframeCompetitionSceneElements() {
     PageElement.cue(
       cue: Cue.keyframe(
         id: "root_keyframe",
-        frame: 34,
+        frame: 24,
         blueprint: _blueprint("root_keyframe_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -2301,7 +2736,7 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
       entry: PageEntry.definition(
         definition: EntryDefinition(
           id: "entry",
-          name: "Dense Deterministic Reservation Entry",
+          name: "Dense Deterministic Entry",
           blueprint: _blueprint("entry_blueprint"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
           data: const DynamicData({}),
@@ -2318,7 +2753,7 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
               path: "children",
             ),
             const ElementLink(
-              linkId: "entry_root_c",
+              linkId: "entry_root_c_keyframe",
               otherId: "root_c_keyframe",
               path: "children",
             ),
@@ -2328,7 +2763,7 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
               path: "children",
             ),
             const ElementLink(
-              linkId: "entry_root_e",
+              linkId: "entry_root_e_keyframe",
               otherId: "root_e_keyframe",
               path: "children",
             ),
@@ -2357,12 +2792,12 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
         ],
         outwardLinks: [
           const ElementLink(
-            linkId: "root_a_child_one_link",
+            linkId: "root_a_child_one",
             otherId: "root_a_child_one",
             path: "children",
           ),
           const ElementLink(
-            linkId: "root_a_child_two_link",
+            linkId: "root_a_child_two",
             otherId: "root_a_child_two",
             path: "children",
           ),
@@ -2372,13 +2807,13 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "root_a_child_one",
-        startFrame: 0,
-        endFrame: 6,
+        startFrame: 11,
+        endFrame: 20,
         blueprint: _blueprint("root_a_child_one_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "root_a_child_one_link",
+            linkId: "root_a_child_one",
             otherId: "root_a",
             path: "parent",
           ),
@@ -2389,13 +2824,13 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "root_a_child_two",
-        startFrame: 8,
-        endFrame: 14,
+        startFrame: 0,
+        endFrame: 10,
         blueprint: _blueprint("root_a_child_two_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "root_a_child_two_link",
+            linkId: "root_a_child_two",
             otherId: "root_a",
             path: "parent",
           ),
@@ -2419,7 +2854,7 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
         ],
         outwardLinks: [
           const ElementLink(
-            linkId: "root_b_child_link",
+            linkId: "root_b_child",
             otherId: "root_b_child",
             path: "children",
           ),
@@ -2430,12 +2865,12 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
       cue: Cue.segment(
         id: "root_b_child",
         startFrame: 0,
-        endFrame: 6,
+        endFrame: 10,
         blueprint: _blueprint("root_b_child_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "root_b_child_link",
+            linkId: "root_b_child",
             otherId: "root_b",
             path: "parent",
           ),
@@ -2446,12 +2881,12 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
     PageElement.cue(
       cue: Cue.keyframe(
         id: "root_c_keyframe",
-        frame: 0,
+        frame: 10,
         blueprint: _blueprint("root_c_keyframe_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "entry_root_c",
+            linkId: "entry_root_c_keyframe",
             otherId: "entry",
             path: "parent",
           ),
@@ -2462,7 +2897,7 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
       cue: Cue.segment(
         id: "root_d",
         startFrame: 10,
-        endFrame: 12,
+        endFrame: 20,
         blueprint: _blueprint("root_d_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
@@ -2478,12 +2913,12 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
     PageElement.cue(
       cue: Cue.keyframe(
         id: "root_e_keyframe",
-        frame: 20,
+        frame: 10,
         blueprint: _blueprint("root_e_keyframe_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
-            linkId: "entry_root_e",
+            linkId: "entry_root_e_keyframe",
             otherId: "entry",
             path: "parent",
           ),
@@ -2493,14 +2928,288 @@ List<PageElement> _denseDeterministicReservationSceneElements() {
     PageElement.cue(
       cue: Cue.segment(
         id: "root_f",
-        startFrame: 32,
-        endFrame: 36,
+        startFrame: 30,
+        endFrame: 50,
         blueprint: _blueprint("root_f_blueprint"),
         data: const DynamicData({}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root_f",
             otherId: "entry",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: const [],
+      ),
+    ),
+  ];
+}
+
+List<PageElement> _containmentStressSceneElements() {
+  return [
+    PageElement.entry(
+      entry: PageEntry.definition(
+        definition: EntryDefinition(
+          id: "entry",
+          name: "Containment Stress Entry",
+          blueprint: _blueprint("entry_blueprint"),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
+          data: const DynamicData({}),
+          inwardEdges: const [],
+          outwardEdges: [
+            const ElementLink(
+              linkId: "entry_root",
+              otherId: "root",
+              path: "children",
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "root",
+        startFrame: 20,
+        endFrame: 60,
+        blueprint: _blueprint("root_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_root",
+            otherId: "entry",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "root_active_child",
+            otherId: "active_child",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "active_child",
+        startFrame: 10,
+        endFrame: 20,
+        blueprint: _blueprint("active_child_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "root_active_child",
+            otherId: "root",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: const [],
+      ),
+    ),
+  ];
+}
+
+List<PageElement> _nestedContainmentStressSceneElements() {
+  return [
+    PageElement.entry(
+      entry: PageEntry.definition(
+        definition: EntryDefinition(
+          id: "entry",
+          name: "Nested Containment Stress Entry",
+          blueprint: _blueprint("entry_blueprint"),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
+          data: const DynamicData({}),
+          inwardEdges: const [],
+          outwardEdges: [
+            const ElementLink(
+              linkId: "entry_root",
+              otherId: "root",
+              path: "children",
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "root",
+        startFrame: 20,
+        endFrame: 80,
+        blueprint: _blueprint("root_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_root",
+            otherId: "entry",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "root_nested_child",
+            otherId: "nested_child",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "nested_child",
+        startFrame: 5,
+        endFrame: 25,
+        blueprint: _blueprint("nested_child_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "root_nested_child",
+            otherId: "root",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "nested_child_grandchild",
+            otherId: "grandchild",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "grandchild",
+        startFrame: 10,
+        endFrame: 15,
+        blueprint: _blueprint("grandchild_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "nested_child_grandchild",
+            otherId: "nested_child",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: const [],
+      ),
+    ),
+  ];
+}
+
+List<PageElement> _multiTrackContainmentStressSceneElements() {
+  return [
+    PageElement.entry(
+      entry: PageEntry.definition(
+        definition: EntryDefinition(
+          id: "entry_a",
+          name: "Containment Track A",
+          blueprint: _blueprint("entry_a_blueprint"),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
+          data: const DynamicData({}),
+          inwardEdges: const [],
+          outwardEdges: [
+            const ElementLink(
+              linkId: "entry_a_root",
+              otherId: "track_a_root",
+              path: "children",
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageElement.entry(
+      entry: PageEntry.definition(
+        definition: EntryDefinition(
+          id: "entry_b",
+          name: "Containment Track B",
+          blueprint: _blueprint("entry_b_blueprint"),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
+          data: const DynamicData({}),
+          inwardEdges: const [],
+          outwardEdges: [
+            const ElementLink(
+              linkId: "entry_b_root",
+              otherId: "track_b_root",
+              path: "children",
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "track_a_root",
+        startFrame: 20,
+        endFrame: 60,
+        blueprint: _blueprint("track_a_root_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_a_root",
+            otherId: "entry_a",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "track_a_active_child_link",
+            otherId: "track_a_active_child",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "track_a_active_child",
+        startFrame: 10,
+        endFrame: 20,
+        blueprint: _blueprint("track_a_active_child_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "track_a_active_child_link",
+            otherId: "track_a_root",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: const [],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "track_b_root",
+        startFrame: 0,
+        endFrame: 40,
+        blueprint: _blueprint("track_b_root_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_b_root",
+            otherId: "entry_b",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "track_b_child_link",
+            otherId: "track_b_child",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "track_b_child",
+        startFrame: 5,
+        endFrame: 15,
+        blueprint: _blueprint("track_b_child_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "track_b_child_link",
+            otherId: "track_b_root",
             path: "parent",
           ),
         ],

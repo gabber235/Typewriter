@@ -103,6 +103,8 @@ class TimelineLayoutEngine {
     required TimelineElement element,
     required TimelinePreview? preview,
     int inheritedFrameDelta = 0,
+    int? parentStartFrame,
+    int? parentEndFrame,
   }) {
     final shifted = _shiftElement(
       element: element,
@@ -114,9 +116,14 @@ class TimelineLayoutEngine {
 
     if (shifted case TimelineKeyframe()) {
       if (!isActive) return shifted;
+      final previewFrame = _clampKeyframeFrame(
+        frame: preview.startFrame,
+        parentStartFrame: parentStartFrame,
+        parentEndFrame: parentEndFrame,
+      );
       return TimelineKeyframe(
         id: shifted.id,
-        frame: preview.startFrame,
+        frame: previewFrame,
         builder: shifted.builder,
         color: shifted.color,
       );
@@ -136,23 +143,32 @@ class TimelineLayoutEngine {
               element: child,
               preview: preview,
               inheritedFrameDelta: inheritedFrameDelta,
+              parentStartFrame: segment.startFrame,
+              parentEndFrame: segment.endFrame,
             ),
         ],
       );
     }
 
     final shiftedStart = segment.startFrame;
+    final clampedFrames = _clampSegmentFrames(
+      segment: segment,
+      preview: preview,
+      parentStartFrame: parentStartFrame,
+      parentEndFrame: parentEndFrame,
+    );
     final movedSegment = TimelineSegment(
       id: segment.id,
-      startFrame: preview.startFrame,
-      endFrame: preview.endFrame,
+      startFrame: clampedFrames.startFrame,
+      endFrame: clampedFrames.endFrame,
       builder: segment.builder,
       color: segment.color,
       children: const [],
     );
     final descendantDelta = switch (preview.mode) {
-      TimelineInteractionMode.move => preview.startFrame - shiftedStart,
-      TimelineInteractionMode.resizeStart => preview.startFrame - shiftedStart,
+      TimelineInteractionMode.move => clampedFrames.startFrame - shiftedStart,
+      TimelineInteractionMode.resizeStart =>
+        clampedFrames.startFrame - shiftedStart,
       TimelineInteractionMode.resizeEnd => 0,
     };
 
@@ -168,9 +184,105 @@ class TimelineLayoutEngine {
             element: child,
             preview: preview,
             inheritedFrameDelta: inheritedFrameDelta + descendantDelta,
+            parentStartFrame: movedSegment.startFrame,
+            parentEndFrame: movedSegment.endFrame,
           ),
       ],
     );
+  }
+
+  int _clampKeyframeFrame({
+    required int frame,
+    required int? parentStartFrame,
+    required int? parentEndFrame,
+  }) {
+    final minFrame = math.max(0, parentStartFrame ?? 0);
+    final maxFrame = parentEndFrame;
+    if (maxFrame == null) {
+      return math.max(frame, minFrame);
+    }
+    if (maxFrame < minFrame) {
+      return minFrame;
+    }
+    return frame.clamp(minFrame, maxFrame) as int;
+  }
+
+  ({int startFrame, int endFrame}) _clampSegmentFrames({
+    required TimelineSegment segment,
+    required TimelinePreview preview,
+    required int? parentStartFrame,
+    required int? parentEndFrame,
+  }) {
+    final currentStart = segment.startFrame;
+    final currentEnd = segment.endFrame;
+    final currentDuration = currentEnd - currentStart;
+    final minFrame = math.max(0, parentStartFrame ?? 0);
+    final maxFrame = parentEndFrame;
+
+    return switch (preview.mode) {
+      TimelineInteractionMode.move => _clampMoveFrames(
+        desiredStartFrame: preview.startFrame,
+        duration: currentDuration,
+        minFrame: minFrame,
+        maxFrame: maxFrame,
+      ),
+      TimelineInteractionMode.resizeStart => _clampResizeStartFrames(
+        desiredStartFrame: preview.startFrame,
+        currentEndFrame: currentEnd,
+        minFrame: minFrame,
+      ),
+      TimelineInteractionMode.resizeEnd => _clampResizeEndFrames(
+        currentStartFrame: currentStart,
+        desiredEndFrame: preview.endFrame,
+        maxFrame: maxFrame,
+      ),
+    };
+  }
+
+  ({int startFrame, int endFrame}) _clampMoveFrames({
+    required int desiredStartFrame,
+    required int duration,
+    required int minFrame,
+    required int? maxFrame,
+  }) {
+    final safeDuration = math.max(0, duration);
+    if (maxFrame == null) {
+      final clampedStart = math.max(desiredStartFrame, minFrame);
+      return (startFrame: clampedStart, endFrame: clampedStart + safeDuration);
+    }
+
+    final maxStartFrame = maxFrame - safeDuration;
+    if (maxStartFrame < minFrame) {
+      return (startFrame: minFrame, endFrame: maxFrame);
+    }
+
+    final clampedStart =
+        desiredStartFrame.clamp(minFrame, maxStartFrame) as int;
+    return (startFrame: clampedStart, endFrame: clampedStart + safeDuration);
+  }
+
+  ({int startFrame, int endFrame}) _clampResizeStartFrames({
+    required int desiredStartFrame,
+    required int currentEndFrame,
+    required int minFrame,
+  }) {
+    final safeEndFrame = math.max(currentEndFrame, minFrame);
+    final clampedStart = desiredStartFrame.clamp(minFrame, safeEndFrame) as int;
+    return (startFrame: clampedStart, endFrame: safeEndFrame);
+  }
+
+  ({int startFrame, int endFrame}) _clampResizeEndFrames({
+    required int currentStartFrame,
+    required int desiredEndFrame,
+    required int? maxFrame,
+  }) {
+    final safeStartFrame = math.max(0, currentStartFrame);
+    final maxEndFrame = maxFrame == null
+        ? desiredEndFrame
+        : math.max(safeStartFrame, maxFrame);
+    final clampedEnd =
+        desiredEndFrame.clamp(safeStartFrame, maxEndFrame) as int;
+    return (startFrame: safeStartFrame, endFrame: clampedEnd);
   }
 
   TimelineElement _shiftElement({

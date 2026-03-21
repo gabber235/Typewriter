@@ -13,8 +13,23 @@ import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_viewport.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 
-typedef TimelineCommit =
-    Future<void> Function((TimelineIdentifier, int, int) change);
+class TimelineCommitPayload {
+  const TimelineCommitPayload({
+    required this.id,
+    required this.absoluteStartFrame,
+    required this.absoluteEndFrame,
+    required this.localStartFrame,
+    required this.localEndFrame,
+  });
+
+  final TimelineIdentifier id;
+  final int absoluteStartFrame;
+  final int absoluteEndFrame;
+  final int localStartFrame;
+  final int localEndFrame;
+}
+
+typedef TimelineCommit = Future<void> Function(TimelineCommitPayload change);
 
 class Timeline extends HookWidget {
   const Timeline({
@@ -86,10 +101,12 @@ class Timeline extends HookWidget {
 
         Future<void> commitPreview(TimelinePreview? preview) async {
           if (preview == null) return;
-          final change = (
-            TimelineIdentifier(preview.id),
-            preview.startFrame,
-            preview.endFrame,
+          final change = TimelineCommitPayload(
+            id: TimelineIdentifier(preview.id),
+            absoluteStartFrame: preview.startFrame,
+            absoluteEndFrame: preview.endFrame,
+            localStartFrame: preview.startFrame,
+            localEndFrame: preview.endFrame,
           );
           final callback = switch (preview.mode) {
             TimelineInteractionMode.move => onElementMoved,
