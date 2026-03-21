@@ -22,6 +22,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Entry("smelt_objective", "A smelt objective definition", Colors.BLUE_VIOLET, "game-icons:furnace")
 /**
@@ -58,10 +59,12 @@ class SmeltObjective(
                 InventoryType.BLAST_FURNACE,
                 InventoryType.SMOKER
             )
+
             if (!validFurnace || event.rawSlot != 2 || item.type == Material.AIR) return@listenToEvent
 
-            val expectedItem = result.takeIf { it.isPresent }?.get()?.get(player)
-            if (expectedItem != null && expectedItem.isSameAs(player, item)) return@listenToEvent
+            val expectedItem = result.getOrNull()?.get(player)
+
+            if (expectedItem != null && !expectedItem.isSameAs(player, item)) return@listenToEvent
 
             incrementFact(player, item.amount)
         }
