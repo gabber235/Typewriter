@@ -13,6 +13,11 @@ class InnerElementNode extends StatelessWidget {
     required this.isDeprecated,
     this.isReference = false,
     this.pageId,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    this.compactPadding = const EdgeInsets.all(4),
+    this.iconSize = 18,
+    this.fontSize = 13,
+    this.secondaryFontSize = 11,
     super.key,
   });
 
@@ -22,6 +27,11 @@ class InnerElementNode extends StatelessWidget {
   final bool isDeprecated;
   final bool isReference;
   final String? pageId;
+  final EdgeInsets padding;
+  final EdgeInsets compactPadding;
+  final double iconSize;
+  final double fontSize;
+  final double secondaryFontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +45,7 @@ class InnerElementNode extends StatelessWidget {
                   name,
                   style: TextStyle(
                     color: color,
-                    fontSize: 13,
+                    fontSize: fontSize,
                     decoration: isDeprecated
                         ? TextDecoration.lineThrough
                         : null,
@@ -50,7 +60,7 @@ class InnerElementNode extends StatelessWidget {
                 "Page: $pageId",
                 style: TextStyle(
                   color: color.withValues(alpha: 0.7),
-                  fontSize: 11,
+                  fontSize: secondaryFontSize,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -60,7 +70,7 @@ class InnerElementNode extends StatelessWidget {
             name,
             style: TextStyle(
               color: color,
-              fontSize: 13,
+              fontSize: fontSize,
               decoration: isDeprecated ? TextDecoration.lineThrough : null,
               decorationThickness: 2.8,
               decorationColor: color,
@@ -71,12 +81,12 @@ class InnerElementNode extends StatelessWidget {
           );
 
     return AdaptiveElementLayout(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      compactPadding: const EdgeInsets.all(4),
-      leading: Icones(blueprint.icon, size: 18, color: color),
+      padding: padding,
+      compactPadding: compactPadding,
+      leading: Icones(blueprint.icon, size: iconSize, color: color),
       center: centerContent,
       suffix: isReference
-          ? Icon(Icons.open_in_new, color: color, size: 18)
+          ? Icon(Icons.open_in_new, color: color, size: iconSize)
           : null,
     );
   }

@@ -26,6 +26,27 @@ void main() {
       expect(controller.preview?.endFrame, 10);
     });
 
+    test("updates all move previews in one interaction session", () {
+      final controller = TimelineController()
+        ..startMove(
+          id: "cue_a",
+          startFrame: 10,
+          endFrame: 20,
+          additionalPreviews: const [(id: "cue_b", startFrame: 2, endFrame: 6)],
+        )
+        ..updateInteraction(24);
+
+      final session = controller.finishInteractionSession();
+      final byId = {for (final preview in session) preview.id: preview};
+
+      expect(byId["cue_a"]?.startFrame, 12);
+      expect(byId["cue_a"]?.endFrame, 22);
+      expect(byId["cue_b"]?.startFrame, 4);
+      expect(byId["cue_b"]?.endFrame, 8);
+      expect(controller.preview, isNull);
+      expect(controller.previews, isEmpty);
+    });
+
     test("rounds interaction deltas near half frame thresholds", () {
       final controller = TimelineController()
         ..startMove(id: "cue", startFrame: 10, endFrame: 20)

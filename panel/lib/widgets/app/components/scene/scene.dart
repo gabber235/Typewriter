@@ -1,5 +1,3 @@
-import "dart:math" as math;
-
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -7,6 +5,9 @@ import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
+import "package:typewriter_panel/logic/scene/scene_cue_graph.dart";
+import "package:typewriter_panel/logic/scene/scene_frame_resolver.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -49,13 +50,21 @@ class EntryScene extends HookConsumerWidget {
 
         return Timeline(
           data: sceneView.timelineData,
-          onElementMoved: (change) => _commitSceneMove(
+          resolveMoveTargets: (draggedId) {
+            final index = SceneCueGraphIndex.fromPageElements(elements);
+            final roots = _resolveMoveCueRoots(
+              ref: ref,
+              pageId: pageId,
+              index: index,
+              draggedCueId: draggedId.id,
+            );
+            return roots.map(TimelineIdentifier.new).toList();
+          },
+          onElementMoved: (changes) => _commitSceneMoveBatch(
             ref: ref,
             pageId: pageId,
             elements: elements,
-            cueId: change.id.id,
-            absoluteStartFrame: change.absoluteStartFrame,
-            absoluteEndFrame: change.absoluteEndFrame,
+            changes: changes,
           ),
           onElementResized: (change) => _commitSceneResize(
             ref: ref,
@@ -76,214 +85,88 @@ class EntryScene extends HookConsumerWidget {
   }
 }
 
-class _ResolvedCueFrames {
-  const _ResolvedCueFrames({
-    required this.localStartFrame,
-    required this.localEndFrame,
-    required this.absoluteStartFrame,
-    required this.absoluteEndFrame,
-  });
-
-  final int localStartFrame;
-  final int localEndFrame;
-  final int absoluteStartFrame;
-  final int absoluteEndFrame;
-}
-
-_ResolvedCueFrames _resolveCueFrames({
-  required String cueId,
-  required int absoluteStartFrame,
-  required int absoluteEndFrame,
-  required _CueIndex index,
-  required _ParentInfo? parentInfo,
-  required TimelineInteractionMode mode,
+List<String> _resolveMoveCueRoots({
+  required WidgetRef ref,
+  required String pageId,
+  required SceneCueGraphIndex index,
+  required String draggedCueId,
 }) {
-  final cue = index.cuesById[cueId];
-  if (cue == null) {
-    return _ResolvedCueFrames(
-      localStartFrame: absoluteStartFrame,
-      localEndFrame: absoluteEndFrame,
-      absoluteStartFrame: absoluteStartFrame,
-      absoluteEndFrame: absoluteEndFrame,
-    );
+  final draggedIdentifier = CueIdentifier(pageId: pageId, id: draggedCueId);
+  final selected = ref.read(selectionProvider);
+  final draggedIsSelected = selected.contains(draggedIdentifier);
+
+  final selectedCueIds = <String>[
+    for (final item in selected)
+      if (item case CueIdentifier(
+        pageId: final selectedPageId,
+        id: final cueId,
+      ) when selectedPageId == pageId && index.cuesById.containsKey(cueId))
+        cueId,
+  ];
+
+  final candidateCueIds = draggedIsSelected ? selectedCueIds : [draggedCueId];
+  final uniqueCandidateCueIds = <String>[];
+  final candidateCueIdSet = <String>{};
+  for (final cueId in candidateCueIds) {
+    if (!candidateCueIdSet.add(cueId)) continue;
+    uniqueCandidateCueIds.add(cueId);
   }
 
-  final isRoot = parentInfo == null;
-  final parentStartFrame = parentInfo?.startFrame ?? 0;
-
-  switch (mode) {
-    case TimelineInteractionMode.move:
-      if (isRoot) {
-        return _ResolvedCueFrames(
-          localStartFrame: absoluteStartFrame,
-          localEndFrame: absoluteEndFrame,
-          absoluteStartFrame: absoluteStartFrame,
-          absoluteEndFrame: absoluteEndFrame,
-        );
+  final roots = <String>[];
+  for (final cueId in uniqueCandidateCueIds) {
+    var parentCueId = index.parentByCueId[cueId];
+    var hasCandidateAncestor = false;
+    while (parentCueId != null) {
+      if (candidateCueIdSet.contains(parentCueId)) {
+        hasCandidateAncestor = true;
+        break;
       }
+      parentCueId = index.parentByCueId[parentCueId];
+    }
 
-      final desiredLocalStart = absoluteStartFrame - parentStartFrame;
-      final duration = absoluteEndFrame - absoluteStartFrame;
-      final maxLocalStart = parentInfo?.duration != null
-          ? math.max(0, parentInfo!.duration! - duration)
-          : desiredLocalStart;
-      final resolvedLocalStart = desiredLocalStart
-          .clamp(0, math.max(0, maxLocalStart))
-          .toInt();
-
-      return _ResolvedCueFrames(
-        localStartFrame: resolvedLocalStart,
-        localEndFrame: resolvedLocalStart + duration,
-        absoluteStartFrame: parentStartFrame + resolvedLocalStart,
-        absoluteEndFrame: parentStartFrame + resolvedLocalStart + duration,
-      );
-
-    case TimelineInteractionMode.resizeStart:
-      if (cue is! Segment) {
-        return _ResolvedCueFrames(
-          localStartFrame: absoluteStartFrame,
-          localEndFrame: absoluteEndFrame,
-          absoluteStartFrame: absoluteStartFrame,
-          absoluteEndFrame: absoluteEndFrame,
-        );
-      }
-
-      final baseLocalStart = cue.startFrame;
-      final baseLocalEnd = cue.endFrame;
-
-      if (isRoot) {
-        final newDuration = absoluteEndFrame - absoluteStartFrame;
-        final newLocalStart = baseLocalEnd - newDuration;
-        return _ResolvedCueFrames(
-          localStartFrame: newLocalStart.clamp(0, baseLocalEnd).toInt(),
-          localEndFrame: baseLocalEnd,
-          absoluteStartFrame: newLocalStart.clamp(0, baseLocalEnd).toInt(),
-          absoluteEndFrame: absoluteEndFrame,
-        );
-      }
-
-      final requiredDuration = _requiredDurationForChildren(cueId, index);
-      final maxStart = baseLocalEnd - requiredDuration;
-      final newLocalStart = absoluteStartFrame - parentStartFrame;
-      final clampedLocalStart = newLocalStart
-          .clamp(0, math.max(0, maxStart))
-          .toInt();
-
-      return _ResolvedCueFrames(
-        localStartFrame: clampedLocalStart,
-        localEndFrame: baseLocalEnd,
-        absoluteStartFrame: parentStartFrame + clampedLocalStart,
-        absoluteEndFrame: absoluteEndFrame,
-      );
-
-    case TimelineInteractionMode.resizeEnd:
-      if (cue is! Segment) {
-        return _ResolvedCueFrames(
-          localStartFrame: absoluteStartFrame,
-          localEndFrame: absoluteEndFrame,
-          absoluteStartFrame: absoluteStartFrame,
-          absoluteEndFrame: absoluteEndFrame,
-        );
-      }
-
-      final baseLocalStart = cue.startFrame;
-      final baseLocalEnd = cue.endFrame;
-
-      if (isRoot) {
-        return _ResolvedCueFrames(
-          localStartFrame: baseLocalStart,
-          localEndFrame: absoluteEndFrame,
-          absoluteStartFrame: absoluteStartFrame,
-          absoluteEndFrame: absoluteEndFrame,
-        );
-      }
-
-      final minEnd =
-          baseLocalStart + _requiredDurationForChildren(cueId, index);
-      final maxEnd = parentInfo?.duration ?? absoluteEndFrame;
-      final newLocalEnd = (absoluteEndFrame - parentStartFrame)
-          .clamp(minEnd, maxEnd)
-          .toInt();
-
-      return _ResolvedCueFrames(
-        localStartFrame: baseLocalStart,
-        localEndFrame: newLocalEnd,
-        absoluteStartFrame: absoluteStartFrame,
-        absoluteEndFrame: parentStartFrame + newLocalEnd,
-      );
-  }
-}
-
-int _requiredDurationForChildren(String cueId, _CueIndex index) {
-  var requiredDuration = 0;
-
-  for (final childCueId in index.childrenByCueId[cueId] ?? const <String>[]) {
-    final childCue = index.cuesById[childCueId];
-    if (childCue == null) continue;
-
-    final childEndFrame = switch (childCue) {
-      Segment(endFrame: final endFrame) => endFrame,
-      Keyframe(frame: final frame) => frame,
-      _ => 0,
-    };
-    requiredDuration = math.max(requiredDuration, childEndFrame);
+    if (!hasCandidateAncestor) {
+      roots.add(cueId);
+    }
   }
 
-  return requiredDuration;
+  if (roots.contains(draggedCueId)) {
+    return [
+      draggedCueId,
+      for (final cueId in roots)
+        if (cueId != draggedCueId) cueId,
+    ];
+  }
+
+  return roots;
 }
 
-_ParentInfo? _findParentInfo(String cueId, _CueIndex index) {
-  final parentCueId = index.parentByCueId[cueId];
-  if (parentCueId == null) return null;
-
-  final parentCue = index.cuesById[parentCueId];
-  if (parentCue == null) return null;
-
-  final parentStartFrame = switch (parentCue) {
-    Segment(startFrame: final startFrame) => startFrame,
-    Keyframe(frame: final frame) => frame,
-    _ => 0,
-  };
-
-  final parentDuration = switch (parentCue) {
-    Segment(startFrame: final start, endFrame: final end) => end - start,
-    Keyframe() => null,
-    _ => null,
-  };
-
-  return _ParentInfo(startFrame: parentStartFrame, duration: parentDuration);
-}
-
-class _ParentInfo {
-  const _ParentInfo({required this.startFrame, this.duration});
-
-  final int startFrame;
-  final int? duration;
-}
-
-Future<void> _commitSceneMove({
+Future<void> _commitSceneMoveBatch({
   required WidgetRef ref,
   required String pageId,
   required List<PageElement> elements,
-  required String cueId,
-  required int absoluteStartFrame,
-  required int absoluteEndFrame,
+  required List<TimelineCommitPayload> changes,
 }) {
-  final index = _CueIndex.fromPageElements(elements);
-  final parentInfo = _findParentInfo(cueId, index);
+  if (changes.isEmpty) return Future.value();
 
-  final resolved = _resolveCueFrames(
-    cueId: cueId,
-    absoluteStartFrame: absoluteStartFrame,
-    absoluteEndFrame: absoluteEndFrame,
-    index: index,
-    parentInfo: parentInfo,
-    mode: TimelineInteractionMode.move,
-  );
+  final index = SceneCueGraphIndex.fromPageElements(elements);
+  final moveChanges = <(String, int, int)>[];
 
-  return ref.read(pageElementsProvider(pageId).notifier).moveCues([
-    (cueId, resolved.localStartFrame, resolved.localEndFrame),
-  ]);
+  for (final change in changes) {
+    final cueId = change.id.id;
+    final parentInfo = findSceneParentInfo(cueId, index);
+
+    final resolved = resolveSceneCueFrames(
+      cueId: cueId,
+      absoluteStartFrame: change.absoluteStartFrame,
+      absoluteEndFrame: change.absoluteEndFrame,
+      index: index,
+      parentInfo: parentInfo,
+      mode: TimelineInteractionMode.move,
+    );
+    moveChanges.add((cueId, resolved.localStartFrame, resolved.localEndFrame));
+  }
+
+  return ref.read(pageElementsProvider(pageId).notifier).moveCues(moveChanges);
 }
 
 Future<void> _commitSceneResize({
@@ -294,21 +177,25 @@ Future<void> _commitSceneResize({
   required int absoluteStartFrame,
   required int absoluteEndFrame,
 }) {
-  final index = _CueIndex.fromPageElements(elements);
+  final index = SceneCueGraphIndex.fromPageElements(elements);
 
   final baseCue = index.cuesById[cueId];
   if (baseCue is! Segment) return Future.value();
 
   final baseStartFrame = baseCue.startFrame;
-  final baseAbsoluteStart = _absoluteFrame(baseStartFrame, cueId, index);
+  final baseAbsoluteStart = absoluteFrameFromLocalFrame(
+    baseStartFrame,
+    cueId,
+    index,
+  );
 
   final mode = absoluteStartFrame == baseAbsoluteStart
       ? TimelineInteractionMode.resizeEnd
       : TimelineInteractionMode.resizeStart;
 
-  final parentInfo = _findParentInfo(cueId, index);
+  final parentInfo = findSceneParentInfo(cueId, index);
 
-  final resolved = _resolveCueFrames(
+  final resolved = resolveSceneCueFrames(
     cueId: cueId,
     absoluteStartFrame: absoluteStartFrame,
     absoluteEndFrame: absoluteEndFrame,
@@ -322,123 +209,6 @@ Future<void> _commitSceneResize({
   ]);
 }
 
-int _absoluteFrame(int localFrame, String cueId, _CueIndex index) {
-  var currentCueId = cueId;
-  var absoluteOffset = localFrame;
-
-  while (true) {
-    final parentCueId = index.parentByCueId[currentCueId];
-    if (parentCueId == null) break;
-
-    final parentCue = index.cuesById[parentCueId];
-    if (parentCue == null) break;
-
-    final parentStartFrame = switch (parentCue) {
-      Segment(startFrame: final startFrame) => startFrame,
-      Keyframe(frame: final frame) => frame,
-      _ => 0,
-    };
-
-    absoluteOffset += parentStartFrame;
-    currentCueId = parentCueId;
-  }
-
-  return absoluteOffset;
-}
-
-class _CueIndex {
-  const _CueIndex({
-    required this.entries,
-    required this.cuesById,
-    required this.parentByCueId,
-    required this.childrenByCueId,
-    required this.rootCueIdsByEntryId,
-  });
-
-  factory _CueIndex.fromPageElements(List<PageElement> elements) {
-    final entries = <PageEntry>[];
-    final cuesById = <String, Cue>{};
-    final parentByCueId = <String, String>{};
-    final childrenByCueId = <String, List<String>>{};
-    final rootCueIdsByEntryId = <String, List<String>>{};
-
-    for (final element in elements) {
-      switch (element) {
-        case PageElementEntry(entry: final entry):
-          entries.add(entry);
-          rootCueIdsByEntryId[entry.id] = _childIds(_entryOutwardLinks(entry));
-        case PageElementCue(cue: final cue):
-          cuesById[cue.id] = cue;
-
-          final parentIds = _parentIds(cue);
-          if (parentIds.isNotEmpty) {
-            parentByCueId[cue.id] = parentIds.single;
-          }
-
-          if (cue case Segment(outwardLinks: final outwardLinks)) {
-            childrenByCueId[cue.id] = _childIds(outwardLinks);
-          }
-        case PageElementGroup():
-      }
-    }
-
-    return _CueIndex(
-      entries: entries,
-      cuesById: cuesById,
-      parentByCueId: parentByCueId,
-      childrenByCueId: childrenByCueId,
-      rootCueIdsByEntryId: rootCueIdsByEntryId,
-    );
-  }
-
-  final List<PageEntry> entries;
-  final Map<String, Cue> cuesById;
-  final Map<String, String> parentByCueId;
-  final Map<String, List<String>> childrenByCueId;
-  final Map<String, List<String>> rootCueIdsByEntryId;
-}
-
-List<String> _childIds(List<ElementLink> links) {
-  final ids = <String>[];
-  final seenIds = <String>{};
-
-  for (final link in links) {
-    if (link.path != "children") continue;
-    if (!seenIds.add(link.otherId)) continue;
-    ids.add(link.otherId);
-  }
-
-  return ids;
-}
-
-List<String> _parentIds(Cue cue) {
-  final inwardLinks = switch (cue) {
-    Segment(:final inwardLinks) => inwardLinks,
-    Keyframe(:final inwardLinks) => inwardLinks,
-    _ => const <ElementLink>[],
-  };
-
-  final ids = <String>[];
-  final seenIds = <String>{};
-
-  for (final link in inwardLinks) {
-    if (link.path != "parent") continue;
-    if (!seenIds.add(link.otherId)) continue;
-    ids.add(link.otherId);
-  }
-
-  return ids;
-}
-
-List<ElementLink> _entryOutwardLinks(PageEntry entry) {
-  return switch (entry) {
-    DefinitionPageEntry(definition: final definition) =>
-      definition.outwardEdges,
-    NoBlueprintPageEntry(:final outwardLinks) => outwardLinks,
-    _ => const <ElementLink>[],
-  };
-}
-
 class _SceneViewData {
   const _SceneViewData({required this.timelineData});
 
@@ -446,14 +216,13 @@ class _SceneViewData {
     required String pageId,
     required List<PageElement> elements,
   }) {
-    final index = _CueIndex.fromPageElements(elements);
-    final entriesById = <String, PageEntry>{};
+    final index = SceneCueGraphIndex.fromPageElements(elements);
     final cuesById = <String, Cue>{};
 
     for (final element in elements) {
       switch (element) {
-        case PageElementEntry(entry: final entry):
-          entriesById[entry.id] = entry;
+        case PageElementEntry():
+          continue;
         case PageElementCue(cue: final cue):
           cuesById[cue.id] = cue;
         case PageElementGroup():
@@ -484,23 +253,18 @@ List<TimelineElement> _buildTimelineElements({
   required String pageId,
   required List<String> rootCueIds,
   required Map<String, Cue> cuesById,
-  required _CueIndex index,
+  required SceneCueGraphIndex index,
 }) {
-  final items = <(String, int, int, List<String>)>[];
+  final items = collectSceneTimelineItems(rootCueIds: rootCueIds, index: index)
+    ..sort((a, b) {
+      final frameCompare = a.$2.compareTo(b.$2);
+      if (frameCompare != 0) return frameCompare;
 
-  for (final rootCueId in rootCueIds) {
-    _collectTimelineItems(cueId: rootCueId, index: index, items: items);
-  }
+      final endCompare = b.$3.compareTo(a.$3);
+      if (endCompare != 0) return endCompare;
 
-  items.sort((a, b) {
-    final frameCompare = a.$2.compareTo(b.$2);
-    if (frameCompare != 0) return frameCompare;
-
-    final endCompare = b.$3.compareTo(a.$3);
-    if (endCompare != 0) return endCompare;
-
-    return a.$1.compareTo(b.$1);
-  });
+      return a.$1.compareTo(b.$1);
+    });
 
   final itemMap = <String, (int, int, List<String>)>{};
   for (final item in items) {
@@ -663,55 +427,6 @@ List<TimelineElement> _buildChildElements({
   return elements;
 }
 
-void _collectTimelineItems({
-  required String cueId,
-  required _CueIndex index,
-  required List<(String, int, int, List<String>)> items,
-}) {
-  final cue = index.cuesById[cueId];
-  if (cue == null) return;
-
-  final absoluteStartFrame = _absoluteFrameForCue(cueId, index);
-  final absoluteEndFrame = switch (cue) {
-    Segment(startFrame: final start, endFrame: final end) =>
-      absoluteStartFrame + (end - start),
-    Keyframe(frame: final frame) => absoluteStartFrame,
-    _ => absoluteStartFrame,
-  };
-
-  final children = index.childrenByCueId[cueId] ?? const <String>[];
-
-  items.add((cueId, absoluteStartFrame, absoluteEndFrame, children));
-
-  for (final childId in children) {
-    _collectTimelineItems(cueId: childId, index: index, items: items);
-  }
-}
-
-int _absoluteFrameForCue(String cueId, _CueIndex index) {
-  var currentCueId = cueId;
-  var offset = 0;
-
-  while (true) {
-    final cue = index.cuesById[currentCueId];
-    if (cue == null) break;
-
-    final localStart = switch (cue) {
-      Segment(startFrame: final start) => start,
-      Keyframe(frame: final f) => f,
-      _ => 0,
-    };
-
-    offset += localStart;
-
-    final parentId = index.parentByCueId[currentCueId];
-    if (parentId == null) break;
-    currentCueId = parentId;
-  }
-
-  return offset;
-}
-
 Color _fillColor(BuildContext context, Cue cue, TimelineElementBuildData data) {
   final isDeprecated = cue.blueprint.hasModifier<DeprecatedModifier>();
   if (!isDeprecated && !data.isPreview) {
@@ -766,11 +481,13 @@ class _SceneTimelineSegmentWidget extends HookWidget {
           data: data,
           fillColor: fillColor,
           outlineColor: outlineColor,
-          outlineWidth: 3.0,
-          child: _SceneCueCard(
-            cue: cue,
+          outlineWidth: 2.8,
+          child: InnerElementNode(
+            name: cue.blueprint.name,
+            blueprint: cue.blueprint,
+            color: foregroundColor,
             isDeprecated: isDeprecated,
-            foregroundColor: foregroundColor,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
           ),
         );
       },
@@ -814,28 +531,6 @@ class _SceneTimelineKeyframeWidget extends HookWidget {
           child: const SizedBox.shrink(),
         );
       },
-    );
-  }
-}
-
-class _SceneCueCard extends StatelessWidget {
-  const _SceneCueCard({
-    required this.isDeprecated,
-    required this.cue,
-    required this.foregroundColor,
-  });
-
-  final Cue cue;
-  final bool isDeprecated;
-  final Color foregroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return InnerElementNode(
-      name: cue.blueprint.name,
-      blueprint: cue.blueprint,
-      color: foregroundColor,
-      isDeprecated: isDeprecated,
     );
   }
 }

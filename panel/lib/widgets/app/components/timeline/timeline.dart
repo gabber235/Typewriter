@@ -30,18 +30,23 @@ class TimelineCommitPayload {
 }
 
 typedef TimelineCommit = Future<void> Function(TimelineCommitPayload change);
+typedef TimelineMoveCommit =
+    Future<void> Function(List<TimelineCommitPayload> changes);
 
 class Timeline extends HookWidget {
   const Timeline({
     required this.data,
     this.onElementMoved,
     this.onElementResized,
+    this.resolveMoveTargets,
     super.key,
   });
 
   final TimelineData data;
-  final TimelineCommit? onElementMoved;
+  final TimelineMoveCommit? onElementMoved;
   final TimelineCommit? onElementResized;
+  final List<TimelineIdentifier> Function(TimelineIdentifier draggedId)?
+  resolveMoveTargets;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +86,7 @@ class Timeline extends HookWidget {
         final provisionalLayout = layoutEngine.build(
           data: data,
           viewport: provisionalViewport,
-          preview: controller.preview,
+          previews: controller.previews,
         );
         final viewport = provisionalViewport.copyWith(
           horizontalOffset: controller.horizontalOffset.clamp(
@@ -96,25 +101,80 @@ class Timeline extends HookWidget {
         final layout = layoutEngine.build(
           data: data,
           viewport: viewport,
-          preview: controller.preview,
+          previews: controller.previews,
         );
 
-        Future<void> commitPreview(TimelinePreview? preview) async {
-          if (preview == null) return;
-          final change = TimelineCommitPayload(
-            id: TimelineIdentifier(preview.id),
-            absoluteStartFrame: preview.startFrame,
-            absoluteEndFrame: preview.endFrame,
-            localStartFrame: preview.startFrame,
-            localEndFrame: preview.endFrame,
-          );
-          final callback = switch (preview.mode) {
-            TimelineInteractionMode.move => onElementMoved,
-            TimelineInteractionMode.resizeStart => onElementResized,
-            TimelineInteractionMode.resizeEnd => onElementResized,
-          };
-          if (callback != null) {
-            unawaited(callback(change));
+        Map<String, TimelineElement> mapElementsById(
+          List<TimelineElement> elements,
+        ) {
+          final byId = <String, TimelineElement>{};
+
+          void collect(TimelineElement element) {
+            byId[element.id.id] = element;
+            if (element case TimelineSegment(:final children)) {
+              for (final child in children) {
+                collect(child);
+              }
+            }
+          }
+
+          for (final element in elements) {
+            collect(element);
+          }
+
+          return byId;
+        }
+
+        final elementsById = mapElementsById(
+          data.tracks.expand((track) => track.elements).toList(),
+        );
+
+        List<TimelinePreviewSeed> resolveMovePreviews(
+          TimelineIdentifier draggedId,
+        ) {
+          final targetIds = resolveMoveTargets?.call(draggedId);
+          final orderedIds = targetIds == null || targetIds.isEmpty
+              ? [draggedId]
+              : targetIds;
+
+          final seen = <String>{};
+          final previews = <TimelinePreviewSeed>[];
+          for (final targetId in orderedIds) {
+            if (!seen.add(targetId.id)) continue;
+            final element = elementsById[targetId.id];
+            if (element == null) continue;
+            previews.add((
+              id: targetId.id,
+              startFrame: element.startFrame,
+              endFrame: element.endFrame,
+            ));
+          }
+          return previews;
+        }
+
+        Future<void> commitPreview(List<TimelinePreview> previews) async {
+          if (previews.isEmpty) return;
+          final mode = previews.first.mode;
+          final changes = [
+            for (final preview in previews)
+              TimelineCommitPayload(
+                id: TimelineIdentifier(preview.id),
+                absoluteStartFrame: preview.startFrame,
+                absoluteEndFrame: preview.endFrame,
+                localStartFrame: preview.startFrame,
+                localEndFrame: preview.endFrame,
+              ),
+          ];
+
+          if (mode == TimelineInteractionMode.move) {
+            if (onElementMoved != null) {
+              unawaited(onElementMoved!(changes));
+            }
+            return;
+          }
+
+          if (onElementResized != null) {
+            unawaited(onElementResized!(changes.first));
           }
         }
 
@@ -124,6 +184,7 @@ class Timeline extends HookWidget {
           viewport: viewport,
           layout: layout,
           onCommitPreview: commitPreview,
+          resolveMovePreviews: resolveMovePreviews,
         );
 
         return Row(
@@ -357,13 +418,16 @@ class _TimelinePlaneSurface extends HookWidget {
     required this.viewport,
     required this.layout,
     required this.onCommitPreview,
+    required this.resolveMovePreviews,
   });
 
   final TimelineController controller;
   final TimelineStyle style;
   final TimelineViewport viewport;
   final TimelineLayoutResult layout;
-  final Future<void> Function(TimelinePreview? preview) onCommitPreview;
+  final Future<void> Function(List<TimelinePreview> previews) onCommitPreview;
+  final List<TimelinePreviewSeed> Function(TimelineIdentifier id)
+  resolveMovePreviews;
 
   @override
   Widget build(BuildContext context) {
@@ -442,6 +506,7 @@ class _TimelinePlaneSurface extends HookWidget {
                         style: style,
                         controller: controller,
                         onCommitPreview: onCommitPreview,
+                        resolveMovePreviews: resolveMovePreviews,
                       ),
                     ),
                   ),
@@ -486,10 +551,14 @@ class TimelineSegmentSurface extends HookWidget {
               behavior: HitTestBehavior.opaque,
               onHorizontalDragStart: (_) {
                 totalDelta.value = 0;
+                final movePreviews = data.resolveMovePreviews(segment.id);
                 controller.startMove(
                   id: segment.id.id,
                   startFrame: segment.startFrame,
                   endFrame: segment.endFrame,
+                  additionalPreviews: movePreviews
+                      .where((preview) => preview.id != segment.id.id)
+                      .toList(),
                 );
               },
               onHorizontalDragUpdate: (details) {
@@ -498,7 +567,7 @@ class TimelineSegmentSurface extends HookWidget {
               },
               onHorizontalDragCancel: controller.cancelInteraction,
               onHorizontalDragEnd: (_) =>
-                  data.onCommitPreview(controller.finishInteraction()),
+                  data.onCommitPreview(controller.finishInteractionSession()),
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: style.edgeHandleWidth / 2,
@@ -509,13 +578,9 @@ class TimelineSegmentSurface extends HookWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
                     margin: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 4,
+                      horizontal: 3,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       border: Border.all(
@@ -550,7 +615,8 @@ class TimelineSegmentSurface extends HookWidget {
               totalDelta.value += details.delta.dx;
               controller.updateInteraction(totalDelta.value);
             },
-            onEnd: () => data.onCommitPreview(controller.finishInteraction()),
+            onEnd: () =>
+                data.onCommitPreview(controller.finishInteractionSession()),
             onCancel: controller.cancelInteraction,
           ),
         ),
@@ -573,7 +639,8 @@ class TimelineSegmentSurface extends HookWidget {
               totalDelta.value += details.delta.dx;
               controller.updateInteraction(totalDelta.value);
             },
-            onEnd: () => data.onCommitPreview(controller.finishInteraction()),
+            onEnd: () =>
+                data.onCommitPreview(controller.finishInteractionSession()),
             onCancel: controller.cancelInteraction,
           ),
         ),
@@ -641,10 +708,14 @@ class TimelineKeyframeSurface extends HookWidget {
         behavior: HitTestBehavior.opaque,
         onHorizontalDragStart: (_) {
           totalDelta.value = 0;
+          final movePreviews = data.resolveMovePreviews(keyframe.id);
           controller.startMove(
             id: keyframe.id.id,
             startFrame: keyframe.frame,
             endFrame: keyframe.frame,
+            additionalPreviews: movePreviews
+                .where((preview) => preview.id != keyframe.id.id)
+                .toList(),
           );
         },
         onHorizontalDragUpdate: (details) {
@@ -653,7 +724,7 @@ class TimelineKeyframeSurface extends HookWidget {
         },
         onHorizontalDragCancel: controller.cancelInteraction,
         onHorizontalDragEnd: (_) =>
-            data.onCommitPreview(controller.finishInteraction()),
+            data.onCommitPreview(controller.finishInteractionSession()),
         child: Center(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),

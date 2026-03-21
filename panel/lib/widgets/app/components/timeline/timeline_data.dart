@@ -138,12 +138,15 @@ class TimelineElementBuildData {
     required this.style,
     required this.controller,
     required this.onCommitPreview,
+    required this.resolveMovePreviews,
   });
 
   final TimelinePlacedElement placed;
   final TimelineStyle style;
   final TimelineController controller;
-  final Future<void> Function(TimelinePreview? preview) onCommitPreview;
+  final Future<void> Function(List<TimelinePreview> previews) onCommitPreview;
+  final List<TimelinePreviewSeed> Function(TimelineIdentifier id)
+  resolveMovePreviews;
 
   TimelineElement get element => placed.element;
   bool get isPreview => placed.isPreview;

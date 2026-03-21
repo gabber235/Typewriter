@@ -227,6 +227,74 @@ void main() {
       );
     });
 
+    testWidgets("keeps multi root preview lane reservation deterministic", (
+      tester,
+    ) async {
+      final data = _timelineDataFromElements(_rootReservationSceneElements());
+
+      final previewLayoutA = _buildLayout(
+        data: data,
+        viewport: _viewport(),
+        preview: null,
+        previews: const [
+          TimelinePreview(
+            id: "root_b",
+            mode: TimelineInteractionMode.move,
+            originalStartFrame: 24,
+            originalEndFrame: 40,
+            startFrame: 20,
+            endFrame: 36,
+          ),
+          TimelinePreview(
+            id: "root_a",
+            mode: TimelineInteractionMode.move,
+            originalStartFrame: 0,
+            originalEndFrame: 20,
+            startFrame: 24,
+            endFrame: 44,
+          ),
+        ],
+      );
+      final previewLayoutB = _buildLayout(
+        data: data,
+        viewport: _viewport(),
+        preview: null,
+        previews: const [
+          TimelinePreview(
+            id: "root_a",
+            mode: TimelineInteractionMode.move,
+            originalStartFrame: 0,
+            originalEndFrame: 20,
+            startFrame: 24,
+            endFrame: 44,
+          ),
+          TimelinePreview(
+            id: "root_b",
+            mode: TimelineInteractionMode.move,
+            originalStartFrame: 24,
+            originalEndFrame: 40,
+            startFrame: 20,
+            endFrame: 36,
+          ),
+        ],
+      );
+
+      _expectLaneIndices(previewLayoutA, {
+        "root_a": _placed(previewLayoutB, "root_a").laneIndex,
+        "root_a_child": _placed(previewLayoutB, "root_a_child").laneIndex,
+        "root_b": _placed(previewLayoutB, "root_b").laneIndex,
+        "root_b_child": _placed(previewLayoutB, "root_b_child").laneIndex,
+      });
+      expect(
+        _placed(previewLayoutA, "root_a").previewState,
+        TimelinePreviewState.active,
+      );
+      expect(
+        _placed(previewLayoutA, "root_b").previewState,
+        TimelinePreviewState.active,
+      );
+    });
+
     testWidgets(
       "keeps a moved child segment stream when a sibling keyframe overlaps",
       (tester) async {
@@ -1051,10 +1119,11 @@ TimelineLayoutResult _buildLayout({
   required TimelineData data,
   required TimelineViewport viewport,
   required TimelinePreview? preview,
+  List<TimelinePreview> previews = const [],
 }) {
   return TimelineLayoutEngine(
     style: TimelineStyle.fallback(ThemeData()),
-  ).build(data: data, viewport: viewport, preview: preview);
+  ).build(data: data, viewport: viewport, preview: preview, previews: previews);
 }
 
 TimelineData _timelineDataFromElements(

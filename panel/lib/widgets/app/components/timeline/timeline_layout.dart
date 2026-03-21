@@ -15,23 +15,32 @@ class TimelineLayoutEngine {
   TimelineLayoutResult build({
     required TimelineData data,
     required TimelineViewport viewport,
+    List<TimelinePreview> previews = const [],
     TimelinePreview? preview,
   }) {
+    final effectivePreviews = previews.isNotEmpty
+        ? previews
+        : preview == null
+        ? const <TimelinePreview>[]
+        : [preview];
+    final previewById = {for (final item in effectivePreviews) item.id: item};
+    final activePreviewIds = previewById.keys.toSet();
+
     final tracks = <TimelineTrackLayout>[];
     var currentTop = style.trackGap;
 
     for (var index = 0; index < data.tracks.length; index++) {
       final track = data.tracks[index];
       final baseElements = track.elements.sorted();
-      final previewElements = _previewElements(baseElements, preview);
-      final laneLayout = preview == null
+      final previewElements = _previewElements(baseElements, previewById);
+      final laneLayout = activePreviewIds.isEmpty
           ? _layoutSiblings(baseElements)
           : _layoutPreviewSiblings(
               baseElements: baseElements,
               previewElements: previewElements,
-              activeElementId: preview.id,
+              activeElementIds: activePreviewIds,
             );
-      final previewStates = _previewStates(previewElements, preview?.id);
+      final previewStates = _previewStates(previewElements, activePreviewIds);
       final placed = <TimelinePlacedElement>[];
 
       for (final element in _flatten(previewElements)) {
@@ -78,7 +87,7 @@ class TimelineLayoutEngine {
 
     final contentWidth = math.max(
       viewport.planeWidth,
-      (_maxFrame(data, preview) + style.trailingFrames + 1) *
+      (_maxFrame(data, previewById) + style.trailingFrames + 1) *
           viewport.pixelsPerFrame,
     );
 
@@ -91,17 +100,17 @@ class TimelineLayoutEngine {
 
   List<TimelineElement> _previewElements(
     List<TimelineElement> baseElements,
-    TimelinePreview? preview,
+    Map<String, TimelinePreview> previewById,
   ) {
     return [
       for (final element in baseElements)
-        _applyPreview(element: element, preview: preview),
+        _applyPreview(element: element, previewById: previewById),
     ];
   }
 
   TimelineElement _applyPreview({
     required TimelineElement element,
-    required TimelinePreview? preview,
+    required Map<String, TimelinePreview> previewById,
     int inheritedFrameDelta = 0,
     int? parentStartFrame,
     int? parentEndFrame,
@@ -110,9 +119,8 @@ class TimelineLayoutEngine {
       element: element,
       frameDelta: inheritedFrameDelta,
     );
-    if (preview == null) return shifted;
-
-    final isActive = shifted.id.id == preview.id;
+    final preview = previewById[shifted.id.id];
+    final isActive = preview != null;
 
     if (shifted case TimelineKeyframe()) {
       if (!isActive) return shifted;
@@ -141,7 +149,7 @@ class TimelineLayoutEngine {
           for (final child in segment.children)
             _applyPreview(
               element: child,
-              preview: preview,
+              previewById: previewById,
               inheritedFrameDelta: inheritedFrameDelta,
               parentStartFrame: segment.startFrame,
               parentEndFrame: segment.endFrame,
@@ -182,7 +190,7 @@ class TimelineLayoutEngine {
         for (final child in segment.children)
           _applyPreview(
             element: child,
-            preview: preview,
+            previewById: previewById,
             inheritedFrameDelta: inheritedFrameDelta + descendantDelta,
             parentStartFrame: movedSegment.startFrame,
             parentEndFrame: movedSegment.endFrame,
@@ -204,7 +212,7 @@ class TimelineLayoutEngine {
     if (maxFrame < minFrame) {
       return minFrame;
     }
-    return frame.clamp(minFrame, maxFrame) as int;
+    return frame.clamp(minFrame, maxFrame);
   }
 
   ({int startFrame, int endFrame}) _clampSegmentFrames({
@@ -256,8 +264,7 @@ class TimelineLayoutEngine {
       return (startFrame: minFrame, endFrame: maxFrame);
     }
 
-    final clampedStart =
-        desiredStartFrame.clamp(minFrame, maxStartFrame) as int;
+    final clampedStart = desiredStartFrame.clamp(minFrame, maxStartFrame);
     return (startFrame: clampedStart, endFrame: clampedStart + safeDuration);
   }
 
@@ -267,7 +274,7 @@ class TimelineLayoutEngine {
     required int minFrame,
   }) {
     final safeEndFrame = math.max(currentEndFrame, minFrame);
-    final clampedStart = desiredStartFrame.clamp(minFrame, safeEndFrame) as int;
+    final clampedStart = desiredStartFrame.clamp(minFrame, safeEndFrame);
     return (startFrame: clampedStart, endFrame: safeEndFrame);
   }
 
@@ -280,8 +287,7 @@ class TimelineLayoutEngine {
     final maxEndFrame = maxFrame == null
         ? desiredEndFrame
         : math.max(safeStartFrame, maxFrame);
-    final clampedEnd =
-        desiredEndFrame.clamp(safeStartFrame, maxEndFrame) as int;
+    final clampedEnd = desiredEndFrame.clamp(safeStartFrame, maxEndFrame);
     return (startFrame: safeStartFrame, endFrame: clampedEnd);
   }
 
@@ -345,12 +351,16 @@ class TimelineLayoutEngine {
   _LaneLayout _layoutPreviewSiblings({
     required List<TimelineElement> baseElements,
     required List<TimelineElement> previewElements,
-    required String activeElementId,
+    required Set<String> activeElementIds,
   }) {
-    final activePreviewElement = previewElements.firstWhereOrNull(
-      (element) => _containsElement(element, activeElementId),
-    );
-    if (activePreviewElement == null) {
+    if (activeElementIds.isEmpty) {
+      return _layoutSiblings(previewElements);
+    }
+
+    final activePreviewElements = previewElements
+        .where((element) => _containsAnyElement(element, activeElementIds))
+        .toList();
+    if (activePreviewElements.isEmpty) {
       return _layoutSiblings(previewElements);
     }
 
@@ -360,39 +370,49 @@ class TimelineLayoutEngine {
     final baseLaneLayout = _layoutSiblings(baseElements);
     final occupancy = _LaneOccupancy();
     final laneByElementId = <String, int>{};
-    final activeBaseElement = baseElementsById[activePreviewElement.id.id];
-    assert(
-      activeBaseElement != null,
-      "Missing base element ${activePreviewElement.id.id} for preview layout.",
-    );
-    if (activeBaseElement == null) {
-      return _layoutSiblings(previewElements);
-    }
 
-    final activeLaneIndex =
-        baseLaneLayout.laneByElementId[activePreviewElement.id.id] ?? 0;
-    final activeSubtreeLayout = _layoutPreviewSubtree(
-      baseElement: activeBaseElement,
-      previewElement: activePreviewElement,
-      activeElementId: activeElementId,
-    );
-    occupancy
-      ..lockBlock(
-        laneIndex: activeLaneIndex,
-        width: activeSubtreeLayout.laneCount,
-      )
-      ..reserveBlock(
-        laneIndex: activeLaneIndex,
-        width: activeSubtreeLayout.laneCount,
-        startFrame: activePreviewElement.startFrame,
-        endFrame: activePreviewElement.endFrame,
+    final sortedActivePreviewElements = [...activePreviewElements]
+      ..sort((left, right) {
+        final leftLane = baseLaneLayout.laneByElementId[left.id.id] ?? 0;
+        final rightLane = baseLaneLayout.laneByElementId[right.id.id] ?? 0;
+        final laneCompare = leftLane.compareTo(rightLane);
+        if (laneCompare != 0) return laneCompare;
+        return left.id.id.compareTo(right.id.id);
+      });
+
+    for (final activePreviewElement in sortedActivePreviewElements) {
+      final activeBaseElement = baseElementsById[activePreviewElement.id.id];
+      assert(
+        activeBaseElement != null,
+        "Missing base element ${activePreviewElement.id.id} for preview layout.",
       );
-    for (final entry in activeSubtreeLayout.laneByElementId.entries) {
-      laneByElementId[entry.key] = activeLaneIndex + entry.value;
+      if (activeBaseElement == null) continue;
+
+      final activeLaneIndex =
+          baseLaneLayout.laneByElementId[activePreviewElement.id.id] ?? 0;
+      final activeSubtreeLayout = _layoutPreviewSubtree(
+        baseElement: activeBaseElement,
+        previewElement: activePreviewElement,
+        activeElementIds: activeElementIds,
+      );
+      occupancy
+        ..lockBlock(
+          laneIndex: activeLaneIndex,
+          width: activeSubtreeLayout.laneCount,
+        )
+        ..reserveBlock(
+          laneIndex: activeLaneIndex,
+          width: activeSubtreeLayout.laneCount,
+          startFrame: activePreviewElement.startFrame,
+          endFrame: activePreviewElement.endFrame,
+        );
+      for (final entry in activeSubtreeLayout.laneByElementId.entries) {
+        laneByElementId[entry.key] = activeLaneIndex + entry.value;
+      }
     }
 
     for (final element in previewElements.sorted()) {
-      if (element.id == activePreviewElement.id) continue;
+      if (_containsAnyElement(element, activeElementIds)) continue;
 
       final baseElement = baseElementsById[element.id.id];
       assert(
@@ -404,7 +424,7 @@ class TimelineLayoutEngine {
       final subtreeLayout = _layoutPreviewSubtree(
         baseElement: baseElement,
         previewElement: element,
-        activeElementId: activeElementId,
+        activeElementIds: activeElementIds,
       );
       final laneIndex = occupancy.firstAvailableLane(
         width: subtreeLayout.laneCount,
@@ -453,9 +473,9 @@ class TimelineLayoutEngine {
   _LaneLayout _layoutPreviewSubtree({
     required TimelineElement baseElement,
     required TimelineElement previewElement,
-    required String activeElementId,
+    required Set<String> activeElementIds,
   }) {
-    if (!_containsElement(previewElement, activeElementId)) {
+    if (!_containsAnyElement(previewElement, activeElementIds)) {
       return _layoutSubtree(previewElement);
     }
 
@@ -478,7 +498,7 @@ class TimelineLayoutEngine {
     final childLayout = _layoutPreviewSiblings(
       baseElements: baseSegment.children,
       previewElements: previewSegment.children,
-      activeElementId: activeElementId,
+      activeElementIds: activeElementIds,
     );
     final laneByElementId = <String, int>{previewSegment.id.id: 0};
     for (final entry in childLayout.laneByElementId.entries) {
@@ -493,19 +513,28 @@ class TimelineLayoutEngine {
 
   Map<String, TimelinePreviewState> _previewStates(
     List<TimelineElement> previewElements,
-    String? activeElementId,
+    Set<String> activeElementIds,
   ) {
-    if (activeElementId == null) return const {};
+    if (activeElementIds.isEmpty) return const {};
 
     final states = <String, TimelinePreviewState>{};
-    final active = _findElement(previewElements, activeElementId);
-    if (active == null) return states;
-
-    for (final element in _flatten([active])) {
-      states[element.id.id] = TimelinePreviewState.related;
+    for (final activeElementId in activeElementIds) {
+      final active = _findElement(previewElements, activeElementId);
+      if (active == null) continue;
+      for (final element in _flatten([active])) {
+        states[element.id.id] = TimelinePreviewState.related;
+      }
+      states[activeElementId] = TimelinePreviewState.active;
     }
-    states[activeElementId] = TimelinePreviewState.active;
+
     return states;
+  }
+
+  bool _containsAnyElement(TimelineElement element, Set<String> elementIds) {
+    for (final elementId in elementIds) {
+      if (_containsElement(element, elementId)) return true;
+    }
+    return false;
   }
 
   bool _containsElement(TimelineElement element, String elementId) {
@@ -575,10 +604,10 @@ class TimelineLayoutEngine {
     };
   }
 
-  int _maxFrame(TimelineData data, TimelinePreview? preview) {
+  int _maxFrame(TimelineData data, Map<String, TimelinePreview> previewById) {
     var maxFrame = 200;
     for (final track in data.tracks) {
-      final previewElements = _previewElements(track.elements, preview);
+      final previewElements = _previewElements(track.elements, previewById);
       for (final element in _flatten(previewElements)) {
         maxFrame = math.max(maxFrame, element.endFrame);
       }

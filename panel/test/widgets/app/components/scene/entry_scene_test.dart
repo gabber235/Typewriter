@@ -1,10 +1,12 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/iconoir.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/widgets/app/components/scene/scene.dart";
@@ -171,6 +173,125 @@ void main() {
       );
       expect(notifier.resizeCalls, isEmpty);
     });
+
+    testWidgets("moves selected roots together when dragged cue is selected", (
+      tester,
+    ) async {
+      final notifier = _TestPageElements(_multiRootSceneElements());
+
+      await tester.pumpTestApp(
+        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        child: const SizedBox(
+          width: 1600,
+          height: 900,
+          child: Material(child: EntryScene(pageId: "page")),
+        ),
+      );
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(EntryScene)),
+      );
+      container.read(selectionProvider.notifier).selectAll([
+        const CueIdentifier(pageId: "page", id: "root_a"),
+        const CueIdentifier(pageId: "page", id: "root_b"),
+      ]);
+      await tester.pumpAndSettle();
+
+      final surfaceFinder = find.ancestor(
+        of: find.text("Root A"),
+        matching: find.byType(TimelineSegmentSurface),
+      );
+
+      await tester.dragFrom(
+        tester.getRect(surfaceFinder).center,
+        const Offset(60, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(notifier.moveCalls, [
+        const [("root_a", 13, 33), ("root_b", 43, 53)],
+      ]);
+      expect(notifier.resizeCalls, isEmpty);
+    });
+
+    testWidgets("moves only dragged cue when dragged cue is not selected", (
+      tester,
+    ) async {
+      final notifier = _TestPageElements(_multiRootSceneElements());
+
+      await tester.pumpTestApp(
+        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        child: const SizedBox(
+          width: 1600,
+          height: 900,
+          child: Material(child: EntryScene(pageId: "page")),
+        ),
+      );
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(EntryScene)),
+      );
+      container.read(selectionProvider.notifier).selectAll([
+        const CueIdentifier(pageId: "page", id: "root_b"),
+      ]);
+      await tester.pumpAndSettle();
+
+      final surfaceFinder = find.ancestor(
+        of: find.text("Root A"),
+        matching: find.byType(TimelineSegmentSurface),
+      );
+
+      await tester.dragFrom(
+        tester.getRect(surfaceFinder).center,
+        const Offset(60, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(notifier.moveCalls, [
+        const [("root_a", 13, 33)],
+      ]);
+      expect(notifier.resizeCalls, isEmpty);
+    });
+
+    testWidgets("normalizes selected set to roots before move commit", (
+      tester,
+    ) async {
+      final notifier = _TestPageElements(_sceneElements());
+
+      await tester.pumpTestApp(
+        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        child: const SizedBox(
+          width: 1600,
+          height: 900,
+          child: Material(child: EntryScene(pageId: "page")),
+        ),
+      );
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(EntryScene)),
+      );
+      container.read(selectionProvider.notifier).selectAll([
+        const CueIdentifier(pageId: "page", id: "root"),
+        const CueIdentifier(pageId: "page", id: "child"),
+      ]);
+      await tester.pumpAndSettle();
+
+      final surfaceFinder = find.ancestor(
+        of: find.text("Root Segment"),
+        matching: find.byType(TimelineSegmentSurface),
+      );
+
+      await tester.dragFrom(
+        tester.getRect(surfaceFinder).center,
+        const Offset(60, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(notifier.moveCalls, [
+        const [("root", 13, 33)],
+      ]);
+      expect(notifier.resizeCalls, isEmpty);
+    });
   });
 }
 
@@ -274,6 +395,69 @@ List<PageElement> _sceneElementsWithSibling() {
         inwardLinks: [
           const ElementLink(
             linkId: "entry_sibling",
+            otherId: "entry",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: const [],
+      ),
+    ),
+  ];
+}
+
+List<PageElement> _multiRootSceneElements() {
+  return [
+    PageElement.entry(
+      entry: PageEntry.definition(
+        definition: EntryDefinition(
+          id: "entry",
+          name: "Scene Entry",
+          blueprint: _blueprint("entry_blueprint", "Scene Entry"),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
+          data: const DynamicData({}),
+          inwardEdges: const [],
+          outwardEdges: [
+            const ElementLink(
+              linkId: "entry_root_a",
+              otherId: "root_a",
+              path: "children",
+            ),
+            const ElementLink(
+              linkId: "entry_root_b",
+              otherId: "root_b",
+              path: "children",
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "root_a",
+        startFrame: 10,
+        endFrame: 30,
+        blueprint: _blueprint("root_a_blueprint", "Root A"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_root_a",
+            otherId: "entry",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: const [],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "root_b",
+        startFrame: 40,
+        endFrame: 50,
+        blueprint: _blueprint("root_b_blueprint", "Root B"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_root_b",
             otherId: "entry",
             path: "parent",
           ),
