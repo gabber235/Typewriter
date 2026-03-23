@@ -106,7 +106,7 @@ final class PageElementsProvider
   }
 }
 
-String _$pageElementsHash() => r'd2538cbf5003f8d165f4bb2822fbd0ed5e53173f';
+String _$pageElementsHash() => r'c6a8c883cc897208b47433b837103fb218eb6f4c';
 
 final class PageElementsFamily extends $Family
     with
