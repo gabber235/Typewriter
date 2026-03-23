@@ -12,6 +12,10 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+@theme {
+  --color-primary: #009fff;
+}
+
 /* ############################## */
 /* Color Variables for TypeWriter */
 /* ############################## */
