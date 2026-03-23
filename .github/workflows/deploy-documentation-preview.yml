@@ -1,34 +1,38 @@
+---
 name: Deploy Documentation Preview
-
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   push:
     branches-ignore:
       - develop
     paths:
-      - "documentation/**"
+      - documentation/**
   pull_request:
-    types: [opened, reopened, synchronize]
+    types:
+      - opened
+      - reopened
+      - synchronize
     paths:
-      - "documentation/**"
+      - documentation/**
 permissions:
   contents: write
   pull-requests: write
-
 concurrency:
   group: docs-preview-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
 jobs:
   deploy-preview:
     name: Deploy Documentation Preview
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           fetch-depth: 0
-
+      - name: Use Node.js 22.12.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
       - name: Determine deploy path
         id: path
         run: |
@@ -42,21 +46,19 @@ jobs:
           echo "deploy_path=${DEPLOY_PATH}" >> "$GITHUB_OUTPUT"
           echo "base_path=/${DEPLOY_PATH}/" >> "$GITHUB_OUTPUT"
           echo "Deploying to: ${DEPLOY_PATH}"
-
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
-
+        with:
+          bun-version: latest
       - name: Install dependencies
         run: bun install --frozen-lockfile
         working-directory: ./documentation
-
       - name: Build website
         run: bun run build
         working-directory: ./documentation
         env:
           DOCS_BASE_PATH: ${{ steps.path.outputs.base_path }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -68,41 +70,57 @@ jobs:
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
           commit_message: "docs: deploy preview for ${{ steps.path.outputs.deploy_path }}"
-
       - name: Job summary
-        run: |
-          DEPLOY_URL="https://docs.typewritermc.com/${{ steps.path.outputs.deploy_path }}/"
-          echo "## :book: Documentation Preview Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Detail | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Branch/PR** | \`${{ steps.path.outputs.deploy_path }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Base path** | \`${{ steps.path.outputs.base_path }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Preview URL** | ${DEPLOY_URL} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Trigger** | \`${{ github.event_name }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo ":link: **[Open preview](${DEPLOY_URL})**" >> $GITHUB_STEP_SUMMARY
+        run: >
+          DEPLOY_URL="https://docs.typewritermc.com/${{
+          steps.path.outputs.deploy_path }}/"
 
+          echo "## :book: Documentation Preview Deployed" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Detail | Value |" >> $GITHUB_STEP_SUMMARY
+
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+
+          echo "| **Branch/PR** | \`${{ steps.path.outputs.deploy_path }}\` |" >> $GITHUB_STEP_SUMMARY
+
+          echo "| **Base path** | \`${{ steps.path.outputs.base_path }}\` |" >> $GITHUB_STEP_SUMMARY
+
+          echo "| **Preview URL** | ${DEPLOY_URL} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "| **Trigger** | \`${{ github.event_name }}\` |" >> $GITHUB_STEP_SUMMARY
+
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo ":link: **[Open preview](${DEPLOY_URL})**" >> $GITHUB_STEP_SUMMARY
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
-          script: |
+          script: >
             const deployPath = '${{ steps.path.outputs.deploy_path }}';
+
             const url = `https://docs.typewritermc.com/${deployPath}/`;
+
             const body = `📖 **Documentation Preview**\n\nPreview deployed to: ${url}`;
 
+
             // Find existing comment to update
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
+
             const existing = comments.find(c =>
               c.user.login === 'github-actions[bot]' &&
               c.body.includes('Documentation Preview')
             );
+
 
             if (existing) {
               await github.rest.issues.updateComment({
