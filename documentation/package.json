@@ -7,18 +7,21 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "check": "astro check",
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.37.4",
-    "@astrojs/starlight-docsearch": "^0.6.1",
-    "@astrojs/starlight-tailwind": "^4.0.2",
-    "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.6.1",
+    "@astrojs/check": "^0.9.8",
+    "@astrojs/starlight": "^0.38.2",
+    "@astrojs/starlight-docsearch": "^0.7.0",
+    "@astrojs/starlight-tailwind": "^5.0.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "astro": "^6.0.8",
     "hastscript": "^9.0.1",
     "remark-directive": "^4.0.0",
-    "sharp": "^0.34.2",
-    "tailwindcss": "^4.1.18",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
     "unist-util-visit": "^5.1.0"
   },
   "prettier": {
