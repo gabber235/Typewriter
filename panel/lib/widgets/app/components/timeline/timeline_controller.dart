@@ -1,24 +1,233 @@
 import "dart:math" as math;
 
 import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-
-part "timeline_controller.freezed.dart";
+import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
 
 enum TimelineInteractionMode { move, resizeStart, resizeEnd }
 
-typedef TimelinePreviewSeed = ({String id, int startFrame, int endFrame});
+class FrameRange {
+  const FrameRange(this.startFrame, this.endFrame);
 
-@freezed
-abstract class TimelinePreview with _$TimelinePreview {
-  const factory TimelinePreview({
-    required String id,
-    required TimelineInteractionMode mode,
-    required int originalStartFrame,
-    required int originalEndFrame,
-    required int startFrame,
-    required int endFrame,
-  }) = _TimelinePreview;
+  final FrameConstraint startFrame;
+  final FrameConstraint endFrame;
+  bool isWithin(int frame) {
+    return startFrame <= frame && endFrame >= frame;
+  }
+
+  int coerceIn(int frame) {
+    return endFrame.coerceAtMost(startFrame.coerceAtLeast(frame));
+  }
+}
+
+sealed class FrameConstraint {
+  const FrameConstraint();
+
+  const factory FrameConstraint.exact(int frame) = ExactFrameConstraint;
+  const factory FrameConstraint.infinite() = InfiniteFrameConstraint;
+
+  bool operator <=(int frame);
+  bool operator >=(int frame);
+
+  int coerceAtLeast(int frame);
+  int coerceAtMost(int frame);
+}
+
+class ExactFrameConstraint implements FrameConstraint {
+  const ExactFrameConstraint(this.frame);
+
+  final int frame;
+
+  @override
+  bool operator <=(int frame) => this.frame <= frame;
+
+  @override
+  bool operator >=(int frame) => this.frame >= frame;
+
+  @override
+  int coerceAtLeast(int frame) => math.max(this.frame, frame);
+  @override
+  int coerceAtMost(int frame) => math.min(this.frame, frame);
+
+  @override
+  String toString() => "ExactFrameConstraint($frame)";
+}
+
+class InfiniteFrameConstraint implements FrameConstraint {
+  const InfiniteFrameConstraint();
+
+  @override
+  bool operator <=(int frame) => 0 <= frame;
+
+  @override
+  bool operator >=(int frame) => true;
+
+  @override
+  int coerceAtLeast(int frame) => math.max(0, frame);
+  @override
+  int coerceAtMost(int frame) => frame;
+
+  @override
+  String toString() => "InfiniteFrameConstraint";
+}
+
+sealed class TimelinePreview {
+  const TimelinePreview({
+    required this.id,
+    required this.mode,
+    required this.originalStartFrame,
+    required this.originalEndFrame,
+    required this.startFrame,
+    required this.endFrame,
+  });
+
+  final TimelineIdentifier id;
+  final TimelineInteractionMode mode;
+  final int originalStartFrame;
+  final int originalEndFrame;
+  final int startFrame;
+  final int endFrame;
+
+  TimelinePreview update(int frameDelta);
+}
+
+class MoveTimelinePreview implements TimelinePreview {
+  MoveTimelinePreview({
+    required this.id,
+    required this.startFrame,
+    required this.endFrame,
+    required this.frameRange,
+    int? originalStartFrame,
+    int? originalEndFrame,
+  }) : originalStartFrame = originalStartFrame ?? startFrame,
+       originalEndFrame = originalEndFrame ?? endFrame,
+       assert(frameRange.isWithin(startFrame)),
+       assert(frameRange.isWithin(endFrame));
+
+  @override
+  final TimelineIdentifier id;
+  @override
+  final int startFrame;
+  @override
+  final int endFrame;
+
+  @override
+  final int originalStartFrame;
+  @override
+  final int originalEndFrame;
+
+  @override
+  TimelineInteractionMode get mode => TimelineInteractionMode.move;
+
+  final FrameRange frameRange;
+
+  @override
+  TimelinePreview update(int frameDelta) {
+    final duration = originalEndFrame - originalStartFrame;
+    var nextStart = frameRange.coerceIn(originalStartFrame + frameDelta);
+
+    if (!frameRange.isWithin(nextStart + duration)) {
+      final nextEnd = frameRange.coerceIn(nextStart + duration);
+      if (frameRange.isWithin(nextStart - duration)) {
+        nextStart = nextEnd - duration;
+      } else {
+        return this;
+      }
+    }
+
+    return MoveTimelinePreview(
+      id: id,
+      startFrame: nextStart,
+      endFrame: nextStart + duration,
+      originalStartFrame: originalStartFrame,
+      originalEndFrame: originalEndFrame,
+      frameRange: frameRange,
+    );
+  }
+}
+
+class ResizeStartTimelinePreview implements TimelinePreview {
+  ResizeStartTimelinePreview({
+    required this.id,
+    required this.startFrame,
+    required this.endFrame,
+    required this.startFrameRange,
+    int? originalStartFrame,
+  }) : originalStartFrame = originalStartFrame ?? startFrame,
+       originalEndFrame = endFrame,
+       assert(startFrameRange.isWithin(startFrame));
+
+  @override
+  final TimelineIdentifier id;
+  @override
+  final int startFrame;
+  @override
+  final int endFrame;
+
+  @override
+  final int originalStartFrame;
+  @override
+  final int originalEndFrame;
+
+  @override
+  TimelineInteractionMode get mode => TimelineInteractionMode.resizeStart;
+
+  final FrameRange startFrameRange;
+
+  @override
+  TimelinePreview update(int frameDelta) {
+    final nextStart = startFrameRange.coerceIn(originalStartFrame + frameDelta);
+    return ResizeStartTimelinePreview(
+      id: id,
+      startFrame: nextStart,
+      endFrame: endFrame,
+      originalStartFrame: originalStartFrame,
+      startFrameRange: startFrameRange,
+    );
+  }
+}
+
+class ResizeEndTimelinePreview implements TimelinePreview {
+  ResizeEndTimelinePreview({
+    required this.id,
+    required this.startFrame,
+    required this.endFrame,
+    required this.endFrameRange,
+    int? originalEndFrame,
+  }) : originalStartFrame = startFrame,
+       originalEndFrame = originalEndFrame ?? endFrame,
+       assert(endFrameRange.isWithin(endFrame));
+
+  @override
+  final TimelineIdentifier id;
+  @override
+  final int startFrame;
+  @override
+  final int endFrame;
+
+  @override
+  final int originalStartFrame;
+  @override
+  final int originalEndFrame;
+
+  @override
+  TimelineInteractionMode get mode => TimelineInteractionMode.resizeEnd;
+
+  final FrameRange endFrameRange;
+
+  @override
+  TimelinePreview update(int frameDelta) {
+    final nextEnd = math.max(
+      startFrame,
+      endFrameRange.coerceIn(originalEndFrame + frameDelta),
+    );
+    return ResizeEndTimelinePreview(
+      id: id,
+      startFrame: startFrame,
+      endFrame: nextEnd,
+      originalEndFrame: originalEndFrame,
+      endFrameRange: endFrameRange,
+    );
+  }
 }
 
 class TimelineController extends ChangeNotifier {
@@ -26,18 +235,13 @@ class TimelineController extends ChangeNotifier {
   double _horizontalOffset = 0;
   double _verticalOffset = 0;
   double _pixelsPerFrame = 12;
-  String? _activePreviewId;
-  final Map<String, TimelinePreview> _previewsById = {};
+  final Map<TimelineIdentifier, TimelinePreview> _previewsById = {};
 
   double get headerWidth => _headerWidth;
   double get horizontalOffset => _horizontalOffset;
   double get verticalOffset => _verticalOffset;
   double get pixelsPerFrame => _pixelsPerFrame;
-  TimelinePreview? get preview {
-    final activePreviewId = _activePreviewId;
-    if (activePreviewId == null) return null;
-    return _previewsById[activePreviewId];
-  }
+  bool get inPreview => _previewsById.isNotEmpty;
 
   List<TimelinePreview> get previews => _previewsById.values.toList();
 
@@ -72,135 +276,33 @@ class TimelineController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void startMove({
-    required String id,
-    required int startFrame,
-    required int endFrame,
-    List<TimelinePreviewSeed> additionalPreviews = const [],
-  }) {
-    final seeds = <TimelinePreviewSeed>[
-      (id: id, startFrame: startFrame, endFrame: endFrame),
-      ...additionalPreviews,
-    ];
-
-    _activePreviewId = id;
+  void startInteractionSession({required List<TimelinePreview> previews}) {
     _previewsById
       ..clear()
-      ..addEntries(
-        seeds
-            .where((seed) => seed.id.isNotEmpty)
-            .map(
-              (seed) => MapEntry(
-                seed.id,
-                TimelinePreview(
-                  id: seed.id,
-                  mode: TimelineInteractionMode.move,
-                  originalStartFrame: seed.startFrame,
-                  originalEndFrame: seed.endFrame,
-                  startFrame: seed.startFrame,
-                  endFrame: seed.endFrame,
-                ),
-              ),
-            ),
-      );
-    notifyListeners();
-  }
-
-  void startResizeStart({
-    required String id,
-    required int startFrame,
-    required int endFrame,
-  }) {
-    _activePreviewId = id;
-    _previewsById
-      ..clear()
-      ..[id] = TimelinePreview(
-        id: id,
-        mode: TimelineInteractionMode.resizeStart,
-        originalStartFrame: startFrame,
-        originalEndFrame: endFrame,
-        startFrame: startFrame,
-        endFrame: endFrame,
-      );
-    notifyListeners();
-  }
-
-  void startResizeEnd({
-    required String id,
-    required int startFrame,
-    required int endFrame,
-  }) {
-    _activePreviewId = id;
-    _previewsById
-      ..clear()
-      ..[id] = TimelinePreview(
-        id: id,
-        mode: TimelineInteractionMode.resizeEnd,
-        originalStartFrame: startFrame,
-        originalEndFrame: endFrame,
-        startFrame: startFrame,
-        endFrame: endFrame,
-      );
+      ..addEntries(previews.map((preview) => MapEntry(preview.id, preview)));
     notifyListeners();
   }
 
   void updateInteraction(double deltaPixels) {
-    final preview = this.preview;
-    if (preview == null) return;
+    if (_previewsById.isEmpty) return;
 
     final frameDelta = (deltaPixels / _pixelsPerFrame).round();
-    switch (preview.mode) {
-      case TimelineInteractionMode.move:
-        _previewsById.updateAll((id, movingPreview) {
-          final duration =
-              movingPreview.originalEndFrame - movingPreview.originalStartFrame;
-          final nextStart = math.max(
-            0,
-            movingPreview.originalStartFrame + frameDelta,
-          );
-          return movingPreview.copyWith(
-            startFrame: nextStart,
-            endFrame: nextStart + duration,
-          );
-        });
-      case TimelineInteractionMode.resizeStart:
-        final nextStart = math.max(
-          0,
-          math.min(
-            preview.originalEndFrame,
-            preview.originalStartFrame + frameDelta,
-          ),
-        );
-        _previewsById[preview.id] = preview.copyWith(startFrame: nextStart);
-      case TimelineInteractionMode.resizeEnd:
-        final nextEnd = math.max(
-          preview.originalStartFrame,
-          preview.originalEndFrame + frameDelta,
-        );
-        _previewsById[preview.id] = preview.copyWith(endFrame: nextEnd);
-    }
+    _previewsById.updateAll(
+      (id, seedPreview) => seedPreview.update(frameDelta),
+    );
     notifyListeners();
-  }
-
-  TimelinePreview? finishInteraction() {
-    final preview = this.preview;
-    _activePreviewId = null;
-    _previewsById.clear();
-    notifyListeners();
-    return preview;
   }
 
   List<TimelinePreview> finishInteractionSession() {
+    if (_previewsById.isEmpty) return const [];
     final sessionPreviews = previews;
-    _activePreviewId = null;
     _previewsById.clear();
     notifyListeners();
     return sessionPreviews;
   }
 
   void cancelInteraction() {
-    if (preview == null) return;
-    _activePreviewId = null;
+    if (_previewsById.isEmpty) return;
     _previewsById.clear();
     notifyListeners();
   }

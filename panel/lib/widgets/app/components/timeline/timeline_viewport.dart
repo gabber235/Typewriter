@@ -1,6 +1,7 @@
 import "dart:math" as math;
 
 import "package:flutter/foundation.dart";
+import "package:flutter/widgets.dart";
 
 @immutable
 class TimelineViewport {
@@ -33,7 +34,7 @@ class TimelineViewport {
   }
 
   double frameToPixel(int frame) {
-    return frame * pixelsPerFrame - horizontalOffset;
+    return frame * pixelsPerFrame;
   }
 
   double frameCenterToPixel(int frame) {
@@ -42,6 +43,15 @@ class TimelineViewport {
 
   int pixelToFrame(double pixel) {
     return ((horizontalOffset + pixel) / pixelsPerFrame).round();
+  }
+
+  Rect get visibleBounds {
+    return Rect.fromLTWH(
+      horizontalOffset,
+      verticalOffset,
+      planeWidth,
+      planeHeight,
+    );
   }
 
   TimelineViewport copyWith({

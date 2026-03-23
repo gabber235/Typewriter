@@ -1098,6 +1098,31 @@ void main() {
         );
       },
     );
+
+    testWidgets(
+      "keeps containment when root resizeStart preview compresses nested descendants",
+      (tester) async {
+        final data = _timelineDataFromElements(
+          _rootResizeStartContainmentSceneElements(),
+        );
+        final preview = const TimelinePreview(
+          id: "root",
+          mode: TimelineInteractionMode.resizeStart,
+          originalStartFrame: 20,
+          originalEndFrame: 60,
+          startFrame: 55,
+          endFrame: 60,
+        );
+
+        final layout = _buildLayout(
+          data: data,
+          viewport: _viewport(),
+          preview: preview,
+        );
+
+        _expectContainmentInLayout(layout, data);
+      },
+    );
   });
 }
 
@@ -3283,6 +3308,91 @@ List<PageElement> _multiTrackContainmentStressSceneElements() {
           ),
         ],
         outwardLinks: const [],
+      ),
+    ),
+  ];
+}
+
+List<PageElement> _rootResizeStartContainmentSceneElements() {
+  return [
+    PageElement.entry(
+      entry: PageEntry.definition(
+        definition: EntryDefinition(
+          id: "entry",
+          name: "Root ResizeStart Containment Entry",
+          blueprint: _blueprint("entry_blueprint"),
+          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
+          data: const DynamicData({}),
+          inwardEdges: const [],
+          outwardEdges: [
+            const ElementLink(
+              linkId: "entry_root",
+              otherId: "root",
+              path: "children",
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "root",
+        startFrame: 20,
+        endFrame: 60,
+        blueprint: _blueprint("root_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "entry_root",
+            otherId: "entry",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "root_child",
+            otherId: "child",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.segment(
+        id: "child",
+        startFrame: 30,
+        endFrame: 40,
+        blueprint: _blueprint("child_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "root_child",
+            otherId: "root",
+            path: "parent",
+          ),
+        ],
+        outwardLinks: [
+          const ElementLink(
+            linkId: "child_keyframe_link",
+            otherId: "child_keyframe",
+            path: "children",
+          ),
+        ],
+      ),
+    ),
+    PageElement.cue(
+      cue: Cue.keyframe(
+        id: "child_keyframe",
+        frame: 39,
+        blueprint: _blueprint("child_keyframe_blueprint"),
+        data: const DynamicData({}),
+        inwardLinks: [
+          const ElementLink(
+            linkId: "child_keyframe_link",
+            otherId: "child",
+            path: "parent",
+          ),
+        ],
       ),
     ),
   ];

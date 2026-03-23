@@ -67,14 +67,34 @@ void main() {
 
     test("clamps resize previews and clears preview on finish", () {
       final controller = TimelineController()
-        ..startResizeStart(id: "cue", startFrame: 8, endFrame: 18)
+        ..startInteractionSession(
+          activeId: "cue",
+          seeds: const [
+            (
+              id: "cue",
+              mode: TimelineInteractionMode.resizeStart,
+              startFrame: 8,
+              endFrame: 18,
+            ),
+          ],
+        )
         ..updateInteraction(180);
 
       expect(controller.preview?.startFrame, 18);
       expect(controller.preview?.endFrame, 18);
 
       controller
-        ..startResizeEnd(id: "cue", startFrame: 8, endFrame: 18)
+        ..startInteractionSession(
+          activeId: "cue",
+          seeds: const [
+            (
+              id: "cue",
+              mode: TimelineInteractionMode.resizeEnd,
+              startFrame: 8,
+              endFrame: 18,
+            ),
+          ],
+        )
         ..updateInteraction(-180);
 
       expect(controller.preview?.startFrame, 8);
@@ -89,14 +109,34 @@ void main() {
 
     test("keeps resize start unchanged when clamped at boundaries", () {
       final controller = TimelineController()
-        ..startResizeStart(id: "cue", startFrame: 0, endFrame: 12)
+        ..startInteractionSession(
+          activeId: "cue",
+          seeds: const [
+            (
+              id: "cue",
+              mode: TimelineInteractionMode.resizeStart,
+              startFrame: 0,
+              endFrame: 12,
+            ),
+          ],
+        )
         ..updateInteraction(-240);
 
       expect(controller.preview?.startFrame, 0);
       expect(controller.preview?.endFrame, 12);
 
       controller
-        ..startResizeStart(id: "cue", startFrame: 7, endFrame: 7)
+        ..startInteractionSession(
+          activeId: "cue",
+          seeds: const [
+            (
+              id: "cue",
+              mode: TimelineInteractionMode.resizeStart,
+              startFrame: 7,
+              endFrame: 7,
+            ),
+          ],
+        )
         ..updateInteraction(240);
 
       expect(controller.preview?.startFrame, 7);
@@ -105,11 +145,81 @@ void main() {
 
     test("keeps resize end unchanged when clamped at start", () {
       final controller = TimelineController()
-        ..startResizeEnd(id: "cue", startFrame: 9, endFrame: 9)
+        ..startInteractionSession(
+          activeId: "cue",
+          seeds: const [
+            (
+              id: "cue",
+              mode: TimelineInteractionMode.resizeEnd,
+              startFrame: 9,
+              endFrame: 9,
+            ),
+          ],
+        )
         ..updateInteraction(-240);
 
       expect(controller.preview?.startFrame, 9);
       expect(controller.preview?.endFrame, 9);
+    });
+
+    test("updates paired resize previews in one session", () {
+      final controller = TimelineController()
+        ..startInteractionSession(
+          activeId: "root_left",
+          seeds: const [
+            (
+              id: "root_left",
+              mode: TimelineInteractionMode.resizeEnd,
+              startFrame: 10,
+              endFrame: 30,
+            ),
+            (
+              id: "root_right",
+              mode: TimelineInteractionMode.resizeStart,
+              startFrame: 31,
+              endFrame: 50,
+            ),
+          ],
+        )
+        ..updateInteraction(36);
+
+      final session = controller.finishInteractionSession();
+      final byId = {for (final preview in session) preview.id: preview};
+
+      expect(byId["root_left"]?.startFrame, 10);
+      expect(byId["root_left"]?.endFrame, 33);
+      expect(byId["root_right"]?.startFrame, 34);
+      expect(byId["root_right"]?.endFrame, 50);
+    });
+
+    test("clamps each mode independently in paired resize session", () {
+      final controller = TimelineController()
+        ..startInteractionSession(
+          activeId: "root_left",
+          seeds: const [
+            (
+              id: "root_left",
+              mode: TimelineInteractionMode.resizeEnd,
+              startFrame: 10,
+              endFrame: 10,
+            ),
+            (
+              id: "root_right",
+              mode: TimelineInteractionMode.resizeStart,
+              startFrame: 11,
+              endFrame: 11,
+            ),
+          ],
+        )
+        ..updateInteraction(-240);
+
+      final session = controller.finishInteractionSession();
+      final byId = {for (final preview in session) preview.id: preview};
+
+      expect(byId["root_left"]?.startFrame, 10);
+      expect(byId["root_left"]?.endFrame, 10);
+      expect(byId["root_right"]?.startFrame, 0);
+      expect(byId["root_right"]?.endFrame, 11);
     });
 
     test("returns final preview from finishInteraction and clears state", () {

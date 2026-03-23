@@ -1,747 +1,360 @@
-import "dart:math" as math;
-
 import "package:collection/collection.dart";
-import "package:flutter/material.dart";
+import "package:json_annotation/json_annotation.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_viewport.dart";
+
+part "timeline_layout.g.dart";
 
 class TimelineLayoutEngine {
-  const TimelineLayoutEngine({required this.style});
-
-  final TimelineStyle style;
+  const TimelineLayoutEngine();
 
   TimelineLayoutResult build({
     required TimelineData data,
-    required TimelineViewport viewport,
     List<TimelinePreview> previews = const [],
-    TimelinePreview? preview,
   }) {
-    final effectivePreviews = previews.isNotEmpty
-        ? previews
-        : preview == null
-        ? const <TimelinePreview>[]
-        : [preview];
-    final previewById = {for (final item in effectivePreviews) item.id: item};
-    final activePreviewIds = previewById.keys.toSet();
+    final previewById = {for (final item in previews) item.id: item};
 
-    final tracks = <TimelineTrackLayout>[];
-    var currentTop = style.trackGap;
-
-    for (var index = 0; index < data.tracks.length; index++) {
-      final track = data.tracks[index];
-      final baseElements = track.elements.sorted();
-      final previewElements = _previewElements(baseElements, previewById);
-      final laneLayout = activePreviewIds.isEmpty
-          ? _layoutSiblings(baseElements)
-          : _layoutPreviewSiblings(
-              baseElements: baseElements,
-              previewElements: previewElements,
-              activeElementIds: activePreviewIds,
-            );
-      final previewStates = _previewStates(previewElements, activePreviewIds);
-      final placed = <TimelinePlacedElement>[];
-
-      for (final element in _flatten(previewElements)) {
-        if (!_isVisible(element, viewport)) continue;
-
-        final laneIndex = laneLayout.laneByElementId[element.id.id] ?? 0;
-        final top =
-            currentTop +
-            style.trackPadding +
-            laneIndex * (style.laneHeight + style.laneGap) -
-            viewport.verticalOffset;
-        placed.add(
-          TimelinePlacedElement(
-            trackId: track.id,
-            element: element,
-            laneIndex: laneIndex,
-            rect: _elementRect(element: element, viewport: viewport, top: top),
-            previewState:
-                previewStates[element.id.id] ?? TimelinePreviewState.none,
-          ),
-        );
-      }
-
-      final laneCount = math.max(1, laneLayout.laneCount);
-      final height =
-          style.trackPadding * 2 +
-          laneCount * style.laneHeight +
-          (laneCount - 1) * style.laneGap;
-      tracks.add(
-        TimelineTrackLayout(
-          track: track,
-          top: currentTop - viewport.verticalOffset,
-          contentTop: currentTop,
-          height: height,
-          laneCount: laneCount,
-          elements: placed,
-          backgroundColor: index.isEven
-              ? style.palette.trackBackground
-              : style.palette.trackAltBackground,
-        ),
-      );
-      currentTop += height + style.trackGap;
-    }
-
-    final contentWidth = math.max(
-      viewport.planeWidth,
-      (_maxFrame(data, previewById) + style.trailingFrames + 1) *
-          viewport.pixelsPerFrame,
-    );
-
-    return TimelineLayoutResult(
-      tracks: tracks,
-      contentHeight: math.max(viewport.planeHeight, currentTop),
-      contentWidth: contentWidth,
-    );
-  }
-
-  List<TimelineElement> _previewElements(
-    List<TimelineElement> baseElements,
-    Map<String, TimelinePreview> previewById,
-  ) {
-    return [
-      for (final element in baseElements)
-        _applyPreview(element: element, previewById: previewById),
-    ];
-  }
-
-  TimelineElement _applyPreview({
-    required TimelineElement element,
-    required Map<String, TimelinePreview> previewById,
-    int inheritedFrameDelta = 0,
-    int? parentStartFrame,
-    int? parentEndFrame,
-  }) {
-    final shifted = _shiftElement(
-      element: element,
-      frameDelta: inheritedFrameDelta,
-    );
-    final preview = previewById[shifted.id.id];
-    final isActive = preview != null;
-
-    if (shifted case TimelineKeyframe()) {
-      if (!isActive) return shifted;
-      final previewFrame = _clampKeyframeFrame(
-        frame: preview.startFrame,
-        parentStartFrame: parentStartFrame,
-        parentEndFrame: parentEndFrame,
-      );
-      return TimelineKeyframe(
-        id: shifted.id,
-        frame: previewFrame,
-        builder: shifted.builder,
-        color: shifted.color,
-      );
-    }
-
-    final segment = shifted as TimelineSegment;
-    if (!isActive) {
-      return TimelineSegment(
-        id: segment.id,
-        startFrame: segment.startFrame,
-        endFrame: segment.endFrame,
-        builder: segment.builder,
-        color: segment.color,
-        children: [
-          for (final child in segment.children)
-            _applyPreview(
-              element: child,
-              previewById: previewById,
-              inheritedFrameDelta: inheritedFrameDelta,
-              parentStartFrame: segment.startFrame,
-              parentEndFrame: segment.endFrame,
-            ),
-        ],
-      );
-    }
-
-    final shiftedStart = segment.startFrame;
-    final clampedFrames = _clampSegmentFrames(
-      segment: segment,
-      preview: preview,
-      parentStartFrame: parentStartFrame,
-      parentEndFrame: parentEndFrame,
-    );
-    final movedSegment = TimelineSegment(
-      id: segment.id,
-      startFrame: clampedFrames.startFrame,
-      endFrame: clampedFrames.endFrame,
-      builder: segment.builder,
-      color: segment.color,
-      children: const [],
-    );
-    final descendantDelta = switch (preview.mode) {
-      TimelineInteractionMode.move => clampedFrames.startFrame - shiftedStart,
-      TimelineInteractionMode.resizeStart =>
-        clampedFrames.startFrame - shiftedStart,
-      TimelineInteractionMode.resizeEnd => 0,
-    };
-
-    return TimelineSegment(
-      id: movedSegment.id,
-      startFrame: movedSegment.startFrame,
-      endFrame: movedSegment.endFrame,
-      builder: movedSegment.builder,
-      color: movedSegment.color,
-      children: [
-        for (final child in segment.children)
-          _applyPreview(
-            element: child,
-            previewById: previewById,
-            inheritedFrameDelta: inheritedFrameDelta + descendantDelta,
-            parentStartFrame: movedSegment.startFrame,
-            parentEndFrame: movedSegment.endFrame,
-          ),
-      ],
-    );
-  }
-
-  int _clampKeyframeFrame({
-    required int frame,
-    required int? parentStartFrame,
-    required int? parentEndFrame,
-  }) {
-    final minFrame = math.max(0, parentStartFrame ?? 0);
-    final maxFrame = parentEndFrame;
-    if (maxFrame == null) {
-      return math.max(frame, minFrame);
-    }
-    if (maxFrame < minFrame) {
-      return minFrame;
-    }
-    return frame.clamp(minFrame, maxFrame);
-  }
-
-  ({int startFrame, int endFrame}) _clampSegmentFrames({
-    required TimelineSegment segment,
-    required TimelinePreview preview,
-    required int? parentStartFrame,
-    required int? parentEndFrame,
-  }) {
-    final currentStart = segment.startFrame;
-    final currentEnd = segment.endFrame;
-    final currentDuration = currentEnd - currentStart;
-    final minFrame = math.max(0, parentStartFrame ?? 0);
-    final maxFrame = parentEndFrame;
-
-    return switch (preview.mode) {
-      TimelineInteractionMode.move => _clampMoveFrames(
-        desiredStartFrame: preview.startFrame,
-        duration: currentDuration,
-        minFrame: minFrame,
-        maxFrame: maxFrame,
-      ),
-      TimelineInteractionMode.resizeStart => _clampResizeStartFrames(
-        desiredStartFrame: preview.startFrame,
-        currentEndFrame: currentEnd,
-        minFrame: minFrame,
-      ),
-      TimelineInteractionMode.resizeEnd => _clampResizeEndFrames(
-        currentStartFrame: currentStart,
-        desiredEndFrame: preview.endFrame,
-        maxFrame: maxFrame,
-      ),
-    };
-  }
-
-  ({int startFrame, int endFrame}) _clampMoveFrames({
-    required int desiredStartFrame,
-    required int duration,
-    required int minFrame,
-    required int? maxFrame,
-  }) {
-    final safeDuration = math.max(0, duration);
-    if (maxFrame == null) {
-      final clampedStart = math.max(desiredStartFrame, minFrame);
-      return (startFrame: clampedStart, endFrame: clampedStart + safeDuration);
-    }
-
-    final maxStartFrame = maxFrame - safeDuration;
-    if (maxStartFrame < minFrame) {
-      return (startFrame: minFrame, endFrame: maxFrame);
-    }
-
-    final clampedStart = desiredStartFrame.clamp(minFrame, maxStartFrame);
-    return (startFrame: clampedStart, endFrame: clampedStart + safeDuration);
-  }
-
-  ({int startFrame, int endFrame}) _clampResizeStartFrames({
-    required int desiredStartFrame,
-    required int currentEndFrame,
-    required int minFrame,
-  }) {
-    final safeEndFrame = math.max(currentEndFrame, minFrame);
-    final clampedStart = desiredStartFrame.clamp(minFrame, safeEndFrame);
-    return (startFrame: clampedStart, endFrame: safeEndFrame);
-  }
-
-  ({int startFrame, int endFrame}) _clampResizeEndFrames({
-    required int currentStartFrame,
-    required int desiredEndFrame,
-    required int? maxFrame,
-  }) {
-    final safeStartFrame = math.max(0, currentStartFrame);
-    final maxEndFrame = maxFrame == null
-        ? desiredEndFrame
-        : math.max(safeStartFrame, maxFrame);
-    final clampedEnd = desiredEndFrame.clamp(safeStartFrame, maxEndFrame);
-    return (startFrame: safeStartFrame, endFrame: clampedEnd);
-  }
-
-  TimelineElement _shiftElement({
-    required TimelineElement element,
-    required int frameDelta,
-  }) {
-    if (frameDelta == 0) return element;
-
-    return switch (element) {
-      TimelineKeyframe() => TimelineKeyframe(
-        id: element.id,
-        frame: element.frame + frameDelta,
-        builder: element.builder,
-        color: element.color,
-      ),
-      TimelineSegment() => TimelineSegment(
-        id: element.id,
-        startFrame: element.startFrame + frameDelta,
-        endFrame: element.endFrame + frameDelta,
-        builder: element.builder,
-        color: element.color,
-        children: [
-          for (final child in element.children)
-            _shiftElement(element: child, frameDelta: frameDelta),
-        ],
-      ),
-    };
-  }
-
-  _LaneLayout _layoutSiblings(List<TimelineElement> elements) {
-    final sortedElements = elements.sorted();
-    final occupancy = _LaneOccupancy();
-    final laneByElementId = <String, int>{};
-
-    for (final element in sortedElements) {
-      final subtreeLayout = _layoutSubtree(element);
-      final laneIndex = occupancy.firstAvailableLane(
-        width: subtreeLayout.laneCount,
-        startFrame: element.startFrame,
-        endFrame: element.endFrame,
-      );
-      occupancy.reserveBlock(
-        laneIndex: laneIndex,
-        width: subtreeLayout.laneCount,
-        startFrame: element.startFrame,
-        endFrame: element.endFrame,
-      );
-
-      for (final entry in subtreeLayout.laneByElementId.entries) {
-        laneByElementId[entry.key] = laneIndex + entry.value;
-      }
-    }
-
-    return _LaneLayout(
-      laneByElementId: laneByElementId,
-      laneCount: math.max(1, occupancy.laneCount),
-    );
-  }
-
-  _LaneLayout _layoutPreviewSiblings({
-    required List<TimelineElement> baseElements,
-    required List<TimelineElement> previewElements,
-    required Set<String> activeElementIds,
-  }) {
-    if (activeElementIds.isEmpty) {
-      return _layoutSiblings(previewElements);
-    }
-
-    final activePreviewElements = previewElements
-        .where((element) => _containsAnyElement(element, activeElementIds))
+    final tracks = data.tracks
+        .map((track) => _buildTrackLayout(track, previewById))
         .toList();
-    if (activePreviewElements.isEmpty) {
-      return _layoutSiblings(previewElements);
-    }
 
-    final baseElementsById = {
-      for (final element in baseElements) element.id.id: element,
-    };
-    final baseLaneLayout = _layoutSiblings(baseElements);
-    final occupancy = _LaneOccupancy();
-    final laneByElementId = <String, int>{};
-
-    final sortedActivePreviewElements = [...activePreviewElements]
-      ..sort((left, right) {
-        final leftLane = baseLaneLayout.laneByElementId[left.id.id] ?? 0;
-        final rightLane = baseLaneLayout.laneByElementId[right.id.id] ?? 0;
-        final laneCompare = leftLane.compareTo(rightLane);
-        if (laneCompare != 0) return laneCompare;
-        return left.id.id.compareTo(right.id.id);
-      });
-
-    for (final activePreviewElement in sortedActivePreviewElements) {
-      final activeBaseElement = baseElementsById[activePreviewElement.id.id];
-      assert(
-        activeBaseElement != null,
-        "Missing base element ${activePreviewElement.id.id} for preview layout.",
-      );
-      if (activeBaseElement == null) continue;
-
-      final activeLaneIndex =
-          baseLaneLayout.laneByElementId[activePreviewElement.id.id] ?? 0;
-      final activeSubtreeLayout = _layoutPreviewSubtree(
-        baseElement: activeBaseElement,
-        previewElement: activePreviewElement,
-        activeElementIds: activeElementIds,
-      );
-      occupancy
-        ..lockBlock(
-          laneIndex: activeLaneIndex,
-          width: activeSubtreeLayout.laneCount,
-        )
-        ..reserveBlock(
-          laneIndex: activeLaneIndex,
-          width: activeSubtreeLayout.laneCount,
-          startFrame: activePreviewElement.startFrame,
-          endFrame: activePreviewElement.endFrame,
-        );
-      for (final entry in activeSubtreeLayout.laneByElementId.entries) {
-        laneByElementId[entry.key] = activeLaneIndex + entry.value;
-      }
-    }
-
-    for (final element in previewElements.sorted()) {
-      if (_containsAnyElement(element, activeElementIds)) continue;
-
-      final baseElement = baseElementsById[element.id.id];
-      assert(
-        baseElement != null,
-        "Missing base element ${element.id.id} for preview layout.",
-      );
-      if (baseElement == null) continue;
-
-      final subtreeLayout = _layoutPreviewSubtree(
-        baseElement: baseElement,
-        previewElement: element,
-        activeElementIds: activeElementIds,
-      );
-      final laneIndex = occupancy.firstAvailableLane(
-        width: subtreeLayout.laneCount,
-        startFrame: element.startFrame,
-        endFrame: element.endFrame,
-      );
-      occupancy.reserveBlock(
-        laneIndex: laneIndex,
-        width: subtreeLayout.laneCount,
-        startFrame: element.startFrame,
-        endFrame: element.endFrame,
-      );
-      for (final entry in subtreeLayout.laneByElementId.entries) {
-        laneByElementId[entry.key] = laneIndex + entry.value;
-      }
-    }
-
-    return _LaneLayout(
-      laneByElementId: laneByElementId,
-      laneCount: math.max(1, occupancy.laneCount),
-    );
+    return TimelineLayoutResult(tracks: tracks);
   }
 
-  _LaneLayout _layoutSubtree(TimelineElement element) {
-    if (element is TimelineKeyframe) {
-      return _LaneLayout(laneByElementId: {element.id.id: 0}, laneCount: 1);
-    }
-
-    final segment = element as TimelineSegment;
-    if (segment.children.isEmpty) {
-      return _LaneLayout(laneByElementId: {segment.id.id: 0}, laneCount: 1);
-    }
-
-    final childLayout = _layoutSiblings(segment.children);
-    final laneByElementId = <String, int>{segment.id.id: 0};
-    for (final entry in childLayout.laneByElementId.entries) {
-      laneByElementId[entry.key] = entry.value + 1;
-    }
-
-    return _LaneLayout(
-      laneByElementId: laneByElementId,
-      laneCount: math.max(1, childLayout.laneCount + 1),
-    );
-  }
-
-  _LaneLayout _layoutPreviewSubtree({
-    required TimelineElement baseElement,
-    required TimelineElement previewElement,
-    required Set<String> activeElementIds,
-  }) {
-    if (!_containsAnyElement(previewElement, activeElementIds)) {
-      return _layoutSubtree(previewElement);
-    }
-
-    if (previewElement is TimelineKeyframe) {
-      return _LaneLayout(
-        laneByElementId: {previewElement.id.id: 0},
-        laneCount: 1,
-      );
-    }
-
-    final previewSegment = previewElement as TimelineSegment;
-    final baseSegment = baseElement as TimelineSegment;
-    if (previewSegment.children.isEmpty) {
-      return _LaneLayout(
-        laneByElementId: {previewSegment.id.id: 0},
-        laneCount: 1,
-      );
-    }
-
-    final childLayout = _layoutPreviewSiblings(
-      baseElements: baseSegment.children,
-      previewElements: previewSegment.children,
-      activeElementIds: activeElementIds,
-    );
-    final laneByElementId = <String, int>{previewSegment.id.id: 0};
-    for (final entry in childLayout.laneByElementId.entries) {
-      laneByElementId[entry.key] = entry.value + 1;
-    }
-
-    return _LaneLayout(
-      laneByElementId: laneByElementId,
-      laneCount: math.max(1, childLayout.laneCount + 1),
-    );
-  }
-
-  Map<String, TimelinePreviewState> _previewStates(
-    List<TimelineElement> previewElements,
-    Set<String> activeElementIds,
+  TimelineTrackLayout _buildTrackLayout(
+    TimelineTrack track,
+    Map<TimelineIdentifier, TimelinePreview> previewsById,
   ) {
-    if (activeElementIds.isEmpty) return const {};
-
-    final states = <String, TimelinePreviewState>{};
-    for (final activeElementId in activeElementIds) {
-      final active = _findElement(previewElements, activeElementId);
-      if (active == null) continue;
-      for (final element in _flatten([active])) {
-        states[element.id.id] = TimelinePreviewState.related;
-      }
-      states[activeElementId] = TimelinePreviewState.active;
-    }
-
-    return states;
+    final (placements, laneCount) = _layoutBlocks(
+      trackId: track.id,
+      elements: track.elements,
+      previewState: TimelinePreviewState.none,
+      previewsById: previewsById,
+    );
+    return TimelineTrackLayout(
+      track: track,
+      laneCount: laneCount,
+      placements: placements,
+    );
   }
 
-  bool _containsAnyElement(TimelineElement element, Set<String> elementIds) {
-    for (final elementId in elementIds) {
-      if (_containsElement(element, elementId)) return true;
-    }
-    return false;
-  }
-
-  bool _containsElement(TimelineElement element, String elementId) {
-    if (element.id.id == elementId) return true;
-    if (element is! TimelineSegment) return false;
-    for (final child in element.children) {
-      if (_containsElement(child, elementId)) return true;
-    }
-    return false;
-  }
-
-  TimelineElement? _findElement(
-    List<TimelineElement> elements,
-    String elementId,
-  ) {
-    for (final element in elements) {
-      if (element.id.id == elementId) return element;
-      if (element case TimelineSegment(:final children)) {
-        final found = _findElement(children, elementId);
-        if (found != null) return found;
-      }
-    }
-    return null;
-  }
-
-  Iterable<TimelineElement> _flatten(List<TimelineElement> elements) sync* {
-    for (final element in elements) {
-      yield element;
-      if (element case TimelineSegment(:final children)) {
-        yield* _flatten(children);
-      }
-    }
-  }
-
-  bool _isVisible(TimelineElement element, TimelineViewport viewport) {
-    final startFrame = element.startFrame;
-    final endFrame = element.endFrame;
-    return endFrame >= viewport.visibleStartFrame &&
-        startFrame <= viewport.visibleEndFrame;
-  }
-
-  Rect _elementRect({
+  TimelineTrackBlock _buildTrackBlock({
+    required TimelineIdentifier trackId,
     required TimelineElement element,
-    required TimelineViewport viewport,
-    required double top,
+    required TimelinePreviewState previewState,
+    required Map<TimelineIdentifier, TimelinePreview> previewsById,
   }) {
-    return switch (element) {
-      TimelineSegment(startFrame: final startFrame, endFrame: final endFrame) =>
-        Rect.fromLTWH(
-          viewport.frameToPixel(startFrame),
-          top,
-          math.max(
-            style.minSegmentWidth,
-            viewport.frameToPixel(endFrame + 1) -
-                viewport.frameToPixel(startFrame),
+    final preview = previewsById[element.id];
+    final currentPreviewState = preview != null
+        ? TimelinePreviewState.related
+        : previewState;
+
+    if (element is TimelineKeyframe) {
+      return TimelineTrackBlock(
+        trackId: trackId,
+        element: element,
+        previewState: currentPreviewState,
+        height: 1,
+        children: const [],
+      );
+    }
+    if (element is! TimelineSegment) {
+      throw StateError("Unexpected element type: ${element.runtimeType}");
+    }
+
+    if (element.children.isEmpty) {
+      return TimelineTrackBlock(
+        trackId: trackId,
+        element: element,
+        previewState: currentPreviewState,
+        height: 1,
+        children: const [],
+      );
+    }
+
+    final (reservedPlacements, height) = _layoutBlocks(
+      trackId: trackId,
+      elements: element.children,
+      previewState: preview != null
+          ? TimelinePreviewState.related
+          : previewState,
+      previewsById: previewsById,
+    );
+
+    return TimelineTrackBlock(
+      trackId: trackId,
+      element: element,
+      previewState: currentPreviewState,
+      height: height,
+      children: reservedPlacements,
+    );
+  }
+
+  (List<TimelineTrackBlockPlacement>, int) _layoutBlocks({
+    required TimelineIdentifier trackId,
+    required List<TimelineElement> elements,
+    required TimelinePreviewState previewState,
+    required Map<TimelineIdentifier, TimelinePreview> previewsById,
+  }) {
+    final childrenBlocks = elements
+        .map((child) {
+          return _buildTrackBlock(
+            trackId: trackId,
+            element: child,
+            previewState: previewState,
+            previewsById: previewsById,
+          );
+        })
+        .sorted((a, b) {
+          final heightCompare = a.height.compareTo(b.height);
+          if (heightCompare != 0) return heightCompare;
+
+          final startCompare = a.element.startFrame.compareTo(
+            b.element.startFrame,
+          );
+          if (startCompare != 0) return startCompare;
+
+          final endCompare = b.element.endFrame.compareTo(a.element.endFrame);
+          if (endCompare != 0) return endCompare;
+
+          return a.element.id.id.compareTo(b.element.id.id);
+        });
+
+    final placements = _placeBlocks(childrenBlocks);
+    final reservedPlacements = _reservePreviewLanes(placements, previewsById);
+
+    final height =
+        reservedPlacements
+            .map((placement) => placement.lane + placement.height)
+            .maxOrNull ??
+        0;
+
+    return (reservedPlacements, height + 1);
+  }
+
+  List<TimelineTrackBlockPlacement> _placeBlocks(
+    List<TimelineTrackBlock> blocks,
+  ) {
+    final placements = <TimelineTrackBlockPlacement>[];
+
+    final laneOccupancy = _LaneOccupancy();
+
+    for (final block in blocks) {
+      final laneIndex = laneOccupancy.claimFirstAvailableBlock(
+        startFrame: block.element.startFrame,
+        endFrame: block.element.endFrame,
+        height: block.height,
+      );
+      final placement = TimelineTrackBlockPlacement(
+        block: block,
+        lane: laneIndex,
+      );
+      placements.add(placement);
+    }
+    return placements;
+  }
+
+  List<TimelineTrackBlockPlacement> _reservePreviewLanes(
+    List<TimelineTrackBlockPlacement> placements,
+    Map<TimelineIdentifier, TimelinePreview> previewsById,
+  ) {
+    if (previewsById.isEmpty) return placements;
+    final previewPlacements = placements.where((placement) {
+      final preview = previewsById[placement.block.element.id];
+      return preview != null;
+    }).toSet();
+
+    if (previewPlacements.isEmpty) return placements;
+
+    final newPlacements = <TimelineTrackBlockPlacement>[];
+    final laneOccupancy = _LaneOccupancy();
+
+    for (final previewPlacement in previewPlacements) {
+      laneOccupancy.occupyLanes(previewPlacement.lane, previewPlacement.height);
+    }
+
+    for (final placement in placements) {
+      final preview = previewsById[placement.block.element.id];
+      if (preview != null) {
+        newPlacements.add(
+          TimelineTrackBlockPlacement(
+            block: TimelineTrackBlock(
+              trackId: placement.block.trackId,
+              element: placement.block.element.applyPreview(preview),
+              previewState: placement.block.previewState,
+              height: placement.height,
+              children: placement.block.children,
+            ),
+            lane: placement.lane,
           ),
-          style.laneHeight,
-        ),
-      TimelineKeyframe(frame: final frame) => Rect.fromCenter(
-        center: Offset(
-          viewport.frameCenterToPixel(frame),
-          top + style.laneHeight / 2,
-        ),
-        width: style.keyframeWidth,
-        height: style.laneHeight,
-      ),
-    };
-  }
-
-  int _maxFrame(TimelineData data, Map<String, TimelinePreview> previewById) {
-    var maxFrame = 200;
-    for (final track in data.tracks) {
-      final previewElements = _previewElements(track.elements, previewById);
-      for (final element in _flatten(previewElements)) {
-        maxFrame = math.max(maxFrame, element.endFrame);
+        );
+        continue;
       }
+      final laneIndex = laneOccupancy.claimFirstAvailableBlock(
+        startFrame: placement.element.startFrame,
+        endFrame: placement.element.endFrame,
+        height: placement.height,
+      );
+      if (placement.lane == laneIndex) {
+        newPlacements.add(placement);
+        continue;
+      }
+
+      newPlacements.add(
+        TimelineTrackBlockPlacement(block: placement.block, lane: laneIndex),
+      );
     }
-    return maxFrame;
+
+    assert(newPlacements.length == placements.length);
+
+    return newPlacements;
   }
-}
-
-class TimelineLayoutResult {
-  const TimelineLayoutResult({
-    required this.tracks,
-    required this.contentHeight,
-    required this.contentWidth,
-  });
-
-  final List<TimelineTrackLayout> tracks;
-  final double contentHeight;
-  final double contentWidth;
-
-  Iterable<TimelinePlacedElement> get visibleElements sync* {
-    for (final track in tracks) {
-      yield* track.elements;
-    }
-  }
-}
-
-class TimelineTrackLayout {
-  const TimelineTrackLayout({
-    required this.track,
-    required this.top,
-    required this.contentTop,
-    required this.height,
-    required this.laneCount,
-    required this.elements,
-    required this.backgroundColor,
-  });
-
-  final TimelineTrack track;
-  final double top;
-  final double contentTop;
-  final double height;
-  final int laneCount;
-  final List<TimelinePlacedElement> elements;
-  final Color backgroundColor;
 }
 
 class _LaneOccupancy {
+  _LaneOccupancy();
+
   final List<List<_FrameRange>> _rangesByLane = [];
-  final Set<int> _lockedLanes = {};
+  final Set<int> _occupiedLanes = {};
 
   int get laneCount => _rangesByLane.length;
 
-  int firstAvailableLane({
-    required int width,
+  int claimFirstAvailableBlock({
     required int startFrame,
     required int endFrame,
+    required int height,
   }) {
-    for (var laneIndex = 0; laneIndex <= _rangesByLane.length; laneIndex++) {
-      if (_canUseLaneBlock(
-        laneIndex: laneIndex,
-        width: width,
-        startFrame: startFrame,
-        endFrame: endFrame,
-      )) {
-        return laneIndex;
-      }
-    }
+    final laneIndex = firstAvailableBlock(
+      startFrame: startFrame,
+      endFrame: endFrame,
+      height: height,
+    );
 
+    reserveBlock(
+      laneIndex: laneIndex,
+      startFrame: startFrame,
+      endFrame: endFrame,
+      height: height,
+    );
+
+    return laneIndex;
+  }
+
+  int firstAvailableBlock({
+    required int startFrame,
+    required int endFrame,
+    required int height,
+  }) {
+    var laneIndex = 0;
+    outer:
+    while (laneIndex < _rangesByLane.length) {
+      for (var offset = 0; offset < height; offset++) {
+        if (!_canUseLane(
+          laneIndex: laneIndex + offset,
+          startFrame: startFrame,
+          endFrame: endFrame,
+        )) {
+          laneIndex += offset + 1;
+          continue outer;
+        }
+      }
+
+      return laneIndex;
+    }
     return _rangesByLane.length;
+  }
+
+  void _ensureLaneRanges(int laneIndex) {
+    while (_rangesByLane.length < laneIndex + 1) {
+      _rangesByLane.add([]);
+    }
   }
 
   void reserveBlock({
     required int laneIndex,
-    required int width,
     required int startFrame,
     required int endFrame,
+    required int height,
   }) {
-    while (_rangesByLane.length < laneIndex + width) {
-      _rangesByLane.add([]);
-    }
+    _ensureLaneRanges(laneIndex + height);
 
-    for (var offset = 0; offset < width; offset++) {
-      _rangesByLane[laneIndex + offset].add(
-        _FrameRange(startFrame: startFrame, endFrame: endFrame),
-      );
+    final range = _FrameRange(startFrame: startFrame, endFrame: endFrame);
+    for (var offset = 0; offset < height; offset++) {
+      _rangesByLane[laneIndex + offset].add(range);
     }
   }
 
-  void lockBlock({required int laneIndex, required int width}) {
-    while (_rangesByLane.length < laneIndex + width) {
-      _rangesByLane.add([]);
-    }
+  void occupyLane(int laneIndex) {
+    _ensureLaneRanges(laneIndex);
+    _occupiedLanes.add(laneIndex);
+  }
 
-    for (var offset = 0; offset < width; offset++) {
-      _lockedLanes.add(laneIndex + offset);
+  void occupyLanes(int startLaneIndex, int height) {
+    for (
+      var laneIndex = startLaneIndex;
+      laneIndex < startLaneIndex + height;
+      laneIndex++
+    ) {
+      occupyLane(laneIndex);
     }
   }
 
-  bool _canUseLaneBlock({
+  bool _canUseLane({
     required int laneIndex,
-    required int width,
     required int startFrame,
     required int endFrame,
   }) {
-    for (var offset = 0; offset < width; offset++) {
-      final probeIndex = laneIndex + offset;
-      if (_lockedLanes.contains(probeIndex)) return false;
-      if (probeIndex >= _rangesByLane.length) continue;
-
-      final overlapsExisting = _rangesByLane[probeIndex].any(
-        (range) => range.overlaps(startFrame: startFrame, endFrame: endFrame),
-      );
-      if (overlapsExisting) {
-        return false;
-      }
-    }
-    return true;
+    if (_occupiedLanes.contains(laneIndex)) return false;
+    if (laneIndex >= _rangesByLane.length) return true;
+    return _rangesByLane[laneIndex].none(
+      (range) => range.overlaps(startFrame: startFrame, endFrame: endFrame),
+    );
   }
-}
-
-class _LaneLayout {
-  const _LaneLayout({required this.laneByElementId, required this.laneCount});
-
-  final Map<String, int> laneByElementId;
-  final int laneCount;
 }
 
 class _FrameRange {
   const _FrameRange({required this.startFrame, required this.endFrame});
-
   final int startFrame;
   final int endFrame;
 
   bool overlaps({required int startFrame, required int endFrame}) {
     return this.endFrame >= startFrame && this.startFrame <= endFrame;
   }
+}
+
+class TimelineLayoutResult {
+  TimelineLayoutResult({required this.tracks}) {
+    void collect(TimelineTrackBlockPlacement placement) {
+      placementsById[placement.element.id] = placement;
+      for (final child in placement.children) {
+        collect(child);
+      }
+    }
+
+    for (final track in tracks) {
+      for (final element in track.placements) {
+        collect(element);
+      }
+    }
+  }
+
+  final List<TimelineTrackLayout> tracks;
+
+  final Map<TimelineIdentifier, TimelineTrackBlockPlacement> placementsById =
+      {};
+}
+
+@JsonSerializable(createFactory: false)
+class TimelineTrackLayout {
+  const TimelineTrackLayout({
+    required this.track,
+    required this.laneCount,
+    required this.placements,
+  });
+
+  final TimelineTrack track;
+  final int laneCount;
+  final List<TimelineTrackBlockPlacement> placements;
+
+  Map<String, dynamic> toJson() => _$TimelineTrackLayoutToJson(this);
 }

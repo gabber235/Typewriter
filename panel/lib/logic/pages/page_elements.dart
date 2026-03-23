@@ -103,7 +103,7 @@ class PageElements extends _$PageElements {
     final data = state.requireValue;
     final newData = data.map((element) {
       if (element.id != cueId) return element;
-      return element.updateCueFieldValue(path, value);
+      return element.updateFieldValue(path, value);
     }).toList();
 
     state = AsyncValue.data(newData);
@@ -207,8 +207,16 @@ extension PageElementExtension on PageElement {
     };
   }
 
-  PageElement updateCueFieldValue(String path, dynamic value) {
+  PageElement updateFieldValue(String path, dynamic value) {
     return switch (this) {
+      PageElementEntry(:final entry) => PageElement.entry(
+        entry: switch (entry) {
+          DefinitionPageEntry() => entry.copyWith.definition(
+            data: entry.definition.data.copyWith(path, value),
+          ),
+          _ => entry,
+        },
+      ),
       PageElementCue(:final cue) => PageElement.cue(
         cue: switch (cue) {
           Segment() => cue.copyWith(data: cue.data.copyWith(path, value)),

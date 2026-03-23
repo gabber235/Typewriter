@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:math" as math;
 
+import "package:collection/collection.dart";
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -8,6 +9,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_layout.dart";
+import "package:typewriter_panel/widgets/app/components/timeline/timeline_placement.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_plane.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_viewport.dart";
@@ -16,17 +18,13 @@ import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 class TimelineCommitPayload {
   const TimelineCommitPayload({
     required this.id,
-    required this.absoluteStartFrame,
-    required this.absoluteEndFrame,
-    required this.localStartFrame,
-    required this.localEndFrame,
+    required this.startFrame,
+    required this.endFrame,
   });
 
   final TimelineIdentifier id;
-  final int absoluteStartFrame;
-  final int absoluteEndFrame;
-  final int localStartFrame;
-  final int localEndFrame;
+  final int startFrame;
+  final int endFrame;
 }
 
 typedef TimelineCommit = Future<void> Function(TimelineCommitPayload change);
@@ -56,180 +54,337 @@ class Timeline extends HookWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final style = TimelineStyle.fallback(Theme.of(context));
-        final headerWidth = controller.headerWidth
-            .clamp(
-              style.minHeaderWidth,
-              math.min(style.maxHeaderWidth, constraints.maxWidth * 0.55),
-            )
-            .toDouble();
-        final handleWidth = 16.0;
-        final bodyHeight = math.max(
-          0.0,
-          constraints.maxHeight - style.rulerHeight,
-        );
-        final planeWidth = math.max(
-          0.0,
-          constraints.maxWidth - headerWidth - handleWidth,
-        );
-        final provisionalViewport = TimelineViewport(
-          headerWidth: headerWidth,
-          planeWidth: planeWidth,
-          planeHeight: bodyHeight,
-          horizontalOffset: controller.horizontalOffset,
-          verticalOffset: controller.verticalOffset,
-          pixelsPerFrame: controller.pixelsPerFrame,
-          overscanFrames: style.overscanFrames,
-        );
-
-        final layoutEngine = TimelineLayoutEngine(style: style);
-        final provisionalLayout = layoutEngine.build(
-          data: data,
-          viewport: provisionalViewport,
-          previews: controller.previews,
-        );
-        final viewport = provisionalViewport.copyWith(
-          horizontalOffset: controller.horizontalOffset.clamp(
-            0,
-            math.max(0, provisionalLayout.contentWidth - planeWidth),
-          ),
-          verticalOffset: controller.verticalOffset.clamp(
-            0,
-            math.max(0, provisionalLayout.contentHeight - bodyHeight),
-          ),
-        );
-        final layout = layoutEngine.build(
-          data: data,
-          viewport: viewport,
-          previews: controller.previews,
-        );
-
-        Map<String, TimelineElement> mapElementsById(
-          List<TimelineElement> elements,
-        ) {
-          final byId = <String, TimelineElement>{};
-
-          void collect(TimelineElement element) {
-            byId[element.id.id] = element;
-            if (element case TimelineSegment(:final children)) {
-              for (final child in children) {
-                collect(child);
-              }
-            }
-          }
-
-          for (final element in elements) {
-            collect(element);
-          }
-
-          return byId;
-        }
-
-        final elementsById = mapElementsById(
-          data.tracks.expand((track) => track.elements).toList(),
-        );
-
-        List<TimelinePreviewSeed> resolveMovePreviews(
-          TimelineIdentifier draggedId,
-        ) {
-          final targetIds = resolveMoveTargets?.call(draggedId);
-          final orderedIds = targetIds == null || targetIds.isEmpty
-              ? [draggedId]
-              : targetIds;
-
-          final seen = <String>{};
-          final previews = <TimelinePreviewSeed>[];
-          for (final targetId in orderedIds) {
-            if (!seen.add(targetId.id)) continue;
-            final element = elementsById[targetId.id];
-            if (element == null) continue;
-            previews.add((
-              id: targetId.id,
-              startFrame: element.startFrame,
-              endFrame: element.endFrame,
-            ));
-          }
-          return previews;
-        }
-
-        Future<void> commitPreview(List<TimelinePreview> previews) async {
-          if (previews.isEmpty) return;
-          final mode = previews.first.mode;
-          final changes = [
-            for (final preview in previews)
-              TimelineCommitPayload(
-                id: TimelineIdentifier(preview.id),
-                absoluteStartFrame: preview.startFrame,
-                absoluteEndFrame: preview.endFrame,
-                localStartFrame: preview.startFrame,
-                localEndFrame: preview.endFrame,
+        return HookBuilder(
+          builder: (context) {
+            final style = useMemoized(
+              () => TimelineStyle.fallback(Theme.of(context)),
+              [Theme.of(context)],
+            );
+            final headerWidth = useMemoized(
+              () => controller.headerWidth
+                  .clamp(
+                    style.minHeaderWidth,
+                    math.min(style.maxHeaderWidth, constraints.maxWidth * 0.55),
+                  )
+                  .toDouble(),
+              [controller.headerWidth, style, constraints.maxWidth],
+            );
+            const handleWidth = 16.0;
+            final bodyHeight = useMemoized(
+              () => math.max(0.0, constraints.maxHeight - style.rulerHeight),
+              [constraints.maxHeight, style.rulerHeight],
+            );
+            final planeWidth = useMemoized(
+              () => math.max(
+                0.0,
+                constraints.maxWidth - headerWidth - handleWidth,
               ),
-          ];
+              [constraints.maxWidth, headerWidth],
+            );
+            final viewport = useMemoized(
+              () => TimelineViewport(
+                headerWidth: headerWidth,
+                planeWidth: planeWidth,
+                planeHeight: bodyHeight,
+                horizontalOffset: controller.horizontalOffset,
+                verticalOffset: controller.verticalOffset,
+                pixelsPerFrame: controller.pixelsPerFrame,
+              ),
+              [
+                headerWidth,
+                planeWidth,
+                bodyHeight,
+                controller.horizontalOffset,
+                controller.verticalOffset,
+                controller.pixelsPerFrame,
+              ],
+            );
 
-          if (mode == TimelineInteractionMode.move) {
-            if (onElementMoved != null) {
-              unawaited(onElementMoved!(changes));
-            }
-            return;
-          }
+            final layout = useMemoized(
+              () => TimelineLayoutEngine().build(
+                data: data,
+                previews: controller.previews,
+              ),
+              [data, controller.previews],
+            );
+            final placement = useMemoized(
+              () => TimelinePlacementEngine().build(
+                layout: layout,
+                viewport: viewport,
+                style: style,
+              ),
+              [layout, viewport, style],
+            );
 
-          if (onElementResized != null) {
-            unawaited(onElementResized!(changes.first));
-          }
-        }
+            List<MoveTimelinePreview> resolveMovePreviews(
+              TimelineIdentifier draggedId,
+            ) {
+              final targetIds = resolveMoveTargets?.call(draggedId);
+              final orderedIds = targetIds == null || targetIds.isEmpty
+                  ? {draggedId}
+                  : targetIds.toSet();
 
-        final plane = _TimelinePlaneSurface(
-          controller: controller,
-          style: style,
-          viewport: viewport,
-          layout: layout,
-          onCommitPreview: commitPreview,
-          resolveMovePreviews: resolveMovePreviews,
-        );
+              final previews = <MoveTimelinePreview>[];
+              for (final targetId in orderedIds) {
+                final element = data.elementsById[targetId];
+                if (element == null) continue;
+                final parentId = element.parentId;
+                final parentElement = parentId == null
+                    ? null
+                    : data.elementsById[parentId];
 
-        return Row(
-          children: [
-            SizedBox(
-              width: headerWidth,
-              child: Column(
-                children: [
-                  _TimelineTopLeftHeader(viewport: viewport, style: style),
-                  Expanded(
-                    child: _TimelineTrackHeaders(
-                      data: data,
-                      layout: layout,
-                      style: style,
+                final endConstraint = parentElement != null
+                    ? FrameConstraint.exact(parentElement.frameDuration)
+                    : const FrameConstraint.infinite();
+
+                previews.add(
+                  MoveTimelinePreview(
+                    id: targetId,
+                    startFrame: element.startFrame,
+                    endFrame: element.endFrame,
+                    frameRange: FrameRange(
+                      FrameConstraint.infinite(),
+                      endConstraint,
                     ),
                   ),
-                ],
-              ),
-            ),
-            SizedBox(
-              width: handleWidth,
-              child: DragHandle(
-                axis: Axis.horizontal,
-                getSize: () => controller.headerWidth,
-                onSizeChange: controller.setHeaderWidth,
-                minSize: style.minHeaderWidth,
-                maxSize: math.min(
-                  style.maxHeaderWidth,
-                  constraints.maxWidth * 0.55,
+                );
+              }
+              return previews;
+            }
+
+            TimelinePreview? buildResizePreview(
+              TimelineSegment segment,
+              TimelineInteractionMode mode,
+            ) {
+              switch (mode) {
+                case TimelineInteractionMode.resizeStart:
+                  final lastChildEndFrame = segment.children
+                      .map((e) => e.endFrame)
+                      .maxOrNull;
+
+                  final endConstraint = lastChildEndFrame != null
+                      ? FrameConstraint.exact(
+                          segment.startFrame +
+                              segment.frameDuration -
+                              lastChildEndFrame,
+                        )
+                      : FrameConstraint.exact(segment.endFrame);
+                  return ResizeStartTimelinePreview(
+                    id: segment.id,
+                    startFrame: segment.startFrame,
+                    endFrame: segment.endFrame,
+                    startFrameRange: FrameRange(
+                      const FrameConstraint.infinite(),
+                      endConstraint,
+                    ),
+                  );
+                case TimelineInteractionMode.resizeEnd:
+                  final parentId = segment.parentId;
+                  final parentElement = parentId == null
+                      ? null
+                      : data.elementsById[parentId];
+
+                  final lastChildEndFrame = segment.children
+                      .map((e) => e.endFrame)
+                      .maxOrNull;
+
+                  final startConstraint = lastChildEndFrame != null
+                      ? FrameConstraint.exact(
+                          segment.startFrame + lastChildEndFrame,
+                        )
+                      : FrameConstraint.exact(segment.startFrame);
+
+                  final endConstraint = parentElement != null
+                      ? FrameConstraint.exact(parentElement.frameDuration)
+                      : const FrameConstraint.infinite();
+
+                  return ResizeEndTimelinePreview(
+                    id: segment.id,
+                    startFrame: segment.startFrame,
+                    endFrame: segment.endFrame,
+                    endFrameRange: FrameRange(startConstraint, endConstraint),
+                  );
+                case TimelineInteractionMode.move:
+                  throw ArgumentError.value(
+                    mode,
+                    "mode",
+                    "Invalid mode for segment resize",
+                  );
+              }
+            }
+
+            TimelinePreview? findAdjacentPreview(
+              TimelineIdentifier id,
+              TimelineInteractionMode mode,
+            ) {
+              final source = data.elementsById[id];
+              if (source is! TimelineSegment) return null;
+
+              final targetFrame = switch (mode) {
+                TimelineInteractionMode.resizeStart => source.startFrame - 1,
+                TimelineInteractionMode.resizeEnd => source.endFrame + 1,
+                TimelineInteractionMode.move => null,
+              };
+              if (targetFrame == null) return null;
+
+              final parentId = source.parentId;
+              final parentElement = parentId == null
+                  ? null
+                  : data.elementsById[parentId];
+              List<TimelineTrackBlockPlacement> siblings;
+
+              final placement = layout.placementsById[source.id]!;
+
+              if (parentElement is TimelineSegment) {
+                siblings = parentElement.children
+                    .where((element) => element.id != source.id)
+                    .map((element) => layout.placementsById[element.id])
+                    .nonNulls
+                    .toList();
+              } else {
+                final sourceTrackId = data.trackByElementId[id];
+                if (sourceTrackId == null) return null;
+                siblings = data.tracks
+                    .firstWhere((track) => track.id == sourceTrackId)
+                    .elements
+                    .where((element) => element.id != source.id)
+                    .map((element) => layout.placementsById[element.id])
+                    .nonNulls
+                    .toList();
+              }
+
+              TimelineSegment? adjacent;
+              for (final sibling in siblings) {
+                if (sibling.lane != placement.lane) continue;
+                final siblingElement = sibling.element;
+                if (siblingElement is! TimelineSegment) continue;
+
+                final isMatch = switch (mode) {
+                  TimelineInteractionMode.resizeStart =>
+                    siblingElement.endFrame == targetFrame,
+                  TimelineInteractionMode.resizeEnd =>
+                    siblingElement.startFrame == targetFrame,
+                  TimelineInteractionMode.move => false,
+                };
+                if (!isMatch) continue;
+
+                adjacent = siblingElement;
+                break;
+              }
+
+              if (adjacent == null) return null;
+
+              final adjacentMode = switch (mode) {
+                TimelineInteractionMode.resizeStart =>
+                  TimelineInteractionMode.resizeEnd,
+                TimelineInteractionMode.resizeEnd =>
+                  TimelineInteractionMode.resizeStart,
+                TimelineInteractionMode.move => throw StateError(
+                  "Invalid mode, should not be possible",
                 ),
-                hitThickness: handleWidth,
-                showOnHover: true,
-                handleExtentFactor: 1,
-                handleThickness: 3,
-              ),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  _TimelineRuler(viewport: viewport, style: style),
-                  Expanded(child: plane),
-                ],
-              ),
-            ),
-          ],
+              };
+
+              return buildResizePreview(adjacent, adjacentMode);
+            }
+
+            List<TimelinePreview> resolveResizeSessionSeeds(
+              TimelineIdentifier id,
+              TimelineInteractionMode mode,
+            ) {
+              final source = data.elementsById[id];
+              if (source is! TimelineSegment) return const [];
+
+              final preview = buildResizePreview(source, mode);
+              if (preview == null) return const [];
+
+              final adjacent = findAdjacentPreview(id, mode);
+              return adjacent == null ? [preview] : [preview, adjacent];
+            }
+
+            Future<void> commitPreview(List<TimelinePreview> previews) async {
+              if (previews.isEmpty) return;
+
+              final moves = <TimelineCommitPayload>[];
+              final awaits = <Future<void>>[];
+
+              for (final preview in previews) {
+                final commit = TimelineCommitPayload(
+                  id: preview.id,
+                  startFrame: preview.startFrame,
+                  endFrame: preview.endFrame,
+                );
+                if (preview is MoveTimelinePreview) {
+                  moves.add(commit);
+                  continue;
+                }
+                if (onElementResized != null) {
+                  awaits.add(onElementResized!(commit));
+                }
+              }
+
+              if (moves.isNotEmpty && onElementMoved != null) {
+                awaits.add(onElementMoved!(moves));
+              }
+
+              await Future.wait(awaits);
+            }
+
+            final plane = _TimelinePlaneSurface(
+              controller: controller,
+              style: style,
+              viewport: viewport,
+              placement: placement,
+              onCommitPreview: commitPreview,
+              resolveMovePreviews: resolveMovePreviews,
+              resolveResizeSessionSeeds: resolveResizeSessionSeeds,
+            );
+
+            return Row(
+              children: [
+                SizedBox(
+                  width: headerWidth,
+                  child: Column(
+                    children: [
+                      _TimelineTopLeftHeader(viewport: viewport, style: style),
+                      Expanded(
+                        child: _TimelineTrackHeaders(
+                          placement: placement,
+                          viewport: viewport,
+                          style: style,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: handleWidth,
+                  child: DragHandle(
+                    axis: Axis.horizontal,
+                    getSize: () => controller.headerWidth,
+                    onSizeChange: controller.setHeaderWidth,
+                    minSize: style.minHeaderWidth,
+                    maxSize: math.min(
+                      style.maxHeaderWidth,
+                      constraints.maxWidth * 0.55,
+                    ),
+                    hitThickness: handleWidth,
+                    showOnHover: true,
+                    handleExtentFactor: 1,
+                    handleThickness: 3,
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _TimelineRuler(viewport: viewport, style: style),
+                      Expanded(child: plane),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -252,24 +407,8 @@ class _TimelineTopLeftHeader extends StatelessWidget {
         color: style.palette.headerBackground,
         border: Border(bottom: BorderSide(color: style.palette.headerDivider)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Timeline", style: textTheme.titleSmall),
-                Text(
-                  "Frames ${viewport.visibleStartFrame} to ${viewport.visibleEndFrame}",
-                  style: textTheme.bodySmall?.copyWith(
-                    color: style.palette.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: Center(
+        child: Text("Timeline", style: textTheme.titleSmall),
       ),
     );
   }
@@ -277,13 +416,13 @@ class _TimelineTopLeftHeader extends StatelessWidget {
 
 class _TimelineTrackHeaders extends StatelessWidget {
   const _TimelineTrackHeaders({
-    required this.data,
-    required this.layout,
+    required this.placement,
+    required this.viewport,
     required this.style,
   });
 
-  final TimelineData data;
-  final TimelineLayoutResult layout;
+  final TimelinePlacementResult placement;
+  final TimelineViewport viewport;
   final TimelineStyle style;
 
   @override
@@ -296,9 +435,9 @@ class _TimelineTrackHeaders extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            for (final trackLayout in layout.tracks)
+            for (final trackLayout in placement.tracks)
               Positioned(
-                top: trackLayout.top,
+                top: trackLayout.top - viewport.verticalOffset,
                 left: 0,
                 right: 0,
                 height: trackLayout.height,
@@ -353,11 +492,18 @@ class _TimelineRulerPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.clipRect(Offset.zero & size);
     final background = Paint()..color = style.palette.rulerBackground;
     canvas.drawRect(Offset.zero & size, background);
 
-    final minorStep = _tickStep(viewport.pixelsPerFrame, 12);
-    final majorStep = _tickStep(viewport.pixelsPerFrame, 80);
+    final minorStep = _tickStep(
+      viewport.pixelsPerFrame,
+      style.gridMinorMinSpacing,
+    );
+    final majorStep = _tickStep(
+      viewport.pixelsPerFrame,
+      style.gridMajorMinSpacing,
+    );
     final startFrame = (viewport.visibleStartFrame ~/ minorStep) * minorStep;
 
     final divider = Paint()
@@ -374,7 +520,7 @@ class _TimelineRulerPainter extends CustomPainter {
       frame <= viewport.visibleEndFrame + majorStep;
       frame += minorStep
     ) {
-      final x = viewport.frameToPixel(frame);
+      final x = viewport.frameToPixel(frame) - viewport.horizontalOffset;
       final isMajor = frame % majorStep == 0;
       final linePaint = Paint()
         ..color = isMajor ? style.palette.gridMajor : style.palette.gridMinor
@@ -396,13 +542,12 @@ class _TimelineRulerPainter extends CustomPainter {
   }
 
   int _tickStep(double pixelsPerFrame, double minSpacing) {
-    const steps = [1, 2, 5, 10, 20, 40, 100, 200, 400];
-    for (final step in steps) {
+    for (final step in style.gridTickSteps) {
       if (step * pixelsPerFrame >= minSpacing) {
         return step;
       }
     }
-    return steps.last;
+    return style.gridTickSteps.last;
   }
 
   @override
@@ -416,18 +561,24 @@ class _TimelinePlaneSurface extends HookWidget {
     required this.controller,
     required this.style,
     required this.viewport,
-    required this.layout,
+    required this.placement,
     required this.onCommitPreview,
     required this.resolveMovePreviews,
+    required this.resolveResizeSessionSeeds,
   });
 
   final TimelineController controller;
   final TimelineStyle style;
   final TimelineViewport viewport;
-  final TimelineLayoutResult layout;
+  final TimelinePlacementResult placement;
   final Future<void> Function(List<TimelinePreview> previews) onCommitPreview;
-  final List<TimelinePreviewSeed> Function(TimelineIdentifier id)
+  final List<MoveTimelinePreview> Function(TimelineIdentifier id)
   resolveMovePreviews;
+  final List<TimelinePreview> Function(
+    TimelineIdentifier id,
+    TimelineInteractionMode mode,
+  )
+  resolveResizeSessionSeeds;
 
   @override
   Widget build(BuildContext context) {
@@ -488,17 +639,20 @@ class _TimelinePlaneSurface extends HookWidget {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onPanUpdate: (details) {
-              if (controller.preview != null) return;
+              if (controller.inPreview) return;
               controller.panBy(dx: -details.delta.dx, dy: -details.delta.dy);
             },
             child: TimelinePlane(
-              layout: layout,
+              placement: placement,
               viewport: viewport,
               style: style,
               children: [
-                for (final placed in layout.visibleElements)
+                for (final placed in placement.visibleElements)
                   TimelinePlaneChild(
+                    key: Key("TimelinePlaneChild-${placed.element.id}"),
                     rect: placed.rect,
+                    childRect: placed.childrenRect,
+                    color: placed.element.color,
                     child: placed.element.builder(
                       context,
                       TimelineElementBuildData(
@@ -507,6 +661,7 @@ class _TimelinePlaneSurface extends HookWidget {
                         controller: controller,
                         onCommitPreview: onCommitPreview,
                         resolveMovePreviews: resolveMovePreviews,
+                        resolveResizeSessionSeeds: resolveResizeSessionSeeds,
                       ),
                     ),
                   ),
@@ -551,14 +706,8 @@ class TimelineSegmentSurface extends HookWidget {
               behavior: HitTestBehavior.opaque,
               onHorizontalDragStart: (_) {
                 totalDelta.value = 0;
-                final movePreviews = data.resolveMovePreviews(segment.id);
-                controller.startMove(
-                  id: segment.id.id,
-                  startFrame: segment.startFrame,
-                  endFrame: segment.endFrame,
-                  additionalPreviews: movePreviews
-                      .where((preview) => preview.id != segment.id.id)
-                      .toList(),
+                controller.startInteractionSession(
+                  previews: data.resolveMovePreviews(segment.id),
                 );
               },
               onHorizontalDragUpdate: (details) {
@@ -566,8 +715,9 @@ class TimelineSegmentSurface extends HookWidget {
                 controller.updateInteraction(totalDelta.value);
               },
               onHorizontalDragCancel: controller.cancelInteraction,
-              onHorizontalDragEnd: (_) =>
-                  data.onCommitPreview(controller.finishInteractionSession()),
+              onHorizontalDragEnd: (_) {
+                data.onCommitPreview(controller.finishInteractionSession());
+              },
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: style.edgeHandleWidth / 2,
@@ -605,10 +755,11 @@ class TimelineSegmentSurface extends HookWidget {
             cursor: SystemMouseCursors.resizeLeftRight,
             onStart: () {
               totalDelta.value = 0;
-              controller.startResizeStart(
-                id: segment.id.id,
-                startFrame: segment.startFrame,
-                endFrame: segment.endFrame,
+              controller.startInteractionSession(
+                previews: data.resolveResizeSessionSeeds(
+                  segment.id,
+                  TimelineInteractionMode.resizeStart,
+                ),
               );
             },
             onUpdate: (details) {
@@ -629,10 +780,11 @@ class TimelineSegmentSurface extends HookWidget {
             cursor: SystemMouseCursors.resizeLeftRight,
             onStart: () {
               totalDelta.value = 0;
-              controller.startResizeEnd(
-                id: segment.id.id,
-                startFrame: segment.startFrame,
-                endFrame: segment.endFrame,
+              controller.startInteractionSession(
+                previews: data.resolveResizeSessionSeeds(
+                  segment.id,
+                  TimelineInteractionMode.resizeEnd,
+                ),
               );
             },
             onUpdate: (details) {
@@ -708,14 +860,8 @@ class TimelineKeyframeSurface extends HookWidget {
         behavior: HitTestBehavior.opaque,
         onHorizontalDragStart: (_) {
           totalDelta.value = 0;
-          final movePreviews = data.resolveMovePreviews(keyframe.id);
-          controller.startMove(
-            id: keyframe.id.id,
-            startFrame: keyframe.frame,
-            endFrame: keyframe.frame,
-            additionalPreviews: movePreviews
-                .where((preview) => preview.id != keyframe.id.id)
-                .toList(),
+          controller.startInteractionSession(
+            previews: data.resolveMovePreviews(keyframe.id),
           );
         },
         onHorizontalDragUpdate: (details) {

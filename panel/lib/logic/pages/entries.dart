@@ -129,6 +129,20 @@ extension PageEntryExtension on PageEntry {
     NoBlueprintPageEntry(:final id) => id,
     _ => throw UnimplementedError(),
   };
+
+  (List<ElementLink> inwardLinks, List<ElementLink> outwardLinks) get links =>
+      switch (this) {
+        NoBlueprintPageEntry(
+          inwardLinks: final inwardLinks,
+          outwardLinks: final outwardLinks,
+        ) =>
+          (inwardLinks, outwardLinks),
+        DefinitionPageEntry(definition: final definition) => (
+          definition.inwardEdges,
+          definition.outwardEdges,
+        ),
+        _ => (const <ElementLink>[], const <ElementLink>[]),
+      };
 }
 
 extension EntryPlacementExtension on EntryPlacement {
