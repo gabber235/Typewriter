@@ -1,0 +1,90 @@
+---
+import type { VideoPlayerProps } from "./types";
+import { videoStyles as s } from "./styles";
+import { playIcon, volumeHighIcon, fullscreenIcon } from "./icons";
+
+interface Props extends VideoPlayerProps {}
+
+const {
+  src,
+  poster,
+  audio = false,
+  loop = !audio,
+  chapters = [],
+} = Astro.props;
+
+const videoSrc = `/videos/${src}`;
+const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
+---
+
+<div class={s.wrapper} data-video-player>
+  <video
+    class={s.video}
+    data-video
+    data-audio={audio ? "true" : undefined}
+    src={videoSrc}
+    poster={poster}
+    loop={loop}
+    muted={!audio}
+    playsinline
+    preload="auto"></video>
+
+  <!-- Center play/pause indicator -->
+  <div class={s.centerIndicator} data-center-indicator>
+    <div class={s.centerIcon} data-center-icon set:html={playIcon} />
+  </div>
+
+  <!-- Progress bar: always visible at bottom, lifts on hover -->
+  <div class={s.progressTrack} data-progress-track data-chapters={chaptersJson}>
+    <div class={s.progressFill} data-progress-fill></div>
+    <div class={s.progressThumb} data-progress-thumb></div>
+    <div class={s.chapterLabels} data-chapter-labels></div>
+  </div>
+
+  <!-- Overlay with controls: visible on hover -->
+  <div class={s.overlay}>
+    <div class={s.controls}>
+      <div class={s.controlsLeft}>
+        <button class={s.btn} data-play-btn aria-label="Play/Pause">
+          <span class={s.btnIcon} data-play-icon set:html={playIcon} />
+        </button>
+
+        <div class:list={[s.volumeGroup, "group/vol"]}>
+          <button class={s.btn} data-volume-btn aria-label="Toggle mute">
+            <span
+              class={s.btnIcon}
+              data-volume-icon
+              set:html={volumeHighIcon}
+            />
+          </button>
+          <div class={s.volumeSlider}>
+            <div class={s.volumeTrack} data-volume-track>
+              <div class={s.volumeFill} data-volume-fill style="width:100%">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <span class={s.timestamp} data-timestamp>0:00 / 0:00</span>
+      </div>
+
+      <div class={s.controlsRight}>
+        <button class={s.btn} data-fullscreen-btn aria-label="Fullscreen">
+          <span
+            class={s.btnIcon}
+            data-fullscreen-icon
+            set:html={fullscreenIcon}
+          />
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initVideoPlayer } from "./controls";
+
+  document
+    .querySelectorAll<HTMLElement>("[data-video-player]")
+    .forEach(initVideoPlayer);
+</script>
