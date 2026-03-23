@@ -1,5 +1,4 @@
 ---
-/// <reference path="../../starlight.d.ts" />
 import project from "virtual:starlight/project-context";
 
 const pagefindTranslations = {
@@ -131,7 +130,7 @@ const devWarning = Astro.locals.t("search.devWarning");
     const shortcut = openBtn?.querySelector("kbd");
     if (!openBtn || !(shortcut instanceof HTMLElement)) return;
     const platformKey = shortcut.querySelector("kbd");
-    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
       platformKey.textContent = "⌘";
       openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
     }
@@ -150,7 +149,6 @@ const devWarning = Astro.locals.t("search.devWarning");
     private openBtn: HTMLButtonElement;
     private closeBtns: NodeListOf<HTMLButtonElement>;
     private dialog: HTMLDialogElement;
-    private dialogFrame: HTMLElement;
     private static instances: SiteSearch[] = [];
 
     constructor() {
@@ -163,7 +161,7 @@ const devWarning = Astro.locals.t("search.devWarning");
         "button[data-close-modal]",
       );
       this.dialog = this.querySelector<HTMLDialogElement>("dialog")!;
-      this.dialogFrame = this.querySelector<HTMLElement>(".dialog-frame")!;
+      this.querySelector<HTMLElement>(".dialog-frame")!;
 
       // Track all instances
       SiteSearch.instances.push(this);

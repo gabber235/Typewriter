@@ -3,7 +3,9 @@ import SidebarList from "./SidebarList.astro";
 import { processSidebarBadges } from "../badge";
 
 const { sidebar } = Astro.locals.starlightRoute;
-const sidebarWithBadges = await processSidebarBadges(sidebar);
+const sidebarWithBadges = await processSidebarBadges(
+  sidebar as Parameters<typeof processSidebarBadges>[0],
+);
 ---
 
 <nav class="py-2" aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
@@ -79,23 +81,6 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
     // ========================================
     function createTransition() {
       return `height ${ANIMATION_DURATION}ms ease-in-out`;
-    }
-
-    function animateExpand(content, targetHeight, onComplete) {
-      content.style.transition = "none";
-      content.style.height = "0px";
-      content.offsetHeight; // Force reflow
-
-      content.style.transition = createTransition();
-      content.style.height = targetHeight + "px";
-
-      function cleanup() {
-        content.removeEventListener("transitionend", cleanup);
-        content.style.transition = "";
-        content.style.height = "auto";
-        if (onComplete) onComplete();
-      }
-      content.addEventListener("transitionend", cleanup);
     }
 
     function animateCollapse(content, onComplete) {
@@ -558,7 +543,7 @@ const sidebarWithBadges = await processSidebarBadges(sidebar);
         }
       }
 
-      function handleTouchEnd(e) {
+      function handleTouchEnd(_e) {
         if (window.innerWidth >= 768) return;
         if (!isOpen || !isDragging) {
           sidebar.style.transition = "";

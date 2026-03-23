@@ -13,7 +13,18 @@ const {
   chapters = [],
 } = Astro.props;
 
-const videoSrc = `/videos/${src}`;
+const videos = import.meta.glob<string>("/src/assets/**/*.{webm,mp4,ogg,mov}", {
+  eager: true,
+  import: "default",
+});
+
+function resolveVideoSrc(input: string): string {
+  if (!input.startsWith("@assets/")) return input;
+  const key = `/src/assets/${input.slice("@assets/".length)}`;
+  return videos[key] ?? input;
+}
+
+const videoSrc = resolveVideoSrc(src);
 const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
 ---
 

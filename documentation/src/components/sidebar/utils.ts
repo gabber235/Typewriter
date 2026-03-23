@@ -1,4 +1,4 @@
-import type { LinkEntry, GroupEntry, SidebarEntry } from "./types";
+import type { LinkEntry, SidebarEntry } from "./types";
 
 /**
  * Returns the Tailwind padding class based on sidebar nesting level.

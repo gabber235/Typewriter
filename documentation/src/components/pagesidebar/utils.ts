@@ -85,7 +85,7 @@ export const storage = {
 	}
 };
 
-export function findParentLinks(currentLink: HTMLAnchorElement, tocElement: HTMLElement): HTMLAnchorElement[] {
+export function findParentLinks(currentLink: HTMLAnchorElement, _tocElement: HTMLElement): HTMLAnchorElement[] {
 	const parents: HTMLAnchorElement[] = [];
 	let listItem = currentLink.closest('li');
 	

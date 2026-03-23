@@ -1,6 +1,6 @@
 ---
 import SidebarItem from "./SidebarItem.astro";
-import type { LinkEntry, GroupEntry, SidebarEntry } from "./types";
+import type { LinkEntry, SidebarEntry } from "./types";
 
 interface Props {
   sublist: Array<SidebarEntry>;
@@ -8,7 +8,7 @@ interface Props {
   level?: number;
 }
 
-const { sublist, nested = false, level = 1 } = Astro.props as Props;
+const { sublist, level = 1 } = Astro.props as Props;
 
 const filteredSublist = sublist.filter(
   (entry) => entry.type !== "link" || entry.href !== "/",

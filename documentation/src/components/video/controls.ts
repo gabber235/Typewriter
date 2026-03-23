@@ -62,13 +62,6 @@ export function initVideoPlayer(container: HTMLElement) {
     }, 400);
   }
 
-  function hideCenterIcon() {
-    if (!centerIcon) return;
-    if (indicatorTimeout) clearTimeout(indicatorTimeout);
-    centerIcon.style.opacity = "0";
-    centerIcon.style.transform = "scale(1.2)";
-  }
-
   function updatePlayIcon() {
     if (!playBtnIcon || !video) return;
     playBtnIcon.innerHTML = video.paused ? playIcon : pauseIcon;
