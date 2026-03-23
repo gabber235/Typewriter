@@ -45,13 +45,13 @@ Press Escape to close. Use Tab to navigate results.
     const shortcut = openBtn?.querySelector("kbd");
     if (!openBtn || !(shortcut instanceof HTMLElement)) return;
     const platformKey = shortcut.querySelector("kbd");
-    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
       platformKey.textContent = "⌘";
       openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
     }
     shortcut.style.display = "";
   })();
-</script>  <script type="module" src="/branches/features/v1/_astro/Search.astro_astro_type_script_index_0_lang.NZtkK35l.js"></script>    </div> <div class="flex items-center justify-end gap-3 print:hidden min-[50rem]:flex"> <div class="min-[50rem]:hidden"> <site-search data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}" class="contents astro-2wyhcnp4">  <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="group flex items-center gap-2 h-10 border-0 bg-transparent text-(--sl-color-gray-1) cursor-pointer text-xl
+</script>  <script type="module" src="/branches/features/v1/_astro/Search.astro_astro_type_script_index_0_lang.ChczjZ97.js"></script>    </div> <div class="flex items-center justify-end gap-3 print:hidden min-[50rem]:flex"> <div class="min-[50rem]:hidden"> <site-search data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}" class="contents astro-2wyhcnp4">  <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="group flex items-center gap-2 h-10 border-0 bg-transparent text-(--sl-color-gray-1) cursor-pointer text-xl
            md:border md:border-(--sl-color-gray-5) md:rounded-lg md:ps-3 md:pe-2 md:bg-(--sl-color-black) md:text-(--sl-color-gray-2) md:text-sm md:w-full md:max-w-10/12
            md:hover:border-(--sl-color-gray-2) md:hover:text-white
            md:focus-visible:outline-none md:focus-visible:ring-2 md:focus-visible:ring-(--sl-color-accent) md:focus-visible:ring-offset-2 md:focus-visible:ring-offset-(--sl-color-black)
@@ -71,7 +71,7 @@ Press Escape to close. Use Tab to navigate results.
     const shortcut = openBtn?.querySelector("kbd");
     if (!openBtn || !(shortcut instanceof HTMLElement)) return;
     const platformKey = shortcut.querySelector("kbd");
-    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
       platformKey.textContent = "⌘";
       openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
     }
