@@ -1,12 +1,15 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
 import "package:typewriter_panel/hooks/menu_controller.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/animation.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/generic/components/context_menu.dart";
+import "package:typewriter_panel/widgets/generic/components/pixel_scale_transition.dart";
 
 /// Provides SelectableIdentifier to descendants and exposes primary focus lookup.
 class SelectableScope extends InheritedWidget {
@@ -72,6 +75,18 @@ class Selector extends HookConsumerWidget {
       return null;
     }, [focusNode, onFocusChange]);
 
+    final focusAnimation = useAnimationController(
+      duration: 200.ms,
+      initialValue: 0.0,
+    );
+
+    useEffect(() {
+      if (!isFocused.value) return null;
+      if (focusAnimation.isAnimating) return null;
+      focusAnimation.forward(from: 0.0);
+      return null;
+    }, [isFocused.value]);
+
     return KeyedSubtree(
       key: Key(selectableId.id),
       child: ContextMenuRegion(
@@ -131,7 +146,33 @@ class Selector extends HookConsumerWidget {
                   },
                 ),
               },
-              child: builder(isSelected, isFocused.value, isHovered.value),
+              child: PixelScaleTransition(
+                pixelScale: TweenSequence<double>([
+                  TweenSequenceItem<double>(
+                    tween: Tween<double>(
+                      begin: 0,
+                      end: 15,
+                    ).curved(Curves.easeInOutCubicEmphasized),
+                    weight: .5,
+                  ),
+                  TweenSequenceItem<double>(
+                    tween: Tween<double>(
+                      begin: 15,
+                      end: 0,
+                    ).curved(Curves.easeInOut),
+                    weight: .5,
+                  ),
+                ]).animate(focusAnimation),
+                child: HookBuilder(
+                  builder: (context) {
+                    return builder(
+                      isSelected,
+                      isFocused.value,
+                      isHovered.value,
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),

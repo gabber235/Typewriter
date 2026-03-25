@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
@@ -6,6 +7,7 @@ import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/animation.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
