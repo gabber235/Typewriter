@@ -1,6 +1,7 @@
 import "dart:math" as math;
 
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
 
 enum TimelineInteractionMode { move, resizeStart, resizeEnd }
@@ -231,10 +232,14 @@ class ResizeEndTimelinePreview implements TimelinePreview {
 }
 
 class TimelineController extends ChangeNotifier {
-  double _headerWidth = 280;
+  TimelineController({double headerWidth = 200, double pixelsPerFrame = 6})
+    : _headerWidth = headerWidth,
+      _pixelsPerFrame = pixelsPerFrame;
+
+  double _headerWidth;
   double _horizontalOffset = 0;
   double _verticalOffset = 0;
-  double _pixelsPerFrame = 12;
+  double _pixelsPerFrame;
   final Map<TimelineIdentifier, TimelinePreview> _previewsById = {};
 
   double get headerWidth => _headerWidth;
@@ -248,6 +253,12 @@ class TimelineController extends ChangeNotifier {
   void setHeaderWidth(double width) {
     if (_headerWidth == width) return;
     _headerWidth = width;
+    notifyListeners();
+  }
+
+  void setPixelsPerFrame(double pixelsPerFrame) {
+    if (_pixelsPerFrame == pixelsPerFrame) return;
+    _pixelsPerFrame = pixelsPerFrame;
     notifyListeners();
   }
 
@@ -306,4 +317,72 @@ class TimelineController extends ChangeNotifier {
     _previewsById.clear();
     notifyListeners();
   }
+}
+
+TimelineController useTimelineController({
+  double headerWidth = 200,
+  double pixelsPerFrame = 6,
+  List<Object?>? keys,
+}) {
+  return use(_TimelineControllerHook(headerWidth, pixelsPerFrame, keys: keys));
+}
+
+class _TimelineControllerHook extends Hook<TimelineController> {
+  const _TimelineControllerHook(
+    this.headerWidth,
+    this.pixelsPerFrame, {
+    super.keys,
+  });
+
+  final double headerWidth;
+  final double pixelsPerFrame;
+
+  @override
+  _TimelineControllerHookState createState() => _TimelineControllerHookState();
+}
+
+class _TimelineControllerHookState
+    extends HookState<TimelineController, _TimelineControllerHook> {
+  late TimelineController controller;
+
+  @override
+  void initHook() {
+    super.initHook();
+    controller = TimelineController(
+      headerWidth: hook.headerWidth,
+      pixelsPerFrame: hook.pixelsPerFrame,
+    );
+    controller.addListener(_onUpdate);
+  }
+
+  void _onUpdate() {
+    setState(() {});
+  }
+
+  @override
+  void didUpdateHook(_TimelineControllerHook oldHook) {
+    super.didUpdateHook(oldHook);
+    if (hook.headerWidth != oldHook.headerWidth) {
+      controller.setHeaderWidth(hook.headerWidth);
+    }
+    if (hook.pixelsPerFrame != oldHook.pixelsPerFrame) {
+      controller.setPixelsPerFrame(hook.pixelsPerFrame);
+    }
+  }
+
+  @override
+  TimelineController build(BuildContext context) => controller;
+
+  @override
+  void dispose() {
+    controller
+      ..removeListener(_onUpdate)
+      ..dispose();
+  }
+
+  @override
+  String debugLabel = "TimelineController";
+
+  @override
+  bool get debugSkipValue => true;
 }

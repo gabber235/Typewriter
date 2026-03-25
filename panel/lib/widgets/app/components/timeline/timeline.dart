@@ -6,6 +6,7 @@ import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_layout.dart";
@@ -48,9 +49,9 @@ class Timeline extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = useMemoized(TimelineController.new);
-    useEffect(() => controller.dispose, [controller]);
-    useListenable(controller);
+    final controller = useTimelineController(
+        headerWidth: context.responsive(mobile: 100, desktop: 200),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -356,8 +357,9 @@ class Timeline extends HookWidget {
                     ],
                   ),
                 ),
-                SizedBox(
+                Container(
                   width: handleWidth,
+                  color: style.palette.headerBackground,
                   child: DragHandle(
                     axis: Axis.horizontal,
                     getSize: () => controller.headerWidth,
@@ -431,11 +433,10 @@ class _TimelineTrackHeaders extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: style.palette.headerBackground,
-          border: Border(right: BorderSide(color: style.palette.headerDivider)),
         ),
         child: Stack(
           children: [
-            for (final trackLayout in placement.tracks)
+            for (final trackLayout in placement.tracks.where((element) => element.isVisible(viewport)))
               Positioned(
                 top: trackLayout.top - viewport.verticalOffset,
                 left: 0,

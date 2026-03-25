@@ -55,7 +55,7 @@ class TimelineStyle {
       keyframeSize: 12,
       edgeHandleWidth: 10,
       palette: TimelinePalette(
-        headerBackground: scheme.surfaceContainerHigh,
+        headerBackground: scheme.surfaceContainer,
         rulerBackground: scheme.surfaceContainer,
         trackBackground: scheme.surfaceContainerLowest,
         trackAltBackground: scheme.surfaceContainerLow,

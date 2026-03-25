@@ -169,25 +169,31 @@ class TimelineLayoutEngine {
     final newPlacements = <TimelineTrackBlockPlacement>[];
     final laneOccupancy = _LaneOccupancy();
 
-    for (final previewPlacement in previewPlacements) {
-      laneOccupancy.occupyLanes(previewPlacement.lane, previewPlacement.height);
+    for (final placement in previewPlacements) {
+      final preview = previewsById[placement.block.element.id];
+      if (preview == null) continue;
+      final actualLane = laneOccupancy.tryReserveLane(
+        laneIndex: placement.lane,
+        startFrame: preview.startFrame,
+        endFrame: preview.endFrame,
+        height: placement.height,
+      );
+      newPlacements.add(
+        TimelineTrackBlockPlacement(
+          block: TimelineTrackBlock(
+            trackId: placement.block.trackId,
+            element: placement.block.element.applyPreview(preview),
+            previewState: placement.block.previewState,
+            height: placement.height,
+            children: placement.block.children,
+          ),
+          lane: actualLane,
+        ),
+      );
     }
 
     for (final placement in placements) {
-      final preview = previewsById[placement.block.element.id];
-      if (preview != null) {
-        newPlacements.add(
-          TimelineTrackBlockPlacement(
-            block: TimelineTrackBlock(
-              trackId: placement.block.trackId,
-              element: placement.block.element.applyPreview(preview),
-              previewState: placement.block.previewState,
-              height: placement.height,
-              children: placement.block.children,
-            ),
-            lane: placement.lane,
-          ),
-        );
+      if (previewsById.containsKey(placement.block.element.id)) {
         continue;
       }
       final laneIndex = laneOccupancy.claimFirstAvailableBlock(
@@ -215,7 +221,6 @@ class _LaneOccupancy {
   _LaneOccupancy();
 
   final List<List<_FrameRange>> _rangesByLane = [];
-  final Set<int> _occupiedLanes = {};
 
   int get laneCount => _rangesByLane.length;
 
@@ -284,19 +289,39 @@ class _LaneOccupancy {
     }
   }
 
-  void occupyLane(int laneIndex) {
-    _ensureLaneRanges(laneIndex);
-    _occupiedLanes.add(laneIndex);
-  }
-
-  void occupyLanes(int startLaneIndex, int height) {
-    for (
-      var laneIndex = startLaneIndex;
-      laneIndex < startLaneIndex + height;
-      laneIndex++
-    ) {
-      occupyLane(laneIndex);
+  int tryReserveLane({
+    required int laneIndex,
+    required int startFrame,
+    required int endFrame,
+    required int height,
+  }) {
+    var canReserveLane = true;
+    for (var offset = 0; offset < height; offset++) {
+      if (!_canUseLane(
+        laneIndex: laneIndex + offset,
+        startFrame: startFrame,
+        endFrame: endFrame,
+      )) {
+        canReserveLane = false;
+        break;
+      }
     }
+
+    if (canReserveLane) {
+      reserveBlock(
+        laneIndex: laneIndex,
+        startFrame: startFrame,
+        endFrame: endFrame,
+        height: height,
+      );
+      return laneIndex;
+    }
+
+    return firstAvailableBlock(
+      startFrame: startFrame,
+      endFrame: endFrame,
+      height: height,
+    );
   }
 
   bool _canUseLane({
@@ -304,7 +329,6 @@ class _LaneOccupancy {
     required int startFrame,
     required int endFrame,
   }) {
-    if (_occupiedLanes.contains(laneIndex)) return false;
     if (laneIndex >= _rangesByLane.length) return true;
     return _rangesByLane[laneIndex].none(
       (range) => range.overlaps(startFrame: startFrame, endFrame: endFrame),
