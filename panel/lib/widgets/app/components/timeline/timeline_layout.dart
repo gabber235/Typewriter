@@ -106,8 +106,10 @@ class TimelineLayoutEngine {
           );
         })
         .sorted((a, b) {
-          final heightCompare = a.height.compareTo(b.height);
-          if (heightCompare != 0) return heightCompare;
+          final durationCompare = b.element.frameDuration.compareTo(
+            a.element.frameDuration,
+          );
+          if (durationCompare != 0) return durationCompare;
 
           final startCompare = a.element.startFrame.compareTo(
             b.element.startFrame,
