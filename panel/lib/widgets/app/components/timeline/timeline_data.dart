@@ -262,7 +262,7 @@ class TimelineElementBuildData {
     required this.controller,
     required this.onCommitPreview,
     required this.resolveMovePreviews,
-    required this.resolveResizeSessionSeeds,
+    required this.resolveResizePreviews,
   });
 
   final TimelinePlacedElement placed;
@@ -275,7 +275,7 @@ class TimelineElementBuildData {
     TimelineIdentifier id,
     TimelineInteractionMode mode,
   )
-  resolveResizeSessionSeeds;
+  resolveResizePreviews;
 
   TimelineElement get element => placed.element;
   bool get isPreview => placed.isPreview;

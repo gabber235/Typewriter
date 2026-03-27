@@ -223,17 +223,23 @@ class TimelinePlacementEngine {
 }
 
 class TimelinePlacementResult {
-  const TimelinePlacementResult({
+  TimelinePlacementResult({
     required this.tracks,
     required this.visibleElements,
     required this.contentWidth,
     required this.contentHeight,
-  });
+  }) {
+    placementById = {
+      for (final element in visibleElements) element.element.id: element,
+    };
+  }
 
   final List<TimelineTrackGeometry> tracks;
   final List<TimelinePlacedElement> visibleElements;
   final double contentWidth;
   final double contentHeight;
+
+  late final Map<TimelineIdentifier, TimelinePlacedElement> placementById;
 }
 
 class TimelineTrackGeometry {

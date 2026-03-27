@@ -33,6 +33,10 @@ class TimelineViewport {
     return math.max(visibleStartFrame, frame + overscanFrames);
   }
 
+  int get visibleFrameCount {
+    return visibleEndFrame - visibleStartFrame;
+  }
+
   double frameToPixel(int frame) {
     return frame * pixelsPerFrame;
   }
