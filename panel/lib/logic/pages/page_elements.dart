@@ -56,7 +56,7 @@ class PageElements extends _$PageElements {
     throw UnimplementedError();
   }
 
-  void optimisticMoveCues(List<(String, int, int)> changed) {
+  void optimisticCuesUpdate(List<(String, int, int)> changed) {
     final data = state.requireValue;
     final map = <String, (int, int)>{
       for (final entry in changed) entry.$1: (entry.$2, entry.$3),
@@ -64,34 +64,15 @@ class PageElements extends _$PageElements {
     final newData = data.map((element) {
       final frameRange = map[element.id];
       if (frameRange == null) return element;
-      return element.moveCueTo(frameRange.$1, frameRange.$2);
+      return element.updateCueTo(frameRange.$1, frameRange.$2);
     }).toList();
 
     state = AsyncValue.data(newData);
   }
 
-  void optimisticResizeCues(List<(String, int, int)> changed) {
-    final data = state.requireValue;
-    final map = <String, (int, int)>{
-      for (final entry in changed) entry.$1: (entry.$2, entry.$3),
-    };
-    final newData = data.map((element) {
-      final frameRange = map[element.id];
-      if (frameRange == null) return element;
-      return element.resizeCueTo(frameRange.$1, frameRange.$2);
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-
-  Future<void> moveCues(List<(String, int, int)> changed) async {
+  Future<void> updateCues(List<(String, int, int)> changed) async {
     state.ensureReady();
-    optimisticMoveCues(changed);
-  }
-
-  Future<void> resizeCues(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    optimisticResizeCues(changed);
+    optimisticCuesUpdate(changed);
   }
 
   Future<void> updateCueFieldValue(
@@ -182,24 +163,12 @@ extension PageElementExtension on PageElement {
     };
   }
 
-  PageElement moveCueTo(int startFrame, int endFrame) {
+  PageElement updateCueTo(int startFrame, int endFrame) {
     return switch (this) {
       PageElementCue(:final cue) => PageElement.cue(
         cue: switch (cue) {
           Segment() => cue.copyWith(startFrame: startFrame, endFrame: endFrame),
           Keyframe() => cue.copyWith(frame: startFrame),
-          _ => cue,
-        },
-      ),
-      _ => this,
-    };
-  }
-
-  PageElement resizeCueTo(int startFrame, int endFrame) {
-    return switch (this) {
-      PageElementCue(:final cue) => PageElement.cue(
-        cue: switch (cue) {
-          Segment() => cue.copyWith(startFrame: startFrame, endFrame: endFrame),
           _ => cue,
         },
       ),
