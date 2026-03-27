@@ -1,8 +1,13 @@
 import "dart:math" as math;
 
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:flutter/scheduler.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/utils/spring_value.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
+import "package:typewriter_panel/widgets/app/components/timeline/timeline_layout.dart";
+import "package:typewriter_panel/widgets/app/components/timeline/timeline_viewport.dart";
 
 enum TimelineInteractionMode { move, resizeStart, resizeEnd }
 
@@ -232,23 +237,44 @@ class ResizeEndTimelinePreview implements TimelinePreview {
 }
 
 class TimelineController extends ChangeNotifier {
-  TimelineController({double headerWidth = 200, double pixelsPerFrame = 6})
-    : _headerWidth = headerWidth,
-      _pixelsPerFrame = pixelsPerFrame;
+  TimelineController({
+    required TickerProvider tickerProvider,
+    double headerWidth = 200,
+    double pixelsPerFrame = 6,
+  }) : _headerWidth = headerWidth,
+       _pixelsPerFrame = SpringValue(value: pixelsPerFrame) {
+    _ticker = tickerProvider.createTicker(_tick);
+  }
 
   double _headerWidth;
-  double _horizontalOffset = 0;
-  double _verticalOffset = 0;
-  double _pixelsPerFrame;
+  final SpringValue _horizontalOffset = SpringValue(value: 0);
+  final SpringValue _verticalOffset = SpringValue(value: 0);
+  final SpringValue _pixelsPerFrame;
+
+  List<SpringValue> get _animations => [
+    _horizontalOffset,
+    _verticalOffset,
+    _pixelsPerFrame,
+  ];
+
   final Map<TimelineIdentifier, TimelinePreview> _previewsById = {};
 
+  late final Ticker _ticker;
+  Duration _lastElapsedDuration = Duration.zero;
+
   double get headerWidth => _headerWidth;
-  double get horizontalOffset => _horizontalOffset;
-  double get verticalOffset => _verticalOffset;
-  double get pixelsPerFrame => _pixelsPerFrame;
+  double get horizontalOffset => _horizontalOffset.value;
+  double get verticalOffset => _verticalOffset.value;
+  double get pixelsPerFrame => _pixelsPerFrame.value;
   bool get inPreview => _previewsById.isNotEmpty;
 
   List<TimelinePreview> get previews => _previewsById.values.toList();
+
+  void _startTicker() {
+    if (_ticker.isActive) return;
+    _lastElapsedDuration = Duration.zero;
+    _ticker.start();
+  }
 
   void setHeaderWidth(double width) {
     if (_headerWidth == width) return;
@@ -256,17 +282,34 @@ class TimelineController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPixelsPerFrame(double pixelsPerFrame) {
-    if (_pixelsPerFrame == pixelsPerFrame) return;
-    _pixelsPerFrame = pixelsPerFrame;
-    notifyListeners();
+  void setPixelsPerFrame(double pixelsPerFrame, {bool animate = true}) {
+    if (_pixelsPerFrame.target == pixelsPerFrame) return;
+    if (animate) {
+      _pixelsPerFrame.target = pixelsPerFrame;
+      _startTicker();
+    } else {
+      _pixelsPerFrame.value = pixelsPerFrame;
+      notifyListeners();
+    }
   }
 
-  void panBy({double dx = 0, double dy = 0}) {
+  void panBy({double dx = 0, double dy = 0, bool animate = true}) {
     if (dx == 0 && dy == 0) return;
-    _horizontalOffset = math.max(0, _horizontalOffset + dx);
-    _verticalOffset = math.max(0, _verticalOffset + dy);
-    notifyListeners();
+    final nextHorizontalOffset = math.max(0.0, _horizontalOffset.target + dx);
+    final nextVerticalOffset = math.max(0.0, _verticalOffset.target + dy);
+    if (nextHorizontalOffset == _horizontalOffset.target &&
+        nextVerticalOffset == _verticalOffset.target) {
+      return;
+    }
+    if (animate) {
+      _horizontalOffset.target = nextHorizontalOffset;
+      _verticalOffset.target = nextVerticalOffset;
+      _startTicker();
+    } else {
+      _horizontalOffset.value = nextHorizontalOffset;
+      _verticalOffset.value = nextVerticalOffset;
+      notifyListeners();
+    }
   }
 
   void zoomAt({
@@ -274,17 +317,91 @@ class TimelineController extends ChangeNotifier {
     required double scaleDelta,
     required double minPixelsPerFrame,
     required double maxPixelsPerFrame,
+    bool animate = true,
   }) {
-    final oldPixelsPerFrame = _pixelsPerFrame;
-    final nextPixelsPerFrame = (_pixelsPerFrame * scaleDelta).clamp(
+    final oldPixelsPerFrame = _pixelsPerFrame.target;
+    final nextPixelsPerFrame = (oldPixelsPerFrame * scaleDelta).clamp(
       minPixelsPerFrame,
       maxPixelsPerFrame,
     );
     if (oldPixelsPerFrame == nextPixelsPerFrame) return;
-    final anchorFrame = (_horizontalOffset + localDx) / oldPixelsPerFrame;
-    _pixelsPerFrame = nextPixelsPerFrame;
-    _horizontalOffset = math.max(0, anchorFrame * _pixelsPerFrame - localDx);
-    notifyListeners();
+    final anchorFrame =
+        (_horizontalOffset.target + localDx) / oldPixelsPerFrame;
+    final nextHorizontalOffset = math.max(
+      0.0,
+      anchorFrame * nextPixelsPerFrame - localDx,
+    );
+    if (animate) {
+      _pixelsPerFrame.target = nextPixelsPerFrame;
+      _horizontalOffset.target = nextHorizontalOffset;
+      _startTicker();
+    } else {
+      _pixelsPerFrame.value = nextPixelsPerFrame;
+      _horizontalOffset.value = nextHorizontalOffset;
+      notifyListeners();
+    }
+  }
+
+  void resetZoom(
+    TimelineViewport viewport,
+    TimelineLayoutResult layout, {
+    bool animate = true,
+  }) {
+    final startFrame =
+        layout.placementsById.values
+            .map((placement) => placement.element.startFrame)
+            .minOrNull ??
+        0;
+    final endFrame =
+        layout.placementsById.values
+            .map((placement) => placement.element.endFrame)
+            .maxOrNull ??
+        0;
+
+    final frameDuration = endFrame - startFrame;
+
+    final width = viewport.planeWidth;
+    final nextPixelsPerFrame = width / frameDuration;
+    final nextHorizontalOffset = math.max(0.0, startFrame * nextPixelsPerFrame);
+    if (nextPixelsPerFrame == _pixelsPerFrame.target &&
+        nextHorizontalOffset == _horizontalOffset.target) {
+      return;
+    }
+    if (animate) {
+      _pixelsPerFrame.target = nextPixelsPerFrame;
+      _horizontalOffset.target = nextHorizontalOffset;
+      _startTicker();
+    } else {
+      _pixelsPerFrame.value = nextPixelsPerFrame;
+      _horizontalOffset.value = nextHorizontalOffset;
+      notifyListeners();
+    }
+  }
+
+  void centerOn(
+    TimelineViewport viewport,
+    TimelinePlacedElement element, {
+    bool animate = true,
+  }) {
+    final elementRect = element.rect;
+    final targetOffset = elementRect.center;
+    final targetHorizontalOffset = math.max(
+      0.0,
+      targetOffset.dx - viewport.planeWidth / 2,
+    );
+    final targetVerticalOffset = math.max(
+      0.0,
+      targetOffset.dy - viewport.planeHeight / 2,
+    );
+    if (animate) {
+      _horizontalOffset.target = targetHorizontalOffset;
+      _verticalOffset.target = targetVerticalOffset;
+      _startTicker();
+    } else {
+      _horizontalOffset.value = targetHorizontalOffset;
+      _verticalOffset.value = targetVerticalOffset;
+      notifyListeners();
+    }
   }
 
   void startInteractionSession({required List<TimelinePreview> previews}) {
@@ -297,7 +414,7 @@ class TimelineController extends ChangeNotifier {
   void updateInteraction(double deltaPixels) {
     if (_previewsById.isEmpty) return;
 
-    final frameDelta = (deltaPixels / _pixelsPerFrame).round();
+    final frameDelta = (deltaPixels / _pixelsPerFrame.target).round();
     _previewsById.updateAll(
       (id, seedPreview) => seedPreview.update(frameDelta),
     );
@@ -317,25 +434,57 @@ class TimelineController extends ChangeNotifier {
     _previewsById.clear();
     notifyListeners();
   }
+
+  void _tick(Duration elapsed) {
+    final delta = elapsed - _lastElapsedDuration;
+    _lastElapsedDuration = elapsed;
+    final animations = _animations;
+    if (animations.none((a) => a.isAnimating)) {
+      _ticker.stop();
+      return;
+    }
+
+    for (final animation in animations) {
+      animation.tick(delta);
+    }
+
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
 }
 
 TimelineController useTimelineController({
+  required TickerProvider tickerProvider,
   double headerWidth = 200,
   double pixelsPerFrame = 6,
   List<Object?>? keys,
 }) {
-  return use(_TimelineControllerHook(headerWidth, pixelsPerFrame, keys: keys));
+  return use(
+    _TimelineControllerHook(
+      headerWidth,
+      pixelsPerFrame,
+      tickerProvider,
+      keys: keys,
+    ),
+  );
 }
 
 class _TimelineControllerHook extends Hook<TimelineController> {
   const _TimelineControllerHook(
     this.headerWidth,
-    this.pixelsPerFrame, {
+    this.pixelsPerFrame,
+    this.tickerProvider, {
     super.keys,
   });
 
   final double headerWidth;
   final double pixelsPerFrame;
+  final TickerProvider tickerProvider;
 
   @override
   _TimelineControllerHookState createState() => _TimelineControllerHookState();
@@ -351,6 +500,7 @@ class _TimelineControllerHookState
     controller = TimelineController(
       headerWidth: hook.headerWidth,
       pixelsPerFrame: hook.pixelsPerFrame,
+      tickerProvider: hook.tickerProvider,
     );
     controller.addListener(_onUpdate);
   }
