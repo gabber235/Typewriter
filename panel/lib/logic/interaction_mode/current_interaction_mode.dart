@@ -26,4 +26,9 @@ class CurrentInteractionMode extends _$CurrentInteractionMode {
   void setMode(InteractionMode mode) {
     state = mode;
   }
+
+  /// Transitions to the normal interaction mode.
+  void normal() {
+    state = NormalMode();
+  }
 }
