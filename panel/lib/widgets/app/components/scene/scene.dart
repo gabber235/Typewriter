@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
@@ -7,7 +6,6 @@ import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
-import "package:typewriter_panel/utils/animation.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -59,22 +57,17 @@ class EntryScene extends HookConsumerWidget {
 
             return Timeline(
               data: sceneView.timelineData,
-              resolveMoveTargets: (draggedId) {
-                final roots = _resolveMoveCues(
+              resolveTargets: (draggedId) {
+                final roots = _resolveCues(
                   ref: ref,
                   pageId: pageId,
-                  draggedCueId: draggedId.id,
+                  primaryCueId: draggedId?.id,
                   elementsById: elementsById,
                 );
                 return roots.map(TimelineIdentifier.new).toList();
               },
-              onElementMoved: (changes) => _commitSceneMoveBatch(
-                ref: ref,
-                pageId: pageId,
-                changes: changes,
-              ),
-              onElementResized: (change) =>
-                  _commitSceneResize(ref: ref, pageId: pageId, change: change),
+              onElementsCommited: (changes) =>
+                  _commitSceneBatch(ref: ref, pageId: pageId, changes: changes),
             );
           },
         );
@@ -88,16 +81,21 @@ class EntryScene extends HookConsumerWidget {
   }
 }
 
-Set<String> _resolveMoveCues({
+Set<String> _resolveCues({
   required WidgetRef ref,
   required String pageId,
-  required String draggedCueId,
+  required String? primaryCueId,
   required Map<String, PageElement> elementsById,
 }) {
-  final draggedIdentifier = CueIdentifier(pageId: pageId, id: draggedCueId);
+  final primaryIdentifier = primaryCueId != null
+      ? CueIdentifier(pageId: pageId, id: primaryCueId)
+      : null;
   final selected = ref.read(selectionProvider);
-  final draggedIsSelected = selected.contains(draggedIdentifier);
-  if (!draggedIsSelected) return {draggedCueId};
+  if (primaryIdentifier != null) {
+    if (!selected.contains(primaryIdentifier)) {
+      return {primaryCueId!};
+    }
+  }
 
   return <String>{
     for (final item in selected)
@@ -109,29 +107,21 @@ Set<String> _resolveMoveCues({
   };
 }
 
-Future<void> _commitSceneMoveBatch({
+Future<void> _commitSceneBatch({
   required WidgetRef ref,
   required String pageId,
   required List<TimelineCommitPayload> changes,
 }) {
   if (changes.isEmpty) return Future.value();
 
-  final moveChanges = <(String, int, int)>[
+  final changedCues = <(String, int, int)>[
     for (final change in changes)
       (change.id.id, change.startFrame, change.endFrame),
   ];
 
-  return ref.read(pageElementsProvider(pageId).notifier).moveCues(moveChanges);
-}
-
-Future<void> _commitSceneResize({
-  required WidgetRef ref,
-  required String pageId,
-  required TimelineCommitPayload change,
-}) {
-  return ref.read(pageElementsProvider(pageId).notifier).resizeCues([
-    (change.id.id, change.startFrame, change.endFrame),
-  ]);
+  return ref
+      .read(pageElementsProvider(pageId).notifier)
+      .updateCues(changedCues);
 }
 
 class _SceneViewData {
