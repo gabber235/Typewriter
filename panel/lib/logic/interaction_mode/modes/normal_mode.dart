@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/mode_display.dart";
@@ -140,7 +141,7 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
 ///   }
 /// }
 /// ```
-ActionShortcut escapeToNormalAction() {
+ActionShortcut escapeToNormalAction({Function(WidgetRef ref)? onInvoke}) {
   return ActionShortcut(
     id: "escape_to_normal",
     label: "Normal Mode",
@@ -148,7 +149,8 @@ ActionShortcut escapeToNormalAction() {
     activators: [const SingleActivator(LogicalKeyboardKey.escape)],
     priority: 1000,
     onInvoke: (ref) {
-      ref.read(currentInteractionModeProvider.notifier).setMode(NormalMode());
+      onInvoke?.call(ref);
+      ref.read(currentInteractionModeProvider.notifier).normal();
     },
   );
 }

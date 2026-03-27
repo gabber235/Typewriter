@@ -341,10 +341,7 @@ class Graph extends HookConsumerWidget {
                       viewerGlobalKey.currentContext?.findRenderObject()
                           as RenderBox?;
                   if (viewerBox == null) return;
-                  final focal = Offset(
-                    viewerBox.size.width / 2,
-                    viewerBox.size.height / 2,
-                  );
+                  final focal = viewerBox.size.center(Offset.zero);
                   final sceneFocal = controller.toScene(focal);
                   final currentScale = controller.value.getMaxScaleOnAxis();
                   const minScale = kGraphMinScale;

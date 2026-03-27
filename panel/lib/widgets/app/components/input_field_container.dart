@@ -149,9 +149,7 @@ class InputFieldContainer extends HookConsumerWidget {
               if (currentMode is InsertMode &&
                   currentMode.id == id &&
                   !inputFocusNode.hasFocus) {
-                ref
-                    .read(currentInteractionModeProvider.notifier)
-                    .setMode(NormalMode());
+                ref.read(currentInteractionModeProvider.notifier).normal();
               }
             },
             child: Actions(
@@ -161,7 +159,7 @@ class InputFieldContainer extends HookConsumerWidget {
                     onInvoke: (intent) {
                       ref
                           .read(currentInteractionModeProvider.notifier)
-                          .setMode(NormalMode());
+                          .normal();
                       return null;
                     },
                   ),
