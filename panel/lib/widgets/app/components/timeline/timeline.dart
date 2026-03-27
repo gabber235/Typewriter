@@ -6,15 +6,27 @@ import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/icons/ion.dart";
+import "package:iconify_flutter_plus/icons/lucide.dart";
+import "package:typewriter_panel/hooks/delayed_execution.dart";
+import "package:typewriter_panel/hooks/global_key.dart";
+import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
+import "package:typewriter_panel/logic/interaction_mode/modes/timeline_modes.dart";
+import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
+import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
+import "package:typewriter_panel/widgets/app/components/timeline/timeline_intents.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_layout.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_placement.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_plane.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_viewport.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
+import "package:typewriter_panel/widgets/generic/components/icones.dart";
 
 class TimelineCommitPayload {
   const TimelineCommitPayload({
@@ -28,30 +40,37 @@ class TimelineCommitPayload {
   final int endFrame;
 }
 
-typedef TimelineCommit = Future<void> Function(TimelineCommitPayload change);
-typedef TimelineMoveCommit =
+typedef TimelineCommit =
     Future<void> Function(List<TimelineCommitPayload> changes);
 
-class Timeline extends HookWidget {
+class Timeline extends HookConsumerWidget {
   const Timeline({
     required this.data,
-    this.onElementMoved,
-    this.onElementResized,
-    this.resolveMoveTargets,
+    this.onElementsCommited,
+    this.resolveTargets,
     super.key,
   });
 
   final TimelineData data;
-  final TimelineMoveCommit? onElementMoved;
-  final TimelineCommit? onElementResized;
-  final List<TimelineIdentifier> Function(TimelineIdentifier draggedId)?
-  resolveMoveTargets;
+  final TimelineCommit? onElementsCommited;
+  final List<TimelineIdentifier> Function(TimelineIdentifier? focusedId)?
+  resolveTargets;
+
+  int framesJump() {
+    if (HardwareKeyboard.instance.isMetaPressed) return 100;
+    if (HardwareKeyboard.instance.isControlPressed) return 50;
+    if (HardwareKeyboard.instance.isShiftPressed) return 10;
+    return 1;
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tickerProvider = useSingleTickerProvider();
     final controller = useTimelineController(
-        headerWidth: context.responsive(mobile: 100, desktop: 200),
+      tickerProvider: tickerProvider,
+      headerWidth: context.responsive(mobile: 100, desktop: 200),
     );
+    final planeGlobalKey = useGlobalKey();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -117,12 +136,17 @@ class Timeline extends HookWidget {
               [layout, viewport, style],
             );
 
+            useDelayedExecution(() {
+              controller.resetZoom(viewport, layout, animate: false);
+              return null;
+            }, []);
+
             List<MoveTimelinePreview> resolveMovePreviews(
-              TimelineIdentifier draggedId,
+              TimelineIdentifier primaryId,
             ) {
-              final targetIds = resolveMoveTargets?.call(draggedId);
+              final targetIds = resolveTargets?.call(primaryId);
               final orderedIds = targetIds == null || targetIds.isEmpty
-                  ? {draggedId}
+                  ? {primaryId}
                   : targetIds.toSet();
 
               final previews = <MoveTimelinePreview>[];
@@ -288,46 +312,36 @@ class Timeline extends HookWidget {
               return buildResizePreview(adjacent, adjacentMode);
             }
 
-            List<TimelinePreview> resolveResizeSessionSeeds(
+            List<TimelinePreview> resolveResizePreviews(
               TimelineIdentifier id,
               TimelineInteractionMode mode,
             ) {
-              final source = data.elementsById[id];
-              if (source is! TimelineSegment) return const [];
-
-              final preview = buildResizePreview(source, mode);
-              if (preview == null) return const [];
-
-              final adjacent = findAdjacentPreview(id, mode);
-              return adjacent == null ? [preview] : [preview, adjacent];
+              final ids = resolveTargets?.call(id) ?? [id];
+              return ids
+                  .map((id) => data.elementsById[id])
+                  .whereType<TimelineSegment>()
+                  .map((element) => buildResizePreview(element, mode))
+                  .nonNulls
+                  .expand((preview) {
+                    final adjacent = findAdjacentPreview(preview.id, mode);
+                    return adjacent == null ? [preview] : [preview, adjacent];
+                  })
+                  .toList();
             }
 
-            Future<void> commitPreview(List<TimelinePreview> previews) async {
+            Future<void> commitPreviews(List<TimelinePreview> previews) async {
               if (previews.isEmpty) return;
 
-              final moves = <TimelineCommitPayload>[];
-              final awaits = <Future<void>>[];
+              if (onElementsCommited == null) return;
 
-              for (final preview in previews) {
-                final commit = TimelineCommitPayload(
-                  id: preview.id,
-                  startFrame: preview.startFrame,
-                  endFrame: preview.endFrame,
-                );
-                if (preview is MoveTimelinePreview) {
-                  moves.add(commit);
-                  continue;
-                }
-                if (onElementResized != null) {
-                  awaits.add(onElementResized!(commit));
-                }
-              }
-
-              if (moves.isNotEmpty && onElementMoved != null) {
-                awaits.add(onElementMoved!(moves));
-              }
-
-              await Future.wait(awaits);
+              await onElementsCommited!([
+                for (final preview in previews)
+                  TimelineCommitPayload(
+                    id: preview.id,
+                    startFrame: preview.startFrame,
+                    endFrame: preview.endFrame,
+                  ),
+              ]);
             }
 
             final plane = _TimelinePlaneSurface(
@@ -335,56 +349,431 @@ class Timeline extends HookWidget {
               style: style,
               viewport: viewport,
               placement: placement,
-              onCommitPreview: commitPreview,
+              onCommitPreviews: commitPreviews,
               resolveMovePreviews: resolveMovePreviews,
-              resolveResizeSessionSeeds: resolveResizeSessionSeeds,
+              resolveResizePreviews: resolveResizePreviews,
+              key: planeGlobalKey,
             );
 
-            return Row(
-              children: [
-                SizedBox(
-                  width: headerWidth,
-                  child: Column(
-                    children: [
-                      _TimelineTopLeftHeader(viewport: viewport, style: style),
-                      Expanded(
-                        child: _TimelineTrackHeaders(
-                          placement: placement,
+            final currentInteractionMode = ref.watch(
+              currentInteractionModeProvider,
+            );
+
+            final ignoreCentering = useState<List<SelectableIdentifier>>([]);
+            final totalDelta = useState(0.0);
+
+            useEffect(() {
+              void onFocusChange() {
+                final focused = SelectableScope.primaryFocusedId();
+                if (focused == null) return;
+                if (ignoreCentering.value.remove(focused)) return;
+                final identifier = TimelineIdentifier(focused.id);
+                final element = placement.placementById[identifier];
+                if (element == null) return;
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  controller.centerOn(viewport, element);
+                });
+              }
+
+              FocusManager.instance.addListener(onFocusChange);
+              return () {
+                FocusManager.instance.removeListener(onFocusChange);
+              };
+            }, [placement]);
+
+            return ManagedActionSet(
+              shortcuts: [
+                if (onElementsCommited != null &&
+                    currentInteractionMode is! TimelineMoveMode)
+                  ActionShortcut(
+                    id: "timeline_move_mode_activate",
+                    label: "Move Mode",
+                    description: "Go to Move Mode",
+                    activators: [
+                      SingleActivator(shift: true, LogicalKeyboardKey.keyM),
+                    ],
+                    icon: Icones(Ion.md_move),
+                    onInvoke: (ref) {
+                      final primaryFocusedId =
+                          SelectableScope.primaryFocusedId();
+                      if (primaryFocusedId == null) return;
+                      final identifier = TimelineIdentifier(
+                        primaryFocusedId.id,
+                      );
+                      ref
+                          .read(currentInteractionModeProvider.notifier)
+                          .setMode(TimelineMoveMode());
+                      controller.startInteractionSession(
+                        previews: resolveMovePreviews(identifier),
+                      );
+                      totalDelta.value = 0;
+
+                      final element = placement.placementById[identifier];
+                      if (element != null) {
+                        controller.centerOn(viewport, element);
+                      }
+                      return null;
+                    },
+                    priority: 10,
+                  ),
+                if (onElementsCommited != null &&
+                    (currentInteractionMode is! TimelineResizeMode ||
+                        currentInteractionMode.mode ==
+                            TimelineInteractionMode.resizeStart))
+                  ActionShortcut(
+                    id: "timeline_resize_start_mode_activate",
+                    label: "Resize Start Mode",
+                    description: "Resize the selected segments start",
+                    activators: [
+                      SingleActivator(shift: true, LogicalKeyboardKey.keyS),
+                    ],
+                    icon: Icones(Lucide.move_diagonal_2),
+                    onInvoke: (ref) {
+                      final primaryFocusedId =
+                          SelectableScope.primaryFocusedId();
+                      if (primaryFocusedId == null) return;
+                      final identifier = TimelineIdentifier(
+                        primaryFocusedId.id,
+                      );
+                      ref
+                          .read(currentInteractionModeProvider.notifier)
+                          .setMode(
+                            TimelineResizeMode(
+                              mode: TimelineInteractionMode.resizeStart,
+                            ),
+                          );
+                      controller.startInteractionSession(
+                        previews: resolveResizePreviews(
+                          identifier,
+                          TimelineInteractionMode.resizeStart,
+                        ),
+                      );
+                      totalDelta.value = 0;
+                      final element = placement.placementById[identifier];
+                      if (element != null) {
+                        controller.centerOn(viewport, element);
+                      }
+                      return null;
+                    },
+                    priority: 10,
+                  ),
+
+                if (onElementsCommited != null &&
+                    (currentInteractionMode is! TimelineResizeMode ||
+                        currentInteractionMode.mode ==
+                            TimelineInteractionMode.resizeEnd))
+                  ActionShortcut(
+                    id: "timeline_resize_end_mode_activate",
+                    label: "Resize End Mode",
+                    description: "Resize the selected segments end",
+                    activators: [
+                      SingleActivator(shift: true, LogicalKeyboardKey.keyE),
+                    ],
+                    icon: Icones(Lucide.move_diagonal_2),
+                    onInvoke: (ref) {
+                      final primaryFocusedId =
+                          SelectableScope.primaryFocusedId();
+                      if (primaryFocusedId == null) return;
+                      final identifier = TimelineIdentifier(
+                        primaryFocusedId.id,
+                      );
+                      ref
+                          .read(currentInteractionModeProvider.notifier)
+                          .setMode(
+                            TimelineResizeMode(
+                              mode: TimelineInteractionMode.resizeEnd,
+                            ),
+                          );
+                      controller.startInteractionSession(
+                        previews: resolveResizePreviews(
+                          identifier,
+                          TimelineInteractionMode.resizeEnd,
+                        ),
+                      );
+                      totalDelta.value = 0;
+                      final element = placement.placementById[identifier];
+                      if (element != null) {
+                        controller.centerOn(viewport, element);
+                      }
+                      return null;
+                    },
+                    priority: 10,
+                  ),
+
+                ActionShortcut(
+                  id: "timeline_zoom_in",
+                  label: "Zoom In",
+                  description: "Zoom the timeline in",
+                  activators: [
+                    for (final key in [
+                      LogicalKeyboardKey.equal,
+                      LogicalKeyboardKey.add,
+                      LogicalKeyboardKey.numpadEqual,
+                      LogicalKeyboardKey.numpadAdd,
+                    ]) ...[
+                      SingleActivator(key),
+                      SingleActivator(key, shift: true),
+                      SingleActivator(key, meta: true),
+                      SingleActivator(key, meta: true, shift: true),
+                      SingleActivator(key, control: true),
+                      SingleActivator(key, control: true, shift: true),
+                    ],
+                    for (final ch in ["=", "+"]) ...[
+                      CharacterActivator(ch),
+                      CharacterActivator(ch, meta: true),
+                      CharacterActivator(ch, control: true),
+                    ],
+                  ],
+                  priority: -2,
+                  onInvoke: (_) {
+                    final planeBox =
+                        planeGlobalKey.currentContext?.findRenderObject()
+                            as RenderBox?;
+                    if (planeBox == null) return;
+                    final focal = planeBox.size.center(Offset.zero);
+                    final scaleDelta = math.exp(25 * 0.0025);
+                    controller.zoomAt(
+                      localDx: focal.dx,
+                      scaleDelta: scaleDelta,
+                      minPixelsPerFrame: style.minPixelsPerFrame,
+                      maxPixelsPerFrame: style.maxPixelsPerFrame,
+                    );
+                    return null;
+                  },
+                ),
+                ActionShortcut(
+                  id: "timeline_zoom_out",
+                  label: "Zoom Out",
+                  description: "Zoom the timeline out",
+                  activators: [
+                    for (final key in [
+                      LogicalKeyboardKey.minus,
+                      LogicalKeyboardKey.underscore,
+                      LogicalKeyboardKey.numpadSubtract,
+                    ]) ...[
+                      SingleActivator(key),
+                      SingleActivator(key, shift: true),
+                      SingleActivator(key, meta: true),
+                      SingleActivator(key, meta: true, shift: true),
+                      SingleActivator(key, control: true),
+                      SingleActivator(key, control: true, shift: true),
+                    ],
+                    for (final ch in ["-", "_"]) ...[
+                      CharacterActivator(ch),
+                      CharacterActivator(ch, meta: true),
+                      CharacterActivator(ch, control: true),
+                    ],
+                  ],
+                  priority: -2,
+                  onInvoke: (_) {
+                    final planeBox =
+                        planeGlobalKey.currentContext?.findRenderObject()
+                            as RenderBox?;
+                    if (planeBox == null) return;
+                    final focal = planeBox.size.center(Offset.zero);
+                    final scaleDelta = math.exp(-25 * 0.0025);
+                    controller.zoomAt(
+                      localDx: focal.dx,
+                      scaleDelta: scaleDelta,
+                      minPixelsPerFrame: style.minPixelsPerFrame,
+                      maxPixelsPerFrame: style.maxPixelsPerFrame,
+                    );
+                    return null;
+                  },
+                ),
+                ActionShortcut(
+                  id: "timeline_zoom_reset",
+                  label: "Reset Zoom",
+                  description: "Reset zoom to 100% and center",
+                  activators: [
+                    for (final key in [
+                      LogicalKeyboardKey.digit0,
+                      LogicalKeyboardKey.numpad0,
+                    ]) ...[
+                      SingleActivator(key),
+                      SingleActivator(key, meta: true),
+                      SingleActivator(key, control: true),
+                    ],
+                  ],
+                  priority: -2,
+                  onInvoke: (_) {
+                    controller.resetZoom(viewport, layout);
+                  },
+                ),
+              ],
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: headerWidth,
+                    child: Column(
+                      children: [
+                        _TimelineTopLeftHeader(
                           viewport: viewport,
                           style: style,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: handleWidth,
-                  color: style.palette.headerBackground,
-                  child: DragHandle(
-                    axis: Axis.horizontal,
-                    getSize: () => controller.headerWidth,
-                    onSizeChange: controller.setHeaderWidth,
-                    minSize: style.minHeaderWidth,
-                    maxSize: math.min(
-                      style.maxHeaderWidth,
-                      constraints.maxWidth * 0.55,
+                        Expanded(
+                          child: _TimelineTrackHeaders(
+                            placement: placement,
+                            viewport: viewport,
+                            style: style,
+                          ),
+                        ),
+                      ],
                     ),
-                    hitThickness: handleWidth,
-                    showOnHover: true,
-                    handleExtentFactor: 1,
-                    handleThickness: 3,
                   ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _TimelineRuler(viewport: viewport, style: style),
-                      Expanded(child: plane),
-                    ],
+                  Container(
+                    width: handleWidth,
+                    color: style.palette.headerBackground,
+                    child: DragHandle(
+                      axis: Axis.horizontal,
+                      getSize: () => controller.headerWidth,
+                      onSizeChange: controller.setHeaderWidth,
+                      minSize: style.minHeaderWidth,
+                      maxSize: math.min(
+                        style.maxHeaderWidth,
+                        constraints.maxWidth * 0.55,
+                      ),
+                      hitThickness: handleWidth,
+                      showOnHover: true,
+                      handleExtentFactor: 1,
+                      handleThickness: 3,
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _TimelineRuler(viewport: viewport, style: style),
+                        Expanded(
+                          child: Actions(
+                            actions: {
+                              SelectedSelectorIntent:
+                                  CallbackAction<SelectedSelectorIntent>(
+                                    onInvoke: (intent) {
+                                      // When we click on a node, it will auto focus on it, however we don't want to center the graph
+                                      // on it because it will cause the graph to jump around and all around feel terrible.
+                                      if (!intent.throughTap) return null;
+                                      ignoreCentering.value = [
+                                        ...ignoreCentering.value,
+                                        intent.selectableId,
+                                      ];
+                                      return null;
+                                    },
+                                  ),
+
+                              TimelineMoveIntent:
+                                  CallbackAction<TimelineMoveIntent>(
+                                    onInvoke: (intent) {
+                                      assert(
+                                        onElementsCommited != null,
+                                        "onElementsCommited must be provided",
+                                      );
+                                      final direction = intent.direction;
+                                      final moveDelta = switch (direction) {
+                                        TraversalDirection.left => -1,
+                                        TraversalDirection.right => 1,
+                                        _ => 0,
+                                      };
+
+                                      final movePixels =
+                                          moveDelta *
+                                          controller.pixelsPerFrame *
+                                          framesJump();
+                                      totalDelta.value += movePixels;
+                                      controller.updateInteraction(
+                                        totalDelta.value,
+                                      );
+
+                                      final primaryFocusedId =
+                                          SelectableScope.primaryFocusedId();
+                                      if (primaryFocusedId == null) return;
+                                      final identifier = TimelineIdentifier(
+                                        primaryFocusedId.id,
+                                      );
+                                      final element =
+                                          placement.placementById[identifier];
+                                      if (element != null) {
+                                        controller.centerOn(viewport, element);
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                              TimelineResizeIntent:
+                                  CallbackAction<TimelineResizeIntent>(
+                                    onInvoke: (intent) {
+                                      assert(
+                                        onElementsCommited != null,
+                                        "onElementsCommited must be provided",
+                                      );
+
+                                      final direction = intent.direction;
+                                      final moveDelta = switch (direction) {
+                                        TraversalDirection.left => -1,
+                                        TraversalDirection.right => 1,
+                                        _ => 0,
+                                      };
+
+                                      final movePixels =
+                                          moveDelta *
+                                          controller.pixelsPerFrame *
+                                          framesJump();
+                                      totalDelta.value += movePixels;
+                                      controller.updateInteraction(
+                                        totalDelta.value,
+                                      );
+
+                                      final primaryFocusedId =
+                                          SelectableScope.primaryFocusedId();
+                                      if (primaryFocusedId == null) return;
+                                      final identifier = TimelineIdentifier(
+                                        primaryFocusedId.id,
+                                      );
+                                      final element =
+                                          placement.placementById[identifier];
+                                      if (element != null) {
+                                        controller.centerOn(viewport, element);
+                                      }
+                                      return null;
+                                    },
+                                  ),
+
+                              TimelineCenterFocusedIntent:
+                                  CallbackAction<TimelineCenterFocusedIntent>(
+                                    onInvoke: (intent) {
+                                      final primaryFocusedId =
+                                          SelectableScope.primaryFocusedId();
+                                      if (primaryFocusedId == null) return;
+                                      final identifier = TimelineIdentifier(
+                                        primaryFocusedId.id,
+                                      );
+                                      final element =
+                                          placement.placementById[identifier];
+                                      if (element != null) {
+                                        controller.centerOn(viewport, element);
+                                      }
+                                      return null;
+                                    },
+                                  ),
+
+                              TimelineCommitIntent:
+                                  CallbackAction<TimelineCommitIntent>(
+                                    onInvoke: (intent) {
+                                      final previews = controller
+                                          .finishInteractionSession();
+                                      commitPreviews(previews);
+                                      return null;
+                                    },
+                                  ),
+                            },
+                            child: plane,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -409,9 +798,7 @@ class _TimelineTopLeftHeader extends StatelessWidget {
         color: style.palette.headerBackground,
         border: Border(bottom: BorderSide(color: style.palette.headerDivider)),
       ),
-      child: Center(
-        child: Text("Timeline", style: textTheme.titleSmall),
-      ),
+      child: Center(child: Text("Timeline", style: textTheme.titleSmall)),
     );
   }
 }
@@ -431,12 +818,12 @@ class _TimelineTrackHeaders extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRect(
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: style.palette.headerBackground,
-        ),
+        decoration: BoxDecoration(color: style.palette.headerBackground),
         child: Stack(
           children: [
-            for (final trackLayout in placement.tracks.where((element) => element.isVisible(viewport)))
+            for (final trackLayout in placement.tracks.where(
+              (element) => element.isVisible(viewport),
+            ))
               Positioned(
                 top: trackLayout.top - viewport.verticalOffset,
                 left: 0,
@@ -563,23 +950,24 @@ class _TimelinePlaneSurface extends HookWidget {
     required this.style,
     required this.viewport,
     required this.placement,
-    required this.onCommitPreview,
+    required this.onCommitPreviews,
     required this.resolveMovePreviews,
-    required this.resolveResizeSessionSeeds,
+    required this.resolveResizePreviews,
+    super.key,
   });
 
   final TimelineController controller;
   final TimelineStyle style;
   final TimelineViewport viewport;
   final TimelinePlacementResult placement;
-  final Future<void> Function(List<TimelinePreview> previews) onCommitPreview;
+  final Future<void> Function(List<TimelinePreview> previews) onCommitPreviews;
   final List<MoveTimelinePreview> Function(TimelineIdentifier id)
   resolveMovePreviews;
   final List<TimelinePreview> Function(
     TimelineIdentifier id,
     TimelineInteractionMode mode,
   )
-  resolveResizeSessionSeeds;
+  resolveResizePreviews;
 
   @override
   Widget build(BuildContext context) {
@@ -592,6 +980,7 @@ class _TimelinePlaneSurface extends HookWidget {
         scaleDelta: scaleDelta,
         minPixelsPerFrame: style.minPixelsPerFrame,
         maxPixelsPerFrame: style.maxPixelsPerFrame,
+        animate: false,
       );
     }
 
@@ -610,7 +999,11 @@ class _TimelinePlaneSurface extends HookWidget {
           zoomAtPointer(localPosition.dx, scaleDelta);
           return;
         }
-        controller.panBy(dx: scrollDelta.dx, dy: scrollDelta.dy);
+        controller.panBy(
+          dx: scrollDelta.dx,
+          dy: scrollDelta.dy,
+          animate: false,
+        );
       }
     }
 
@@ -618,7 +1011,11 @@ class _TimelinePlaneSurface extends HookWidget {
       child: Listener(
         onPointerSignal: handlePointerSignal,
         onPointerPanZoomUpdate: (event) {
-          controller.panBy(dx: -event.panDelta.dx, dy: -event.panDelta.dy);
+          controller.panBy(
+            dx: -event.panDelta.dx,
+            dy: -event.panDelta.dy,
+            animate: false,
+          );
           zoomAtPointer(event.localPosition.dx, event.scale);
         },
         child: GestureDetector(
@@ -631,7 +1028,11 @@ class _TimelinePlaneSurface extends HookWidget {
             if (details.pointerCount < 2) return;
             final focalDelta = details.localFocalPoint - lastFocalPoint.value;
             lastFocalPoint.value = details.localFocalPoint;
-            controller.panBy(dx: -focalDelta.dx, dy: -focalDelta.dy);
+            controller.panBy(
+              dx: -focalDelta.dx,
+              dy: -focalDelta.dy,
+              animate: false,
+            );
 
             final scaleDelta = details.scale / lastScale.value;
             lastScale.value = details.scale;
@@ -641,7 +1042,11 @@ class _TimelinePlaneSurface extends HookWidget {
             behavior: HitTestBehavior.opaque,
             onPanUpdate: (details) {
               if (controller.inPreview) return;
-              controller.panBy(dx: -details.delta.dx, dy: -details.delta.dy);
+              controller.panBy(
+                dx: -details.delta.dx,
+                dy: -details.delta.dy,
+                animate: false,
+              );
             },
             child: TimelinePlane(
               placement: placement,
@@ -660,9 +1065,9 @@ class _TimelinePlaneSurface extends HookWidget {
                         placed: placed,
                         style: style,
                         controller: controller,
-                        onCommitPreview: onCommitPreview,
+                        onCommitPreview: onCommitPreviews,
                         resolveMovePreviews: resolveMovePreviews,
-                        resolveResizeSessionSeeds: resolveResizeSessionSeeds,
+                        resolveResizePreviews: resolveResizePreviews,
                       ),
                     ),
                   ),
@@ -675,7 +1080,7 @@ class _TimelinePlaneSurface extends HookWidget {
   }
 }
 
-class TimelineSegmentSurface extends HookWidget {
+class TimelineSegmentSurface extends HookConsumerWidget {
   const TimelineSegmentSurface({
     required this.data,
     required this.child,
@@ -692,7 +1097,7 @@ class TimelineSegmentSurface extends HookWidget {
   final double outlineWidth;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final totalDelta = useState(0.0);
     final placed = data.placed;
     final style = data.style;
@@ -710,14 +1115,21 @@ class TimelineSegmentSurface extends HookWidget {
                 controller.startInteractionSession(
                   previews: data.resolveMovePreviews(segment.id),
                 );
+                ref
+                    .read(currentInteractionModeProvider.notifier)
+                    .setMode(TimelineMoveMode());
               },
               onHorizontalDragUpdate: (details) {
                 totalDelta.value += details.delta.dx;
                 controller.updateInteraction(totalDelta.value);
               },
-              onHorizontalDragCancel: controller.cancelInteraction,
+              onHorizontalDragCancel: () {
+                controller.cancelInteraction();
+                ref.read(currentInteractionModeProvider.notifier).normal();
+              },
               onHorizontalDragEnd: (_) {
                 data.onCommitPreview(controller.finishInteractionSession());
+                ref.read(currentInteractionModeProvider.notifier).normal();
               },
               child: Padding(
                 padding: EdgeInsets.symmetric(
@@ -757,19 +1169,31 @@ class TimelineSegmentSurface extends HookWidget {
             onStart: () {
               totalDelta.value = 0;
               controller.startInteractionSession(
-                previews: data.resolveResizeSessionSeeds(
+                previews: data.resolveResizePreviews(
                   segment.id,
                   TimelineInteractionMode.resizeStart,
                 ),
               );
+              ref
+                  .read(currentInteractionModeProvider.notifier)
+                  .setMode(
+                    TimelineResizeMode(
+                      mode: TimelineInteractionMode.resizeStart,
+                    ),
+                  );
             },
             onUpdate: (details) {
               totalDelta.value += details.delta.dx;
               controller.updateInteraction(totalDelta.value);
             },
-            onEnd: () =>
-                data.onCommitPreview(controller.finishInteractionSession()),
-            onCancel: controller.cancelInteraction,
+            onEnd: () {
+              data.onCommitPreview(controller.finishInteractionSession());
+              ref.read(currentInteractionModeProvider.notifier).normal();
+            },
+            onCancel: () {
+              controller.cancelInteraction();
+              ref.read(currentInteractionModeProvider.notifier).normal();
+            },
           ),
         ),
         Positioned(
@@ -782,19 +1206,29 @@ class TimelineSegmentSurface extends HookWidget {
             onStart: () {
               totalDelta.value = 0;
               controller.startInteractionSession(
-                previews: data.resolveResizeSessionSeeds(
+                previews: data.resolveResizePreviews(
                   segment.id,
                   TimelineInteractionMode.resizeEnd,
                 ),
               );
+              ref
+                  .read(currentInteractionModeProvider.notifier)
+                  .setMode(
+                    TimelineResizeMode(mode: TimelineInteractionMode.resizeEnd),
+                  );
             },
             onUpdate: (details) {
               totalDelta.value += details.delta.dx;
               controller.updateInteraction(totalDelta.value);
             },
-            onEnd: () =>
-                data.onCommitPreview(controller.finishInteractionSession()),
-            onCancel: controller.cancelInteraction,
+            onEnd: () {
+              data.onCommitPreview(controller.finishInteractionSession());
+              ref.read(currentInteractionModeProvider.notifier).normal();
+            },
+            onCancel: () {
+              controller.cancelInteraction();
+              ref.read(currentInteractionModeProvider.notifier).normal();
+            },
           ),
         ),
       ],
@@ -832,7 +1266,7 @@ class _ResizeHandle extends StatelessWidget {
   }
 }
 
-class TimelineKeyframeSurface extends HookWidget {
+class TimelineKeyframeSurface extends HookConsumerWidget {
   const TimelineKeyframeSurface({
     required this.data,
     required this.child,
@@ -849,7 +1283,7 @@ class TimelineKeyframeSurface extends HookWidget {
   final double outlineWidth;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final totalDelta = useState(0.0);
     final keyframe = data.placed.element as TimelineKeyframe;
     final style = data.style;
@@ -864,14 +1298,22 @@ class TimelineKeyframeSurface extends HookWidget {
           controller.startInteractionSession(
             previews: data.resolveMovePreviews(keyframe.id),
           );
+          ref
+              .read(currentInteractionModeProvider.notifier)
+              .setMode(TimelineMoveMode());
         },
         onHorizontalDragUpdate: (details) {
           totalDelta.value += details.delta.dx;
           controller.updateInteraction(totalDelta.value);
         },
-        onHorizontalDragCancel: controller.cancelInteraction,
-        onHorizontalDragEnd: (_) =>
-            data.onCommitPreview(controller.finishInteractionSession()),
+        onHorizontalDragCancel: () {
+          controller.cancelInteraction();
+          ref.read(currentInteractionModeProvider.notifier).normal();
+        },
+        onHorizontalDragEnd: (_) {
+          data.onCommitPreview(controller.finishInteractionSession());
+          ref.read(currentInteractionModeProvider.notifier).normal();
+        },
         child: Center(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
