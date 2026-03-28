@@ -121,11 +121,11 @@ fun Player.sendSpokenDialogue(
         maxLineLength = spokenMaxLineLength
     )
 
-    val component = spokenFormat.asMiniWithResolvers(
+    val component = spokenFormat.parsePlaceholders(player).asMiniWithResolvers(
         Placeholder.parsed("speaker", speakerDisplayName),
         Placeholder.component("message", message),
-        Placeholder.parsed("next_color", nextColor),
-        Placeholder.parsed("finish_text", continueOrFinish),
+        Placeholder.parsed("next_color", nextColor.parsePlaceholders(player)),
+        Placeholder.parsed("finish_text", continueOrFinish.parsePlaceholders(player)),
         Placeholder.parsed("padding", spokenPadding)
     )
 

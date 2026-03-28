@@ -174,7 +174,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
             maxLineLength = optionMaxLineLength
         )
 
-        val message = optionFormat.asMiniWithResolvers(
+        val message = optionFormat.parsePlaceholders(player).asMiniWithResolvers(
             Placeholder.parsed("speaker", speakerDisplayName),
             Placeholder.component("text", text),
             Placeholder.component("options", formatOptions(rawText)),
@@ -208,7 +208,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
             else unselectedPrefix
 
             val format = if (isSelected) selectedOption else unselectedOption
-            lines += format.asMiniWithResolvers(
+            lines += format.parsePlaceholders(player).asMiniWithResolvers(
                 Placeholder.parsed("prefix", prefix),
                 Placeholder.parsed("option_text", option.text.get(player).parsePlaceholders(player))
             )
