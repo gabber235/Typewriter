@@ -141,6 +141,16 @@ class TypewriterPanel extends HookConsumerWidget {
   };
 }
 
+final movementShortcuts = {
+  [LogicalKeyboardKey.arrowUp, LogicalKeyboardKey.keyK]: TraversalDirection.up,
+  [LogicalKeyboardKey.arrowDown, LogicalKeyboardKey.keyJ]:
+      TraversalDirection.down,
+  [LogicalKeyboardKey.arrowLeft, LogicalKeyboardKey.keyH]:
+      TraversalDirection.left,
+  [LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.keyL]:
+      TraversalDirection.right,
+};
+
 class DeleteIntent extends Intent {
   const DeleteIntent();
 }

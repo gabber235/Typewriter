@@ -4,6 +4,7 @@ import "package:typewriter_panel/logic/interaction_mode/interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/logic/interaction_mode/mode_shortcut.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
+import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
@@ -27,17 +28,6 @@ class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
 
   @override
   List<ActionShortcut> getShortcuts() {
-    final movementShortcuts = {
-      [LogicalKeyboardKey.arrowUp, LogicalKeyboardKey.keyK]:
-          TraversalDirection.up,
-      [LogicalKeyboardKey.arrowDown, LogicalKeyboardKey.keyJ]:
-          TraversalDirection.down,
-      [LogicalKeyboardKey.arrowLeft, LogicalKeyboardKey.keyH]:
-          TraversalDirection.left,
-      [LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.keyL]:
-          TraversalDirection.right,
-    };
-
     return [
       for (final MapEntry(key: keys, value: direction)
           in movementShortcuts.entries)
