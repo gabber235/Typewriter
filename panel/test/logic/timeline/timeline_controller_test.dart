@@ -1,16 +1,20 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
+import "package:typewriter_panel/logic/timeline/timeline_controller.dart";
+import "package:typewriter_panel/logic/timeline/timeline_data.dart";
+
+import "support/timeline_test_dsl.dart";
 
 void main() {
   group("TimelineController", () {
     test("keeps the zoom anchor stable under the pointer", () {
-      final controller = TimelineController()
-        ..panBy(dx: 120)
+      final controller = _controller()
+        ..panBy(dx: 120, animate: false)
         ..zoomAt(
           localDx: 80,
           scaleDelta: 2,
           minPixelsPerFrame: 6,
           maxPixelsPerFrame: 48,
+          animate: false,
         );
 
       expect(controller.pixelsPerFrame, 24);
@@ -18,42 +22,46 @@ void main() {
     });
 
     test("clamps move previews while preserving duration", () {
-      final controller = TimelineController()
-        ..startMove(id: "cue", startFrame: 5, endFrame: 15)
+      final controller = _controller()
+        ..startInteractionSession(
+          previews: [previewCue("cue").move(startFrame: 5, endFrame: 15)],
+        )
         ..updateInteraction(-120);
 
-      expect(controller.preview?.startFrame, 0);
-      expect(controller.preview?.endFrame, 10);
+      expect(_preview(controller)?.startFrame, 0);
+      expect(_preview(controller)?.endFrame, 10);
     });
 
     test("updates all move previews in one interaction session", () {
-      final controller = TimelineController()
-        ..startMove(
-          id: "cue_a",
-          startFrame: 10,
-          endFrame: 20,
-          additionalPreviews: const [(id: "cue_b", startFrame: 2, endFrame: 6)],
+      final controller = _controller()
+        ..startInteractionSession(
+          previews: [
+            previewCue("cue_a").move(startFrame: 10, endFrame: 20),
+            previewCue("cue_b").move(startFrame: 2, endFrame: 6),
+          ],
         )
         ..updateInteraction(24);
 
       final session = controller.finishInteractionSession();
-      final byId = {for (final preview in session) preview.id: preview};
+      final byId = {for (final preview in session) preview.id.id: preview};
 
       expect(byId["cue_a"]?.startFrame, 12);
       expect(byId["cue_a"]?.endFrame, 22);
       expect(byId["cue_b"]?.startFrame, 4);
       expect(byId["cue_b"]?.endFrame, 8);
-      expect(controller.preview, isNull);
+      expect(_preview(controller), isNull);
       expect(controller.previews, isEmpty);
     });
 
     test("rounds interaction deltas near half frame thresholds", () {
-      final controller = TimelineController()
-        ..startMove(id: "cue", startFrame: 10, endFrame: 20)
+      final controller = _controller()
+        ..startInteractionSession(
+          previews: [previewCue("cue").move(startFrame: 10, endFrame: 20)],
+        )
         ..updateInteraction(5.9);
 
-      expect(controller.preview?.startFrame, 10);
-      expect(controller.preview?.endFrame, 20);
+      expect(_preview(controller)?.startFrame, 10);
+      expect(_preview(controller)?.endFrame, 20);
 
       controller
         ..updateInteraction(6.1)
@@ -61,130 +69,84 @@ void main() {
         ..updateInteraction(-5.9)
         ..updateInteraction(-6.1);
 
-      expect(controller.preview?.startFrame, 9);
-      expect(controller.preview?.endFrame, 19);
+      expect(_preview(controller)?.startFrame, 9);
+      expect(_preview(controller)?.endFrame, 19);
     });
 
     test("clamps resize previews and clears preview on finish", () {
-      final controller = TimelineController()
+      final controller = _controller()
         ..startInteractionSession(
-          activeId: "cue",
-          seeds: const [
-            (
-              id: "cue",
-              mode: TimelineInteractionMode.resizeStart,
-              startFrame: 8,
-              endFrame: 18,
-            ),
+          previews: [
+            previewCue("cue").resizeStart(startFrame: 8, endFrame: 18),
           ],
         )
         ..updateInteraction(180);
 
-      expect(controller.preview?.startFrame, 18);
-      expect(controller.preview?.endFrame, 18);
+      expect(_preview(controller)?.startFrame, 18);
+      expect(_preview(controller)?.endFrame, 18);
 
       controller
         ..startInteractionSession(
-          activeId: "cue",
-          seeds: const [
-            (
-              id: "cue",
-              mode: TimelineInteractionMode.resizeEnd,
-              startFrame: 8,
-              endFrame: 18,
-            ),
-          ],
+          previews: [previewCue("cue").resizeEnd(startFrame: 8, endFrame: 18)],
         )
         ..updateInteraction(-180);
 
-      expect(controller.preview?.startFrame, 8);
-      expect(controller.preview?.endFrame, 8);
+      expect(_preview(controller)?.startFrame, 8);
+      expect(_preview(controller)?.endFrame, 8);
 
-      final finished = controller.finishInteraction();
-      expect(finished?.mode, TimelineInteractionMode.resizeEnd);
-      expect(finished?.startFrame, 8);
-      expect(finished?.endFrame, 8);
-      expect(controller.preview, isNull);
+      final finished = controller.finishInteractionSession();
+      expect(finished, hasLength(1));
+      expect(finished.first.mode, TimelineInteractionMode.resizeEnd);
+      expect(finished.first.startFrame, 8);
+      expect(finished.first.endFrame, 8);
+      expect(_preview(controller), isNull);
     });
 
     test("keeps resize start unchanged when clamped at boundaries", () {
-      final controller = TimelineController()
+      final controller = _controller()
         ..startInteractionSession(
-          activeId: "cue",
-          seeds: const [
-            (
-              id: "cue",
-              mode: TimelineInteractionMode.resizeStart,
-              startFrame: 0,
-              endFrame: 12,
-            ),
+          previews: [
+            previewCue("cue").resizeStart(startFrame: 0, endFrame: 12),
           ],
         )
         ..updateInteraction(-240);
 
-      expect(controller.preview?.startFrame, 0);
-      expect(controller.preview?.endFrame, 12);
+      expect(_preview(controller)?.startFrame, 0);
+      expect(_preview(controller)?.endFrame, 12);
 
       controller
         ..startInteractionSession(
-          activeId: "cue",
-          seeds: const [
-            (
-              id: "cue",
-              mode: TimelineInteractionMode.resizeStart,
-              startFrame: 7,
-              endFrame: 7,
-            ),
-          ],
+          previews: [previewCue("cue").resizeStart(startFrame: 7, endFrame: 7)],
         )
         ..updateInteraction(240);
 
-      expect(controller.preview?.startFrame, 7);
-      expect(controller.preview?.endFrame, 7);
+      expect(_preview(controller)?.startFrame, 7);
+      expect(_preview(controller)?.endFrame, 7);
     });
 
     test("keeps resize end unchanged when clamped at start", () {
-      final controller = TimelineController()
+      final controller = _controller()
         ..startInteractionSession(
-          activeId: "cue",
-          seeds: const [
-            (
-              id: "cue",
-              mode: TimelineInteractionMode.resizeEnd,
-              startFrame: 9,
-              endFrame: 9,
-            ),
-          ],
+          previews: [previewCue("cue").resizeEnd(startFrame: 9, endFrame: 9)],
         )
         ..updateInteraction(-240);
 
-      expect(controller.preview?.startFrame, 9);
-      expect(controller.preview?.endFrame, 9);
+      expect(_preview(controller)?.startFrame, 9);
+      expect(_preview(controller)?.endFrame, 9);
     });
 
     test("updates paired resize previews in one session", () {
-      final controller = TimelineController()
+      final controller = _controller()
         ..startInteractionSession(
-          activeId: "root_left",
-          seeds: const [
-            (
-              id: "root_left",
-              mode: TimelineInteractionMode.resizeEnd,
-              startFrame: 10,
-              endFrame: 30,
-            ),
-            (
-              id: "root_right",
-              mode: TimelineInteractionMode.resizeStart,
-              startFrame: 31,
-              endFrame: 50,
-            ),
+          previews: [
+            previewCue("root_left").resizeEnd(startFrame: 10, endFrame: 30),
+            previewCue("root_right").resizeStart(startFrame: 31, endFrame: 50),
           ],
         )
         ..updateInteraction(36);
 
       final session = controller.finishInteractionSession();
-      final byId = {for (final preview in session) preview.id: preview};
+      final byId = {for (final preview in session) preview.id.id: preview};
 
       expect(byId["root_left"]?.startFrame, 10);
       expect(byId["root_left"]?.endFrame, 33);
@@ -193,28 +155,17 @@ void main() {
     });
 
     test("clamps each mode independently in paired resize session", () {
-      final controller = TimelineController()
+      final controller = _controller()
         ..startInteractionSession(
-          activeId: "root_left",
-          seeds: const [
-            (
-              id: "root_left",
-              mode: TimelineInteractionMode.resizeEnd,
-              startFrame: 10,
-              endFrame: 10,
-            ),
-            (
-              id: "root_right",
-              mode: TimelineInteractionMode.resizeStart,
-              startFrame: 11,
-              endFrame: 11,
-            ),
+          previews: [
+            previewCue("root_left").resizeEnd(startFrame: 10, endFrame: 10),
+            previewCue("root_right").resizeStart(startFrame: 11, endFrame: 11),
           ],
         )
         ..updateInteraction(-240);
 
       final session = controller.finishInteractionSession();
-      final byId = {for (final preview in session) preview.id: preview};
+      final byId = {for (final preview in session) preview.id.id: preview};
 
       expect(byId["root_left"]?.startFrame, 10);
       expect(byId["root_left"]?.endFrame, 10);
@@ -222,37 +173,45 @@ void main() {
       expect(byId["root_right"]?.endFrame, 11);
     });
 
-    test("returns final preview from finishInteraction and clears state", () {
-      final controller = TimelineController()
-        ..startMove(id: "cue", startFrame: 3, endFrame: 9)
-        ..updateInteraction(26);
-      final finalPreview = controller.preview;
+    test(
+      "returns final previews from finishInteractionSession and clears state",
+      () {
+        final controller = _controller()
+          ..startInteractionSession(
+            previews: [previewCue("cue").move(startFrame: 3, endFrame: 9)],
+          )
+          ..updateInteraction(26);
+        final finalPreview = _preview(controller);
 
-      final finished = controller.finishInteraction();
+        final finished = controller.finishInteractionSession();
 
-      expect(finished, same(finalPreview));
-      expect(finished?.mode, TimelineInteractionMode.move);
-      expect(finished?.startFrame, 5);
-      expect(finished?.endFrame, 11);
-      expect(controller.preview, isNull);
-    });
+        expect(finished, hasLength(1));
+        expect(finished.first.id, finalPreview?.id);
+        expect(finished.first.mode, TimelineInteractionMode.move);
+        expect(finished.first.startFrame, 5);
+        expect(finished.first.endFrame, 11);
+        expect(_preview(controller), isNull);
+      },
+    );
 
     test("keeps pan and zoom viewport offsets nonnegative", () {
-      final controller = TimelineController()
-        ..panBy(dx: 180, dy: 40)
-        ..panBy(dx: -500, dy: -200)
+      final controller = _controller()
+        ..panBy(dx: 180, dy: 40, animate: false)
+        ..panBy(dx: -500, dy: -200, animate: false)
         ..zoomAt(
           localDx: 500,
           scaleDelta: 0.5,
           minPixelsPerFrame: 6,
           maxPixelsPerFrame: 48,
+          animate: false,
         )
-        ..panBy(dx: 10, dy: 25)
+        ..panBy(dx: 10, dy: 25, animate: false)
         ..zoomAt(
           localDx: 0,
           scaleDelta: 2,
           minPixelsPerFrame: 6,
           maxPixelsPerFrame: 48,
+          animate: false,
         );
 
       expect(controller.horizontalOffset, 20);
@@ -261,13 +220,27 @@ void main() {
       expect(controller.verticalOffset, greaterThanOrEqualTo(0));
     });
 
-    test("cancelInteraction clears preview without returning a value", () {
-      final controller = TimelineController()
-        ..startMove(id: "cue", startFrame: 4, endFrame: 9)
+    test("cancelInteraction clears previews without returning values", () {
+      final controller = _controller()
+        ..startInteractionSession(
+          previews: [previewCue("cue").move(startFrame: 4, endFrame: 9)],
+        )
         ..cancelInteraction();
 
-      expect(controller.preview, isNull);
-      expect(controller.finishInteraction(), isNull);
+      expect(_preview(controller), isNull);
+      expect(controller.finishInteractionSession(), isEmpty);
     });
   });
+}
+
+TimelineController _controller({double pixelsPerFrame = 12}) {
+  return TimelineController(
+    tickerProvider: const TestVSync(),
+    pixelsPerFrame: pixelsPerFrame,
+  );
+}
+
+TimelinePreview? _preview(TimelineController controller) {
+  if (controller.previews.isEmpty) return null;
+  return controller.previews.first;
 }
