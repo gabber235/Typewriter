@@ -117,7 +117,9 @@ void main() {
       expect(last.first.$3, 3 + 2);
     });
 
-    testWidgets("dragging TagNode shows feedback widget", (tester) async {
+    testWidgets("dragging TagNode inside graph hides feedback widget", (
+      tester,
+    ) async {
       final tag = Tag()
         ..tagId = "test-tag"
         ..name = "Test Tag"
@@ -152,13 +154,13 @@ void main() {
       await gesture.moveBy(const Offset(100, 100));
       await tester.pump();
 
-      expect(find.byType(FeedbackTagNode), findsOneWidget);
+      expect(find.byType(FeedbackTagNode), findsNothing);
 
       await gesture.up();
       await tester.pumpAndSettle();
     });
 
-    testWidgets("TagNode shows placeholder when dragging inside graph", (
+    testWidgets("TagNode hides placeholder when dragging inside graph", (
       tester,
     ) async {
       final tag = Tag()
@@ -198,6 +200,86 @@ void main() {
       await tester.pump();
 
       expect(draggingInsideGraph.value, isTrue);
+      expect(find.byType(PlaceholderTagNode), findsNothing);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets("dragging TagNode outside graph shows feedback widget", (
+      tester,
+    ) async {
+      final tag = Tag()
+        ..tagId = "test-tag"
+        ..name = "Test Tag"
+        ..placement = (Placement()
+          ..x = 0
+          ..y = 0
+          ..width = 2
+          ..height = 1);
+
+      await tester.pumpTestApp(
+        overrides: [
+          tags_lib.tagProvider("test-tag").overrideWith((ref) => tag),
+        ],
+        child: Center(
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: TagNode(tagId: "test-tag"),
+          ),
+        ),
+        settle: true,
+      );
+
+      final tagFinder = find.byType(TagNode);
+      final start = tester.getCenter(tagFinder);
+
+      final gesture = await tester.startGesture(start);
+      await tester.pump();
+      await gesture.moveBy(const Offset(100, 100));
+      await tester.pump();
+
+      expect(find.byType(FeedbackTagNode), findsOneWidget);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets("dragging TagNode outside graph shows placeholder widget", (
+      tester,
+    ) async {
+      final tag = Tag()
+        ..tagId = "test-tag"
+        ..name = "Test Tag"
+        ..placement = (Placement()
+          ..x = 0
+          ..y = 0
+          ..width = 2
+          ..height = 1);
+
+      await tester.pumpTestApp(
+        overrides: [
+          tags_lib.tagProvider("test-tag").overrideWith((ref) => tag),
+        ],
+        child: Center(
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: TagNode(tagId: "test-tag"),
+          ),
+        ),
+        settle: true,
+      );
+
+      final tagFinder = find.byType(TagNode);
+      final start = tester.getCenter(tagFinder);
+
+      final gesture = await tester.startGesture(start);
+      await tester.pump();
+      await gesture.moveBy(const Offset(50, 50));
+      await tester.pump();
+
       expect(find.byType(PlaceholderTagNode), findsOneWidget);
 
       await gesture.up();

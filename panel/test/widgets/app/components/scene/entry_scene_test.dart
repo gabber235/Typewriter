@@ -6,9 +6,9 @@ import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
-import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
+import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/widgets/app/components/scene/scene.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline.dart";
 
@@ -41,8 +41,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(notifier.moveCalls, [
-        const [("child", 8, 18)],
+      expect(notifier.updateCalls, [
+        const [("child", 6, 16)],
       ]);
       expect(notifier.resizeCalls, isEmpty);
     });
@@ -74,9 +74,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(notifier.resizeCalls, [
-        const [("child", 5, 18)],
+        const [("child", 5, 16)],
       ]);
-      expect(notifier.moveCalls, isEmpty);
+      expect(notifier.updateCalls, isEmpty);
     });
 
     testWidgets("commits nested start-handle resize using local bounds", (
@@ -106,9 +106,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(notifier.resizeCalls, [
-        const [("child", 8, 15)],
+        const [("child", 6, 15)],
       ]);
-      expect(notifier.moveCalls, isEmpty);
+      expect(notifier.updateCalls, isEmpty);
     });
 
     testWidgets("commits root move in root timeline frame", (tester) async {
@@ -134,8 +134,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(notifier.moveCalls, [
-        const [("root", 12, 32)],
+      expect(notifier.updateCalls, [
+        const [("root", 11, 31)],
       ]);
       expect(notifier.resizeCalls, isEmpty);
     });
@@ -171,7 +171,7 @@ void main() {
         expect(notifier.resizeCalls, [
           const [("root", 15, 30)],
         ]);
-        expect(notifier.moveCalls, isEmpty);
+        expect(notifier.updateCalls, isEmpty);
       },
     );
 
@@ -200,10 +200,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(notifier.moveCalls.length, 1);
-      expect(notifier.moveCalls.single, const [("child", 8, 18)]);
+      expect(notifier.updateCalls.length, 1);
+      expect(notifier.updateCalls.single, const [("child", 6, 16)]);
       expect(
-        notifier.moveCalls.single.any((change) => change.$1 == "sibling"),
+        notifier.updateCalls.single.any((change) => change.$1 == "sibling"),
         isFalse,
       );
       expect(notifier.resizeCalls, isEmpty);
@@ -243,8 +243,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(notifier.moveCalls, [
-        const [("root_a", 13, 33), ("root_b", 43, 53)],
+      expect(notifier.updateCalls, [
+        const [("root_a", 12, 32), ("root_b", 42, 52)],
       ]);
       expect(notifier.resizeCalls, isEmpty);
     });
@@ -282,8 +282,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(notifier.moveCalls, [
-        const [("root_a", 13, 33)],
+      expect(notifier.updateCalls, [
+        const [("root_a", 12, 32)],
       ]);
       expect(notifier.resizeCalls, isEmpty);
     });
@@ -322,11 +322,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(notifier.resizeCalls, isEmpty);
-      expect(notifier.moveCalls, hasLength(1));
-      final changed = notifier.moveCalls.single;
+      expect(notifier.updateCalls, hasLength(1));
+      final changed = notifier.updateCalls.single;
       expect(changed, hasLength(2));
-      expect(changed, contains(const ("root_left", 10, 33)));
-      expect(changed, contains(const ("root_right", 34, 50)));
+      expect(changed, contains(const ("root_left", 10, 32)));
+      expect(changed, contains(const ("root_right", 33, 50)));
     });
 
     testWidgets("normalizes selected set to roots before move commit", (
@@ -363,8 +363,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(notifier.moveCalls, [
-        const [("root", 13, 33)],
+      expect(notifier.updateCalls, [
+        const [("root", 11, 31), ("child", 6, 16)],
       ]);
       expect(notifier.resizeCalls, isEmpty);
     });
@@ -375,22 +375,41 @@ class _TestPageElements extends PageElements {
   _TestPageElements(this.initialElements);
 
   final List<PageElement> initialElements;
-  final List<List<(String, int, int)>> moveCalls = [];
+  final List<List<(String, int, int)>> updateCalls = [];
   final List<List<(String, int, int)>> resizeCalls = [];
 
   @override
   Future<List<PageElement>> build(String pageId) async => initialElements;
 
   @override
-  Future<void> moveCues(List<(String, int, int)> changed) async {
-    moveCalls.add(changed);
-    optimisticMoveCues(changed);
+  Future<void> updateCues(List<(String, int, int)> changed) async {
+    final hasResize = _hasResizeChanges(state.requireValue, changed);
+    if (hasResize) {
+      resizeCalls.add(changed);
+    } else {
+      updateCalls.add(changed);
+    }
+    optimisticCuesUpdate(changed);
   }
 
-  @override
-  Future<void> resizeCues(List<(String, int, int)> changed) async {
-    resizeCalls.add(changed);
-    optimisticResizeCues(changed);
+  bool _hasResizeChanges(
+    List<PageElement> elements,
+    List<(String, int, int)> changed,
+  ) {
+    if (changed.length != 1) return false;
+    final change = changed.first;
+    final currentElement = elements.where((element) => element.id == change.$1);
+    if (currentElement.isEmpty) return false;
+    final current = currentElement.first;
+
+    if (current case PageElementCue(cue: final cue)) {
+      if (cue is! Segment) return false;
+      final startDelta = change.$2 - cue.startFrame;
+      final endDelta = change.$3 - cue.endFrame;
+      return startDelta != endDelta;
+    }
+
+    return false;
   }
 }
 
