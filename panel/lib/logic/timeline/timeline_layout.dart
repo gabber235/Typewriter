@@ -1,7 +1,7 @@
 import "package:collection/collection.dart";
 import "package:json_annotation/json_annotation.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
+import "package:typewriter_panel/logic/timeline/timeline_controller.dart";
+import "package:typewriter_panel/logic/timeline/timeline_data.dart";
 
 part "timeline_layout.g.dart";
 
@@ -46,7 +46,7 @@ class TimelineLayoutEngine {
   }) {
     final preview = previewsById[element.id];
     final currentPreviewState = preview != null
-        ? TimelinePreviewState.related
+        ? TimelinePreviewState.active
         : previewState;
 
     if (element is TimelineKeyframe) {
@@ -164,9 +164,14 @@ class TimelineLayoutEngine {
     final previewPlacements = placements.where((placement) {
       final preview = previewsById[placement.block.element.id];
       return preview != null;
-    }).toSet();
+    }).toList();
 
     if (previewPlacements.isEmpty) return placements;
+
+    final previewAnchorLanes = _computePreviewAnchorLanes(
+      placements,
+      previewsById,
+    );
 
     final newPlacements = <TimelineTrackBlockPlacement>[];
     final laneOccupancy = _LaneOccupancy();
@@ -174,8 +179,10 @@ class TimelineLayoutEngine {
     for (final placement in previewPlacements) {
       final preview = previewsById[placement.block.element.id];
       if (preview == null) continue;
+      final anchorLane =
+          previewAnchorLanes[placement.block.element.id] ?? placement.lane;
       final actualLane = laneOccupancy.tryReserveLane(
-        laneIndex: placement.lane,
+        laneIndex: anchorLane,
         startFrame: preview.startFrame,
         endFrame: preview.endFrame,
         height: placement.height,
@@ -216,6 +223,30 @@ class TimelineLayoutEngine {
     assert(newPlacements.length == placements.length);
 
     return newPlacements;
+  }
+
+  Map<TimelineIdentifier, int> _computePreviewAnchorLanes(
+    List<TimelineTrackBlockPlacement> placements,
+    Map<TimelineIdentifier, TimelinePreview> previewsById,
+  ) {
+    final laneOccupancy = _LaneOccupancy();
+    final lanesByPreviewId = <TimelineIdentifier, int>{};
+
+    for (final placement in placements) {
+      final preview = previewsById[placement.block.element.id];
+      final startFrame =
+          preview?.originalStartFrame ?? placement.element.startFrame;
+      final endFrame = preview?.originalEndFrame ?? placement.element.endFrame;
+      final lane = laneOccupancy.claimFirstAvailableBlock(
+        startFrame: startFrame,
+        endFrame: endFrame,
+        height: placement.height,
+      );
+      if (preview == null) continue;
+      lanesByPreviewId[placement.block.element.id] = lane;
+    }
+
+    return lanesByPreviewId;
   }
 }
 
@@ -319,11 +350,18 @@ class _LaneOccupancy {
       return laneIndex;
     }
 
-    return firstAvailableBlock(
+    final fallbackLane = firstAvailableBlock(
       startFrame: startFrame,
       endFrame: endFrame,
       height: height,
     );
+    reserveBlock(
+      laneIndex: fallbackLane,
+      startFrame: startFrame,
+      endFrame: endFrame,
+      height: height,
+    );
+    return fallbackLane;
   }
 
   bool _canUseLane({

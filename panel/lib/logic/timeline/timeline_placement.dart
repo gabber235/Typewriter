@@ -2,10 +2,10 @@ import "dart:math" as math;
 
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_layout.dart";
+import "package:typewriter_panel/logic/timeline/timeline_data.dart";
+import "package:typewriter_panel/logic/timeline/timeline_layout.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_viewport.dart";
+import "package:typewriter_panel/logic/timeline/timeline_viewport.dart";
 
 class TimelinePlacementEngine {
   const TimelinePlacementEngine();

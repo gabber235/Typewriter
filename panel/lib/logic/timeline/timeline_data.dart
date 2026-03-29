@@ -1,9 +1,9 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:json_annotation/json_annotation.dart";
+import "package:typewriter_panel/logic/timeline/timeline_controller.dart";
 import "package:typewriter_panel/utils/color_converter.dart";
 import "package:typewriter_panel/utils/rect_converter.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_controller.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
 
 part "timeline_data.g.dart";
@@ -30,6 +30,73 @@ class TimelineData {
 
   final Map<TimelineIdentifier, TimelineElement> elementsById = {};
   final Map<TimelineIdentifier, TimelineIdentifier> trackByElementId = {};
+
+  MoveTimelinePreview? movePreview(TimelineIdentifier id) {
+    final element = elementsById[id];
+    if (element == null) return null;
+
+    final parentId = element.parentId;
+    final parentElement = parentId == null ? null : elementsById[parentId];
+
+    final endConstraint = parentElement != null
+        ? FrameConstraint.exact(parentElement.frameDuration)
+        : const FrameConstraint.infinite();
+
+    return MoveTimelinePreview(
+      id: id,
+      startFrame: element.startFrame,
+      endFrame: element.endFrame,
+      frameRange: FrameRange(FrameConstraint.infinite(), endConstraint),
+    );
+  }
+
+  ResizeStartTimelinePreview? resizeStartPreview(TimelineIdentifier id) {
+    final element = elementsById[id];
+    if (element == null) return null;
+    if (element is! TimelineSegment) return null;
+    final lastChildEndFrame = element.children.map((e) => e.endFrame).maxOrNull;
+
+    final endConstraint = lastChildEndFrame != null
+        ? FrameConstraint.exact(
+            element.startFrame + element.frameDuration - lastChildEndFrame,
+          )
+        : FrameConstraint.exact(element.endFrame);
+    return ResizeStartTimelinePreview(
+      id: element.id,
+      startFrame: element.startFrame,
+      endFrame: element.endFrame,
+      startFrameRange: FrameRange(
+        const FrameConstraint.infinite(),
+        endConstraint,
+      ),
+    );
+  }
+
+  ResizeEndTimelinePreview? resizeEndPreview(TimelineIdentifier id) {
+    final element = elementsById[id];
+    if (element == null) return null;
+    if (element is! TimelineSegment) return null;
+
+    final parentId = element.parentId;
+    final parentElement = parentId == null ? null : elementsById[parentId];
+
+    final lastChildEndFrame = element.children.map((e) => e.endFrame).maxOrNull;
+
+    final startConstraint = lastChildEndFrame != null
+        ? FrameConstraint.exact(element.startFrame + lastChildEndFrame)
+        : FrameConstraint.exact(element.startFrame);
+
+    final endConstraint = parentElement != null
+        ? FrameConstraint.exact(parentElement.frameDuration)
+        : const FrameConstraint.infinite();
+
+    return ResizeEndTimelinePreview(
+      id: element.id,
+      startFrame: element.startFrame,
+      endFrame: element.endFrame,
+      endFrameRange: FrameRange(startConstraint, endConstraint),
+    );
+  }
 }
 
 class TimelineIdentifier {
