@@ -14,7 +14,7 @@ import "package:typewriter_panel/widgets/app/components/entry.dart";
 import "package:typewriter_panel/widgets/app/components/inner_element_node.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_data.dart";
+import "package:typewriter_panel/logic/timeline/timeline_data.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
