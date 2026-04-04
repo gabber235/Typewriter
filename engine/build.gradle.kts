@@ -1,9 +1,9 @@
 plugins {
     id("java")
-    kotlin("jvm") version "2.2.10"
+    kotlin("jvm") version "2.3.20"
     id("java-library")
     `maven-publish`
-    id("io.github.goooler.shadow") version "8.1.8" apply false
+    id("com.gradleup.shadow") version "9.4.1" apply false
 }
 
 group = "com.typewritermc"
@@ -30,7 +30,7 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "io.github.goooler.shadow")
+    apply(plugin = "com.gradleup.shadow")
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
 
@@ -38,19 +38,19 @@ subprojects {
     version = rootProject.version
 
     dependencies {
-        api("io.insert-koin:koin-core:4.1.1")
+        api("io.insert-koin:koin-core:4.2.0")
         compileOnly("com.google.code.gson:gson:2.13.2")
 
         compileOnlyApi(kotlin("stdlib"))
         compileOnlyApi(kotlin("reflect"))
         compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
-        val kotestVersion = "6.0.4"
+        val kotestVersion = "6.1.10"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
         testImplementation("io.kotest:kotest-framework-engine:$kotestVersion")
         testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
         testImplementation("io.kotest:kotest-property:$kotestVersion")
-        testImplementation("io.mockk:mockk:1.13.16")
+        testImplementation("io.mockk:mockk:1.14.9")
     }
 
     tasks.register("releaseSourcesJar", Jar::class) {

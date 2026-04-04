@@ -22,8 +22,8 @@ public class TypewriterPaperLoader implements PluginLoader {
                 "default",
                 getDefaultMavenCentralMirror()).build();
 
-        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-stdlib:2.2.10", central);
-        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-reflect:2.2.10", central);
+        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-stdlib:2.3.20", central);
+        addDependency(classpathBuilder, "org.jetbrains.kotlin:kotlin-reflect:2.3.20", central);
         addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2",
                 central);
         addDependency(classpathBuilder, "com.corundumstudio.socketio:netty-socketio:1.7.19",
@@ -34,11 +34,11 @@ public class TypewriterPaperLoader implements PluginLoader {
         addDependency(classpathBuilder,
                 "com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0", central);
 
-        addDependency(classpathBuilder, "io.ktor:ktor-server-core-jvm:2.3.12", central);
-        addDependency(classpathBuilder, "io.ktor:ktor-server-netty-jvm:2.3.12", central);
-        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1",
+        addDependency(classpathBuilder, "io.ktor:ktor-server-core-jvm:2.3.13", central);
+        addDependency(classpathBuilder, "io.ktor:ktor-server-netty-jvm:2.3.13", central);
+        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0",
                 central);
-        addDependency(classpathBuilder, "org.bstats:bstats-bukkit:3.1.0", central);
+        addDependency(classpathBuilder, "org.bstats:bstats-bukkit:3.2.1", central);
     }
 
     public void addDependency(PluginClasspathBuilder classpathBuilder, String artifact,

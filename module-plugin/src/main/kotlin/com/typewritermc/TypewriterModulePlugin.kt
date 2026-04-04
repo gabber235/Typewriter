@@ -97,7 +97,7 @@ class TypewriterModulePlugin : Plugin<Project> {
                 )
                 it.arg("pluginVersion", pluginVersion)
                 it.arg("version", version.toString())
-                it.arg("buildDir", buildDir.absolutePath)
+                it.arg("buildDir", layout.buildDirectory.get().asFile.absolutePath)
             }
         }
     }

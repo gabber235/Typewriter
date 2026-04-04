@@ -139,6 +139,12 @@ jars/
 .gitub
 .vscode
 
+# Eclipse and Buildship
+.classpath
+.project
+.settings/
+bin/
+
 /documentation/plugins/code-snippets/
 /.history/
 /documentation/.history/

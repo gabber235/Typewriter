@@ -1,11 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.papermc.hangarpublishplugin.model.Platforms
 import xyz.jpenilla.resourcefactory.paper.PaperPluginYaml
-import java.io.ByteArrayOutputStream
 
 plugins {
-    id("xyz.jpenilla.resource-factory-paper-convention") version "1.2.0"
-    id("io.papermc.hangar-publish-plugin") version "0.1.3"
+    id("xyz.jpenilla.resource-factory-paper-convention") version "1.3.1"
+    id("io.papermc.hangar-publish-plugin") version "0.1.4"
 }
 
 repositories {
@@ -44,24 +43,24 @@ dependencies {
     // Doesn't want to load properly using the spigot api.
     compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.13")
     compileOnlyApi("io.ktor:ktor-server-netty-jvm:2.3.13")
-    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
-    compileOnlyApi("org.bstats:bstats-bukkit:3.1.0")
+    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+    compileOnlyApi("org.bstats:bstats-bukkit:3.2.1")
 
-    val adventureVersion = "4.25.0"
+    val adventureVersion = "4.26.1"
     compileOnlyApi("net.kyori:adventure-api:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-minimessage:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-plain:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.11.0")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.11.0")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.11.2")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.11.2")
 
     compileOnly("me.clip:placeholderapi:2.11.7")
-    compileOnlyApi("org.geysermc.geyser:api:2.8.3-SNAPSHOT")
-    compileOnlyApi("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
+    compileOnlyApi("org.geysermc.geyser:api:2.9.5-SNAPSHOT")
+    compileOnlyApi("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
 
-    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.46.3")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0")
 }
 
 tasks.withType<ShadowJar> {
@@ -73,19 +72,20 @@ tasks.withType<ShadowJar> {
     }
 }
 
-tasks.register<ShadowJar>("buildAndMove") {
-    from(tasks.shadowJar)
+tasks.register<Copy>("buildAndMove") {
+    dependsOn(tasks.shadowJar)
+    from(tasks.shadowJar.flatMap { it.archiveFile })
     group = "build"
     description = "Builds the jar and moves it to the server folder"
     outputs.upToDateWhen { false }
 
-    destinationDirectory = file("../../server/plugins")
-    archiveFileName = "Typewriter.${archiveExtension.get()}"
-    manifest.from(tasks.shadowJar.get().manifest)
+    into(file("../../server/plugins"))
+    rename { "Typewriter.jar" }
 }
 
-tasks.register<ShadowJar>("buildRelease") {
-    from(tasks.shadowJar)
+tasks.register<Jar>("buildRelease") {
+    dependsOn(tasks.shadowJar)
+    from(zipTree(tasks.shadowJar.flatMap { it.archiveFile }))
     from("../../app/build/web") {
         into("web")
     }
@@ -94,18 +94,15 @@ tasks.register<ShadowJar>("buildRelease") {
 
     outputs.upToDateWhen { false }
 
-    archiveFileName = "Typewriter-${project.version}.${archiveExtension.get()}"
-    destinationDirectory = file("../../jars/engine")
+    archiveFileName = "Typewriter-${project.version}.jar"
+    destinationDirectory.set(file("../../jars/engine"))
     manifest.from(tasks.shadowJar.get().manifest)
 }
 
 fun executeGitCommand(vararg command: String): String {
-    val byteOut = ByteArrayOutputStream()
-    exec {
-        commandLine = listOf("git", *command)
-        standardOutput = byteOut
-    }
-    return byteOut.toString(Charsets.UTF_8.name()).trim()
+    return providers.exec {
+        commandLine("git", *command)
+    }.standardOutput.asText.get().trim()
 }
 
 fun latestCommitMessage(): String {

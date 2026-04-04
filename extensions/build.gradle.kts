@@ -1,8 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    kotlin("jvm") version "2.2.10"
-    id("io.github.goooler.shadow") version "8.1.8" apply false
+    kotlin("jvm") version "2.3.20"
+    id("com.gradleup.shadow") version "9.4.1" apply false
     id("com.typewritermc.module-plugin") apply false
     `maven-publish`
 }
@@ -33,7 +33,7 @@ subprojects {
     group = "com.typewritermc"
     version = file("../../version.txt").readText().trim().substringBefore("-beta")
 
-    apply(plugin = "io.github.goooler.shadow")
+    apply(plugin = "com.gradleup.shadow")
     apply(plugin = "com.typewritermc.module-plugin")
     apply<MavenPublishPlugin>()
 
@@ -45,23 +45,25 @@ subprojects {
     }
 
     if (!project.name.startsWith("_")) {
-        tasks.register<ShadowJar>("buildAndMove") {
-            from(tasks.named("shadowJar"))
+        tasks.register<Copy>("buildAndMove") {
+            dependsOn(tasks.named("shadowJar"))
+            from(tasks.named<ShadowJar>("shadowJar").flatMap { it.archiveFile })
             group = "build"
             description = "Builds the jar and moves it to the server folder"
             outputs.upToDateWhen { false }
 
-            archiveFileName = "${project.name}.${archiveExtension.get()}"
-            destinationDirectory = file("../../server/plugins/Typewriter/extensions")
+            into(file("../../server/plugins/Typewriter/extensions"))
+            rename { "${project.name}.jar" }
         }
 
-        tasks.register<ShadowJar>("buildRelease") {
-            from(tasks.named("shadowJar"))
+        tasks.register<Copy>("buildRelease") {
+            dependsOn(tasks.named("shadowJar"))
+            from(tasks.named<ShadowJar>("shadowJar").flatMap { it.archiveFile })
             group = "build"
             description = "Builds the jar and renames it"
 
-            archiveFileName = "${project.name}.${archiveExtension.get()}"
-            destinationDirectory = file("../../jars/extensions")
+            into(file("../../jars/extensions"))
+            rename { "${project.name}.jar" }
         }
 
         tasks.register("releaseSourcesJar", Jar::class) {
