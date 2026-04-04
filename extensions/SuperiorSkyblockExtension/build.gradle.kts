@@ -5,7 +5,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2025.1")
+    compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2025.2.1")
 }
 
 typewriter {

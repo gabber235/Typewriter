@@ -6,7 +6,7 @@ repositories {
 
 dependencies {
     // External dependencies
-    compileOnly("net.citizensnpcs:citizens-main:2.0.38-SNAPSHOT") {
+    compileOnly("net.citizensnpcs:citizens-main:2.0.41-SNAPSHOT") {
         exclude(group = "*", module = "*")
     }
 }
