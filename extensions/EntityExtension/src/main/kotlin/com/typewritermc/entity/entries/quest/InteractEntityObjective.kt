@@ -13,8 +13,11 @@ import com.typewritermc.engine.paper.entry.entity.AudienceEntityDisplay
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.findDisplay
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.entries.StreamProducer
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -52,5 +55,15 @@ class InteractEntityObjective(
         if (player == null) return emptyList()
         return displays.filter { it.canView(player.uniqueId) }
             .mapNotNull { it.position(player.uniqueId) }
+    }
+
+    override fun streamProducers(player: Player, pathStreamDisplay: Ref<PathStreamDisplayEntry>): List<StreamProducer> {
+        return displays.filter { it.canView(player.uniqueId) }
+            .map { display ->
+                StreamProducer(
+                    "${id}_${display.instanceEntryRef.id}",
+                    pathStreamDisplay,
+                    endPosition = { display.position(player.uniqueId) ?: it.position })
+            }
     }
 }

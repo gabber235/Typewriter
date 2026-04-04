@@ -1,15 +1,22 @@
 package com.typewritermc.quest.entries.interfaces
 
+import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.distanceSqrt
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.utils.position
 import com.typewritermc.quest.entries.ObjectiveEntry
+import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.entries.StreamProducer
 import org.bukkit.entity.Player
 import kotlin.math.roundToInt
 
+@Tags("locatable_objective")
 interface LocatableObjective : ObjectiveEntry {
     fun positions(player: Player?): List<Position>
+
+    fun streamProducers(player: Player, pathStreamDisplay: Ref<PathStreamDisplayEntry>): List<StreamProducer>
 
     override fun parser(): PlaceholderParser = placeholderParser {
         include(super.parser())

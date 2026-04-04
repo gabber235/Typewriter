@@ -13,6 +13,8 @@ import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.entries.interfaces.LocatableObjective
+import com.typewritermc.roadnetwork.entries.PathStreamDisplayEntry
+import com.typewritermc.roadnetwork.entries.StreamProducer
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -60,5 +62,15 @@ class LocationObjectiveEntry(
     override fun positions(player: Player?): List<Position> {
         val position = targetLocation.get(player) ?: return emptyList()
         return listOf(position)
+    }
+
+    override fun streamProducers(player: Player, pathStreamDisplay: Ref<PathStreamDisplayEntry>): List<StreamProducer> {
+        return listOf(
+            StreamProducer(
+                id,
+                pathStreamDisplay,
+                endPosition = targetLocation::get
+            )
+        )
     }
 }

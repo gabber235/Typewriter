@@ -26,6 +26,7 @@ import com.typewritermc.roadnetwork.entries.highestPathStreamDisplayEntry
     Colors.GREEN,
     "material-symbols:conversion-path"
 )
+@Deprecated("Move to the new LocatableObjectivesPathStream")
 /**
  * The `Interact Entity Objectives Path Stream` entry is a path stream that shows the path to each interact entity objective.
  * When the player has an interact entity objective, and the quest for the objective is tracked, a path stream will be displayed.
