@@ -50,10 +50,11 @@ private fun matchesTarget(count: Int, raw: String): Boolean {
                 to != null && count <= to
             }
             trimmed.contains("-") -> {
-                val rangeParts = trimmed.split("-")
+                val rangeParts = trimmed.split("-", limit = 2)
                 val from = rangeParts[0].trim().toIntOrNull()
                 val to = rangeParts[1].trim().toIntOrNull()
                 from != null && to != null && count in from..to
+            }
             }
             else -> trimmed.toIntOrNull() == count
         }
