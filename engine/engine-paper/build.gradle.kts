@@ -60,6 +60,7 @@ dependencies {
     compileOnlyApi("org.geysermc.geyser:api:2.9.5-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
 
+    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0")
 }
 
