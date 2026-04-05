@@ -6,6 +6,8 @@ import { remarkAside } from "./src/components/aside/remark-aside";
 
 import tailwindcss from "@tailwindcss/vite";
 import starlightDocSearch from "@astrojs/starlight-docsearch";
+import starlightLlmsTxt from 'starlight-llms-txt'
+import starlightDotMd from "starlight-dot-md";
 
 // https://astro.build/config
 export default defineConfig({
@@ -48,7 +50,11 @@ export default defineConfig({
         PageSidebar: "./src/components/pagesidebar/PageSidebar.astro",
       },
       markdown: {
-      }
+      },
+      plugins: [
+        starlightLlmsTxt(),
+        starlightDotMd()
+      ]
     }),
   ],
 
