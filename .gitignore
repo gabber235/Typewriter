@@ -148,3 +148,5 @@ bin/
 /documentation/plugins/code-snippets/
 /.history/
 /documentation/.history/
+
+.env
