@@ -87,13 +87,14 @@ sealed interface TargetSpec {
             token.startsWith("..") -> {
                 token.drop(2).trim().toIntOrNull()?.let { UpperBoundTarget(it) }
             }
+            token.toIntOrNull() != null -> ExactTarget(token.toIntOrNull()!!)
             token.contains("-") -> {
                 val parts = token.split("-", limit = 2)
                 val from = parts[0].trim().toIntOrNull()
                 val to = parts.getOrNull(1)?.trim()?.toIntOrNull()
                 if (from != null && to != null && from <= to) RangeTarget(from, to) else null
             }
-            else -> token.toIntOrNull()?.let { ExactTarget(it) }
+            else -> null
         }
     }
 }
@@ -191,8 +192,8 @@ class CountableObjective(
         if (player == null) return inactiveObjectiveDisplay
 
         val currentCount = count.get(player)
-        val targetSpec = TargetSpec.parse(target.get(player) ?: "")
-        val displayStr = display.get(player) ?: ""
+        val targetSpec = TargetSpec.parse(target.get(player))
+        val displayStr = display.get(player)
         val complete = targetSpec.contains(currentCount.absoluteValue)
 
         val text = when {
