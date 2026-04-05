@@ -1,0 +1,50 @@
+---
+title: Asides
+description: A preview of all aside types added.
+editUrl: true
+head: []
+template: doc
+sidebar:
+  hidden: false
+  attrs: {}
+pagefind: true
+draft: false
+---
+
+import Aside from '@components/aside/Aside.astro';
+
+Have fun looking at these:
+
+## Aside Examples
+
+<Aside type="info">This is an info aside for general information.</Aside>
+
+<Aside type="warning">This is a warning aside for cautionary content.</Aside>
+
+<Aside type="danger">Do not give your password to anyone.</Aside>
+
+<Aside type="success">Operation completed successfully!</Aside>
+
+<Aside type="tip">Here's a helpful tip to improve your workflow.</Aside>
+
+<Aside type="note">A neutral note with supplementary information.</Aside>
+
+<Aside type="example">
+
+```js
+// A code example
+const greeting = "Hello, world!";
+console.log(greeting);
+```
+
+</Aside>
+
+<Aside type="experimental">This feature is experimental and may change.</Aside>
+
+<Aside type="deprecated">This API is deprecated. Use the new API instead.</Aside>
+
+<Aside type="bug">There's a known issue with this on Safari. Workaround: use Firefox.</Aside>
+
+<Aside type="performance">Use memoization to avoid expensive recalculations.</Aside>
+
+<Aside type="info" title="Custom Title">You can also provide a custom title.</Aside>
