@@ -1,0 +1,18 @@
+---
+import type { TabItemProps } from "./types";
+import { tabStyles as s } from "./styles";
+
+interface Props extends TabItemProps {}
+
+const { label } = Astro.props;
+---
+
+<section
+  class:list={[s.panel, s.panelHidden]}
+  data-tab-panel
+  data-tab-label={label}
+  role="tabpanel"
+  tabindex="0"
+  hidden>
+  <slot />
+</section>

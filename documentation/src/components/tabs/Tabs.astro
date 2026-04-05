@@ -1,0 +1,31 @@
+---
+import type { TabsProps } from "./types";
+import { tabStyles as s } from "./styles";
+
+interface Props extends TabsProps {}
+
+const { defaultTab = 0, syncKey } = Astro.props;
+
+const id = crypto.randomUUID();
+---
+
+<div
+  class={s.container}
+  data-tabs
+  data-tabs-id={id}
+  data-default-tab={defaultTab}
+  data-sync-key={syncKey ?? undefined}>
+  <div class:list={["relative", s.bar]} role="tablist">
+    <div class={s.pill} data-tab-pill aria-hidden="true"></div>
+  </div>
+
+  <div class={s.panels} data-tab-panels>
+    <slot />
+  </div>
+</div>
+
+<script>
+  import { initTabs } from "./tabs";
+
+  document.querySelectorAll<HTMLElement>("[data-tabs]").forEach(initTabs);
+</script>
