@@ -21,17 +21,46 @@ import com.typewritermc.quest.entries.inactiveObjectiveDisplay
 import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
 import java.util.*
-import kotlin.math.absoluteValue
 
 private val countableObjectiveDisplay by snippet(
     "quest.objectives.countable.completed",
     "<green>✔</green> <gray><display></gray>"
 )
 
+// Display snippets — translatable by end users
+private val displayExact by snippet(
+    "quest.objectives.countable.target.exact",
+    "<value>"
+)
+private val displayRange by snippet(
+    "quest.objectives.countable.target.range",
+    "between <min> and <max>"
+)
+private val displayLowerBound by snippet(
+    "quest.objectives.countable.target.lower_bound",
+    "<min> or more"
+)
+private val displayUpperBound by snippet(
+    "quest.objectives.countable.target.upper_bound",
+    "<max> or less"
+)
+private val displayUniversal by snippet(
+    "quest.objectives.countable.target.universal",
+    "any value"
+)
+private val displayEmpty by snippet(
+    "quest.objectives.countable.target.empty",
+    "nothing"
+)
+private val displayCompositeSeparator by snippet(
+    "quest.objectives.countable.target.separator",
+    ", or "
+)
+
 /**
  * Represents a single target specification token.
  * Implementations: [ExactTarget], [RangeTarget], [LowerBoundTarget], [UpperBoundTarget],
- * [UniversalTarget], [EmptyTarget].
+ * [UniversalTarget], [EmptyTarget], [CompositeTarget].
  */
 sealed interface TargetSpec {
     /** Returns true if [value] satisfies this spec. */
@@ -45,17 +74,25 @@ sealed interface TargetSpec {
 
     companion object {
         /**
-         * Parses a comma-separated target string into a simplified [CompositeTarget].
-         * Invalid tokens are silently dropped. An empty or blank string returns [EmptyTarget].
-         * A combination that covers all integers returns [UniversalTarget].
+         * Parses a comma-separated target string into a simplified [TargetSpec].
+         * Invalid tokens are silently dropped. A blank string returns [EmptyTarget].
+         * A combination covering all integers returns [UniversalTarget].
          */
         fun parse(raw: String): TargetSpec {
             if (raw.isBlank()) return EmptyTarget
 
+            val parsers: List<(String) -> TargetSpec?> = listOf(
+                UniversalTarget::tryParse,
+                ExactTarget::tryParse,
+                LowerBoundTarget::tryParse,
+                UpperBoundTarget::tryParse,
+                RangeTarget::tryParse,
+            )
+
             val tokens = raw.split(",")
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
-                .mapNotNull { parseToken(it) }
+                .mapNotNull { token -> parsers.firstNotNullOfOrNull { it(token) } }
 
             if (tokens.isEmpty()) return EmptyTarget
 
@@ -65,12 +102,10 @@ sealed interface TargetSpec {
             }
 
             // Check if the simplified set covers all integers
-            val hasLower = simplified.any { it is UpperBoundTarget } // ..N covers -inf to N
-            val hasUpper = simplified.any { it is LowerBoundTarget } // N.. covers N to +inf
-            if (hasLower && hasUpper) {
-                val lower = simplified.filterIsInstance<UpperBoundTarget>().maxOf { it.max }
-                val upper = simplified.filterIsInstance<LowerBoundTarget>().minOf { it.min }
-                if (upper <= lower + 1) return UniversalTarget
+            val maxUpperBound = simplified.filterIsInstance<UpperBoundTarget>().maxOfOrNull { it.max }
+            val minLowerBound = simplified.filterIsInstance<LowerBoundTarget>().minOfOrNull { it.min }
+            if (maxUpperBound != null && minLowerBound != null && minLowerBound <= maxUpperBound + 1) {
+                return UniversalTarget
             }
 
             return when {
@@ -78,35 +113,22 @@ sealed interface TargetSpec {
                 else -> CompositeTarget(simplified)
             }
         }
-
-        private fun parseToken(token: String): TargetSpec? = when {
-            token == "*" -> UniversalTarget
-            token.endsWith("..") -> {
-                token.dropLast(2).trim().toIntOrNull()?.let { LowerBoundTarget(it) }
-            }
-            token.startsWith("..") -> {
-                token.drop(2).trim().toIntOrNull()?.let { UpperBoundTarget(it) }
-            }
-            token.toIntOrNull() != null -> ExactTarget(token.toIntOrNull()!!)
-            token.contains("-") -> {
-                val parts = token.split("-", limit = 2)
-                val from = parts[0].trim().toIntOrNull()
-                val to = parts.getOrNull(1)?.trim()?.toIntOrNull()
-                if (from != null && to != null && from <= to) RangeTarget(from, to) else null
-            }
-            else -> null
-        }
     }
 }
 
-/** matches exactly one value. */
+/** Matches exactly one value. */
 data class ExactTarget(val value: Int) : TargetSpec {
     override fun contains(value: Int) = value == this.value
     override fun subsumes(other: TargetSpec) = other is ExactTarget && other.value == value
-    override fun display() = value.toString()
+    override fun display() = displayExact.replaceTagPlaceholders("value", value.toString())
+
+    companion object {
+        fun tryParse(token: String): ExactTarget? =
+            token.toIntOrNull()?.let { ExactTarget(it) }
+    }
 }
 
-/** matches an inclusive integer range [min]..[max]. */
+/** Matches an inclusive integer range [min]..[max]. */
 data class RangeTarget(val min: Int, val max: Int) : TargetSpec {
     override fun contains(value: Int) = value in min..max
     override fun subsumes(other: TargetSpec) = when (other) {
@@ -114,10 +136,22 @@ data class RangeTarget(val min: Int, val max: Int) : TargetSpec {
         is RangeTarget -> other.min >= min && other.max <= max
         else -> false
     }
-    override fun display() = "$min-$max"
+    override fun display() = displayRange
+        .replaceTagPlaceholders("min", min.toString())
+        .replaceTagPlaceholders("max", max.toString())
+
+    companion object {
+        fun tryParse(token: String): RangeTarget? {
+            if (!token.contains("-")) return null
+            val parts = token.split("-", limit = 2)
+            val from = parts[0].trim().toIntOrNull()
+            val to = parts.getOrNull(1)?.trim()?.toIntOrNull()
+            return if (from != null && to != null && from <= to) RangeTarget(from, to) else null
+        }
+    }
 }
 
-/** matches any value >= [min] (open-ended upper, e.g. "32.."). */
+/** Matches any value >= [min] (e.g. "32.."). */
 data class LowerBoundTarget(val min: Int) : TargetSpec {
     override fun contains(value: Int) = value >= min
     override fun subsumes(other: TargetSpec) = when (other) {
@@ -126,10 +160,17 @@ data class LowerBoundTarget(val min: Int) : TargetSpec {
         is LowerBoundTarget -> other.min >= min
         else -> false
     }
-    override fun display() = "$min.."
+    override fun display() = displayLowerBound.replaceTagPlaceholders("min", min.toString())
+
+    companion object {
+        fun tryParse(token: String): LowerBoundTarget? {
+            if (!token.endsWith("..")) return null
+            return token.dropLast(2).trim().toIntOrNull()?.let { LowerBoundTarget(it) }
+        }
+    }
 }
 
-/** matches any value <= [max] (open-ended lower, e.g. "..10"). */
+/** Matches any value <= [max] (e.g. "..10"). */
 data class UpperBoundTarget(val max: Int) : TargetSpec {
     override fun contains(value: Int) = value <= max
     override fun subsumes(other: TargetSpec) = when (other) {
@@ -138,28 +179,38 @@ data class UpperBoundTarget(val max: Int) : TargetSpec {
         is UpperBoundTarget -> other.max <= max
         else -> false
     }
-    override fun display() = "..$max"
+    override fun display() = displayUpperBound.replaceTagPlaceholders("max", max.toString())
+
+    companion object {
+        fun tryParse(token: String): UpperBoundTarget? {
+            if (!token.startsWith("..")) return null
+            return token.drop(2).trim().toIntOrNull()?.let { UpperBoundTarget(it) }
+        }
+    }
 }
 
-/** matches all integers. Produced when the spec set covers the entire number line. */
+/** Matches all integers. Produced when the spec set covers the entire number line. */
 object UniversalTarget : TargetSpec {
     override fun contains(value: Int) = true
     override fun subsumes(other: TargetSpec) = true
-    override fun display() = "*"
+    override fun display() = displayUniversal
+
+    fun tryParse(token: String): UniversalTarget? =
+        if (token == "*") UniversalTarget else null
 }
 
-/** matches nothing. Produced from a blank or entirely invalid spec string */
+/** Matches nothing. Produced from a blank or entirely invalid spec string. */
 object EmptyTarget : TargetSpec {
     override fun contains(value: Int) = false
     override fun subsumes(other: TargetSpec) = other is EmptyTarget
-    override fun display() = ""
+    override fun display() = displayEmpty
 }
 
-/** simplified union of multiple [TargetSpec] tokens */
+/** A simplified union of multiple [TargetSpec] tokens. */
 data class CompositeTarget(val specs: List<TargetSpec>) : TargetSpec {
     override fun contains(value: Int) = specs.any { it.contains(value) }
     override fun subsumes(other: TargetSpec) = specs.any { it.subsumes(other) }
-    override fun display() = specs.joinToString(",") { it.display() }
+    override fun display() = specs.joinToString(displayCompositeSeparator) { it.display() }
 }
 
 @Entry(
@@ -194,7 +245,7 @@ class CountableObjective(
         val currentCount = count.get(player)
         val targetSpec = TargetSpec.parse(target.get(player))
         val displayStr = display.get(player)
-        val complete = targetSpec.contains(currentCount.absoluteValue)
+        val complete = targetSpec.contains(currentCount)
 
         val text = when {
             complete -> countableObjectiveDisplay
