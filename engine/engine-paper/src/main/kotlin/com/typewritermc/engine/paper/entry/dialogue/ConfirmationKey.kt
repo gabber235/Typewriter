@@ -1,6 +1,8 @@
 package com.typewritermc.engine.paper.entry.dialogue
 
 import com.destroystokyo.paper.event.player.PlayerJumpEvent
+import com.typewritermc.engine.paper.interaction.InterceptionBundle
+import com.typewritermc.engine.paper.interaction.interceptPackets
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.reloadable
@@ -18,6 +20,13 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
 import org.bukkit.inventory.EquipmentSlot
+import com.github.retrooper.packetevents.event.PacketReceiveEvent
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
+import com.typewritermc.core.utils.launch
+import com.typewritermc.engine.paper.utils.Sync
+import kotlinx.coroutines.Dispatchers
+
 
 
 private val confirmationKeyString by config(
@@ -50,8 +59,8 @@ enum class ConfirmationKey(val keybind: String) {
             SWAP_HANDS -> SwapHandsHandler(player, block)
             JUMP -> JumpHandler(player, block)
             SNEAK -> SneakHandler(player, block)
-            LEFT_CLICK -> ClickHandler(player, block, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK)
-            RIGHT_CLICK -> ClickHandler(player, block, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK)
+            LEFT_CLICK -> ClickHandler(player, block)
+            RIGHT_CLICK -> ClickHandler(player, block, false)
         }.apply { initialize() }
     }
 
@@ -117,14 +126,64 @@ class SneakHandler(override val player: Player, override val block: () -> Unit) 
     }
 }
 
-class ClickHandler(override val player: Player, override val block: () -> Unit, vararg val actions: Action) : ConfirmationKeyHandler {
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+class ClickHandler(override val player: Player, override val block: () -> Unit, private val isLeft: Boolean = true) : ConfirmationKeyHandler {
+    private var interceptor: InterceptionBundle? = null
+    private var lastTrigger = 0L
+
+    override fun initialize() {
+
+        super.initialize()
+        interceptor = player.interceptPackets {
+            fun trigger(event: PacketReceiveEvent) {
+                val now = System.currentTimeMillis()
+                if (now - lastTrigger < 50) return
+                lastTrigger = now
+
+                event.isCancelled = true
+                Dispatchers.Sync.launch {
+                    block()
+                }
+            }
+
+            if (isLeft) {
+                PacketType.Play.Client.ANIMATION { event ->
+                    trigger(event)
+                }
+                PacketType.Play.Client.INTERACT_ENTITY { event ->
+                    val wrapper = WrapperPlayClientInteractEntity(event)
+                    if (wrapper.action == WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
+                        trigger(event)
+                    }
+                }
+            } else {
+                PacketType.Play.Client.USE_ITEM { event ->
+                    trigger(event)
+                }
+                PacketType.Play.Client.INTERACT_ENTITY { event ->
+                    val wrapper = WrapperPlayClientInteractEntity(event)
+                    if (wrapper.action != WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
+                        trigger(event)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun dispose() {
+        PlayerInteractEvent.getHandlerList().unregister(this as Listener)
+        interceptor?.cancel()
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     fun onInteract(event: PlayerInteractEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         if (event.hand != EquipmentSlot.HAND) return
-        if (event.action !in actions) return
-        event.isCancelled = true
-        block()
+
+        // Right Click Block is handled here to ensure we catch block interactions correctly
+        // Left Click is fully handled by packets (Animation)
+        if (!isLeft && event.action == Action.RIGHT_CLICK_BLOCK) {
+            event.isCancelled = true
+            block()
+        }
     }
 }
-
