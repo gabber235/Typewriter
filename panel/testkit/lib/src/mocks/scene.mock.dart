@@ -1,6 +1,6 @@
 import "dart:math" as math;
 
-import "package:faker/faker.dart";
+import "package:flutter/material.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
@@ -9,34 +9,339 @@ import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/utils/color.dart";
 
+SceneElementsDsl sceneElements() => SceneElementsDsl();
+
 List<PageElement> generateRandomScenePageElements(int count) {
-  return _SceneMockBuilder().generate(count);
+  return _SceneMockBuilder().generateWithDsl(count);
+}
+
+class SceneElementsDsl {
+  final List<_SceneEntryDsl> _entries = [];
+
+  SceneElementsDsl entry({
+    required String id,
+    String? name,
+    Color? color,
+    String? icon,
+    EntryPlacement? placement,
+    DynamicData? data,
+    List<SceneCueDsl> children = const [],
+  }) {
+    _entries.add(
+      _SceneEntryDsl(
+        id: id,
+        name: name,
+        color: color,
+        icon: icon,
+        placement: placement,
+        data: data,
+        children: children,
+      ),
+    );
+    return this;
+  }
+
+  List<PageElement> build() {
+    if (_entries.isEmpty) return const [];
+
+    final elements = <PageElement>[];
+    final usedIds = <String>{};
+
+    for (var entryIndex = 0; entryIndex < _entries.length; entryIndex++) {
+      final entryDsl = _entries[entryIndex];
+      assert(usedIds.add(entryDsl.id), "Duplicate scene id ${entryDsl.id}");
+
+      final entryName = entryDsl.name ?? "Scene Entry ${entryIndex + 1}";
+      final entryBlueprint = _buildBlueprint(
+        id: "${entryDsl.id}_blueprint",
+        name: entryName,
+        icon: entryDsl.icon ?? "solar:video-frame-bold",
+        color: entryDsl.color,
+      );
+
+      final outwardEdges = <ElementLink>[];
+      final cueElements = <PageElement>[];
+
+      for (
+        var childIndex = 0;
+        childIndex < entryDsl.children.length;
+        childIndex++
+      ) {
+        final child = entryDsl.children[childIndex];
+        final linkId = _linkId(entryDsl.id, child.id, childIndex);
+        outwardEdges.add(
+          ElementLink(linkId: linkId, otherId: child.id, path: "children"),
+        );
+        cueElements.addAll(
+          _buildCueElements(
+            cueDsl: child,
+            parentId: entryDsl.id,
+            parentLinkId: linkId,
+            usedIds: usedIds,
+          ),
+        );
+      }
+
+      final entryData = _mergeData({
+        "entryType": outwardEdges.length.isEven ? "entity" : "title",
+        "label": entryName,
+      }, entryDsl.data);
+
+      final entry = EntryDefinition(
+        id: entryDsl.id,
+        name: entryName,
+        blueprint: entryBlueprint,
+        placement:
+            entryDsl.placement ??
+            EntryPlacement(
+              x: 40 + ((entryIndex % 4) * 220),
+              y: 32 + ((entryIndex ~/ 4) * 120),
+              width: 180,
+              height: 72,
+            ),
+        data: entryData,
+        inwardEdges: const [],
+        outwardEdges: outwardEdges,
+      );
+
+      elements
+        ..add(PageElement.entry(entry: PageEntry.definition(definition: entry)))
+        ..addAll(cueElements);
+    }
+
+    return elements;
+  }
+}
+
+abstract class SceneCueDsl {
+  const SceneCueDsl._();
+
+  factory SceneCueDsl.segment(
+    String id, {
+    required int start,
+    required int end,
+    String? name,
+    Color? color,
+    String? icon,
+    DynamicData? data,
+    List<SceneCueDsl> children,
+  }) = SceneSegmentDsl;
+
+  factory SceneCueDsl.keyframe(
+    String id, {
+    required int frame,
+    String? name,
+    Color? color,
+    String? icon,
+    DynamicData? data,
+  }) = SceneKeyframeDsl;
+
+  String get id;
+}
+
+class SceneSegmentDsl extends SceneCueDsl {
+  SceneSegmentDsl(
+    this.id, {
+    required this.start,
+    required this.end,
+    this.name,
+    this.color,
+    this.icon,
+    this.data,
+    this.children = const [],
+  }) : super._() {
+    assert(start <= end, "Segment $id has start > end");
+  }
+
+  @override
+  final String id;
+  final int start;
+  final int end;
+  final String? name;
+  final Color? color;
+  final String? icon;
+  final DynamicData? data;
+  final List<SceneCueDsl> children;
+}
+
+class SceneKeyframeDsl extends SceneCueDsl {
+  SceneKeyframeDsl(
+    this.id, {
+    required this.frame,
+    this.name,
+    this.color,
+    this.icon,
+    this.data,
+  }) : super._();
+
+  @override
+  final String id;
+  final int frame;
+  final String? name;
+  final Color? color;
+  final String? icon;
+  final DynamicData? data;
+}
+
+class _SceneEntryDsl {
+  const _SceneEntryDsl({
+    required this.id,
+    required this.name,
+    required this.color,
+    required this.icon,
+    required this.placement,
+    required this.data,
+    required this.children,
+  });
+
+  final String id;
+  final String? name;
+  final Color? color;
+  final String? icon;
+  final EntryPlacement? placement;
+  final DynamicData? data;
+  final List<SceneCueDsl> children;
+}
+
+List<PageElement> _buildCueElements({
+  required SceneCueDsl cueDsl,
+  required String parentId,
+  required String parentLinkId,
+  required Set<String> usedIds,
+}) {
+  assert(usedIds.add(cueDsl.id), "Duplicate scene id ${cueDsl.id}");
+
+  if (cueDsl case SceneKeyframeDsl keyframeDsl) {
+    final keyframeName = keyframeDsl.name ?? cueDsl.id;
+    final keyframe = Cue.keyframe(
+      id: keyframeDsl.id,
+      blueprint: _buildBlueprint(
+        id: "${keyframeDsl.id}_blueprint",
+        name: keyframeName,
+        icon: keyframeDsl.icon ?? "fa7-solid:star",
+        color: keyframeDsl.color,
+      ),
+      frame: keyframeDsl.frame,
+      data: _mergeData({
+        "channel": "scene",
+        "event": "trigger",
+        "label": keyframeName,
+      }, keyframeDsl.data),
+      inwardLinks: [
+        ElementLink(linkId: parentLinkId, otherId: parentId, path: "parent"),
+      ],
+    );
+
+    return [PageElement.cue(cue: keyframe)];
+  }
+
+  final segmentDsl = cueDsl as SceneSegmentDsl;
+  final segmentName = segmentDsl.name ?? cueDsl.id;
+  final outwardLinks = <ElementLink>[];
+  final children = <PageElement>[];
+
+  for (
+    var childIndex = 0;
+    childIndex < segmentDsl.children.length;
+    childIndex++
+  ) {
+    final child = segmentDsl.children[childIndex];
+    final linkId = _linkId(segmentDsl.id, child.id, childIndex);
+    outwardLinks.add(
+      ElementLink(linkId: linkId, otherId: child.id, path: "children"),
+    );
+    children.addAll(
+      _buildCueElements(
+        cueDsl: child,
+        parentId: segmentDsl.id,
+        parentLinkId: linkId,
+        usedIds: usedIds,
+      ),
+    );
+  }
+
+  final segment = Cue.segment(
+    id: segmentDsl.id,
+    blueprint: _buildBlueprint(
+      id: "${segmentDsl.id}_blueprint",
+      name: segmentName,
+      icon: segmentDsl.icon ?? "fa-solid:video",
+      color: segmentDsl.color,
+    ),
+    startFrame: segmentDsl.start,
+    endFrame: segmentDsl.end,
+    data: _mergeData({
+      "channel": "scene",
+      "label": segmentName,
+      "mode": "cinematic",
+    }, segmentDsl.data),
+    inwardLinks: [
+      ElementLink(linkId: parentLinkId, otherId: parentId, path: "parent"),
+    ],
+    outwardLinks: outwardLinks,
+  );
+
+  return [PageElement.cue(cue: segment), ...children];
+}
+
+ElementBlueprint _buildBlueprint({
+  required String id,
+  required String name,
+  required String icon,
+  required Color? color,
+}) {
+  final generated = _generateSceneBlueprint(id: id, name: name, icon: icon);
+  if (color == null) {
+    return generated;
+  }
+  return generated.copyWith(color: color);
+}
+
+DynamicData _mergeData(Map<String, dynamic> defaults, DynamicData? overrides) {
+  if (overrides == null) {
+    return DynamicData(defaults);
+  }
+  return DynamicData({...defaults, ...overrides.data});
+}
+
+String _linkId(String parentId, String childId, int index) {
+  return "${parentId}_${childId}_$index";
 }
 
 class _SceneMockBuilder {
   final math.Random _random = math.Random();
 
-  List<PageElement> generate(int count) {
+  List<PageElement> generateWithDsl(int count) {
     if (count <= 0) return const [];
 
-    final elements = <PageElement>[];
-    for (var entryIndex = 0; elements.length < count; entryIndex++) {
-      final remaining = count - elements.length;
+    final dsl = sceneElements();
+    var consumed = 0;
+
+    for (var entryIndex = 0; consumed < count; entryIndex++) {
+      final remaining = count - consumed;
       final blockBudget = remaining <= 10
           ? remaining
           : _nextInt(10, math.min(16, remaining));
-      elements.addAll(_generateEntryBlock(entryIndex, blockBudget));
+      final entry = _generateEntry(entryIndex, blockBudget);
+      dsl.entry(
+        id: entry.id,
+        name: entry.name,
+        icon: entry.icon,
+        placement: entry.placement,
+        data: entry.data,
+        children: entry.children,
+      );
+      consumed += blockBudget;
     }
 
-    return elements;
+    return dsl.build();
   }
 
-  List<PageElement> _generateEntryBlock(int entryIndex, int budget) {
-    if (budget <= 0) return const [];
+  _GeneratedEntry _generateEntry(int entryIndex, int budget) {
+    assert(budget > 0);
 
     final entryId = "scene_entry_$entryIndex";
-    final rootElements = <PageElement>[];
-    final rootLinks = <ElementLink>[];
+    final rootChildren = <SceneCueDsl>[];
     final remainingCueBudget = budget - 1;
 
     if (remainingCueBudget > 0) {
@@ -51,33 +356,23 @@ class _SceneMockBuilder {
       );
 
       for (var rootIndex = 0; rootIndex < rootBudgets.length; rootIndex++) {
-        final linkId = faker.guid.guid();
         final range = _generateRootSegmentRange();
         final tree = _generateSegmentTree(
           entryIndex: entryIndex,
           nodePath: "$rootIndex",
           depth: 0,
           budget: rootBudgets[rootIndex],
-          parentId: entryId,
-          linkId: linkId,
           startFrame: range.$1,
           endFrame: range.$2,
         );
-        rootElements.addAll(tree.elements);
-        rootLinks.add(
-          ElementLink(linkId: linkId, otherId: tree.cueId, path: "children"),
-        );
+        rootChildren.add(tree);
       }
     }
 
-    final entry = EntryDefinition(
+    return _GeneratedEntry(
       id: entryId,
       name: "Scene Entry ${entryIndex + 1}",
-      blueprint: _generateSceneBlueprint(
-        id: "scene_entry_${entryIndex}_blueprint",
-        name: "Scene Entry Blueprint ${entryIndex + 1}",
-        icon: "solar:video-frame-bold",
-      ),
+      icon: "solar:video-frame-bold",
       placement: EntryPlacement(
         x: 40 + ((entryIndex % 4) * 220),
         y: 32 + ((entryIndex ~/ 4) * 120),
@@ -85,26 +380,18 @@ class _SceneMockBuilder {
         height: 72,
       ),
       data: DynamicData({
-        "entryType": rootLinks.length.isEven ? "entity" : "title",
+        "entryType": rootChildren.length.isEven ? "entity" : "title",
         "label": "Scene Entry ${entryIndex + 1}",
       }),
-      inwardEdges: const [],
-      outwardEdges: rootLinks,
+      children: rootChildren,
     );
-
-    return [
-      PageElement.entry(entry: PageEntry.definition(definition: entry)),
-      ...rootElements,
-    ];
   }
 
-  _CueTree _generateSegmentTree({
+  SceneCueDsl _generateSegmentTree({
     required int entryIndex,
     required String nodePath,
     required int depth,
     required int budget,
-    required String parentId,
-    required String linkId,
     required int startFrame,
     required int endFrame,
   }) {
@@ -113,8 +400,7 @@ class _SceneMockBuilder {
     final cueId = "scene_entry_${entryIndex}_segment_$nodePath";
     final kind = _pickSegmentKind(depth);
     final remainingBudget = budget - 1;
-    final childElements = <PageElement>[];
-    final outwardLinks = <ElementLink>[];
+    final children = <SceneCueDsl>[];
 
     if (remainingBudget > 0) {
       final childSegmentCount = _pickChildSegmentCount(depth, remainingBudget);
@@ -136,24 +422,15 @@ class _SceneMockBuilder {
           childIndex < childBudgets.length;
           childIndex++
         ) {
-          final childLinkId = faker.guid.guid();
           final range = _generateRelativeSegmentRange(endFrame - startFrame);
-          final childTree = _generateSegmentTree(
-            entryIndex: entryIndex,
-            nodePath: "${nodePath}_$childIndex",
-            depth: depth + 1,
-            budget: childBudgets[childIndex],
-            parentId: cueId,
-            linkId: childLinkId,
-            startFrame: range.$1,
-            endFrame: range.$2,
-          );
-          childElements.addAll(childTree.elements);
-          outwardLinks.add(
-            ElementLink(
-              linkId: childLinkId,
-              otherId: childTree.cueId,
-              path: "children",
+          children.add(
+            _generateSegmentTree(
+              entryIndex: entryIndex,
+              nodePath: "${nodePath}_$childIndex",
+              depth: depth + 1,
+              budget: childBudgets[childIndex],
+              startFrame: range.$1,
+              endFrame: range.$2,
             ),
           );
         }
@@ -166,65 +443,35 @@ class _SceneMockBuilder {
       ) {
         final keyframeId =
             "scene_entry_${entryIndex}_keyframe_${nodePath}_$keyframeIndex";
-        final keyframeLinkId = faker.guid.guid();
-        childElements.add(
-          PageElement.cue(
-            cue: Cue.keyframe(
-              id: keyframeId,
-              blueprint: _generateSceneBlueprint(
-                id: "scene_entry_${entryIndex}_keyframe_blueprint_${nodePath}_$keyframeIndex",
-                name: "${kind.name} Keyframe",
-                icon: _pickKeyframeIcon(),
-              ),
-              frame: _generateRelativeKeyframe(endFrame - startFrame),
-              data: DynamicData({
-                "channel": kind.channel,
-                "event": _pickKeyframeEvent(depth),
-                "label": "${kind.name} Keyframe ${keyframeIndex + 1}",
-              }),
-              inwardLinks: [
-                ElementLink(
-                  linkId: keyframeLinkId,
-                  otherId: cueId,
-                  path: "parent",
-                ),
-              ],
-            ),
-          ),
-        );
-        outwardLinks.add(
-          ElementLink(
-            linkId: keyframeLinkId,
-            otherId: keyframeId,
-            path: "children",
+        children.add(
+          SceneCueDsl.keyframe(
+            keyframeId,
+            name: "${kind.name} Keyframe",
+            icon: _pickKeyframeIcon(),
+            frame: _generateRelativeKeyframe(endFrame - startFrame),
+            data: DynamicData({
+              "channel": kind.channel,
+              "event": _pickKeyframeEvent(depth),
+              "label": "${kind.name} Keyframe ${keyframeIndex + 1}",
+            }),
           ),
         );
       }
     }
 
-    final segment = PageElement.cue(
-      cue: Cue.segment(
-        id: cueId,
-        blueprint: _generateSceneBlueprint(
-          id: "scene_entry_${entryIndex}_segment_blueprint_$nodePath",
-          name: kind.name,
-          icon: kind.icon,
-        ),
-        startFrame: startFrame,
-        endFrame: endFrame,
-        data: DynamicData({
-          "channel": kind.channel,
-          "label": "${kind.name} ${entryIndex + 1}.$nodePath",
-          "mode": _pickSegmentMode(depth),
-        }),
-        inwardLinks: [
-          ElementLink(linkId: linkId, otherId: parentId, path: "parent"),
-        ],
-        outwardLinks: outwardLinks,
-      ),
+    return SceneCueDsl.segment(
+      cueId,
+      name: kind.name,
+      icon: kind.icon,
+      start: startFrame,
+      end: endFrame,
+      data: DynamicData({
+        "channel": kind.channel,
+        "label": "${kind.name} ${entryIndex + 1}.$nodePath",
+        "mode": _pickSegmentMode(depth),
+      }),
+      children: children,
     );
-
-    return _CueTree(cueId: cueId, elements: [segment, ...childElements]);
   }
 
   (int, int) _generateRootSegmentRange() {
@@ -333,11 +580,22 @@ class _SceneMockBuilder {
   }
 }
 
-class _CueTree {
-  const _CueTree({required this.cueId, required this.elements});
+class _GeneratedEntry {
+  const _GeneratedEntry({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.placement,
+    required this.data,
+    required this.children,
+  });
 
-  final String cueId;
-  final List<PageElement> elements;
+  final String id;
+  final String name;
+  final String icon;
+  final EntryPlacement placement;
+  final DynamicData data;
+  final List<SceneCueDsl> children;
 }
 
 class _SceneCueKind {

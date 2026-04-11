@@ -7,5 +7,6 @@ export "mock_utils.dart";
 export "nats.mock.dart";
 export "organization.mock.dart";
 export "pages.mock.dart";
+export "scene.mock.dart";
 export "services.mock.dart";
 export "tag.mock.dart";
