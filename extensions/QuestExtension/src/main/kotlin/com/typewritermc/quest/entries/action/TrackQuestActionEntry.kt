@@ -23,8 +23,8 @@ import com.typewritermc.quest.trackQuest
  *
  * ## How could this be used?
  *
- * Start tacking a quest, so it displays in the player's quest tracker.
- * If no quest is specified, the action will find the highest priority active quest and track that.
+ * Start tracking a quest, so it displays in the player's quest tracker.
+ * If no quest is specified, the action will find the active quest whose showing objectives have the highest priority and track that.
  */
 class TrackQuestActionEntry(
     override val id: String = "",
