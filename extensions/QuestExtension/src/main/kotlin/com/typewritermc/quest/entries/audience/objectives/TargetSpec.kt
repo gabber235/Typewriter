@@ -80,12 +80,13 @@ data class RangeTarget(val min: Int, val max: Int) : TargetSpec {
     }
 
     companion object {
+        private val RANGE_REGEX = Regex("""^(-?\d+)-(-?\d+)$""")
+
         fun tryParse(token: String): RangeTarget? {
-            if (!token.contains("-")) return null
-            val parts = token.split("-", limit = 2)
-            val from = parts[0].trim().toIntOrNull()
-            val to = parts.getOrNull(1)?.trim()?.toIntOrNull()
-            return if (from != null && to != null && from <= to) RangeTarget(from, to) else null
+            val match = RANGE_REGEX.matchEntire(token) ?: return null
+            val from = match.groupValues[1].toIntOrNull() ?: return null
+            val to = match.groupValues[2].toIntOrNull() ?: return null
+            return if (from <= to) RangeTarget(from, to) else null
         }
     }
 }

@@ -121,8 +121,19 @@ class TargetSpecTest : FunSpec({
         }
 
         test("malformed range with extra dash is invalid") {
-            // "1-2-3" splits to from=1, to=null (limit=2 gives "2-3" which is non-int)
             TargetSpec.parse("1-2-3") shouldBe EmptyTarget
+        }
+
+        test("negative range") {
+            TargetSpec.parse("-10--3") shouldBe RangeTarget(-10, -3)
+        }
+
+        test("negative to positive range") {
+            TargetSpec.parse("-5-3") shouldBe RangeTarget(-5, 3)
+        }
+
+        test("inverted negative range is invalid") {
+            TargetSpec.parse("-2--5") shouldBe EmptyTarget
         }
 
         test("whitespace around tokens is trimmed") {

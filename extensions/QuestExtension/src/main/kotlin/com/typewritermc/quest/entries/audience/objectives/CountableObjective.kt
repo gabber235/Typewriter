@@ -85,9 +85,9 @@ class CountableObjective(
     val count: Var<Int> = ConstVar(0),
     @Help(
         "The target value(s) to reach for completion. Supports exact values (5), inclusive ranges (28-61), " +
-        "open-ended upper (32..), open-ended lower (..10), and comma-separated combinations (28-61,63,70..). " +
-        "Redundant ranges are simplified automatically. Leave blank to never complete. " +
-        "Note: negative range bounds (e.g. -5--2) are not supported; use exact negative values instead."
+        "open-ended upper (32..), open-ended lower (..10), negative values (-5), negative ranges (-10--3), " +
+        "and comma-separated combinations (28-61,63,70..). " +
+        "Redundant ranges are simplified automatically. Leave blank to never complete."
     )
     val target: Var<String> = ConstVar("0"),
     @Help("The display supports the <count> and <target> tags from the fact.")
