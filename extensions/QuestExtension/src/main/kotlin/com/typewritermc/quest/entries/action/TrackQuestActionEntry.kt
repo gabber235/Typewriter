@@ -3,13 +3,16 @@ package com.typewritermc.quest.entries.action
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.entries.priority
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
+import com.typewritermc.quest.activeQuests
 import com.typewritermc.quest.entries.QuestEntry
+import com.typewritermc.quest.entries.questShowingObjectives
 import com.typewritermc.quest.trackQuest
 
 @Entry("track_quest", "Start tracking a quest for a player", Colors.RED, "material-symbols:bookmark")
@@ -21,6 +24,7 @@ import com.typewritermc.quest.trackQuest
  * ## How could this be used?
  *
  * Start tacking a quest, so it displays in the player's quest tracker.
+ * If no quest is specified, the action will find the highest priority active quest and track that.
  */
 class TrackQuestActionEntry(
     override val id: String = "",
@@ -31,6 +35,14 @@ class TrackQuestActionEntry(
     val quest: Ref<QuestEntry> = emptyRef(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        player trackQuest quest
+        if (quest.isSet) {
+            player trackQuest quest
+            return
+        }
+        val highestPriorityQuest = player.activeQuests()
+            .maxByOrNull { questRef ->
+                player.questShowingObjectives(questRef).maxOfOrNull { it.priority } ?: 0
+            } ?: return
+        player trackQuest highestPriorityQuest
     }
 }
