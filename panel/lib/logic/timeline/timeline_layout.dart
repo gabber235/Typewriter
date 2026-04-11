@@ -85,7 +85,7 @@ class TimelineLayoutEngine {
       trackId: trackId,
       element: element,
       previewState: currentPreviewState,
-      height: height,
+      height: height + 1,
       children: reservedPlacements,
     );
   }
@@ -131,7 +131,7 @@ class TimelineLayoutEngine {
             .maxOrNull ??
         0;
 
-    return (reservedPlacements, height + 1);
+    return (reservedPlacements, height);
   }
 
   List<TimelineTrackBlockPlacement> _placeBlocks(

@@ -155,6 +155,8 @@ sealed class TimelineElement {
   int get startFrame;
   int get endFrame;
 
+  bool get hasChildren;
+
   int get frameDuration => endFrame - startFrame;
 
   bool overlaps(TimelineElement other) {
@@ -193,6 +195,9 @@ class TimelineSegment extends TimelineElement {
   @JsonKey(includeToJson: false)
   final TimelineElementBuilder builder;
   final List<TimelineElement> children;
+
+  @override
+  bool get hasChildren => children.isNotEmpty;
 
   @override
   TimelineElement applyPreview(TimelinePreview? preview) {
@@ -235,6 +240,9 @@ class TimelineKeyframe extends TimelineElement {
   @override
   @JsonKey(includeToJson: false)
   int get endFrame => frame;
+
+  @override
+  bool get hasChildren => false;
 
   @override
   TimelineElement applyPreview(TimelinePreview? preview) {

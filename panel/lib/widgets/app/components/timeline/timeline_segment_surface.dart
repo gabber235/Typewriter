@@ -59,7 +59,9 @@ class TimelineSegmentSurface extends HookConsumerWidget {
               },
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: style.edgeHandleWidth / 2,
+                  horizontal: data.element.hasChildren
+                      ? style.edgeHandleWidth / 2
+                      : 0,
                 ),
                 child: DecoratedBox(
                   decoration: BoxDecoration(

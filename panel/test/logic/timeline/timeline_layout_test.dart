@@ -26,6 +26,24 @@ void main() {
       expect(placement.element("sibling_keyframe").laneIndex, 3);
     });
 
+    test("has lane height 1 when no segments and keyframes overlap", () {
+      final data = timeline()
+          .track(
+            elements: [
+              .keyframe("keyframe", 0),
+              .segment("segment_1", 5, 10),
+              .segment("segment_2", 15, 20),
+              .keyframe("keyframe_2", 25),
+              .segment("segment_3", 35, 40),
+            ],
+          )
+          .build();
+
+      final layout = data.layout();
+      expect(layout.tracks.length, 1);
+      expect(layout.tracks.first.laneCount, 1);
+    });
+
     testWidgets(
       "keeps subtree lanes stable during preview and marks descendants as related",
       (tester) async {
