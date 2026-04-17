@@ -82,6 +82,7 @@ class CompletableLocationObjectiveEntry(
     }
 
     override fun streamProducers(player: Player, pathStreamDisplay: Ref<PathStreamDisplayEntry>): List<StreamProducer> {
+        if (completedCriteria.matches(player)) return emptyList()
         return listOf(
             StreamProducer(
                 id,
