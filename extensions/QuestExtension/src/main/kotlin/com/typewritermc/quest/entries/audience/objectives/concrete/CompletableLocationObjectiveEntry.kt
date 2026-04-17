@@ -77,6 +77,7 @@ class CompletableLocationObjectiveEntry(
     }
 
     override fun positions(player: Player?): List<Position> {
+        if (player != null && completedCriteria.matches(player)) return emptyList()
         val position = targetLocation.get(player) ?: return emptyList()
         return listOf(position)
     }
