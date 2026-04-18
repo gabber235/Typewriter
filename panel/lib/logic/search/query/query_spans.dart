@@ -13,9 +13,3 @@ class QueryRange {
   bool containsOffset(int offset) => offset >= start && offset <= end;
 }
 
-class QueryRecoveryRange {
-  final QueryRange range;
-  final String fragment;
-
-  const QueryRecoveryRange({required this.range, required this.fragment});
-}

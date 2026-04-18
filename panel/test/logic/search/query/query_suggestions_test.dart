@@ -93,6 +93,10 @@ void main() {
       suggestions.every((suggestion) => suggestion.replaceRange.start == 3),
       isTrue,
     );
+    expect(
+      suggestions.every((suggestion) => suggestion.replaceRange.end == 5),
+      isTrue,
+    );
   });
 
   test("max items limit is enforced", () {

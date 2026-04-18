@@ -34,4 +34,15 @@ void main() {
 
     expect(selectors.every((selector) => !selector.caseSensitive), isTrue);
   });
+
+  test("default catalog can parse mixed selector query", () {
+    final selectors = buildDefaultQuerySelectorsForTest();
+    final engine = QueryEngine(selectors);
+
+    final result = engine.parse("#quest title:\"Book\" role:admin hello");
+
+    expect(result.selectorMatches, hasLength(3));
+    expect(result.textTerms, hasLength(1));
+    expect(result.textTerms.single.text, "hello");
+  });
 }

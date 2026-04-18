@@ -76,5 +76,18 @@ void main() {
     expect(issue.code, QueryIssueCode.unclosedQuote);
     expect(issue.severity, QuerySeverity.warning);
     expect(issue.range, isNotNull);
+    expect(issue.recoveryFragment, "\"My title hello");
+  });
+
+  test("keeps selector and text term ordering in mixed query", () {
+    final engine = QueryEngine(selectors);
+
+    final result = engine.parse("#tag OR title:Book hello");
+
+    expect(result.selectorMatches, hasLength(2));
+    expect(result.textTerms, hasLength(1));
+    expect(result.selectorMatches.first.fullRange.start, 0);
+    expect(result.selectorMatches.last.fullRange.start, 8);
+    expect(result.textTerms.single.range.start, 19);
   });
 }

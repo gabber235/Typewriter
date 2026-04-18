@@ -17,6 +17,12 @@ void main() {
       result.issues.any((issue) => issue.severity == QuerySeverity.warning),
       isTrue,
     );
+    expect(
+      result.issues.any(
+        (issue) => issue.code == QueryIssueCode.unclosedParenthesis,
+      ),
+      isTrue,
+    );
     expect(result.issues.any((issue) => issue.range != null), isTrue);
   });
 
@@ -31,6 +37,12 @@ void main() {
       result.issues.any((issue) => issue.severity == QuerySeverity.warning),
       isTrue,
     );
+    expect(
+      result.issues.any(
+        (issue) => issue.code == QueryIssueCode.unexpectedToken,
+      ),
+      isTrue,
+    );
     expect(result.issues.any((issue) => issue.range != null), isTrue);
   });
 
@@ -43,6 +55,12 @@ void main() {
     expect(result.issues, isNotEmpty);
     expect(
       result.issues.any((issue) => issue.severity == QuerySeverity.warning),
+      isTrue,
+    );
+    expect(
+      result.issues.any(
+        (issue) => issue.code == QueryIssueCode.unexpectedToken,
+      ),
       isTrue,
     );
   });

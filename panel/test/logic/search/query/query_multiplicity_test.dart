@@ -14,6 +14,10 @@ void main() {
     final result = engine.parse("id:1 id:2");
 
     expect(result.selectorMatches, hasLength(2));
+    expect(result.selectorMatches.first.fullRange.start, 0);
+    expect(result.selectorMatches.first.fullRange.end, 4);
+    expect(result.selectorMatches.last.fullRange.start, 5);
+    expect(result.selectorMatches.last.fullRange.end, 9);
     expect(
       result.issues.any(
         (issue) =>

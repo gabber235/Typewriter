@@ -16,6 +16,8 @@ void main() {
     final context = result.cursorContext! as SelectorValueCursorContext;
     expect(context.selectorId, "role");
     expect(context.partialValue, "ad");
+    expect(context.activeRange.start, 5);
+    expect(context.activeRange.end, 7);
   });
 
   test("cursor inside key resolves selector key context", () {
@@ -54,5 +56,17 @@ void main() {
     final result = engine.parse("#a  #b", cursorOffset: 3);
 
     expect(result.cursorContext, isA<UnknownCursorContext>());
+  });
+
+  test("cursor at end of selector value keeps selector value context", () {
+    final engine = QueryEngine(selectors);
+
+    final result = engine.parse("role:ad", cursorOffset: 7);
+
+    expect(result.cursorContext, isA<SelectorValueCursorContext>());
+    final context = result.cursorContext! as SelectorValueCursorContext;
+    expect(context.partialValue, "ad");
+    expect(context.activeRange.start, 5);
+    expect(context.activeRange.end, 7);
   });
 }

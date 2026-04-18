@@ -39,4 +39,14 @@ void main() {
 
     expect(result.expression, isA<QueryOrNode>());
   });
+
+  test("mixed symbolic and word operators remain supported", () {
+    final engine = QueryEngine([
+      const SymbolSelectorDefinition(id: "tag", symbol: "#"),
+    ]);
+
+    final result = engine.parse("!#a Or #b && #c");
+
+    expect(result.expression, isA<QueryOrNode>());
+  });
 }

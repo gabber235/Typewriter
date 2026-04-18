@@ -38,6 +38,9 @@ void main() {
     expect(result.expression, isA<QueryAndNode>());
     final andNode = result.expression! as QueryAndNode;
     expect(andNode.left, isA<QueryOrNode>());
+    final grouped = andNode.left as QueryOrNode;
+    expect(grouped.range.start, 0);
+    expect(grouped.range.end, 10);
   });
 
   test("word operators are case insensitive", () {
