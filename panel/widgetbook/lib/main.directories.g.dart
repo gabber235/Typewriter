@@ -81,6 +81,8 @@ import 'package:widgetbook_workspace/stories/generic/components/outline_decorato
     as _widgetbook_workspace_stories_generic_components_outline_decorator_stories;
 import 'package:widgetbook_workspace/stories/generic/components/page_heading.stories.dart'
     as _widgetbook_workspace_stories_generic_components_page_heading_stories;
+import 'package:widgetbook_workspace/stories/generic/components/query_bar.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_query_bar_stories;
 import 'package:widgetbook_workspace/stories/generic/components/retry_indicator.stories.dart'
     as _widgetbook_workspace_stories_generic_components_retry_indicator_stories;
 import 'package:widgetbook_workspace/stories/generic/components/secret_field.stories.dart'
@@ -1004,6 +1006,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_generic_components_page_heading_stories
                             .pageHeadingWithoutSubtextUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'QueryBar',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_generic_components_query_bar_stories
+                            .queryBarDefaultUseCase,
                   ),
                 ],
               ),

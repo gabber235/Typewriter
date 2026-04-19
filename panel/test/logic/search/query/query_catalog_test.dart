@@ -1,10 +1,10 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
-import "test_query_catalog.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test("default catalog contains planned selectors", () {
-    final selectors = buildDefaultQuerySelectorsForTest();
+    final selectors = mockQuerySelectors;
 
     final ids = selectors.map((selector) => selector.id).toSet();
     final symbols = selectors
@@ -22,7 +22,7 @@ void main() {
   });
 
   test("default catalog has no duplicate ids", () {
-    final selectors = buildDefaultQuerySelectorsForTest();
+    final selectors = mockQuerySelectors;
     final ids = selectors.map((selector) => selector.id).toList();
     final unique = ids.toSet();
 
@@ -30,13 +30,13 @@ void main() {
   });
 
   test("default case sensitivity is false", () {
-    final selectors = buildDefaultQuerySelectorsForTest();
+    final selectors = mockQuerySelectors;
 
     expect(selectors.every((selector) => !selector.caseSensitive), isTrue);
   });
 
   test("default catalog can parse mixed selector query", () {
-    final selectors = buildDefaultQuerySelectorsForTest();
+    final selectors = mockQuerySelectors;
     final engine = QueryEngine(selectors);
 
     final result = engine.parse("#quest title:\"Book\" role:admin hello");
