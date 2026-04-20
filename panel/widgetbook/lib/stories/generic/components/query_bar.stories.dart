@@ -22,7 +22,6 @@ Widget queryBarDefaultUseCase(BuildContext context) {
               query: query.value,
               selectors: selectors,
               onQueryChanged: (next) => query.value = next,
-              hintText: "Search",
             ),
           ),
         );

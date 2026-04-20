@@ -187,6 +187,12 @@ final class OperatorSuggestion extends QuerySuggestion {
   });
 }
 
+extension QuerySuggestionListX on List<QuerySuggestion> {
+  String get key => fold("", (previousValue, element) {
+    return "$previousValue${element.label}";
+  });
+}
+
 class QueryParseResult {
   final QueryExpressionNode? expression;
   final List<QuerySelectorMatch> selectorMatches;

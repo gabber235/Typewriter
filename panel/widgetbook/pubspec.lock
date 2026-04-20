@@ -377,6 +377,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  flex_overlay:
+    dependency: transitive
+    description:
+      name: flex_overlay
+      sha256: d0954074c3353014abe63a7005cd81b110e1d4ff176d4b448fe615f2c057ccbe
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.1+2"
   flutter:
     dependency: "direct main"
     description: flutter

@@ -4,6 +4,8 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay.dart";
+import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay_config.dart";
 
 class QueryBar extends HookWidget {
   const QueryBar({
@@ -67,8 +69,13 @@ class QueryBar extends HookWidget {
     final activeSuggestionIndex = useState<int?>(null);
     final dismissedSignature = useState<String?>(null);
     final currentSignature = "${controller.text}|$cursorOffset";
-    final suggestionsVisible =
-        suggestions.isNotEmpty && dismissedSignature.value != currentSignature;
+    final helperVisible = _shouldShowHelperRow(suggestions);
+    final helperBadges = _helperBadgeData(suggestions);
+    final popupSuggestionsVisible =
+        suggestions.isNotEmpty &&
+        !helperVisible &&
+        dismissedSignature.value != currentSignature;
+    final popupVisible = focusNode.hasFocus && popupSuggestionsVisible;
 
     useEffect(() {
       controller.updateParseResult(parseResult);
@@ -77,7 +84,7 @@ class QueryBar extends HookWidget {
 
     useEffect(() {
       final activeIndex = activeSuggestionIndex.value;
-      if (!suggestionsVisible) {
+      if (!popupSuggestionsVisible) {
         activeSuggestionIndex.value = null;
         return null;
       }
@@ -91,7 +98,7 @@ class QueryBar extends HookWidget {
       }
 
       return null;
-    }, [suggestionsVisible, suggestions, activeSuggestionIndex]);
+    }, [popupSuggestionsVisible, suggestions, activeSuggestionIndex]);
 
     void applySuggestion(QuerySuggestion suggestion) {
       final before = controller.text.substring(
@@ -110,7 +117,7 @@ class QueryBar extends HookWidget {
     }
 
     void acceptActiveOrFirstSuggestion() {
-      if (!suggestionsVisible) {
+      if (!popupSuggestionsVisible) {
         return;
       }
 
@@ -123,7 +130,7 @@ class QueryBar extends HookWidget {
     }
 
     void selectNextSuggestion() {
-      if (!suggestionsVisible) {
+      if (!popupSuggestionsVisible) {
         return;
       }
 
@@ -137,7 +144,7 @@ class QueryBar extends HookWidget {
     }
 
     void selectPreviousSuggestion() {
-      if (!suggestionsVisible) {
+      if (!popupSuggestionsVisible) {
         return;
       }
 
@@ -157,7 +164,7 @@ class QueryBar extends HookWidget {
     }
 
     final shortcuts = useMemoized(() {
-      if (!suggestionsVisible) {
+      if (!popupSuggestionsVisible) {
         return const <ShortcutActivator, Intent>{};
       }
 
@@ -177,7 +184,7 @@ class QueryBar extends HookWidget {
         for (final activator in shortcutsFor(NextFocusIntent))
           activator: const _NextSuggestionIntent(),
       };
-    }, [suggestionsVisible]);
+    }, [popupSuggestionsVisible]);
 
     final actions = <Type, Action<Intent>>{
       _PreviousSuggestionIntent: CallbackAction<_PreviousSuggestionIntent>(
@@ -198,7 +205,7 @@ class QueryBar extends HookWidget {
           return null;
         },
       ),
-      if (suggestionsVisible) ...{
+      if (popupSuggestionsVisible) ...{
         _DismissSuggestionsIntent: CallbackAction<_DismissSuggestionsIntent>(
           onInvoke: (_) {
             dismissSuggestions();
@@ -219,73 +226,78 @@ class QueryBar extends HookWidget {
       child: Actions(
         actions: actions,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          spacing: 8,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DecoratedTextField(
-              focusNode: focusNode,
-              controller: controller,
-              decoration: inputDecoration,
-              onChanged: (value) {
-                dismissedSignature.value = null;
-                onQueryChanged(value);
-              },
-              onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
+            AnchoredOverlayPortal(
+              visible: popupVisible,
+              config: const AnchoredOverlayConfig(
+                preferredSide: AnchoredOverlaySide.bottom,
+                spacing: 4,
+                sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
+              ),
+              child: DecoratedTextField(
+                focusNode: focusNode,
+                controller: controller,
+                decoration: inputDecoration,
+                onChanged: (value) {
+                  dismissedSignature.value = null;
+                  onQueryChanged(value);
+                },
+                onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
+              ),
+              overlayBuilder: (context, _) => _buildSuggestionPanel(
+                context: context,
+                suggestions: suggestions,
+                activeSuggestionIndex: activeSuggestionIndex.value,
+                onTapSuggestion: applySuggestion,
+                onHoverIndex: (index) {
+                  activeSuggestionIndex.value = index;
+                },
+              ),
             ),
-            if (suggestionsVisible)
-              Material(
-                elevation: 2,
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  key: const ValueKey("query_bar_suggestions"),
-                  width: double.infinity,
-                  constraints: const BoxConstraints(maxHeight: 240),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: suggestions.length,
-                    itemBuilder: (context, index) {
-                      final suggestion = suggestions[index];
-                      final isActive = activeSuggestionIndex.value == index;
-
-                      return InkWell(
-                        key: ValueKey("query_bar_suggestion_$index"),
-                        onTap: () => applySuggestion(suggestion),
-                        onHover: (hovering) {
-                          if (hovering) {
-                            activeSuggestionIndex.value = index;
-                          }
-                        },
-                        child: Container(
-                          color: isActive
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  suggestion.label,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _suggestionTypeLabel(suggestion),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
+            if (helperVisible) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                key: const ValueKey("query_bar_helper"),
+                spacing: 6,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    "You can use:",
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Wrap(
+                    key: const ValueKey("query_bar_helper_badges"),
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      for (
+                        var index = 0;
+                        index < helperBadges.labels.length;
+                        index++
+                      )
+                        _buildHelperBadge(
+                          context,
+                          helperBadges.labels[index],
+                          key: ValueKey("query_bar_helper_badge_$index"),
+                        ),
+                      if (helperBadges.hiddenCount > 0)
+                        _buildHelperBadge(
+                          context,
+                          "+${helperBadges.hiddenCount}",
+                          key: const ValueKey(
+                            "query_bar_helper_badge_overflow",
                           ),
                         ),
-                      );
-                    },
+                    ],
                   ),
-                ),
+                ],
               ),
+            ],
           ],
         ),
       ),
@@ -309,12 +321,146 @@ class _DismissSuggestionsIntent extends Intent {
   const _DismissSuggestionsIntent();
 }
 
+Widget _buildSuggestionPanel({
+  required BuildContext context,
+  required List<QuerySuggestion> suggestions,
+  required int? activeSuggestionIndex,
+  required ValueChanged<QuerySuggestion> onTapSuggestion,
+  required ValueChanged<int> onHoverIndex,
+}) {
+  return Material(
+    key: ValueKey(suggestions.key),
+    elevation: 2,
+    color: Theme.of(context).colorScheme.surface,
+    borderRadius: BorderRadius.circular(8),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        key: const ValueKey("query_bar_suggestions"),
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: suggestions.length,
+          itemBuilder: (context, index) {
+            final suggestion = suggestions[index];
+            final isActive = activeSuggestionIndex == index;
+
+            return InkWell(
+              key: ValueKey("query_bar_suggestion_$index"),
+              onTap: () => onTapSuggestion(suggestion),
+              onHover: (hovering) {
+                if (hovering) {
+                  onHoverIndex(index);
+                }
+              },
+              child: Container(
+                color: isActive
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : null,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        suggestion.label,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _suggestionTypeLabel(suggestion),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
 String _suggestionTypeLabel(QuerySuggestion suggestion) {
   return switch (suggestion) {
     SelectorKeySuggestion() => "Selector",
     SelectorValueSuggestion() => "Value",
     OperatorSuggestion() => "Operator",
   };
+}
+
+bool _isSelectorOrOperatorSuggestion(QuerySuggestion suggestion) {
+  return switch (suggestion) {
+    SelectorKeySuggestion() => true,
+    OperatorSuggestion() => true,
+    _ => false,
+  };
+}
+
+bool _shouldShowHelperRow(List<QuerySuggestion> suggestions) {
+  if (suggestions.isEmpty) {
+    return false;
+  }
+
+  return suggestions.every(_isSelectorOrOperatorSuggestion);
+}
+
+_HelperBadgeData _helperBadgeData(
+  List<QuerySuggestion> suggestions, {
+  int maxItems = 8,
+}) {
+  assert(maxItems > 0, "maxItems must be greater than zero");
+
+  final uniqueLabels = <String>[];
+  final seenLabels = <String>{};
+
+  for (final suggestion in suggestions) {
+    if (!_isSelectorOrOperatorSuggestion(suggestion)) {
+      continue;
+    }
+
+    if (seenLabels.add(suggestion.label)) {
+      uniqueLabels.add(suggestion.label);
+    }
+  }
+
+  if (uniqueLabels.length <= maxItems) {
+    return _HelperBadgeData(labels: uniqueLabels, hiddenCount: 0);
+  }
+
+  return _HelperBadgeData(
+    labels: uniqueLabels.take(maxItems).toList(growable: false),
+    hiddenCount: uniqueLabels.length - maxItems,
+  );
+}
+
+Widget _buildHelperBadge(BuildContext context, String label, {Key? key}) {
+  final colors = Theme.of(context).colorScheme;
+
+  return Container(
+    key: key,
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+    decoration: BoxDecoration(
+      color: colors.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      label,
+      style: Theme.of(
+        context,
+      ).textTheme.labelSmall?.copyWith(color: colors.onSurfaceVariant),
+    ),
+  );
+}
+
+class _HelperBadgeData {
+  const _HelperBadgeData({required this.labels, required this.hiddenCount});
+
+  final List<String> labels;
+  final int hiddenCount;
 }
 
 List<QuerySuggestion> _computeSuggestions(
