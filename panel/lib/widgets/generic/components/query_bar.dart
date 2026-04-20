@@ -228,6 +228,7 @@ class QueryBar extends HookWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 4,
           children: [
             AnchoredOverlayPortal(
               visible: popupVisible,
@@ -257,45 +258,47 @@ class QueryBar extends HookWidget {
               ),
             ),
             if (helperVisible) ...[
-              const SizedBox(height: 4),
-              Wrap(
-                key: const ValueKey("query_bar_helper"),
-                spacing: 6,
-                runSpacing: 6,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    "You can use:",
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Wrap(
+                  key: const ValueKey("query_bar_helper"),
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "You can use:",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  Wrap(
-                    key: const ValueKey("query_bar_helper_badges"),
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: [
-                      for (
-                        var index = 0;
-                        index < helperBadges.labels.length;
-                        index++
-                      )
-                        _buildHelperBadge(
-                          context,
-                          helperBadges.labels[index],
-                          key: ValueKey("query_bar_helper_badge_$index"),
-                        ),
-                      if (helperBadges.hiddenCount > 0)
-                        _buildHelperBadge(
-                          context,
-                          "+${helperBadges.hiddenCount}",
-                          key: const ValueKey(
-                            "query_bar_helper_badge_overflow",
+                    Wrap(
+                      key: const ValueKey("query_bar_helper_badges"),
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (
+                          var index = 0;
+                          index < helperBadges.labels.length;
+                          index++
+                        )
+                          _buildHelperBadge(
+                            context,
+                            helperBadges.labels[index],
+                            key: ValueKey("query_bar_helper_badge_$index"),
                           ),
-                        ),
-                    ],
-                  ),
-                ],
+                        if (helperBadges.hiddenCount > 0)
+                          _buildHelperBadge(
+                            context,
+                            "+${helperBadges.hiddenCount}",
+                            key: const ValueKey(
+                              "query_bar_helper_badge_overflow",
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
