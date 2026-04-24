@@ -1,63 +1,205 @@
-// ignore_for_file: sort_constructors_first
+import "package:collection/collection.dart";
+import "package:flutter/widgets.dart";
+import "package:petitparser/petitparser.dart";
+import "package:typewriter_panel/logic/search/query/query.dart";
+
+const quotes = ["'", '"'];
 
 enum QueryMultiplicity { single, multiple }
 
-enum QueryValueMode { freeText, enumValue }
-
-typedef QueryValueSuggestionsProvider = List<String> Function(String partial);
-
 sealed class QuerySelectorDefinition {
-  final String id;
-  final bool caseSensitive;
-  final QueryMultiplicity multiplicity;
-  final QueryValueSuggestionsProvider? suggestionSource;
-
   const QuerySelectorDefinition({
     required this.id,
     this.caseSensitive = false,
     this.multiplicity = QueryMultiplicity.multiple,
-    this.suggestionSource,
+    this.color,
   });
-}
 
-final class SymbolSelectorDefinition extends QuerySelectorDefinition {
-  final String symbol;
+  final String id;
+  final bool caseSensitive;
+  final QueryMultiplicity multiplicity;
+  final Color? color;
 
-  const SymbolSelectorDefinition({
-    required super.id,
-    required this.symbol,
-    super.caseSensitive,
-    super.multiplicity,
-    super.suggestionSource,
-  });
+  Parser<QueryLexerSelectorToken> parser();
+
+  List<QueryParseIssue> validate(List<QueryLexerSelectorToken> tokens) {
+    assert(
+      tokens.none((token) => token.selectorId != id),
+      "Can only validate own tokens",
+    );
+
+    final issues = <QueryParseIssue>[];
+
+    if (multiplicity == QueryMultiplicity.single && tokens.length > 1) {
+      for (final token in tokens.skip(1)) {
+        issues.add(
+          QueryParseIssue(
+            code: QueryIssueCode.multiplicityViolation,
+            message: "Selector $id can only appear once",
+            severity: QuerySeverity.error,
+            range: token.range,
+          ),
+        );
+      }
+    }
+
+    return issues;
+  }
 }
 
 final class KeyValueSelectorDefinition extends QuerySelectorDefinition {
-  final String key;
-  final QueryValueMode valueMode;
-
   const KeyValueSelectorDefinition({
     required super.id,
     required this.key,
-    this.valueMode = QueryValueMode.freeText,
     super.caseSensitive,
     super.multiplicity,
-    super.suggestionSource,
+    super.color,
+    this.value = const QuerySelectorValue.freeText(),
   });
+  final String key;
+  final QuerySelectorValue value;
 
-  bool matchesKey(String candidate) {
-    if (caseSensitive) {
-      return key == candidate;
-    }
-    return key.toLowerCase() == candidate.toLowerCase();
-  }
+  @override
+  Parser<QueryLexerKeyValueSelectorToken> parser() {
+    return (string(key, ignoreCase: !caseSensitive).token() &
+            [
+              ([whitespace(), pattern("'\"|&()")].toChoiceParser().not() &
+                      any())
+                  .plus()
+                  .flatten(),
+              for (final quote in quotes)
+                char(quote) &
+                    (char(quote).not() & any()).plus().flatten().optional() &
+                    char(quote).optional(),
+            ].toChoiceParser().token().optional())
+        .token()
+        .map((token) {
+          final data = token.value;
+          final raw = token.input;
+          final range = token.range;
+          assert(data.length == 2, "Expected 2 elements");
+          final [Token<String> key, Token<dynamic>? valueToken] = data;
+          assert(
+            caseSensitive
+                ? key.value == this.key
+                : key.value.toLowerCase() == this.key.toLowerCase(),
+            "Expected key",
+          );
 
-  bool hasSuggestedValue(String candidate) {
-    final suggestions = suggestionSource;
-    if (suggestions == null) {
-      return true;
-    }
-    final values = suggestions("");
-    return values.any((value) => value == candidate);
+          final keyRange = key.range;
+
+          if (valueToken == null) {
+            return QueryLexerKeyValueSelectorToken(
+              selectorId: id,
+              raw: raw,
+              range: range,
+              keyRange: keyRange,
+              issues: [
+                QueryParseIssue(
+                  code: QueryIssueCode.missingSelectorValue,
+                  severity: QuerySeverity.error,
+                  message: "Missing value for selector $id",
+                  range: keyRange,
+                ),
+              ],
+            );
+          }
+
+          final value = valueToken.value;
+          final valueRange = valueToken.range;
+
+          if (value is String) {
+            return QueryLexerKeyValueSelectorToken(
+              selectorId: id,
+              raw: raw,
+              range: range,
+              keyRange: keyRange,
+              value: value,
+              valueRange: valueRange,
+              issues: [
+                if (!this.value.isValid(value))
+                  QueryParseIssue(
+                    code: QueryIssueCode.invalidSelectorValue,
+                    severity: QuerySeverity.warning,
+                    message: "Value $value is invalid for selector $id",
+                    range: valueRange,
+                  ),
+              ],
+            );
+          }
+
+          if (value is List) {
+            final [String openQuote, String? label, String? closeQuote] = value;
+
+            return QueryLexerKeyValueSelectorToken(
+              selectorId: id,
+              raw: raw,
+              range: range,
+              keyRange: keyRange,
+              value: label,
+              valueRange: valueRange,
+              issues: [
+                if (closeQuote == null)
+                  QueryParseIssue(
+                    code: QueryIssueCode.unclosedQuote,
+                    severity: QuerySeverity.error,
+                    message: "Unclosed quote",
+                    range: valueRange,
+                  ),
+                if (label == null)
+                  QueryParseIssue(
+                    code: QueryIssueCode.missingSelectorValue,
+                    severity: QuerySeverity.error,
+                    message: "Missing value for selector $id",
+                    range: range,
+                  )
+                else if (!this.value.isValid(label))
+                  QueryParseIssue(
+                    code: QueryIssueCode.invalidSelectorValue,
+                    severity: QuerySeverity.warning,
+                    message: "Value $label is invalid for selector $id",
+                    range: valueRange,
+                  ),
+              ],
+            );
+          }
+
+          throw UnimplementedError(
+            "Unexpected value: $value, ${value.runtimeType}",
+          );
+        });
   }
+}
+
+sealed class QuerySelectorValue {
+  const QuerySelectorValue._();
+
+  const factory QuerySelectorValue.freeText() = FreeTextSelectorValue;
+  const factory QuerySelectorValue.enumValue(List<String> possibleValues) =
+      EnumSelectorValue;
+
+  bool isValid(String value);
+  List<String> suggestions(String partial);
+}
+
+class FreeTextSelectorValue extends QuerySelectorValue {
+  const FreeTextSelectorValue() : super._();
+
+  @override
+  bool isValid(String value) => true;
+
+  @override
+  List<String> suggestions(String partial) => [];
+}
+
+class EnumSelectorValue extends QuerySelectorValue {
+  const EnumSelectorValue(this.possibleValues) : super._();
+
+  final List<String> possibleValues;
+
+  @override
+  bool isValid(String value) => possibleValues.contains(value);
+
+  @override
+  List<String> suggestions(String partial) => possibleValues;
 }

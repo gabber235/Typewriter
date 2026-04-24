@@ -1,52 +1,67 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
 
+import "query_test_harness.dart";
+
 void main() {
   test("case insensitive selector matches mixed case", () {
-    final engine = QueryEngine([
-      const KeyValueSelectorDefinition(id: "title", key: "title"),
-    ]);
-
-    final result = engine.parse("Title:\"A\"");
-
-    expect(result.selectorMatches, hasLength(1));
-    final match = result.selectorMatches.single as KeyValueSelectorMatch;
-    expect(match.value, "A");
+    checkQuery(
+      "Title:\"A\"",
+      selectors: [const KeyValueSelectorDefinition(id: "title", key: "title:")],
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      expression.isSelector(id: "title", value: "A");
+    }).done();
   });
 
   test("case sensitive selector requires exact case", () {
-    final engine = QueryEngine([
-      const KeyValueSelectorDefinition(
-        id: "title",
-        key: "title",
-        caseSensitive: true,
-      ),
-    ]);
+    checkQuery(
+      "Title:\"A\"",
+      selectors: [
+        const KeyValueSelectorDefinition(
+          id: "title",
+          key: "title:",
+          caseSensitive: true,
+        ),
+      ],
+    ).expectNoIssues().expectQuery("Title:\"A\"").expectNoExpression().done();
 
-    final mixed = engine.parse("Title:\"A\"");
-    final exact = engine.parse("title:\"A\"");
-
-    expect(mixed.selectorMatches, isEmpty);
-    expect(exact.selectorMatches, hasLength(1));
+    checkQuery(
+      "title:\"A\"",
+      selectors: [
+        const KeyValueSelectorDefinition(
+          id: "title",
+          key: "title:",
+          caseSensitive: true,
+        ),
+      ],
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      expression.isSelector(id: "title", value: "A");
+    }).done();
   });
 
   test("operators remain case insensitive", () {
-    final engine = QueryEngine([
-      const SymbolSelectorDefinition(id: "tag", symbol: "#"),
-    ]);
-
-    final result = engine.parse("nOt #a aNd #b oR #c");
-
-    expect(result.expression, isA<QueryOrNode>());
+    checkQuery(
+      "nOt #a aNd #b oR #c",
+      selectors: selectorsTagOnly(),
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final root = expression.isOr();
+      final andNode = root.left().isAnd();
+      andNode.left().isNot().inner().isSelector(id: "tag", value: "a");
+      andNode.right().isSelector(id: "tag", value: "b");
+      root.right().isSelector(id: "tag", value: "c");
+    }).done();
   });
 
   test("mixed symbolic and word operators remain supported", () {
-    final engine = QueryEngine([
-      const SymbolSelectorDefinition(id: "tag", symbol: "#"),
-    ]);
-
-    final result = engine.parse("!#a Or #b && #c");
-
-    expect(result.expression, isA<QueryOrNode>());
+    checkQuery(
+      "!#a Or #b && #c",
+      selectors: selectorsTagOnly(),
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final root = expression.isOr();
+      root.left().isNot().inner().isSelector(id: "tag", value: "a");
+      final andNode = root.right().isAnd();
+      andNode.left().isSelector(id: "tag", value: "b");
+      andNode.right().isSelector(id: "tag", value: "c");
+    }).done();
   });
 }

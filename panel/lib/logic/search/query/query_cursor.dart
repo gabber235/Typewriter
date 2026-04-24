@@ -1,121 +1,96 @@
+import "package:collection/collection.dart";
+import "package:typewriter_panel/logic/search/query/query_lexer.dart";
 import "package:typewriter_panel/logic/search/query/query_models.dart";
 import "package:typewriter_panel/logic/search/query/query_spans.dart";
+import "package:typewriter_panel/utils/collection.dart";
 
 QueryCursorContext resolveQueryCursorContext(
-  QueryParseResult result,
+  List<QueryLexerToken> tokens,
   String input,
   int cursorOffset,
 ) {
   final clampedCursor = cursorOffset.clamp(0, input.length);
 
-  for (final match
-      in result.selectorMatches.whereType<KeyValueSelectorMatch>()) {
-    final valueRange = match.valueRange;
-    if (valueRange != null && _contains(valueRange, clampedCursor)) {
-      final partial = _slice(input, valueRange, clampedCursor);
-      return SelectorValueCursorContext(
-        cursorOffset: clampedCursor,
-        activeRange: valueRange,
-        selectorId: match.selectorId,
-        partialValue: partial,
-        keyRange: match.keyRange,
-        valueRange: valueRange,
-      );
-    }
-  }
-
-  for (final match
-      in result.selectorMatches.whereType<KeyValueSelectorMatch>()) {
-    if (_contains(match.keyRange, clampedCursor)) {
-      final partial = _slice(input, match.keyRange, clampedCursor);
-      return SelectorKeyCursorContext(
-        cursorOffset: clampedCursor,
-        activeRange: match.keyRange,
-        partialKey: partial,
-      );
-    }
-  }
-
-  for (final match in result.selectorMatches.whereType<SymbolSelectorMatch>()) {
-    if (_contains(match.tokenRange, clampedCursor)) {
-      final partial = _slice(input, match.tokenRange, clampedCursor);
-      return SelectorKeyCursorContext(
-        cursorOffset: clampedCursor,
-        activeRange: match.tokenRange,
-        partialKey: partial,
-      );
-    }
-  }
-
-  final operatorRange = _findOperatorRange(input, clampedCursor);
-  if (operatorRange != null) {
-    final partial = _slice(input, operatorRange, clampedCursor);
-    return OperatorCursorContext(
-      cursorOffset: clampedCursor,
-      activeRange: operatorRange,
-      partialOperator: partial,
-    );
-  }
-
-  for (final term in result.textTerms) {
-    if (_contains(term.range, clampedCursor)) {
-      final partial = _slice(input, term.range, clampedCursor);
-      return TextTermCursorContext(
-        cursorOffset: clampedCursor,
-        activeRange: term.range,
-        partialText: partial,
-      );
-    }
-  }
-
-  return UnknownCursorContext(
-    cursorOffset: clampedCursor,
-    activeRange: QueryRange(clampedCursor, clampedCursor),
+  final token = tokens.firstWhereOrNull(
+    (token) => switch (token) {
+      QueryLexerOperatorToken() =>
+        token.operatorRange?.containsOffset(clampedCursor) ?? false,
+      QueryLexerNegationToken() => token.operatorRange.containsOffset(
+        clampedCursor,
+      ),
+      _ => token.range.containsOffset(clampedCursor),
+    },
   );
+
+  switch (token) {
+    case null:
+      final range = _wordRange(input, clampedCursor);
+      return UnknownCursorContext(
+        cursorOffset: clampedCursor,
+        activeRange: range,
+        partial: _slice(input, range, clampedCursor),
+        side: _side(tokens, clampedCursor),
+      );
+    case QueryLexerKeyValueSelectorToken():
+      final valueRange = token.valueRange;
+      if (valueRange != null && valueRange.containsOffset(clampedCursor)) {
+        final partial = _slice(input, valueRange, clampedCursor);
+        return SelectorValueCursorContext(
+          cursorOffset: clampedCursor,
+          activeRange: valueRange,
+          selectorId: token.selectorId,
+          partialValue: partial,
+          keyRange: token.keyRange,
+          valueRange: valueRange,
+        );
+      }
+      if (valueRange == null && token.keyRange.isAtEnd(clampedCursor)) {
+        return SelectorValueCursorContext(
+          cursorOffset: clampedCursor,
+          activeRange: QueryRange(clampedCursor, clampedCursor),
+          selectorId: token.selectorId,
+          partialValue: "",
+          keyRange: token.keyRange,
+          valueRange: valueRange,
+        );
+      }
+      return SelectorKeyCursorContext(
+        cursorOffset: clampedCursor,
+        activeRange: token.range,
+        partialKey: _slice(input, token.range, clampedCursor),
+      );
+    case QueryLexerSelectorToken():
+      return SelectorKeyCursorContext(
+        cursorOffset: clampedCursor,
+        activeRange: token.range,
+        partialKey: _slice(input, token.range, clampedCursor),
+      );
+    case QueryLexerOperatorToken():
+      return OperatorCursorContext(
+        cursorOffset: clampedCursor,
+        activeRange: token.operatorRange!,
+        partialOperator: _slice(input, token.operatorRange!, clampedCursor),
+      );
+    case QueryLexerNegationToken():
+      return OperatorCursorContext(
+        cursorOffset: clampedCursor,
+        activeRange: token.operatorRange,
+        partialOperator: _slice(input, token.operatorRange, clampedCursor),
+      );
+  }
 }
 
-QueryRange? _findOperatorRange(String input, int cursorOffset) {
-  if (input.isEmpty) {
-    return null;
-  }
+const _spaceCodeUnit = 32;
 
-  final at = cursorOffset == input.length ? cursorOffset - 1 : cursorOffset;
-  if (at < 0 || at >= input.length) {
-    return null;
-  }
-
-  if (input.startsWith("&&", at) ||
-      (at > 0 && input.startsWith("&&", at - 1))) {
-    final start = input.startsWith("&&", at) ? at : at - 1;
-    return QueryRange(start, start + 2);
-  }
-
-  if (input.startsWith("||", at) ||
-      (at > 0 && input.startsWith("||", at - 1))) {
-    final start = input.startsWith("||", at) ? at : at - 1;
-    return QueryRange(start, start + 2);
-  }
-
-  if (input[at] == "!") {
-    return QueryRange(at, at + 1);
-  }
-
-  var start = at;
-  while (start > 0 && !_isDelimiter(input[start - 1])) {
-    start -= 1;
-  }
-
-  var end = at + 1;
-  while (end < input.length && !_isDelimiter(input[end])) {
-    end += 1;
-  }
-
-  final token = input.substring(start, end).toLowerCase();
-  if (token == "and" || token == "or" || token == "not") {
-    return QueryRange(start, end);
-  }
-
-  return null;
+QueryRange _wordRange(String input, int cursorOffset) {
+  final spaceIndices = input.codeUnits.indexed
+      .where((e) => e.$2 == _spaceCodeUnit)
+      .map((e) => e.$1)
+      .toList();
+  final end =
+      spaceIndices.firstWhereOrNull((i) => cursorOffset <= i) ?? input.length;
+  final start = spaceIndices.lastWhereOrNull((i) => i < cursorOffset) ?? -1;
+  return QueryRange(start + 1, end);
 }
 
 String _slice(String input, QueryRange range, int cursorOffset) {
@@ -123,10 +98,16 @@ String _slice(String input, QueryRange range, int cursorOffset) {
   return input.substring(range.start, end);
 }
 
-bool _contains(QueryRange range, int offset) {
-  return offset >= range.start && offset <= range.end;
-}
+QuerySide _side(List<QueryLexerToken> tokens, int cursorOffset) {
+    if (tokens.isEmpty) {
+        return QuerySide.before;
+    }
 
-bool _isDelimiter(String value) {
-  return value.trim().isEmpty || value == "(" || value == ")";
+    final min = tokens.minByOrNull((t) => t.range.start)!.range.start;
+    final max = tokens.maxByOrNull((t) => t.range.end)!.range.end;
+    return min < cursorOffset && cursorOffset < max
+        ? QuerySide.expression
+        : cursorOffset < min
+        ? QuerySide.before
+        : QuerySide.after;
 }

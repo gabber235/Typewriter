@@ -1,61 +1,75 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
 
+import "query_test_harness.dart";
+
 void main() {
-  final selectors = <QuerySelectorDefinition>[
-    const SymbolSelectorDefinition(id: "tag", symbol: "#"),
-  ];
+  final selectors = selectorsTagOnly();
 
   test("respects NOT, AND, OR precedence", () {
-    final engine = QueryEngine(selectors);
+    checkQuery(
+      "NOT #a OR #b AND #c",
+      selectors: selectors,
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final root = expression.isOr();
 
-    final result = engine.parse("NOT #a OR #b AND #c");
+      root.left().isNot().inner().isSelector(id: "tag", value: "a");
 
-    expect(result.expression, isA<QueryOrNode>());
-    final root = result.expression! as QueryOrNode;
-    expect(root.left, isA<QueryNotNode>());
-    expect(root.right, isA<QueryAndNode>());
-
-    final andNode = root.right as QueryAndNode;
-    expect(andNode.implicit, isFalse);
+      final andNode = root.right().isAnd();
+      andNode.left().isSelector(id: "tag", value: "b");
+      andNode.right().isSelector(id: "tag", value: "c");
+      andNode.operatorRange(const QueryRange(13, 16));
+    }).done();
   });
 
   test("inserts implicit AND between adjacent terms", () {
-    final engine = QueryEngine(selectors);
-
-    final result = engine.parse("#a #b");
-
-    expect(result.expression, isA<QueryAndNode>());
-    final andNode = result.expression! as QueryAndNode;
-    expect(andNode.implicit, isTrue);
+    checkQuery(
+      "#a #b",
+      selectors: selectors,
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final andNode = expression.isAnd();
+      andNode.left().isSelector(id: "tag", value: "a");
+      andNode.right().isSelector(id: "tag", value: "b");
+      andNode.operatorRange(null);
+    }).done();
   });
 
   test("parentheses group expressions", () {
-    final engine = QueryEngine(selectors);
-
-    final result = engine.parse("(#a OR #b) AND #c");
-
-    expect(result.expression, isA<QueryAndNode>());
-    final andNode = result.expression! as QueryAndNode;
-    expect(andNode.left, isA<QueryOrNode>());
-    final grouped = andNode.left as QueryOrNode;
-    expect(grouped.range.start, 0);
-    expect(grouped.range.end, 10);
+    checkQuery(
+      "(#a OR #b) AND #c",
+      selectors: selectors,
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final andNode = expression.isAnd();
+      final grouped = andNode.left().isOr();
+      grouped.left().isSelector(id: "tag", value: "a");
+      grouped.right().isSelector(id: "tag", value: "b");
+      andNode.right().isSelector(id: "tag", value: "c");
+    }).done();
   });
 
   test("word operators are case insensitive", () {
-    final engine = QueryEngine(selectors);
-
-    final result = engine.parse("not #a Or #b aNd #c");
-
-    expect(result.expression, isA<QueryOrNode>());
+    checkQuery(
+      "not #a Or #b aNd #c",
+      selectors: selectors,
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final root = expression.isOr();
+      root.left().isNot().inner().isSelector(id: "tag", value: "a");
+      final andNode = root.right().isAnd();
+      andNode.left().isSelector(id: "tag", value: "b");
+      andNode.right().isSelector(id: "tag", value: "c");
+    }).done();
   });
 
   test("symbolic operators are supported", () {
-    final engine = QueryEngine(selectors);
-
-    final result = engine.parse("!#a || #b && #c");
-
-    expect(result.expression, isA<QueryOrNode>());
+    checkQuery(
+      "!#a || #b && #c",
+      selectors: selectors,
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final root = expression.isOr();
+      root.left().isNot().inner().isSelector(id: "tag", value: "a");
+      final andNode = root.right().isAnd();
+      andNode.left().isSelector(id: "tag", value: "b");
+      andNode.right().isSelector(id: "tag", value: "c");
+    }).done();
   });
 }

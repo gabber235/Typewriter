@@ -38,6 +38,30 @@ extension StringX on String {
     }
     return this;
   }
+
+  String replacePrefix(
+    String prefix,
+    String replacement, {
+    bool caseSensitive = true,
+  }) {
+    if (caseSensitive && !startsWith(prefix)) return this;
+    if (!caseSensitive && !toLowerCase().startsWith(prefix.toLowerCase())) {
+      return this;
+    }
+    return replaceRange(0, prefix.length, replacement);
+  }
+
+  String replaceSuffix(
+    String suffix,
+    String replacement, {
+    bool caseSensitive = true,
+  }) {
+    if (caseSensitive && !endsWith(suffix)) return this;
+    if (!caseSensitive && !toLowerCase().endsWith(suffix.toLowerCase())) {
+      return this;
+    }
+    return replaceRange(length - suffix.length, length, replacement);
+  }
 }
 
 String generateCode([int length = 20]) {

@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:material_color_utilities/material_color_utilities.dart";
 
-final safeColors = <Color>[
+const safeColors = <Color>[
   Colors.pinkAccent,
   Colors.redAccent,
   Colors.orange,

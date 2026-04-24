@@ -2,11 +2,12 @@
 
 import "package:typewriter_panel/logic/search/query/query_models.dart";
 import "package:typewriter_panel/logic/search/query/query_selector.dart";
+import "package:typewriter_panel/utils/string.dart";
 
 class QuerySuggestionEngine {
-  final List<QuerySelectorDefinition> selectors;
-
   const QuerySuggestionEngine(this.selectors);
+
+  final List<QuerySelectorDefinition> selectors;
 
   List<QuerySuggestion> suggest(QueryParseResult result, {int maxItems = 8}) {
     final context = result.cursorContext;
@@ -15,11 +16,10 @@ class QuerySuggestionEngine {
     }
 
     final items = switch (context) {
-      SelectorKeyCursorContext() => _suggestSelectorKeys(context),
-      SelectorValueCursorContext() => _suggestSelectorValues(context),
-      OperatorCursorContext() => _suggestOperators(context),
-      TextTermCursorContext() => const <QuerySuggestion>[],
-      UnknownCursorContext() => const <QuerySuggestion>[],
+      SelectorKeyCursorContext() => _suggestSelectorKeys(result, context),
+      SelectorValueCursorContext() => _suggestSelectorValues(result, context),
+      OperatorCursorContext() => _suggestOperators(result, context),
+      UnknownCursorContext() => _suggestUnknown(result, context),
     };
 
     if (items.length <= maxItems) {
@@ -28,65 +28,69 @@ class QuerySuggestionEngine {
     return items.take(maxItems).toList(growable: false);
   }
 
-  List<QuerySuggestion> _suggestSelectorKeys(SelectorKeyCursorContext context) {
+  List<QuerySuggestion> _suggestOperators(
+    QueryParseResult result,
+    OperatorCursorContext context, {
+    List<QueryOperatorType>? types,
+  }) {
+    final partial = context.partialOperator.toLowerCase();
+
+    return QueryOperator.allTokens(types)
+        .where((token) => token.toLowerCase().startsWith(partial))
+        .map((operator) {
+          return OperatorSuggestion(
+            label: operator,
+            replaceRange: context.activeRange,
+            operatorToken: operator,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  List<QuerySuggestion> _suggestSelectorKeys(
+    QueryParseResult result,
+    SelectorKeyCursorContext context,
+  ) {
     final partial = context.partialKey.toLowerCase();
-    final suggestions = <QuerySuggestion>[];
-
-    for (final selector in selectors) {
-      if (selector case KeyValueSelectorDefinition(:final key, :final id)) {
-        if (!key.toLowerCase().startsWith(partial)) {
-          continue;
-        }
-        suggestions.add(
-          SelectorKeySuggestion(
-            label: "$key:",
+    return selectors
+        .whereType<KeyValueSelectorDefinition>()
+        .where((selector) => selector.key.toLowerCase().startsWith(partial))
+        .where(
+          (selector) =>
+              selector.multiplicity != .single ||
+              !result.selectors.any((s) => s.selectorId == selector.id),
+        )
+        .map(
+          (selector) => SelectorKeySuggestion(
+            label: selector.key,
             replaceRange: context.activeRange,
-            selectorId: id,
+            selectorId: selector.id,
           ),
-        );
-      }
-      if (selector case SymbolSelectorDefinition(:final symbol, :final id)) {
-        final shouldInclude = partial.isEmpty || symbol.startsWith(partial);
-        if (!shouldInclude) {
-          continue;
-        }
-        suggestions.add(
-          SelectorKeySuggestion(
-            label: symbol,
-            replaceRange: context.activeRange,
-            selectorId: id,
-          ),
-        );
-      }
-    }
-
-    return suggestions;
+        )
+        .toList(growable: false);
   }
 
   List<QuerySuggestion> _suggestSelectorValues(
+    QueryParseResult result,
     SelectorValueCursorContext context,
   ) {
-    final selector = selectors.firstWhere(
-      (candidate) => candidate.id == context.selectorId,
-      orElse: () => const KeyValueSelectorDefinition(id: "", key: ""),
-    );
+    final selector = selectors
+        .whereType<KeyValueSelectorDefinition>()
+        .firstWhere(
+          (candidate) => candidate.id == context.selectorId,
+          orElse: () => const KeyValueSelectorDefinition(id: "", key: ""),
+        );
 
-    if (selector is! KeyValueSelectorDefinition) {
-      return const <QuerySuggestion>[];
-    }
+    final value = selector.value;
+    final partialValue = context.partialValue.toLowerCase();
 
-    final source = selector.suggestionSource;
-    if (source == null) {
-      return const <QuerySuggestion>[];
-    }
-
-    final candidates = source(context.partialValue);
+    final candidates = value.suggestions(context.partialValue);
     return candidates
-        .where(
-          (candidate) => candidate.toLowerCase().startsWith(
-            context.partialValue.toLowerCase(),
-          ),
-        )
+        .where((candidate) {
+          final candidateValue = candidate.toLowerCase();
+          return partialValue != candidateValue &&
+              candidateValue.startsWith(partialValue);
+        })
         .map(
           (candidate) => SelectorValueSuggestion(
             label: candidate,
@@ -98,19 +102,101 @@ class QuerySuggestionEngine {
         .toList(growable: false);
   }
 
-  List<QuerySuggestion> _suggestOperators(OperatorCursorContext context) {
-    const operators = <String>["AND", "OR", "NOT", "&&", "||", "!"];
-    final partial = context.partialOperator.toLowerCase();
-
-    return operators
-        .where((operator) => operator.toLowerCase().startsWith(partial))
-        .map(
-          (operator) => OperatorSuggestion(
-            label: operator,
-            replaceRange: context.activeRange,
-            operatorToken: operator,
-          ),
+  List<QuerySuggestion> _suggestUnknown(
+    QueryParseResult result,
+    UnknownCursorContext context,
+  ) {
+    var actualAfter = QueryOperator.allTokens()
+        .fold(
+          result.queryAfter,
+          (previous, op) =>
+              previous.replacePrefix(op, "", caseSensitive: false),
         )
-        .toList(growable: false);
+        .trimLeft();
+
+    while (true) {
+      final newAfter = QueryOperator.allTokens([.prefix])
+          .fold(
+            actualAfter,
+            (previous, op) =>
+                previous.replacePrefix(op, "", caseSensitive: false),
+          )
+          .trimLeft();
+
+      if (actualAfter == newAfter) {
+        break;
+      }
+      actualAfter = newAfter;
+    }
+
+    final isAtExpressionBorder = switch (context.side) {
+      QuerySide.before => context.activeRange.end >= result.queryBefore.length,
+      QuerySide.expression => true,
+      QuerySide.after =>
+        context.activeRange.start <= (result.raw.length - actualAfter.length),
+    };
+
+    if (!isAtExpressionBorder) {
+      return const <QuerySuggestion>[];
+    }
+
+    var partialKey = context.partial;
+    var activeRange = context.activeRange;
+
+    while (true) {
+      final newPartialKey = QueryOperator.allTokens([.prefix])
+          .fold(
+            partialKey,
+            (previous, op) =>
+                previous.replacePrefix(op, "", caseSensitive: false),
+          )
+          .trimLeft();
+
+      if (partialKey == newPartialKey) {
+        break;
+      }
+      final diff = partialKey.replaceSuffix(newPartialKey, "");
+      partialKey = newPartialKey;
+      activeRange = activeRange.copyWith(
+        start: activeRange.start + diff.length,
+      );
+    }
+
+    final suggestions = <QuerySuggestion>[
+      ..._suggestSelectorKeys(
+        result,
+        SelectorKeyCursorContext(
+          cursorOffset: context.cursorOffset,
+          activeRange: activeRange,
+          partialKey: partialKey,
+        ),
+      ),
+    ];
+
+    if (context.side == .after) {
+      final startsWithNonPostfixOperator =
+          QueryOperator.allTokens([.prefix, .group]).any(
+            (token) =>
+                result.queryAfter.toLowerCase().startsWith(token.toLowerCase()),
+          );
+
+      final operatorType = startsWithNonPostfixOperator
+          ? QueryOperatorType.prefix
+          : null;
+
+      suggestions.addAll(
+        _suggestOperators(
+          result,
+          OperatorCursorContext(
+            cursorOffset: context.cursorOffset,
+            activeRange: context.activeRange,
+            partialOperator: context.partial,
+          ),
+          types: operatorType != null ? [operatorType] : null,
+        ),
+      );
+    }
+
+    return suggestions;
   }
 }

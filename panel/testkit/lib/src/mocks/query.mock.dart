@@ -1,50 +1,53 @@
 import "package:typewriter_panel/logic/search/query/query.dart";
+import "package:typewriter_panel/utils/color.dart";
 
 const List<String> _roleSuggestionValues = ["admin", "editor", "viewer"];
 const List<String> _statusSuggestionValues = ["active", "archived", "draft"];
 const List<String> _typeSuggestionValues = ["quest", "book", "chapter"];
 
-List<String> _roleSuggestions(String partial) => _roleSuggestionValues;
-List<String> _statusSuggestions(String partial) => _statusSuggestionValues;
-List<String> _typeSuggestions(String partial) => _typeSuggestionValues;
-
-const List<QuerySelectorDefinition> mockQuerySelectors = [
-  SymbolSelectorDefinition(id: "tag", symbol: "#"),
-  SymbolSelectorDefinition(id: "user", symbol: "@"),
-  SymbolSelectorDefinition(id: "type_symbol", symbol: "~"),
-  KeyValueSelectorDefinition(id: "title", key: "title"),
-  KeyValueSelectorDefinition(id: "name", key: "name"),
+final List<QuerySelectorDefinition> mockQuerySelectors = [
   KeyValueSelectorDefinition(
-    id: "id",
-    key: "id",
+    id: "tag",
+    key: "#",
+    multiplicity: QueryMultiplicity.single,
+    value: QuerySelectorValue.enumValue(_typeSuggestionValues),
+    color: safeColors[4],
+  ),
+  KeyValueSelectorDefinition(
+    id: "user",
+    key: "@",
+    value: QuerySelectorValue.enumValue(_roleSuggestionValues),
+    color: safeColors[6],
+  ),
+  KeyValueSelectorDefinition(id: "free", key: "~"),
+  KeyValueSelectorDefinition(
+    id: "name",
+    key: "name:",
     multiplicity: QueryMultiplicity.single,
   ),
-  KeyValueSelectorDefinition(id: "author", key: "author"),
-  KeyValueSelectorDefinition(id: "owner", key: "owner"),
+  KeyValueSelectorDefinition(
+    id: "id",
+    key: "id:",
+    multiplicity: QueryMultiplicity.single,
+    color: safeColors[7],
+  ),
   KeyValueSelectorDefinition(
     id: "role",
-    key: "role",
-    valueMode: QueryValueMode.enumValue,
-    suggestionSource: _roleSuggestions,
+    key: "role:",
+    value: QuerySelectorValue.enumValue(_roleSuggestionValues),
+    color: safeColors[6],
   ),
   KeyValueSelectorDefinition(
     id: "status",
-    key: "status",
-    valueMode: QueryValueMode.enumValue,
-    suggestionSource: _statusSuggestions,
+    key: "status:",
+    value: QuerySelectorValue.enumValue(_statusSuggestionValues),
+    color: safeColors[8],
   ),
   KeyValueSelectorDefinition(
     id: "type",
-    key: "type",
-    valueMode: QueryValueMode.enumValue,
-    suggestionSource: _typeSuggestions,
+    key: "type:",
+    multiplicity: QueryMultiplicity.single,
+    value: QuerySelectorValue.enumValue(_typeSuggestionValues),
+    color: safeColors[4],
   ),
-  KeyValueSelectorDefinition(id: "chapter", key: "chapter"),
-  KeyValueSelectorDefinition(id: "page", key: "page"),
-  KeyValueSelectorDefinition(id: "book", key: "book"),
-  KeyValueSelectorDefinition(id: "lang", key: "lang"),
-  KeyValueSelectorDefinition(id: "locale", key: "locale"),
-  KeyValueSelectorDefinition(id: "kind", key: "kind"),
-  KeyValueSelectorDefinition(id: "source", key: "source"),
-  KeyValueSelectorDefinition(id: "path", key: "path"),
 ];

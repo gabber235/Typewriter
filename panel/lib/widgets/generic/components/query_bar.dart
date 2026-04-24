@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
 import "package:typewriter_panel/main.dart";
@@ -24,8 +25,8 @@ class QueryBar extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final controller = useMemoized(
-      () => _QueryBarTextEditingController(text: query),
-      const [],
+      () => _QueryBarTextEditingController(text: query, selectors: selectors),
+      [selectors],
     );
     final focusNode = useFocusNode();
 
@@ -62,7 +63,7 @@ class QueryBar extends HookWidget {
     );
 
     final suggestions = useMemoized(
-      () => _computeSuggestions(suggestionEngine, parseResult, maxItems: 8),
+      () => suggestionEngine.suggest(parseResult, maxItems: 100),
       [suggestionEngine, parseResult],
     );
 
@@ -70,7 +71,7 @@ class QueryBar extends HookWidget {
     final dismissedSignature = useState<String?>(null);
     final currentSignature = "${controller.text}|$cursorOffset";
     final helperVisible = _shouldShowHelperRow(suggestions);
-    final helperBadges = _helperBadgeData(suggestions);
+    final helperBadges = _helperBadgeData(suggestions, maxItems: 20);
     final popupSuggestionsVisible =
         suggestions.isNotEmpty &&
         !helperVisible &&
@@ -225,83 +226,95 @@ class QueryBar extends HookWidget {
       shortcuts: shortcuts,
       child: Actions(
         actions: actions,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 4,
-          children: [
-            AnchoredOverlayPortal(
-              visible: popupVisible,
-              config: const AnchoredOverlayConfig(
-                preferredSide: AnchoredOverlaySide.bottom,
-                spacing: 4,
-                sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
+        child: AnimatedSize(
+          duration: 300.ms,
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 4,
+            children: [
+              AnchoredOverlayPortal(
+                visible: popupVisible,
+                config: const AnchoredOverlayConfig(
+                  preferredSide: AnchoredOverlaySide.bottom,
+                  spacing: 4,
+                  sharedAxisConstraintMode:
+                      SharedAxisConstraintMode.matchAnchor,
+                ),
+                child: DecoratedTextField(
+                  focusNode: focusNode,
+                  controller: controller,
+                  decoration: inputDecoration.copyWith(
+                    errorText: parseResult.issues.isNotEmpty
+                        ? parseResult.issues.first.message
+                        : null,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 8,
+                    ),
+                  ),
+                  maxLines: null,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
+                  ],
+                  onChanged: (value) {
+                    dismissedSignature.value = null;
+                    onQueryChanged(value);
+                  },
+                  onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
+                ),
+                overlayBuilder: (context, _) => _buildSuggestionPanel(
+                  context: context,
+                  suggestions: suggestions,
+                  activeSuggestionIndex: activeSuggestionIndex.value,
+                  onTapSuggestion: applySuggestion,
+                  onHoverIndex: (index) {
+                    activeSuggestionIndex.value = index;
+                  },
+                ),
               ),
-              child: DecoratedTextField(
-                focusNode: focusNode,
-                controller: controller,
-                decoration: inputDecoration,
-                onChanged: (value) {
-                  dismissedSignature.value = null;
-                  onQueryChanged(value);
-                },
-                onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
-              ),
-              overlayBuilder: (context, _) => _buildSuggestionPanel(
-                context: context,
-                suggestions: suggestions,
-                activeSuggestionIndex: activeSuggestionIndex.value,
-                onTapSuggestion: applySuggestion,
-                onHoverIndex: (index) {
-                  activeSuggestionIndex.value = index;
-                },
-              ),
-            ),
-            if (helperVisible) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Wrap(
-                  key: const ValueKey("query_bar_helper"),
-                  spacing: 6,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      "You can use:",
+              if (helperVisible) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text.rich(
+                    TextSpan(
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                    Wrap(
-                      key: const ValueKey("query_bar_helper_badges"),
-                      spacing: 6,
-                      runSpacing: 6,
                       children: [
-                        for (
-                          var index = 0;
-                          index < helperBadges.labels.length;
-                          index++
-                        )
-                          _buildHelperBadge(
-                            context,
-                            helperBadges.labels[index],
-                            key: ValueKey("query_bar_helper_badge_$index"),
-                          ),
-                        if (helperBadges.hiddenCount > 0)
-                          _buildHelperBadge(
-                            context,
-                            "+${helperBadges.hiddenCount}",
-                            key: const ValueKey(
-                              "query_bar_helper_badge_overflow",
+                        TextSpan(text: "You can use: "),
+                        for (final label in helperBadges.labels) ...[
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: _buildHelperBadge(
+                              context,
+                              label,
+                              key: ValueKey("query_bar_helper_badge_$label"),
                             ),
                           ),
+                          const TextSpan(text: ", "),
+                        ],
+                        if (helperBadges.hiddenCount > 0)
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: _buildHelperBadge(
+                              context,
+                              "+${helperBadges.hiddenCount}",
+                              key: const ValueKey(
+                                "query_bar_helper_badge_overflow",
+                              ),
+                            ),
+                          ),
+                        const TextSpan(text: "to filter results."),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -466,114 +479,12 @@ class _HelperBadgeData {
   final int hiddenCount;
 }
 
-List<QuerySuggestion> _computeSuggestions(
-  QuerySuggestionEngine suggestionEngine,
-  QueryParseResult parseResult, {
-  int maxItems = 8,
-}) {
-  final directSuggestions = suggestionEngine.suggest(
-    parseResult,
-    maxItems: maxItems,
-  );
-  if (directSuggestions.isNotEmpty) {
-    return directSuggestions;
-  }
-
-  final cursorContext = parseResult.cursorContext;
-  if (cursorContext case TextTermCursorContext()) {
-    final keySuggestions = suggestionEngine.suggest(
-      _copyParseResultWithContext(
-        parseResult,
-        SelectorKeyCursorContext(
-          cursorOffset: cursorContext.cursorOffset,
-          activeRange: cursorContext.activeRange,
-          partialKey: cursorContext.partialText,
-        ),
-      ),
-      maxItems: maxItems,
-    );
-
-    final operatorSuggestions = suggestionEngine.suggest(
-      _copyParseResultWithContext(
-        parseResult,
-        OperatorCursorContext(
-          cursorOffset: cursorContext.cursorOffset,
-          activeRange: cursorContext.activeRange,
-          partialOperator: cursorContext.partialText,
-        ),
-      ),
-      maxItems: maxItems,
-    );
-
-    return _mergeSuggestions(
-      keySuggestions,
-      operatorSuggestions,
-      maxItems: maxItems,
-    );
-  }
-
-  if (cursorContext case UnknownCursorContext()) {
-    return suggestionEngine.suggest(
-      _copyParseResultWithContext(
-        parseResult,
-        SelectorKeyCursorContext(
-          cursorOffset: cursorContext.cursorOffset,
-          activeRange: cursorContext.activeRange,
-          partialKey: "",
-        ),
-      ),
-      maxItems: maxItems,
-    );
-  }
-
-  return directSuggestions;
-}
-
-List<QuerySuggestion> _mergeSuggestions(
-  List<QuerySuggestion> first,
-  List<QuerySuggestion> second, {
-  required int maxItems,
-}) {
-  final merged = <QuerySuggestion>[];
-  final seen = <String>{};
-
-  for (final suggestion in [...first, ...second]) {
-    final key = [
-      suggestion.runtimeType,
-      suggestion.label,
-      suggestion.replaceRange.start,
-      suggestion.replaceRange.end,
-    ].join(":");
-
-    if (seen.add(key)) {
-      merged.add(suggestion);
-    }
-
-    if (merged.length >= maxItems) {
-      break;
-    }
-  }
-
-  return merged;
-}
-
-QueryParseResult _copyParseResultWithContext(
-  QueryParseResult source,
-  QueryCursorContext context,
-) {
-  return QueryParseResult(
-    expression: source.expression,
-    selectorMatches: source.selectorMatches,
-    textTerms: source.textTerms,
-    leftoverText: source.leftoverText,
-    issues: source.issues,
-    cursorContext: context,
-  );
-}
-
 class _QueryBarTextEditingController extends TextEditingController {
-  _QueryBarTextEditingController({super.text});
+  _QueryBarTextEditingController({required this.selectors, super.text})
+    : _selectorsById = Map.fromEntries(selectors.map((e) => MapEntry(e.id, e)));
 
+  final List<QuerySelectorDefinition> selectors;
+  final Map<String, QuerySelectorDefinition> _selectorsById;
   QueryParseResult _parseResult = QueryParseResult.empty();
 
   void updateParseResult(QueryParseResult result) {
@@ -588,77 +499,54 @@ class _QueryBarTextEditingController extends TextEditingController {
     TextStyle? style,
   }) {
     final baseStyle = style ?? DefaultTextStyle.of(context).style;
+
+    if (text.isEmpty) {
+      return TextSpan(text: text, style: baseStyle);
+    }
+
     final theme = Theme.of(context);
 
-    final keyStyle = TextStyle(color: theme.colorScheme.primary);
-    final valueStyle = TextStyle(color: theme.colorScheme.secondary);
     final operatorStyle = TextStyle(
-      color: theme.colorScheme.onSurface,
-      fontWeight: FontWeight.w600,
+      color: theme.colorScheme.onSurfaceVariant,
+      fontVariations: [.weight(900)],
     );
-    final termStyle = TextStyle(color: theme.colorScheme.onSurface);
     final warningStyle = TextStyle(
       color: theme.colorScheme.tertiary,
       decoration: TextDecoration.underline,
+      decorationStyle: TextDecorationStyle.wavy,
       decorationColor: theme.colorScheme.tertiary,
     );
     final errorStyle = TextStyle(
       color: theme.colorScheme.error,
       decoration: TextDecoration.underline,
+      decorationStyle: TextDecorationStyle.wavy,
       decorationColor: theme.colorScheme.error,
     );
 
     final tokenRanges = <_StyledRange>[];
 
-    for (final match in _parseResult.selectorMatches) {
+    for (final match in _parseResult.tokens) {
       switch (match) {
-        case SymbolSelectorMatch(:final symbolRange, :final tokenRange):
+        case QueryLexerSelectorToken(:final selectorId, :final range):
           _addClampedRange(
             tokenRanges,
-            symbolRange,
-            _TokenStylePriority.selectorKey,
-            keyStyle,
+            range,
+            _TokenStylePriority.selector,
+            TextStyle(
+              color:
+                  _selectorsById[selectorId]?.color ??
+                  theme.colorScheme.primary,
+              fontVariations: [.weight(600)],
+            ),
           );
+        case QueryLexerOperatorToken() || QueryLexerNegationToken():
           _addClampedRange(
             tokenRanges,
-            tokenRange,
-            _TokenStylePriority.selectorValue,
-            valueStyle,
+            match.range,
+            _TokenStylePriority.operator,
+            operatorStyle,
           );
-        case KeyValueSelectorMatch(:final keyRange, :final valueRange):
-          _addClampedRange(
-            tokenRanges,
-            keyRange,
-            _TokenStylePriority.selectorKey,
-            keyStyle,
-          );
-          if (valueRange != null) {
-            _addClampedRange(
-              tokenRanges,
-              valueRange,
-              _TokenStylePriority.selectorValue,
-              valueStyle,
-            );
-          }
       }
-    }
-
-    for (final term in _parseResult.textTerms) {
-      _addClampedRange(
-        tokenRanges,
-        term.range,
-        _TokenStylePriority.textTerm,
-        termStyle,
-      );
-    }
-
-    for (final operatorRange in _findOperatorRanges(text)) {
-      _addClampedRange(
-        tokenRanges,
-        operatorRange,
-        _TokenStylePriority.operator,
-        operatorStyle,
-      );
     }
 
     final issueRanges = <_StyledRange>[];
@@ -679,10 +567,6 @@ class _QueryBarTextEditingController extends TextEditingController {
       };
 
       _addClampedRange(issueRanges, range, priority, issueStyle);
-    }
-
-    if (text.isEmpty) {
-      return TextSpan(text: text, style: baseStyle);
     }
 
     final boundaries = <int>{0, text.length};
@@ -778,22 +662,6 @@ class _QueryBarTextEditingController extends TextEditingController {
       ),
     );
   }
-
-  List<QueryRange> _findOperatorRanges(String input) {
-    final ranges = <QueryRange>[];
-    final expression = RegExp(
-      r"\b(?:AND|OR|NOT)\b|&&|\|\||!",
-      caseSensitive: false,
-    );
-
-    for (final match in expression.allMatches(input)) {
-      if (match.start < match.end) {
-        ranges.add(QueryRange(match.start, match.end));
-      }
-    }
-
-    return ranges;
-  }
 }
 
 class _StyledRange {
@@ -808,11 +676,4 @@ class _StyledRange {
   final TextStyle style;
 }
 
-enum _TokenStylePriority {
-  textTerm,
-  operator,
-  selectorValue,
-  selectorKey,
-  warningIssue,
-  errorIssue,
-}
+enum _TokenStylePriority { operator, selector, warningIssue, errorIssue }
