@@ -155,3 +155,4 @@ docker/nats
 *.tfstate
 *.tfstate.backup
 *.tfstate.*.backup
+PLAN.md

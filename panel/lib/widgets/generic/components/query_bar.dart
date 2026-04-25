@@ -4,9 +4,11 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay_config.dart";
+import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
 class QueryBar extends HookWidget {
   const QueryBar({
@@ -53,9 +55,9 @@ class QueryBar extends HookWidget {
       [selectors],
     );
 
-    final cursorOffset = controller.selection.isValid
-        ? controller.selection.extentOffset.clamp(0, controller.text.length)
-        : controller.text.length;
+    final cursorOffset = controller.selection.isCollapsed
+        ? controller.selection.baseOffset
+        : null;
 
     final parseResult = useMemoized(
       () => queryEngine.parse(controller.text, cursorOffset: cursorOffset),
@@ -118,7 +120,7 @@ class QueryBar extends HookWidget {
     }
 
     void acceptActiveOrFirstSuggestion() {
-      if (!popupSuggestionsVisible) {
+      if (suggestions.isEmpty) {
         return;
       }
 
@@ -165,25 +167,23 @@ class QueryBar extends HookWidget {
     }
 
     final shortcuts = useMemoized(() {
-      if (!popupSuggestionsVisible) {
-        return const <ShortcutActivator, Intent>{};
-      }
-
       return <ShortcutActivator, Intent>{
-        const SingleActivator(LogicalKeyboardKey.arrowUp):
-            const _PreviousSuggestionIntent(),
-        const SingleActivator(LogicalKeyboardKey.arrowDown):
-            const _NextSuggestionIntent(),
         const SingleActivator(LogicalKeyboardKey.enter):
             const _AcceptSuggestionIntent(),
         const SingleActivator(LogicalKeyboardKey.numpadEnter):
             const _AcceptSuggestionIntent(),
-        const SingleActivator(LogicalKeyboardKey.escape):
-            const _DismissSuggestionsIntent(),
-        for (final activator in shortcutsFor(PreviousFocusIntent))
-          activator: const _PreviousSuggestionIntent(),
-        for (final activator in shortcutsFor(NextFocusIntent))
-          activator: const _NextSuggestionIntent(),
+        if (popupSuggestionsVisible) ...{
+          const SingleActivator(LogicalKeyboardKey.arrowUp):
+              const _PreviousSuggestionIntent(),
+          const SingleActivator(LogicalKeyboardKey.arrowDown):
+              const _NextSuggestionIntent(),
+          const SingleActivator(LogicalKeyboardKey.escape):
+              const _DismissSuggestionsIntent(),
+          for (final activator in shortcutsFor(PreviousFocusIntent))
+            activator: const _PreviousSuggestionIntent(),
+          for (final activator in shortcutsFor(NextFocusIntent))
+            activator: const _NextSuggestionIntent(),
+        },
       };
     }, [popupSuggestionsVisible]);
 
@@ -308,6 +308,18 @@ class QueryBar extends HookWidget {
                             ),
                           ),
                         const TextSpan(text: "to filter results."),
+                        if (context.isTablet || context.isDesktop) ...[
+                          const TextSpan(text: " Press "),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: ShortcutDisplay(
+                              shortcut: SingleActivator(
+                                LogicalKeyboardKey.enter,
+                              ),
+                            ),
+                          ),
+                          const TextSpan(text: " to select first result."),
+                        ],
                       ],
                     ),
                   ),
@@ -344,13 +356,27 @@ Widget _buildSuggestionPanel({
   required ValueChanged<QuerySuggestion> onTapSuggestion,
   required ValueChanged<int> onHoverIndex,
 }) {
+  final theme = Theme.of(context);
+  final menuStyle = theme.dropdownMenuTheme.menuStyle ?? const MenuStyle();
+  final states = <WidgetState>{};
+  final shape =
+      menuStyle.shape?.resolve(states) ??
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(6));
+  final padding =
+      menuStyle.padding?.resolve(states) ??
+      const EdgeInsets.symmetric(horizontal: 4, vertical: 4);
+  final elevation = menuStyle.elevation?.resolve(states) ?? 1;
+  final backgroundColor =
+      menuStyle.backgroundColor?.resolve(states) ?? theme.colorScheme.surface;
+
   return Material(
     key: ValueKey(suggestions.key),
-    elevation: 2,
-    color: Theme.of(context).colorScheme.surface,
-    borderRadius: BorderRadius.circular(8),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+    elevation: elevation,
+    color: backgroundColor,
+    shape: shape,
+    clipBehavior: Clip.antiAlias,
+    child: Padding(
+      padding: padding,
       child: Container(
         key: const ValueKey("query_bar_suggestions"),
         child: ListView.builder(
@@ -360,43 +386,68 @@ Widget _buildSuggestionPanel({
             final suggestion = suggestions[index];
             final isActive = activeSuggestionIndex == index;
 
-            return InkWell(
+            return MouseRegion(
               key: ValueKey("query_bar_suggestion_$index"),
-              onTap: () => onTapSuggestion(suggestion),
-              onHover: (hovering) {
-                if (hovering) {
-                  onHoverIndex(index);
-                }
-              },
-              child: Container(
-                color: isActive
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : null,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+              onEnter: (_) => onHoverIndex(index),
+              child: MenuItemButton(
+                style: _suggestionItemStyle(context, isActive: isActive),
+                trailingIcon: Text(
+                  _suggestionTypeLabel(suggestion),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        suggestion.label,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _suggestionTypeLabel(suggestion),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
+                requestFocusOnHover: false,
+                onPressed: () => onTapSuggestion(suggestion),
+                child: Text(suggestion.label, overflow: TextOverflow.ellipsis),
               ),
             );
           },
         ),
       ),
     ),
+  );
+}
+
+ButtonStyle? _suggestionItemStyle(
+  BuildContext context, {
+  required bool isActive,
+}) {
+  if (!isActive) {
+    return null;
+  }
+
+  final themeStyle = MenuButtonTheme.of(context).style;
+  final defaultStyle = const MenuItemButton().defaultStyleOf(context);
+
+  Color? resolveFocusedColor(WidgetStateProperty<Color?>? property) {
+    return property?.resolve(<WidgetState>{WidgetState.focused});
+  }
+
+  final focusedForegroundColor = resolveFocusedColor(
+    themeStyle?.foregroundColor ?? defaultStyle.foregroundColor,
+  );
+  final focusedIconColor = resolveFocusedColor(
+    themeStyle?.iconColor ?? defaultStyle.iconColor,
+  );
+  final focusedOverlayColor = resolveFocusedColor(
+    themeStyle?.overlayColor ?? defaultStyle.overlayColor,
+  );
+  final focusedBackgroundColor =
+      resolveFocusedColor(themeStyle?.backgroundColor) ??
+      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
+
+  return (themeStyle ?? const ButtonStyle()).copyWith(
+    backgroundColor: WidgetStatePropertyAll<Color>(focusedBackgroundColor),
+    foregroundColor: focusedForegroundColor == null
+        ? null
+        : WidgetStatePropertyAll<Color>(focusedForegroundColor),
+    iconColor: focusedIconColor == null
+        ? null
+        : WidgetStatePropertyAll<Color>(focusedIconColor),
+    overlayColor: focusedOverlayColor == null
+        ? null
+        : WidgetStatePropertyAll<Color>(focusedOverlayColor),
   );
 }
 
