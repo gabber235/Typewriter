@@ -1,0 +1,107 @@
+import "dart:async";
+
+import "package:typewriter_panel/logic/search/core/models.dart";
+import "package:typewriter_panel/logic/search/core/search_source.dart";
+import "package:typewriter_panel/logic/search/query/query_selector.dart";
+
+final class CachedSearchSource implements SearchSource {
+  CachedSearchSource({required this.source}) {
+    _snapshotSubscription = source.snapshots.listen(_onSnapshot);
+  }
+
+  final SearchSource source;
+
+  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
+    sync: true,
+  );
+
+  StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
+  SearchSourceSnapshot? _cachedReadySnapshot;
+
+  @override
+  Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
+
+  @override
+  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
+
+  @override
+  void initialize() {
+    source.initialize();
+  }
+
+  @override
+  void search(SearchQueryContext context) {
+    source.search(context);
+  }
+
+  @override
+  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
+    return source.preview(request);
+  }
+
+  @override
+  void dispose() {
+    unawaited(_snapshotSubscription?.cancel());
+    _snapshotSubscription = null;
+    unawaited(_snapshots.close());
+    source.dispose();
+  }
+
+  void _onSnapshot(SearchSourceSnapshot snapshot) {
+    if (snapshot.status == SearchSourceStatus.ready) {
+      _cachedReadySnapshot = snapshot;
+      _snapshots.add(snapshot);
+      return;
+    }
+
+    final cachedSnapshot = _cachedReadySnapshot;
+    if (cachedSnapshot == null) {
+      _snapshots.add(snapshot);
+      return;
+    }
+
+    switch (snapshot.status) {
+      case SearchSourceStatus.loading || SearchSourceStatus.error:
+        _snapshots.add(
+          snapshot.copyWith(
+            nodes: _markNodesStale(cachedSnapshot.nodes),
+            actions: cachedSnapshot.actions,
+          ),
+        );
+      case SearchSourceStatus.idle:
+        _snapshots.add(snapshot);
+      case SearchSourceStatus.ready:
+        throw StateError("Ready snapshot handled before switch");
+    }
+  }
+
+  List<SearchNode> _markNodesStale(List<SearchNode> nodes) {
+    return nodes.map(_markNodeStale).toList();
+  }
+
+  SearchNode _markNodeStale(SearchNode node) {
+    return switch (node) {
+      SearchResultNode(:final result) => SearchNode.result(
+        result: result.copyWith(isStale: true),
+      ),
+      SearchSectionNode(
+        :final id,
+        :final title,
+        :final subtitle,
+        :final children,
+      ) =>
+        SearchNode.section(
+          id: id,
+          title: title,
+          subtitle: subtitle,
+          children: _markNodesStale(children),
+        ),
+    };
+  }
+}
+
+extension CachedSearchSourceX on SearchSource {
+  SearchSource cached() {
+    return CachedSearchSource(source: this);
+  }
+}

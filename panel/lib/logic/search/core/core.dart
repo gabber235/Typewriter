@@ -3,3 +3,4 @@ export "controller/source_controller.dart";
 export "models.dart";
 export "search_controller.dart";
 export "search_source.dart";
+export "source/sources.dart";
