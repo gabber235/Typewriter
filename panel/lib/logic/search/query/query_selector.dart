@@ -21,6 +21,7 @@ sealed class QuerySelectorDefinition {
   final Color? color;
 
   Parser<QueryLexerSelectorToken> parser();
+  QuerySelectorDefinition merge(QuerySelectorDefinition other);
 
   List<QueryParseIssue> validate(List<QueryLexerSelectorToken> tokens) {
     assert(
@@ -169,6 +170,43 @@ final class KeyValueSelectorDefinition extends QuerySelectorDefinition {
           );
         });
   }
+
+  @override
+  QuerySelectorDefinition merge(QuerySelectorDefinition other) {
+    assert(id == other.id, "Can only merge selectors with same id");
+    if (other is! KeyValueSelectorDefinition) {
+      return this;
+    }
+    return KeyValueSelectorDefinition(
+      id: id,
+      key: key,
+      caseSensitive: caseSensitive || other.caseSensitive,
+      multiplicity: multiplicity == .single || other.multiplicity == .single
+          ? .single
+          : .multiple,
+      color: color,
+      value: value.merge(other.value),
+    );
+  }
+}
+
+extension QuerySelectorDefinitionsX on List<QuerySelectorDefinition> {
+  List<QuerySelectorDefinition> merge(List<QuerySelectorDefinition> other) {
+    final result = <QuerySelectorDefinition>[];
+    final otherById = {for (final s in other) s.id: s};
+    for (final s in this) {
+      final otherS = otherById.remove(s.id);
+      if (otherS == null) {
+        result.add(s);
+        continue;
+      }
+      result.add(s.merge(otherS));
+    }
+    for (final s in otherById.values) {
+      result.add(s);
+    }
+    return result;
+  }
 }
 
 sealed class QuerySelectorValue {
@@ -180,6 +218,7 @@ sealed class QuerySelectorValue {
 
   bool isValid(String value);
   List<String> suggestions(String partial);
+  QuerySelectorValue merge(QuerySelectorValue other);
 }
 
 class FreeTextSelectorValue extends QuerySelectorValue {
@@ -190,6 +229,9 @@ class FreeTextSelectorValue extends QuerySelectorValue {
 
   @override
   List<String> suggestions(String partial) => [];
+
+  @override
+  QuerySelectorValue merge(QuerySelectorValue other) => this;
 }
 
 class EnumSelectorValue extends QuerySelectorValue {
@@ -202,4 +244,14 @@ class EnumSelectorValue extends QuerySelectorValue {
 
   @override
   List<String> suggestions(String partial) => possibleValues;
+
+  @override
+  QuerySelectorValue merge(QuerySelectorValue other) {
+    switch (other) {
+      case EnumSelectorValue(possibleValues: final otherValues):
+        return EnumSelectorValue({...possibleValues, ...otherValues}.toList());
+      case FreeTextSelectorValue():
+        return other;
+    }
+  }
 }
