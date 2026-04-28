@@ -15,6 +15,7 @@ import "package:typewriter_panel/widgets/app/components/inspector/editors/object
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
+import "package:typewriter_panel/widgets/generic/components/draggable_sheet_handle.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
@@ -156,9 +157,9 @@ class MobileInspector extends HookConsumerWidget {
                     child: CustomScrollView(
                       controller: scrollController,
                       slivers: [
-                        SliverPersistentHeader(
+                        const SliverPersistentHeader(
                           pinned: true,
-                          delegate: _MobileDragHandleDelegate(),
+                          delegate: DraggableSheetHandleDelegate(),
                         ),
                         SliverToBoxAdapter(
                           child: Padding(
@@ -347,36 +348,6 @@ class DesktopInspector extends HookConsumerWidget {
       ],
     );
   }
-}
-
-class _MobileDragHandleDelegate extends SliverPersistentHeaderDelegate {
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Center(
-      child: Container(
-        height: 4,
-        width: 32,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => 32;
-
-  @override
-  double get minExtent => 32;
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
 }
 
 class _InspectorContent extends HookConsumerWidget {
