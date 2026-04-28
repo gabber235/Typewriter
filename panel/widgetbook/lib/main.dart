@@ -50,10 +50,16 @@ class TypewriterWidgetbook extends StatelessWidget {
         InspectorAddon(),
         MaterialThemeAddon(
           themes: [darkTheme, lightTheme],
-          initialTheme: SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark ? darkTheme : lightTheme,
+          initialTheme:
+              SchedulerBinding.instance.platformDispatcher.platformBrightness ==
+                  Brightness.dark
+              ? darkTheme
+              : lightTheme,
         ),
         AlignmentAddon(),
         ZoomAddon(),
+        // ignore: experimental_member_use
+        TimeDilationAddon(),
       ],
       lightTheme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),

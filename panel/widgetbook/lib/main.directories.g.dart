@@ -85,6 +85,10 @@ import 'package:widgetbook_workspace/stories/generic/components/query_bar.storie
     as _widgetbook_workspace_stories_generic_components_query_bar_stories;
 import 'package:widgetbook_workspace/stories/generic/components/retry_indicator.stories.dart'
     as _widgetbook_workspace_stories_generic_components_retry_indicator_stories;
+import 'package:widgetbook_workspace/stories/generic/components/search/search_frame.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_search_search_frame_stories;
+import 'package:widgetbook_workspace/stories/generic/components/search_modal.stories.dart'
+    as _widgetbook_workspace_stories_generic_components_search_modal_stories;
 import 'package:widgetbook_workspace/stories/generic/components/secret_field.stories.dart'
     as _widgetbook_workspace_stories_generic_components_secret_field_stories;
 import 'package:widgetbook_workspace/stories/generic/components/section.stories.dart'
@@ -1148,6 +1152,39 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_generic_components_type_link_stories
                             .typeLinkDefaultUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'search',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'SearchFrame',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_generic_components_search_search_frame_stories
+                                .searchFrameDefaultUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'SearchModal',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Direct',
+                        builder:
+                            _widgetbook_workspace_stories_generic_components_search_modal_stories
+                                .searchModalDirectUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Route',
+                        builder:
+                            _widgetbook_workspace_stories_generic_components_search_modal_stories
+                                .searchModalRouteUseCase,
+                      ),
+                    ],
                   ),
                 ],
               ),
