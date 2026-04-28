@@ -30,6 +30,10 @@ class SearchController extends ChangeNotifier {
 
   SearchActionState get actionState => _actionController.state;
 
+  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
+    return _sourceController.source.preview(request);
+  }
+
   SearchActionSubmitResult executeAction(
     Type actionType, {
     SearchActionTarget target = const SearchActionTarget.selection(),

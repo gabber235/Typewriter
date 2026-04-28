@@ -9,5 +9,6 @@ export "organization.mock.dart";
 export "pages.mock.dart";
 export "query.mock.dart";
 export "scene.mock.dart";
+export "search.mock.dart";
 export "services.mock.dart";
 export "tag.mock.dart";
