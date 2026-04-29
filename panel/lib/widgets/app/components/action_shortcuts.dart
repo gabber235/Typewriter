@@ -8,6 +8,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/hooks/delayed_execution.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
+import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
@@ -28,7 +29,33 @@ abstract class ActionShortcut with _$ActionShortcut {
     ActionInvoke? onInvoke,
     @Default(true) bool show,
     GlobalKey? owner,
-  }) = _ActionShortcut;
+  }) = ActivatorActionShortcut;
+
+  const factory ActionShortcut.intent({
+    required String id,
+    required String label,
+    required String description,
+    required Type intent,
+    required int priority,
+    Widget? icon,
+    ActionInvoke? onInvoke,
+    @Default(true) bool show,
+    GlobalKey? owner,
+  }) = IntentActionShortcut;
+
+  const ActionShortcut._();
+
+  bool get canInvoke {
+    return onInvoke != null && shortcuts.isNotEmpty;
+  }
+
+  List<ShortcutActivator> get shortcuts {
+    return switch (this) {
+      ActivatorActionShortcut(:final activators) => activators,
+      IntentActionShortcut(:final intent) => shortcutsFor(intent),
+      ActionShortcut() => [],
+    };
+  }
 }
 
 @riverpod
@@ -129,21 +156,40 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final regKey = useGlobalKey(debugLabel: "ShortcutActionSet");
     final callableShortcuts = useMemoized(
-      () => shortcuts
-          .where((s) => s.onInvoke != null && s.activators.isNotEmpty)
-          .toList(),
+      () => shortcuts.where((s) => s.canInvoke).toList(),
       [shortcuts],
     );
-    return CallbackShortcuts(
+
+    return Shortcuts(
       key: regKey,
-      bindings: {
-        for (final action in callableShortcuts)
+      shortcuts: {
+        for (final action
+            in callableShortcuts.whereType<ActivatorActionShortcut>())
           for (final activator in action.activators)
-            activator: () => action.onInvoke!.call(ref),
+            activator: _ActionIntent(action),
       },
-      child: child,
+      child: Actions(
+        actions: {
+          _ActionIntent: CallbackAction<_ActionIntent>(
+            onInvoke: (intent) {
+              return intent.action.onInvoke!.call(ref);
+            },
+          ),
+          for (final action
+              in callableShortcuts.whereType<IntentActionShortcut>())
+            action.intent: CallbackAction(
+              onInvoke: (intent) => action.onInvoke!.call(ref),
+            ),
+        },
+        child: child,
+      ),
     );
   }
+}
+
+class _ActionIntent extends Intent {
+  const _ActionIntent(this.action);
+  final ActionShortcut action;
 }
 
 class ActionSet extends HookConsumerWidget {
@@ -359,7 +405,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
           action.icon!,
         Flexible(child: Text(action.label, overflow: TextOverflow.ellipsis)),
         RotatingShortcuts(
-          shortcuts: action.activators,
+          shortcuts: action.shortcuts,
           size: 9,
           interval: 5.seconds,
         ),

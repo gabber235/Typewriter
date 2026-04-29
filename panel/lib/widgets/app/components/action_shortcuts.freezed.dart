@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ActionShortcut implements DiagnosticableTreeMixin {
 
- String get id; String get label; String get description; List<ShortcutActivator> get activators; int get priority; Widget? get icon; ActionInvoke? get onInvoke; bool get show; GlobalKey? get owner;
+ String get id; String get label; String get description; int get priority; Widget? get icon; ActionInvoke? get onInvoke; bool get show; GlobalKey? get owner;
 /// Create a copy of ActionShortcut
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,21 +26,21 @@ $ActionShortcutCopyWith<ActionShortcut> get copyWith => _$ActionShortcutCopyWith
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'ActionShortcut'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('activators', activators))..add(DiagnosticsProperty('priority', priority))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('onInvoke', onInvoke))..add(DiagnosticsProperty('show', show))..add(DiagnosticsProperty('owner', owner));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('priority', priority))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('onInvoke', onInvoke))..add(DiagnosticsProperty('show', show))..add(DiagnosticsProperty('owner', owner));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActionShortcut&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.activators, activators)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.onInvoke, onInvoke) || other.onInvoke == onInvoke)&&(identical(other.show, show) || other.show == show)&&(identical(other.owner, owner) || other.owner == owner));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActionShortcut&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.description, description) || other.description == description)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.onInvoke, onInvoke) || other.onInvoke == onInvoke)&&(identical(other.show, show) || other.show == show)&&(identical(other.owner, owner) || other.owner == owner));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,label,description,const DeepCollectionEquality().hash(activators),priority,icon,onInvoke,show,owner);
+int get hashCode => Object.hash(runtimeType,id,label,description,priority,icon,onInvoke,show,owner);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'ActionShortcut(id: $id, label: $label, description: $description, activators: $activators, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, owner: $owner)';
+  return 'ActionShortcut(id: $id, label: $label, description: $description, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, owner: $owner)';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $ActionShortcutCopyWith<$Res>  {
   factory $ActionShortcutCopyWith(ActionShortcut value, $Res Function(ActionShortcut) _then) = _$ActionShortcutCopyWithImpl;
 @useResult
 $Res call({
- String id, String label, String description, List<ShortcutActivator> activators, int priority, Widget? icon, ActionInvoke? onInvoke, bool show, GlobalKey? owner
+ String id, String label, String description, int priority, Widget? icon, FutureOr<void> Function(WidgetRef)? onInvoke, bool show, GlobalKey<State<StatefulWidget>>? owner
 });
 
 
@@ -68,18 +68,17 @@ class _$ActionShortcutCopyWithImpl<$Res>
 
 /// Create a copy of ActionShortcut
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? description = null,Object? activators = null,Object? priority = null,Object? icon = freezed,Object? onInvoke = freezed,Object? show = null,Object? owner = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? description = null,Object? priority = null,Object? icon = freezed,Object? onInvoke = freezed,Object? show = null,Object? owner = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String,activators: null == activators ? _self.activators : activators // ignore: cast_nullable_to_non_nullable
-as List<ShortcutActivator>,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as int,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as Widget?,onInvoke: freezed == onInvoke ? _self.onInvoke : onInvoke // ignore: cast_nullable_to_non_nullable
-as ActionInvoke?,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
+as FutureOr<void> Function(WidgetRef)?,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
 as bool,owner: freezed == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
-as GlobalKey?,
+as GlobalKey<State<StatefulWidget>>?,
   ));
 }
 
@@ -100,11 +99,12 @@ extension ActionShortcutPatterns on ActionShortcut {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ActionShortcut value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( ActivatorActionShortcut value)?  $default,{TResult Function( IntentActionShortcut value)?  intent,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _ActionShortcut() when $default != null:
-return $default(_that);case _:
+case ActivatorActionShortcut() when $default != null:
+return $default(_that);case IntentActionShortcut() when intent != null:
+return intent(_that);case _:
   return orElse();
 
 }
@@ -122,11 +122,12 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ActionShortcut value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( ActivatorActionShortcut value)  $default,{required TResult Function( IntentActionShortcut value)  intent,}){
 final _that = this;
 switch (_that) {
-case _ActionShortcut():
-return $default(_that);case _:
+case ActivatorActionShortcut():
+return $default(_that);case IntentActionShortcut():
+return intent(_that);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -143,11 +144,12 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ActionShortcut value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( ActivatorActionShortcut value)?  $default,{TResult? Function( IntentActionShortcut value)?  intent,}){
 final _that = this;
 switch (_that) {
-case _ActionShortcut() when $default != null:
-return $default(_that);case _:
+case ActivatorActionShortcut() when $default != null:
+return $default(_that);case IntentActionShortcut() when intent != null:
+return intent(_that);case _:
   return null;
 
 }
@@ -164,10 +166,11 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  String description,  List<ShortcutActivator> activators,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  String description,  List<ShortcutActivator> activators,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)?  $default,{TResult Function( String id,  String label,  String description,  Type intent,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)?  intent,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _ActionShortcut() when $default != null:
-return $default(_that.id,_that.label,_that.description,_that.activators,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case _:
+case ActivatorActionShortcut() when $default != null:
+return $default(_that.id,_that.label,_that.description,_that.activators,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case IntentActionShortcut() when intent != null:
+return intent(_that.id,_that.label,_that.description,_that.intent,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case _:
   return orElse();
 
 }
@@ -185,10 +188,11 @@ return $default(_that.id,_that.label,_that.description,_that.activators,_that.pr
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  String description,  List<ShortcutActivator> activators,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  String description,  List<ShortcutActivator> activators,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)  $default,{required TResult Function( String id,  String label,  String description,  Type intent,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)  intent,}) {final _that = this;
 switch (_that) {
-case _ActionShortcut():
-return $default(_that.id,_that.label,_that.description,_that.activators,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case _:
+case ActivatorActionShortcut():
+return $default(_that.id,_that.label,_that.description,_that.activators,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case IntentActionShortcut():
+return intent(_that.id,_that.label,_that.description,_that.intent,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +209,11 @@ return $default(_that.id,_that.label,_that.description,_that.activators,_that.pr
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  String description,  List<ShortcutActivator> activators,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  String description,  List<ShortcutActivator> activators,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)?  $default,{TResult? Function( String id,  String label,  String description,  Type intent,  int priority,  Widget? icon,  ActionInvoke? onInvoke,  bool show,  GlobalKey? owner)?  intent,}) {final _that = this;
 switch (_that) {
-case _ActionShortcut() when $default != null:
-return $default(_that.id,_that.label,_that.description,_that.activators,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case _:
+case ActivatorActionShortcut() when $default != null:
+return $default(_that.id,_that.label,_that.description,_that.activators,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case IntentActionShortcut() when intent != null:
+return intent(_that.id,_that.label,_that.description,_that.intent,_that.priority,_that.icon,_that.onInvoke,_that.show,_that.owner);case _:
   return null;
 
 }
@@ -219,15 +224,15 @@ return $default(_that.id,_that.label,_that.description,_that.activators,_that.pr
 /// @nodoc
 
 
-class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
-  const _ActionShortcut({required this.id, required this.label, required this.description, required final  List<ShortcutActivator> activators, required this.priority, this.icon, this.onInvoke, this.show = true, this.owner}): _activators = activators;
+class ActivatorActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
+  const ActivatorActionShortcut({required this.id, required this.label, required this.description, required final  List<ShortcutActivator> activators, required this.priority, this.icon, this.onInvoke, this.show = true, this.owner}): _activators = activators,super._();
   
 
 @override final  String id;
 @override final  String label;
 @override final  String description;
  final  List<ShortcutActivator> _activators;
-@override List<ShortcutActivator> get activators {
+ List<ShortcutActivator> get activators {
   if (_activators is EqualUnmodifiableListView) return _activators;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_activators);
@@ -243,7 +248,7 @@ class _ActionShortcut with DiagnosticableTreeMixin implements ActionShortcut {
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$ActionShortcutCopyWith<_ActionShortcut> get copyWith => __$ActionShortcutCopyWithImpl<_ActionShortcut>(this, _$identity);
+$ActivatorActionShortcutCopyWith<ActivatorActionShortcut> get copyWith => _$ActivatorActionShortcutCopyWithImpl<ActivatorActionShortcut>(this, _$identity);
 
 
 @override
@@ -255,7 +260,7 @@ void debugFillProperties(DiagnosticPropertiesBuilder properties) {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActionShortcut&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._activators, _activators)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.onInvoke, onInvoke) || other.onInvoke == onInvoke)&&(identical(other.show, show) || other.show == show)&&(identical(other.owner, owner) || other.owner == owner));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivatorActionShortcut&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._activators, _activators)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.onInvoke, onInvoke) || other.onInvoke == onInvoke)&&(identical(other.show, show) || other.show == show)&&(identical(other.owner, owner) || other.owner == owner));
 }
 
 
@@ -271,8 +276,8 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 }
 
 /// @nodoc
-abstract mixin class _$ActionShortcutCopyWith<$Res> implements $ActionShortcutCopyWith<$Res> {
-  factory _$ActionShortcutCopyWith(_ActionShortcut value, $Res Function(_ActionShortcut) _then) = __$ActionShortcutCopyWithImpl;
+abstract mixin class $ActivatorActionShortcutCopyWith<$Res> implements $ActionShortcutCopyWith<$Res> {
+  factory $ActivatorActionShortcutCopyWith(ActivatorActionShortcut value, $Res Function(ActivatorActionShortcut) _then) = _$ActivatorActionShortcutCopyWithImpl;
 @override @useResult
 $Res call({
  String id, String label, String description, List<ShortcutActivator> activators, int priority, Widget? icon, ActionInvoke? onInvoke, bool show, GlobalKey? owner
@@ -283,22 +288,110 @@ $Res call({
 
 }
 /// @nodoc
-class __$ActionShortcutCopyWithImpl<$Res>
-    implements _$ActionShortcutCopyWith<$Res> {
-  __$ActionShortcutCopyWithImpl(this._self, this._then);
+class _$ActivatorActionShortcutCopyWithImpl<$Res>
+    implements $ActivatorActionShortcutCopyWith<$Res> {
+  _$ActivatorActionShortcutCopyWithImpl(this._self, this._then);
 
-  final _ActionShortcut _self;
-  final $Res Function(_ActionShortcut) _then;
+  final ActivatorActionShortcut _self;
+  final $Res Function(ActivatorActionShortcut) _then;
 
 /// Create a copy of ActionShortcut
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? description = null,Object? activators = null,Object? priority = null,Object? icon = freezed,Object? onInvoke = freezed,Object? show = null,Object? owner = freezed,}) {
-  return _then(_ActionShortcut(
+  return _then(ActivatorActionShortcut(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,activators: null == activators ? _self._activators : activators // ignore: cast_nullable_to_non_nullable
 as List<ShortcutActivator>,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as int,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as Widget?,onInvoke: freezed == onInvoke ? _self.onInvoke : onInvoke // ignore: cast_nullable_to_non_nullable
+as ActionInvoke?,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
+as bool,owner: freezed == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as GlobalKey?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class IntentActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
+  const IntentActionShortcut({required this.id, required this.label, required this.description, required this.intent, required this.priority, this.icon, this.onInvoke, this.show = true, this.owner}): super._();
+  
+
+@override final  String id;
+@override final  String label;
+@override final  String description;
+ final  Type intent;
+@override final  int priority;
+@override final  Widget? icon;
+@override final  ActionInvoke? onInvoke;
+@override@JsonKey() final  bool show;
+@override final  GlobalKey? owner;
+
+/// Create a copy of ActionShortcut
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$IntentActionShortcutCopyWith<IntentActionShortcut> get copyWith => _$IntentActionShortcutCopyWithImpl<IntentActionShortcut>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ActionShortcut.intent'))
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('intent', intent))..add(DiagnosticsProperty('priority', priority))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('onInvoke', onInvoke))..add(DiagnosticsProperty('show', show))..add(DiagnosticsProperty('owner', owner));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IntentActionShortcut&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.description, description) || other.description == description)&&(identical(other.intent, intent) || other.intent == intent)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.onInvoke, onInvoke) || other.onInvoke == onInvoke)&&(identical(other.show, show) || other.show == show)&&(identical(other.owner, owner) || other.owner == owner));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,label,description,intent,priority,icon,onInvoke,show,owner);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'ActionShortcut.intent(id: $id, label: $label, description: $description, intent: $intent, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, owner: $owner)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $IntentActionShortcutCopyWith<$Res> implements $ActionShortcutCopyWith<$Res> {
+  factory $IntentActionShortcutCopyWith(IntentActionShortcut value, $Res Function(IntentActionShortcut) _then) = _$IntentActionShortcutCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String label, String description, Type intent, int priority, Widget? icon, ActionInvoke? onInvoke, bool show, GlobalKey? owner
+});
+
+
+
+
+}
+/// @nodoc
+class _$IntentActionShortcutCopyWithImpl<$Res>
+    implements $IntentActionShortcutCopyWith<$Res> {
+  _$IntentActionShortcutCopyWithImpl(this._self, this._then);
+
+  final IntentActionShortcut _self;
+  final $Res Function(IntentActionShortcut) _then;
+
+/// Create a copy of ActionShortcut
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? description = null,Object? intent = null,Object? priority = null,Object? icon = freezed,Object? onInvoke = freezed,Object? show = null,Object? owner = freezed,}) {
+  return _then(IntentActionShortcut(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String,intent: null == intent ? _self.intent : intent // ignore: cast_nullable_to_non_nullable
+as Type,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as int,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as Widget?,onInvoke: freezed == onInvoke ? _self.onInvoke : onInvoke // ignore: cast_nullable_to_non_nullable
 as ActionInvoke?,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
