@@ -43,6 +43,8 @@ import 'package:widgetbook_workspace/stories/app/components/organization_selecto
     as _widgetbook_workspace_stories_app_components_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/app/components/realm_selector.stories.dart'
     as _widgetbook_workspace_stories_app_components_realm_selector_stories;
+import 'package:widgetbook_workspace/stories/app/components/search_result_item.stories.dart'
+    as _widgetbook_workspace_stories_app_components_search_result_item_stories;
 import 'package:widgetbook_workspace/stories/app/components/selectable.stories.dart'
     as _widgetbook_workspace_stories_app_components_selectable_stories;
 import 'package:widgetbook_workspace/stories/app/components/tags/tag_node.stories.dart'
@@ -690,6 +692,77 @@ final directories = <_widgetbook.WidgetbookNode>[
                         builder:
                             _widgetbook_workspace_stories_app_components_interaction_mode_mode_display_chip_stories
                                 .modeDisplayChipNormal,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'search_result_item',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'BlueprintSearchResultItem',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Blueprint',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                .blueprintSearchResultItemUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'BookSearchResultItem',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Book',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                .bookSearchResultItemUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'EntrySearchResultItem',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Entry',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                .entrySearchResultItemUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PageSearchResultItem',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Page',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                .pageSearchResultItemUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'SearchResultCard',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Catalog',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                .searchResultItemCatalogUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'TagSearchResultItem',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Tag',
+                        builder:
+                            _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                .tagSearchResultItemUseCase,
                       ),
                     ],
                   ),
