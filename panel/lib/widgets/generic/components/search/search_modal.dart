@@ -13,6 +13,7 @@ Future<void> showSearchModal(
   SearchSource source, {
   List<QuerySelectorDefinition> baseSelectors = const [],
   String initialQuery = "",
+  String searchHint = "Search",
 }) {
   return Navigator.of(context).push(
     _PopupRoute(
@@ -33,6 +34,7 @@ Future<void> showSearchModal(
               source: source,
               baseSelectors: baseSelectors,
               initialQuery: initialQuery,
+              searchHint: searchHint,
             ),
           ),
         ),
@@ -46,12 +48,15 @@ class SearchModal extends HookWidget {
     required this.source,
     this.baseSelectors = const [],
     this.initialQuery = "",
+    this.searchHint = "Search",
     super.key,
   });
 
   final SearchSource source;
   final List<QuerySelectorDefinition> baseSelectors;
   final String initialQuery;
+
+  final String searchHint;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +69,7 @@ class SearchModal extends HookWidget {
           onCloseRequested: () => Navigator.of(context).maybePop(),
         );
       },
-      child: SearchModalBody(initialQuery: initialQuery),
+      child: SearchModalBody(searchHint: searchHint),
     );
   }
 }
@@ -100,7 +105,7 @@ class _PopupRoute extends PopupRoute<void> {
   ) {
     final curvedAnimation = CurvedAnimation(
       parent: animation,
-      curve: Curves.easeOutCubic,
+      curve: ElasticOutCurve(0.8),
       reverseCurve: Curves.easeInCubic,
     );
 
