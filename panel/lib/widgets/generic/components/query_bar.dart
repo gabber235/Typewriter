@@ -3,8 +3,9 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
-import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/shortuct.dart";
+import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay_config.dart";
@@ -16,6 +17,7 @@ class QueryBar extends HookWidget {
     required this.onQueryChanged,
     required this.selectors,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
+    this.autofocus = DecoratedTextFieldAutoFocus.none,
     super.key,
   });
 
@@ -23,6 +25,7 @@ class QueryBar extends HookWidget {
   final void Function(String) onQueryChanged;
   final List<QuerySelectorDefinition> selectors;
   final InputDecoration inputDecoration;
+  final DecoratedTextFieldAutoFocus autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +58,9 @@ class QueryBar extends HookWidget {
       [selectors],
     );
 
-    final cursorOffset = controller.selection.isCollapsed
-        ? controller.selection.baseOffset
+    final cursorOffset =
+        controller.selection.isCollapsed && focusNode.hasPrimaryFocus
+        ? controller.selection.extentOffset
         : null;
 
     final parseResult = useMemoized(
@@ -167,186 +171,204 @@ class QueryBar extends HookWidget {
     }
 
     final shortcuts = useMemoized(() {
-      return <ShortcutActivator, Intent>{
-        const SingleActivator(LogicalKeyboardKey.enter):
-            const _AcceptSuggestionIntent(),
-        const SingleActivator(LogicalKeyboardKey.numpadEnter):
-            const _AcceptSuggestionIntent(),
-        if (popupSuggestionsVisible) ...{
-          const SingleActivator(LogicalKeyboardKey.arrowUp):
-              const _PreviousSuggestionIntent(),
-          const SingleActivator(LogicalKeyboardKey.arrowDown):
-              const _NextSuggestionIntent(),
-          const SingleActivator(LogicalKeyboardKey.escape):
-              const _DismissSuggestionsIntent(),
-          for (final activator in shortcutsFor(PreviousFocusIntent))
-            activator: const _PreviousSuggestionIntent(),
-          for (final activator in shortcutsFor(NextFocusIntent))
-            activator: const _NextSuggestionIntent(),
-        },
-      };
-    }, [popupSuggestionsVisible]);
-
-    final actions = <Type, Action<Intent>>{
-      _PreviousSuggestionIntent: CallbackAction<_PreviousSuggestionIntent>(
-        onInvoke: (_) {
-          selectPreviousSuggestion();
-          return null;
-        },
-      ),
-      _NextSuggestionIntent: CallbackAction<_NextSuggestionIntent>(
-        onInvoke: (_) {
-          selectNextSuggestion();
-          return null;
-        },
-      ),
-      _AcceptSuggestionIntent: CallbackAction<_AcceptSuggestionIntent>(
-        onInvoke: (_) {
-          acceptActiveOrFirstSuggestion();
-          return null;
-        },
-      ),
-      if (popupSuggestionsVisible) ...{
-        _DismissSuggestionsIntent: CallbackAction<_DismissSuggestionsIntent>(
-          onInvoke: (_) {
-            dismissSuggestions();
-            return null;
-          },
-        ),
-        DismissIntent: CallbackAction<DismissIntent>(
-          onInvoke: (_) {
-            dismissSuggestions();
-            return null;
-          },
-        ),
-      },
-    };
-
-    return Shortcuts(
-      shortcuts: shortcuts,
-      child: Actions(
-        actions: actions,
-        child: AnimatedSize(
-          duration: 300.ms,
-          curve: Curves.easeInOut,
-          alignment: Alignment.topCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 4,
-            children: [
-              AnchoredOverlayPortal(
-                visible: popupVisible,
-                config: const AnchoredOverlayConfig(
-                  preferredSide: AnchoredOverlaySide.bottom,
-                  spacing: 4,
-                  sharedAxisConstraintMode:
-                      SharedAxisConstraintMode.matchAnchor,
-                ),
-                child: DecoratedTextField(
-                  focusNode: focusNode,
-                  controller: controller,
-                  decoration: inputDecoration.copyWith(
-                    errorText: parseResult.issues.isNotEmpty
-                        ? parseResult.issues.first.message
-                        : null,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 8,
-                    ),
-                  ),
-                  maxLines: null,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
-                  ],
-                  onChanged: (value) {
-                    dismissedSignature.value = null;
-                    onQueryChanged(value);
-                  },
-                  onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
-                ),
-                overlayBuilder: (context, _) => _buildSuggestionPanel(
-                  context: context,
-                  suggestions: suggestions,
-                  activeSuggestionIndex: activeSuggestionIndex.value,
-                  onTapSuggestion: applySuggestion,
-                  onHoverIndex: (index) {
-                    activeSuggestionIndex.value = index;
-                  },
-                ),
-              ),
-              if (helperVisible) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text.rich(
-                    TextSpan(
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      children: [
-                        TextSpan(text: "You can use: "),
-                        for (final label in helperBadges.labels) ...[
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.middle,
-                            child: _buildHelperBadge(
-                              context,
-                              label,
-                              key: ValueKey("query_bar_helper_badge_$label"),
-                            ),
-                          ),
-                          const TextSpan(text: ", "),
-                        ],
-                        if (helperBadges.hiddenCount > 0)
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.middle,
-                            child: _buildHelperBadge(
-                              context,
-                              "+${helperBadges.hiddenCount}",
-                              key: const ValueKey(
-                                "query_bar_helper_badge_overflow",
-                              ),
-                            ),
-                          ),
-                        const TextSpan(text: "to filter results."),
-                        if (context.isTablet || context.isDesktop) ...[
-                          const TextSpan(text: " Press "),
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.middle,
-                            child: ShortcutDisplay(
-                              shortcut: SingleActivator(
-                                LogicalKeyboardKey.enter,
-                              ),
-                            ),
-                          ),
-                          const TextSpan(text: " to select first result."),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+      return [
+        if (focusNode.hasPrimaryFocus)
+          ActionShortcut(
+            id: "query_bar_accept_first_suggestion",
+            label: "Accept suggestion",
+            description: "Accept the first suggestion",
+            activators: const [
+              SingleActivator(LogicalKeyboardKey.enter),
+              SingleActivator(LogicalKeyboardKey.numpadEnter),
             ],
+            priority: 2000,
+            show: true,
+            onInvoke: (_) => acceptActiveOrFirstSuggestion(),
           ),
+        if (popupSuggestionsVisible) ...[
+          ActionShortcut(
+            id: "query_bar_navigate_suggestions_popup",
+            label: "Switch suggestions",
+            description: "Switch between the suggestions popup",
+            activators: [
+              SortedLogicalKeyActivator(
+                LogicalKeyboardKey.arrowUp,
+                LogicalKeyboardKey.arrowDown,
+              ),
+            ],
+            show: true,
+            priority: 1999,
+          ),
+          ActionShortcut(
+            id: "query_bar_previous_suggestion",
+            label: "",
+            description: "",
+            activators: [const SingleActivator(LogicalKeyboardKey.arrowUp)],
+            onInvoke: (_) => selectPreviousSuggestion(),
+            show: false,
+            priority: -1,
+          ),
+          ActionShortcut(
+            id: "query_bar_next_suggestion",
+            label: "",
+            description: "",
+            activators: [const SingleActivator(LogicalKeyboardKey.arrowDown)],
+            onInvoke: (_) => selectNextSuggestion(),
+            show: false,
+            priority: -1,
+          ),
+          ActionShortcut.intent(
+            id: "query_bar_dismiss_suggestions_popup",
+            label: "Dismiss suggestions",
+            description: "Dismiss the suggestions popup",
+            intent: DismissIntent,
+            priority: 1998,
+            show: true,
+            onInvoke: (_) => dismissSuggestions(),
+          ),
+        ],
+      ];
+    }, [popupSuggestionsVisible, focusNode.hasPrimaryFocus, cursorOffset]);
+
+    return ManagedActionSet(
+      shortcuts: shortcuts,
+      child: AnimatedSize(
+        duration: 300.ms,
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 4,
+          children: [
+            AnchoredOverlayPortal(
+              visible: popupVisible,
+              config: const AnchoredOverlayConfig(
+                preferredSide: AnchoredOverlaySide.bottom,
+                spacing: 4,
+                sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
+              ),
+              child: DecoratedTextField(
+                focusNode: focusNode,
+                controller: controller,
+                autofocus: autofocus,
+                decoration: inputDecoration.copyWith(
+                  errorText: parseResult.issues.isNotEmpty
+                      ? parseResult.issues.first.message
+                      : null,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 8,
+                  ),
+                ),
+                maxLines: null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
+                ],
+                onChanged: (value) {
+                  dismissedSignature.value = null;
+                  onQueryChanged(value);
+                },
+                onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
+              ),
+              overlayBuilder: (context, _) => _buildSuggestionPanel(
+                context: context,
+                suggestions: suggestions,
+                activeSuggestionIndex: activeSuggestionIndex.value,
+                onTapSuggestion: applySuggestion,
+                onHoverIndex: (index) {
+                  activeSuggestionIndex.value = index;
+                },
+              ),
+            ),
+            ClipRect(
+              child: AnimatedSwitcher(
+                duration: 420.ms,
+                reverseDuration: 180.ms,
+                switchInCurve: Curves.linear,
+                switchOutCurve: Curves.linear,
+                transitionBuilder: (child, animation) {
+                  final elastic = CurvedAnimation(
+                    parent: animation,
+                    curve: const ElasticOutCurve(0.82),
+                    reverseCurve: Curves.easeInCubic,
+                  );
+
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: Offset(0, -0.1),
+                        end: Offset(0, 0),
+                      ).animate(elastic),
+                      child: child,
+                    ),
+                  );
+                },
+                child: !helperVisible
+                    ? null
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text.rich(
+                          TextSpan(
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                            children: [
+                              TextSpan(text: "You can use: "),
+                              for (final label in helperBadges.labels) ...[
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: _buildHelperBadge(
+                                    context,
+                                    label,
+                                    key: ValueKey(
+                                      "query_bar_helper_badge_$label",
+                                    ),
+                                  ),
+                                ),
+                                const TextSpan(text: ", "),
+                              ],
+                              if (helperBadges.hiddenCount > 0)
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: _buildHelperBadge(
+                                    context,
+                                    "+${helperBadges.hiddenCount}",
+                                    key: const ValueKey(
+                                      "query_bar_helper_badge_overflow",
+                                    ),
+                                  ),
+                                ),
+                              const TextSpan(text: "to filter results."),
+                              if (context.isTablet || context.isDesktop) ...[
+                                const TextSpan(text: " Press "),
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: ShortcutDisplay(
+                                    shortcut: SingleActivator(
+                                      LogicalKeyboardKey.enter,
+                                    ),
+                                  ),
+                                ),
+                                const TextSpan(
+                                  text: " to select first result.",
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
-
-class _PreviousSuggestionIntent extends Intent {
-  const _PreviousSuggestionIntent();
-}
-
-class _NextSuggestionIntent extends Intent {
-  const _NextSuggestionIntent();
-}
-
-class _AcceptSuggestionIntent extends Intent {
-  const _AcceptSuggestionIntent();
-}
-
-class _DismissSuggestionsIntent extends Intent {
-  const _DismissSuggestionsIntent();
 }
 
 Widget _buildSuggestionPanel({

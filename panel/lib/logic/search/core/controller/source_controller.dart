@@ -32,6 +32,7 @@ class SourceController extends ChangeNotifier {
 
   late String _lastRawQuery;
   late SearchQueryContext _lastSearchedContext;
+  String get query => _lastRawQuery;
 
   late StreamSubscription<SearchSourceSnapshot> _sourceSubscription;
   late StreamSubscription<List<QuerySelectorDefinition>> _selectorSubscription;

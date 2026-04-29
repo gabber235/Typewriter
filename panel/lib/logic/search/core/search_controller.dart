@@ -24,9 +24,12 @@ class SearchController extends ChangeNotifier {
   late final ActionController _actionController;
 
   final VoidCallback? _onCloseRequested;
+  void close() => _onCloseRequested?.call();
+  bool get canClose => _onCloseRequested != null;
 
   SearchSourceSnapshot get snapshot => _sourceController.snapshot;
   List<QuerySelectorDefinition> get selectors => _sourceController.selectors;
+  String get query => _sourceController.query;
 
   SearchActionState get actionState => _actionController.state;
 

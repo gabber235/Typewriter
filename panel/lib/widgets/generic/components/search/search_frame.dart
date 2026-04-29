@@ -233,7 +233,7 @@ class _SheetPreviewLayout extends HookWidget {
                   padding: EdgeInsets.only(
                     bottom: visible
                         ? constraints.maxHeight * _sheetPeekSize
-                        : 0,
+                        : _spacing,
                     top: _spacing,
                     left: _spacing,
                     right: _spacing,
