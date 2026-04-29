@@ -292,11 +292,11 @@ class _JoinRequestCard extends HookConsumerWidget {
   ) {
     return ManagedActionSet(
       shortcuts: [
-        ActionShortcut(
+        ActionShortcut.intent(
           id: "decline_${request.id}",
           label: "Decline",
           description: "Decline this join request",
-          activators: shortcutsFor(DeleteIntent),
+          intent: DeleteIntent,
           priority: 1,
           onInvoke: (ref) async {
             await _confirmDeclineRequest(context, ref, isRemoving);

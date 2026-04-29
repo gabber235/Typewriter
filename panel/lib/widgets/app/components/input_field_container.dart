@@ -4,7 +4,6 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/insert_mode.dart";
-import "package:typewriter_panel/logic/interaction_mode/modes/normal_mode.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart";

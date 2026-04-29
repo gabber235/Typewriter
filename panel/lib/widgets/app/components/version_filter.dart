@@ -7,6 +7,7 @@ import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/generic/components/input_icon_button.dart";
 
 /// Version number segment filter abstraction used by the query parser and UI.
 sealed class VersionPartFilter {
@@ -124,10 +125,7 @@ class VersionFilter {
 // ignore: avoid_classes_with_only_static_members
 /// Parser to convert user text patterns into [VersionFilter].
 class VersionFilterParser {
-  static VersionFilter parse({
-    required String query,
-    required bool hasEpoch,
-  }) {
+  static VersionFilter parse({required String query, required bool hasEpoch}) {
     final q = query.trim();
     if (q.isEmpty) return const VersionFilter();
 
@@ -158,8 +156,10 @@ class VersionFilterParser {
     if (trimmed == "*") return const AnyPart();
 
     if (trimmed.contains("-")) {
-      final parts =
-          trimmed.split("-").map((e) => e.trim().asInt).toList(growable: false);
+      final parts = trimmed
+          .split("-")
+          .map((e) => e.trim().asInt)
+          .toList(growable: false);
       if (parts.length != 2) return const AnyPart();
       final low = parts[0];
       final high = parts[1];
@@ -306,17 +306,14 @@ class VersionFilterBar extends HookWidget {
     final focusNode = useFocusNode();
     final queryController = useTextEditingController(text: "");
 
-    final suggestionLabels = useMemoized(
-      () {
-        return VersionFilterParser.suggestionStrings(
-          filter.value,
-          filtered,
-          hasEpoch,
-          max: 9,
-        );
-      },
-      [filtered],
-    );
+    final suggestionLabels = useMemoized(() {
+      return VersionFilterParser.suggestionStrings(
+        filter.value,
+        filtered,
+        hasEpoch,
+        max: 9,
+      );
+    }, [filtered]);
 
     void applyQuery(String q) {
       final parsed = VersionFilterParser.parse(
@@ -356,7 +353,7 @@ class VersionFilterBar extends HookWidget {
             prefixIcon: const Icon(Icons.filter_alt),
             suffixIcon: filter.value.isEmpty
                 ? null
-                : IconButton(
+                : InputIconButton(
                     icon: const Icon(Icons.undo),
                     tooltip: "Unwind",
                     onPressed: unwind,
@@ -366,11 +363,11 @@ class VersionFilterBar extends HookWidget {
           onChanged: applyQuery,
           surroundingActions: [
             if (filter.value.isNotEmpty) ...[
-              ActionShortcut(
+              ActionShortcut.intent(
                 id: "version_filter_unwind",
                 label: "Unwind",
                 description: "Unwind the filter",
-                activators: shortcutsFor(DeleteIntent),
+                intent: DeleteIntent,
                 priority: 1001,
                 onInvoke: (_) => unwind(),
               ),

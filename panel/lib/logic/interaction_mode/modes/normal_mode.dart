@@ -39,22 +39,12 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
 
   @override
   List<ActionShortcut> getShortcuts() {
-    final shortcuts = {
-      [LogicalKeyboardKey.arrowUp, LogicalKeyboardKey.keyK]:
-          TraversalDirection.up,
-      [LogicalKeyboardKey.arrowDown, LogicalKeyboardKey.keyJ]:
-          TraversalDirection.down,
-      [LogicalKeyboardKey.arrowLeft, LogicalKeyboardKey.keyH]:
-          TraversalDirection.left,
-      [LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.keyL]:
-          TraversalDirection.right,
-    };
-
     return [
-      for (final MapEntry(key: keys, value: direction) in shortcuts.entries)
+      for (final MapEntry(key: keys, value: direction)
+          in movementShortcuts.entries)
         for (final key in keys)
           ActionShortcut(
-            id: "normal_move_${direction.name}_${key.debugName?.snakeCase}",
+            id: "normal_move_${direction.name}_${key.debugName?.snakeCase()}",
             label: "Move Focus ${direction.name.titleCase()}",
             description: "Move focus ${direction.name}",
             activators: [SingleActivator(key)],
@@ -87,11 +77,11 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
         priority: -1,
       ),
 
-      ActionShortcut(
+      ActionShortcut.intent(
         id: "normal_unselect_selection",
         label: "Unselect Selection",
         description: "Unselect the currently selected item",
-        activators: shortcutsFor(DismissIntent),
+        intent: DismissIntent,
         priority: -1,
         show: false,
         onInvoke: (ref) {
@@ -142,11 +132,11 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
 /// }
 /// ```
 ActionShortcut escapeToNormalAction({Function(WidgetRef ref)? onInvoke}) {
-  return ActionShortcut(
+  return ActionShortcut.intent(
     id: "escape_to_normal",
     label: "Normal Mode",
     description: "Return to normal mode",
-    activators: [const SingleActivator(LogicalKeyboardKey.escape)],
+    intent: DismissIntent,
     priority: 1000,
     onInvoke: (ref) {
       onInvoke?.call(ref);
