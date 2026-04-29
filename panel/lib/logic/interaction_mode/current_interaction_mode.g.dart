@@ -63,7 +63,7 @@ final class CurrentInteractionModeProvider
 }
 
 String _$currentInteractionModeHash() =>
-    r'88cbef4900ef96fdde55db0a60861bc02d5cd68b';
+    r'a428df52265c6d3154956f72c2e4cb6dbb4fe6b8';
 
 /// Riverpod notifier that manages the current active interaction mode.
 ///

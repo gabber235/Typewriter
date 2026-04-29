@@ -102,17 +102,6 @@ class GraphResizeMode extends InteractionMode with ModeDisplay, ModeShortcut {
 
   @override
   List<ActionShortcut> getShortcuts() {
-    final movementShortcuts = {
-      [LogicalKeyboardKey.arrowUp, LogicalKeyboardKey.keyK]:
-          TraversalDirection.up,
-      [LogicalKeyboardKey.arrowDown, LogicalKeyboardKey.keyJ]:
-          TraversalDirection.down,
-      [LogicalKeyboardKey.arrowLeft, LogicalKeyboardKey.keyH]:
-          TraversalDirection.left,
-      [LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.keyL]:
-          TraversalDirection.right,
-    };
-
     return [
       for (final MapEntry(key: keys, value: direction)
           in movementShortcuts.entries)
