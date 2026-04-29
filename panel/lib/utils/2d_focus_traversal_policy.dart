@@ -36,7 +36,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     if (node == null || oldScope == null) {
       return;
     }
-    final List<_DirectionHistoryEntry>? history = _historyByScope[oldScope];
+    final history = _historyByScope[oldScope];
     if (history == null) {
       return;
     }
@@ -51,8 +51,8 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     FocusNode currentNode,
     TraversalDirection direction,
   ) {
-    final FocusScopeNode scope = currentNode.nearestScope!;
-    final List<_NodeGeometry> nodes = _collectGeometry(
+    final scope = currentNode.nearestScope!;
+    final nodes = _collectGeometry(
       scope.traversalDescendants,
     );
     if (nodes.isEmpty) {
@@ -60,7 +60,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     }
 
     nodes.sort((a, b) {
-      final int primary = switch (direction) {
+      final primary = switch (direction) {
         TraversalDirection.up => b.rect.bottom.compareTo(a.rect.bottom),
         TraversalDirection.down => a.rect.top.compareTo(b.rect.top),
         TraversalDirection.left => b.rect.right.compareTo(a.rect.right),
@@ -70,7 +70,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
         return primary;
       }
 
-      final int cross = switch (direction) {
+      final cross = switch (direction) {
         TraversalDirection.up ||
         TraversalDirection.down => a.rect.left.compareTo(b.rect.left),
         TraversalDirection.left ||
@@ -88,10 +88,10 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
 
   @override
   bool inDirection(FocusNode currentNode, TraversalDirection direction) {
-    final FocusScopeNode scope = currentNode.nearestScope!;
-    final FocusNode? focusedChild = scope.focusedChild;
+    final scope = currentNode.nearestScope!;
+    final focusedChild = scope.focusedChild;
     if (focusedChild == null) {
-      final FocusNode? first = findFirstFocusInDirection(
+      final first = findFirstFocusInDirection(
         currentNode,
         direction,
       );
@@ -101,14 +101,14 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
       return _requestDirectionalFocus(first, direction);
     }
 
-    final bool popped = _popHistoryIfNeeded(scope, direction);
+    final popped = _popHistoryIfNeeded(scope, direction);
     if (popped) {
       return true;
     }
 
     _clearHistoryForOrthogonalSwitch(scope, direction);
 
-    final FocusNode? next = _findBestDirectionalCandidate(
+    final next = _findBestDirectionalCandidate(
       focusedChild,
       scope.traversalDescendants.where((node) => node != focusedChild),
       direction,
@@ -128,18 +128,18 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     Iterable<FocusNode> descendants,
     FocusNode currentNode,
   ) {
-    final List<_NodeGeometry> nodes = _collectGeometry(descendants);
+    final nodes = _collectGeometry(descendants);
     if (nodes.length <= 1) {
       return nodes.map((entry) => entry.node);
     }
 
     nodes.sort((a, b) {
-      final int crossStart = _crossStart(a.rect).compareTo(_crossStart(b.rect));
+      final crossStart = _crossStart(a.rect).compareTo(_crossStart(b.rect));
       if (crossStart != 0) {
         return crossStart;
       }
 
-      final int mainStart = _mainStart(a.rect).compareTo(_mainStart(b.rect));
+      final mainStart = _mainStart(a.rect).compareTo(_mainStart(b.rect));
       if (mainStart != 0) {
         return mainStart;
       }
@@ -147,9 +147,9 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
       return a.index.compareTo(b.index);
     });
 
-    final List<_NodeBand> bands = <_NodeBand>[];
-    for (final _NodeGeometry node in nodes) {
-      final _NodeBand? band = bands
+    final bands = <_NodeBand>[];
+    for (final node in nodes) {
+      final band = bands
           .where((candidate) => candidate.accepts(node, crossAxisBandTolerance))
           .firstOrNull;
       if (band == null) {
@@ -160,22 +160,22 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     }
 
     bands.sort((a, b) {
-      final int crossStart = a.crossStart.compareTo(b.crossStart);
+      final crossStart = a.crossStart.compareTo(b.crossStart);
       if (crossStart != 0) {
         return crossStart;
       }
       return a.firstIndex.compareTo(b.firstIndex);
     });
 
-    final List<FocusNode> ordered = <FocusNode>[];
-    for (final _NodeBand band in bands) {
+    final ordered = <FocusNode>[];
+    for (final band in bands) {
       band.members.sort((a, b) {
-        final int mainStart = _mainStart(a.rect).compareTo(_mainStart(b.rect));
+        final mainStart = _mainStart(a.rect).compareTo(_mainStart(b.rect));
         if (mainStart != 0) {
           return mainStart;
         }
 
-        final int crossCenter = _crossCenter(
+        final crossCenter = _crossCenter(
           a.rect,
         ).compareTo(_crossCenter(b.rect));
         if (crossCenter != 0) {
@@ -200,20 +200,20 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
   }
 
   bool _isSameAxis(TraversalDirection a, TraversalDirection b) {
-    final bool aVertical =
+    final aVertical =
         a == TraversalDirection.up || a == TraversalDirection.down;
-    final bool bVertical =
+    final bVertical =
         b == TraversalDirection.up || b == TraversalDirection.down;
     return aVertical == bVertical;
   }
 
   bool _popHistoryIfNeeded(FocusScopeNode scope, TraversalDirection direction) {
-    final List<_DirectionHistoryEntry>? history = _historyByScope[scope];
+    final history = _historyByScope[scope];
     if (history == null || history.isEmpty) {
       return false;
     }
 
-    final _DirectionHistoryEntry last = history.last;
+    final last = history.last;
     if (!_isOpposite(last.direction, direction)) {
       return false;
     }
@@ -237,7 +237,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     FocusScopeNode scope,
     TraversalDirection direction,
   ) {
-    final List<_DirectionHistoryEntry>? history = _historyByScope[scope];
+    final history = _historyByScope[scope];
     if (history == null || history.isEmpty) {
       return;
     }
@@ -255,7 +255,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     TraversalDirection direction,
     FocusNode node,
   ) {
-    final List<_DirectionHistoryEntry> history = _historyByScope.putIfAbsent(
+    final history = _historyByScope.putIfAbsent(
       scope,
       () => <_DirectionHistoryEntry>[],
     );
@@ -263,12 +263,12 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
   }
 
   bool _requestDirectionalFocus(FocusNode node, TraversalDirection direction) {
-    final ScrollPositionAlignmentPolicy alignmentPolicy =
+    final alignmentPolicy =
         direction == TraversalDirection.up ||
             direction == TraversalDirection.left
         ? ScrollPositionAlignmentPolicy.keepVisibleAtStart
         : ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
-    final bool hadPrimaryFocus = node.hasPrimaryFocus;
+    final hadPrimaryFocus = node.hasPrimaryFocus;
     requestFocusCallback(node, alignmentPolicy: alignmentPolicy);
     return !hadPrimaryFocus;
   }
@@ -286,7 +286,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
         focusedChild.unfocus();
         return false;
       case TraversalEdgeBehavior.closedLoop:
-        final FocusNode? wrapTarget = findFirstFocusInDirection(
+        final wrapTarget = findFirstFocusInDirection(
           currentNode,
           direction,
         );
@@ -295,10 +295,10 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
         }
         return _requestDirectionalFocus(wrapTarget, direction);
       case TraversalEdgeBehavior.parentScope:
-        final FocusScopeNode? parentScope = scope.enclosingScope;
+        final parentScope = scope.enclosingScope;
         if (parentScope == null ||
             parentScope == FocusManager.instance.rootScope) {
-          final FocusNode? fallback = findFirstFocusInDirection(
+          final fallback = findFirstFocusInDirection(
             currentNode,
             direction,
           );
@@ -308,7 +308,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
           return _requestDirectionalFocus(fallback, direction);
         }
 
-        final FocusNode? parentCandidate = _findBestDirectionalCandidate(
+        final parentCandidate = _findBestDirectionalCandidate(
           focusedChild,
           parentScope.traversalDescendants.where(
             (node) => node != focusedChild,
@@ -336,16 +336,16 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     TraversalDirection direction, {
     required bool includeForwardCandidates,
   }) {
-    final Rect currentRect = current.rect;
-    final Size scopeScale = _scopeScale(current.nearestScope!);
+    final currentRect = current.rect;
+    final scopeScale = _scopeScale(current.nearestScope!);
 
     _ScoredCandidate? best;
-    for (final FocusNode node in nodes) {
+    for (final node in nodes) {
       if (!node.canRequestFocus || node.skipTraversal) {
         continue;
       }
-      final Rect candidateRect = node.rect;
-      final _DirectionalMetrics? metrics = _metricsForDirection(
+      final candidateRect = node.rect;
+      final metrics = _metricsForDirection(
         currentRect,
         candidateRect,
         direction,
@@ -362,8 +362,8 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
         continue;
       }
 
-      final double score = _scoreMetrics(metrics, scopeScale);
-      final _ScoredCandidate candidate = _ScoredCandidate(
+      final score = _scoreMetrics(metrics, scopeScale);
+      final candidate = _ScoredCandidate(
         node: node,
         score: score,
         metrics: metrics,
@@ -382,28 +382,28 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     _ScoredCandidate b,
     Rect currentRect,
   ) {
-    final int byScore = a.score.compareTo(b.score);
+    final byScore = a.score.compareTo(b.score);
     if (byScore != 0) {
       return byScore;
     }
 
-    final int byForward = a.metrics.absoluteForward.compareTo(
+    final byForward = a.metrics.absoluteForward.compareTo(
       b.metrics.absoluteForward,
     );
     if (byForward != 0) {
       return byForward;
     }
 
-    final int byCross = a.metrics.crossDistance.compareTo(
+    final byCross = a.metrics.crossDistance.compareTo(
       b.metrics.crossDistance,
     );
     if (byCross != 0) {
       return byCross;
     }
 
-    final Rect aRect = a.node.rect;
-    final Rect bRect = b.node.rect;
-    final int byMainCenter = _mainCenter(aRect).compareTo(_mainCenter(bRect));
+    final aRect = a.node.rect;
+    final bRect = b.node.rect;
+    final byMainCenter = _mainCenter(aRect).compareTo(_mainCenter(bRect));
     if (byMainCenter != 0) {
       return byMainCenter;
     }
@@ -416,23 +416,23 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     Rect candidate,
     TraversalDirection direction,
   ) {
-    final Offset vector = candidate.center - current.center;
-    final double forward = switch (direction) {
+    final vector = candidate.center - current.center;
+    final forward = switch (direction) {
       TraversalDirection.up => -vector.dy,
       TraversalDirection.down => vector.dy,
       TraversalDirection.left => -vector.dx,
       TraversalDirection.right => vector.dx,
     };
 
-    final double cross = switch (direction) {
+    final cross = switch (direction) {
       TraversalDirection.up || TraversalDirection.down => vector.dx.abs(),
       TraversalDirection.left || TraversalDirection.right => vector.dy.abs(),
     };
 
-    final double angle = forward <= 0
+    final angle = forward <= 0
         ? 1.5707963267948966
         : math.atan(cross / forward);
-    final double overlap = _overlapRatioOnPerpendicularAxis(
+    final overlap = _overlapRatioOnPerpendicularAxis(
       current,
       candidate,
       direction,
@@ -447,19 +447,19 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
   }
 
   double _scoreMetrics(_DirectionalMetrics metrics, Size scopeScale) {
-    final double forwardScale = switch (mainAxis) {
+    final forwardScale = switch (mainAxis) {
       Axis.horizontal => scopeScale.width > 0 ? scopeScale.width : 1,
       Axis.vertical => scopeScale.height > 0 ? scopeScale.height : 1,
     };
 
-    final double crossScale = switch (mainAxis) {
+    final crossScale = switch (mainAxis) {
       Axis.horizontal => scopeScale.height > 0 ? scopeScale.height : 1,
       Axis.vertical => scopeScale.width > 0 ? scopeScale.width : 1,
     };
 
-    final double normalizedForward = metrics.absoluteForward / forwardScale;
-    final double normalizedCross = metrics.crossDistance / crossScale;
-    final double normalizedAngle = metrics.angleRadians / 1.5707963267948966;
+    final normalizedForward = metrics.absoluteForward / forwardScale;
+    final normalizedCross = metrics.crossDistance / crossScale;
+    final normalizedAngle = metrics.angleRadians / 1.5707963267948966;
 
     return (primaryDistanceWeight * normalizedForward) +
         (crossAxisWeight * normalizedCross) +
@@ -479,7 +479,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     Rect candidate,
     TraversalDirection direction,
   ) {
-    final double overlapLength = switch (direction) {
+    final overlapLength = switch (direction) {
       TraversalDirection.up || TraversalDirection.down => _intervalOverlap(
         current.left,
         current.right,
@@ -494,7 +494,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
       ),
     };
 
-    final double currentLength = switch (direction) {
+    final currentLength = switch (direction) {
       TraversalDirection.up || TraversalDirection.down => current.width,
       TraversalDirection.left || TraversalDirection.right => current.height,
     };
@@ -512,16 +512,16 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     double bStart,
     double bEnd,
   ) {
-    final double start = aStart > bStart ? aStart : bStart;
-    final double end = aEnd < bEnd ? aEnd : bEnd;
-    final double overlap = end - start;
+    final start = aStart > bStart ? aStart : bStart;
+    final end = aEnd < bEnd ? aEnd : bEnd;
+    final overlap = end - start;
     return overlap > 0 ? overlap : 0;
   }
 
   List<_NodeGeometry> _collectGeometry(Iterable<FocusNode> nodes) {
-    final List<_NodeGeometry> result = <_NodeGeometry>[];
+    final result = <_NodeGeometry>[];
     var index = 0;
-    for (final FocusNode node in nodes) {
+    for (final node in nodes) {
       result.add(_NodeGeometry(node: node, rect: node.rect, index: index));
       index++;
     }
@@ -593,17 +593,17 @@ class _NodeBand {
   final int firstIndex;
 
   bool accepts(_NodeGeometry node, double tolerance) {
-    final double start = members.isEmpty
+    final start = members.isEmpty
         ? crossStart
         : (crossStart < crossEnd ? crossStart : crossEnd);
-    final double end = members.isEmpty
+    final end = members.isEmpty
         ? crossEnd
         : (crossEnd > crossStart ? crossEnd : crossStart);
-    final double nodeStart = switch (mainAxis) {
+    final nodeStart = switch (mainAxis) {
       Axis.horizontal => node.rect.top,
       Axis.vertical => node.rect.left,
     };
-    final double nodeEnd = switch (mainAxis) {
+    final nodeEnd = switch (mainAxis) {
       Axis.horizontal => node.rect.bottom,
       Axis.vertical => node.rect.right,
     };
@@ -612,11 +612,11 @@ class _NodeBand {
 
   void add(_NodeGeometry node, {required Axis mainAxis}) {
     members.add(node);
-    final double nodeCrossStart = switch (mainAxis) {
+    final nodeCrossStart = switch (mainAxis) {
       Axis.horizontal => node.rect.top,
       Axis.vertical => node.rect.left,
     };
-    final double nodeCrossEnd = switch (mainAxis) {
+    final nodeCrossEnd = switch (mainAxis) {
       Axis.horizontal => node.rect.bottom,
       Axis.vertical => node.rect.right,
     };

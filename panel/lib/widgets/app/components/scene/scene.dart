@@ -6,6 +6,7 @@ import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/scene.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/logic/timeline/timeline_data.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -14,7 +15,6 @@ import "package:typewriter_panel/widgets/app/components/entry.dart";
 import "package:typewriter_panel/widgets/app/components/inner_element_node.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
 import "package:typewriter_panel/widgets/app/components/timeline/timeline.dart";
-import "package:typewriter_panel/logic/timeline/timeline_data.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 

@@ -61,7 +61,7 @@ class _PixelScaleTransitionState extends State<PixelScaleTransition> {
         if (_childSize == null) return _scale(child: child);
         final pixels = widget.pixelScale.value;
         final longestSide = _childSize!.longestSide;
-        if (longestSide == 0) return _scale(child: child!);
+        if (longestSide == 0) return _scale(child: child);
         final scale = (longestSide + pixels) / longestSide;
         return _scale(scale: scale, child: child);
       },

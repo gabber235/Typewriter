@@ -1,8 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:typewriter_panel/logic/timeline/timeline_placement.dart";
-import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
 import "package:typewriter_panel/logic/timeline/timeline_viewport.dart";
+import "package:typewriter_panel/widgets/app/components/timeline/timeline_style.dart";
 
 class TimelinePlane extends MultiChildRenderObjectWidget {
   const TimelinePlane({

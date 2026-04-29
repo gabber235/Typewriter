@@ -395,13 +395,6 @@ void main() {
   });
 }
 
-List<TextStyle?> _stylesForText(TextSpan root, String text) {
-  return _leafTextSpans(root)
-      .where((span) => span.text == text)
-      .map((span) => span.style)
-      .toList(growable: false);
-}
-
 List<TextStyle?> _stylesForTextContaining(TextSpan root, String text) {
   return _leafTextSpans(root)
       .where((span) => (span.text ?? "").contains(text))

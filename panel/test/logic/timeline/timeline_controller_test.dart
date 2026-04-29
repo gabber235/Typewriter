@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/timeline/timeline_controller.dart";
-import "package:typewriter_panel/logic/timeline/timeline_data.dart";
 
 import "support/timeline_test_dsl.dart";
 

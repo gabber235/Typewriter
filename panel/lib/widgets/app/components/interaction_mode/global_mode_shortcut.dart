@@ -22,10 +22,7 @@ import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 /// )
 /// ```
 class GlobalModeShortcut extends ConsumerWidget {
-  const GlobalModeShortcut({
-    required this.child,
-    super.key,
-  });
+  const GlobalModeShortcut({required this.child, super.key});
 
   /// The child widget to wrap with mode shortcut functionality.
   final Widget child;
@@ -34,14 +31,10 @@ class GlobalModeShortcut extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentMode = ref.watch(currentInteractionModeProvider);
 
-    final shortcuts = <ActionShortcut>[];
-    if (currentMode is ModeShortcut) {
-      shortcuts.addAll(currentMode.getShortcuts());
-    }
+    final shortcuts = currentMode is ModeShortcut
+        ? currentMode.getShortcuts()
+        : <ActionShortcut>[];
 
-    return ManagedActionSet(
-      shortcuts: shortcuts,
-      child: child,
-    );
+    return ManagedActionSet(shortcuts: shortcuts, child: child);
   }
 }

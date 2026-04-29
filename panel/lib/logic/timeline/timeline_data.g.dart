@@ -24,6 +24,7 @@ Map<String, dynamic> _$TimelineSegmentToJson(TimelineSegment instance) =>
       'startFrame': instance.startFrame,
       'endFrame': instance.endFrame,
       'children': instance.children.map((e) => e.toJson()).toList(),
+      'hasChildren': instance.hasChildren,
     };
 
 Json? _$JsonConverterToJson<Json, Value>(
@@ -41,6 +42,7 @@ Map<String, dynamic> _$TimelineKeyframeToJson(TimelineKeyframe instance) =>
       ),
       'frameDuration': instance.frameDuration,
       'frame': instance.frame,
+      'hasChildren': instance.hasChildren,
     };
 
 Map<String, dynamic> _$TimelineTrackBlockToJson(
