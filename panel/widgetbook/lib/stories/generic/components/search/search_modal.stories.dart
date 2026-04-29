@@ -18,13 +18,12 @@ Widget searchModalDirectUseCase(BuildContext context) {
 
   return FakeApp(
     child: SizedBox.expand(
-      child: Section(
-        child: Center(
-          child: SearchModal(
-            source: _sourceFromConfig(config),
-            baseSelectors: mockQuerySelectors,
-            initialQuery: initialQuery,
-          ),
+      child: Center(
+        child: SearchModal(
+          source: _sourceFromConfig(config),
+          baseSelectors: mockQuerySelectors,
+          initialQuery: initialQuery,
+          searchHint: "Search entries, pages, books, organizations",
         ),
       ),
     ),
@@ -54,15 +53,20 @@ Widget searchModalRouteUseCase(BuildContext context) {
     child: BookScaffold(
       child: Section(
         child: Center(
-          child: FilledButton.icon(
-            onPressed: () => showSearchModal(
-              context,
-              _sourceFromConfig(config),
-              baseSelectors: mockQuerySelectors,
-              initialQuery: initialQuery,
-            ),
-            icon: const Icon(Icons.search),
-            label: const Text("Open search modal"),
+          child: Builder(
+            builder: (context) {
+              return FilledButton.icon(
+                onPressed: () => showSearchModal(
+                  context,
+                  _sourceFromConfig(config),
+                  baseSelectors: mockQuerySelectors,
+                  initialQuery: initialQuery,
+                  searchHint: "Search entries, pages, books, organizations",
+                ),
+                icon: const Icon(Icons.search),
+                label: const Text("Open search modal"),
+              );
+            },
           ),
         ),
       ),
