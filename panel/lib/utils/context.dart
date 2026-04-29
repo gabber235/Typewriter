@@ -26,3 +26,14 @@ extension ResponsiveBreakpointsX on BuildContext {
     return fourK ?? desktop ?? tablet ?? mobile;
   }
 }
+
+extension BrightnessX on Brightness {
+  Brightness get inverted {
+    switch (this) {
+      case Brightness.light:
+        return Brightness.dark;
+      case Brightness.dark:
+        return Brightness.light;
+    }
+  }
+}

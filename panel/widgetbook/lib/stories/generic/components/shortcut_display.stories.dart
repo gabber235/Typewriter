@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -7,9 +8,16 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 @widgetbook.UseCase(name: "Single", type: ShortcutDisplay)
 Widget singleShortcutDisplayUseCase(BuildContext context) {
+  final style = context.knobs.object.segmented(
+    label: "Style",
+    options: KeyStyle.values,
+    initialOption: KeyStyle.solid,
+    labelBuilder: (style) => style.name.formatted,
+  );
   return FakeApp(
     child: Center(
       child: ShortcutDisplay(
+        style: style,
         shortcut: SingleActivator(
           LogicalKeyboardKey.keyD,
           meta: true,
@@ -28,10 +36,17 @@ Widget rotatingShortcutsUseCase(BuildContext context) {
     label: "Interval",
     initialValue: const Duration(seconds: 4),
   );
+  final style = context.knobs.object.segmented(
+    label: "Style",
+    options: KeyStyle.values,
+    initialOption: KeyStyle.solid,
+    labelBuilder: (style) => style.name.formatted,
+  );
 
   return FakeApp(
     child: Center(
       child: RotatingShortcuts(
+        style: style,
         shortcuts: [
           SingleActivator(LogicalKeyboardKey.keyD),
           SingleActivator(LogicalKeyboardKey.delete, meta: true),

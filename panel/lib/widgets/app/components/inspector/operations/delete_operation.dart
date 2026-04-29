@@ -121,7 +121,7 @@ class DeleteOperationButton extends HookConsumerWidget {
             ),
             if (operation.shortcut.canInvoke) ...[
               const SizedBox(width: 8),
-              RotatingShortcuts(shortcuts: operation.shortcut.shortcuts),
+              RotatingShortcuts(shortcuts: operation.shortcut.shortcuts, style: KeyStyle.outline),
             ],
           ],
         ),

@@ -3,64 +3,41 @@ import "dart:math" as math;
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/hooks/timer.dart";
+import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/widgets/generic/components/elastic_switcher.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
-class _KeyDisplay extends StatelessWidget {
-  const _KeyDisplay({required this.child, this.size = 12});
-  final Widget child;
-  final double size;
+// The default spacing between the leading icon, label, trailing icon, and
+// shortcut label in a _MenuItemLabel.
+const double _kLabelItemDefaultSpacing = 8;
 
-  @override
-  Widget build(BuildContext context) {
-    final fixedWidth = switch (child) {
-      Text(:final data) => (data?.length ?? 0) <= 1,
-      _ => false,
-    };
-    final color = Theme.of(context).colorScheme.surfaceContainerHighest;
+// The minimum spacing between the leading icon, label, trailing icon, and
+// shortcut label in a _MenuItemLabel.
+const double _kLabelItemMinSpacing = 4;
 
-    return Surface(
-      color: color,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          color: color,
-        ),
-        height: size + 8,
-        width: fixedWidth ? size + 8 : null,
-        child: DefaultTextStyle(
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: size,
-            fontWeight: FontWeight.w700,
-            height: 1,
-          ),
-          child: IconTheme(
-            data: IconThemeData(
-              color: Theme.of(context).colorScheme.onSurface,
-              size: size,
-            ),
-            child: Center(child: child),
-          ),
-        ),
-      ),
-    );
-  }
-}
+enum KeyStyle { solid, outline }
 
 class LogicalKeyBoardDisplay extends HookWidget {
   const LogicalKeyBoardDisplay({
     required this.keyBoardKey,
+    this.style = KeyStyle.solid,
     this.size = 12,
     super.key,
   });
 
   final LogicalKeyboardKey keyBoardKey;
   final double size;
+  final KeyStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return _KeyDisplay(size: size, style: style, child: _buildKey());
+  }
 
   Widget _buildKey() {
     switch (keyBoardKey) {
@@ -123,26 +100,65 @@ class LogicalKeyBoardDisplay extends HookWidget {
     // Fallback to key label if no specific case is matched
     return Text(keyBoardKey.keyLabel);
   }
+}
+
+/// Cycles through a list of shortcuts, showing one at a time with animation.
+class RotatingShortcuts extends HookWidget {
+  const RotatingShortcuts({
+    required this.shortcuts,
+    this.size = 12.0,
+    this.style = KeyStyle.solid,
+    this.interval = const Duration(seconds: 5),
+    super.key,
+  });
+
+  final List<ShortcutActivator> shortcuts;
+  final double size;
+  final KeyStyle style;
+  final Duration interval;
 
   @override
   Widget build(BuildContext context) {
-    return _KeyDisplay(size: size, child: _buildKey());
+    if (shortcuts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    if (shortcuts.length == 1) {
+      return ShortcutDisplay(
+        shortcut: shortcuts.first,
+        size: size,
+        style: style,
+      );
+    }
+
+    final index = useState(0);
+    useTimer(interval, (_) {
+      index.value = (index.value + 1) % shortcuts.length;
+    });
+
+    return ElasticSwitcher(
+      child: KeyedSubtree(
+        key: ValueKey<int>(index.value),
+        child: ShortcutDisplay(
+          shortcut: shortcuts[index.value % shortcuts.length],
+          size: size,
+          style: style,
+        ),
+      ),
+    );
   }
 }
 
-// The default spacing between the leading icon, label, trailing icon, and
-// shortcut label in a _MenuItemLabel.
-const double _kLabelItemDefaultSpacing = 8;
-
-// The minimum spacing between the leading icon, label, trailing icon, and
-// shortcut label in a _MenuItemLabel.
-const double _kLabelItemMinSpacing = 4;
-
 /// Displays a single shortcut (label with optional icon) in a pill style.
 class ShortcutDisplay extends StatelessWidget {
-  const ShortcutDisplay({required this.shortcut, this.size = 12, super.key});
+  const ShortcutDisplay({
+    required this.shortcut,
+    this.size = 12,
+    this.style = KeyStyle.solid,
+    super.key,
+  });
 
   final ShortcutActivator shortcut;
+  final KeyStyle style;
   final double size;
 
   @override
@@ -158,10 +174,11 @@ class ShortcutDisplay extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final key in shortcut.keys)
-          LogicalKeyBoardDisplay(keyBoardKey: key, size: size),
+          LogicalKeyBoardDisplay(keyBoardKey: key, size: size, style: style),
         switch (shortcut) {
           CharacterActivator(:final character) => _KeyDisplay(
             size: size,
+            style: style,
             child: Text(character),
           ),
           _ => SizedBox(),
@@ -171,41 +188,82 @@ class ShortcutDisplay extends StatelessWidget {
   }
 }
 
-/// Cycles through a list of shortcuts, showing one at a time with animation.
-class RotatingShortcuts extends HookWidget {
-  const RotatingShortcuts({
-    required this.shortcuts,
-    this.size = 12.0,
-    this.interval = const Duration(seconds: 5),
-    super.key,
-  });
-
-  final List<ShortcutActivator> shortcuts;
+class _KeyDisplay extends StatelessWidget {
+  const _KeyDisplay({required this.child, required this.style, this.size = 12});
+  final Widget child;
   final double size;
-  final Duration interval;
+  final KeyStyle style;
 
   @override
   Widget build(BuildContext context) {
-    if (shortcuts.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    if (shortcuts.length == 1) {
-      return ShortcutDisplay(shortcut: shortcuts.first, size: size);
-    }
+    final fixedWidth = switch (child) {
+      Text(:final data) => (data?.length ?? 0) <= 1,
+      _ => false,
+    };
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.surfaceContainerHighest;
+    final surfaceColor = switch (style) {
+      KeyStyle.solid => color,
+      KeyStyle.outline => Surface.colorOf(context),
+    };
+    final surfaceBrightness = ThemeData.estimateBrightnessForColor(
+      surfaceColor,
+    );
+    final textColor = surfaceBrightness == theme.brightness
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.surface;
 
-    final index = useState(0);
-    useTimer(interval, (_) {
-      index.value = (index.value + 1) % shortcuts.length;
-    });
+    final height = size + 8;
+    final width = fixedWidth ? size + 8 : null;
 
-    return ElasticSwitcher(
-      child: KeyedSubtree(
-        key: ValueKey<int>(index.value),
-        child: ShortcutDisplay(
-          shortcut: shortcuts[index.value % shortcuts.length],
-          size: size,
-        ),
+    final padding = const EdgeInsets.symmetric(horizontal: 4);
+    final rounding = BorderRadius.circular(4);
+
+    final text = DefaultTextStyle(
+      style: TextStyle(
+        color: textColor,
+        fontSize: size,
+        fontWeight: FontWeight.w700,
+        height: 1,
+      ),
+      child: IconTheme(
+        data: IconThemeData(color: textColor, size: size),
+        child: Center(child: child),
       ),
     );
+
+    switch (style) {
+      case KeyStyle.solid:
+        return AnimatedContainer(
+          duration: 200.ms,
+          padding: padding,
+          decoration: BoxDecoration(
+            borderRadius: rounding,
+            color: color,
+            boxShadow: [
+              BoxShadow(
+                color: color.darker(context.isDarkMode ? 0.4 : 0.1),
+                blurRadius: 0,
+                offset: Offset(0, context.isDarkMode ? 3 : 2),
+              ),
+            ],
+          ),
+          height: height,
+          width: width,
+          child: Surface(color: color, child: text),
+        );
+      case KeyStyle.outline:
+        return AnimatedContainer(
+          duration: 200.ms,
+          padding: padding,
+          decoration: BoxDecoration(
+            borderRadius: rounding,
+            border: Border.all(color: textColor.withValues(alpha: 0.3)),
+          ),
+          height: height,
+          width: width,
+          child: text,
+        );
+    }
   }
 }
