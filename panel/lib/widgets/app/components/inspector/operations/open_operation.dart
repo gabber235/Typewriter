@@ -22,7 +22,7 @@ class OpenSelectableOperation extends SelectableOperation {
 
 /// The open operation exposed when every selected item provides an
 /// [OpenSelectableOperation].
-class OpenOperation extends Operation {
+class OpenOperation extends ActivatorShortcutOperation {
   const OpenOperation();
 
   @override
@@ -32,7 +32,7 @@ class OpenOperation extends Operation {
   String get description => "Open selected items";
 
   @override
-  List<ShortcutActivator> get shortcutActivators => const [
+  List<ShortcutActivator> get activators => const [
     SingleActivator(LogicalKeyboardKey.enter),
   ];
 

@@ -20,7 +20,7 @@ class DeleteSelectableOperation extends SelectableOperation {
 
 /// The delete operation exposed when every selected item provides a
 /// [DeleteSelectableOperation].
-class DeleteOperation extends Operation {
+class DeleteOperation extends IntentShortcutOperation {
   const DeleteOperation();
 
   @override
@@ -30,7 +30,7 @@ class DeleteOperation extends Operation {
   String get description => "Delete selected items";
 
   @override
-  List<ShortcutActivator> get shortcutActivators => shortcutsFor(DeleteIntent);
+  Type get intent => DeleteIntent;
 
   @override
   bool canExecuteOn(List<Selectable> selection) =>
@@ -114,13 +114,14 @@ class DeleteOperationButton extends HookConsumerWidget {
         ),
         icon: const Icon(Icons.delete_outline, size: 16),
         label: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               selection.length > 1 ? "Delete (${selection.length})" : "Delete",
             ),
-            if (operation.shortcutActivators.isEmpty) ...[
+            if (operation.shortcut.canInvoke) ...[
               const SizedBox(width: 8),
-              RotatingShortcuts(shortcuts: operation.shortcutActivators),
+              RotatingShortcuts(shortcuts: operation.shortcut.shortcuts),
             ],
           ],
         ),

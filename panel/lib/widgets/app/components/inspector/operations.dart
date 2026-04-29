@@ -49,9 +49,6 @@ abstract class Operation {
   /// Human readable description displayed in tooltips.
   String get description;
 
-  /// Keyboard shortcuts that trigger this operation (platform aware).
-  List<ShortcutActivator> get shortcutActivators;
-
   /// Returns true if this operation can currently execute on the provided
   /// selection set. Called reactively; keep fast and side-effect free.
   /// Assures that the selection is not empty.
@@ -99,6 +96,47 @@ abstract class Operation {
   /// Builds the UI control (e.g. a button) representing this operation for
   /// the given selection. The control is responsible for invoking the action.
   Widget inspectorButton(List<Selectable> selection);
+}
+
+abstract class ShortcutableOperation extends Operation {
+  const ShortcutableOperation();
+
+  /// Returns the [ActionShortcut] that should be registered for this operation.
+  ActionShortcut get shortcut;
+}
+
+abstract class ActivatorShortcutOperation extends ShortcutableOperation {
+  const ActivatorShortcutOperation();
+
+  /// Keyboard shortcuts that trigger this operation.
+  List<ShortcutActivator> get activators;
+
+  @override
+  ActionShortcut get shortcut => ActionShortcut(
+    id: "operation_${name.snakeCase()}",
+    label: name,
+    description: description,
+    activators: activators,
+    onInvoke: executeOn,
+    priority: 10,
+  );
+}
+
+abstract class IntentShortcutOperation extends ShortcutableOperation {
+  const IntentShortcutOperation();
+
+  /// [Intent] that triggers this operation.
+  Type get intent;
+
+  @override
+  ActionShortcut get shortcut => ActionShortcut.intent(
+    id: "operation_${name.snakeCase()}",
+    label: name,
+    description: description,
+    intent: intent,
+    onInvoke: executeOn,
+    priority: 10,
+  );
 }
 
 /// Base type for per-selectable capability objects exposed via
@@ -159,53 +197,21 @@ class GlobalOperationShortcuts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentMode = ref.watch(currentInteractionModeProvider);
 
+    if (currentMode is! NormalMode) {
+      return ManagedActionSet(shortcuts: [], child: child);
+    }
+
     final operations = ref.watch(
       availableOperationsProvider.select(
-        (s) => s.where((o) => o.shortcutActivators.isNotEmpty).toList(),
+        (s) => s.whereType<ShortcutableOperation>().toList(),
       ),
     );
 
-    final activeOperations = currentMode is NormalMode
-        ? operations
-        : <Operation>[];
-
-    return ActionSet(
-      shortcuts: [
-        for (final op in activeOperations)
-          ActionShortcut(
-            id: "operation_${op.name.snakeCase()}",
-            label: op.name,
-            description: op.description,
-            activators: op.shortcutActivators,
-            onInvoke: op.executeOn,
-            priority: 10,
-          ),
-      ],
-      child: Shortcuts(
-        shortcuts: {
-          for (final op in activeOperations)
-            for (final activator in op.shortcutActivators)
-              activator: _OperationIntent(operation: op),
-        },
-        child: Actions(
-          actions: {
-            _OperationIntent: CallbackAction<_OperationIntent>(
-              onInvoke: (intent) {
-                intent.operation.executeOn(ref);
-                return null;
-              },
-            ),
-          },
-          child: child,
-        ),
-      ),
+    return ManagedActionSet(
+      shortcuts: [for (final op in operations) op.shortcut],
+      child: child,
     );
   }
-}
-
-class _OperationIntent extends Intent {
-  const _OperationIntent({required this.operation});
-  final Operation operation;
 }
 
 /// Shows a dialog displaying errors that occurred during a batch operation.

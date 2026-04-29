@@ -20,7 +20,7 @@ import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 
 /// Operation to create a connection between the selected entry and another entry.
-class EntryLinkWithOperation extends Operation {
+class EntryLinkWithOperation extends ActivatorShortcutOperation {
   const EntryLinkWithOperation();
 
   @override
@@ -32,7 +32,7 @@ class EntryLinkWithOperation extends Operation {
   Color get color => Colors.blue;
 
   @override
-  List<ShortcutActivator> get shortcutActivators => const [
+  List<ShortcutActivator> get activators => const [
     SingleActivator(LogicalKeyboardKey.keyL),
   ];
 
@@ -111,7 +111,7 @@ class EntryLinkWithOperation extends Operation {
 }
 
 /// Operation to link with a duplicate of the selected/target entry.
-class EntryLinkWithDuplicateOperation extends Operation {
+class EntryLinkWithDuplicateOperation extends ActivatorShortcutOperation {
   const EntryLinkWithDuplicateOperation();
 
   @override
@@ -124,7 +124,7 @@ class EntryLinkWithDuplicateOperation extends Operation {
   Color get color => Colors.orange;
 
   @override
-  List<ShortcutActivator> get shortcutActivators => const [
+  List<ShortcutActivator> get activators => const [
     SingleActivator(LogicalKeyboardKey.keyL, shift: true),
   ];
 
@@ -212,7 +212,7 @@ class EntryLinkWithDuplicateOperation extends Operation {
 }
 
 /// Operation to duplicate the selected entry.
-class EntryDuplicateOperation extends Operation {
+class EntryDuplicateOperation extends ActivatorShortcutOperation {
   const EntryDuplicateOperation();
 
   @override
@@ -224,7 +224,7 @@ class EntryDuplicateOperation extends Operation {
   Color get color => Colors.green;
 
   @override
-  List<ShortcutActivator> get shortcutActivators => const [
+  List<ShortcutActivator> get activators => const [
     SingleActivator(LogicalKeyboardKey.keyD),
   ];
 
@@ -273,7 +273,7 @@ class EntryDuplicateOperation extends Operation {
 }
 
 /// Operation to move the selected entry to another page.
-class EntryMoveToPageOperation extends Operation {
+class EntryMoveToPageOperation extends ActivatorShortcutOperation {
   const EntryMoveToPageOperation();
 
   @override
@@ -285,7 +285,7 @@ class EntryMoveToPageOperation extends Operation {
   Color get color => Colors.blueAccent;
 
   @override
-  List<ShortcutActivator> get shortcutActivators => const [
+  List<ShortcutActivator> get activators => const [
     SingleActivator(LogicalKeyboardKey.keyM),
   ];
 
@@ -334,7 +334,7 @@ class EntryMoveToPageOperation extends Operation {
 }
 
 /// Operation to replace the selected entry with another entry.
-class EntryReplaceWithOperation extends Operation {
+class EntryReplaceWithOperation extends ActivatorShortcutOperation {
   const EntryReplaceWithOperation();
 
   @override
@@ -346,7 +346,7 @@ class EntryReplaceWithOperation extends Operation {
   Color get color => Colors.orange;
 
   @override
-  List<ShortcutActivator> get shortcutActivators => const [
+  List<ShortcutActivator> get activators => const [
     SingleActivator(LogicalKeyboardKey.keyR),
   ];
 

@@ -21,7 +21,7 @@ class UnbindSelectableOperation extends SelectableOperation {
 
 /// The unbind operation exposed when every selected item provides an
 /// [UnbindSelectableOperation].
-class UnbindOperation extends Operation {
+class UnbindOperation extends ActivatorShortcutOperation {
   const UnbindOperation();
 
   @override
@@ -31,7 +31,7 @@ class UnbindOperation extends Operation {
   String get description => "Unbind selected items";
 
   @override
-  List<ShortcutActivator> get shortcutActivators => [
+  List<ShortcutActivator> get activators => [
     SingleActivator(
       LogicalKeyboardKey.backspace,
       meta: defaultTargetPlatform == TargetPlatform.macOS,
