@@ -21,6 +21,7 @@ import "package:typewriter_panel/widgets/generic/components/labeled_divider.dart
 import "package:typewriter_panel/widgets/generic/components/loading_button.dart";
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/section_title.dart";
+import "package:typewriter_panel/widgets/generic/components/simple_scaffold.dart";
 
 @RoutePage()
 class IndexPage extends HookConsumerWidget {
@@ -70,7 +71,7 @@ class IndexPage extends HookConsumerWidget {
     );
 
     if (context.isMobile) {
-      return Scaffold(
+      return SimpleScaffold(
         appBar: AppBar(
           toolbarHeight: 56,
           automaticallyImplyLeading: false,
@@ -80,17 +81,15 @@ class IndexPage extends HookConsumerWidget {
             const SizedBox(width: 8),
           ],
         ),
-        body: content,
+        child: content,
       );
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          content,
-          const Positioned(left: 8, bottom: 8, child: UserMenu(expand: false)),
-        ],
-      ),
+    return Stack(
+      children: [
+        content,
+        const Positioned(left: 8, bottom: 8, child: UserMenu(expand: false)),
+      ],
     );
   }
 }

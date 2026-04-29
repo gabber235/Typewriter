@@ -41,30 +41,32 @@ class TypewriterPanel extends HookConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(appearanceProvider);
 
-    return AppRequiredWidgets(
-      child: _EagerInitialization(
-        child: MaterialApp.router(
-          title: "Typewriter",
-          theme: buildTheme(Brightness.light),
-          darkTheme: buildTheme(Brightness.dark),
-          themeMode: themeMode,
-          routerConfig: router.config(
-            navigatorObservers: () => [
-              InvalidatorNavigatorObserver(() async {
-                // We don't want to invalidate during the build phase, so we wait
-                await WidgetsBinding.instance.endOfFrame;
-                ref
-                  ..invalidate(routeParamProvider)
-                  ..invalidate(currentRouteProvider);
-              }),
-              LoggerNavigatorObserver(),
-            ],
-          ),
-          shortcuts: typewriterShortcuts,
-          scrollBehavior: GlobalCustomScrollBehavior(),
-          builder: (context, child) => Responsive(
-            child: RequiredNatsConnection(
-              child: child ?? const SizedBox.shrink(),
+    return _EagerInitialization(
+      child: MaterialApp.router(
+        title: "Typewriter",
+        theme: buildTheme(Brightness.light),
+        darkTheme: buildTheme(Brightness.dark),
+        themeMode: themeMode,
+        routerConfig: router.config(
+          navigatorObservers: () => [
+            InvalidatorNavigatorObserver(() async {
+              // We don't want to invalidate during the build phase, so we wait
+              await WidgetsBinding.instance.endOfFrame;
+              ref
+                ..invalidate(routeParamProvider)
+                ..invalidate(currentRouteProvider);
+            }),
+            LoggerNavigatorObserver(),
+          ],
+        ),
+        shortcuts: typewriterShortcuts,
+        scrollBehavior: GlobalCustomScrollBehavior(),
+        builder: (context, child) => Scaffold(
+          body: AppRequiredWidgets(
+            child: Responsive(
+              child: RequiredNatsConnection(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         ),

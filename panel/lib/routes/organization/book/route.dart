@@ -50,6 +50,7 @@ import "package:typewriter_panel/widgets/generic/components/loading_button.dart"
 import "package:typewriter_panel/widgets/generic/components/popups.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+import "package:typewriter_panel/widgets/generic/components/simple_scaffold.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 part "route.g.dart";
@@ -109,7 +110,7 @@ class BookScaffold extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
-    return Scaffold(
+    return SimpleScaffold(
       appBar: CustomAppBar(
         row: [
           if (organizationId != null) ...[
@@ -128,7 +129,7 @@ class BookScaffold extends HookConsumerWidget {
         ],
         sidebar: const BookSidebarContent(),
       ),
-      body: Row(
+      child: Row(
         children: [
           if (!context.isMobile) const Sidebar(child: BookSidebarContent()),
           Expanded(

@@ -14,6 +14,7 @@ import "package:typewriter_panel/widgets/app/components/organization_selector.da
 import "package:typewriter_panel/widgets/app/components/realm_selector.dart";
 import "package:typewriter_panel/widgets/app/components/sidebar.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
+import "package:typewriter_panel/widgets/generic/components/simple_scaffold.dart";
 
 @RoutePage()
 class OrganizationPage extends HookConsumerWidget {
@@ -39,7 +40,7 @@ class OrganizationScaffold extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
-    return Scaffold(
+    return SimpleScaffold(
       appBar: CustomAppBar(
         row: [
           if (organizationId != null) ...[
@@ -58,7 +59,7 @@ class OrganizationScaffold extends HookConsumerWidget {
         ],
         sidebar: const OrganizationSidebarContent(),
       ),
-      body: Row(
+      child: Row(
         children: [
           if (!context.isMobile)
             const Sidebar(child: OrganizationSidebarContent()),

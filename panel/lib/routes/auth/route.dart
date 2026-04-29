@@ -17,41 +17,37 @@ class AuthPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final fileLoader = useRiveFileLoader.fromAsset("assets/game_character.riv");
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Spacer(),
-          Expanded(
-            flex: 2,
-            child: RiveWidgetBuilder(
-              fileLoader: fileLoader,
-              stateMachineSelector: StateMachineSelector.byName(
-                "State Machine",
-              ),
-              builder: (context, state) => state(),
-            ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Spacer(),
+        Expanded(
+          flex: 2,
+          child: RiveWidgetBuilder(
+            fileLoader: fileLoader,
+            stateMachineSelector: StateMachineSelector.byName("State Machine"),
+            builder: (context, state) => state(),
           ),
-          Text(
-            "Your journey starts here",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 24),
-          LoadingButton.filled(
-            child: const Text("Sign in"),
-            onPressed: () async {
-              await ref.read(authProvider.notifier).signIn();
-              if (!context.mounted) return;
-              final isAuthenticated = await ref.read(
-                isAuthenticatedProvider.future,
-              );
-              onResult(isAuthenticated);
-            },
-          ),
-          Spacer(),
-        ],
-      ),
+        ),
+        Text(
+          "Your journey starts here",
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 24),
+        LoadingButton.filled(
+          child: const Text("Sign in"),
+          onPressed: () async {
+            await ref.read(authProvider.notifier).signIn();
+            if (!context.mounted) return;
+            final isAuthenticated = await ref.read(
+              isAuthenticatedProvider.future,
+            );
+            onResult(isAuthenticated);
+          },
+        ),
+        Spacer(),
+      ],
     );
   }
 }

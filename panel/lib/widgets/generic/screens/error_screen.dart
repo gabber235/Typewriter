@@ -28,87 +28,85 @@ class ErrorScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final fileLoader = useRiveFileLoader.fromAsset("assets/robot_island.riv");
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Spacer(),
-          Expanded(
-            flex: 6,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.zoomIn,
-              child: RiveWidgetBuilder(
-                fileLoader: fileLoader,
-                stateMachineSelector: StateMachineSelector.byName("Motion"),
-                builder: (context, state) => state(),
-              ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Spacer(),
+        Expanded(
+          flex: 6,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.zoomIn,
+            child: RiveWidgetBuilder(
+              fileLoader: fileLoader,
+              stateMachineSelector: StateMachineSelector.byName("Motion"),
+              builder: (context, state) => state(),
             ),
           ),
-          SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              spacing: 8,
-              children: [
-                Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: context.responsive(
-                          mobile: 24,
-                          tablet: 32,
-                          desktop: 40,
-                        ),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
+        ),
+        SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            spacing: 8,
+            children: [
+              Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: context.responsive(
+                        mobile: 24,
+                        tablet: 32,
+                        desktop: 40,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 100.ms)
-                    .slideY(begin: 0.1, end: 0),
-                Text(
-                      "Something went wrong, please report this to the Typewriter discord.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: context.responsive(
-                          mobile: 14,
-                          tablet: 16,
-                          desktop: 20,
-                        ),
-                        color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: 100.ms)
+                  .slideY(begin: 0.1, end: 0),
+              Text(
+                    "Something went wrong, please report this to the Typewriter discord.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: context.responsive(
+                        mobile: 14,
+                        tablet: 16,
+                        desktop: 20,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 200.ms)
-                    .slideY(begin: 0.1, end: 0),
-                Text(
-                      message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: context.responsive(
-                          mobile: 12,
-                          tablet: 14,
-                          desktop: 18,
-                        ),
-                        color: Colors.grey,
+                      color: Colors.white,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: 200.ms)
+                  .slideY(begin: 0.1, end: 0),
+              Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: context.responsive(
+                        mobile: 12,
+                        tablet: 14,
+                        desktop: 18,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 300.ms)
-                    .slideY(begin: 0.1, end: 0),
-              ],
-            ),
+                      color: Colors.grey,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: 300.ms)
+                  .slideY(begin: 0.1, end: 0),
+            ],
           ),
-          SizedBox(height: 24),
-          if (child != null)
-            child!
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 300.ms)
-                .slideY(begin: 0.1, end: 0),
-          Spacer(),
-        ],
-      ),
+        ),
+        SizedBox(height: 24),
+        if (child != null)
+          child!
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 300.ms)
+              .slideY(begin: 0.1, end: 0),
+        Spacer(),
+      ],
     );
   }
 }

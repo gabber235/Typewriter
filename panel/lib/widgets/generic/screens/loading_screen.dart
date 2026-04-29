@@ -13,33 +13,27 @@ class LoadingScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final fileLoader = useRiveFileLoader.fromAsset("assets/tour.riv");
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Spacer(),
-          Expanded(
-            flex: 8,
-            child: RiveWidgetBuilder(
-              fileLoader: fileLoader,
-              stateMachineSelector: StateMachineSelector.byName(
-                "state_machine",
-              ),
-              builder: (context, state) => state(),
-            ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Spacer(),
+        Expanded(
+          flex: 8,
+          child: RiveWidgetBuilder(
+            fileLoader: fileLoader,
+            stateMachineSelector: StateMachineSelector.byName("state_machine"),
+            builder: (context, state) => state(),
           ),
-          SizedBox(height: 24),
-          Text(
-            title,
-            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          ),
-          ConnectionScroller(
-            style: TextStyle(fontSize: 20, color: Colors.grey),
-          ),
-          SizedBox(height: 24),
-          Spacer(),
-        ],
-      ),
+        ),
+        SizedBox(height: 24),
+        Text(
+          title,
+          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+        ),
+        ConnectionScroller(style: TextStyle(fontSize: 20, color: Colors.grey)),
+        SizedBox(height: 24),
+        Spacer(),
+      ],
     );
   }
 }

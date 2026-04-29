@@ -11,6 +11,7 @@ import "package:typewriter_panel/widgets/app/components/inspector/inspector.dart
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
 import "package:typewriter_panel/widgets/app/components/selector.dart";
+import "package:typewriter_panel/widgets/generic/components/floating_button.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -123,23 +124,27 @@ class SelectableDemo extends HookConsumerWidget {
       return null;
     }, []);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const .only(right: 16, top: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [ModeDisplayWidget()],
-            ),
+    return Column(
+      children: [
+        Padding(
+          padding: const .only(right: 16, top: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [ModeDisplayWidget()],
           ),
-          Expanded(
-            child: Inspector(
-              margin: EdgeInsets.only(top: 8, right: 8),
-              child: Pane(
-                id: "boxes",
-                borderRadius: BorderRadius.circular(12),
-                margin: EdgeInsets.only(top: 8, left: 8),
+        ),
+        Expanded(
+          child: Inspector(
+            margin: EdgeInsets.only(top: 8, right: 8),
+            child: Pane(
+              id: "boxes",
+              borderRadius: BorderRadius.circular(12),
+              margin: EdgeInsets.only(top: 8, left: 8),
+              child: FloatingButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  selectables.value = [...selectables.value, generate()];
+                },
                 child: Section(
                   margin: EdgeInsets.zero,
                   child: Center(
@@ -157,16 +162,9 @@ class SelectableDemo extends HookConsumerWidget {
               ),
             ),
           ),
-          ActionRow(),
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          selectables.value = [...selectables.value, generate()];
-        },
-        child: const Icon(Icons.add),
-      ),
+        ),
+        ActionRow(),
+      ],
     );
   }
 }
