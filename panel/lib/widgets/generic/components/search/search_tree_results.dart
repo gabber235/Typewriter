@@ -3,6 +3,9 @@ import "package:flutter/material.dart" hide SearchController;
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/logic/search/search.dart";
+import "package:typewriter_panel/widgets/generic/components/admonition.dart";
+import "package:typewriter_panel/widgets/generic/components/labeled_message.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_result_empty_state.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_result_renderers.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_root.dart";
@@ -35,6 +38,10 @@ class SearchTreeResults extends HookConsumerWidget {
 
     return CustomScrollView(
       slivers: [
+        for (final error in snapshot.errorSummaries)
+          SearchErrorSummarySliver(error: error),
+        for (final guidance in snapshot.guidance)
+          SearchGuidanceSliver(guidance: guidance),
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
         for (var i = 0; i < viewModel.groups.length; i++)
           SearchTreeSectionSliver(
@@ -44,6 +51,65 @@ class SearchTreeResults extends HookConsumerWidget {
           ),
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
       ],
+    );
+  }
+}
+
+class SearchErrorSummarySliver extends StatelessWidget {
+  const SearchErrorSummarySliver({required this.error, super.key});
+
+  final SearchErrorSummary error;
+
+  @override
+  Widget build(BuildContext context) {
+    Padding childBuilder() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: LabeledMessage(
+        label: error.sourceLabel,
+        message: error.message,
+        messageStyle: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
+    final Widget admition = switch (error.severity) {
+      SearchErrorSeverity.warning => Admonition.warning(child: childBuilder()),
+      SearchErrorSeverity.error => Admonition.danger(child: childBuilder()),
+    };
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      sliver: SliverResizingHeader(
+        minExtentPrototype: Admonition.danger(
+          child: LabeledMessage(label: error.sourceLabel),
+        ),
+        maxExtentPrototype: Admonition.danger(child: childBuilder()),
+        child: admition,
+      ),
+    );
+  }
+}
+
+class SearchGuidanceSliver extends StatelessWidget {
+  const SearchGuidanceSliver({required this.guidance, super.key});
+
+  final SearchGuidance guidance;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget childBuilder() => LabeledMessage(
+      label: guidance.title,
+      message: guidance.description,
+      messageStyle: Theme.of(context).textTheme.bodySmall,
+    );
+    final Widget admition = Admonition.info(child: childBuilder());
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      sliver: SliverResizingHeader(
+        minExtentPrototype: Admonition.danger(
+          child: LabeledMessage(label: guidance.title),
+        ),
+        maxExtentPrototype: Admonition.danger(child: childBuilder()),
+        child: admition,
+      ),
     );
   }
 }

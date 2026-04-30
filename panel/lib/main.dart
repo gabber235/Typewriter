@@ -489,11 +489,7 @@ class _Error extends HookConsumerWidget {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
-      home: ErrorScreen(
-        title: "Error",
-        message: "$error",
-        child: SignOutButton(),
-      ),
+      home: ErrorScreen(message: "$error", child: SignOutButton()),
     );
   }
 }

@@ -506,19 +506,22 @@ class _FloatingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Material(
+    return Surface(
       color: colors.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.72),
-          width: context.isDarkMode ? 1.2 : 0.4,
+      child: Material(
+        color: colors.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: colors.outlineVariant.withValues(alpha: 0.72),
+            width: context.isDarkMode ? 1.2 : 0.4,
+          ),
         ),
+        elevation: 3,
+        shadowColor: colors.shadow,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(padding: const EdgeInsets.all(16.0), child: child),
       ),
-      elevation: 3,
-      shadowColor: colors.shadow,
-      clipBehavior: Clip.antiAlias,
-      child: Padding(padding: const EdgeInsets.all(16.0), child: child),
     );
   }
 }

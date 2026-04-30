@@ -37,25 +37,37 @@ class SearchModalBody extends HookConsumerWidget {
           ),
       },
       child: SearchFrame(
-        queryBar: QueryBar(
-          inputFieldController: inputFieldController,
-          query: controller.query,
-          onQueryChanged: controller.updateQuery,
-          selectors: controller.selectors,
-          autofocus: DecoratedTextFieldAutoFocus.textField,
-          inputDecoration: InputDecoration(
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: const Icon(Icons.search_rounded),
-            ),
-            hintText: searchHint,
-            suffixIcon: controller.canClose
-                ? InputIconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    tooltip: "Close",
-                    onPressed: controller.close,
-                  )
-                : null,
+        queryBar: ClipRRect(
+          borderRadius: BorderRadiusGeometry.only(
+            topLeft: Radius.circular(12),
+            topRight: Radius.circular(12),
+          ),
+          child: Stack(
+            children: [
+              QueryBar(
+                inputFieldController: inputFieldController,
+                query: controller.query,
+                onQueryChanged: controller.updateQuery,
+                selectors: controller.selectors,
+                autofocus: DecoratedTextFieldAutoFocus.textField,
+                inputDecoration: InputDecoration(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 4.0),
+                    child: const Icon(Icons.search_rounded),
+                  ),
+                  hintText: searchHint,
+                  suffixIcon: controller.canClose
+                      ? InputIconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: "Close",
+                          onPressed: controller.close,
+                        )
+                      : null,
+                ),
+              ),
+              if (controller.snapshot.status == .loading)
+                LinearProgressIndicator(backgroundColor: Colors.transparent),
+            ],
           ),
         ),
         searchResults: Actions(

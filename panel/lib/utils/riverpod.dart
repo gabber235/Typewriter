@@ -28,16 +28,13 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
           ? () => loading(name)
           : () => LoadingIndicator(message: "Loading $name...", shrink: shrink),
       error: (e, stackTrace) {
-        final title = "Failed to load $name";
+        final title = "";
         final message = e is ApiException ? e.toUserMessage() : e.toString();
         if (error != null) {
           return error(title, message);
         }
         if (shrink) {
-          return ErrorScreen.small(
-            title: title,
-            message: message,
-          );
+          return ErrorScreen.small(title: title, message: message);
         }
         return ErrorScreen(
           title: title,

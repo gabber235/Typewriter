@@ -104,12 +104,25 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
       reverseCurve: const Interval(0.55, 1, curve: Curves.easeIn),
     );
 
+    final padding = Tween<double>(begin: 0, end: 2).animate(
+      CurvedAnimation(
+        parent: animation,
+        curve: const Interval(0, 1, curve: Curves.ease),
+      ),
+    );
+
     return FadeTransition(
       key: ValueKey(row.key),
       opacity: opacity,
       child: SizeTransition(
         sizeFactor: size,
-        child: ScaleTransition(scale: scale, child: child),
+        child: ScaleTransition(
+          scale: scale,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: padding.value),
+            child: child,
+          ),
+        ),
       ),
     );
   }
