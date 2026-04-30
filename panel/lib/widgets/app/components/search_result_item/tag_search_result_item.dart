@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_card.dart";
 import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_visuals.dart";
@@ -15,6 +17,27 @@ class TagSearchResultItem extends StatelessWidget {
     this.shortcutActivator,
     super.key,
   });
+
+  factory TagSearchResultItem.fromTag({
+    required Tag tag,
+    bool selected = false,
+    bool focused = false,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+    ShortcutActivator? shortcutActivator,
+    Key? key,
+  }) {
+    return TagSearchResultItem(
+      name: tag.name,
+      color: tag.color.toFlutterColor(),
+      selected: selected,
+      focused: focused,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      shortcutActivator: shortcutActivator,
+      key: key,
+    );
+  }
 
   final String name;
   final Color color;

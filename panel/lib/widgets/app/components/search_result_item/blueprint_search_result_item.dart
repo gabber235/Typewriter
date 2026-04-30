@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
@@ -19,6 +20,32 @@ class BlueprintSearchResultItem extends StatelessWidget {
     this.shortcutActivator,
     super.key,
   });
+
+  factory BlueprintSearchResultItem.fromBlueprint({
+    required ElementBlueprint blueprint,
+    bool selected = false,
+    bool focused = false,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+    ShortcutActivator? shortcutActivator,
+    Key? key,
+  }) {
+    return BlueprintSearchResultItem(
+      name: blueprint.name,
+      extensionName: blueprint.extension,
+      shortDescription: blueprint.description,
+      color: blueprint.color,
+      icon: blueprint.icon,
+      tags: blueprint.tags,
+      deprecated: blueprint.hasModifier<DeprecatedModifier>(),
+      selected: selected,
+      focused: focused,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      shortcutActivator: shortcutActivator,
+      key: key,
+    );
+  }
 
   final String name;
   final String extensionName;

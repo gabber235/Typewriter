@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/logic/pages/element_blueprint.dart";
+import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
@@ -22,6 +24,38 @@ class EntrySearchResultItem extends StatelessWidget {
     this.shortcutActivator,
     super.key,
   });
+
+  factory EntrySearchResultItem.fromEntry({
+    required EntryDefinition entry,
+    required String pageTitle,
+    required String chapter,
+    required String bookTitle,
+    bool selected = false,
+    bool focused = false,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+    ShortcutActivator? shortcutActivator,
+    Key? key,
+  }) {
+    final blueprint = entry.blueprint;
+    return EntrySearchResultItem(
+      name: entry.name,
+      blueprintName: blueprint.name,
+      bookTitle: bookTitle,
+      chapter: chapter,
+      pageTitle: pageTitle,
+      color: blueprint.color,
+      icon: blueprint.icon,
+      tags: blueprint.tags,
+      deprecated: blueprint.hasModifier<DeprecatedModifier>(),
+      selected: selected,
+      focused: focused,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      shortcutActivator: shortcutActivator,
+      key: key,
+    );
+  }
 
   final String name;
   final String blueprintName;

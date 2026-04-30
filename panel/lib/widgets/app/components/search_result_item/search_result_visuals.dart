@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
@@ -166,21 +167,34 @@ class SearchResultTags extends StatelessWidget {
     final onSurface = surfaceColor.onBrightness(surfaceBrightness.inverted);
 
     final backgroundColor = switch ((selected, focused)) {
-          (false, false) => Color.alphaBlend(color.withValues(alpha: 0.3), surfaceColor),
-          (true, false) => Color.alphaBlend(color.withValues(alpha: 0.72), surfaceColor),
-          (false, true) => Color.alphaBlend(onSurface.withValues(alpha: 0.55), surfaceColor),
-          (true, true) => Color.alphaBlend(onSurface.withValues(alpha: 0.9), surfaceColor),
+      (false, false) => Color.alphaBlend(
+        color.withValues(alpha: 0.3),
+        surfaceColor,
+      ),
+      (true, false) => Color.alphaBlend(
+        color.withValues(alpha: 0.72),
+        surfaceColor,
+      ),
+      (false, true) => Color.alphaBlend(
+        onSurface.withValues(alpha: 0.55),
+        surfaceColor,
+      ),
+      (true, true) => Color.alphaBlend(
+        onSurface.withValues(alpha: 0.9),
+        surfaceColor,
+      ),
     };
 
     final foregroundColor = switch ((selected, focused)) {
-          (false, false) => color,
-          (true, false) => onSurface,
-          (_, true) => color,
+      (false, false) => color,
+      (true, false) => onSurface,
+      (_, true) => color,
     };
-
 
     return Flexible(
       child: UnconstrainedBox(
+        alignment: Alignment.centerLeft,
+        clipBehavior: .antiAlias,
         child: Row(
           spacing: 4,
           children: [
@@ -192,7 +206,7 @@ class SearchResultTags extends StatelessWidget {
             ),
             for (final tag in tags)
               SearchResultSoftChip(
-                label: tag,
+                label: tag.formatted,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
               ),
@@ -235,18 +249,15 @@ class SearchResultSuffix extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      final surfaceColor = Surface.colorOf(context);
-      final surfaceBrightness = ThemeData.estimateBrightnessForColor(
-        surfaceColor,
-      );
-      final onSurface = surfaceColor.onBrightness(surfaceBrightness.inverted);
+    final surfaceColor = Surface.colorOf(context);
+    final surfaceBrightness = ThemeData.estimateBrightnessForColor(
+      surfaceColor,
+    );
+    final onSurface = surfaceColor.onBrightness(surfaceBrightness.inverted);
     return Row(
       spacing: 8,
       children: [
-        SearchResultType(
-          label: label,
-          color: onSurface.withValues(alpha: 0.7),
-        ),
+        SearchResultType(label: label, color: onSurface.withValues(alpha: 0.7)),
         if (shortcutActivator != null)
           ShortcutDisplay(
             shortcut: shortcutActivator!,

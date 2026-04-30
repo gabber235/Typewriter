@@ -1,4 +1,5 @@
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" hide Page;
+import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
@@ -18,6 +19,33 @@ class PageSearchResultItem extends StatelessWidget {
     this.shortcutActivator,
     super.key,
   });
+
+  factory PageSearchResultItem.fromPage({
+    required Page page,
+    required String bookName,
+    required Color color,
+    String? icon,
+    bool selected = false,
+    bool focused = false,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+    ShortcutActivator? shortcutActivator,
+    Key? key,
+  }) {
+    return PageSearchResultItem(
+      name: page.name,
+      bookName: bookName,
+      chapter: page.chapter,
+      color: color,
+      icon: icon == null || icon.isEmpty ? "fa6-solid:file-lines" : icon,
+      selected: selected,
+      focused: focused,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      shortcutActivator: shortcutActivator,
+      key: key,
+    );
+  }
 
   final String name;
   final String bookName;
