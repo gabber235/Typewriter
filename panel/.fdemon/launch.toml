@@ -1,0 +1,50 @@
+# Flutter Demon launch configurations for Typewriter panel
+# fdemon falls back to first config when no auto_start is set, so web local stays first.
+
+[[configurations]]
+name = "Panel web local"
+device = "chrome"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--web-port=2350", "--dart-define-from-file=config/local.json"]
+auto_start = false
+
+[[configurations]]
+name = "Panel web hybrid"
+device = "chrome"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--web-port=2350", "--dart-define-from-file=config/hybrid.json"]
+auto_start = false
+
+[[configurations]]
+name = "Panel web production"
+device = "chrome"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--dart-define-from-file=config/production.json"]
+auto_start = false
+
+[[configurations]]
+name = "Panel macOS local"
+device = "macos"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--dart-define-from-file=config/local.json"]
+auto_start = false
+
+[[configurations]]
+name = "Panel macOS hybrid"
+device = "macos"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--dart-define-from-file=config/hybrid.json"]
+auto_start = false
+
+[[configurations]]
+name = "Panel macOS production"
+device = "macos"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--dart-define-from-file=config/production.json"]
+auto_start = false

@@ -1,3 +1,6 @@
+# Flutter Demon local user preferences
+.fdemon/settings.local.toml
+
 # Miscellaneous
 *.class
 *.log

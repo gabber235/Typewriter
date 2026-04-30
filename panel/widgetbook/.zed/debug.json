@@ -1,0 +1,11 @@
+[
+  {
+    "adapter": "Delve",
+    "label": "Flutter Demon (TCP)",
+    "request": "attach",
+    "tcp_connection": {
+      "host": "127.0.0.1",
+      "port": 54584
+    }
+  }
+]

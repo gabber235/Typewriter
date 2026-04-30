@@ -1,0 +1,9 @@
+# Flutter Demon launch configurations for Typewriter WidgetBook
+
+[[configurations]]
+name = "WidgetBook macOS local"
+device = "macos"
+mode = "debug"
+entry_point = "lib/main.dart"
+extra_args = ["--dart-define-from-file=../config/local.json"]
+auto_start = false

@@ -1,0 +1,58 @@
+# Flutter Demon project settings for Typewriter WidgetBook
+
+[behavior]
+confirm_quit = true
+
+[watcher]
+paths = ["lib", "../lib", "../assets", "../config"]
+debounce_ms = 500
+auto_reload = true
+extensions = ["dart", "json", "svg", "png", "yaml", "yml"]
+
+[ui]
+log_buffer_size = 10000
+show_timestamps = true
+compact_logs = true
+theme = "default"
+stack_trace_collapsed = true
+stack_trace_max_frames = 3
+icons = "nerd_fonts"
+
+[devtools]
+auto_open = false
+browser = ""
+default_panel = "inspector"
+performance_refresh_ms = 2000
+memory_history_size = 60
+tree_max_depth = 0
+inspector_fetch_timeout_secs = 60
+auto_repaint_rainbow = false
+auto_performance_overlay = false
+allocation_profile_interval_ms = 5000
+max_network_entries = 500
+network_auto_record = true
+network_poll_interval_ms = 1000
+
+[devtools.logging]
+hybrid_enabled = true
+prefer_vm_level = true
+show_source_indicator = false
+dedupe_threshold_ms = 100
+
+[editor]
+command = ""
+open_pattern = "$EDITOR $FILE:$LINE"
+
+[dap]
+enabled = false
+auto_start_in_ide = true
+port = 0
+bind_address = "127.0.0.1"
+suppress_reload_on_pause = true
+auto_configure_ide = true
+
+[native_logs]
+enabled = true
+exclude_tags = ["flutter"]
+include_tags = []
+min_level = "info"
