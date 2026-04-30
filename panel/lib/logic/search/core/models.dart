@@ -14,11 +14,70 @@ abstract class SearchParsedSelector with _$SearchParsedSelector {
   }) = _SearchParsedSelector;
 }
 
+enum SearchSelectorOperator { and, or }
+
+sealed class SearchSelectorExpression {
+  const SearchSelectorExpression();
+}
+
+final class SearchSelectorLeafExpression extends SearchSelectorExpression {
+  const SearchSelectorLeafExpression(this.selector);
+
+  final SearchParsedSelector selector;
+
+  @override
+  bool operator ==(Object other) {
+    return other is SearchSelectorLeafExpression && other.selector == selector;
+  }
+
+  @override
+  int get hashCode => selector.hashCode;
+}
+
+final class SearchSelectorBinaryExpression extends SearchSelectorExpression {
+  const SearchSelectorBinaryExpression({
+    required this.operator,
+    required this.left,
+    required this.right,
+  });
+
+  final SearchSelectorOperator operator;
+  final SearchSelectorExpression left;
+  final SearchSelectorExpression right;
+
+  @override
+  bool operator ==(Object other) {
+    return other is SearchSelectorBinaryExpression &&
+        other.operator == operator &&
+        other.left == left &&
+        other.right == right;
+  }
+
+  @override
+  int get hashCode => Object.hash(operator, left, right);
+}
+
+final class SearchSelectorNotExpression extends SearchSelectorExpression {
+  const SearchSelectorNotExpression(this.expression);
+
+  final SearchSelectorExpression expression;
+
+  @override
+  bool operator ==(Object other) {
+    return other is SearchSelectorNotExpression &&
+        other.expression == expression;
+  }
+
+  @override
+  int get hashCode => expression.hashCode;
+}
+
 @freezed
 abstract class SearchQueryContext with _$SearchQueryContext {
   const factory SearchQueryContext({
     required String normalizedQuery,
     required List<SearchParsedSelector> selectors,
+    SearchSelectorExpression? selectorExpression,
   }) = _SearchQueryContext;
 }
 

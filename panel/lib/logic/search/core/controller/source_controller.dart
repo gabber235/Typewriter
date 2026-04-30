@@ -43,24 +43,15 @@ class SourceController extends ChangeNotifier {
     final selectorsById = {for (final s in selectors) s.id: s};
     final query = Query(selectors);
     final result = query.parse(rawQuery);
+    final parsedSelectors = result.selectors.map((s) {
+      assert(selectorsById.containsKey(s.selectorId), "Unknown selector");
+      return _parsedSelector(s, selectorsById);
+    }).toList();
 
     final newContext = SearchQueryContext(
       normalizedQuery: result.query,
-      selectors: result.selectors.map((s) {
-        assert(selectorsById.containsKey(s.selectorId), "Unknown selector");
-        return switch (s) {
-          QueryLexerKeyValueSelectorToken(:final selectorId, :final value) =>
-            SearchParsedSelector(
-              selectorId: selectorId,
-              key: (selectorsById[selectorId]! as KeyValueSelectorDefinition)
-                  .key,
-              value: value,
-            ),
-          QueryLexerSelectorToken() => throw StateError(
-            "Unexpected selector token",
-          ),
-        };
-      }).toList(),
+      selectors: parsedSelectors,
+      selectorExpression: _selectorExpression(result.expression, selectorsById),
     );
 
     if (newContext == _lastSearchedContext) {
@@ -73,6 +64,50 @@ class SourceController extends ChangeNotifier {
 
   void triggerQuery() {
     source.search(_lastSearchedContext);
+  }
+
+  SearchParsedSelector _parsedSelector(
+    QueryLexerSelectorToken token,
+    Map<String, QuerySelectorDefinition> selectorsById,
+  ) {
+    return switch (token) {
+      QueryLexerKeyValueSelectorToken(:final selectorId, :final value) =>
+        SearchParsedSelector(
+          selectorId: selectorId,
+          key: (selectorsById[selectorId]! as KeyValueSelectorDefinition).key,
+          value: value,
+        ),
+      QueryLexerSelectorToken() => throw StateError(
+        "Unexpected selector token",
+      ),
+    };
+  }
+
+  SearchSelectorExpression? _selectorExpression(
+    QueryLexerToken? token,
+    Map<String, QuerySelectorDefinition> selectorsById,
+  ) {
+    return switch (token) {
+      null => null,
+      QueryLexerKeyValueSelectorToken() => SearchSelectorLeafExpression(
+        _parsedSelector(token, selectorsById),
+      ),
+      QueryLexerOperatorToken(:final type, :final left, :final right) =>
+        SearchSelectorBinaryExpression(
+          operator: switch (type) {
+            QueryLexerOperatorType.and => SearchSelectorOperator.and,
+            QueryLexerOperatorType.or => SearchSelectorOperator.or,
+          },
+          left: _selectorExpression(left, selectorsById)!,
+          right: _selectorExpression(right, selectorsById)!,
+        ),
+      QueryLexerNegationToken(:final token) => SearchSelectorNotExpression(
+        _selectorExpression(token, selectorsById)!,
+      ),
+      QueryLexerSelectorToken() => throw StateError(
+        "Unexpected selector token",
+      ),
+    };
   }
 
   void _onSourceSnapshot(SearchSourceSnapshot snapshot) {

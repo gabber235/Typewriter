@@ -289,7 +289,7 @@ as String?,
 /// @nodoc
 mixin _$SearchQueryContext implements DiagnosticableTreeMixin {
 
- String get normalizedQuery; List<SearchParsedSelector> get selectors;
+ String get normalizedQuery; List<SearchParsedSelector> get selectors; SearchSelectorExpression? get selectorExpression;
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -301,21 +301,21 @@ $SearchQueryContextCopyWith<SearchQueryContext> get copyWith => _$SearchQueryCon
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'SearchQueryContext'))
-    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors));
+    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors))..add(DiagnosticsProperty('selectorExpression', selectorExpression));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchQueryContext&&(identical(other.normalizedQuery, normalizedQuery) || other.normalizedQuery == normalizedQuery)&&const DeepCollectionEquality().equals(other.selectors, selectors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchQueryContext&&(identical(other.normalizedQuery, normalizedQuery) || other.normalizedQuery == normalizedQuery)&&const DeepCollectionEquality().equals(other.selectors, selectors)&&(identical(other.selectorExpression, selectorExpression) || other.selectorExpression == selectorExpression));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,normalizedQuery,const DeepCollectionEquality().hash(selectors));
+int get hashCode => Object.hash(runtimeType,normalizedQuery,const DeepCollectionEquality().hash(selectors),selectorExpression);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors)';
+  return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors, selectorExpression: $selectorExpression)';
 }
 
 
@@ -326,7 +326,7 @@ abstract mixin class $SearchQueryContextCopyWith<$Res>  {
   factory $SearchQueryContextCopyWith(SearchQueryContext value, $Res Function(SearchQueryContext) _then) = _$SearchQueryContextCopyWithImpl;
 @useResult
 $Res call({
- String normalizedQuery, List<SearchParsedSelector> selectors
+ String normalizedQuery, List<SearchParsedSelector> selectors, SearchSelectorExpression? selectorExpression
 });
 
 
@@ -343,11 +343,12 @@ class _$SearchQueryContextCopyWithImpl<$Res>
 
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? normalizedQuery = null,Object? selectors = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? selectorExpression = freezed,}) {
   return _then(_self.copyWith(
 normalizedQuery: null == normalizedQuery ? _self.normalizedQuery : normalizedQuery // ignore: cast_nullable_to_non_nullable
 as String,selectors: null == selectors ? _self.selectors : selectors // ignore: cast_nullable_to_non_nullable
-as List<SearchParsedSelector>,
+as List<SearchParsedSelector>,selectorExpression: freezed == selectorExpression ? _self.selectorExpression : selectorExpression // ignore: cast_nullable_to_non_nullable
+as SearchSelectorExpression?,
   ));
 }
 
@@ -432,10 +433,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  SearchSelectorExpression? selectorExpression)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchQueryContext() when $default != null:
-return $default(_that.normalizedQuery,_that.selectors);case _:
+return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);case _:
   return orElse();
 
 }
@@ -453,10 +454,10 @@ return $default(_that.normalizedQuery,_that.selectors);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  SearchSelectorExpression? selectorExpression)  $default,) {final _that = this;
 switch (_that) {
 case _SearchQueryContext():
-return $default(_that.normalizedQuery,_that.selectors);case _:
+return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -473,10 +474,10 @@ return $default(_that.normalizedQuery,_that.selectors);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String normalizedQuery,  List<SearchParsedSelector> selectors)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  SearchSelectorExpression? selectorExpression)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchQueryContext() when $default != null:
-return $default(_that.normalizedQuery,_that.selectors);case _:
+return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);case _:
   return null;
 
 }
@@ -488,7 +489,7 @@ return $default(_that.normalizedQuery,_that.selectors);case _:
 
 
 class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryContext {
-  const _SearchQueryContext({required this.normalizedQuery, required final  List<SearchParsedSelector> selectors}): _selectors = selectors;
+  const _SearchQueryContext({required this.normalizedQuery, required final  List<SearchParsedSelector> selectors, this.selectorExpression}): _selectors = selectors;
   
 
 @override final  String normalizedQuery;
@@ -499,6 +500,7 @@ class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryCon
   return EqualUnmodifiableListView(_selectors);
 }
 
+@override final  SearchSelectorExpression? selectorExpression;
 
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
@@ -511,21 +513,21 @@ _$SearchQueryContextCopyWith<_SearchQueryContext> get copyWith => __$SearchQuery
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'SearchQueryContext'))
-    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors));
+    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors))..add(DiagnosticsProperty('selectorExpression', selectorExpression));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchQueryContext&&(identical(other.normalizedQuery, normalizedQuery) || other.normalizedQuery == normalizedQuery)&&const DeepCollectionEquality().equals(other._selectors, _selectors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchQueryContext&&(identical(other.normalizedQuery, normalizedQuery) || other.normalizedQuery == normalizedQuery)&&const DeepCollectionEquality().equals(other._selectors, _selectors)&&(identical(other.selectorExpression, selectorExpression) || other.selectorExpression == selectorExpression));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,normalizedQuery,const DeepCollectionEquality().hash(_selectors));
+int get hashCode => Object.hash(runtimeType,normalizedQuery,const DeepCollectionEquality().hash(_selectors),selectorExpression);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors)';
+  return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors, selectorExpression: $selectorExpression)';
 }
 
 
@@ -536,7 +538,7 @@ abstract mixin class _$SearchQueryContextCopyWith<$Res> implements $SearchQueryC
   factory _$SearchQueryContextCopyWith(_SearchQueryContext value, $Res Function(_SearchQueryContext) _then) = __$SearchQueryContextCopyWithImpl;
 @override @useResult
 $Res call({
- String normalizedQuery, List<SearchParsedSelector> selectors
+ String normalizedQuery, List<SearchParsedSelector> selectors, SearchSelectorExpression? selectorExpression
 });
 
 
@@ -553,11 +555,12 @@ class __$SearchQueryContextCopyWithImpl<$Res>
 
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? normalizedQuery = null,Object? selectors = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? selectorExpression = freezed,}) {
   return _then(_SearchQueryContext(
 normalizedQuery: null == normalizedQuery ? _self.normalizedQuery : normalizedQuery // ignore: cast_nullable_to_non_nullable
 as String,selectors: null == selectors ? _self._selectors : selectors // ignore: cast_nullable_to_non_nullable
-as List<SearchParsedSelector>,
+as List<SearchParsedSelector>,selectorExpression: freezed == selectorExpression ? _self.selectorExpression : selectorExpression // ignore: cast_nullable_to_non_nullable
+as SearchSelectorExpression?,
   ));
 }
 

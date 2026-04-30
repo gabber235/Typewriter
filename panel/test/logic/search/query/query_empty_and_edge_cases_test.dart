@@ -51,6 +51,30 @@ void main() {
     expect(result.raw, "");
   });
 
+  test("non-empty query with no selectors is treated as plain text", () {
+    final result = checkQuery("title:test #tag", selectors: const [])
+        .expectNoIssues()
+        .expectQuery("title:test #tag")
+        .expectNoExpression()
+        .done();
+
+    expect(result.selectors, isEmpty);
+    expect(result.tokens, isEmpty);
+    expect(result.queryBefore, "title:test #tag");
+    expect(result.queryAfter, isEmpty);
+    expect(result.raw, "title:test #tag");
+  });
+
+  test("lexer with no selectors tokenizes all input as plain text", () {
+    final result = lexQuery("  title:test #tag  ", selectors: const []);
+
+    expect(result.query, "title:test #tag");
+    expect(result.queryBefore, "title:test #tag");
+    expect(result.queryAfter, isEmpty);
+    expect(result.expression, isNull);
+    expect(result.raw, "  title:test #tag  ");
+  });
+
   test("cursor beyond input length clamps", () {
     final result = checkQuery(
       "",

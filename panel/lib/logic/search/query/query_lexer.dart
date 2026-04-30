@@ -19,6 +19,20 @@ final _notOperatorParser = [
 
 class QueryLexer {
   QueryLexer(List<QuerySelectorDefinition> selectors) {
+    if (selectors.isEmpty) {
+      parser = any().star().flatten().map((input) {
+        final query = input.trim();
+        return QueryLexerResult(
+          query: query,
+          queryBefore: query,
+          queryAfter: "",
+          raw: "",
+          expression: null,
+        );
+      }).end();
+      return;
+    }
+
     final builder = ExpressionBuilder<QueryLexerToken>();
 
     for (final selector in selectors) {
