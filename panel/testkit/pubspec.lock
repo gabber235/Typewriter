@@ -561,7 +561,7 @@ packages:
     source: hosted
     version: "4.1.2"
   iconify_flutter_plus:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: iconify_flutter_plus
       sha256: "6a7568746a16de5e1c02a0d350580e4d24749cc2f675bb236d19d5a862b1a79f"

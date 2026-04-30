@@ -16,7 +16,6 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 Book Function() generateRandomBook(List<Tag> tags) {
   return () {
-    final icon = "book";
     final possibleTagIds = tags.map((tag) => tag.tagId).toList();
     final tagIds = <String>[];
     var chance = 0.9;
@@ -34,7 +33,7 @@ Book Function() generateRandomBook(List<Tag> tags) {
     return Book(
       bookId: title,
       title: title,
-      icon: icon,
+      icon: generateRandomIconName(),
       color: safeColors.randomElement().toProtoColor(),
       tagIds: tagIds,
     );

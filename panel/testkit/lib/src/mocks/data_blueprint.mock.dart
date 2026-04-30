@@ -1,6 +1,7 @@
 import "package:faker/faker.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/utils/collection.dart";
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 
 const defaultBlueprintIcons = <String>[
   "fa-solid:star",
@@ -15,7 +16,7 @@ const defaultBlueprintIcons = <String>[
   "fa-solid:chess-knight",
 ];
 
-String generateRandomIconName() => defaultBlueprintIcons.randomOrNull()!;
+String generateRandomIconName() => Fa6Solid.iconsList.randomOrNull()!;
 
 /// Generate a random DataBlueprint, recursing up to [maxDepth].
 ///

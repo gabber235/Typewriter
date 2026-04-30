@@ -62,51 +62,7 @@ const mockMemberSearchResultType = SearchResultType(
   label: "Member",
 );
 
-enum MockSearchDisplayState { ready, empty, loading, error }
-
-final class MockSearchPayload {
-  const MockSearchPayload({
-    required this.kind,
-    required this.source,
-    required this.fields,
-    this.tags = const [],
-  });
-
-  final String kind;
-  final Object source;
-  final Map<String, String> fields;
-  final List<String> tags;
-
-  Iterable<String> valuesForSelector(String selectorId) {
-    return switch ((kind, selectorId)) {
-      ("book", "tag") => tags,
-      ("page", "tag") => tags,
-      ("page", "book") => [fields["book"] ?? "", fields["bookId"] ?? ""],
-      ("page", "chapter") => [fields["chapter"] ?? ""],
-      ("page", "pageType") => [fields["pageType"] ?? ""],
-      ("entry", "tag") => tags,
-      ("entry", "book") => [fields["book"] ?? "", fields["bookId"] ?? ""],
-      ("entry", "chapter") => [fields["chapter"] ?? ""],
-      ("entry", "page") => [fields["page"] ?? "", fields["pageId"] ?? ""],
-      ("entry", "entryType") => [fields["entryType"] ?? ""],
-      ("entry", "extension") => [fields["extension"] ?? ""],
-      ("blueprint", "tag") => tags,
-      ("blueprint", "entryType") => [fields["entryType"] ?? ""],
-      ("blueprint", "extension") => [fields["extension"] ?? ""],
-      ("tag", "tag") => tags,
-      _ => const [],
-    };
-  }
-
-  Iterable<String> get searchableValues sync* {
-    yield kind;
-    yield* fields.values;
-    yield* tags;
-  }
-
-  @override
-  String toString() => [...searchableValues].join(" ");
-}
+enum MockSearchDisplayState { ready, loading, error }
 
 final class MockSearchPreviewData {
   const MockSearchPreviewData({
@@ -192,7 +148,6 @@ final class MockSearchSource implements SearchSource {
         nodes: nodes,
         actions: actions,
         guidance: guidance,
-        errorSummaries: errorSummaries,
       ),
     );
     _searchTimer = Timer(searchDelay, () => _emitSearchResult(context));
@@ -207,11 +162,6 @@ final class MockSearchSource implements SearchSource {
     return switch (state) {
       MockSearchDisplayState.ready => SearchSourceSnapshot.ready(
         nodes: nextNodes,
-        actions: actions,
-        guidance: guidance,
-      ),
-      MockSearchDisplayState.empty => SearchSourceSnapshot.ready(
-        nodes: const [],
         actions: actions,
         guidance: guidance,
       ),
@@ -242,7 +192,14 @@ final class MockSearchSource implements SearchSource {
     final query = context.normalizedQuery.trim().toLowerCase();
     if (query.isEmpty && context.selectors.isEmpty) return nodes;
     return nodes
-        .map((node) => _filterNode(node, query, context.selectors))
+        .map(
+          (node) => _filterNode(
+            node,
+            query,
+            context.selectors,
+            context.selectorExpression,
+          ),
+        )
         .nonNulls
         .toList();
   }
@@ -251,6 +208,7 @@ final class MockSearchSource implements SearchSource {
     SearchNode node,
     String query,
     List<SearchParsedSelector> selectors,
+    SearchSelectorExpression? selectorExpression,
   ) {
     return switch (node) {
       SearchSectionNode(
@@ -259,9 +217,17 @@ final class MockSearchSource implements SearchSource {
         :final subtitle,
         :final children,
       ) =>
-        _filterSection(id, title, subtitle, children, query, selectors),
+        _filterSection(
+          id,
+          title,
+          subtitle,
+          children,
+          query,
+          selectors,
+          selectorExpression,
+        ),
       SearchResultNode(:final result) =>
-        _matches(result, query, selectors) ? node : null,
+        _matches(result, query, selectors, selectorExpression) ? node : null,
     };
   }
 
@@ -272,9 +238,10 @@ final class MockSearchSource implements SearchSource {
     List<SearchNode> children,
     String query,
     List<SearchParsedSelector> selectors,
+    SearchSelectorExpression? selectorExpression,
   ) {
     final filtered = children
-        .map((node) => _filterNode(node, query, selectors))
+        .map((node) => _filterNode(node, query, selectors, selectorExpression))
         .nonNulls
         .toList();
     if (filtered.isEmpty) return null;
@@ -290,38 +257,66 @@ final class MockSearchSource implements SearchSource {
     SearchResult result,
     String query,
     List<SearchParsedSelector> selectors,
+    SearchSelectorExpression? selectorExpression,
   ) {
     final payload = result.payload;
-    final searchableValues = payload is MockSearchPayload
-        ? payload.searchableValues
-        : [
-            result.id,
-            result.title,
-            result.subtitle,
-            result.type.id,
-            result.type.label,
-            result.payload.toString(),
-          ].whereType<String>();
-
-    final haystack = searchableValues.join(" ").toLowerCase();
+    final haystack = _searchableValuesForResult(result).join(" ").toLowerCase();
     final queryTerms = query
         .split(RegExp(r"\s+"))
         .where((term) => term.isNotEmpty)
         .map((term) => term.toLowerCase())
         .toList();
     final queryMatches = queryTerms.every(haystack.contains);
-    final selectorsMatch = selectors.every((selector) {
-      final value = selector.value?.toLowerCase();
-      if (value == null || value.isEmpty) return true;
-      if (payload case MockSearchPayload payload) {
-        return payload
-            .valuesForSelector(selector.selectorId)
-            .map((field) => field.toLowerCase())
-            .any((field) => field.contains(value));
-      }
-      return haystack.contains(value);
-    });
+    final selectorsMatch = selectorExpression == null
+        ? selectors.every(
+            (selector) => _matchesSelector(payload, haystack, selector),
+          )
+        : _matchesSelectorExpression(payload, haystack, selectorExpression);
     return queryMatches && selectorsMatch;
+  }
+
+  bool _matchesSelectorExpression(
+    Object payload,
+    String haystack,
+    SearchSelectorExpression expression,
+  ) {
+    return switch (expression) {
+      SearchSelectorLeafExpression(:final selector) => _matchesSelector(
+        payload,
+        haystack,
+        selector,
+      ),
+      SearchSelectorBinaryExpression(
+        :final operator,
+        :final left,
+        :final right,
+      ) =>
+        switch (operator) {
+          SearchSelectorOperator.and =>
+            _matchesSelectorExpression(payload, haystack, left) &&
+                _matchesSelectorExpression(payload, haystack, right),
+          SearchSelectorOperator.or =>
+            _matchesSelectorExpression(payload, haystack, left) ||
+                _matchesSelectorExpression(payload, haystack, right),
+        },
+      SearchSelectorNotExpression(:final expression) =>
+        !_matchesSelectorExpression(payload, haystack, expression),
+    };
+  }
+
+  bool _matchesSelector(
+    Object payload,
+    String haystack,
+    SearchParsedSelector selector,
+  ) {
+    final value = selector.value?.toLowerCase();
+    if (value == null || value.isEmpty) return true;
+    final selectorValues = _valuesForSelector(
+      payload,
+      selector.selectorId,
+    ).map((field) => field.toLowerCase());
+    return selectorValues.any((field) => field.contains(value)) ||
+        haystack.contains(value);
   }
 
   @override
@@ -343,6 +338,185 @@ final class MockSearchSource implements SearchSource {
     unawaited(_snapshots.close());
     unawaited(_selectors.close());
   }
+}
+
+Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
+  yield result.id;
+  yield result.type.id;
+  if (result.type.label case final label?) yield label;
+  if (result.title case final title?) yield title;
+  if (result.subtitle case final subtitle?) yield subtitle;
+
+  final payload = result.payload;
+  switch (payload) {
+    case MockBookRecord():
+      yield "book";
+      yield payload.book.bookId;
+      yield payload.book.title;
+      yield payload.book.icon;
+      yield* payload.tags;
+    case MockPageRecord():
+      final page = payload.page;
+      final book = payload.book;
+      yield "page";
+      yield page.pageId;
+      yield page.name;
+      yield page.chapter;
+      yield _pageTypeLabel(page.type);
+      yield book.bookId;
+      yield book.title;
+      yield* book.tagIds;
+    case MockEntryRecord():
+      final entry = payload.entry;
+      final page = payload.page.page;
+      final book = payload.page.book;
+      final blueprint = entry.blueprint;
+      yield "entry";
+      yield entry.id;
+      yield entry.name;
+      yield page.pageId;
+      yield page.name;
+      yield page.chapter;
+      yield book.bookId;
+      yield book.title;
+      yield blueprint.id;
+      yield blueprint.name;
+      yield blueprint.extension;
+      yield blueprint.description;
+      yield* blueprint.tags;
+      yield* book.tagIds;
+    case ElementBlueprint():
+      yield "blueprint";
+      yield payload.id;
+      yield payload.name;
+      yield payload.extension;
+      yield payload.description;
+      yield payload.icon;
+      yield* payload.tags;
+    case Tag():
+      yield "tag";
+      yield payload.tagId;
+      yield payload.name;
+      yield* payload.parentIds;
+    default:
+      yield payload.toString();
+  }
+}
+
+Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
+  switch (payload) {
+    case MockBookRecord():
+      switch (selectorId) {
+        case "tag":
+          yield* payload.tags;
+        case "type":
+          yield "book";
+      }
+    case MockPageRecord():
+      final page = payload.page;
+      final book = payload.book;
+      switch (selectorId) {
+        case "tag":
+          yield _pageTypeLabel(page.type);
+          yield* book.tagIds;
+        case "book":
+          yield book.title;
+          yield book.bookId;
+        case "chapter":
+          yield page.chapter;
+        case "pageType":
+          yield _pageTypeLabel(page.type);
+        case "type":
+          yield "page";
+      }
+    case MockEntryRecord():
+      final entry = payload.entry;
+      final page = payload.page.page;
+      final book = payload.page.book;
+      final blueprint = entry.blueprint;
+      switch (selectorId) {
+        case "tag":
+          yield* blueprint.tags;
+          yield* book.tagIds;
+        case "book":
+          yield book.title;
+          yield book.bookId;
+        case "chapter":
+          yield page.chapter;
+        case "page":
+          yield page.name;
+          yield page.pageId;
+        case "entryType":
+          yield blueprint.name;
+        case "extension":
+          yield blueprint.extension;
+        case "type":
+          yield "entry";
+      }
+    case ElementBlueprint():
+      switch (selectorId) {
+        case "tag":
+          yield* payload.tags;
+        case "entryType":
+          yield payload.name;
+        case "extension":
+          yield payload.extension;
+        case "type":
+          yield "blueprint";
+      }
+    case Tag():
+      switch (selectorId) {
+        case "tag":
+          yield payload.name;
+          yield payload.tagId;
+          yield* payload.parentIds;
+        case "type":
+          yield "tag";
+      }
+  }
+}
+
+Map<String, String> _previewFieldsForPayload(Object payload) {
+  return switch (payload) {
+    MockBookRecord() => {
+      "id": payload.book.bookId,
+      "bookId": payload.book.bookId,
+      "name": payload.book.title,
+      "title": payload.book.title,
+    },
+    MockPageRecord() => {
+      "id": payload.page.pageId,
+      "pageId": payload.page.pageId,
+      "name": payload.page.name,
+      "title": payload.page.name,
+      "book": payload.book.title,
+      "bookId": payload.book.bookId,
+      "chapter": payload.page.chapter,
+      "pageType": _pageTypeLabel(payload.page.type),
+    },
+    MockEntryRecord() => {
+      "id": payload.entry.id,
+      "name": payload.entry.name,
+      "title": payload.entry.name,
+      "book": payload.page.book.title,
+      "bookId": payload.page.book.bookId,
+      "page": payload.page.page.name,
+      "pageId": payload.page.page.pageId,
+      "chapter": payload.page.page.chapter,
+      "entryType": payload.entry.blueprint.name,
+      "extension": payload.entry.blueprint.extension,
+    },
+    ElementBlueprint() => {
+      "id": payload.id,
+      "name": payload.name,
+      "title": payload.name,
+      "entryType": payload.name,
+      "extension": payload.extension,
+      "description": payload.description,
+    },
+    Tag() => {"id": payload.tagId, "name": payload.name, "title": payload.name},
+    _ => const {},
+  };
 }
 
 SearchResult mockSearchResult({
@@ -505,6 +679,13 @@ final class MockSearchIndex {
   };
 }
 
+final class MockBookRecord {
+  const MockBookRecord({required this.book, required this.tags});
+
+  final Book book;
+  final List<String> tags;
+}
+
 final class MockPageRecord {
   const MockPageRecord({required this.book, required this.page});
 
@@ -580,6 +761,7 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       .map((blueprint) => blueprint.extension)
       .toSet()
       .toList();
+  const resultTypes = ["book", "page", "entry", "blueprint", "tag"];
 
   return [
     KeyValueSelectorDefinition(
@@ -624,70 +806,70 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       value: QuerySelectorValue.enumValue(extensions),
       color: safeColors[9],
     ),
+    KeyValueSelectorDefinition(
+      id: "type",
+      key: "type:",
+      value: QuerySelectorValue.enumValue(resultTypes),
+      color: safeColors[1],
+    ),
   ];
 }
 
 List<SearchNode> mockMixedGlobalSearchNodes([MockSearchIndex? index]) {
   final searchIndex = index ?? mockSearchIndex();
   return [
-    mockSearchSection(
-      id: "books",
-      title: "Books",
-      subtitle: "Books and tags",
-      children: searchIndex.books
-          .map((book) => _bookSearchNode(book, searchIndex))
-          .toList(),
-    ),
-    mockSearchSection(
-      id: "pages",
-      title: "Pages",
-      subtitle: "Books and chapters",
-      children: searchIndex.pages
-          .map((record) => _pageSearchNode(record, searchIndex))
-          .toList(),
-    ),
-    mockSearchSection(
-      id: "entries",
-      title: "Entries",
-      subtitle: "Quest logic",
-      children: searchIndex.entries
-          .map((record) => _entrySearchNode(record, searchIndex))
-          .toList(),
-    ),
-    mockSearchSection(
-      id: "blueprints",
-      title: "Blueprints",
-      subtitle: "Entry definitions",
-      children: searchIndex.blueprints.map(_blueprintSearchNode).toList(),
-    ),
-    mockSearchSection(
-      id: "tags",
-      title: "Tags",
-      subtitle: "Workspace labels",
-      children: searchIndex.tags.map(_tagSearchNode).toList(),
-    ),
+    if (searchIndex.books.isNotEmpty)
+      mockSearchSection(
+        id: "books",
+        title: "Books",
+        subtitle: "Books and tags",
+        children: searchIndex.books
+            .map((book) => _bookSearchNode(book, searchIndex))
+            .toList(),
+      ),
+    if (searchIndex.pages.isNotEmpty)
+      mockSearchSection(
+        id: "pages",
+        title: "Pages",
+        subtitle: "Books and chapters",
+        children: searchIndex.pages
+            .map((record) => _pageSearchNode(record, searchIndex))
+            .toList(),
+      ),
+    if (searchIndex.entries.isNotEmpty)
+      mockSearchSection(
+        id: "entries",
+        title: "Entries",
+        subtitle: "Quest logic",
+        children: searchIndex.entries
+            .map((record) => _entrySearchNode(record, searchIndex))
+            .toList(),
+      ),
+    if (searchIndex.blueprints.isNotEmpty)
+      mockSearchSection(
+        id: "blueprints",
+        title: "Blueprints",
+        subtitle: "Entry definitions",
+        children: searchIndex.blueprints.map(_blueprintSearchNode).toList(),
+      ),
+    if (searchIndex.tags.isNotEmpty)
+      mockSearchSection(
+        id: "tags",
+        title: "Tags",
+        subtitle: "Workspace labels",
+        children: searchIndex.tags.map(_tagSearchNode).toList(),
+      ),
   ];
 }
 
 SearchNode _bookSearchNode(Book book, MockSearchIndex index) {
   final tags = _tagNames(book.tagIds, index);
-  final payload = MockSearchPayload(
-    kind: "book",
-    source: book,
-    tags: tags,
-    fields: {
-      "id": book.bookId,
-      "bookId": book.bookId,
-      "name": book.title,
-      "title": book.title,
-    },
-  );
   return mockSearchResultNode(
     id: "book.${book.bookId}",
     type: mockBookSearchResultType,
     title: book.title.formatted,
-    subtitle: "Book / ${tags.length} tags",
-    payload: payload,
+    subtitle: "Book / ${tags.join(", ")}",
+    payload: MockBookRecord(book: book, tags: tags),
     actions: const [MockCloseSearchAction, MockUpdateQuerySearchAction],
   );
 }
@@ -696,27 +878,14 @@ SearchNode _pageSearchNode(MockPageRecord record, MockSearchIndex index) {
   final page = record.page;
   final book = record.book;
   final pageType = _pageTypeLabel(page.type);
-  final payload = MockSearchPayload(
-    kind: "page",
-    source: page,
-    tags: [pageType, ..._tagNames(book.tagIds, index)],
-    fields: {
-      "id": page.pageId,
-      "pageId": page.pageId,
-      "name": page.name,
-      "title": page.name,
-      "book": book.title,
-      "bookId": book.bookId,
-      "chapter": page.chapter,
-      "pageType": pageType,
-    },
-  );
+  final tags = _tagNames(book.tagIds, index);
   return mockSearchResultNode(
     id: "page.${page.pageId}",
     type: mockPageSearchResultType,
     title: page.name.formatted,
-    subtitle: "${book.title.formatted} / ${page.chapter.formatted} / $pageType",
-    payload: payload,
+    subtitle:
+        "${book.title.formatted} / ${page.chapter.formatted} / $pageType / ${tags.join(", ")}",
+    payload: record,
     actions: const [
       MockCloseSearchAction,
       MockUpdateQuerySearchAction,
@@ -730,70 +899,35 @@ SearchNode _entrySearchNode(MockEntryRecord record, MockSearchIndex index) {
   final page = record.page.page;
   final book = record.page.book;
   final blueprint = entry.blueprint;
-  final payload = MockSearchPayload(
-    kind: "entry",
-    source: entry,
-    tags: [...blueprint.tags, ..._tagNames(book.tagIds, index)],
-    fields: {
-      "id": entry.id,
-      "name": entry.name,
-      "title": entry.name,
-      "book": book.title,
-      "bookId": book.bookId,
-      "page": page.name,
-      "pageId": page.pageId,
-      "chapter": page.chapter,
-      "entryType": blueprint.name,
-      "extension": blueprint.extension,
-    },
-  );
+  final tags = _tagNames(book.tagIds, index);
   return mockSearchResultNode(
     id: "entry.${entry.id}",
     type: mockEntrySearchResultType,
     title: entry.name,
-    subtitle: "${blueprint.name} / ${page.name.formatted}",
-    payload: payload,
+    subtitle: "${blueprint.name} / ${page.name.formatted} / ${tags.join(", ")}",
+    payload: record,
     actions: const [MockCloseSearchAction, MockRefreshSearchAction],
   );
 }
 
 SearchNode _blueprintSearchNode(ElementBlueprint blueprint) {
-  final payload = MockSearchPayload(
-    kind: "blueprint",
-    source: blueprint,
-    tags: blueprint.tags,
-    fields: {
-      "id": blueprint.id,
-      "name": blueprint.name,
-      "title": blueprint.name,
-      "entryType": blueprint.name,
-      "extension": blueprint.extension,
-      "description": blueprint.description,
-    },
-  );
   return mockSearchResultNode(
     id: "blueprint.${blueprint.id}",
     type: mockBlueprintSearchResultType,
     title: blueprint.name,
     subtitle: "${blueprint.extension} / ${blueprint.tags.join(", ")}",
-    payload: payload,
+    payload: blueprint,
     actions: const [MockUpdateQuerySearchAction, MockRefreshSearchAction],
   );
 }
 
 SearchNode _tagSearchNode(Tag tag) {
-  final payload = MockSearchPayload(
-    kind: "tag",
-    source: tag,
-    tags: [tag.name, tag.tagId, ...tag.parentIds],
-    fields: {"id": tag.tagId, "name": tag.name, "title": tag.name},
-  );
   return mockSearchResultNode(
     id: "tag.${tag.tagId}",
     type: mockTagSearchResultType,
     title: tag.name.formatted,
     subtitle: "Tag / ${tag.parentIds.length} parents",
-    payload: payload,
+    payload: tag,
     actions: const [MockUpdateQuerySearchAction, MockRefreshSearchAction],
   );
 }
@@ -825,9 +959,7 @@ Map<String, SearchPreviewRequestResult> mockSearchPreviewResults(
         data: MockSearchPreviewData(
           title: node.result.title ?? node.result.id,
           description: node.result.subtitle ?? "Mock search result",
-          fields: node.result.payload is MockSearchPayload
-              ? (node.result.payload as MockSearchPayload).fields
-              : const {},
+          fields: _previewFieldsForPayload(node.result.payload),
         ),
       ),
   };
@@ -839,7 +971,7 @@ List<SearchGuidance> mockSearchGuidance() {
       id: "selectors",
       title: "Use selectors to narrow results",
       description:
-          "Try #quest, book:main, chapter:intro, page:spawn, pageType:sequence, entryType:dialogue, or extension:basic.",
+          "Try #quest, book:main, chapter:intro, page:spawn, pageType:sequence, entryType:dialogue, extension:basic, or type:book OR type:page.",
       visibility: SearchGuidanceVisibility.always,
       priority: 0,
     ),
@@ -872,18 +1004,29 @@ List<SearchErrorSummary> mockSearchErrors() {
 
 SearchSource mockMixedGlobalSearchSource({
   MockSearchDisplayState state = MockSearchDisplayState.ready,
+  bool hasData = true,
+  bool includeGuidance = true,
   List<QuerySelectorDefinition> selectors = const [],
   Duration searchDelay = Duration.zero,
 }) {
-  final index = mockSearchIndex();
+  final index = mockSearchIndex(
+    tagCount: hasData ? 18 : 0,
+    bookCount: hasData ? 8 : 0,
+    pagesPerBook: hasData ? 5 : 0,
+    entryCount: hasData ? 32 : 0,
+    blueprintCount: hasData ? 18 : 0,
+  );
+
   final searchSelectors = selectors.merge(mockSearchQuerySelectors(index));
   return MockSearchSource(
     state: state,
     sourceSelectors: searchSelectors,
     nodes: mockMixedGlobalSearchNodes(index),
     actions: mockSearchActions(),
-    guidance: mockSearchGuidance(),
-    errorSummaries: mockSearchErrors(),
+    guidance: includeGuidance ? mockSearchGuidance() : const [],
+    errorSummaries: state == MockSearchDisplayState.error
+        ? mockSearchErrors()
+        : const [],
     previewResults: mockSearchPreviewResults(index),
     searchDelay: searchDelay,
   );

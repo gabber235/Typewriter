@@ -157,3 +157,4 @@ docker/nats
 *.tfstate.*.backup
 PLAN.md
 /panel/doc
+plans/
