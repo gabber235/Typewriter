@@ -2,11 +2,13 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/hooks/input_field_controller.dart";
 import "package:typewriter_panel/logic/search/query/query.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
+import "package:typewriter_panel/widgets/app/components/input_field_container.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay_config.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
@@ -16,11 +18,13 @@ class QueryBar extends HookWidget {
     required this.query,
     required this.onQueryChanged,
     required this.selectors,
+    this.inputFieldController,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
     this.autofocus = DecoratedTextFieldAutoFocus.none,
     super.key,
   });
 
+  final InputFieldController? inputFieldController;
   final String query;
   final void Function(String) onQueryChanged;
   final List<QuerySelectorDefinition> selectors;
@@ -33,7 +37,13 @@ class QueryBar extends HookWidget {
       () => _QueryBarTextEditingController(text: query, selectors: selectors),
       [selectors],
     );
-    final focusNode = useFocusNode();
+    final defaultInputFieldController = useInputFieldController(
+      inputDebugLabel: "QueryBar",
+      surroundingDebugLabel: "Surrounding QueryBar",
+    );
+    final inputFieldController =
+        this.inputFieldController ?? defaultInputFieldController;
+    final focusNode = inputFieldController.inputFocusNode;
 
     useEffect(() {
       return controller.dispose;
@@ -249,7 +259,7 @@ class QueryBar extends HookWidget {
                 sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
               ),
               child: DecoratedTextField(
-                focusNode: focusNode,
+                inputFieldController: inputFieldController,
                 controller: controller,
                 autofocus: autofocus,
                 decoration: inputDecoration.copyWith(

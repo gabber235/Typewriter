@@ -6,6 +6,7 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
 import "package:typewriter_panel/hooks/global_key.dart";
+import "package:typewriter_panel/hooks/input_field_controller.dart";
 import "package:typewriter_panel/hooks/menu_controller.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
@@ -21,11 +22,12 @@ const double _kMinimumWidth = 112.0;
 /// item. Selected items are tracked and reported via [onSelectionChanged].
 class MultiselectDropdown<T extends Object> extends HookWidget {
   const MultiselectDropdown({
-    required this.focusNode,
     required this.dropdownMenuEntries,
+    this.focusNode,
     this.selectedItems = const [],
     this.onSelectionChanged,
     this.enabled = true,
+    this.inputFieldController,
     this.actions,
     this.menuActions,
     this.surroundingActions,
@@ -36,8 +38,11 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
     super.key,
   });
 
-  /// Focus node used by the dropdown's input.
-  final FocusNode focusNode;
+  /// Optional legacy focus node used by the dropdown's input.
+  final FocusNode? focusNode;
+
+  /// Optional controller used for input/surrounding focus.
+  final InputFieldController? inputFieldController;
 
   /// All available items to select from.
   final List<DropdownMenuEntry<T>> dropdownMenuEntries;
@@ -206,10 +211,15 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
       },
     );
 
-    final surroundingFocusNode = useFocusNode(
-      debugLabel: "Surrounding focus node",
-      descendantsAreTraversable: false,
+    final defaultInputFieldController = useInputFieldController(
+      inputFocusNode: this.focusNode,
+      inputDebugLabel: "MultiselectDropdown",
+      surroundingDebugLabel: "Surrounding focus node",
     );
+    final inputFieldController =
+        this.inputFieldController ?? defaultInputFieldController;
+    final focusNode = inputFieldController.inputFocusNode;
+    final surroundingFocusNode = inputFieldController.surroundingFocusNode;
 
     useEffect(() {
       textController.value = textController.value.copyWith(text: currentLabel);
@@ -269,8 +279,7 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
     );
 
     return InputFieldContainer(
-      inputFocusNode: focusNode,
-      surroundingFocusNode: surroundingFocusNode,
+      controller: inputFieldController,
       actions: actions,
       inputActions: menuActions,
       surroundingActions: surroundingActions,

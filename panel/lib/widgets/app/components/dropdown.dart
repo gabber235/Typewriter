@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
+import "package:typewriter_panel/hooks/input_field_controller.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/input_field_container.dart";
 
@@ -9,11 +10,12 @@ import "package:typewriter_panel/widgets/app/components/input_field_container.da
 /// key-event blocking with [InputFieldContainer].
 class Dropdown<T extends Object> extends HookWidget {
   const Dropdown({
-    required this.focusNode,
     required this.dropdownMenuEntries,
+    this.focusNode,
     this.selected,
     this.onSelected,
     this.controller,
+    this.inputFieldController,
     this.enabled = true,
     this.actions,
     this.menuActions,
@@ -23,8 +25,11 @@ class Dropdown<T extends Object> extends HookWidget {
     super.key,
   });
 
-  /// Focus node for the inner dropdown menu input.
-  final FocusNode focusNode;
+  /// Optional legacy focus node for the inner dropdown menu input.
+  final FocusNode? focusNode;
+
+  /// Optional controller used for input/surrounding focus.
+  final InputFieldController? inputFieldController;
 
   /// The entries shown in the dropdown menu.
   final List<DropdownMenuEntry<T>> dropdownMenuEntries;
@@ -67,6 +72,14 @@ class Dropdown<T extends Object> extends HookWidget {
     final currentLabel = current?.label;
     final controller =
         this.controller ?? useTextEditingController(text: currentLabel);
+    final defaultInputFieldController = useInputFieldController(
+      inputFocusNode: this.focusNode,
+      inputDebugLabel: "Dropdown",
+      surroundingDebugLabel: "Surrounding focus node",
+    );
+    final inputFieldController =
+        this.inputFieldController ?? defaultInputFieldController;
+    final focusNode = inputFieldController.inputFocusNode;
 
     // When we are not focused, we want to update the controller with the latest.
     // Since other people may update the text and we want that reflected.
@@ -82,14 +95,8 @@ class Dropdown<T extends Object> extends HookWidget {
         controller.text = currentLabel ?? "";
       }
     }, [currentLabel]);
-    final surroundingFocusNode = useFocusNode(
-      debugLabel: "Surrounding focus node",
-      descendantsAreTraversable: false,
-    );
-
     return InputFieldContainer(
-      inputFocusNode: focusNode,
-      surroundingFocusNode: surroundingFocusNode,
+      controller: inputFieldController,
       actions: actions,
       inputActions: menuActions,
       surroundingActions: surroundingActions,
@@ -102,7 +109,7 @@ class Dropdown<T extends Object> extends HookWidget {
         onSelected: (value) {
           onSelected?.call(value);
           if (focusNode.hasFocus) {
-            surroundingFocusNode.requestFocus();
+            inputFieldController.requestSurroundingFocus();
           }
         },
         dropdownMenuEntries: dropdownMenuEntries,

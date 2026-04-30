@@ -6,6 +6,7 @@ import "package:typewriter_panel/logic/search/search.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
 import "package:typewriter_panel/widgets/app/components/interaction_mode/global_mode_shortcut.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_modal_body.dart";
+import "package:typewriter_panel/widgets/generic/components/search/search_result_renderers.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_root.dart";
 
 Future<void> showSearchModal(
@@ -14,6 +15,8 @@ Future<void> showSearchModal(
   List<QuerySelectorDefinition> baseSelectors = const [],
   String initialQuery = "",
   String searchHint = "Search",
+  Map<String, SearchResultRowBuilder> rowRenderers = const {},
+  Map<String, SearchResultPreviewBuilder> previewRenderers = const {},
 }) {
   return Navigator.of(context).push(
     _PopupRoute(
@@ -35,6 +38,8 @@ Future<void> showSearchModal(
               baseSelectors: baseSelectors,
               initialQuery: initialQuery,
               searchHint: searchHint,
+              rowRenderers: rowRenderers,
+              previewRenderers: previewRenderers,
             ),
           ),
         ),
@@ -49,14 +54,17 @@ class SearchModal extends HookWidget {
     this.baseSelectors = const [],
     this.initialQuery = "",
     this.searchHint = "Search",
+    this.rowRenderers = const {},
+    this.previewRenderers = const {},
     super.key,
   });
 
   final SearchSource source;
   final List<QuerySelectorDefinition> baseSelectors;
   final String initialQuery;
-
   final String searchHint;
+  final Map<String, SearchResultRowBuilder> rowRenderers;
+  final Map<String, SearchResultPreviewBuilder> previewRenderers;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +77,11 @@ class SearchModal extends HookWidget {
           onCloseRequested: () => Navigator.of(context).maybePop(),
         );
       },
-      child: SearchModalBody(searchHint: searchHint),
+      child: SearchModalBody(
+        searchHint: searchHint,
+        rowRenderers: rowRenderers,
+        previewRenderers: previewRenderers,
+      ),
     );
   }
 }

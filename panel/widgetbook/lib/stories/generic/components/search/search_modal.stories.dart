@@ -3,6 +3,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/logic/search/search.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_modal.dart";
+import "package:typewriter_panel/widgets/generic/components/search/search_result_renderers.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -24,6 +25,8 @@ Widget searchModalDirectUseCase(BuildContext context) {
           baseSelectors: mockQuerySelectors,
           initialQuery: initialQuery,
           searchHint: "Search entries, pages, books, organizations",
+          rowRenderers: _mockRowRenderers,
+          previewRenderers: const {},
         ),
       ),
     ),
@@ -62,6 +65,8 @@ Widget searchModalRouteUseCase(BuildContext context) {
                   baseSelectors: mockQuerySelectors,
                   initialQuery: initialQuery,
                   searchHint: "Search entries, pages, books, organizations",
+                  rowRenderers: _mockRowRenderers,
+                  previewRenderers: const {},
                 ),
                 icon: const Icon(Icons.search),
                 label: const Text("Open search modal"),
@@ -98,6 +103,29 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
     debounce: debounce,
     debounceDuration: debounceDuration,
     searchDelay: searchDelay,
+  );
+}
+
+final _mockRowRenderers = <String, SearchResultRowBuilder>{
+  "mockPageRow": _mockResultRow,
+  "mockEntryRow": _mockResultRow,
+  "mockBlueprintRow": _mockResultRow,
+  "mockBookRow": _mockResultRow,
+  "mockTagRow": _mockResultRow,
+  "mockServiceRow": _mockResultRow,
+  "mockMemberRow": _mockResultRow,
+};
+
+Widget _mockResultRow(SearchResultRowContext context) {
+  return ListTile(
+    selected: context.selected,
+    title: Text(context.result.title ?? context.result.id),
+    subtitle: Text(context.result.subtitle ?? context.result.type.label ?? ""),
+    trailing: context.shortcutActivator == null
+        ? null
+        : Text(context.shortcutActivator!.debugDescribeKeys()),
+    onTap: context.onTap,
+    onLongPress: context.onLongPress,
   );
 }
 

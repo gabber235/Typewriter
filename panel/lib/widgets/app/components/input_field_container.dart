@@ -10,26 +10,77 @@ import "package:typewriter_panel/widgets/generic/components/focus_highlight.dart
 
 typedef KeyEventBlocker = bool Function(BuildContext context, KeyEvent event);
 
+class InputFieldController {
+  InputFieldController({String? inputDebugLabel, String? surroundingDebugLabel})
+    : this._(
+        inputFocusNode: FocusNode(debugLabel: inputDebugLabel),
+        surroundingFocusNode: FocusNode(
+          debugLabel: surroundingDebugLabel ?? "SurroundingInputFieldContainer",
+          descendantsAreTraversable: false,
+        ),
+        ownsInputFocusNode: true,
+        ownsSurroundingFocusNode: true,
+      );
+
+  InputFieldController.fromInputFocusNode(
+    FocusNode inputFocusNode, {
+    String? surroundingDebugLabel,
+  }) : this._(
+         inputFocusNode: inputFocusNode,
+         surroundingFocusNode: FocusNode(
+           debugLabel: surroundingDebugLabel ?? "SurroundingInputFieldContainer",
+           descendantsAreTraversable: false,
+         ),
+         ownsInputFocusNode: false,
+         ownsSurroundingFocusNode: true,
+       );
+
+  InputFieldController._({
+    required this.inputFocusNode,
+    required this.surroundingFocusNode,
+    required bool ownsInputFocusNode,
+    required bool ownsSurroundingFocusNode,
+  }) : _ownsInputFocusNode = ownsInputFocusNode,
+       _ownsSurroundingFocusNode = ownsSurroundingFocusNode;
+
+  /// Focus node of the inner input widget.
+  final FocusNode inputFocusNode;
+
+  /// Focus node of the surrounding input container.
+  final FocusNode surroundingFocusNode;
+
+  final bool _ownsInputFocusNode;
+  final bool _ownsSurroundingFocusNode;
+
+  void requestInputFocus() => inputFocusNode.requestFocus();
+
+  void requestSurroundingFocus() => surroundingFocusNode.requestFocus();
+
+  void dispose() {
+    if (_ownsInputFocusNode) inputFocusNode.dispose();
+    if (_ownsSurroundingFocusNode) surroundingFocusNode.dispose();
+  }
+}
+
 /// Container that unifies focus highlighting, surrounding focus behavior,
 /// action shortcuts, and key-event blocking for input-like widgets.
-/// Supply the inner input via [child] and its [inputFocusNode].
+/// Supply the inner input via [child] and its [controller].
 class InputFieldContainer extends HookConsumerWidget {
   const InputFieldContainer({
-    required this.inputFocusNode,
+    required this.controller,
     required this.child,
     this.actions,
     this.inputActions,
     this.surroundingActions,
     this.borderRadius,
-    this.surroundingFocusNode,
     this.onInputFocus,
     this.onDismiss,
     this.autofocus = false,
     super.key,
   });
 
-  /// Focus node of the inner input widget.
-  final FocusNode inputFocusNode;
+  /// Controller that owns the input and surrounding focus nodes.
+  final InputFieldController controller;
 
   /// The actual input widget to render (e.g. TextField, DropdownMenu).
   final Widget child;
@@ -46,9 +97,6 @@ class InputFieldContainer extends HookConsumerWidget {
   /// Optional border radius for the highlight.
   final BorderRadius? borderRadius;
 
-  /// Optional external surrounding focus node. If null, one will be created.
-  final FocusNode? surroundingFocusNode;
-
   /// Called when the input is focused.
   final VoidCallback? onInputFocus;
 
@@ -60,12 +108,8 @@ class InputFieldContainer extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final surroundingNode =
-        surroundingFocusNode ??
-        useFocusNode(
-          debugLabel: "SurroundingInputFieldContainer",
-          descendantsAreTraversable: false,
-        );
+    final inputFocusNode = controller.inputFocusNode;
+    final surroundingNode = controller.surroundingFocusNode;
 
     useListenable(surroundingNode);
     useListenable(inputFocusNode);

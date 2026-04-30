@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/hooks/focused_change.dart";
+import "package:typewriter_panel/hooks/input_field_controller.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/input_field_container.dart";
 
@@ -9,7 +10,8 @@ enum DecoratedTextFieldAutoFocus { none, textField, surroundingField }
 
 class DecoratedTextField extends HookWidget {
   const DecoratedTextField({
-    required this.focusNode,
+    this.focusNode,
+    this.inputFieldController,
     this.autofocus = DecoratedTextFieldAutoFocus.none,
     this.controller,
     this.text,
@@ -30,7 +32,8 @@ class DecoratedTextField extends HookWidget {
     super.key,
   }) : super();
   final TextEditingController? controller;
-  final FocusNode focusNode;
+  final FocusNode? focusNode;
+  final InputFieldController? inputFieldController;
 
   /// Determines if the field auto‑focuses when built.
   final DecoratedTextFieldAutoFocus autofocus;
@@ -75,6 +78,15 @@ class DecoratedTextField extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final controller = this.controller ?? useTextEditingController(text: text);
+    final defaultInputFieldController = useInputFieldController(
+      inputFocusNode: this.focusNode,
+      inputDebugLabel: "DecoratedTextField",
+      surroundingDebugLabel: "Surrounding focus node",
+    );
+    final inputFieldController =
+        this.inputFieldController ?? defaultInputFieldController;
+    final focusNode = inputFieldController.inputFocusNode;
+    final surroundingFocusNode = inputFieldController.surroundingFocusNode;
 
     // When we are not focused, we want to update the controller with the latest.
     // Since other people may update the text and we want that reflected.
@@ -99,15 +111,9 @@ class DecoratedTextField extends HookWidget {
       previousFocus.value = hasFocus;
     }, [text]);
 
-    final surroundingFocusNode = useFocusNode(
-      debugLabel: "Surrounding focus node",
-      descendantsAreTraversable: false,
-    );
-
     return InputFieldContainer(
-      inputFocusNode: focusNode,
+      controller: inputFieldController,
       autofocus: autofocus == DecoratedTextFieldAutoFocus.surroundingField,
-      surroundingFocusNode: surroundingFocusNode,
       actions: actions,
       inputActions: textFieldActions,
       surroundingActions: surroundingActions,
