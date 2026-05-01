@@ -1,7 +1,11 @@
 import "dart:async";
 
 import "package:flutter/material.dart" hide Page;
+import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
+import "package:iconify_flutter_plus/icons/ic.dart";
+import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
@@ -17,14 +21,12 @@ import "package:typewriter_testkit/src/mocks/tag.mock.dart";
 const mockPageSearchResultType = SearchResultType(
   id: "page",
   rowRendererId: "mockPageRow",
-  previewRendererId: "mockPagePreview",
   label: "Page",
 );
 
 const mockEntrySearchResultType = SearchResultType(
   id: "entry",
   rowRendererId: "mockEntryRow",
-  previewRendererId: "mockEntryPreview",
   label: "Entry",
 );
 
@@ -38,28 +40,13 @@ const mockBlueprintSearchResultType = SearchResultType(
 const mockBookSearchResultType = SearchResultType(
   id: "book",
   rowRendererId: "mockBookRow",
-  previewRendererId: "mockBookPreview",
   label: "Book",
 );
 
 const mockTagSearchResultType = SearchResultType(
   id: "tag",
   rowRendererId: "mockTagRow",
-  previewRendererId: "mockTagPreview",
   label: "Tag",
-);
-
-const mockServiceSearchResultType = SearchResultType(
-  id: "service",
-  rowRendererId: "mockServiceRow",
-  previewRendererId: "mockServicePreview",
-  label: "Service",
-);
-
-const mockMemberSearchResultType = SearchResultType(
-  id: "member",
-  rowRendererId: "mockMemberRow",
-  label: "Member",
 );
 
 enum MockSearchDisplayState { ready, loading, error }
@@ -324,7 +311,7 @@ final class MockSearchSource implements SearchSource {
     SearchPreviewRequest request,
   ) async {
     previewRequests.add(request);
-    await Future<void>.delayed(180.ms);
+    await Future<void>.delayed(2.seconds);
     return previewResults[request.resultId] ??
         const SearchPreviewRequestResult.error(
           message: "No preview data found",
@@ -578,7 +565,10 @@ final class MockCloseSearchAction extends SingleSearchAction {
   String get label => "Open";
 
   @override
-  int get priority => 0;
+  int get priority => 100;
+
+  @override
+  String? get icon => MaterialSymbols.open_in_new_rounded;
 
   @override
   Future<SearchActionResult> execute(SearchResult result) async {
@@ -595,6 +585,12 @@ final class MockRefreshSearchAction extends BatchSearchAction {
 
   @override
   int get priority => 20;
+
+  @override
+  String? get icon => MaterialSymbols.refresh_rounded;
+
+  @override
+  ShortcutActivator? get shortcut => SingleActivator(LogicalKeyboardKey.keyR);
 
   @override
   Future<SearchActionResult> executeBatch(List<SearchResult> results) async {
@@ -615,8 +611,14 @@ final class MockUpdateQuerySearchAction extends SingleSearchAction {
   int get priority => 10;
 
   @override
+  String? get icon => Fa6Solid.link;
+
+  @override
+  ShortcutActivator? get shortcut => SingleActivator(LogicalKeyboardKey.keyU);
+
+  @override
   Future<SearchActionResult> execute(SearchResult result) async {
-    await Future<void>.delayed(250.ms);
+    await Future<void>.delayed(4.seconds);
     return SearchActionResult.completed(
       effect: SearchActionEffect.updateQuery(
         updateQuery: result.type.label ?? result.title ?? "",
@@ -632,14 +634,20 @@ final class MockFailSearchAction extends RepeatedSearchAction {
   String get label => "Fail";
 
   @override
-  int get priority => 30;
+  int get priority => 0;
 
   @override
   Color? get color => Colors.red;
 
   @override
+  String? get icon => Ic.round_dangerous;
+
+  @override
+  ShortcutActivator? get shortcut => SingleActivator(LogicalKeyboardKey.keyX);
+
+  @override
   Future<SearchActionResult> execute(SearchResult result) async {
-    await Future<void>.delayed(250.ms);
+    await Future<void>.delayed(4.seconds);
     return SearchActionResult.failed(
       message: "Could not process ${result.title ?? result.id}",
     );
@@ -765,8 +773,14 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
 
   return [
     KeyValueSelectorDefinition(
-      id: "tag",
+      id: "type-symbol",
       key: "#",
+      value: QuerySelectorValue.enumValue(resultTypes),
+      color: safeColors[7],
+    ),
+    KeyValueSelectorDefinition(
+      id: "tag",
+      key: "tag:",
       value: QuerySelectorValue.enumValue(tagNames),
       color: safeColors[6],
     ),
@@ -810,7 +824,7 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       id: "type",
       key: "type:",
       value: QuerySelectorValue.enumValue(resultTypes),
-      color: safeColors[1],
+      color: safeColors[7],
     ),
   ];
 }
@@ -870,7 +884,11 @@ SearchNode _bookSearchNode(Book book, MockSearchIndex index) {
     title: book.title.formatted,
     subtitle: "Book / ${tags.join(", ")}",
     payload: MockBookRecord(book: book, tags: tags),
-    actions: const [MockCloseSearchAction, MockUpdateQuerySearchAction],
+    actions: const [
+      MockCloseSearchAction,
+      MockUpdateQuerySearchAction,
+      MockFailSearchAction,
+    ],
   );
 }
 

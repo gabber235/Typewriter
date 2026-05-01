@@ -36,7 +36,9 @@ void main() {
       expect(find.text("Books"), findsOneWidget);
       expect(find.text("Result alpha"), findsOneWidget);
       final count = tester.widget<Text>(find.text("(2)"));
-      final colorScheme = Theme.of(tester.element(find.text("(2)"))).colorScheme;
+      final colorScheme = Theme.of(
+        tester.element(find.text("(2)")),
+      ).colorScheme;
       expect(count.style!.color, colorScheme.onSurfaceVariant);
     });
 
@@ -524,7 +526,6 @@ final _rowRenderers = <String, SearchResultRowBuilder>{
     title: Text("Result ${context.result.id}"),
     selected: context.selected,
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
   ),
 };
 

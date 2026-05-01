@@ -164,6 +164,5 @@ final _rowRenderers = <String, SearchResultRowBuilder>{
   "test-row": (context) => ListTile(
     title: Text("Result ${context.result.id}"),
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
   ),
 };

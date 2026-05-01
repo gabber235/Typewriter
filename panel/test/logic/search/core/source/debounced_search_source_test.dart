@@ -144,16 +144,47 @@ void main() {
       expect(selectors, [emitted]);
     });
 
-    test("forwards preview requests", () async {
+    testWidgets("debounces preview and resolves after duration", (tester) async {
       final inner = FakeSearchSource();
       final source = inner.debounced(const Duration(milliseconds: 100));
       addTearDown(source.dispose);
       const request = SearchPreviewRequest(resultId: "alpha");
 
-      final result = await source.preview(request);
+      final future = source.preview(request);
+      await tester.pump(const Duration(milliseconds: 99));
+      expect(inner.previewRequests, isEmpty);
+      await tester.pump(const Duration(milliseconds: 1));
 
+      final result = await future;
       expect(result, inner.previewResult);
       expect(inner.previewRequests, [request]);
+    });
+
+    testWidgets("superseded preview completes previous future with error", (
+      tester,
+    ) async {
+      final inner = FakeSearchSource();
+      final source = inner.debounced(const Duration(milliseconds: 100));
+      addTearDown(source.dispose);
+      const first = SearchPreviewRequest(resultId: "alpha");
+      const second = SearchPreviewRequest(resultId: "beta");
+
+      final firstFuture = source.preview(first);
+      await tester.pump(const Duration(milliseconds: 40));
+      final secondFuture = source.preview(second);
+      final firstResult = await firstFuture;
+
+      expect(
+        firstResult,
+        const SearchPreviewRequestResult.error(
+          message: "Preview request superseded by a newer request",
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 100));
+      final secondResult = await secondFuture;
+      expect(secondResult, inner.previewResult);
+      expect(inner.previewRequests, [second]);
     });
   });
 }

@@ -9,14 +9,11 @@ import "package:flutter_animate/flutter_animate.dart";
 /// The animations are intentionally not configurable to keep transitions
 /// consistent everywhere.
 class ElasticSwitcher extends StatelessWidget {
-  const ElasticSwitcher({
-    required this.child,
-    super.key,
-  });
+  const ElasticSwitcher({required this.child, super.key});
 
   /// The widget to display. Provide a new child (with a differing identity or
   /// key) to trigger the transition to it.
-  final Widget child;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {

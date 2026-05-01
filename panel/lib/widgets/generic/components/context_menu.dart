@@ -5,6 +5,7 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/hooks/menu_controller.dart";
+import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
 part "context_menu.freezed.dart";
 
@@ -227,7 +228,15 @@ class ContextMenuRegion extends HookWidget {
             disabledForegroundColor: menuItem.color?.withValues(alpha: 0.6),
             disabledMouseCursor: SystemMouseCursors.forbidden,
           ),
-          child: Text(menuItem.label),
+          child: Row(
+            spacing: 8,
+            children: [
+              Expanded(child: Text(menuItem.label, maxLines: 1)),
+              if (menuItem.shortcuts.isNotEmpty) ...[
+                RotatingShortcuts(shortcuts: menuItem.shortcuts),
+              ],
+            ],
+          ),
         ),
       ),
       MenuItem _ => const SizedBox.shrink(),
@@ -242,6 +251,7 @@ abstract class MenuItem with _$MenuItem {
     Widget? icon,
     Color? color,
     VoidCallback? onPressed,
+    @Default([]) List<ShortcutActivator> shortcuts,
   }) = _MenuItem;
 
   const factory MenuItem.submenu({

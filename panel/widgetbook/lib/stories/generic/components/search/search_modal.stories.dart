@@ -5,7 +5,8 @@ import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/search/search.dart";
 import "package:typewriter_panel/routes/organization/book/route.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
+import "package:typewriter_panel/widgets/app/components/search/preview/search_preview.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_item.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_modal.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_result_renderers.dart";
 import "package:typewriter_panel/widgets/generic/components/section.dart";
@@ -30,7 +31,7 @@ Widget searchModalDirectUseCase(BuildContext context) {
           initialQuery: initialQuery,
           searchHint: "Search entries, pages, books, organizations",
           rowRenderers: _mockRowRenderers,
-          previewRenderers: const {},
+          previewRenderers: _mockPreviewRenderers,
         ),
       ),
     ),
@@ -70,7 +71,7 @@ Widget searchModalRouteUseCase(BuildContext context) {
                   initialQuery: initialQuery,
                   searchHint: "Search entries, pages, books, organizations",
                   rowRenderers: _mockRowRenderers,
-                  previewRenderers: const {},
+                  previewRenderers: _mockPreviewRenderers,
                 ),
                 icon: const Icon(Icons.search),
                 label: const Text("Open search modal"),
@@ -125,6 +126,14 @@ final _mockRowRenderers = <String, SearchResultRowBuilder>{
   "mockTagRow": _mockTagResultRow,
 };
 
+final _mockPreviewRenderers = <String, SearchResultPreviewBuilder>{
+  "mockBlueprintPreview": _mockBlueprintPreview,
+};
+
+Widget _mockBlueprintPreview(SearchResultPreviewContext context) {
+  return BlueprintSearchPreview(context: context);
+}
+
 Widget _mockPageResultRow(SearchResultRowContext context) {
   final payload = context.result.payload;
   if (payload is! MockPageRecord) {
@@ -138,8 +147,8 @@ Widget _mockPageResultRow(SearchResultRowContext context) {
     icon: payload.book.icon,
     selected: context.selected,
     focused: context.focused,
+    loading: context.loading,
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
     shortcutActivator: context.shortcutActivator,
   );
 }
@@ -157,8 +166,8 @@ Widget _mockEntryResultRow(SearchResultRowContext context) {
     bookTitle: payload.page.book.title,
     selected: context.selected,
     focused: context.focused,
+    loading: context.loading,
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
     shortcutActivator: context.shortcutActivator,
   );
 }
@@ -173,8 +182,8 @@ Widget _mockBlueprintResultRow(SearchResultRowContext context) {
     blueprint: payload,
     selected: context.selected,
     focused: context.focused,
+    loading: context.loading,
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
     shortcutActivator: context.shortcutActivator,
   );
 }
@@ -192,8 +201,8 @@ Widget _mockBookResultRow(SearchResultRowContext context) {
     tags: payload.tags,
     selected: context.selected,
     focused: context.focused,
+    loading: context.loading,
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
     shortcutActivator: context.shortcutActivator,
   );
 }
@@ -208,8 +217,8 @@ Widget _mockTagResultRow(SearchResultRowContext context) {
     tag: payload,
     selected: context.selected,
     focused: context.focused,
+    loading: context.loading,
     onTap: context.onTap,
-    onLongPress: context.onLongPress,
     shortcutActivator: context.shortcutActivator,
   );
 }
@@ -222,11 +231,11 @@ SearchSource _sourceFromConfig(_SearchStoryConfig config) {
     selectors: [],
     searchDelay: config.searchDelay,
   );
-  if (config.cache) {
-    source = source.cached();
-  }
   if (config.debounce) {
     source = source.debounced(config.debounceDuration);
+  }
+  if (config.cache) {
+    source = source.cached();
   }
   return source;
 }

@@ -51,16 +51,58 @@ void main() {
       expect(selectors, [emitted]);
     });
 
-    test("forwards preview unchanged", () async {
+    test("caches successful preview results by resultId", () async {
       final inner = FakeSearchSource();
       final source = inner.cached();
       addTearDown(source.dispose);
       const request = SearchPreviewRequest(resultId: "alpha");
 
-      final result = await source.preview(request);
+      final first = await source.preview(request);
+      inner.previewResult = const SearchPreviewRequestResult.data(
+        data: "changed",
+      );
+      final second = await source.preview(request);
 
-      expect(result, inner.previewResult);
+      expect(first, const SearchPreviewRequestResult.data(data: "preview"));
+      expect(second, const SearchPreviewRequestResult.data(data: "preview"));
       expect(inner.previewRequests, [request]);
+    });
+
+    test("does not cache preview errors", () async {
+      final inner = FakeSearchSource()
+        ..previewResult = const SearchPreviewRequestResult.error(
+          message: "boom",
+        );
+      final source = inner.cached();
+      addTearDown(source.dispose);
+      const request = SearchPreviewRequest(resultId: "alpha");
+
+      final first = await source.preview(request);
+      final second = await source.preview(request);
+
+      expect(first, const SearchPreviewRequestResult.error(message: "boom"));
+      expect(second, const SearchPreviewRequestResult.error(message: "boom"));
+      expect(inner.previewRequests, [request, request]);
+    });
+
+    test("preview cache key uses resultId only", () async {
+      final inner = FakeSearchSource();
+      final source = inner.cached();
+      addTearDown(source.dispose);
+      final firstRequest = SearchPreviewRequest(
+        resultId: "alpha",
+        queryContext: queryContext("first"),
+      );
+      final secondRequest = SearchPreviewRequest(
+        resultId: "alpha",
+        queryContext: queryContext("second"),
+      );
+
+      await source.preview(firstRequest);
+      final second = await source.preview(secondRequest);
+
+      expect(second, const SearchPreviewRequestResult.data(data: "preview"));
+      expect(inner.previewRequests, [firstRequest]);
     });
 
     test("loading before any ready snapshot passes through unchanged", () {

@@ -71,12 +71,53 @@ void main() {
       final inner = FakeSearchSource();
       final source = inner.gated((context) => true);
       addTearDown(source.dispose);
-      const request = SearchPreviewRequest(resultId: "alpha");
+      final request = SearchPreviewRequest(
+        resultId: "alpha",
+        queryContext: queryContext("alpha"),
+      );
 
       final result = await source.preview(request);
 
       expect(result, inner.previewResult);
       expect(inner.previewRequests, [request]);
+    });
+
+    test("closed gate returns preview error without calling inner", () async {
+      final inner = FakeSearchSource();
+      final source = inner.gated((context) => false);
+      addTearDown(source.dispose);
+      final request = SearchPreviewRequest(
+        resultId: "alpha",
+        queryContext: queryContext("alpha"),
+      );
+
+      final result = await source.preview(request);
+
+      expect(
+        result,
+        const SearchPreviewRequestResult.error(
+          message: "Preview unavailable while search gate is closed",
+        ),
+      );
+      expect(inner.previewRequests, isEmpty);
+    });
+
+    test("missing preview queryContext returns gate error", () async {
+      final inner = FakeSearchSource();
+      final source = inner.gated((context) => true);
+      addTearDown(source.dispose);
+
+      final result = await source.preview(
+        const SearchPreviewRequest(resultId: "alpha"),
+      );
+
+      expect(
+        result,
+        const SearchPreviewRequestResult.error(
+          message: "Preview unavailable while search gate is closed",
+        ),
+      );
+      expect(inner.previewRequests, isEmpty);
     });
 
     test("closed gate blocks search", () {

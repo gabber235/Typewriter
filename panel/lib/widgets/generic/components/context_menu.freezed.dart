@@ -134,10 +134,10 @@ return divider(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  Widget? icon,  Color? color,  VoidCallback? onPressed)?  $default,{TResult Function( String label,  List<MenuItem> items,  Widget? icon,  Color? color)?  submenu,TResult Function( List<MenuItem> items,  String? label,  Widget? icon,  Color? color)?  section,TResult Function()?  divider,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  Widget? icon,  Color? color,  VoidCallback? onPressed,  List<ShortcutActivator> shortcuts)?  $default,{TResult Function( String label,  List<MenuItem> items,  Widget? icon,  Color? color)?  submenu,TResult Function( List<MenuItem> items,  String? label,  Widget? icon,  Color? color)?  section,TResult Function()?  divider,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MenuItem() when $default != null:
-return $default(_that.label,_that.icon,_that.color,_that.onPressed);case MenuItemSubmenu() when submenu != null:
+return $default(_that.label,_that.icon,_that.color,_that.onPressed,_that.shortcuts);case MenuItemSubmenu() when submenu != null:
 return submenu(_that.label,_that.items,_that.icon,_that.color);case MenuItemSection() when section != null:
 return section(_that.items,_that.label,_that.icon,_that.color);case MenuItemDivider() when divider != null:
 return divider();case _:
@@ -158,10 +158,10 @@ return divider();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  Widget? icon,  Color? color,  VoidCallback? onPressed)  $default,{required TResult Function( String label,  List<MenuItem> items,  Widget? icon,  Color? color)  submenu,required TResult Function( List<MenuItem> items,  String? label,  Widget? icon,  Color? color)  section,required TResult Function()  divider,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  Widget? icon,  Color? color,  VoidCallback? onPressed,  List<ShortcutActivator> shortcuts)  $default,{required TResult Function( String label,  List<MenuItem> items,  Widget? icon,  Color? color)  submenu,required TResult Function( List<MenuItem> items,  String? label,  Widget? icon,  Color? color)  section,required TResult Function()  divider,}) {final _that = this;
 switch (_that) {
 case _MenuItem():
-return $default(_that.label,_that.icon,_that.color,_that.onPressed);case MenuItemSubmenu():
+return $default(_that.label,_that.icon,_that.color,_that.onPressed,_that.shortcuts);case MenuItemSubmenu():
 return submenu(_that.label,_that.items,_that.icon,_that.color);case MenuItemSection():
 return section(_that.items,_that.label,_that.icon,_that.color);case MenuItemDivider():
 return divider();case _:
@@ -181,10 +181,10 @@ return divider();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  Widget? icon,  Color? color,  VoidCallback? onPressed)?  $default,{TResult? Function( String label,  List<MenuItem> items,  Widget? icon,  Color? color)?  submenu,TResult? Function( List<MenuItem> items,  String? label,  Widget? icon,  Color? color)?  section,TResult? Function()?  divider,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  Widget? icon,  Color? color,  VoidCallback? onPressed,  List<ShortcutActivator> shortcuts)?  $default,{TResult? Function( String label,  List<MenuItem> items,  Widget? icon,  Color? color)?  submenu,TResult? Function( List<MenuItem> items,  String? label,  Widget? icon,  Color? color)?  section,TResult? Function()?  divider,}) {final _that = this;
 switch (_that) {
 case _MenuItem() when $default != null:
-return $default(_that.label,_that.icon,_that.color,_that.onPressed);case MenuItemSubmenu() when submenu != null:
+return $default(_that.label,_that.icon,_that.color,_that.onPressed,_that.shortcuts);case MenuItemSubmenu() when submenu != null:
 return submenu(_that.label,_that.items,_that.icon,_that.color);case MenuItemSection() when section != null:
 return section(_that.items,_that.label,_that.icon,_that.color);case MenuItemDivider() when divider != null:
 return divider();case _:
@@ -199,13 +199,20 @@ return divider();case _:
 
 
 class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
-  const _MenuItem({required this.label, this.icon, this.color, this.onPressed});
+  const _MenuItem({required this.label, this.icon, this.color, this.onPressed, final  List<ShortcutActivator> shortcuts = const []}): _shortcuts = shortcuts;
   
 
  final  String label;
  final  Widget? icon;
  final  Color? color;
  final  VoidCallback? onPressed;
+ final  List<ShortcutActivator> _shortcuts;
+@JsonKey() List<ShortcutActivator> get shortcuts {
+  if (_shortcuts is EqualUnmodifiableListView) return _shortcuts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_shortcuts);
+}
+
 
 /// Create a copy of MenuItem
 /// with the given fields replaced by the non-null parameter values.
@@ -218,21 +225,21 @@ _$MenuItemCopyWith<_MenuItem> get copyWith => __$MenuItemCopyWithImpl<_MenuItem>
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'MenuItem'))
-    ..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('color', color))..add(DiagnosticsProperty('onPressed', onPressed));
+    ..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('color', color))..add(DiagnosticsProperty('onPressed', onPressed))..add(DiagnosticsProperty('shortcuts', shortcuts));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItem&&(identical(other.label, label) || other.label == label)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.onPressed, onPressed) || other.onPressed == onPressed));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItem&&(identical(other.label, label) || other.label == label)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.onPressed, onPressed) || other.onPressed == onPressed)&&const DeepCollectionEquality().equals(other._shortcuts, _shortcuts));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,label,icon,color,onPressed);
+int get hashCode => Object.hash(runtimeType,label,icon,color,onPressed,const DeepCollectionEquality().hash(_shortcuts));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'MenuItem(label: $label, icon: $icon, color: $color, onPressed: $onPressed)';
+  return 'MenuItem(label: $label, icon: $icon, color: $color, onPressed: $onPressed, shortcuts: $shortcuts)';
 }
 
 
@@ -243,7 +250,7 @@ abstract mixin class _$MenuItemCopyWith<$Res> implements $MenuItemCopyWith<$Res>
   factory _$MenuItemCopyWith(_MenuItem value, $Res Function(_MenuItem) _then) = __$MenuItemCopyWithImpl;
 @useResult
 $Res call({
- String label, Widget? icon, Color? color, VoidCallback? onPressed
+ String label, Widget? icon, Color? color, VoidCallback? onPressed, List<ShortcutActivator> shortcuts
 });
 
 
@@ -260,13 +267,14 @@ class __$MenuItemCopyWithImpl<$Res>
 
 /// Create a copy of MenuItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? label = null,Object? icon = freezed,Object? color = freezed,Object? onPressed = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? label = null,Object? icon = freezed,Object? color = freezed,Object? onPressed = freezed,Object? shortcuts = null,}) {
   return _then(_MenuItem(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as Widget?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color?,onPressed: freezed == onPressed ? _self.onPressed : onPressed // ignore: cast_nullable_to_non_nullable
-as VoidCallback?,
+as VoidCallback?,shortcuts: null == shortcuts ? _self._shortcuts : shortcuts // ignore: cast_nullable_to_non_nullable
+as List<ShortcutActivator>,
   ));
 }
 
