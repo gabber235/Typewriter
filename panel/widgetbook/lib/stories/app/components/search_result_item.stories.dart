@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/utils/color.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_item.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -214,13 +214,11 @@ class _SelectableItem extends StatelessWidget {
     required this.selected,
     required this.child,
     this.onTap,
-    this.onLongPress,
   });
 
   final bool selected;
   final Widget child;
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +236,6 @@ class _SelectableItem extends StatelessWidget {
         selected: selected,
         focused: item.focused,
         onTap: onTap ?? item.onTap,
-        onLongPress: onLongPress ?? item.onLongPress,
         shortcutActivator: item.shortcutActivator,
       ),
       final BlueprintSearchResultItem item => BlueprintSearchResultItem(
@@ -252,7 +249,6 @@ class _SelectableItem extends StatelessWidget {
         selected: selected,
         focused: item.focused,
         onTap: onTap ?? item.onTap,
-        onLongPress: onLongPress ?? item.onLongPress,
         shortcutActivator: item.shortcutActivator,
       ),
       final PageSearchResultItem item => PageSearchResultItem(
@@ -264,7 +260,6 @@ class _SelectableItem extends StatelessWidget {
         selected: selected,
         focused: item.focused,
         onTap: onTap ?? item.onTap,
-        onLongPress: onLongPress ?? item.onLongPress,
         shortcutActivator: item.shortcutActivator,
       ),
       final BookSearchResultItem item => BookSearchResultItem(
@@ -275,7 +270,6 @@ class _SelectableItem extends StatelessWidget {
         selected: selected,
         focused: item.focused,
         onTap: onTap ?? item.onTap,
-        onLongPress: onLongPress ?? item.onLongPress,
         shortcutActivator: item.shortcutActivator,
       ),
       final TagSearchResultItem item => TagSearchResultItem(
@@ -285,7 +279,6 @@ class _SelectableItem extends StatelessWidget {
         selected: selected,
         focused: item.focused,
         onTap: onTap ?? item.onTap,
-        onLongPress: onLongPress ?? item.onLongPress,
         shortcutActivator: item.shortcutActivator,
       ),
       _ => child,

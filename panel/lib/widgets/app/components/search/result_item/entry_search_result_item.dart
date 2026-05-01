@@ -3,7 +3,7 @@ import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/logic/pages/entries.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_item.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class EntrySearchResultItem extends StatelessWidget {
@@ -19,8 +19,8 @@ class EntrySearchResultItem extends StatelessWidget {
     this.deprecated = false,
     this.selected = false,
     this.focused = false,
+    this.loading = false,
     this.onTap,
-    this.onLongPress,
     this.shortcutActivator,
     super.key,
   });
@@ -32,8 +32,8 @@ class EntrySearchResultItem extends StatelessWidget {
     required String bookTitle,
     bool selected = false,
     bool focused = false,
+    bool loading = false,
     VoidCallback? onTap,
-    VoidCallback? onLongPress,
     ShortcutActivator? shortcutActivator,
     Key? key,
   }) {
@@ -50,8 +50,8 @@ class EntrySearchResultItem extends StatelessWidget {
       deprecated: blueprint.hasModifier<DeprecatedModifier>(),
       selected: selected,
       focused: focused,
+      loading: loading,
       onTap: onTap,
-      onLongPress: onLongPress,
       shortcutActivator: shortcutActivator,
       key: key,
     );
@@ -68,9 +68,9 @@ class EntrySearchResultItem extends StatelessWidget {
   final bool deprecated;
   final bool selected;
   final bool focused;
+  final bool loading;
 
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   final ShortcutActivator? shortcutActivator;
 
@@ -92,12 +92,12 @@ class EntrySearchResultItem extends StatelessWidget {
       selected: selected,
       focused: focused,
       onTap: onTap,
-      onLongPress: onLongPress,
       prefix: SearchResultIconTile(
         color: color,
         onColor: Colors.white,
         icon: icon,
         focused: focused,
+        loading: loading,
       ),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +170,7 @@ class EntrySearchResultItem extends StatelessWidget {
               ),
             ),
             maxLines: 1,
-            overflow: TextOverflow.fade,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

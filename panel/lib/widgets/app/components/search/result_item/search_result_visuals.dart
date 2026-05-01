@@ -3,6 +3,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/string.dart";
+import "package:typewriter_panel/widgets/generic/components/elastic_switcher.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
@@ -13,6 +14,7 @@ class SearchResultIconTile extends StatelessWidget {
     required this.onColor,
     required this.icon,
     this.focused = false,
+    this.loading = false,
     super.key,
   });
 
@@ -20,6 +22,7 @@ class SearchResultIconTile extends StatelessWidget {
   final Color onColor;
   final String icon;
   final bool focused;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +46,14 @@ class SearchResultIconTile extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(8),
-      child: Icones(icon, color: focused ? color : onColor),
+      child: ElasticSwitcher(
+        child: loading
+            ? CircularProgressIndicator(
+                color: focused ? color : onColor,
+                padding: const EdgeInsets.all(4),
+              )
+            : Icones(icon, color: focused ? color : onColor),
+      ),
     );
   }
 }
@@ -106,7 +116,12 @@ class SearchResultDescription extends StatelessWidget {
       color: descriptionColor,
       height: 1.2,
     );
-    return Text(description, style: contextStyle, maxLines: 1, overflow: .fade);
+    return Text(
+      description,
+      style: contextStyle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 }
 

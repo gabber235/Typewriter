@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:typewriter_panel/logic/pages/element_blueprint.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_item.dart";
 
 class BlueprintSearchResultItem extends StatelessWidget {
   const BlueprintSearchResultItem({
@@ -15,8 +15,8 @@ class BlueprintSearchResultItem extends StatelessWidget {
     this.deprecated = false,
     this.selected = false,
     this.focused = false,
+    this.loading = false,
     this.onTap,
-    this.onLongPress,
     this.shortcutActivator,
     super.key,
   });
@@ -25,8 +25,8 @@ class BlueprintSearchResultItem extends StatelessWidget {
     required ElementBlueprint blueprint,
     bool selected = false,
     bool focused = false,
+    bool loading = false,
     VoidCallback? onTap,
-    VoidCallback? onLongPress,
     ShortcutActivator? shortcutActivator,
     Key? key,
   }) {
@@ -41,7 +41,6 @@ class BlueprintSearchResultItem extends StatelessWidget {
       selected: selected,
       focused: focused,
       onTap: onTap,
-      onLongPress: onLongPress,
       shortcutActivator: shortcutActivator,
       key: key,
     );
@@ -56,9 +55,9 @@ class BlueprintSearchResultItem extends StatelessWidget {
   final bool deprecated;
   final bool selected;
   final bool focused;
+  final bool loading;
 
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   final ShortcutActivator? shortcutActivator;
 
@@ -71,11 +70,11 @@ class BlueprintSearchResultItem extends StatelessWidget {
         onColor: color.onBrightness(Brightness.dark),
         icon: icon,
         focused: focused,
+        loading: loading,
       ),
       selected: selected,
       focused: focused,
       onTap: onTap,
-      onLongPress: onLongPress,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

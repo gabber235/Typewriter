@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_item.dart";
 
 class BookSearchResultItem extends StatelessWidget {
   const BookSearchResultItem({
@@ -10,8 +10,8 @@ class BookSearchResultItem extends StatelessWidget {
     this.tags = const [],
     this.selected = false,
     this.focused = false,
+    this.loading = false,
     this.onTap,
-    this.onLongPress,
     this.shortcutActivator,
     super.key,
   });
@@ -22,9 +22,9 @@ class BookSearchResultItem extends StatelessWidget {
   final List<String> tags;
   final bool selected;
   final bool focused;
+  final bool loading;
 
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   final ShortcutActivator? shortcutActivator;
 
@@ -37,11 +37,11 @@ class BookSearchResultItem extends StatelessWidget {
         onColor: Colors.white,
         icon: icon ?? "fa6-solid:book-open",
         focused: focused,
+        loading: loading,
       ),
       selected: selected,
       focused: focused,
       onTap: onTap,
-      onLongPress: onLongPress,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

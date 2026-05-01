@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_card.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_visuals.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_card.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_visuals.dart";
 
 class TagSearchResultItem extends StatelessWidget {
   const TagSearchResultItem({
@@ -12,8 +12,8 @@ class TagSearchResultItem extends StatelessWidget {
     this.icon = "fa6-solid:tag",
     this.selected = false,
     this.focused = false,
+    this.loading = false,
     this.onTap,
-    this.onLongPress,
     this.shortcutActivator,
     super.key,
   });
@@ -22,8 +22,8 @@ class TagSearchResultItem extends StatelessWidget {
     required Tag tag,
     bool selected = false,
     bool focused = false,
+    bool loading = false,
     VoidCallback? onTap,
-    VoidCallback? onLongPress,
     ShortcutActivator? shortcutActivator,
     Key? key,
   }) {
@@ -32,8 +32,8 @@ class TagSearchResultItem extends StatelessWidget {
       color: tag.color.toFlutterColor(),
       selected: selected,
       focused: focused,
+      loading: loading,
       onTap: onTap,
-      onLongPress: onLongPress,
       shortcutActivator: shortcutActivator,
       key: key,
     );
@@ -44,9 +44,9 @@ class TagSearchResultItem extends StatelessWidget {
   final String icon;
   final bool selected;
   final bool focused;
+  final bool loading;
 
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   final ShortcutActivator? shortcutActivator;
 
@@ -59,11 +59,11 @@ class TagSearchResultItem extends StatelessWidget {
         onColor: Colors.white,
         icon: icon,
         focused: focused,
+        loading: loading,
       ),
       selected: selected,
       focused: focused,
       onTap: onTap,
-      onLongPress: onLongPress,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

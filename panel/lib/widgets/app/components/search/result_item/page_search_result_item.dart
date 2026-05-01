@@ -2,7 +2,7 @@ import "package:flutter/material.dart" hide Page;
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/string.dart";
-import "package:typewriter_panel/widgets/app/components/search_result_item/search_result_item.dart";
+import "package:typewriter_panel/widgets/app/components/search/result_item/search_result_item.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
 class PageSearchResultItem extends StatelessWidget {
@@ -14,8 +14,8 @@ class PageSearchResultItem extends StatelessWidget {
     this.icon = "fa6-solid:file-lines",
     this.selected = false,
     this.focused = false,
+    this.loading = false,
     this.onTap,
-    this.onLongPress,
     this.shortcutActivator,
     super.key,
   });
@@ -27,8 +27,8 @@ class PageSearchResultItem extends StatelessWidget {
     String? icon,
     bool selected = false,
     bool focused = false,
+    bool loading = false,
     VoidCallback? onTap,
-    VoidCallback? onLongPress,
     ShortcutActivator? shortcutActivator,
     Key? key,
   }) {
@@ -40,8 +40,8 @@ class PageSearchResultItem extends StatelessWidget {
       icon: icon == null || icon.isEmpty ? "fa6-solid:file-lines" : icon,
       selected: selected,
       focused: focused,
+      loading: loading,
       onTap: onTap,
-      onLongPress: onLongPress,
       shortcutActivator: shortcutActivator,
       key: key,
     );
@@ -54,9 +54,9 @@ class PageSearchResultItem extends StatelessWidget {
   final String icon;
   final bool selected;
   final bool focused;
+  final bool loading;
 
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   final ShortcutActivator? shortcutActivator;
 
@@ -78,12 +78,12 @@ class PageSearchResultItem extends StatelessWidget {
       selected: selected,
       focused: focused,
       onTap: onTap,
-      onLongPress: onLongPress,
       prefix: SearchResultIconTile(
         color: color,
         onColor: Colors.white,
         icon: icon,
         focused: focused,
+        loading: loading,
       ),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +120,7 @@ class PageSearchResultItem extends StatelessWidget {
               ),
             ),
             maxLines: 1,
-            overflow: TextOverflow.fade,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
