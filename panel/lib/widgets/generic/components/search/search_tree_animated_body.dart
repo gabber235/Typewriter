@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/logic/search/search.dart";
+import "package:typewriter_panel/widgets/generic/components/elastic_transition.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_result_renderers.dart";
-import "package:typewriter_panel/widgets/generic/components/search/search_tree_diff.dart";
-import "package:typewriter_panel/widgets/generic/components/search/search_tree_model.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_tree_results.dart";
 
 class SearchTreeAnimatedBody extends StatefulWidget {
@@ -78,51 +78,13 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
   }
 
   Widget _animatedRow(SearchTreeRow row, Animation<double> animation) {
-    final child = SearchTreeRowWidget(
+    return ElasticTransition(
       key: ValueKey(row.key),
-      row: row,
-      rowRenderers: widget.rowRenderers,
-    );
-
-    final size = CurvedAnimation(
-      parent: animation,
-      curve: ElasticOutCurve(0.9),
-      reverseCurve: const Interval(0, 0.9, curve: Cubic(.89, -0.01, .51, 1.11)),
-    );
-
-    final scale = Tween<double>(begin: 0.9, end: 1).animate(
-      CurvedAnimation(
-        parent: animation,
-        curve: const Interval(0.2, 1, curve: ElasticOutCurve(0.8)),
-        reverseCurve: const Interval(0.5, 1, curve: Curves.ease),
-      ),
-    );
-
-    final opacity = CurvedAnimation(
-      parent: animation,
-      curve: const Interval(0.2, 0.55, curve: Curves.easeOut),
-      reverseCurve: const Interval(0.55, 1, curve: Curves.easeIn),
-    );
-
-    final padding = Tween<double>(begin: 0, end: 2).animate(
-      CurvedAnimation(
-        parent: animation,
-        curve: const Interval(0, 1, curve: Curves.ease),
-      ),
-    );
-
-    return FadeTransition(
-      key: ValueKey(row.key),
-      opacity: opacity,
-      child: SizeTransition(
-        sizeFactor: size,
-        child: ScaleTransition(
-          scale: scale,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: padding.value),
-            child: child,
-          ),
-        ),
+      animation: animation,
+      child: SearchTreeRowWidget(
+        key: ValueKey(row.key),
+        row: row,
+        rowRenderers: widget.rowRenderers,
       ),
     );
   }

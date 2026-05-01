@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/widgets/generic/components/search/search_tree_diff.dart";
-import "package:typewriter_panel/widgets/generic/components/search/search_tree_model.dart";
+import "package:typewriter_panel/logic/search/search.dart";
 
 void main() {
   group("diffSearchTreeRows", () {

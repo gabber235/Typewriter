@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/logic/search/search.dart";
-import "package:typewriter_panel/widgets/generic/components/search/search_tree_model.dart";
 
 import "../../../../logic/search/core/search_core_test_harness.dart";
 
