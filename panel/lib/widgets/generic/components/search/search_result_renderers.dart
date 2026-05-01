@@ -1,30 +1,38 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/logic/search/search.dart";
+import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 
-class SearchResultRowContext {
-  const SearchResultRowContext({
-    required this.result,
-    required this.selected,
-    required this.focused,
-    required this.onTap,
-    required this.onLongPress,
-    this.shortcutActivator,
-  });
+part "search_result_renderers.freezed.dart";
 
-  final SearchResult result;
-  final bool selected;
-  final bool focused;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-  final ShortcutActivator? shortcutActivator;
+@freezed
+abstract class SearchResultRowContext with _$SearchResultRowContext {
+  const factory SearchResultRowContext({
+    required SearchResult result,
+    required bool selected,
+    required bool focused,
+    required bool loading,
+    required VoidCallback onTap,
+    ShortcutActivator? shortcutActivator,
+  }) = _SearchResultRowContext;
 }
 
-class SearchResultPreviewContext {
-  const SearchResultPreviewContext({required this.result});
+@freezed
+sealed class SearchResultPreviewContext with _$SearchResultPreviewContext {
+  const factory SearchResultPreviewContext.loading({
+    required SearchResult result,
+  }) = SearchResultPreviewContextLoading;
 
-  final SearchResult result;
+  const factory SearchResultPreviewContext.data({
+    required SearchResult result,
+    required Object data,
+  }) = SearchResultPreviewContextData;
+
+  const factory SearchResultPreviewContext.error({
+    required SearchResult result,
+    required String message,
+  }) = SearchResultPreviewContextError;
 }
 
 typedef SearchResultRowBuilder =
@@ -49,10 +57,7 @@ ShortcutActivator? searchResultShortcutActivator(int? shortcutNumber) {
     9 => LogicalKeyboardKey.digit9,
     _ => throw StateError("Invalid shortcut number"),
   };
-  final isMac =
-      defaultTargetPlatform == TargetPlatform.macOS ||
-      defaultTargetPlatform == TargetPlatform.iOS;
-  return SingleActivator(key, meta: isMac, control: !isMac);
+  return AdaptiveSingleActivator(key, control: true);
 }
 
 class MissingSearchResultRendererRow extends StatelessWidget {

@@ -18,6 +18,7 @@ import "package:typewriter_panel/logic/graph/graph_identifier.dart";
 import "package:typewriter_panel/logic/interaction_mode/current_interaction_mode.dart";
 import "package:typewriter_panel/logic/interaction_mode/modes/graph_modes.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
+import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/rect.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
@@ -324,10 +325,8 @@ class Graph extends HookConsumerWidget {
                   ]) ...[
                     SingleActivator(key),
                     SingleActivator(key, shift: true),
-                    SingleActivator(key, meta: true),
-                    SingleActivator(key, meta: true, shift: true),
-                    SingleActivator(key, control: true),
-                    SingleActivator(key, control: true, shift: true),
+                    AdaptiveSingleActivator(key, control: true),
+                    AdaptiveSingleActivator(key, control: true, shift: true),
                   ],
                   for (final ch in ["=", "+"]) ...[
                     CharacterActivator(ch),
@@ -376,10 +375,8 @@ class Graph extends HookConsumerWidget {
                   ]) ...[
                     SingleActivator(key),
                     SingleActivator(key, shift: true),
-                    SingleActivator(key, meta: true),
-                    SingleActivator(key, meta: true, shift: true),
-                    SingleActivator(key, control: true),
-                    SingleActivator(key, control: true, shift: true),
+                    AdaptiveSingleActivator(key, control: true),
+                    AdaptiveSingleActivator(key, control: true, shift: true),
                   ],
                   for (final ch in ["-", "_"]) ...[
                     CharacterActivator(ch),
@@ -429,8 +426,7 @@ class Graph extends HookConsumerWidget {
                     LogicalKeyboardKey.numpad0,
                   ]) ...[
                     SingleActivator(key),
-                    SingleActivator(key, meta: true),
-                    SingleActivator(key, control: true),
+                    AdaptiveSingleActivator(key, control: true),
                   ],
                 ],
                 priority: -2,

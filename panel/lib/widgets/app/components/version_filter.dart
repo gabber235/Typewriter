@@ -4,6 +4,7 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:pub_semver/pub_semver.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/decorated_text_field.dart";
@@ -376,18 +377,13 @@ class VersionFilterBar extends HookWidget {
                 label: "Clear",
                 description: "Clear the filter",
                 activators: [
-                  const SingleActivator(
+                  AdaptiveSingleActivator(
                     LogicalKeyboardKey.delete,
                     control: true,
                   ),
-                  const SingleActivator(
+                  AdaptiveSingleActivator(
                     LogicalKeyboardKey.backspace,
                     control: true,
-                  ),
-                  const SingleActivator(LogicalKeyboardKey.delete, meta: true),
-                  const SingleActivator(
-                    LogicalKeyboardKey.backspace,
-                    meta: true,
                   ),
                 ],
                 priority: 1000,

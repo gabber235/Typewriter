@@ -14,6 +14,7 @@ import "package:typewriter_panel/logic/timeline/timeline_layout.dart";
 import "package:typewriter_panel/logic/timeline/timeline_placement.dart";
 import "package:typewriter_panel/logic/timeline/timeline_viewport.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 import "package:typewriter_panel/utils/shortuct.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
@@ -108,10 +109,8 @@ List<ActionShortcut> buildTimelineShortcuts({
         ]) ...[
           SingleActivator(key),
           SingleActivator(key, shift: true),
-          SingleActivator(key, meta: true),
-          SingleActivator(key, meta: true, shift: true),
-          SingleActivator(key, control: true),
-          SingleActivator(key, control: true, shift: true),
+          AdaptiveSingleActivator(key, control: true),
+          AdaptiveSingleActivator(key, control: true, shift: true),
         ],
         for (final ch in ["=", "+"]) ...[
           CharacterActivator(ch),
@@ -138,10 +137,8 @@ List<ActionShortcut> buildTimelineShortcuts({
         ]) ...[
           SingleActivator(key),
           SingleActivator(key, shift: true),
-          SingleActivator(key, meta: true),
-          SingleActivator(key, meta: true, shift: true),
-          SingleActivator(key, control: true),
-          SingleActivator(key, control: true, shift: true),
+          AdaptiveSingleActivator(key, control: true),
+          AdaptiveSingleActivator(key, control: true, shift: true),
         ],
         for (final ch in ["-", "_"]) ...[
           CharacterActivator(ch),
@@ -166,8 +163,7 @@ List<ActionShortcut> buildTimelineShortcuts({
           LogicalKeyboardKey.numpad0,
         ]) ...[
           SingleActivator(key),
-          SingleActivator(key, meta: true),
-          SingleActivator(key, control: true),
+          AdaptiveSingleActivator(key, control: true),
         ],
       ],
       priority: -2,

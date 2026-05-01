@@ -14,6 +14,7 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/fonts.dart";
 import "package:typewriter_panel/widgets/app/components/app_required.dart";
@@ -79,16 +80,14 @@ class TypewriterPanel extends HookConsumerWidget {
     // Default Shortcuts
     ...WidgetsApp.defaultShortcuts,
 
-    SingleActivator(LogicalKeyboardKey.keyV): ActivateIntent(),
-    SingleActivator(LogicalKeyboardKey.keyV, shift: true): ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
         ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateIntent(),
 
     // Focus Navigation
-    SingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
-    SingleActivator(LogicalKeyboardKey.keyP, control: true):
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyP, control: true):
         PreviousFocusIntent(),
 
     // Scroll Navigation
@@ -100,35 +99,35 @@ class TypewriterPanel extends HookConsumerWidget {
       direction: AxisDirection.up,
       type: ScrollIncrementType.page,
     ),
-    SingleActivator(LogicalKeyboardKey.keyU, control: true): ScrollIntent(
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyU, control: true): ScrollIntent(
       direction: AxisDirection.up,
       type: ScrollIncrementType.page,
     ),
-    SingleActivator(LogicalKeyboardKey.keyD, control: true): ScrollIntent(
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyD, control: true): ScrollIntent(
       direction: AxisDirection.down,
       type: ScrollIncrementType.page,
     ),
 
     // Pane Navigation
-    SingleActivator(LogicalKeyboardKey.keyH, control: true): NavigatePaneIntent(
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyH, control: true): NavigatePaneIntent(
       AxisDirection.left,
     ),
-    SingleActivator(LogicalKeyboardKey.keyL, control: true): NavigatePaneIntent(
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyL, control: true): NavigatePaneIntent(
       AxisDirection.right,
     ),
-    SingleActivator(LogicalKeyboardKey.keyJ, control: true): NavigatePaneIntent(
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyJ, control: true): NavigatePaneIntent(
       AxisDirection.down,
     ),
-    SingleActivator(LogicalKeyboardKey.keyK, control: true): NavigatePaneIntent(
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyK, control: true): NavigatePaneIntent(
       AxisDirection.up,
     ),
-    SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
+    AdaptiveSingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
         NavigatePaneIntent(AxisDirection.left),
-    SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
+    AdaptiveSingleActivator(LogicalKeyboardKey.arrowRight, control: true):
         NavigatePaneIntent(AxisDirection.right),
-    SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
+    AdaptiveSingleActivator(LogicalKeyboardKey.arrowDown, control: true):
         NavigatePaneIntent(AxisDirection.down),
-    SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
+    AdaptiveSingleActivator(LogicalKeyboardKey.arrowUp, control: true):
         NavigatePaneIntent(AxisDirection.up),
 
     // Delete Intent
@@ -353,6 +352,7 @@ ThemeData buildTheme(Brightness brightness) {
         visualDensity: VisualDensity.defaultDensityForPlatform(
           defaultTargetPlatform,
         ),
+        padding: WidgetStatePropertyAll(EdgeInsets.all(0)),
       ),
     ),
     dropdownMenuTheme: DropdownMenuThemeData(
