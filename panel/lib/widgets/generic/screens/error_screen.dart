@@ -67,6 +67,7 @@ class ErrorScreen extends HookWidget {
     required String title,
     required String message,
     Widget? child,
+    bool withIcon,
     Key? key,
   }) = SmallErrorScreen;
 
@@ -166,19 +167,46 @@ class SmallErrorScreen extends ErrorScreen {
   const SmallErrorScreen({
     required super.title,
     required super.message,
+    this.withIcon = false,
     super.child,
     super.key,
   });
 
+  final bool withIcon;
+
   @override
   Widget build(BuildContext context) {
+    final fileLoader = withIcon
+        ? useRiveFileLoader.fromAsset("assets/robot_island.riv")
+        : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       spacing: 8,
       children: [
+        if (withIcon)
+          MouseRegion(
+            cursor: SystemMouseCursors.zoomIn,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final size = constraints.maxWidth == double.infinity
+                    ? constraints.maxHeight
+                    : constraints.maxWidth;
+                return SizedBox(
+                  width: size,
+                  height: size,
+                  child: RiveWidgetBuilder(
+                    fileLoader: fileLoader!,
+                    stateMachineSelector: StateMachineSelector.byName("Motion"),
+                    builder: (context, state) => state(),
+                  ),
+                );
+              },
+            ),
+          ),
         Text(
-              title,
+              title.isEmpty ? _funnyErrorTitles.randomElement() : title,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: context.responsive(

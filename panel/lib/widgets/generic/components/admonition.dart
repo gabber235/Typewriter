@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:iconify_flutter_plus/icons/ph.dart";
 import "package:typewriter_panel/widgets/generic/components/icones.dart";
@@ -9,26 +10,41 @@ class Admonition extends StatelessWidget {
     required this.color,
     required this.icon,
     required this.child,
+    this.animationDuration = const Duration(milliseconds: 500),
     this.onTap,
     super.key,
   });
 
-  const Admonition.info({required this.child, this.onTap, super.key})
-    : color = Colors.blue,
-      icon = MaterialSymbols.info_rounded;
+  const Admonition.info({
+    required this.child,
+    this.onTap,
+    this.animationDuration = const Duration(milliseconds: 500),
+    super.key,
+  }) : color = Colors.blue,
+       icon = const Icones(MaterialSymbols.info_rounded);
 
-  const Admonition.warning({required this.child, this.onTap, super.key})
-    : color = Colors.orange,
-      icon = Ph.warning_fill;
+  const Admonition.warning({
+    required this.child,
+    this.onTap,
+    this.animationDuration = const Duration(milliseconds: 500),
+    super.key,
+  }) : color = Colors.orange,
+       icon = const Icones(Ph.warning_fill);
 
-  const Admonition.danger({required this.child, this.onTap, super.key})
-    : color = Colors.red,
-      icon = Ph.warning_octagon_fill;
+  const Admonition.danger({
+    required this.child,
+    this.onTap,
+    this.animationDuration = const Duration(milliseconds: 500),
+    super.key,
+  }) : color = Colors.red,
+       icon = const Icones(Ph.warning_octagon_fill);
 
   final Color color;
-  final String icon;
+  final Widget icon;
   final Widget child;
   final VoidCallback? onTap;
+
+  final Duration animationDuration;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +57,7 @@ class Admonition extends StatelessWidget {
     return Surface(
       color: backgroundColor,
       child: Material(
+        animationDuration: 500.ms,
         color: backgroundColor,
         shape: RoundedRectangleBorder(
           side: BorderSide(color: color, width: 1),
@@ -52,10 +69,14 @@ class Admonition extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             child: Row(
               children: [
-                Icones(icon, color: color),
+                IconTheme(
+                  data: IconThemeData(color: color),
+                  child: icon,
+                ),
                 const SizedBox(width: 12),
                 Flexible(
-                  child: DefaultTextStyle(
+                  child: AnimatedDefaultTextStyle(
+                    duration: animationDuration,
                     style: theme.textTheme.titleSmall!.copyWith(color: color),
                     child: child,
                   ),
