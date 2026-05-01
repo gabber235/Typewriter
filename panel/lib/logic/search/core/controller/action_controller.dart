@@ -50,19 +50,19 @@ class ActionController with ChangeNotifier {
       );
     }());
 
-    _execute(actionType, action, resultIds, results);
+    _execute(actionType, action, results);
     return SearchActionSubmitResult.submitted;
   }
 
   Future<void> _execute(
     Type actionType,
     SearchAction action,
-    Set<String> resultIds,
     List<SearchResult> results,
   ) async {
     if (_disposed) {
       return;
     }
+    final resultIds = results.map((r) => r.id).toSet();
     _state = SearchActionState.running(
       action: actionType,
       resultIds: resultIds,
@@ -130,7 +130,9 @@ class ActionController with ChangeNotifier {
       return;
     }
 
-    await Future<void>.delayed(5.seconds);
+    await Future<void>.delayed(
+      _state is SearchActionFailed ? 10.seconds : 3.seconds,
+    );
     if (_disposed) {
       return;
     }
@@ -140,6 +142,7 @@ class ActionController with ChangeNotifier {
     }
 
     _state = SearchActionState.idle();
+    notifyListeners();
   }
 
   @override
@@ -147,34 +150,5 @@ class ActionController with ChangeNotifier {
     assert(!_disposed);
     _disposed = true;
     super.dispose();
-  }
-}
-
-extension on List<SearchNode> {
-  List<SearchResult> findResults(Set<String> resultIds) {
-    final wanted = resultIds.toSet();
-    final results = <SearchResult>[];
-    final stack = [];
-
-    for (var i = length - 1; i >= 0; i--) {
-      stack.add(this[i]);
-    }
-
-    while (stack.isNotEmpty && wanted.isNotEmpty) {
-      final node = stack.removeLast();
-
-      switch (node) {
-        case SearchSectionNode():
-          for (var i = node.children.length - 1; i >= 0; i--) {
-            stack.add(node.children[i]);
-          }
-        case SearchResultNode():
-          if (wanted.remove(node.result.id)) {
-            results.add(node.result);
-          }
-      }
-    }
-
-    return results;
   }
 }

@@ -17,6 +17,7 @@ final class CachedSearchSource implements SearchSource {
 
   StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
   SearchSourceSnapshot? _cachedReadySnapshot;
+  final Map<String, SearchPreviewRequestResultData> _previewCache = {};
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
@@ -35,8 +36,15 @@ final class CachedSearchSource implements SearchSource {
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    return source.preview(request);
+  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) async {
+    final cachedResult = _previewCache[request.resultId];
+    if (cachedResult != null) return cachedResult;
+
+    final result = await source.preview(request);
+    if (result case SearchPreviewRequestResultData()) {
+      _previewCache[request.resultId] = result;
+    }
+    return result;
   }
 
   @override

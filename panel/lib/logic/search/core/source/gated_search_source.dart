@@ -54,6 +54,15 @@ final class GatedSearchSource implements SearchSource {
 
   @override
   Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
+    final context = request.queryContext;
+    if (context == null || !isOpen(context)) {
+      return Future.value(
+        const SearchPreviewRequestResult.error(
+          message: "Preview unavailable while search gate is closed",
+        ),
+      );
+    }
+
     return source.preview(request);
   }
 

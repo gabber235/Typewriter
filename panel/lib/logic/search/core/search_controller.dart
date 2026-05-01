@@ -1,6 +1,7 @@
+import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
-import "package:typewriter_panel/logic/search/core/core.dart";
-import "package:typewriter_panel/logic/search/query/query_selector.dart";
+import "package:flutter/services.dart";
+import "package:typewriter_panel/logic/search/search.dart";
 
 class SearchController extends ChangeNotifier {
   SearchController({
@@ -30,21 +31,68 @@ class SearchController extends ChangeNotifier {
   SearchSourceSnapshot get snapshot => _sourceController.snapshot;
   List<QuerySelectorDefinition> get selectors => _sourceController.selectors;
   String get query => _sourceController.query;
+  SearchQueryContext get queryContext => _sourceController.queryContext;
+
+  List<SearchResult> _selectedResult = List.unmodifiable([]);
+  List<SearchResult> get selectedResults => _selectedResult;
 
   SearchActionState get actionState => _actionController.state;
 
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    return _sourceController.source.preview(request);
+  SearchSelectionMode get selectionMode =>
+      snapshot.actions.values.any(
+        (a) => a is RepeatedSearchAction || a is BatchSearchAction,
+      )
+      ? SearchSelectionMode.multiple
+      : SearchSelectionMode.single;
+
+  List<SearchAction> actionsFor(SearchResult result) {
+    if (_selectedIds.length > 1 && _selectedIds.contains(result.id)) {
+      return actionsForSelected(result);
+    }
+
+    final actions = result.actions;
+    return actions
+        .map((action) => snapshot.actions[action])
+        .nonNulls
+        .sorted((a, b) => b.priority.compareTo(a.priority));
   }
 
-  SearchActionSubmitResult executeAction(
-    Type actionType, {
-    SearchActionTarget target = const SearchActionTarget.selection(),
-  }) {
-    final resultIds = switch (target) {
-      SearchSingleActionTarget(:final resultId) => {resultId},
-      SearchSelectionActionTarget() => _selectedIds,
-    };
+  List<SearchAction> _actionsFor(List<Type> actions) {
+    return actions
+        .map((action) => snapshot.actions[action])
+        .nonNulls
+        .sorted((a, b) => b.priority.compareTo(a.priority));
+  }
+
+  List<SearchAction> actionsForSelected(SearchResult primaryResult) {
+    assert(_selectedIds.length > 1 && _selectedIds.contains(primaryResult.id));
+
+    final results = selectedResults;
+
+    final actions = results.fold(primaryResult.actions.toSet(), (
+      actions,
+      result,
+    ) {
+      return actions.intersection(result.actions.toSet());
+    }).toList();
+
+    return _actionsFor(actions)
+        .where(
+          (action) =>
+              action is RepeatedSearchAction || action is BatchSearchAction,
+        )
+        .toList();
+  }
+
+  SearchActionSubmitResult executeAction(Type actionType, {String? resultId}) {
+    final Set<String> resultIds;
+    if (resultId != null) {
+      resultIds = selectedIds.contains(resultId)
+          ? _selectedIds.toSet()
+          : {resultId};
+    } else {
+      resultIds = _selectedIds.toSet();
+    }
     return _actionController.execute(actionType, resultIds, snapshot);
   }
 
@@ -55,11 +103,27 @@ class SearchController extends ChangeNotifier {
   List<String> get selectedIds => List.unmodifiable(_selectedIds);
 
   bool isSelected(String id) => _selectedIds.contains(id);
-  void toggleSelected(String id) {
-    if (isSelected(id)) {
-      _selectedIds.remove(id);
-    } else {
-      _selectedIds.add(id);
+  void toggleSelected(String id, {bool? isMultiSelect}) {
+    final selected = isSelected(id);
+    final multiSelect =
+        isMultiSelect ?? HardwareKeyboard.instance.isShiftPressed;
+    switch ((selected, multiSelect)) {
+      case (true, true):
+        _selectedIds.remove(id);
+      case (true, false):
+        if (_selectedIds.length > 1) {
+          _selectedIds
+            ..clear()
+            ..add(id);
+        } else {
+          _selectedIds.clear();
+        }
+      case (false, true):
+        _selectedIds.add(id);
+      case (false, false):
+        _selectedIds
+          ..clear()
+          ..add(id);
     }
     notifyListeners();
   }
@@ -80,6 +144,20 @@ class SearchController extends ChangeNotifier {
     notifyListeners();
   }
 
+  SearchResult? _currentPreview;
+  SearchResult? get currentPreview => _currentPreview;
+
+  void preview(SearchResult? result) {
+    _currentPreview = result;
+    notifyListeners();
+  }
+
+  Future<SearchPreviewRequestResult> requestPreview(
+    SearchPreviewRequest request,
+  ) {
+    return _sourceController.source.preview(request);
+  }
+
   void updateQuery(String query) {
     if (actionState is SearchActionRunning) {
       _queryPending = query;
@@ -90,10 +168,16 @@ class SearchController extends ChangeNotifier {
 
   void _onSourceChange() {
     _cleanupState();
+    _selectedResult = List.unmodifiable(
+      snapshot.nodes.findResults(_selectedIds),
+    );
     notifyListeners();
   }
 
   void _cleanupState() {
+    final oldPreviewId = _currentPreview?.id;
+    _currentPreview = null;
+
     final leftOverSelectedIds = _selectedIds.toSet();
 
     final stack = <SearchNode>[];
@@ -110,6 +194,9 @@ class SearchController extends ChangeNotifier {
           }
         case SearchResultNode(:final result):
           leftOverSelectedIds.remove(result.id);
+          if (result.id == oldPreviewId) {
+            _currentPreview = result;
+          }
       }
     }
 

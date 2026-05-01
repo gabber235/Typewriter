@@ -189,6 +189,57 @@ sealed class SearchNode with _$SearchNode {
       SearchResultNode;
 }
 
+extension SearchNodes on List<SearchNode> {
+  List<SearchResult> findResults(Set<String> resultIds) {
+    final wanted = resultIds.toSet();
+    final results = <SearchResult>[];
+    final stack = [];
+
+    for (var i = length - 1; i >= 0; i--) {
+      stack.add(this[i]);
+    }
+
+    while (stack.isNotEmpty && wanted.isNotEmpty) {
+      final node = stack.removeLast();
+
+      switch (node) {
+        case SearchSectionNode():
+          for (var i = node.children.length - 1; i >= 0; i--) {
+            stack.add(node.children[i]);
+          }
+        case SearchResultNode():
+          if (wanted.remove(node.result.id)) {
+            results.add(node.result);
+          }
+      }
+    }
+
+    return results;
+  }
+
+  Iterable<SearchNode> walk() sync* {
+    final stack = [];
+
+    for (var i = length - 1; i >= 0; i--) {
+      stack.add(this[i]);
+    }
+
+    while (stack.isNotEmpty) {
+      final node = stack.removeLast();
+
+      yield node;
+
+      switch (node) {
+        case SearchSectionNode():
+          for (var i = node.children.length - 1; i >= 0; i--) {
+            stack.add(node.children[i]);
+          }
+        case SearchResultNode():
+      }
+    }
+  }
+}
+
 @freezed
 abstract class SearchResultType with _$SearchResultType {
   const factory SearchResultType({
@@ -219,6 +270,7 @@ abstract class SearchAction {
 
   String get label;
   int get priority;
+  String? get icon => null;
   Color? get color => null;
   ShortcutActivator? get shortcut => null;
 }
@@ -331,14 +383,6 @@ sealed class SearchActionState with _$SearchActionState {
 }
 
 @freezed
-sealed class SearchActionTarget with _$SearchActionTarget {
-  const factory SearchActionTarget.singleAction({required String resultId}) =
-      SearchSingleActionTarget;
-
-  const factory SearchActionTarget.selection() = SearchSelectionActionTarget;
-}
-
-@freezed
 abstract class SearchPreviewRequest with _$SearchPreviewRequest {
   const factory SearchPreviewRequest({
     required String resultId,
@@ -354,3 +398,5 @@ abstract class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
   const factory SearchPreviewRequestResult.error({required String message}) =
       SearchPreviewRequestResultError;
 }
+
+enum SearchSelectionMode { single, multiple }
