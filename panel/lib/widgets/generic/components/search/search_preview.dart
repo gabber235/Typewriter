@@ -32,12 +32,11 @@ class SearchPreview extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(searchProvider)!;
     final currentPreview = controller.currentPreview;
-    assert(
-      currentPreview != null,
-      "SearchPreview can only be built when a preview is available",
-    );
+    if (currentPreview == null) {
+      return const SizedBox.shrink();
+    }
     final previewRenderer =
-        previewRenderers[currentPreview!.type.previewRendererId];
+        previewRenderers[currentPreview.type.previewRendererId];
 
     if (previewRenderer == null) {
       return ErrorScreen.small(
