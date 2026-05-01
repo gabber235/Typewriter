@@ -28,6 +28,7 @@ abstract class ActionShortcut with _$ActionShortcut {
     Widget? icon,
     ActionInvoke? onInvoke,
     @Default(true) bool show,
+    @Default(true) bool registerShortcut,
     GlobalKey? owner,
   }) = ActivatorActionShortcut;
 
@@ -40,6 +41,7 @@ abstract class ActionShortcut with _$ActionShortcut {
     Widget? icon,
     ActionInvoke? onInvoke,
     @Default(true) bool show,
+    @Default(true) bool registerShortcut,
     GlobalKey? owner,
   }) = IntentActionShortcut;
 
@@ -156,7 +158,7 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final regKey = useGlobalKey(debugLabel: "ShortcutActionSet");
     final callableShortcuts = useMemoized(
-      () => shortcuts.where((s) => s.canInvoke).toList(),
+      () => shortcuts.where((s) => s.canInvoke && s.registerShortcut).toList(),
       [shortcuts],
     );
 
@@ -389,7 +391,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final loading = useState(false);
-    final hasInvoke = action.onInvoke != null && !loading.value;
+    final hasInvoke = action.canInvoke && !loading.value;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       spacing: 8,

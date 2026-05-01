@@ -519,7 +519,7 @@ class _FloatingCard extends StatelessWidget {
         ),
         elevation: 3,
         shadowColor: colors.shadow,
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: .antiAlias,
         child: Padding(padding: const EdgeInsets.all(16.0), child: child),
       ),
     );
