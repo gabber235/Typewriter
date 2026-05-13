@@ -5,6 +5,7 @@ import "package:flutter/material.dart" hide FilledButton;
 import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
@@ -327,7 +328,7 @@ class _AlgebraicSearchElement extends SearchElement {
   final FutureOr<bool?> Function(String, DataBlueprint)? onSelect;
 
   @override
-  String get title => caseName.titleCase();
+  String title(AppLocalizations l10n) => caseName.titleCase();
 
   @override
   Color color(BuildContext context) {
@@ -350,10 +351,10 @@ class _AlgebraicSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Select",
+      SearchAction(
+        l10n.select,
         TWIcons.check,
         SingleActivator(LogicalKeyboardKey.enter),
       ),

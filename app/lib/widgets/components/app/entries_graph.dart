@@ -7,6 +7,7 @@ import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/pages/page_editor.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/widgets/components/app/empty_screen.dart";
 import "package:typewriter/widgets/components/app/entry_node.dart";
 import "package:typewriter/widgets/components/app/entry_search.dart";
@@ -115,6 +116,7 @@ class EntriesGraph extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final entryIds = ref.watch(graphableEntryIdsProvider);
     final graph = ref.watch(graphProvider);
 
@@ -127,8 +129,8 @@ class EntriesGraph extends HookConsumerWidget {
 
     if (entryIds.isEmpty) {
       return EmptyScreen(
-        title: "There are no graphable entries on this page.",
-        buttonText: "Add Entry",
+        title: l10n.noGraphableEntries,
+        buttonText: l10n.addEntry,
         onButtonPressed: () => ref.read(searchProvider.notifier).asBuilder()
           ..fetchNewEntry()
           ..nonGenericAddEntry()

@@ -4,6 +4,7 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/main.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/potion_effects.dart";
@@ -99,7 +100,7 @@ class PotionEffectSearchElement extends SearchElement {
   late PotionEffectCategory category;
 
   @override
-  String get title => potionEffect.formatted;
+  String title(AppLocalizations l10n) => potionEffect.formatted;
 
   @override
   Color color(BuildContext context) {
@@ -119,10 +120,10 @@ class PotionEffectSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Select",
+      SearchAction(
+        l10n.select,
         TWIcons.check,
         SingleActivator(LogicalKeyboardKey.enter),
       ),

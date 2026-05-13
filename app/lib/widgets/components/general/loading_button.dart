@@ -4,6 +4,7 @@ import "dart:ui";
 
 import "package:flutter/material.dart" hide FilledButton;
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/widgets/components/general/filled_button.dart";
 
 class LoadingButton extends HookWidget {
@@ -28,6 +29,7 @@ class LoadingButton extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isLoading = useState(false);
 
     return FilledButton(
@@ -40,10 +42,8 @@ class LoadingButton extends HookWidget {
                 await onPressed?.call();
               } on Exception {
                 scaffold.showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "An error occurred, please report on the Typewriter Discord)",
-                    ),
+                  SnackBar(
+                    content: Text(l10n.unexpectedError),
                   ),
                 );
               } finally {

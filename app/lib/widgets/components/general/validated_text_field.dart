@@ -68,20 +68,21 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final void Function(T)? onDone;
   final void Function(T)? onSubmitted;
 
-  _State _parse(String value) {
+  _State _parse(BuildContext context, String value) {
+    final l10n = context.l10n;
     try {
       final object = serialize != null ? serialize?.call(value) : value as T;
-      if (object == null) return _Invalid("Invalid $name: $value");
+      if (object == null) return _Invalid(l10n.invalidValue(name, value));
       final message = validator?.call(object);
       if (message != null) return _Invalid(message);
-      return _Valid(object, "Valid $name: $value");
+      return _Valid(object, l10n.validValue(name, value));
     } on FormatException catch (_) {
-      return _Invalid("Invalid $name: $value");
+      return _Invalid(l10n.invalidValue(name, value));
     }
   }
 
-  T? _updateState(String value, ValueNotifier<_State> state) {
-    final parsed = _parse(value);
+  T? _updateState(BuildContext context, String value, ValueNotifier<_State> state) {
+    final parsed = _parse(context, value);
     state.value = parsed;
     if (parsed is _Valid) return parsed.value;
     return null;
@@ -89,6 +90,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final focus = focusNode ?? useFocusNode();
     final state = useState<_State>(_initial);
 
@@ -98,7 +100,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       if (!hasFocus) state.value = _initial;
 
       if (hasFocus && keepValidVisibleWhileFocused && state.value == _initial) {
-        _updateState(formattedValue, state);
+        _updateState(context, formattedValue, state);
       }
     });
 
@@ -121,19 +123,19 @@ class ValidatedTextField<T> extends HookConsumerWidget {
                 color: state.value is _Invalid ? Colors.redAccent : null,
               ),
             ),
-            hintText: "Enter a $name",
+            hintText: l10n.enterAValue(name),
             errorText: state.value.cast<_Invalid>()?.message,
           ),
           onChanged: (value) {
-            final object = _updateState(value, state);
+            final object = _updateState(context, value, state);
             if (object != null) onChanged?.call(object);
           },
           onDone: (value) {
-            final object = _updateState(value, state);
+            final object = _updateState(context, value, state);
             if (object != null) onDone?.call(object);
           },
           onSubmitted: (value) {
-            final object = _updateState(value, state);
+            final object = _updateState(context, value, state);
             if (object != null) onSubmitted?.call(object);
           },
         ),

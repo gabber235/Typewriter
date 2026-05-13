@@ -4,6 +4,7 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/materials.dart";
@@ -121,7 +122,7 @@ class MaterialSearchElement extends SearchElement {
   final bool? Function(CombinedMaterial)? onSelect;
 
   @override
-  String get title => material.value.name;
+  String title(AppLocalizations l10n) => material.value.name;
 
   @override
   Color color(BuildContext context) {
@@ -149,10 +150,10 @@ class MaterialSearchElement extends SearchElement {
   String description(BuildContext context) => material.key;
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Select",
+      SearchAction(
+        l10n.select,
         TWIcons.check,
         SingleActivator(LogicalKeyboardKey.enter),
       ),

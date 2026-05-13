@@ -4,6 +4,7 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
@@ -413,7 +414,7 @@ class EntrySearchElement extends SearchElement {
   Entry get entry => definition.entry;
 
   @override
-  String get title => entry.formattedName;
+  String title(AppLocalizations l10n) => entry.formattedName;
 
   @override
   Color color(BuildContext context) => blueprint.color;
@@ -429,15 +430,15 @@ class EntrySearchElement extends SearchElement {
   String description(BuildContext context) => definition.pageName.formatted;
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Open",
+      SearchAction(
+        l10n.open,
         TWIcons.externalLink,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
       SearchAction(
-        "Open Wiki",
+        l10n.openWiki,
         TWIcons.book,
         SmartSingleActivator(LogicalKeyboardKey.keyO, control: true),
         onTrigger: (_, __) {
@@ -474,7 +475,7 @@ class AddEntrySearchElement extends SearchElement {
   final FutureOr<bool?> Function(Entry)? onAdded;
 
   @override
-  String get title => "Add ${blueprint.name.formatted}";
+  String title(AppLocalizations l10n) => l10n.addEntryTitle(blueprint.name.formatted);
 
   @override
   Color color(BuildContext context) => blueprint.color;
@@ -490,15 +491,15 @@ class AddEntrySearchElement extends SearchElement {
   String description(BuildContext context) => blueprint.description;
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Add",
+      SearchAction(
+        l10n.add,
         TWIcons.plus,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
       SearchAction(
-        "Open Wiki",
+        l10n.openWiki,
         TWIcons.book,
         SmartSingleActivator(LogicalKeyboardKey.keyO, control: true),
         onTrigger: (_, __) {

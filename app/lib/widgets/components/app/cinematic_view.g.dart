@@ -322,7 +322,7 @@ class _EndingFrameProviderElement extends AutoDisposeProviderElement<int>
 }
 
 String _$entryContextActionsHash() =>
-    r'5c4353ae741b4bafd2046b9a801e77324fa8977f';
+    r'9359132980bcaad48fb98089cc731630c291d916';
 
 /// See also [_entryContextActions].
 @ProviderFor(_entryContextActions)

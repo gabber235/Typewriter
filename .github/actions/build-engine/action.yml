@@ -15,6 +15,11 @@ runs:
         shell: bash
         working-directory: ./app
 
+      - name: Update translations
+        run: flutter gen-l10n
+        shell: bash
+        working-directory: ./app
+
       - name: Run Lint
         run: flutter analyze
         shell: bash

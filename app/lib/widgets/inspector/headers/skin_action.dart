@@ -145,6 +145,7 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final controller = useTextEditingController();
     final focus = useFocusNode();
     final error = useState<String?>(null);
@@ -184,7 +185,7 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
+          child: Text(l10n.cancel),
         ),
         LoadingButton.icon(
           icon: const Iconify(TWIcons.download),

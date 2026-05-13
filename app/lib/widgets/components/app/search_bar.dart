@@ -12,9 +12,12 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:text_scroll/text_scroll.dart";
 import "package:typewriter/hooks/staggered_animation_controllers.dart";
 import "package:typewriter/hooks/ticker.dart";
+import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/staging.dart";
 import "package:typewriter/utils/debouncer.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/utils/smart_single_activator.dart";
@@ -87,7 +90,8 @@ List<FocusNode> searchFocusNodes(Ref ref) {
 @riverpod
 List<GlobalKey> searchGlobalKeys(Ref ref) {
   final elements = ref.watch(searchElementsProvider);
-  return elements.map((e) => GlobalKey(debugLabel: e.title)).toList();
+  final l10n = ref.watch(l10nProvider);
+  return elements.map((e) => GlobalKey(debugLabel: e.title(l10n).toString())).toList();
 }
 
 @riverpod
@@ -104,15 +108,17 @@ SearchElement? _focusedElement(Ref ref) {
 @riverpod
 List<SearchAction> _searchActions(Ref ref) {
   final focusedElement = ref.watch(_focusedElementProvider);
+  final l10n = ref.watch(l10nProvider);
 
-  return focusedElement?.actions(ref.passing) ?? [];
+  return focusedElement?.actions(l10n, ref.passing) ?? [];
 }
 
 @riverpod
 Set<ShortcutActivator> _searchActionShortcuts(Ref ref) {
   final elements = ref.watch(searchElementsProvider);
+  final l10n = ref.watch(l10nProvider);
   final activators = elements
-      .expand((e) => e.actions(ref.passing))
+      .expand((e) => e.actions(l10n, ref.passing))
       .where((a) => a.onTrigger != null)
       .map((a) => a.shortcut)
       .toSet();
@@ -352,9 +358,9 @@ class SearchBuilder {
 abstract class SearchElement {
   const SearchElement();
 
-  String get title;
+  String title(AppLocalizations l10n);
 
-  List<SearchAction> actions(PassingRef ref);
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref);
 
   /// Runs when the element is activated.
   ///
@@ -851,6 +857,7 @@ class _SearchActions extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final actions = ref.watch(_searchActionsProvider);
 
     if (actions.isEmpty) {
@@ -867,7 +874,7 @@ class _SearchActions extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Actions",
+              l10n.actions,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
@@ -899,6 +906,7 @@ class _SearchBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final search = ref.watch(searchProvider);
     final controller = useTextEditingController(text: search?.query ?? "");
     final focusNode = ref.watch(searchBarFocusProvider);
@@ -942,8 +950,8 @@ class _SearchBar extends HookConsumerWidget {
                 controller: controller,
                 focus: focusNode,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: "Enter search query...",
+                decoration: InputDecoration(
+                  hintText: l10n.searchHint,
                   border: InputBorder.none,
                   filled: false,
                 ),
@@ -1110,6 +1118,7 @@ class _SearchResults extends StatefulHookConsumerWidget {
 class _SearchResultsState extends ConsumerState<_SearchResults> {
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final animatedResults = min(8, ref.watch(searchElementsProvider).length);
     final elements = ref.watch(searchElementsProvider);
     final ticker = useTickerProvider();
@@ -1132,12 +1141,12 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
               key: globalKeys[i],
               onPressed: () => _activateItem(elements, i, context, ref.passing),
               focusNode: focusNodes[i],
-              title: elements[i].title,
+              title: elements[i].title(l10n),
               color: elements[i].color(context),
               description: elements[i].description(context),
               icon: elements[i].icon(context),
               suffixIcon: elements[i].suffixIcon(context),
-              actions: elements[i].actions(ref.passing),
+              actions: elements[i].actions(l10n, ref.passing),
             );
 
             if (i >= animatedResults) {

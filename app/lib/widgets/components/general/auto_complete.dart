@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/components/general/formatted_text_field.dart";
 import "package:typewriter/widgets/inspector/current_editing_field.dart";
@@ -11,14 +12,14 @@ class AutoCompleteField extends StatelessWidget {
     required this.onQuery,
     required this.onChanged,
     this.icon,
-    this.hintText = "Enter a value",
+    this.hintText,
     this.inputFormatters,
     this.path,
     super.key,
   });
 
   final String text;
-  final String hintText;
+  final String? hintText;
   final String? icon;
 
   final Iterable<String> Function(String) onQuery;
@@ -31,6 +32,7 @@ class AutoCompleteField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: text),
       fieldViewBuilder:
@@ -42,7 +44,7 @@ class AutoCompleteField extends StatelessWidget {
           inputFormatters: inputFormatters,
           icon: icon,
           text: text,
-          hintText: hintText,
+          hintText: hintText ?? l10n.enterAValueEmpty,
           path: path,
         );
       },

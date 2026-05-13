@@ -1,4 +1,4 @@
-import "dart:async";
+﻿import "dart:async";
 
 import "package:auto_route/auto_route.dart";
 import "package:collection/collection.dart";
@@ -101,6 +101,7 @@ class _PagesSelector extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hovering = useState(false);
+    final l10n = context.l10n;
     return MouseRegion(
       onEnter: (_) => hovering.value = true,
       onExit: (_) {
@@ -123,7 +124,7 @@ class _PagesSelector extends HookConsumerWidget {
                 children: [
                   const SizedBox(height: 12),
                   Text(
-                    "Pages",
+                    l10n.pagesTitle,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -246,6 +247,7 @@ class _TreeCategory extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isExpanded = useState(false);
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +256,7 @@ class _TreeCategory extends HookConsumerWidget {
           builder: (context) {
             return [
               ContextMenuTile.button(
-                title: "New Page",
+                title: l10n.newPage,
                 icon: TWIcons.plus,
                 onTap: () => showDialog(
                   context: context,
@@ -394,9 +396,10 @@ class _PageTile extends HookConsumerWidget {
     WidgetRef ref,
     bool isSelected,
   ) {
+    final l10n = context.l10n;
     return [
       ContextMenuTile.button(
-        title: "Rename",
+        title: l10n.contextMenuRename,
         icon: TWIcons.pencil,
         onTap: () => showDialog(
           context: context,
@@ -407,7 +410,7 @@ class _PageTile extends HookConsumerWidget {
         ),
       ),
       ContextMenuTile.button(
-        title: "Change Chapter",
+        title: l10n.contextMenuChangeChapter,
         icon: TWIcons.bookMarker,
         onTap: () => showDialog(
           context: context,
@@ -416,7 +419,7 @@ class _PageTile extends HookConsumerWidget {
         ),
       ),
       ContextMenuTile.button(
-        title: "Change Priority",
+        title: l10n.contextMenuChangePriority,
         icon: TWIcons.priority,
         onTap: () => showDialog(
           context: context,
@@ -425,7 +428,7 @@ class _PageTile extends HookConsumerWidget {
       ),
       ContextMenuTile.divider(),
       ContextMenuTile.button(
-        title: "Delete",
+        title: l10n.contextMenuDelete,
         icon: TWIcons.trash,
         color: Colors.redAccent,
         onTap: () => showPageDeletionDialogue(context, ref.passing, pageId),
@@ -630,9 +633,10 @@ class EmptyPageEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return EmptyScreen(
-      title: "Select a page to edit or",
-      buttonText: "Add Page",
+      title: l10n.emptyPageTitle,
+      buttonText: l10n.addPage,
       onButtonPressed: () => _showAddPageDialog(context),
     );
   }
@@ -649,35 +653,38 @@ class _AddPageButton extends HookConsumerWidget {
       );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Material(
-        color: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          side: BorderSide(color: Color(0xff214780)),
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-        ),
-        child: InkWell(
-          onTap: () => _showAddPageDialog(context),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Add page",
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                        ),
-                  ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Material(
+      color: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        side: BorderSide(color: Color(0xff214780)),
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+      child: InkWell(
+        onTap: () => _showAddPageDialog(context),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.addPage,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                      ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.add, size: 16, color: Colors.white),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.add, size: 16, color: Colors.white),
+            ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class AddPageDialogue extends HookConsumerWidget {
@@ -711,16 +718,19 @@ class AddPageDialogue extends HookConsumerWidget {
   /// Validates the proposed name for a page.
   /// A name is invalid if it is empty or if it already exists.
   String? _validateName(
+    BuildContext context,
     String text,
   ) {
+    final l10n = context.l10n;
     if (text.isEmpty) {
-      return "Name cannot be empty";
+      return l10n.pageNameCannotBeEmpty;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final name = useState("");
     final isNameValid = useState(false);
     final type = useState(fixedType ?? PageType.sequence);
@@ -733,19 +743,19 @@ class AddPageDialogue extends HookConsumerWidget {
     return AlertDialog(
       title: Text(
         fixedType != null
-            ? "Add a new ${fixedType!.tag} page"
-            : "Add a new page",
+            ? l10n.addNewPageForType(fixedType!.tag)
+            : l10n.addNewPage,
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ValidatedTextField<String>(
-            value: name.value,
-            name: "Page Name",
+            value: name.value,           
+            name: l10n.pageNameField,
             icon: TWIcons.book,
             validator: (value) {
-              final validation = _validateName(value);
+              final validation = _validateName(context, value);
               isNameValid.value = validation == null;
               return validation;
             },
@@ -776,14 +786,14 @@ class AddPageDialogue extends HookConsumerWidget {
           ],
           const SizedBox(height: 12),
           ExpansionTile(
-            title: const Text("Advanced"),
+            title: Text(l10n.advancedSettings),
             shape: const RoundedRectangleBorder(),
             children: [
               const SizedBox(height: 12),
               FormattedTextField(
                 focus: chapterFocus,
                 text: chapter.value,
-                hintText: "Chapter Name",
+                hintText: l10n.chapterNameField,
                 icon: TWIcons.book,
                 inputFormatters: [
                   TextInputFormatter.withFunction(
@@ -804,7 +814,7 @@ class AddPageDialogue extends HookConsumerWidget {
               FormattedTextField(
                 focus: priorityFocus,
                 text: priority.value.toString(),
-                hintText: "Priority",
+                hintText: l10n.pagePriorityField,
                 icon: TWIcons.priority,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"^-?\d*")),
@@ -818,7 +828,7 @@ class AddPageDialogue extends HookConsumerWidget {
       actions: [
         TextButton.icon(
           icon: const Iconify(TWIcons.x),
-          label: const Text("Cancel"),
+          label: Text(l10n.cancel),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
@@ -838,7 +848,7 @@ class AddPageDialogue extends HookConsumerWidget {
                   );
                   navigator.pop(pageId);
                 },
-          label: const Text("Add"),
+          label: Text(l10n.add),
           icon: const Iconify(TWIcons.plus),
         ),
       ],
@@ -865,31 +875,34 @@ class RenamePageDialogue extends HookConsumerWidget {
   /// Validates the proposed name for a page.
   /// A name is invalid if it is empty or if it already exists.
   String? _validateName(
+    BuildContext context,
     String text,
   ) {
+    final l10n = context.l10n;
     if (text.isEmpty) {
-      return "Name cannot be empty";
+      return l10n.pageNameCannotBeEmpty;
     }
 
     if (text == oldName) {
-      return "Name cannot be the same";
+      return l10n.pageNameCannotBeSame;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final name = useState(oldName);
     final isNameValid = useState(false);
 
     return AlertDialog(
-      title: Text("Rename ${oldName.formatted}"),
+      title: Text(l10n.renamePage(oldName)),
       content: ValidatedTextField<String>(
         value: name.value,
-        name: "Page Name",
+        name: l10n.pageNameField,
         icon: TWIcons.book,
         validator: (value) {
-          final validation = _validateName(value);
+          final validation = _validateName(context, value);
           isNameValid.value = validation == null;
           return validation;
         },
@@ -903,7 +916,7 @@ class RenamePageDialogue extends HookConsumerWidget {
       actions: [
         TextButton.icon(
           icon: const Iconify(TWIcons.x),
-          label: const Text("Cancel"),
+          label: Text(l10n.cancel),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
@@ -917,7 +930,7 @@ class RenamePageDialogue extends HookConsumerWidget {
                   await _renamePage(ref, name.value);
                   navigator.pop(true);
                 },
-          label: const Text("Rename"),
+          label: Text(l10n.contextMenuRename),
           icon: const Iconify(TWIcons.pencil),
           color: Colors.orange,
         ),
@@ -952,6 +965,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final chapter = useState(this.chapter);
     final focusNode = useFocusNode();
     final changed = useState(false);
@@ -959,11 +973,11 @@ class ChangeChapterDialogue extends HookConsumerWidget {
     useDelayedExecution(focusNode.requestFocus);
 
     return AlertDialog(
-      title: Text("Change chapter of ${ref.watch(pageNameProvider(pageId))}"),
+      title: Text(l10n.changeChapter(ref.watch(pageNameProvider(pageId) as ProviderListenable<Object>))),
       content: FormattedTextField(
         focus: focusNode,
         text: chapter.value,
-        hintText: "Chapter Name",
+        hintText: l10n.chapterNameField,
         icon: TWIcons.book,
         inputFormatters: [
           TextInputFormatter.withFunction(
@@ -985,7 +999,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
       actions: [
         TextButton.icon(
           icon: const Iconify(TWIcons.x),
-          label: const Text("Cancel"),
+          label: Text(l10n.cancel),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
@@ -998,7 +1012,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
             chapter.value,
             changed,
           ),
-          label: const Text("Change"),
+          label: Text(l10n.contextMenuChange),
           icon: const Iconify(TWIcons.pencil),
           color: Colors.orange,
         ),
@@ -1031,6 +1045,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final priority = ref.watch(pagePriorityProvider(pageId));
     final controller = useTextEditingController();
     final focusNode = useFocusNode();
@@ -1039,14 +1054,12 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
     useDelayedExecution(focusNode.requestFocus);
 
     return AlertDialog(
-      title: Text(
-        "Change priority of ${ref.watch(pageNameProvider(pageId))?.formatted}",
-      ),
+      title: Text(l10n.changePagePriority(ref.watch(pageNameProvider(pageId)) ?? "Page")),
       content: FormattedTextField(
         controller: controller,
         focus: focusNode,
         text: priority.toString(),
-        hintText: "Priority",
+        hintText: l10n.priority,
         icon: TWIcons.book,
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r"^-?\d*")),
@@ -1057,7 +1070,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
       actions: [
         TextButton.icon(
           icon: const Iconify(TWIcons.x),
-          label: const Text("Cancel"),
+          label: Text(l10n.cancel),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
@@ -1070,7 +1083,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
             int.parse(controller.text),
             changed,
           ),
-          label: const Text("Change"),
+          label: Text(l10n.contextMenuChange),
           icon: const Iconify(TWIcons.pencil),
           color: Colors.orange,
         ),
@@ -1084,15 +1097,16 @@ Future<bool> showPageDeletionDialogue(
   PassingRef ref,
   String pageId,
 ) {
+  final l10n = context.l10n;
   final pageName = ref.read(pageProvider(pageId))?.pageName ?? "Page";
   return showConfirmationDialogue(
     context: context,
-    title: "Delete ${pageName.formatted}?",
-    content:
-        "This will delete the page and all its content.\nTHIS CANNOT BE UNDONE.",
+    title: l10n.deletePage(pageName.formatted),
+    content: l10n.deletePageContent,
     delayConfirm: 3.seconds,
-    confirmText: "Delete",
+    confirmText: l10n.delete,
     confirmIcon: TWIcons.trash,
+    cancelText: l10n.cancel,
     onConfirm: () async {
       await ref.read(bookProvider.notifier).deletePage(pageId);
       unawaited(

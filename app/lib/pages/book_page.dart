@@ -1,4 +1,4 @@
-import "package:auto_route/auto_route.dart";
+﻿import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart" hide ConnectionState;
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -14,6 +14,7 @@ import "package:typewriter/widgets/components/app/search_bar.dart";
 import "package:typewriter/widgets/components/app/writers.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 import "package:url_launcher/url_launcher.dart";
+import "package:typewriter/utils/extensions.dart";
 
 @RoutePage()
 class BookPage extends HookConsumerWidget {
@@ -65,6 +66,7 @@ class _ReconnectOverlay extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final controller = useAnimationController(
       duration: 30.seconds,
     )..forward();
@@ -110,7 +112,7 @@ class _ReconnectOverlay extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Connection lost, Reconnecting...",
+                  l10n.reconnectTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
@@ -266,8 +268,9 @@ class _DiscordButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return _SimpleButton(
-      tooltip: "Join Discord",
+      tooltip: l10n.joinDiscord,
       icon: "bi:discord",
       onTap: _launchDiscord,
     );
@@ -286,8 +289,9 @@ class _WikiButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return _SimpleButton(
-      tooltip: "Open Wiki",
+      tooltip: l10n.openWiki,
       icon: "oi:book",
       onTap: _launchWiki,
     );
@@ -299,8 +303,9 @@ class _ReloadBookButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return _SimpleButton(
-      tooltip: "Reload Data",
+      tooltip: l10n.reloadData,
       icon: "fa6-solid:arrows-rotate",
       onTap: () => ref.read(bookProvider.notifier).reload(),
     );

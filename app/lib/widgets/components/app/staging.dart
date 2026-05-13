@@ -7,6 +7,7 @@ import "package:rive/rive.dart";
 import "package:typewriter/hooks/rive_statemachines.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/staging.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 
@@ -81,6 +82,7 @@ class _PublishButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final hovering = useState(false);
     return MouseRegion(
       onEnter: (_) => hovering.value = true,
@@ -98,7 +100,7 @@ class _PublishButton extends HookConsumerWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
                 onTap: () => ref.read(communicatorProvider).publish(),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -110,7 +112,7 @@ class _PublishButton extends HookConsumerWidget {
                       ),
                       SizedBox(width: 12),
                       Text(
-                        "Publish",
+                        l10n.publish,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

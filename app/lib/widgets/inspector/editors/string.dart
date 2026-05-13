@@ -46,6 +46,7 @@ class StringEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final focus = useFocusNode();
     useFocusedBasedCurrentEditingField(focus, ref.passing, path);
     final value =
@@ -60,7 +61,7 @@ class StringEditor extends HookConsumerWidget {
         focus: focus,
         icon: icon,
         hintText:
-            hint.isNotEmpty ? hint : "Enter a ${primitiveBlueprint.type.name}",
+            hint.isNotEmpty ? hint : l10n.enterAValue(primitiveBlueprint.type.name),
         text: forcedValue ?? value,
         singleLine: singleLine,
         keyboardType: singleLine ? TextInputType.text : TextInputType.multiline,

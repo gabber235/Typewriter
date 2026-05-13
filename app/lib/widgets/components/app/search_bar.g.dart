@@ -93,7 +93,7 @@ final searchFocusNodesProvider = AutoDisposeProvider<List<FocusNode>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SearchFocusNodesRef = AutoDisposeProviderRef<List<FocusNode>>;
-String _$searchGlobalKeysHash() => r'b7d07803139dfa9fd0249a16527402e80c99d0b7';
+String _$searchGlobalKeysHash() => r'f2bebb418db6810449ad1840650f1a22d2539fd5';
 
 /// See also [searchGlobalKeys].
 @ProviderFor(searchGlobalKeys)

@@ -1,4 +1,4 @@
-import "dart:async";
+﻿import "dart:async";
 
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart" hide FilledButton;
@@ -10,6 +10,8 @@ import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/components/general/copyable_text.dart";
 import "package:typewriter/widgets/components/general/filled_button.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
+import "package:typewriter/l10n/locale_provider.dart";
+import "package:typewriter/utils/extensions.dart";
 
 @RoutePage()
 class HomePage extends HookConsumerWidget {
@@ -17,38 +19,63 @@ class HomePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    final l10n = context.l10n;
+    final currentLocale = ref.watch(localeControllerProvider);
+
+    return Scaffold(
+      body: Stack(
         children: [
-          Spacer(),
-          Expanded(
-            flex: 2,
-            child: RiveAnimation.asset(
-              "assets/game_character.riv",
-              stateMachines: ["State Machine"],
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
+              const Expanded(
+                flex: 2,
+                child: RiveAnimation.asset(
+                  "assets/game_character.riv",
+                  stateMachines: ["State Machine"],
+                ),
+              ),
+              Text(
+                l10n.homeTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                l10n.homeSubtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                  fontVariations: [thinWeight],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const CopyableText(text: "/typewriter connect"),
+              const SizedBox(height: 24),
+              const _ConnectButtons(),
+              const SizedBox(height: 24),
+              const Spacer(),
+            ],
+          ),
+          Positioned(
+            top: 16,
+            right: 16,
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<Locale>(
+                value: currentLocale,
+                items: const [
+                  DropdownMenuItem(value: Locale('en'), child: Text('English')),
+                  DropdownMenuItem(value: Locale('ru'), child: Text('Русский')),
+                ],
+                onChanged: (newLocale) {
+                  if (newLocale != null) {
+                    ref.read(localeControllerProvider.notifier).setLocale(newLocale);
+                  }
+                },
+              ),
             ),
           ),
-          Text(
-            "Your journey starts here",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Run the following command on your server to start editing",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.grey,
-              fontVariations: [thinWeight],
-            ),
-          ),
-          SizedBox(height: 24),
-          CopyableText(text: "/typewriter connect"),
-          SizedBox(height: 24),
-          _ConnectButtons(),
-          SizedBox(height: 24),
-          Spacer(),
         ],
       ),
     );
@@ -78,26 +105,27 @@ class _ConnectButtons extends HookConsumerWidget {
   }
 
   Future<void> customConnectToPopup(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
     final controller = TextEditingController();
     final url = await showDialog<String?>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Connect to"),
+          title: Text(l10n.connectToTitle),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              hintText: "Fill in the url to connect to",
+            decoration: InputDecoration(
+              hintText: l10n.connectToHint,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Cancel"),
+              child: Text(l10n.cancel),
             ),
             FilledButton.icon(
               icon: const Iconify(TWIcons.externalLink),
-              label: const Text("Connect"),
+              label: Text(l10n.connect),
               onPressed: () => Navigator.of(context).pop(controller.text),
             ),
           ],
@@ -127,19 +155,20 @@ class _ConnectButtons extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         FilledButton.icon(
           color: Colors.green,
           icon: const Iconify(TWIcons.home),
-          label: const Text("Connect Localhost"),
+          label: Text(l10n.connectLocalhost),
           onPressed: () => connectTo(ref, "localhost", 9092),
         ),
         const SizedBox(width: 24),
         FilledButton.icon(
           icon: const Iconify(TWIcons.connect),
-          label: const Text("Connect Custom"),
+          label: Text(l10n.connectCustom),
           onPressed: () => customConnectToPopup(context, ref),
         ),
       ],

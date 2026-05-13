@@ -264,6 +264,7 @@ class _EntryNode extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final linkablePaths = ref.watch(linkablePathsProvider(id));
     final linkableDuplicatePaths =
         ref.watch(linkableDuplicatePathsProvider(id));
@@ -283,13 +284,13 @@ class _EntryNode extends HookConsumerWidget {
               ...contextActions,
               if (linkablePaths.isNotEmpty)
                 ContextMenuTile.button(
-                  title: "Link with ...",
+                  title: l10n.linkWith,
                   icon: TWIcons.plus,
                   onTap: () => _linkWith(context, ref.passing, linkablePaths),
                 ),
               if (linkableDuplicatePaths.isNotEmpty)
                 ContextMenuTile.button(
-                  title: "Link with Duplicate",
+                  title: l10n.linkWithDuplicate,
                   icon: TWIcons.copy,
                   onTap: () => _linkWithDuplicate(
                     context,
@@ -298,25 +299,25 @@ class _EntryNode extends HookConsumerWidget {
                   ),
                 ),
               ContextMenuTile.button(
-                title: "Duplicate",
+                title: l10n.duplicate,
                 icon: TWIcons.duplicate,
                 onTap: () => _duplicateEntry(ref.passing),
               ),
               ContextMenuTile.button(
-                title: "Move to ...",
+                title: l10n.moveTo,
                 icon: TWIcons.moveEntry,
                 color: Colors.blueAccent,
                 onTap: () => moveEntryToSelectingPage(ref.passing, id),
               ),
               ContextMenuTile.button(
-                title: "Replace with ...",
+                title: l10n.replaceWith,
                 icon: TWIcons.replace,
                 color: Colors.orange,
                 onTap: () => _replaceWithConfirmation(context, ref.passing, id),
               ),
               ContextMenuTile.divider(),
               ContextMenuTile.button(
-                title: "Delete",
+                title: l10n.delete,
                 icon: TWIcons.trash,
                 color: Colors.redAccent,
                 onTap: () => _deleteEntry(context, ref.passing),
@@ -554,12 +555,13 @@ class NoBlueprintEntry extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final entryName = ref.watch(entryNameProvider(entryId));
     return ContextMenuRegion(
       builder: (context) {
         return [
           ContextMenuTile.button(
-            title: "Delete",
+            title: l10n.delete,
             icon: TWIcons.trash,
             color: Colors.redAccent,
             onTap: () => _deleteEntry(context, ref.passing),
@@ -581,14 +583,14 @@ class NoBlueprintEntry extends HookConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      entryName ?? "Non existent blueprint",
+                      entryName ?? l10n.nonExistentBlueprint,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
                       ),
                     ),
                     Text(
-                      "Blueprint for this entry does not exist",
+                      l10n.blueprintDoesNotExist,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.white70,
                             fontStyle: FontStyle.italic,
@@ -611,6 +613,7 @@ class NonExistentEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Material(
       color: Colors.redAccent,
       borderRadius: BorderRadius.circular(4),
@@ -623,15 +626,15 @@ class NonExistentEntry extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Non-existent entry",
+                Text(
+                  l10n.nonExistentEntry,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 13,
                   ),
                 ),
                 Text(
-                  "Entry reference is not an entry",
+                  l10n.entryReferenceNotAnEntry,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white70,
                         fontStyle: FontStyle.italic,
@@ -659,9 +662,10 @@ class ExternalEntryNode extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final blueprint = ref.watch(entryBlueprintProvider(entry.blueprintId));
     final page = ref.watch(pageProvider(pageId));
-    final pageName = page?.pageName.formatted ?? "Unknown page";
+    final pageName = page?.pageName.formatted ?? l10n.unknownPage;
 
     if (blueprint == null) {
       return const NonExistentEntry();
@@ -690,7 +694,7 @@ class ExternalEntryNode extends HookConsumerWidget {
         builder: (context) {
           return [
             ContextMenuTile.button(
-              title: "Delete Reference",
+              title: l10n.deleteRefference,
               icon: TWIcons.delete,
               color: Colors.redAccent,
               onTap: () => ref

@@ -7,6 +7,7 @@ import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/hooks/audio_player.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/sound.dart";
 import "package:typewriter/models/sounds.dart";
@@ -105,7 +106,7 @@ class MinecraftSoundIdSearchElement extends SearchElement {
   final FutureOr<bool?> Function(MinecraftSound)? onSelect;
 
   @override
-  String get title => sound.name.formatted;
+  String title(AppLocalizations l10n) => sound.name.formatted;
 
   @override
   Color color(BuildContext context) {
@@ -154,10 +155,10 @@ class MinecraftSoundIdSearchElement extends SearchElement {
   }
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Select",
+      SearchAction(
+        l10n.select,
         TWIcons.check,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
