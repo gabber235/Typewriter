@@ -5,9 +5,9 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 import "package:typewriter/hooks/rive_statemachines.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/staging.dart";
-import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 
@@ -17,6 +17,13 @@ class StagingIndicator extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(stagingStateProvider);
+    final l10n = ref.watch(l10nProvider);
+
+    final stateLabel = switch (state) {
+      StagingState.production => l10n.stagingProduction,
+      StagingState.staging => l10n.stagingStaging,
+      StagingState.publishing => l10n.stagingPublishing,
+    };
 
     return Stack(
       children: [
@@ -34,7 +41,7 @@ class StagingIndicator extends HookConsumerWidget {
               _Icon(),
               const SizedBox(width: 8),
               Text(
-                state.label,
+                stateLabel,
                 style: TextStyle(
                   color: state.color,
                   fontWeight: FontWeight.bold,
@@ -82,7 +89,7 @@ class _PublishButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final hovering = useState(false);
     return MouseRegion(
       onEnter: (_) => hovering.value = true,

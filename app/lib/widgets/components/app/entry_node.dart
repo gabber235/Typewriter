@@ -5,6 +5,7 @@ import "package:flutter/material.dart" hide ContextMenuController;
 import "package:flutter_animate/flutter_animate.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/book.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
@@ -264,7 +265,7 @@ class _EntryNode extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final linkablePaths = ref.watch(linkablePathsProvider(id));
     final linkableDuplicatePaths =
         ref.watch(linkableDuplicatePathsProvider(id));
@@ -555,7 +556,7 @@ class NoBlueprintEntry extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final entryName = ref.watch(entryNameProvider(entryId));
     return ContextMenuRegion(
       builder: (context) {
@@ -662,7 +663,7 @@ class ExternalEntryNode extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final blueprint = ref.watch(entryBlueprintProvider(entry.blueprintId));
     final page = ref.watch(pageProvider(pageId));
     final pageName = page?.pageName.formatted ?? l10n.unknownPage;

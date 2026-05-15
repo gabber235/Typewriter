@@ -5,6 +5,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter/app_router.dart";
 import "package:typewriter/hooks/delayed_execution.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/book.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/entry_blueprint.dart";
@@ -14,7 +15,6 @@ import "package:typewriter/widgets/components/app/search_bar.dart";
 import "package:typewriter/widgets/components/app/writers.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 import "package:url_launcher/url_launcher.dart";
-import "package:typewriter/utils/extensions.dart";
 
 @RoutePage()
 class BookPage extends HookConsumerWidget {
@@ -66,7 +66,7 @@ class _ReconnectOverlay extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final controller = useAnimationController(
       duration: 30.seconds,
     )..forward();
@@ -268,7 +268,7 @@ class _DiscordButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return _SimpleButton(
       tooltip: l10n.joinDiscord,
       icon: "bi:discord",
@@ -289,7 +289,7 @@ class _WikiButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return _SimpleButton(
       tooltip: l10n.openWiki,
       icon: "oi:book",
@@ -303,7 +303,7 @@ class _ReloadBookButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return _SimpleButton(
       tooltip: l10n.reloadData,
       icon: "fa6-solid:arrows-rotate",

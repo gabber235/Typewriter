@@ -254,7 +254,7 @@ class PageSearchElement extends SearchElement {
             false,
       ),
       SearchAction(
-        l10n.contextMenuChangeChapter,
+        l10n.changeChapterTitle,
         TWIcons.bookMarker,
         SmartSingleActivator(LogicalKeyboardKey.keyC, control: true),
         onTrigger: (context, __) async =>

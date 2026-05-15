@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/inspector/header.dart";
@@ -38,9 +39,10 @@ class PlaceholderHeaderAction extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const InfoHeaderAction(
+    final l10n = ref.watch(l10nProvider);
+    return InfoHeaderAction(
       tooltip:
-          "Placeholders like %player_name% are supported. Click for more info.",
+          l10n.placeholderInfo,
       icon: TWIcons.subscript,
       color: Color(0xFF00b300),
       url: "https://github.com/PlaceholderAPI/PlaceholderAPI/wiki",

@@ -85,7 +85,7 @@ class _LinkWithEntry extends HookConsumerWidget {
         page.linkWith(ref.passing, entryId!, path);
       },
       icon: const Iconify(TWIcons.plus),
-      label: Text(context.l10n.inspectorLinkWith),
+      label: Text(context.l10n.linkWith),
       color: Colors.blue,
     );
   }
@@ -111,7 +111,7 @@ class _LinkWithDuplicate extends HookConsumerWidget {
         await page.linkWithDuplicate(ref.passing, entryId!, path);
       },
       icon: const Iconify(TWIcons.duplicate),
-      label: Text(context.l10n.inspectorLinkWithDuplicate),
+      label: Text(context.l10n.linkWithDuplicate),
       color: Colors.blue,
     );
   }
@@ -131,7 +131,7 @@ class _DuplicateEntry extends HookConsumerWidget {
         page.duplicateEntry(ref.passing, entryId!);
       },
       icon: const Iconify(TWIcons.duplicate),
-      label: Text(context.l10n.inspectorDuplicate),
+      label: Text(context.l10n.duplicate),
       color: Colors.blue,
     );
   }
@@ -152,7 +152,7 @@ class _MoveEntry extends HookConsumerWidget {
         );
       },
       icon: const Iconify(TWIcons.moveEntry),
-      label: Text(context.l10n.inspectorMoveEntry),
+      label: Text(context.l10n.moveEntry),
       color: Theme.of(context).colorScheme.primary,
     );
   }
@@ -172,7 +172,7 @@ class _ReplaceWithBlueprint extends HookConsumerWidget {
         page.replaceWithConfirmation(context, ref.passing, entryId!);
       },
       icon: const Iconify(TWIcons.replace),
-      label: Text(context.l10n.inspectorReplaceWith),
+      label: Text(context.l10n.replaceWith),
       color: Colors.orange,
     );
   }
@@ -192,7 +192,7 @@ class DeleteEntry extends HookConsumerWidget {
         page.deleteEntryWithConfirmation(context, ref.passing, entryId!);
       },
       icon: const Iconify(TWIcons.trash),
-      label: Text(context.l10n.inspectorDeleteEntry),
+      label: Text(context.l10n.deleteEntry),
       color: Theme.of(context).colorScheme.error,
     );
   }

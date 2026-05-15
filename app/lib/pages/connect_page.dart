@@ -8,9 +8,10 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 import "package:typewriter/app_router.dart";
 import "package:typewriter/hooks/delayed_execution.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
-import "package:typewriter/widgets/components/general/text_scroller.dart";
 import "package:typewriter/utils/extensions.dart";
+import "package:typewriter/widgets/components/general/text_scroller.dart";
 
 @RoutePage()
 class ConnectPage extends HookConsumerWidget {
@@ -29,7 +30,7 @@ class ConnectPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     // If the hostname is empty, we want to go back to the home page.
     useDelayedExecution(() {
       if (hostname.isEmpty) {

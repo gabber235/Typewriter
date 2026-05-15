@@ -51,6 +51,7 @@ class ContentModeHeaderAction extends HookConsumerWidget {
   final DataBlueprint dataBlueprint;
 
   Future<void> _requestContentMode(PassingRef ref, Header? header) async {
+    final l10n = ref.l10n;
     final contentModeClassPath =
         dataBlueprint.getModifier("contentMode")?.data as String?;
     if (contentModeClassPath == null) return;
@@ -61,8 +62,8 @@ class ContentModeHeaderAction extends HookConsumerWidget {
     if (entryId == null) {
       Toasts.showError(
         ref,
-        "No Entry Selected",
-        description: "An entry must be selected to capture a field.",
+        l10n.noEntrySelected,
+        description: l10n.noEntrySelectedDescriptionContent,
       );
       return;
     }
@@ -75,8 +76,8 @@ class ContentModeHeaderAction extends HookConsumerWidget {
     if (pageId == null) {
       Toasts.showError(
         ref,
-        "No Page Selected",
-        description: "A page must be selected to capture a field.",
+        l10n.noPageSelected,
+        description: l10n.noPageSelectedDescriptionContent,
       );
       return;
     }

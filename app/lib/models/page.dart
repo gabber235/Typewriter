@@ -662,15 +662,16 @@ extension PageX on Page {
     PassingRef ref,
     String entryId,
   ) async {
+    final l10n = ref.l10n;ref.l10n;ref.l10n;
     final entry = ref.read(entryProvider(id, entryId));
     if (entry == null) return;
 
     await showConfirmationDialogue(
       context: context,
-      title: "Replace Entry",
+      title: l10n.replaceEntry,
       content:
-          "Replacing entries is not reversible.\nIt may result in data loss or data corruption.\nAre you sure you want to replace this entry?",
-      confirmText: "Replace",
+          l10n.replaceEntryConfirmation(entry.name),
+      confirmText: l10n.replace,
       onConfirm: () {
         final builder = ref.read(searchProvider.notifier).asBuilder()
           ..tag(type.tag, canRemove: false)
@@ -701,11 +702,15 @@ extension PageX on Page {
     PassingRef ref,
     String entryId,
   ) {
+    final l10n = ref.l10n;
+    final entry = ref.read(entryProvider(id, entryId));
+    if (entry == null) return;
+
     showConfirmationDialogue(
       context: context,
-      title: "Delete Entry",
-      content: "Are you sure you want to delete this entry?",
-      confirmText: "Delete",
+      title: l10n.deleteEntry,
+      content: l10n.deleteEntryConfirmation(entry.name),
+      confirmText: l10n.delete,
       onConfirm: () {
         final entry = ref.read(entryProvider(id, entryId));
         if (entry == null) return;

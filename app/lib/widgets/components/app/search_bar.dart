@@ -17,7 +17,6 @@ import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/staging.dart";
 import "package:typewriter/utils/debouncer.dart";
-import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/utils/smart_single_activator.dart";
@@ -91,7 +90,7 @@ List<FocusNode> searchFocusNodes(Ref ref) {
 List<GlobalKey> searchGlobalKeys(Ref ref) {
   final elements = ref.watch(searchElementsProvider);
   final l10n = ref.watch(l10nProvider);
-  return elements.map((e) => GlobalKey(debugLabel: e.title(l10n).toString())).toList();
+  return elements.map((e) => GlobalKey(debugLabel: e.title(l10n))).toList();
 }
 
 @riverpod
@@ -857,7 +856,7 @@ class _SearchActions extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final actions = ref.watch(_searchActionsProvider);
 
     if (actions.isEmpty) {
@@ -906,7 +905,7 @@ class _SearchBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final search = ref.watch(searchProvider);
     final controller = useTextEditingController(text: search?.query ?? "");
     final focusNode = ref.watch(searchBarFocusProvider);
@@ -1118,7 +1117,7 @@ class _SearchResults extends StatefulHookConsumerWidget {
 class _SearchResultsState extends ConsumerState<_SearchResults> {
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final animatedResults = min(8, ref.watch(searchElementsProvider).length);
     final elements = ref.watch(searchElementsProvider);
     final ticker = useTickerProvider();

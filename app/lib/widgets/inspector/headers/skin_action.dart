@@ -5,6 +5,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:http/http.dart" as http;
 import "package:ktx/collections.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
@@ -56,8 +57,9 @@ class SkinFetchFromUUIDHeaderAction extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return HeaderButton(
-      tooltip: "Fetch From UUID",
+      tooltip: l10n.fetchFromUUID,
       icon: TWIcons.accountTag,
       color: Colors.orange,
       onTap: () => showDialog(
@@ -110,8 +112,9 @@ class SkinFetchFromURLHeaderAction extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return HeaderButton(
-      tooltip: "Fetch From URL",
+      tooltip: l10n.fetchFromURL,
       icon: TWIcons.url,
       color: Colors.blue,
       onTap: () => showDialog(
@@ -145,14 +148,14 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final controller = useTextEditingController();
     final focus = useFocusNode();
     final error = useState<String?>(null);
     final selectedVariant = useState<SkinVariant>(SkinVariant.unknown);
 
     return AlertDialog(
-      title: const Text("Fetch Skin"),
+      title: Text(l10n.fetchSkin),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -166,7 +169,7 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
             focus: focus,
             controller: controller,
             icon: icon,
-            hintText: "Enter the $bodyKey to fetch the skin",
+            hintText: l10n.fetchSkinHint(bodyKey),
           ),
           const SizedBox(height: 16),
           Dropdown<SkinVariant>(
@@ -231,6 +234,8 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
       body: jsonEncode(body),
     );
 
+    final l10n = ref.l10n;
+
     if (response.statusCode != 200) {
       final data = jsonDecode(response.body);
       if (data is Map<String, dynamic> && data.containsKey("errors")) {
@@ -244,38 +249,38 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
           }).join("\n");
         }
       }
-      return "An unknown error occurred";
+      return l10n.unexpectedError;
     }
 
     final result = jsonDecode(response.body);
     if (result is! Map<String, dynamic>) {
-      return "An unknown error occurred";
+      return l10n.unexpectedError;
     }
 
     if (!result.containsKey("skin")) {
-      return "Could not find the skin data in the response";
+      return l10n.noSkinDataError;
     }
 
     final textureObject = result["skin"]["texture"];
     if (textureObject == null || textureObject is! Map<String, dynamic>) {
-      return "Invalid texture data in response";
+      return l10n.invalidTextureDataError;
     }
 
     final textureData = textureObject["data"];
     if (textureData == null || textureData is! Map<String, dynamic>) {
-      return "Invalid texture data in response";
+      return l10n.invalidTextureDataError;
     }
 
     final texture = textureData["value"];
     final signature = textureData["signature"];
 
     if (texture is! String || signature is! String) {
-      return "Invalid texture or signature in response";
+      return l10n.textureAndSignatureMustBeStrings;
     }
 
     final definition = ref.read(inspectingEntryDefinitionProvider);
     if (definition == null) {
-      return "Currently not inspecting an entry";
+      return l10n.noEntryChecked;
     }
 
     await definition.updateField(ref, path, {

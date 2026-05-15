@@ -137,8 +137,32 @@ abstract class AppLocalizations {
   /// No description provided for @unexpectedError.
   ///
   /// In en, this message translates to:
-  /// **'An error occurred, please report on the Typewriter Discord)'**
+  /// **'An error occurred, please report on the Typewriter Discord'**
   String get unexpectedError;
+
+  /// No description provided for @noSkinDataError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find the skin data in the response'**
+  String get noSkinDataError;
+
+  /// No description provided for @invalidTextureDataError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid texture data in response'**
+  String get invalidTextureDataError;
+
+  /// No description provided for @textureAndSignatureMustBeStrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid texture or signature in response'**
+  String get textureAndSignatureMustBeStrings;
+
+  /// No description provided for @noEntryChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently not inspecting an entry'**
+  String get noEntryChecked;
 
   /// No description provided for @cancel.
   ///
@@ -151,6 +175,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get add;
+
+  /// No description provided for @addNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new {item}'**
+  String addNew(Object item);
 
   /// No description provided for @open.
   ///
@@ -182,6 +212,24 @@ abstract class AppLocalizations {
   /// **'Publish'**
   String get publish;
 
+  /// No description provided for @stagingProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Production'**
+  String get stagingProduction;
+
+  /// No description provided for @stagingStaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Staging'**
+  String get stagingStaging;
+
+  /// No description provided for @stagingPublishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Publishing'**
+  String get stagingPublishing;
+
   /// No description provided for @priority.
   ///
   /// In en, this message translates to:
@@ -193,6 +241,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
+
+  /// No description provided for @deleteThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {item}?'**
+  String deleteThis(Object item);
+
+  /// No description provided for @deleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry?'**
+  String get deleteEntry;
+
+  /// No description provided for @deleteEntryConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {entry}?'**
+  String deleteEntryConfirmation(Object entry);
+
+  /// No description provided for @replaceEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Entry'**
+  String get replaceEntry;
+
+  /// No description provided for @replaceEntryConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacing entries is not reversible.\nIt may result in data loss or data corruption.\nAre you sure you want to replace {entry}?'**
+  String replaceEntryConfirmation(Object entry);
+
+  /// No description provided for @replace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
 
   /// No description provided for @confirm.
   ///
@@ -211,6 +295,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duplicate'**
   String get duplicate;
+
+  /// No description provided for @duplicateThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate {item}'**
+  String duplicateThis(Object item);
+
+  /// No description provided for @fetchSkin.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch Skin'**
+  String get fetchSkin;
+
+  /// No description provided for @fetchSkinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the {bodyKey} to fetch the skin'**
+  String fetchSkinHint(Object bodyKey);
 
   /// No description provided for @duration.
   ///
@@ -260,11 +362,35 @@ abstract class AppLocalizations {
   /// **'There was an error while communicating to the server.\nPlease check your connection and try again.'**
   String get errorConnectSubtitle;
 
+  /// No description provided for @placeholderInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Placeholders like %player_name% are supported. Click for more info.'**
+  String get placeholderInfo;
+
+  /// No description provided for @regexInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular expressions are supported. Click for more info.'**
+  String get regexInfo;
+
+  /// No description provided for @coloredInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Adventure Mini Format is supported. Click for more info.'**
+  String get coloredInfo;
+
   /// No description provided for @pageSearch.
   ///
   /// In en, this message translates to:
   /// **'Search'**
   String get pageSearch;
+
+  /// No description provided for @fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields'**
+  String get fields;
 
   /// No description provided for @pagesTitle.
   ///
@@ -284,35 +410,17 @@ abstract class AppLocalizations {
   /// **'New Page'**
   String get newPage;
 
-  /// No description provided for @contextMenuRename.
-  ///
-  /// In en, this message translates to:
-  /// **'Rename'**
-  String get contextMenuRename;
-
-  /// No description provided for @contextMenuChange.
+  /// No description provided for @change.
   ///
   /// In en, this message translates to:
   /// **'Change'**
-  String get contextMenuChange;
+  String get change;
 
-  /// No description provided for @contextMenuChangeChapter.
-  ///
-  /// In en, this message translates to:
-  /// **'Change Chapter'**
-  String get contextMenuChangeChapter;
-
-  /// No description provided for @contextMenuChangePriority.
+  /// No description provided for @changePriority.
   ///
   /// In en, this message translates to:
   /// **'Change Priority'**
-  String get contextMenuChangePriority;
-
-  /// No description provided for @contextMenuDelete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get contextMenuDelete;
+  String get changePriority;
 
   /// No description provided for @reconnectTitle.
   ///
@@ -338,65 +446,17 @@ abstract class AppLocalizations {
   /// **'Reload Data'**
   String get reloadData;
 
-  /// No description provided for @inspectorEmptyTitle.
+  /// No description provided for @fetchFromURL.
   ///
   /// In en, this message translates to:
-  /// **'Inspector'**
-  String get inspectorEmptyTitle;
+  /// **'Fetch from URL'**
+  String get fetchFromURL;
 
-  /// No description provided for @inspectorEmptySubtitle.
+  /// No description provided for @fetchFromUUID.
   ///
   /// In en, this message translates to:
-  /// **'Click on an entry to inspect its properties.'**
-  String get inspectorEmptySubtitle;
-
-  /// No description provided for @inspectorMissingBlueprint.
-  ///
-  /// In en, this message translates to:
-  /// **'The blueprint for this entry does not exist.\n\nThis can happen if the extension for this entry is no longer installed.\nOr if the extension removed the entry type.\n\nTo fix this, you can either:\n - Install the extension again.\n - Remove the entry.'**
-  String get inspectorMissingBlueprint;
-
-  /// No description provided for @inspectorOperations.
-  ///
-  /// In en, this message translates to:
-  /// **'Operations'**
-  String get inspectorOperations;
-
-  /// No description provided for @inspectorLinkWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Link with ...'**
-  String get inspectorLinkWith;
-
-  /// No description provided for @inspectorLinkWithDuplicate.
-  ///
-  /// In en, this message translates to:
-  /// **'Link with duplicate'**
-  String get inspectorLinkWithDuplicate;
-
-  /// No description provided for @inspectorDuplicate.
-  ///
-  /// In en, this message translates to:
-  /// **'Duplicate'**
-  String get inspectorDuplicate;
-
-  /// No description provided for @inspectorMoveEntry.
-  ///
-  /// In en, this message translates to:
-  /// **'Move Entry'**
-  String get inspectorMoveEntry;
-
-  /// No description provided for @inspectorReplaceWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace with ...'**
-  String get inspectorReplaceWith;
-
-  /// No description provided for @inspectorDeleteEntry.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Entry'**
-  String get inspectorDeleteEntry;
+  /// **'Fetch from UUID'**
+  String get fetchFromUUID;
 
   /// No description provided for @componentsCinematicDeleteSegment.
   ///
@@ -415,60 +475,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No segments'**
   String get componentsCinematicNoSegments;
-
-  /// No description provided for @inspectorBooleanTrue.
-  ///
-  /// In en, this message translates to:
-  /// **'True'**
-  String get inspectorBooleanTrue;
-
-  /// No description provided for @inspectorBooleanFalse.
-  ///
-  /// In en, this message translates to:
-  /// **'False'**
-  String get inspectorBooleanFalse;
-
-  /// No description provided for @inspectorNoGlobalKey.
-  ///
-  /// In en, this message translates to:
-  /// **'No extension has a global key. Try using an entry key.'**
-  String get inspectorNoGlobalKey;
-
-  /// No description provided for @inspectorItemValueError.
-  ///
-  /// In en, this message translates to:
-  /// **'Value for serialized item field is not a map'**
-  String get inspectorItemValueError;
-
-  /// No description provided for @inspectorAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get inspectorAdd;
-
-  /// No description provided for @inspectorInvalidPageType.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid page type'**
-  String get inspectorInvalidPageType;
-
-  /// No description provided for @inspectorFetchSkin.
-  ///
-  /// In en, this message translates to:
-  /// **'Fetch Skin'**
-  String get inspectorFetchSkin;
-
-  /// No description provided for @inspectorCancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get inspectorCancel;
-
-  /// No description provided for @inspectorFetch.
-  ///
-  /// In en, this message translates to:
-  /// **'Fetch'**
-  String get inspectorFetch;
 
   /// No description provided for @establishingInterstellarConnection.
   ///
@@ -770,6 +776,12 @@ abstract class AppLocalizations {
   /// **'Rename \${oldName}'**
   String renamePage(Object oldName);
 
+  /// No description provided for @changeChapterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change chapter'**
+  String get changeChapterTitle;
+
   /// No description provided for @changeChapter.
   ///
   /// In en, this message translates to:
@@ -896,6 +908,36 @@ abstract class AppLocalizations {
   /// **'Segment Inspector'**
   String get segmentInspectorTitle;
 
+  /// No description provided for @inspectorEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an entry to inspect'**
+  String get inspectorEmptyTitle;
+
+  /// No description provided for @inspectorEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an entry from the list to view and edit its details'**
+  String get inspectorEmptySubtitle;
+
+  /// No description provided for @inspectorOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations'**
+  String get inspectorOperations;
+
+  /// No description provided for @moveEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Move Entry'**
+  String get moveEntry;
+
+  /// No description provided for @missingBlueprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Blueprint'**
+  String get missingBlueprint;
+
   /// No description provided for @trackDurationLabel.
   ///
   /// In en, this message translates to:
@@ -931,6 +973,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No entry selected'**
   String get noEntrySelected;
+
+  /// No description provided for @noEntrySelectedDescriptionContent.
+  ///
+  /// In en, this message translates to:
+  /// **'An entry must be selected to capture a field.'**
+  String get noEntrySelectedDescriptionContent;
 
   /// No description provided for @noSegmentSelected.
   ///
@@ -1009,6 +1057,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No page is selected.'**
   String get noPageSelected;
+
+  /// No description provided for @noPageSelectedDescriptionContent.
+  ///
+  /// In en, this message translates to:
+  /// **'A page must be selected to capture a field.'**
+  String get noPageSelectedDescriptionContent;
 
   /// No description provided for @noBlueprintFoundForEntry.
   ///
@@ -1111,6 +1165,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'There are no static entries on this page.'**
   String get noStaticEntries;
+
+  /// No description provided for @replaceWithVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with Variable'**
+  String get replaceWithVariable;
+
+  /// No description provided for @removeVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Variable'**
+  String get removeVariable;
+
+  /// No description provided for @couldNotFindGenericBlueprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find generic blueprint, this should not happen! For path: {path}'**
+  String couldNotFindGenericBlueprint(Object path);
+
+  /// No description provided for @entryDeprecatedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This entry has been marked as deprecated. Take a look at the '**
+  String get entryDeprecatedWarning;
+
+  /// No description provided for @entryDeprecatedWarningDocumentation.
+  ///
+  /// In en, this message translates to:
+  /// **' documentation'**
+  String get entryDeprecatedWarningDocumentation;
+
+  /// No description provided for @entryDeprecatedWarningInfo.
+  ///
+  /// In en, this message translates to:
+  /// **' for more information.'**
+  String get entryDeprecatedWarningInfo;
 }
 
 class _AppLocalizationsDelegate

@@ -5,13 +5,13 @@ import "package:flutter/material.dart" hide FilledButton;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
+import "package:typewriter/l10n/locale_provider.dart";
 import "package:typewriter/utils/fonts.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/components/general/copyable_text.dart";
 import "package:typewriter/widgets/components/general/filled_button.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
-import "package:typewriter/l10n/locale_provider.dart";
-import "package:typewriter/utils/extensions.dart";
 
 @RoutePage()
 class HomePage extends HookConsumerWidget {
@@ -19,7 +19,7 @@ class HomePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final currentLocale = ref.watch(localeControllerProvider);
 
     return Scaffold(
@@ -105,7 +105,7 @@ class _ConnectButtons extends HookConsumerWidget {
   }
 
   Future<void> customConnectToPopup(BuildContext context, WidgetRef ref) async {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final controller = TextEditingController();
     final url = await showDialog<String?>(
       context: context,
@@ -155,7 +155,7 @@ class _ConnectButtons extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [

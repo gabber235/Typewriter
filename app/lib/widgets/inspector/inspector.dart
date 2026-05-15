@@ -2,6 +2,7 @@
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -78,7 +79,7 @@ class EmptyInspector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,7 +169,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entry = ref.watch(inspectingEntryProvider);
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
 
     if (entry == null) return const SizedBox();
 
@@ -196,7 +197,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          l10n.inspectorMissingBlueprint,
+          l10n.missingBlueprint,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(),
         ),
         const SizedBox(height: 12),

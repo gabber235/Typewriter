@@ -11,6 +11,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/app_router.dart";
 import "package:typewriter/hooks/delayed_execution.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/book.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
@@ -101,7 +102,7 @@ class _PagesSelector extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hovering = useState(false);
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return MouseRegion(
       onEnter: (_) => hovering.value = true,
       onExit: (_) {
@@ -247,7 +248,7 @@ class _TreeCategory extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isExpanded = useState(false);
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,10 +397,10 @@ class _PageTile extends HookConsumerWidget {
     WidgetRef ref,
     bool isSelected,
   ) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return [
       ContextMenuTile.button(
-        title: l10n.contextMenuRename,
+        title: l10n.rename,
         icon: TWIcons.pencil,
         onTap: () => showDialog(
           context: context,
@@ -410,7 +411,7 @@ class _PageTile extends HookConsumerWidget {
         ),
       ),
       ContextMenuTile.button(
-        title: l10n.contextMenuChangeChapter,
+        title: l10n.changeChapterTitle,
         icon: TWIcons.bookMarker,
         onTap: () => showDialog(
           context: context,
@@ -419,7 +420,7 @@ class _PageTile extends HookConsumerWidget {
         ),
       ),
       ContextMenuTile.button(
-        title: l10n.contextMenuChangePriority,
+        title: l10n.changePriority,
         icon: TWIcons.priority,
         onTap: () => showDialog(
           context: context,
@@ -428,7 +429,7 @@ class _PageTile extends HookConsumerWidget {
       ),
       ContextMenuTile.divider(),
       ContextMenuTile.button(
-        title: l10n.contextMenuDelete,
+        title: l10n.delete,
         icon: TWIcons.trash,
         color: Colors.redAccent,
         onTap: () => showPageDeletionDialogue(context, ref.passing, pageId),
@@ -633,7 +634,7 @@ class EmptyPageEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return EmptyScreen(
       title: l10n.emptyPageTitle,
       buttonText: l10n.addPage,
@@ -654,7 +655,7 @@ class _AddPageButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return Material(
       color: Colors.transparent,
       shape: const RoundedRectangleBorder(
@@ -718,10 +719,10 @@ class AddPageDialogue extends HookConsumerWidget {
   /// Validates the proposed name for a page.
   /// A name is invalid if it is empty or if it already exists.
   String? _validateName(
-    BuildContext context,
+    WidgetRef ref,
     String text,
   ) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     if (text.isEmpty) {
       return l10n.pageNameCannotBeEmpty;
     }
@@ -730,7 +731,7 @@ class AddPageDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final name = useState("");
     final isNameValid = useState(false);
     final type = useState(fixedType ?? PageType.sequence);
@@ -755,7 +756,7 @@ class AddPageDialogue extends HookConsumerWidget {
             name: l10n.pageNameField,
             icon: TWIcons.book,
             validator: (value) {
-              final validation = _validateName(context, value);
+              final validation = _validateName(ref, value);
               isNameValid.value = validation == null;
               return validation;
             },
@@ -875,10 +876,10 @@ class RenamePageDialogue extends HookConsumerWidget {
   /// Validates the proposed name for a page.
   /// A name is invalid if it is empty or if it already exists.
   String? _validateName(
-    BuildContext context,
+    WidgetRef ref,
     String text,
   ) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     if (text.isEmpty) {
       return l10n.pageNameCannotBeEmpty;
     }
@@ -891,7 +892,7 @@ class RenamePageDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final name = useState(oldName);
     final isNameValid = useState(false);
 
@@ -902,7 +903,7 @@ class RenamePageDialogue extends HookConsumerWidget {
         name: l10n.pageNameField,
         icon: TWIcons.book,
         validator: (value) {
-          final validation = _validateName(context, value);
+          final validation = _validateName(ref, value);
           isNameValid.value = validation == null;
           return validation;
         },
@@ -930,7 +931,7 @@ class RenamePageDialogue extends HookConsumerWidget {
                   await _renamePage(ref, name.value);
                   navigator.pop(true);
                 },
-          label: Text(l10n.contextMenuRename),
+          label: Text(l10n.rename),
           icon: const Iconify(TWIcons.pencil),
           color: Colors.orange,
         ),
@@ -965,7 +966,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final chapter = useState(this.chapter);
     final focusNode = useFocusNode();
     final changed = useState(false);
@@ -1012,7 +1013,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
             chapter.value,
             changed,
           ),
-          label: Text(l10n.contextMenuChange),
+          label: Text(l10n.changeChapterTitle),
           icon: const Iconify(TWIcons.pencil),
           color: Colors.orange,
         ),
@@ -1045,7 +1046,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final priority = ref.watch(pagePriorityProvider(pageId));
     final controller = useTextEditingController();
     final focusNode = useFocusNode();
@@ -1083,7 +1084,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
             int.parse(controller.text),
             changed,
           ),
-          label: Text(l10n.contextMenuChange),
+          label: Text(l10n.changePriority),
           icon: const Iconify(TWIcons.pencil),
           color: Colors.orange,
         ),
@@ -1097,7 +1098,7 @@ Future<bool> showPageDeletionDialogue(
   PassingRef ref,
   String pageId,
 ) {
-  final l10n = context.l10n;
+  final l10n = ref.l10n;
   final pageName = ref.read(pageProvider(pageId))?.pageName ?? "Page";
   return showConfirmationDialogue(
     context: context,

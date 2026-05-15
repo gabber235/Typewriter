@@ -172,20 +172,21 @@ class _DeperecationWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Admonition.danger(
       onTap: _launceUrl,
       child: Text.rich(
         TextSpan(
-          text: "This entry has been marked as deprecated. Take a look at the ",
+          text: l10n.entryDeprecatedWarning,
           children: [
             TextSpan(
-              text: "documentation",
+              text: l10n.entryDeprecatedWarningDocumentation,
               style: TextStyle(
                 decoration: TextDecoration.underline,
                 decorationColor: Colors.redAccent,
               ),
             ),
-            TextSpan(text: " for more information."),
+            TextSpan(text: ""),
             if (reason.isNotEmpty) ...[
               TextSpan(
                 text: "\n$reason",

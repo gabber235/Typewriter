@@ -15,27 +15,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLanguage => 'Язык';
 
   @override
-  String get homeTitle => 'Ваше путешествие начинается здесь';
+  String get homeTitle => 'Твоё приключение начинается здесь';
 
   @override
   String get homeSubtitle =>
-      'Выполните следующую команду на вашем сервере, чтобы начать редактирование';
+      'Введите эту команду в консоли Minecraft, чтобы подключиться';
 
   @override
-  String get connectToTitle => 'Подключиться к';
+  String get connectToTitle => 'Подключиться к серверу';
 
   @override
-  String get connectToHint => 'Введите URL для подключения';
+  String get connectToHint => 'Введите адрес сервера';
 
   @override
   String get unexpectedError =>
-      'Произошла ошибка, пожалуйста, сообщите об этом в Discord Typewriter)';
+      'Произошла ошибка, пожалуйста, сообщите в Discord Typewriter';
+
+  @override
+  String get noSkinDataError => 'Не удалось найти данные о скине в ответе';
+
+  @override
+  String get invalidTextureDataError => 'Недопустимые данные текстуры в ответе';
+
+  @override
+  String get textureAndSignatureMustBeStrings =>
+      'Недопустимая текстура или подпись в ответе';
+
+  @override
+  String get noEntryChecked => 'Сущность не выбрана';
 
   @override
   String get cancel => 'Отмена';
 
   @override
   String get add => 'Добавить';
+
+  @override
+  String addNew(Object item) {
+    return 'Добавить новый $item';
+  }
 
   @override
   String get open => 'Открыть';
@@ -53,13 +71,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get publish => 'Жми!';
 
   @override
+  String get stagingProduction => 'Продакшн';
+
+  @override
+  String get stagingStaging => 'Установка';
+
+  @override
+  String get stagingPublishing => 'Публикация';
+
+  @override
   String get priority => 'Приоритет';
 
   @override
   String get delete => 'Удалить';
 
   @override
-  String get confirm => 'Подтвердить';
+  String deleteThis(Object item) {
+    return 'Удалить $item?';
+  }
+
+  @override
+  String get deleteEntry => 'Удалить запись?';
+
+  @override
+  String deleteEntryConfirmation(Object entry) {
+    return 'Вы уверены, что хотите удалить $entry?';
+  }
+
+  @override
+  String get replaceEntry => 'Заменить запись?';
+
+  @override
+  String replaceEntryConfirmation(Object entry) {
+    return 'Замена нод необратима.\nЭто может привести к потере или повреждению данных.\nВы уверены, что хотите заменить $entry?';
+  }
+
+  @override
+  String get replace => 'Заменить';
+
+  @override
+  String get confirm => 'Поддтвердить';
 
   @override
   String get select => 'Выбрать';
@@ -68,32 +119,60 @@ class AppLocalizationsRu extends AppLocalizations {
   String get duplicate => 'Дублировать';
 
   @override
-  String get duration => 'Продолжительность';
+  String duplicateThis(Object item) {
+    return 'Дублировать $item';
+  }
+
+  @override
+  String get fetchSkin => 'Получить скин';
+
+  @override
+  String fetchSkinHint(Object bodyKey) {
+    return 'Введите $bodyKey для получения скина';
+  }
+
+  @override
+  String get duration => 'Длительность';
 
   @override
   String get areYouSure => 'Вы уверены?';
 
   @override
-  String get thisActionCannotBeUndone => 'Это действие нельзя отменить.';
+  String get thisActionCannotBeUndone => 'Это действие не может быть отменено.';
 
   @override
-  String get connectLocalhost => 'Подключиться к Localhost';
+  String get connectLocalhost => 'Подключиться к localhost';
 
   @override
-  String get connectCustom => 'Свое подключение';
+  String get connectCustom => 'Своё подключение';
 
   @override
   String get waitingForConnection => 'Ожидание подключения...';
 
   @override
-  String get errorConnectTitle => 'Ошибка связи';
+  String get errorConnectTitle => 'Ошибка коммуникации';
 
   @override
   String get errorConnectSubtitle =>
-      'Во время связи с сервером произошла ошибка.\nПожалуйста, проверьте ваше соединение и попробуйте снова.';
+      'Произошла ошибка при коммуникации с сервером.\nПожалуйста, проверьте ваше подключение и попробуйте снова.';
+
+  @override
+  String get placeholderInfo =>
+      'Плейсхолдеры типа %player_name% поддерживаются. Нажмите для получения дополнительной информации.';
+
+  @override
+  String get regexInfo =>
+      'Регулярные выражения поддерживаются. Нажмите для получения дополнительной информации.';
+
+  @override
+  String get coloredInfo =>
+      'Поддерживается формат Adventure Mini. Нажмите для получения дополнительной информации.';
 
   @override
   String get pageSearch => 'Поиск';
+
+  @override
+  String get fields => 'Поля';
 
   @override
   String get pagesTitle => 'Страницы';
@@ -105,63 +184,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newPage => 'Новая страница';
 
   @override
-  String get contextMenuRename => 'Переименовать';
+  String get change => 'Изменить';
 
   @override
-  String get contextMenuChange => 'Изменить';
+  String get changePriority => 'Изменить приоритет';
 
   @override
-  String get contextMenuChangeChapter => 'Изменить главу';
+  String get reconnectTitle => 'Соединение потеряно, реконнект...';
 
   @override
-  String get contextMenuChangePriority => 'Изменить приоритет';
+  String get joinDiscord => 'Подключатесь к Discord';
 
   @override
-  String get contextMenuDelete => 'Удалить';
+  String get openWiki => 'Открыть вики';
 
   @override
-  String get reconnectTitle => 'Связь потеряна, переподключение...';
+  String get reloadData => 'Обновить данные';
 
   @override
-  String get joinDiscord => 'Наш Discord';
+  String get fetchFromURL => 'Получить из URL';
 
   @override
-  String get openWiki => 'Открыть Wiki';
-
-  @override
-  String get reloadData => 'Перезагрузить данные';
-
-  @override
-  String get inspectorEmptyTitle => 'Инспектор';
-
-  @override
-  String get inspectorEmptySubtitle =>
-      'Нажмите на узел (entry), чтобы посмотреть его свойства.';
-
-  @override
-  String get inspectorMissingBlueprint =>
-      'Схема (blueprint) для этого узла не существует.\n\nВозможно, нужное расширение было удалено.\nИли же расширение удалило этот тип узлов.\n\nЧтобы исправить проблему, вы можете:\n - Снова установить расширение.\n - Удалить этот узел.';
-
-  @override
-  String get inspectorOperations => 'Операции';
-
-  @override
-  String get inspectorLinkWith => 'Привязать к ...';
-
-  @override
-  String get inspectorLinkWithDuplicate => 'Привязать к дубликату';
-
-  @override
-  String get inspectorDuplicate => 'Дублировать';
-
-  @override
-  String get inspectorMoveEntry => 'Переместить узел';
-
-  @override
-  String get inspectorReplaceWith => 'Заменить на ...';
-
-  @override
-  String get inspectorDeleteEntry => 'Удалить узел';
+  String get fetchFromUUID => 'Получить из UUID';
 
   @override
   String get componentsCinematicDeleteSegment => 'Удалить сегмент';
@@ -173,80 +217,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String get componentsCinematicNoSegments => 'Нет сегментов';
 
   @override
-  String get inspectorBooleanTrue => 'Истина';
-
-  @override
-  String get inspectorBooleanFalse => 'Ложь';
-
-  @override
-  String get inspectorNoGlobalKey =>
-      'Ни одно расширение не имеет глобального ключа. Попробуйте использовать ключ узла.';
-
-  @override
-  String get inspectorItemValueError =>
-      'Значение для поля сериализованного предмета не является словарем';
-
-  @override
-  String get inspectorAdd => 'Добавить';
-
-  @override
-  String get inspectorInvalidPageType => 'Недопустимый тип страницы';
-
-  @override
-  String get inspectorFetchSkin => 'Загрузить скин';
-
-  @override
-  String get inspectorCancel => 'Отмена';
-
-  @override
-  String get inspectorFetch => 'Загрузить';
-
-  @override
   String get establishingInterstellarConnection =>
-      'Установление межзвездной связи';
+      'Установка межзвездного соединения';
 
   @override
-  String get tuningCommunicationFrequency => 'Настройка частоты связи';
+  String get tuningCommunicationFrequency => 'Настройка частоты коммуникации';
 
   @override
-  String get initiatingCommunicationProtocol => 'Инициализация протокола связи';
+  String get initiatingCommunicationProtocol =>
+      'Инициализация протокола коммуникации';
 
   @override
   String get negotiatingConnectionParameters =>
-      'Переговоры о параметрах подключения';
+      'Согласование параметров подключения';
 
   @override
-  String get analyzingNetworkTraffic => 'Анализ сетевого трафика';
+  String get analyzingNetworkTraffic => 'Анализ трафика сети';
 
   @override
-  String get establishingTelepathicLink => 'Установление телепатической связи';
+  String get establishingTelepathicLink => 'Установка телепатической связи';
 
   @override
-  String get activatingQuantumCommunication => 'Активация квантовой связи';
+  String get activatingQuantumCommunication =>
+      'Активация квантовой коммуникации';
 
   @override
   String get settingUpVirtualPrivateConnection =>
       'Настройка виртуального частного соединения';
 
   @override
-  String get checkingForNetworkInterference => 'Проверка на干扰 сети';
+  String get checkingForNetworkInterference => 'Проверка на помехи в сети';
 
   @override
-  String get hackingIntoTheMatrix => 'Хакинг матрицы';
+  String get hackingIntoTheMatrix => 'Ломаем матрицу';
 
   @override
-  String get summoningTheInterdimensionalPortal => 'Вызов межмерного портала';
+  String get summoningTheInterdimensionalPortal =>
+      'Вызов межпространственного портала';
 
   @override
   String get openingTheGatewayToTheAstralPlane =>
-      'Открытие ворот к астральному миру';
+      'Открытие ворот в астральный план';
 
   @override
   String get establishingConnectionToTheOtherSide =>
-      'Установление соединения с другой стороной';
+      'Установка соединения с другой стороной';
 
   @override
-  String get connectingToTheCosmicMind => 'Подключение к космическому сознанию';
+  String get connectingToTheCosmicMind => 'Подключение к космическому разуму';
 
   @override
   String get contactingExtraterrestrialIntelligence =>
@@ -257,47 +275,47 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вызов временно-пространственного континуума';
 
   @override
-  String get downloadingThoughtsFromTheFuture => 'Загрузка мыслей из будущего';
+  String get downloadingThoughtsFromTheFuture =>
+      'Скачивание мыслей из будущего';
 
   @override
   String get establishingLinkToParallelUniverse =>
-      'Установление связи с параллельной вселенной';
+      'Установка связи с параллельной вселенной';
 
   @override
   String get establishingLinkToTheUniversalConsciousness =>
-      'Установление связи с универсальным сознанием';
+      'Установка связи с универсальным сознанием';
 
   @override
   String get tuningIntoTheCosmicFrequency => 'Настройка на космическую частоту';
 
   @override
   String get initiatingIntergalacticCommunication =>
-      'Инициация межгалактической связи';
+      'Инициация межгалактической коммуникации';
 
   @override
-  String get bendingTheFabricOfReality => 'Искажение ткани реальности';
+  String get bendingTheFabricOfReality => 'Изгибание ткани реальности';
 
   @override
-  String get syncingWithTheCosmicClock => 'Синхронизация с космическими часами';
+  String get syncingWithTheCosmicClock =>
+      'Синхронизируясь с космическими часами';
 
   @override
   String get activatingTheTransDimensionalRelay =>
-      'Активация транс-мерного реле';
+      'Активация транс-измерительного реле';
 
   @override
   String get establishingTelekineticConnection =>
-      'Установление телекинетической связи';
+      'Установка телекинетического соединения';
 
   @override
-  String get channelingTheUniversalEnergy =>
-      'Канализация универсальной энергии';
+  String get channelingTheUniversalEnergy => 'Передача универсальной энергии';
 
   @override
-  String get unlockingTheSecretsOfTheUniverse =>
-      'Разблокировка секретов вселенной';
+  String get unlockingTheSecretsOfTheUniverse => 'Раскрытие секретов вселенной';
 
   @override
-  String get contactingTheAllSeeingEye => 'Контакт с все-видящим глазом';
+  String get contactingTheAllSeeingEye => 'Контакт с всеохватывающим глазом';
 
   @override
   String get teleportingThroughTimeAndSpace =>
@@ -308,14 +326,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Настройка на более высокие измерения';
 
   @override
-  String get connectingToTheGreatBeyond => 'Подключение к великому beyond';
+  String get connectingToTheGreatBeyond => 'Обращаемся к великому за пределами';
 
   @override
   String get downloadingKnowledgeFromTheAkashicRecords =>
-      'Загрузка знаний из Акашических записей';
+      'Скачивание знаний из Акашевых записей';
 
   @override
-  String get establishingAPsychicLink => 'Установление психического соединения';
+  String get establishingAPsychicLink => 'Установка психической связи';
 
   @override
   String get activatingTheCosmicGateway => 'Активация космического шлюза';
@@ -333,41 +351,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get establishingAConnectionToTheDivine =>
-      'Установление связи с божественным';
+      'Установка связи с божественным';
 
   @override
-  String get channelingTheUniversalWisdom =>
-      'Канализация универсальной мудрости';
+  String get channelingTheUniversalWisdom => 'Передача универсальной мудрости';
 
   @override
-  String get emptyPageTitle => 'Выберите страницу для редактирования или';
+  String get emptyPageTitle => 'Выберите страницу или создайте новую';
 
   @override
-  String get addPage => 'Создайте страницу';
+  String get addPage => 'Добавить страницу';
 
   @override
   String get addNewPage => 'Добавить новую страницу';
 
   @override
   String addNewPageForType(Object type) {
-    return 'Создать новую страницу типа $type';
+    return 'Добавить новую страницу типа $type';
   }
 
   @override
-  String get pageNameField => 'Название страницы';
+  String get pageNameField => 'Имя страницы';
 
   @override
-  String get pageNameCannotBeEmpty => 'Название страницы не может быть пустым';
+  String get pageNameCannotBeEmpty => 'Имя страницы не может быть пустым';
 
   @override
   String get pageNameCannotBeSame =>
-      'Название страницы должно отличаться от прошлого';
+      'Имя страницы не может быть таким же, как у другой страницы';
 
   @override
-  String get advancedSettings => 'Продвинутые настройки';
+  String get advancedSettings => 'Расширенные настройки';
 
   @override
-  String get chapterNameField => 'Название главы';
+  String get chapterNameField => 'Имя главы';
 
   @override
   String get pagePriorityField => 'Приоритет страницы';
@@ -378,13 +395,16 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get changeChapterTitle => 'Изменить главу';
+
+  @override
   String changeChapter(Object pageId) {
     return 'Изменить главу \$$pageId';
   }
 
   @override
   String changePagePriority(Object pageId) {
-    return 'Изменить приоритет страницы \$$pageId';
+    return 'Изменить приоритет \$$pageId';
   }
 
   @override
@@ -394,7 +414,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deletePageContent =>
-      'Это удалит страницу и все её содержимое.\nЭТО НЕВОЗМОЖНО ОТМЕНИТЬ.';
+      'Это приведет к удалению страницы и всего ее содержимого.\nЭТО НЕЛЬЗЯ ОТМЕНИТЬ.';
 
   @override
   String get enterAValueEmpty => 'Введите значение';
@@ -406,19 +426,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String invalidValue(Object name, Object value) {
-    return 'Недопустимое значение для $name: $value';
+    return 'Недопустимое $name: $value';
   }
 
   @override
   String validValue(Object name, Object value) {
-    return 'Допустимое значение для $name: $value';
+    return 'Допустимое $name: $value';
   }
 
   @override
-  String get noGraphableEntries => 'На этой странице нет нод';
+  String get noGraphableEntries => 'На этой странице нет графических записей.';
 
   @override
-  String get addEntry => 'Добавить ноду';
+  String get addEntry => 'Добавить запись';
 
   @override
   String get deleteSegment => 'Удалить сегмент';
@@ -454,59 +474,80 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String segmentDuration(Object seconds, Object frames) {
-    return 'Длительность сегмента: $seconds секунд ($frames кадров)';
+    return 'Общая продолжительность: $seconds секунд ($frames кадров)';
   }
 
   @override
-  String get segmentInspectorTitle => 'Инспектор сегмента';
+  String get segmentInspectorTitle => 'Инспектор сегментов';
 
   @override
-  String get trackDurationLabel => 'Длительность трека';
+  String get inspectorEmptyTitle => 'Выберите ноду для просмотра';
+
+  @override
+  String get inspectorEmptySubtitle =>
+      'Выберите ноду из списка, чтобы просмотреть и отредактировать ее детали';
+
+  @override
+  String get inspectorOperations => 'Операции';
+
+  @override
+  String get moveEntry => 'Переместить запись';
+
+  @override
+  String get missingBlueprint => 'Отсутствует чертеж';
+
+  @override
+  String get trackDurationLabel => 'Продолжительность трека';
 
   @override
   String get frame => 'Кадр';
 
   @override
-  String get startFrame => 'Первый кадр';
+  String get startFrame => 'Начальный кадр';
 
   @override
-  String get endFrame => 'Последний кадр';
+  String get endFrame => 'Конечный кадр';
 
   @override
   String get enterFrameNumber => 'Введите номер кадра';
 
   @override
-  String get noEntrySelected => 'Нет выбранных нoд';
+  String get noEntrySelected => 'Нода не выбрана';
 
   @override
-  String get noSegmentSelected => 'Нет выбранных сегментов';
+  String get noEntrySelectedDescriptionContent =>
+      'Нода должна быть выбрана для захвата поля.';
 
   @override
-  String get frameBeforeStart => 'Невозможно указать кадр до начального';
+  String get noSegmentSelected => 'Сегмент не выбран';
 
   @override
-  String get frameAfterEnd => 'Невозможно указать кадр после конечного';
+  String get frameBeforeStart => 'Не может быть до начального кадра';
+
+  @override
+  String get frameAfterEnd => 'Не может быть после конечного кадра';
 
   @override
   String segmentTooShort(Object minFrames) {
-    return 'Сегмент должен быть не короче $minFrames кадров';
+    return 'Сегмент слишком короткий: $minFrames кадров';
   }
 
   @override
   String segmentTooLong(Object maxFrames) {
-    return 'Сегмент должен быть не длиннее $maxFrames кадров';
+    return 'Сегмент слишком длинный: $maxFrames кадров';
   }
 
   @override
-  String get cannotExtendPastEndOfTrack => 'Невозможно продлить за конец трека';
+  String get cannotExtendPastEndOfTrack =>
+      'Невозможно продлить за пределы трека';
 
   @override
   String get cannotOverlapWithNextSegment =>
-      'Нельзя перекрывать следующий сегмент';
+      'Невозможно перекрыть следующий сегмент';
 
   @override
   String get cannotOverlapWithPreviousSegment =>
-      'Нельзя перекрывать предыдущий сегмент';
+      'Невозможно перекрыть предыдущий сегмент';
 
   @override
   String get frameAlreadyUsed => 'Сегмент уже существует на этом кадре';
@@ -515,42 +556,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get duplicateSegment => 'Дублировать сегмент';
 
   @override
-  String get noCinematicEntries =>
-      'На этой странице нет кинематографических нод.';
+  String get noCinematicEntries => 'На этой странице нет нoд синематики.';
 
   @override
   String get couldNotDeleteSegment => 'Не удалось удалить сегмент';
 
   @override
-  String get noPageSelected => 'Нет выбранной страницы.';
+  String get noPageSelected => 'Страница не выбрана.';
 
   @override
-  String get noBlueprintFoundForEntry => 'Для выбранной ноды не найдено схемы.';
+  String get noPageSelectedDescriptionContent =>
+      'Страница должна быть выбрана для захвата поля.';
+
+  @override
+  String get noBlueprintFoundForEntry =>
+      'Чертеж не найден для выбранной записи.';
 
   @override
   String get noBlueprintFoundForSegment =>
-      'Для выбранного сегмента не найдено схемы.';
+      'Чертеж не найден для выбранного сегмента.';
 
   @override
-  String get deleteRefference => 'Удалить референс';
+  String get deleteRefference => 'Удалить ссылку';
 
   @override
-  String get nonExistentEntry => 'Несуществующая нода';
+  String get nonExistentEntry => 'Нода не существует';
 
   @override
   String get entryReferenceNotAnEntry => 'Референс ноды не является нодой';
 
   @override
-  String get nonExistentBlueprint => 'Несуществующая схема';
+  String get nonExistentBlueprint => 'Чертеж не существует';
 
   @override
-  String get blueprintDoesNotExist => 'Схема для этой ноды не существует';
+  String get blueprintDoesNotExist => 'Чертеж для этой нodы не существует';
 
   @override
-  String get linkWith => 'Привязать к ...';
+  String get linkWith => 'Связать с ...';
 
   @override
-  String get linkWithDuplicate => 'Привязать к дубликату';
+  String get linkWithDuplicate => 'Связать с дубликатом';
 
   @override
   String get moveTo => 'Переместить в ...';
@@ -565,20 +610,41 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String addPageTitle(Object type) {
-    return 'Добавить страницу $type';
+    return 'Добавить $type';
   }
 
   @override
   String createPageDescription(Object type) {
-    return 'Создать страницу типа $type';
+    return 'Добавить описание для $type';
   }
 
   @override
-  String get manifestEmptyTitle => 'На этой странице нет манифеста';
+  String get manifestEmptyTitle => 'На этой странице нет нод манифеста.';
 
   @override
-  String get searchHint => 'Введите запрос...';
+  String get searchHint => 'Введите запрос для поиска...';
 
   @override
-  String get noStaticEntries => 'На этой странице нет статических нод.';
+  String get noStaticEntries => 'На этой странице нет статичных нод.';
+
+  @override
+  String get replaceWithVariable => 'Заменить на переменную';
+
+  @override
+  String get removeVariable => 'Удалить переменную';
+
+  @override
+  String couldNotFindGenericBlueprint(Object path) {
+    return 'Не удалось найти генеративный чертеж для $path';
+  }
+
+  @override
+  String get entryDeprecatedWarning =>
+      'Эта нода была помечена как устаревшая. Посетите';
+
+  @override
+  String get entryDeprecatedWarningDocumentation => ' документацию';
+
+  @override
+  String get entryDeprecatedWarningInfo => ' для получения подробностей.';
 }

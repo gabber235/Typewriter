@@ -3,6 +3,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/components/general/decorated_text_field.dart";
@@ -90,7 +91,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final focus = focusNode ?? useFocusNode();
     final state = useState<_State>(_initial);
 

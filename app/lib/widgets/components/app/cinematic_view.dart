@@ -78,7 +78,7 @@ void deleteSegmentConfirmation(
   String entryId,
   String segmentId,
 ) {
-  final l10n = context.l10n;
+  final l10n = ref.l10n;
   showConfirmationDialogue(
     context: context,
     title: l10n.deleteSegment,
@@ -637,7 +637,7 @@ class CinematicView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final entryIds = ref.watch(_cinematicEntryIdsProvider);
 
     if (entryIds.isEmpty) {
@@ -743,7 +743,7 @@ class _DeleteSegment extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return FilledButton.icon(
       onPressed: () {
         final segmentId = ref.read(inspectingSegmentIdProvider);
@@ -765,7 +765,7 @@ class _DuplicateSegment extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final color =
         ref.watch(inspectingSegmentProvider.select((s) => s?.color)) ??
             Theme.of(context).colorScheme.primary;
@@ -783,7 +783,7 @@ class _DurationField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final focus = useFocusNode();
     final totalFrames =
         ref.watch(_trackStateProvider.select((state) => state.totalFrames));
@@ -821,7 +821,7 @@ class _EndFrameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final segmentId = ref.watch(inspectingSegmentIdProvider);
 
     if (segmentId == null) return const SizedBox.shrink();
@@ -1056,7 +1056,7 @@ class _Heading extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final longestName = ref.watch(_longestEntryNameProvider);
     final longestNameSize = useTextSize(
       context,
@@ -1134,7 +1134,7 @@ class _InspectorHeader extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final color = ref.watch(
           inspectingSegmentProvider.select((segment) => segment?.color),
         ) ??
@@ -1306,7 +1306,7 @@ class _SegmentDurationDisplay extends HookConsumerWidget {
   const _SegmentDurationDisplay();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final startTime =
         ref.watch(inspectingSegmentProvider.select((s) => s?.startFrame)) ?? 0;
     final endTime =
@@ -1371,7 +1371,7 @@ class _SegmentOperations extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1422,7 +1422,7 @@ class _SegmentSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final entryId = ref.watch(inspectingEntryIdProvider);
     if (entryId == null) return const SizedBox.shrink();
     final segments = ref.watch(_allSegmentsProvider(entryId));
@@ -1457,7 +1457,7 @@ class _SegmentSelectorTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final entryId = ref.watch(inspectingEntryIdProvider);
     if (entryId == null) return const SizedBox.shrink();
     final color = segment.color;
@@ -1588,7 +1588,7 @@ class _SegmentWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final localKey = useGlobalKey();
     final grabbing = useState(false);
     final showThumbs =
@@ -1747,7 +1747,7 @@ class _SingleFrameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final segmentId = ref.watch(inspectingSegmentIdProvider);
 
     if (segmentId == null) return const SizedBox.shrink();
@@ -1815,7 +1815,7 @@ class _StartFrameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     final segmentId = ref.watch(inspectingSegmentIdProvider);
 
     if (segmentId == null) return const SizedBox.shrink();

@@ -29,13 +29,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unexpectedError =>
-      'An error occurred, please report on the Typewriter Discord)';
+      'An error occurred, please report on the Typewriter Discord';
+
+  @override
+  String get noSkinDataError => 'Could not find the skin data in the response';
+
+  @override
+  String get invalidTextureDataError => 'Invalid texture data in response';
+
+  @override
+  String get textureAndSignatureMustBeStrings =>
+      'Invalid texture or signature in response';
+
+  @override
+  String get noEntryChecked => 'Currently not inspecting an entry';
 
   @override
   String get cancel => 'Cancel';
 
   @override
   String get add => 'Add';
+
+  @override
+  String addNew(Object item) {
+    return 'Add new $item';
+  }
 
   @override
   String get open => 'Open';
@@ -53,10 +71,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publish => 'Publish';
 
   @override
+  String get stagingProduction => 'Production';
+
+  @override
+  String get stagingStaging => 'Staging';
+
+  @override
+  String get stagingPublishing => 'Publishing';
+
+  @override
   String get priority => 'Priority';
 
   @override
   String get delete => 'Delete';
+
+  @override
+  String deleteThis(Object item) {
+    return 'Remove $item?';
+  }
+
+  @override
+  String get deleteEntry => 'Delete entry?';
+
+  @override
+  String deleteEntryConfirmation(Object entry) {
+    return 'Are you sure you want to delete $entry?';
+  }
+
+  @override
+  String get replaceEntry => 'Replace Entry';
+
+  @override
+  String replaceEntryConfirmation(Object entry) {
+    return 'Replacing entries is not reversible.\nIt may result in data loss or data corruption.\nAre you sure you want to replace $entry?';
+  }
+
+  @override
+  String get replace => 'Replace';
 
   @override
   String get confirm => 'Confirm';
@@ -66,6 +117,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get duplicate => 'Duplicate';
+
+  @override
+  String duplicateThis(Object item) {
+    return 'Duplicate $item';
+  }
+
+  @override
+  String get fetchSkin => 'Fetch Skin';
+
+  @override
+  String fetchSkinHint(Object bodyKey) {
+    return 'Enter the $bodyKey to fetch the skin';
+  }
 
   @override
   String get duration => 'Duration';
@@ -93,7 +157,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'There was an error while communicating to the server.\nPlease check your connection and try again.';
 
   @override
+  String get placeholderInfo =>
+      'Placeholders like %player_name% are supported. Click for more info.';
+
+  @override
+  String get regexInfo =>
+      'Regular expressions are supported. Click for more info.';
+
+  @override
+  String get coloredInfo =>
+      'Adventure Mini Format is supported. Click for more info.';
+
+  @override
   String get pageSearch => 'Search';
+
+  @override
+  String get fields => 'Fields';
 
   @override
   String get pagesTitle => 'Pages';
@@ -105,19 +184,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newPage => 'New Page';
 
   @override
-  String get contextMenuRename => 'Rename';
+  String get change => 'Change';
 
   @override
-  String get contextMenuChange => 'Change';
-
-  @override
-  String get contextMenuChangeChapter => 'Change Chapter';
-
-  @override
-  String get contextMenuChangePriority => 'Change Priority';
-
-  @override
-  String get contextMenuDelete => 'Delete';
+  String get changePriority => 'Change Priority';
 
   @override
   String get reconnectTitle => 'Connection lost, Reconnecting...';
@@ -132,36 +202,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reloadData => 'Reload Data';
 
   @override
-  String get inspectorEmptyTitle => 'Inspector';
+  String get fetchFromURL => 'Fetch from URL';
 
   @override
-  String get inspectorEmptySubtitle =>
-      'Click on an entry to inspect its properties.';
-
-  @override
-  String get inspectorMissingBlueprint =>
-      'The blueprint for this entry does not exist.\n\nThis can happen if the extension for this entry is no longer installed.\nOr if the extension removed the entry type.\n\nTo fix this, you can either:\n - Install the extension again.\n - Remove the entry.';
-
-  @override
-  String get inspectorOperations => 'Operations';
-
-  @override
-  String get inspectorLinkWith => 'Link with ...';
-
-  @override
-  String get inspectorLinkWithDuplicate => 'Link with duplicate';
-
-  @override
-  String get inspectorDuplicate => 'Duplicate';
-
-  @override
-  String get inspectorMoveEntry => 'Move Entry';
-
-  @override
-  String get inspectorReplaceWith => 'Replace with ...';
-
-  @override
-  String get inspectorDeleteEntry => 'Delete Entry';
+  String get fetchFromUUID => 'Fetch from UUID';
 
   @override
   String get componentsCinematicDeleteSegment => 'Delete Segment';
@@ -171,35 +215,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get componentsCinematicNoSegments => 'No segments';
-
-  @override
-  String get inspectorBooleanTrue => 'True';
-
-  @override
-  String get inspectorBooleanFalse => 'False';
-
-  @override
-  String get inspectorNoGlobalKey =>
-      'No extension has a global key. Try using an entry key.';
-
-  @override
-  String get inspectorItemValueError =>
-      'Value for serialized item field is not a map';
-
-  @override
-  String get inspectorAdd => 'Add';
-
-  @override
-  String get inspectorInvalidPageType => 'Invalid page type';
-
-  @override
-  String get inspectorFetchSkin => 'Fetch Skin';
-
-  @override
-  String get inspectorCancel => 'Cancel';
-
-  @override
-  String get inspectorFetch => 'Fetch';
 
   @override
   String get establishingInterstellarConnection =>
@@ -379,6 +394,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get changeChapterTitle => 'Change chapter';
+
+  @override
   String changeChapter(Object pageId) {
     return 'Change chapter of \$$pageId';
   }
@@ -463,6 +481,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get segmentInspectorTitle => 'Segment Inspector';
 
   @override
+  String get inspectorEmptyTitle => 'Select an entry to inspect';
+
+  @override
+  String get inspectorEmptySubtitle =>
+      'Select an entry from the list to view and edit its details';
+
+  @override
+  String get inspectorOperations => 'Operations';
+
+  @override
+  String get moveEntry => 'Move Entry';
+
+  @override
+  String get missingBlueprint => 'Missing Blueprint';
+
+  @override
   String get trackDurationLabel => 'Track Duration';
 
   @override
@@ -479,6 +513,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEntrySelected => 'No entry selected';
+
+  @override
+  String get noEntrySelectedDescriptionContent =>
+      'An entry must be selected to capture a field.';
 
   @override
   String get noSegmentSelected => 'No segment selected';
@@ -525,6 +563,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noPageSelected => 'No page is selected.';
+
+  @override
+  String get noPageSelectedDescriptionContent =>
+      'A page must be selected to capture a field.';
 
   @override
   String get noBlueprintFoundForEntry =>
@@ -585,4 +627,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noStaticEntries => 'There are no static entries on this page.';
+
+  @override
+  String get replaceWithVariable => 'Replace with Variable';
+
+  @override
+  String get removeVariable => 'Remove Variable';
+
+  @override
+  String couldNotFindGenericBlueprint(Object path) {
+    return 'Could not find generic blueprint, this should not happen! For path: $path';
+  }
+
+  @override
+  String get entryDeprecatedWarning =>
+      'This entry has been marked as deprecated. Take a look at the ';
+
+  @override
+  String get entryDeprecatedWarningDocumentation => ' documentation';
+
+  @override
+  String get entryDeprecatedWarningInfo => ' for more information.';
 }

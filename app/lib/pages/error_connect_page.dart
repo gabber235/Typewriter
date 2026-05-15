@@ -3,9 +3,9 @@ import "package:flutter/material.dart" hide FilledButton;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 import "package:typewriter/hooks/delayed_execution.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/widgets/components/general/copyable_text.dart";
-import "package:typewriter/utils/extensions.dart";
 
 @RoutePage()
 class ErrorConnectPage extends HookConsumerWidget {
@@ -15,7 +15,7 @@ class ErrorConnectPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+    final l10n = ref.watch(l10nProvider);
     useDelayedExecution(() {
       // Make sure the socket gets cleaned up
       ref.invalidate(socketProvider);
