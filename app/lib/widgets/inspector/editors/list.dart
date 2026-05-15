@@ -108,7 +108,7 @@ class ListEditor extends HookConsumerWidget {
       child: length > 0
           ? ReorderableList(
               itemCount: length,
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 _reorder(ref.passing, oldIndex, newIndex);
                 _reorderList(globalKeys, oldIndex, newIndex);
               },
