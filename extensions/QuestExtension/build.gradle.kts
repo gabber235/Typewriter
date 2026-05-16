@@ -2,7 +2,7 @@ repositories {}
 dependencies {
     compileOnly(project(":RoadNetworkExtension"))
 
-    val kotestVersion = "6.1.10"
+    val kotestVersion = "6.1.11"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
 }

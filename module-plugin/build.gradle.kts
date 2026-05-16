@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.3.20"
     `java-gradle-plugin`
     id("com.gradle.plugin-publish") version "2.1.1"
-    id("com.google.devtools.ksp") version "2.3.6"
+    id("com.google.devtools.ksp") version "2.3.8"
     kotlin("plugin.serialization") version "2.3.20" apply false
     `maven-publish`
 }
@@ -30,14 +30,14 @@ allprojects {
     dependencies {
         implementation(kotlin("stdlib"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-        implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.6")
-        implementation("com.google.devtools.ksp:symbol-processing-api:2.3.6")
+        implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.8")
+        implementation("com.google.devtools.ksp:symbol-processing-api:2.3.8")
 
         implementation("com.typewritermc:engine-core:$engineVersion")
 
 
         testImplementation(kotlin("test"))
-        val kotestVersion = "6.1.10"
+        val kotestVersion = "6.1.11"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
         testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
         testImplementation("io.kotest:kotest-property:$kotestVersion")

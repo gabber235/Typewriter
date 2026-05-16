@@ -435,7 +435,7 @@ private fun CommandTree.connectCommand() = literal("connect") {
             return@executes
         }
 
-        val book = Book.book(bookTitle, bookAuthor, bookPage)
+        val book = Book.book(bookTitle, bookAuthor, listOf(bookPage))
         player.openBook(book)
     }
 

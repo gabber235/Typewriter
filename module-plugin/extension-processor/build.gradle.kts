@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.google.devtools.ksp") version "2.3.6"
+    id("com.google.devtools.ksp") version "2.3.8"
 }
 
 repositories {

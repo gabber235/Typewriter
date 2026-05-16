@@ -431,9 +431,9 @@ class EntityCinematicRecording(
 
         value.mainHand?.let { player.inventory.setItemInMainHand(it) }
         value.offHand?.let { player.inventory.setItemInOffHand(it) }
-        value.helmet?.let { player.inventory.helmet = it }
-        value.chestplate?.let { player.inventory.chestplate = it }
-        value.leggings?.let { player.inventory.leggings = it }
-        value.boots?.let { player.inventory.boots = it }
+        value.helmet?.let { player.inventory.setHelmet(it) }
+        value.chestplate?.let { player.inventory.setChestplate(it) }
+        value.leggings?.let { player.inventory.setLeggings(it) }
+        value.boots?.let { player.inventory.setBoots(it) }
     }
 }
