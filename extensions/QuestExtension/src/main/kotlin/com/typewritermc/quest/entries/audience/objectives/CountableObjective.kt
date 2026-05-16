@@ -10,7 +10,6 @@ import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
@@ -27,7 +26,6 @@ private val countableObjectiveDisplay by snippet(
     "<green>✔</green> <gray><display></gray>"
 )
 
-// Display snippets — translatable by end users
 private val displayExact by snippet(
     "quest.objectives.countable.target.exact",
     "<value>"
@@ -62,6 +60,7 @@ private fun TargetSpec.display(): String = when (this) {
     is RangeTarget -> displayRange
         .replaceTagPlaceholders("min", min.toString())
         .replaceTagPlaceholders("max", max.toString())
+
     is LowerBoundTarget -> displayLowerBound.replaceTagPlaceholders("min", min.toString())
     is UpperBoundTarget -> displayUpperBound.replaceTagPlaceholders("max", max.toString())
     is UniversalTarget -> displayUniversal
@@ -84,10 +83,12 @@ class CountableObjective(
     @Help("The value that is being counted towards the target.")
     val count: Var<Int> = ConstVar(0),
     @Help(
-        "The target value(s) to reach for completion. Supports exact values (5), inclusive ranges (28-61), " +
-        "open-ended upper (32..), open-ended lower (..10), negative values (-5), negative ranges (-10--3), " +
-        "and comma-separated combinations (28-61,63,70..). " +
-        "Redundant ranges are simplified automatically. Leave blank to never complete."
+        """
+            The target value(s) to reach for completion. Supports exact values (5), inclusive ranges (28-61), 
+            open-ended upper (32..), open-ended lower (..10), negative values (-5), negative ranges (-10--3), 
+            and comma-separated combinations (28-61,63,70..). 
+            Redundant ranges are simplified automatically. Leave blank to never complete.
+        """
     )
     val target: Var<String> = ConstVar("0"),
     @Help("The display supports the <count> and <target> tags from the fact.")

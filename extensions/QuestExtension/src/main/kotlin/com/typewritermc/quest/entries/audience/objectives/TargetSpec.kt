@@ -6,10 +6,22 @@ package com.typewritermc.quest.entries.audience.objectives
  * [UniversalTarget], [EmptyTarget], [CompositeTarget].
  */
 sealed interface TargetSpec {
-    /** Returns true if [value] satisfies this spec. */
+    /**
+     * Checks if the provided value satisfies the current target specification.
+     *
+     * @param value The value to be checked against the target specification.
+     * @return True if the value is considered within the target specification; otherwise, false.
+     */
     fun contains(value: Int): Boolean
 
-    /** Returns true if every value that satisfies [other] also satisfies this spec. */
+    /**
+     * Determines whether the current TargetSpec fully encompasses another TargetSpec.
+     * This means that all values accepted by the provided TargetSpec are also accepted
+     * by the current TargetSpec.
+     *
+     * @param other The TargetSpec to check for inclusion within the current TargetSpec.
+     * @return True if the current TargetSpec subsumes the provided TargetSpec; otherwise, false.
+     */
     fun subsumes(other: TargetSpec): Boolean
 
     companion object {
@@ -44,7 +56,6 @@ sealed interface TargetSpec {
                 deduped.none { other -> other != candidate && other.subsumes(candidate) }
             }
 
-            // Check if the simplified set covers all integers
             val maxUpperBound = simplified.filterIsInstance<UpperBoundTarget>().maxOfOrNull { it.max }
             val minLowerBound = simplified.filterIsInstance<LowerBoundTarget>().minOfOrNull { it.min }
             if (maxUpperBound != null && minLowerBound != null && minLowerBound <= maxUpperBound + 1) {
