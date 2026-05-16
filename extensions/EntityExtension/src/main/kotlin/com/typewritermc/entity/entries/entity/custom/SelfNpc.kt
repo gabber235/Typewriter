@@ -28,7 +28,7 @@ class SelfNpcDefinition(
     @Help("Overrides the display name of the speaker")
     val overrideName: Optional<Var<String>> = Optional.empty(),
     override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
-    @OnlyTags("generic_entity_data", "living_entity_data", "player_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "player_data", "text_display_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
     override val displayName: Var<String>

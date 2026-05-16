@@ -13,6 +13,7 @@ import com.typewritermc.engine.paper.entry.action.ActionHandler
 import com.typewritermc.engine.paper.entry.dialogue.DialogueHandler
 import com.typewritermc.engine.paper.entry.dialogue.DialoguePlaceholders
 import com.typewritermc.engine.paper.entry.entity.EntityHandler
+import com.typewritermc.engine.paper.entry.entity.PlayerSkinCache
 import com.typewritermc.engine.paper.entry.temporal.TemporalHandler
 import com.typewritermc.engine.paper.entry.temporal.TemporalPlaceholders
 import com.typewritermc.engine.paper.events.TypewriterUnloadEvent
@@ -111,6 +112,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             singleOf(::PacketInterceptor)
             singleOf(::EntityHandler)
             singleOf(::TypewriterCommandManager)
+            singleOf(::PlayerSkinCache)
 
             factory { FactTracker(it.get()) } bind SessionTracker::class
             single { InteractionTriggerHandler() } bind TriggerHandler::class

@@ -76,6 +76,8 @@ class ExtensionLoader : KoinComponent {
         }
     }
 
+    fun isExtensionLoaded(key: String) = loadedExtensions.any { it.info.key == key }
+
     fun entryClass(blueprintId: String): Class<*>? {
         entryClassCache[blueprintId]?.let { return it }
 

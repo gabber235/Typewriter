@@ -73,11 +73,7 @@ class ListEditor extends HookConsumerWidget {
 
   void _reorderList(List<dynamic> value, int oldIndex, int newIndex) {
     final item = value.removeAt(oldIndex);
-    if (newIndex > oldIndex) {
-      value.insert(newIndex - 1, item);
-    } else {
-      value.insert(newIndex, item);
-    }
+    value.insert(newIndex, item);
   }
 
   void _reorder(
@@ -112,7 +108,7 @@ class ListEditor extends HookConsumerWidget {
       child: length > 0
           ? ReorderableList(
               itemCount: length,
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 _reorder(ref.passing, oldIndex, newIndex);
                 _reorderList(globalKeys, oldIndex, newIndex);
               },

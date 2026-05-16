@@ -36,7 +36,7 @@ class NpcDefinition(
     override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
     @Help("The skin of the npc.")
     val skin: Var<SkinProperty> = ConstVar(SkinProperty()),
-    @OnlyTags("generic_entity_data", "living_entity_data", "lines", "player_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "lines", "player_data", "text_display_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
 
@@ -54,7 +54,7 @@ class NpcInstance(
     override val name: String = "",
     override val definition: Ref<NpcDefinition> = emptyRef(),
     override val spawnLocation: Position = Position.ORIGIN,
-    @OnlyTags("generic_entity_data", "living_entity_data", "lines", "player_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "lines", "player_data", "text_display_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
     override val activity: Ref<out SharedEntityActivityEntry> = emptyRef(),
 ) : SimpleEntityInstance

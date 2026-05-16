@@ -14,5 +14,4 @@ develocity {
 includeBuild("../engine")
 include("api")
 include("processor")
-include("engine-processor")
 include("extension-processor")
