@@ -10,7 +10,6 @@ import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.entry.entries.get
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
@@ -21,12 +20,53 @@ import com.typewritermc.quest.entries.inactiveObjectiveDisplay
 import com.typewritermc.quest.entries.showingObjectiveDisplay
 import org.bukkit.entity.Player
 import java.util.*
-import kotlin.math.absoluteValue
 
 private val countableObjectiveDisplay by snippet(
     "quest.objectives.countable.completed",
     "<green>✔</green> <gray><display></gray>"
 )
+
+private val displayExact by snippet(
+    "quest.objectives.countable.target.exact",
+    "<value>"
+)
+private val displayRange by snippet(
+    "quest.objectives.countable.target.range",
+    "between <min> and <max>"
+)
+private val displayLowerBound by snippet(
+    "quest.objectives.countable.target.lower_bound",
+    "<min> or more"
+)
+private val displayUpperBound by snippet(
+    "quest.objectives.countable.target.upper_bound",
+    "<max> or less"
+)
+private val displayUniversal by snippet(
+    "quest.objectives.countable.target.universal",
+    "any value"
+)
+private val displayEmpty by snippet(
+    "quest.objectives.countable.target.empty",
+    "nothing"
+)
+private val displayCompositeSeparator by snippet(
+    "quest.objectives.countable.target.separator",
+    ", or "
+)
+
+private fun TargetSpec.display(): String = when (this) {
+    is ExactTarget -> displayExact.replaceTagPlaceholders("value", value.toString())
+    is RangeTarget -> displayRange
+        .replaceTagPlaceholders("min", min.toString())
+        .replaceTagPlaceholders("max", max.toString())
+
+    is LowerBoundTarget -> displayLowerBound.replaceTagPlaceholders("min", min.toString())
+    is UpperBoundTarget -> displayUpperBound.replaceTagPlaceholders("max", max.toString())
+    is UniversalTarget -> displayUniversal
+    is EmptyTarget -> displayEmpty
+    is CompositeTarget -> specs.joinToString(displayCompositeSeparator) { it.display() }
+}
 
 @Entry(
     "countable_objective",
@@ -42,24 +82,39 @@ class CountableObjective(
     override val criteria: List<Criteria> = emptyList(),
     @Help("The value that is being counted towards the target.")
     val count: Var<Int> = ConstVar(0),
-    @Help("The target value to reach for completion.")
-    val target: Var<Int> = ConstVar(0),
+    @Help(
+        """
+            The target value(s) to reach for completion. Supports exact values (5), inclusive ranges (28-61), 
+            open-ended upper (32..), open-ended lower (..10), negative values (-5), negative ranges (-10--3), 
+            and comma-separated combinations (28-61,63,70..). 
+            Redundant ranges are simplified automatically. Leave blank to never complete.
+        """
+    )
+    val target: Var<String> = ConstVar("0"),
     @Help("The display supports the <count> and <target> tags from the fact.")
     @Default("\"<count>/<target>\"")
     override val display: Var<String> = ConstVar(""),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : ObjectiveEntry {
+
     override fun display(player: Player?): String {
+        if (player == null) return inactiveObjectiveDisplay
+
+        val currentCount = count.get(player)
+        val targetSpec = TargetSpec.parse(target.get(player))
+        val displayStr = display.get(player)
+        val complete = targetSpec.contains(currentCount)
+
         val text = when {
-            player == null -> inactiveObjectiveDisplay
-            count.get(player).absoluteValue == target.get(player).absoluteValue -> countableObjectiveDisplay
+            complete -> countableObjectiveDisplay
             criteria.matches(player) -> showingObjectiveDisplay
             else -> inactiveObjectiveDisplay
         }
+
         return text
-            .replaceTagPlaceholders("display", display.get(player) ?: "")
-            .replaceTagPlaceholders("count", count.get(player).toString())
-            .replaceTagPlaceholders("target", target.get(player).toString())
+            .replaceTagPlaceholders("display", displayStr)
+            .replaceTagPlaceholders("count", currentCount.toString())
+            .replaceTagPlaceholders("target", targetSpec.display())
             .parsePlaceholders(player)
     }
 }
