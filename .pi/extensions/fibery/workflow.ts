@@ -1,3 +1,11 @@
+import {
+	BUG_PRIORITY_VALUES,
+	BUG_STATUS_VALUES,
+	FEATURE_IMPORTANCE_VALUES,
+	FEATURE_SIZE_VALUES,
+	FEATURE_STATUS_VALUES,
+} from "./constants.ts";
+
 export type FiberyNewPromptOptions = {
 	cwd: string;
 	mode: "infer-kind-with-override";
@@ -35,10 +43,17 @@ export function buildFiberyNewPrompt(args: string, options: FiberyNewPromptOptio
 		"14. Show drafted description to user and confirm approval with ask_user before write actions.",
 		"",
 		"Required fields by kind:",
-		"15. Bug requires Priority before create or final update.",
-		"16. Feature requires Size and Importance before create or final update.",
+		"15. Bug requires Priority and Status before create or final update.",
+		"16. Feature requires Size, Importance, and Status before create or final update.",
 		"17. Ask Discord linking before create or final update for both kinds. Must allow explicit no.",
 		"18. Infer domains using repo context and changed paths when possible, then confirm when ambiguous.",
+		"",
+		"Valid enum values (use these exact strings in ask_user options):",
+		"Feature Size: " + FEATURE_SIZE_VALUES.join(", "),
+		"Feature Importance: " + FEATURE_IMPORTANCE_VALUES.join(", "),
+		"Feature Status: " + FEATURE_STATUS_VALUES.join(", "),
+		"Bug Priority: " + BUG_PRIORITY_VALUES.join(", "),
+		"Bug Status: " + BUG_STATUS_VALUES.join(", "),
 		"",
 		"Execution rules:",
 		"19. Treat comments as intake notes only. Do not post Fibery comments.",
