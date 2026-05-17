@@ -6,8 +6,8 @@ import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.plugin
-import lirand.api.extensions.events.unregister
 import com.typewritermc.engine.paper.utils.server
+import lirand.api.extensions.events.unregister
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.Listener
@@ -48,8 +48,8 @@ interface ListenerInteractionBound : InteractionBound, Listener {
         unregister()
     }
 
-    fun <T> handleEvent(event: T) where T : PlayerEvent, T : Cancellable {
-        when (event.player.boundState) {
+    fun <T> handleEvent(event: T, boundState: InteractionBoundState? = null) where T : PlayerEvent, T : Cancellable {
+        when (boundState ?: event.player.boundState) {
             InteractionBoundState.BLOCKING -> event.isCancelled = true
             InteractionBoundState.INTERRUPTING -> event.player.interruptInteraction()
             InteractionBoundState.IGNORING -> {}
