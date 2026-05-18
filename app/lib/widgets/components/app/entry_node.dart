@@ -695,7 +695,7 @@ class ExternalEntryNode extends HookConsumerWidget {
         builder: (context) {
           return [
             ContextMenuTile.button(
-              title: l10n.deleteRefference,
+              title: l10n.deleteReference,
               icon: TWIcons.delete,
               color: Colors.redAccent,
               onTap: () => ref

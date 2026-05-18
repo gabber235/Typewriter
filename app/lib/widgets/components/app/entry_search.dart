@@ -262,7 +262,7 @@ class NewEntryFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "New Entries";
+  String title(AppLocalizations l10n) => l10n.newEntries;
 
   @override
   List<String> get quantifiers => [
@@ -327,7 +327,7 @@ class EntryFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Entries";
+  String title(AppLocalizations l10n) => l10n.entries;
 
   @override
   List<String> get quantifiers =>

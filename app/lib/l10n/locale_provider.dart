@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import "package:flutter/material.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:shared_preferences/shared_preferences.dart";
 
-part 'locale_provider.g.dart';
+part "locale_provider.g.dart";
 
 @Riverpod(keepAlive: true)
 class LocaleController extends _$LocaleController {
-  static const _localeKey = 'app_locale';
+  static const _localeKey = "app_locale";
 
   @override
   Locale build() {
     _loadSavedLocale();
     // Default to English while loading
-    return const Locale('en');
+    return const Locale("en");
   }
 
   Future<void> _loadSavedLocale() async {

@@ -56,6 +56,15 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get trueValue => 'Верно';
+
+  @override
+  String get falseValue => 'Неверно';
+
+  @override
+  String get hexCode => 'Hex код';
+
+  @override
   String get open => 'Открыть';
 
   @override
@@ -87,11 +96,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String deleteThis(Object item) {
-    return 'Удалить $item?';
+    return 'Удалить $item';
   }
 
   @override
-  String get deleteEntry => 'Удалить запись?';
+  String get deleteEntry => 'Удалить ноду';
 
   @override
   String deleteEntryConfirmation(Object entry) {
@@ -99,7 +108,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get replaceEntry => 'Заменить запись?';
+  String get replaceEntry => 'Заменить ноду';
 
   @override
   String replaceEntryConfirmation(Object entry) {
@@ -125,6 +134,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fetchSkin => 'Получить скин';
+
+  @override
+  String get fetch => 'Получить';
 
   @override
   String fetchSkinHint(Object bodyKey) {
@@ -175,10 +187,92 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fields => 'Поля';
 
   @override
-  String get pagesTitle => 'Страницы';
+  String get entry => 'Нода';
+
+  @override
+  String get name => 'Имя';
+
+  @override
+  String get nameHint => 'Введите имя';
+
+  @override
+  String get algebraicEditorInvalidData =>
+      'Это поле содержит недопустимые данные.';
+
+  @override
+  String algebraicEditorCaseNotFound(Object name) {
+    return 'Не удалось найти кейс для $name. ';
+  }
+
+  @override
+  String get selectCase => 'Выберите кейс';
+
+  @override
+  String get valueReset => 'Нажмите здесь, чтобы сбросить значение.';
+
+  @override
+  String setCaseType(Object name) {
+    return 'Установить $name как тип поля';
+  }
+
+  @override
+  String get newEntries => 'Новые ноды';
+
+  @override
+  String get entries => 'Ноды';
+
+  @override
+  String get material => 'Материал';
+
+  @override
+  String get materials => 'Материалы';
+
+  @override
+  String get itemName => 'Имя предмета';
+
+  @override
+  String get sounds => 'Звуки';
+
+  @override
+  String get selectSound => 'Выбрать звук';
+
+  @override
+  String get removeSound => 'Удалить звук';
+
+  @override
+  String get loadingSounds => 'Загрузка звуков...';
+
+  @override
+  String get faledToLoadSounds => 'Не удалось загрузить звуки';
+
+  @override
+  String soundDescription(
+      Object category, Object trackCount, Object trackWord) {
+    return '$category ($trackCount Звук $trackWord)';
+  }
+
+  @override
+  String get texture => 'Текстура';
+
+  @override
+  String get signature => 'Подпись';
+
+  @override
+  String get pages => 'Страницы';
 
   @override
   String get unknownPage => 'Неизвестная страница';
+
+  @override
+  String get invalidPageType => 'Недопустимый тип страницы';
+
+  @override
+  String selectAPage(Object type) {
+    return 'Выберите страницу $type';
+  }
+
+  @override
+  String get pageNotAllowedHere => 'Страница не разрешена здесь';
 
   @override
   String get newPage => 'Новая страница';
@@ -191,6 +285,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get reconnectTitle => 'Соединение потеряно, реконнект...';
+
+  @override
+  String get reloadBookResyncDescription =>
+      'Полная книга перезагружается для повторной синхронизации с сервером.';
 
   @override
   String get joinDiscord => 'Подключатесь к Discord';
@@ -206,6 +304,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fetchFromUUID => 'Получить из UUID';
+
+  @override
+  String get yawFieldLabel => 'Yaw (Горизонтальный угол)';
+
+  @override
+  String get pitchFieldLabel => 'Pitch (Вертикальный угол)';
 
   @override
   String get componentsCinematicDeleteSegment => 'Удалить сегмент';
@@ -438,7 +542,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noGraphableEntries => 'На этой странице нет графических записей.';
 
   @override
-  String get addEntry => 'Добавить запись';
+  String get addEntry => 'Добавить ноду';
 
   @override
   String get deleteSegment => 'Удалить сегмент';
@@ -491,7 +595,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inspectorOperations => 'Операции';
 
   @override
-  String get moveEntry => 'Переместить запись';
+  String get moveEntry => 'Переместить ноду';
 
   @override
   String get missingBlueprint => 'Отсутствует чертеж';
@@ -577,13 +681,27 @@ class AppLocalizationsRu extends AppLocalizations {
       'Чертеж не найден для выбранного сегмента.';
 
   @override
-  String get deleteRefference => 'Удалить ссылку';
+  String get deleteReference => 'Удалить ссылку';
 
   @override
   String get nonExistentEntry => 'Нода не существует';
 
   @override
-  String get entryReferenceNotAnEntry => 'Референс ноды не является нодой';
+  String get selectEntry => 'Выбрать ноду';
+
+  @override
+  String selectAEntry(Object name) {
+    return 'Выберите $name';
+  }
+
+  @override
+  String get entryNotAllow => 'Нода не разрешена здесь';
+
+  @override
+  String get entryReferenceNotAnEntry => 'Референс нoды не является нoдой';
+
+  @override
+  String get navigateToEntry => 'Перейти к ноде';
 
   @override
   String get nonExistentBlueprint => 'Чертеж не существует';
@@ -625,6 +743,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchHint => 'Введите запрос для поиска...';
 
   @override
+  String get worldFieldHint => 'Мир';
+
+  @override
+  String get materialSelectHint => 'Выберите материал';
+
+  @override
   String get noStaticEntries => 'На этой странице нет статичных нод.';
 
   @override
@@ -647,4 +771,128 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get entryDeprecatedWarningInfo => ' для получения подробностей.';
+
+  @override
+  String get invalidCronExpression => 'Недопустимое cron выражение';
+
+  @override
+  String validCron(Object humanReadable) {
+    return 'Допустимое cron выражение: $humanReadable';
+  }
+
+  @override
+  String validDuration(Object duration) {
+    return 'Верная продолжительность: $duration';
+  }
+
+  @override
+  String get genericNotFound => 'Не удалось найти генеративную информацию, ';
+
+  @override
+  String get genericNotFoundDescription =>
+      'пожалуйста, сообщите об этом в дискорде Typewriter';
+
+  @override
+  String get globalContextKeyEditor_noGlobalKeys =>
+      'Ни у одного расширения нет глобального ключа. Попробуйте использовать ключ записи.';
+
+  @override
+  String itemEditor_invalidShape(Object path) {
+    return 'Форма поля элемента не является алгебраической схемой: $path';
+  }
+
+  @override
+  String itemEditor_itemFieldNotMap(Object path) {
+    return 'Значение для сериализованного поля элемента не является мапой: $path';
+  }
+
+  @override
+  String get itemEditor_noItemCaptured =>
+      'Вы не захватили элемент. Нажмите на синюю иконку камеры, чтобы захватить элемент, который вы держите в игре.';
+
+  @override
+  String get itemEditor_itemIsCaptured =>
+      'Этот элемент был захвачен в игре. Если вы хотите изменить его, вы можете повторно захватить другой предмет.';
+
+  @override
+  String noElementsFound(Object name) {
+    return 'Не найдено $name';
+  }
+
+  @override
+  String get mapEditor_keyAlreadyExistsTitle => 'Ключ уже существует';
+
+  @override
+  String mapEditor_keyAlreadyExistsContent(Object key) {
+    return 'Ключ \'$key\' уже существует.\nЭто приведет к удалению всех данных из существующего ключа.\nВы уверены, что хотите заменить его?';
+  }
+
+  @override
+  String materialNotAvailable(Object version) {
+    return 'Недоступно на серверах версии $version';
+  }
+
+  @override
+  String numberEditorMinError(Object min) {
+    return 'Значение должно быть не меньше $min';
+  }
+
+  @override
+  String numberEditorMaxError(Object max) {
+    return 'Значение должно быть не больше $max';
+  }
+
+  @override
+  String get invalidSubfield =>
+      'Недопустимое подполе, попробуйте перезапустить сервер';
+
+  @override
+  String couldNotWireBlueprint(Object bpId) {
+    return 'Не удалось связать чертеж \$$bpId с нодой, сообщите об этом в дискорде Typewriter!';
+  }
+
+  @override
+  String couldNotWireEntry(Object baseEntryId, Object targetEntryId) {
+    return 'Не удалось связать ноду \$$baseEntryId с целевой нодой \$$targetEntryId, сообщите об этом в дискорде Typewriter!';
+  }
+
+  @override
+  String couldNotReplaceEntry(Object baseEntryId, Object targetEntryId) {
+    return 'Не удалось заменить ноду \$$baseEntryId на \$$targetEntryId, сообщите об этом в дискорде Typewriter!';
+  }
+
+  @override
+  String dataBlueprintMismatch(Object path) {
+    return 'Чертеж данных для пути $path не совпадает';
+  }
+
+  @override
+  String pathNotAListWhileBlueprintRequiresAList(Object path) {
+    return 'Путь $path не является списком, в то время как чертеж требует списка';
+  }
+
+  @override
+  String pathNotAMapWhileBlueprintRequiresAMap(Object path) {
+    return 'Путь $path не является мапой, в то время как чертеж требует мапу';
+  }
+
+  @override
+  String noDataBlueprintFound(Object path) {
+    return 'Не найден чертеж данных для пути $path';
+  }
+
+  @override
+  String get blueprintNotCompatibleWithGeneric =>
+      'Генеративный чертеж записи несовместим с новым чертежом';
+
+  @override
+  String get potionEffects => 'Эффекты зелий';
+
+  @override
+  String get variableReferenceNotFound =>
+      'Не удалось найти ссылку на переменную, ';
+
+  @override
+  String get variableReferenceNotFoundReset =>
+      'нажмите, чтобы сбросить до значения по умолчанию';
 }

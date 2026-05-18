@@ -206,7 +206,7 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
             focus.requestFocus();
             error.value = result;
           },
-          label: const Text("Fetch"),
+          label: Text(l10n.fetch),
         ),
       ],
     );

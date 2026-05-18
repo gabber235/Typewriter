@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/inspector/editors.dart";
@@ -55,6 +56,7 @@ class BooleanEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final value =
         ref.watch(fieldValueProvider(path, primitiveBlueprint.defaultValue()));
 
@@ -69,9 +71,9 @@ class BooleanEditor extends HookConsumerWidget {
           },
         ),
         if (value)
-          const Text("True", style: TextStyle(color: Colors.greenAccent))
+          Text(l10n.trueValue, style: const TextStyle(color: Colors.greenAccent))
         else
-          const Text("False", style: TextStyle(color: Colors.grey)),
+          Text(l10n.falseValue, style: const TextStyle(color: Colors.grey)),
       ],
     );
   }

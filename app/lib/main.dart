@@ -1,10 +1,10 @@
 ﻿import "package:flutter/material.dart";
+import "package:flutter_localizations/flutter_localizations.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:stack_trace/stack_trace.dart" as stack_trace;
 import "package:typewriter/app_router.dart";
-import "package:typewriter/l10n/locale_provider.dart";
-import "package:flutter_localizations/flutter_localizations.dart";
 import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/locale_provider.dart";
 import "package:typewriter/utils/fonts.dart";
 import "package:typewriter/widgets/components/general/toasts.dart";
 import "package:typewriter/widgets/inspector/editors.dart";
@@ -46,8 +46,8 @@ class TypeWriterApp extends HookConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en'),
-        Locale('ru'),
+        Locale("en"),
+        Locale("ru"),
       ],
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),

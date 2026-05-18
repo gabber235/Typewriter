@@ -56,6 +56,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trueValue => 'True';
+
+  @override
+  String get falseValue => 'False';
+
+  @override
+  String get hexCode => 'Hex Code';
+
+  @override
   String get open => 'Open';
 
   @override
@@ -127,6 +136,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fetchSkin => 'Fetch Skin';
 
   @override
+  String get fetch => 'Fetch';
+
+  @override
   String fetchSkinHint(Object bodyKey) {
     return 'Enter the $bodyKey to fetch the skin';
   }
@@ -175,10 +187,91 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fields => 'Fields';
 
   @override
-  String get pagesTitle => 'Pages';
+  String get entry => 'Entry';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get nameHint => 'Enter a name';
+
+  @override
+  String get algebraicEditorInvalidData => 'This field contains invalid data. ';
+
+  @override
+  String algebraicEditorCaseNotFound(Object name) {
+    return 'Could not find a case for $name. ';
+  }
+
+  @override
+  String get selectCase => 'Select Case';
+
+  @override
+  String get valueReset => 'Click to reset it to the default value.';
+
+  @override
+  String setCaseType(Object name) {
+    return 'Set $name as the type of the field';
+  }
+
+  @override
+  String get newEntries => 'New Entries';
+
+  @override
+  String get entries => 'Entries';
+
+  @override
+  String get material => 'Material';
+
+  @override
+  String get materials => 'Materials';
+
+  @override
+  String get itemName => 'Item Name';
+
+  @override
+  String get sounds => 'Sounds';
+
+  @override
+  String get selectSound => 'Select Sound';
+
+  @override
+  String get removeSound => 'Remove Sound';
+
+  @override
+  String get loadingSounds => 'Loading Sounds...';
+
+  @override
+  String get faledToLoadSounds => 'Failed to load sounds';
+
+  @override
+  String soundDescription(
+      Object category, Object trackCount, Object trackWord) {
+    return '$category ($trackCount Sound $trackWord)';
+  }
+
+  @override
+  String get texture => 'Texture';
+
+  @override
+  String get signature => 'Signature';
+
+  @override
+  String get pages => 'Pages';
 
   @override
   String get unknownPage => 'Unknown page';
+
+  @override
+  String get invalidPageType => 'Invalid page type';
+
+  @override
+  String selectAPage(Object type) {
+    return 'Select a $type page';
+  }
+
+  @override
+  String get pageNotAllowedHere => 'Page is not allowed here';
 
   @override
   String get newPage => 'New Page';
@@ -191,6 +284,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reconnectTitle => 'Connection lost, Reconnecting...';
+
+  @override
+  String get reloadBookResyncDescription =>
+      'Reloading the full book to resync with the server.';
 
   @override
   String get joinDiscord => 'Join Discord';
@@ -206,6 +303,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fetchFromUUID => 'Fetch from UUID';
+
+  @override
+  String get yawFieldLabel => 'Yaw';
+
+  @override
+  String get pitchFieldLabel => 'Pitch';
 
   @override
   String get componentsCinematicDeleteSegment => 'Delete Segment';
@@ -577,13 +680,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'No blueprint is found for the selected segment.';
 
   @override
-  String get deleteRefference => 'Delete Reference';
+  String get deleteReference => 'Delete Reference';
 
   @override
   String get nonExistentEntry => 'Non-existent entry';
 
   @override
+  String get selectEntry => 'Select Entry';
+
+  @override
+  String selectAEntry(Object name) {
+    return 'Select a $name';
+  }
+
+  @override
+  String get entryNotAllow => 'Entry is not allowed here';
+
+  @override
   String get entryReferenceNotAnEntry => 'Entry reference is not an entry';
+
+  @override
+  String get navigateToEntry => 'Navigate to entry';
 
   @override
   String get nonExistentBlueprint => 'Non-existent blueprint';
@@ -626,6 +743,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchHint => 'Enter search query...';
 
   @override
+  String get worldFieldHint => 'World';
+
+  @override
+  String get materialSelectHint => 'Select a material';
+
+  @override
   String get noStaticEntries => 'There are no static entries on this page.';
 
   @override
@@ -648,4 +771,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryDeprecatedWarningInfo => ' for more information.';
+
+  @override
+  String get invalidCronExpression => 'Invalid cron expression';
+
+  @override
+  String validCron(Object humanReadable) {
+    return 'Valid cron expression: $humanReadable';
+  }
+
+  @override
+  String validDuration(Object duration) {
+    return 'Valid duration: $duration';
+  }
+
+  @override
+  String get genericNotFound => 'Generic not found ';
+
+  @override
+  String get genericNotFoundDescription =>
+      'please report this in the Typewriter Discord';
+
+  @override
+  String get globalContextKeyEditor_noGlobalKeys =>
+      'No extension has a global key. Try using an entry key.';
+
+  @override
+  String itemEditor_invalidShape(Object path) {
+    return 'Shape for item field is not an algebraic blueprint: $path';
+  }
+
+  @override
+  String itemEditor_itemFieldNotMap(Object path) {
+    return 'Value for serialized item field is not a map: $path';
+  }
+
+  @override
+  String get itemEditor_noItemCaptured =>
+      'You have not yet captured the item. Click on the blue camera icon to capture the item you are holding in game.';
+
+  @override
+  String get itemEditor_itemIsCaptured =>
+      'This item has been captured from in game. If you want to change it, you can re-capture the item.';
+
+  @override
+  String noElementsFound(Object name) {
+    return 'No $name found';
+  }
+
+  @override
+  String get mapEditor_keyAlreadyExistsTitle => 'Override key?';
+
+  @override
+  String mapEditor_keyAlreadyExistsContent(Object key) {
+    return 'The key \'$key\' already exists.\nThis will delete all the data from the existing key.';
+  }
+
+  @override
+  String materialNotAvailable(Object version) {
+    return 'Unavailable on \$$version servers';
+  }
+
+  @override
+  String numberEditorMinError(Object min) {
+    return 'Value must be at least $min';
+  }
+
+  @override
+  String numberEditorMaxError(Object max) {
+    return 'Value must be at most $max';
+  }
+
+  @override
+  String get invalidSubfield => 'Invalid subfield, try to restart the server';
+
+  @override
+  String couldNotWireBlueprint(Object bpId) {
+    return 'Could not wire blueprint for entry \$$bpId, report this to the discord!';
+  }
+
+  @override
+  String couldNotWireEntry(Object baseEntryId, Object targetEntryId) {
+    return 'Could not wire entry \$$baseEntryId to target entry \$$targetEntryId, report this to the discord!';
+  }
+
+  @override
+  String couldNotReplaceEntry(Object baseEntryId, Object targetEntryId) {
+    return 'Could not replace entry \$$baseEntryId with target entry \$$targetEntryId, report this to the discord!';
+  }
+
+  @override
+  String dataBlueprintMismatch(Object path) {
+    return 'Data blueprint for path $path did not match';
+  }
+
+  @override
+  String pathNotAListWhileBlueprintRequiresAList(Object path) {
+    return 'Path $path is not a list while blueprint requires a list';
+  }
+
+  @override
+  String pathNotAMapWhileBlueprintRequiresAMap(Object path) {
+    return 'Path $path is not a map while blueprint requires a map';
+  }
+
+  @override
+  String noDataBlueprintFound(Object path) {
+    return 'No data blueprint found for path $path';
+  }
+
+  @override
+  String get blueprintNotCompatibleWithGeneric =>
+      'The generic blueprint of the entry is not compatible with the new blueprint';
+
+  @override
+  String get potionEffects => 'Potion Effects';
+
+  @override
+  String get variableReferenceNotFound => 'Could not find Variable Reference, ';
+
+  @override
+  String get variableReferenceNotFoundReset => 'click to reset to default';
 }

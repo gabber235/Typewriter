@@ -386,7 +386,7 @@ abstract class SearchFetcher {
   /// When a quantifier is used, the fetcher will only be used if the search contains the quantifier.
   List<String> get quantifiers => const [];
 
-  String get title;
+  String title(AppLocalizations l10n);
 
   bool canFetch(String query) {
     return getFetchStatus(query) == FetchStatus.fetching;
@@ -605,6 +605,7 @@ class _FetcherChip extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final query =
         ref.watch(searchProvider.select((value) => value?.query ?? ""));
 
@@ -643,7 +644,7 @@ class _FetcherChip extends HookConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  fetcher.title,
+                  fetcher.title(l10n),
                   style: TextStyle(
                     color: status != FetchStatus.quantifierBlocked
                         ? Colors.white

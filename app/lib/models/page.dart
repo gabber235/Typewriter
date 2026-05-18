@@ -388,6 +388,7 @@ extension PageX on Page {
     String targetEntryId,
     String path,
   ) async {
+    final l10n = ref.l10n;
     final parts = path.split(".");
     final lastPart = parts.last;
     if (int.tryParse(lastPart) != null) {
@@ -399,7 +400,7 @@ extension PageX on Page {
     if (blueprint == null) {
       Toasts.showError(
         ref,
-        "Could not wire blueprint for entry ${baseEntry.blueprintId}, report this to the discord!",
+        l10n.couldNotWireBlueprint(baseEntry.blueprintId),
       );
       return;
     }
@@ -407,8 +408,8 @@ extension PageX on Page {
     if (dataBlueprint == null) {
       Toasts.showError(
         ref,
-        "Could not wire blueprint for entry ${baseEntry.blueprintId}, report this to the discord!",
-        description: "No data blueprint found for path $path",
+        l10n.couldNotWireBlueprint(baseEntry.blueprintId),
+        description: l10n.noDataBlueprintFound(path),
       );
       return;
     }
@@ -437,8 +438,8 @@ extension PageX on Page {
 
     Toasts.showError(
       ref,
-      "Could not wire entry ${baseEntry.id} to target entry $targetEntryId, report this to the discord!",
-      description: "Data blueprint for path $path did not match",
+      l10n.couldNotWireEntry(baseEntry.id, targetEntryId),
+      description: l10n.dataBlueprintMismatch(path),
     );
   }
 
@@ -448,6 +449,7 @@ extension PageX on Page {
     String targetEntryId,
     String path,
   ) async {
+    final l10n = ref.l10n;
     final parts = path.split(".");
 
     // If we have a list, we want to toggle the connection.
@@ -456,8 +458,8 @@ extension PageX on Page {
     if (currentTriggers == null || currentTriggers is! List) {
       Toasts.showError(
         ref,
-        "Could not wire entry ${baseEntry.id} to target entry $targetEntryId, report this to the discord!",
-        description: "Path $path is not a list while blueprint requires a list",
+        l10n.couldNotWireEntry(baseEntry.id, targetEntryId),
+        description: l10n.pathNotAListWhileBlueprintRequiresAList(path),
       );
       return;
     }
@@ -482,13 +484,14 @@ extension PageX on Page {
     String path,
     MapBlueprint mapBlueprint,
   ) async {
+    final l10n = ref.l10n;
     // If the map already contains the target entry, we remove it. Otherwise we add it.
     final map = baseEntry.get(path) ?? mapBlueprint.defaultValue();
     if (map is! Map<dynamic, dynamic>) {
       Toasts.showError(
         ref,
-        "Could not wire entry ${baseEntry.id} to target entry $targetEntryId, report this to the discord!",
-        description: "Path $path is not a map while blueprint requires a map",
+        l10n.couldNotWireEntry(baseEntry.id, targetEntryId),
+        description: l10n.pathNotAMapWhileBlueprintRequiresAMap(path),
       );
       return;
     }
@@ -630,6 +633,7 @@ extension PageX on Page {
     String entryId,
     EntryBlueprint blueprint,
   ) async {
+    final l10n = ref.l10n;
     final entry = ref.read(entryProvider(id, entryId));
     if (entry == null) return;
 
@@ -637,9 +641,9 @@ extension PageX on Page {
     if (!blueprint.allowsGeneric(entry.genericBlueprint)) {
       Toasts.showError(
         ref,
-        "Could not replace entry ${entry.id} with ${blueprint.name}",
+        l10n.couldNotReplaceEntry(entry.id, blueprint.name),
         description:
-            "The generic blueprint of the entry is not compatible with the new blueprint",
+            l10n.blueprintNotCompatibleWithGeneric,
       );
       return;
     }
@@ -662,7 +666,7 @@ extension PageX on Page {
     PassingRef ref,
     String entryId,
   ) async {
-    final l10n = ref.l10n;ref.l10n;ref.l10n;
+    final l10n = ref.l10n;
     final entry = ref.read(entryProvider(id, entryId));
     if (entry == null) return;
 

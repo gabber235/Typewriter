@@ -182,6 +182,24 @@ abstract class AppLocalizations {
   /// **'Add new {item}'**
   String addNew(Object item);
 
+  /// No description provided for @trueValue.
+  ///
+  /// In en, this message translates to:
+  /// **'True'**
+  String get trueValue;
+
+  /// No description provided for @falseValue.
+  ///
+  /// In en, this message translates to:
+  /// **'False'**
+  String get falseValue;
+
+  /// No description provided for @hexCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex Code'**
+  String get hexCode;
+
   /// No description provided for @open.
   ///
   /// In en, this message translates to:
@@ -308,6 +326,12 @@ abstract class AppLocalizations {
   /// **'Fetch Skin'**
   String get fetchSkin;
 
+  /// No description provided for @fetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch'**
+  String get fetch;
+
   /// No description provided for @fetchSkinHint.
   ///
   /// In en, this message translates to:
@@ -392,17 +416,161 @@ abstract class AppLocalizations {
   /// **'Fields'**
   String get fields;
 
-  /// No description provided for @pagesTitle.
+  /// No description provided for @entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get entry;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @nameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get nameHint;
+
+  /// No description provided for @algebraicEditorInvalidData.
+  ///
+  /// In en, this message translates to:
+  /// **'This field contains invalid data. '**
+  String get algebraicEditorInvalidData;
+
+  /// No description provided for @algebraicEditorCaseNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find a case for {name}. '**
+  String algebraicEditorCaseNotFound(Object name);
+
+  /// No description provided for @selectCase.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Case'**
+  String get selectCase;
+
+  /// No description provided for @valueReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to reset it to the default value.'**
+  String get valueReset;
+
+  /// No description provided for @setCaseType.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {name} as the type of the field'**
+  String setCaseType(Object name);
+
+  /// No description provided for @newEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'New Entries'**
+  String get newEntries;
+
+  /// No description provided for @entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get entries;
+
+  /// No description provided for @material.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get material;
+
+  /// No description provided for @materials.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials'**
+  String get materials;
+
+  /// No description provided for @itemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Name'**
+  String get itemName;
+
+  /// No description provided for @sounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds'**
+  String get sounds;
+
+  /// No description provided for @selectSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Sound'**
+  String get selectSound;
+
+  /// No description provided for @removeSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Sound'**
+  String get removeSound;
+
+  /// No description provided for @loadingSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Sounds...'**
+  String get loadingSounds;
+
+  /// No description provided for @faledToLoadSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load sounds'**
+  String get faledToLoadSounds;
+
+  /// No description provided for @soundDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} ({trackCount} Sound {trackWord})'**
+  String soundDescription(Object category, Object trackCount, Object trackWord);
+
+  /// No description provided for @texture.
+  ///
+  /// In en, this message translates to:
+  /// **'Texture'**
+  String get texture;
+
+  /// No description provided for @signature.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature'**
+  String get signature;
+
+  /// No description provided for @pages.
   ///
   /// In en, this message translates to:
   /// **'Pages'**
-  String get pagesTitle;
+  String get pages;
 
   /// No description provided for @unknownPage.
   ///
   /// In en, this message translates to:
   /// **'Unknown page'**
   String get unknownPage;
+
+  /// No description provided for @invalidPageType.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid page type'**
+  String get invalidPageType;
+
+  /// No description provided for @selectAPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a {type} page'**
+  String selectAPage(Object type);
+
+  /// No description provided for @pageNotAllowedHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Page is not allowed here'**
+  String get pageNotAllowedHere;
 
   /// No description provided for @newPage.
   ///
@@ -427,6 +595,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection lost, Reconnecting...'**
   String get reconnectTitle;
+
+  /// No description provided for @reloadBookResyncDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloading the full book to resync with the server.'**
+  String get reloadBookResyncDescription;
 
   /// No description provided for @joinDiscord.
   ///
@@ -457,6 +631,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fetch from UUID'**
   String get fetchFromUUID;
+
+  /// No description provided for @yawFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Yaw'**
+  String get yawFieldLabel;
+
+  /// No description provided for @pitchFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pitch'**
+  String get pitchFieldLabel;
 
   /// No description provided for @componentsCinematicDeleteSegment.
   ///
@@ -1076,11 +1262,11 @@ abstract class AppLocalizations {
   /// **'No blueprint is found for the selected segment.'**
   String get noBlueprintFoundForSegment;
 
-  /// No description provided for @deleteRefference.
+  /// No description provided for @deleteReference.
   ///
   /// In en, this message translates to:
   /// **'Delete Reference'**
-  String get deleteRefference;
+  String get deleteReference;
 
   /// No description provided for @nonExistentEntry.
   ///
@@ -1088,11 +1274,35 @@ abstract class AppLocalizations {
   /// **'Non-existent entry'**
   String get nonExistentEntry;
 
+  /// No description provided for @selectEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Entry'**
+  String get selectEntry;
+
+  /// No description provided for @selectAEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a {name}'**
+  String selectAEntry(Object name);
+
+  /// No description provided for @entryNotAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry is not allowed here'**
+  String get entryNotAllow;
+
   /// No description provided for @entryReferenceNotAnEntry.
   ///
   /// In en, this message translates to:
   /// **'Entry reference is not an entry'**
   String get entryReferenceNotAnEntry;
+
+  /// No description provided for @navigateToEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate to entry'**
+  String get navigateToEntry;
 
   /// No description provided for @nonExistentBlueprint.
   ///
@@ -1160,6 +1370,18 @@ abstract class AppLocalizations {
   /// **'Enter search query...'**
   String get searchHint;
 
+  /// No description provided for @worldFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'World'**
+  String get worldFieldHint;
+
+  /// No description provided for @materialSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a material'**
+  String get materialSelectHint;
+
   /// No description provided for @noStaticEntries.
   ///
   /// In en, this message translates to:
@@ -1201,6 +1423,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' for more information.'**
   String get entryDeprecatedWarningInfo;
+
+  /// No description provided for @invalidCronExpression.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid cron expression'**
+  String get invalidCronExpression;
+
+  /// No description provided for @validCron.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid cron expression: {humanReadable}'**
+  String validCron(Object humanReadable);
+
+  /// No description provided for @validDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid duration: {duration}'**
+  String validDuration(Object duration);
+
+  /// No description provided for @genericNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Generic not found '**
+  String get genericNotFound;
+
+  /// No description provided for @genericNotFoundDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'please report this in the Typewriter Discord'**
+  String get genericNotFoundDescription;
+
+  /// No description provided for @globalContextKeyEditor_noGlobalKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'No extension has a global key. Try using an entry key.'**
+  String get globalContextKeyEditor_noGlobalKeys;
+
+  /// No description provided for @itemEditor_invalidShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape for item field is not an algebraic blueprint: {path}'**
+  String itemEditor_invalidShape(Object path);
+
+  /// No description provided for @itemEditor_itemFieldNotMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Value for serialized item field is not a map: {path}'**
+  String itemEditor_itemFieldNotMap(Object path);
+
+  /// No description provided for @itemEditor_noItemCaptured.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not yet captured the item. Click on the blue camera icon to capture the item you are holding in game.'**
+  String get itemEditor_noItemCaptured;
+
+  /// No description provided for @itemEditor_itemIsCaptured.
+  ///
+  /// In en, this message translates to:
+  /// **'This item has been captured from in game. If you want to change it, you can re-capture the item.'**
+  String get itemEditor_itemIsCaptured;
+
+  /// No description provided for @noElementsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No {name} found'**
+  String noElementsFound(Object name);
+
+  /// No description provided for @mapEditor_keyAlreadyExistsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Override key?'**
+  String get mapEditor_keyAlreadyExistsTitle;
+
+  /// No description provided for @mapEditor_keyAlreadyExistsContent.
+  ///
+  /// In en, this message translates to:
+  /// **'The key \'{key}\' already exists.\nThis will delete all the data from the existing key.'**
+  String mapEditor_keyAlreadyExistsContent(Object key);
+
+  /// No description provided for @materialNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable on \${version} servers'**
+  String materialNotAvailable(Object version);
+
+  /// No description provided for @numberEditorMinError.
+  ///
+  /// In en, this message translates to:
+  /// **'Value must be at least {min}'**
+  String numberEditorMinError(Object min);
+
+  /// No description provided for @numberEditorMaxError.
+  ///
+  /// In en, this message translates to:
+  /// **'Value must be at most {max}'**
+  String numberEditorMaxError(Object max);
+
+  /// No description provided for @invalidSubfield.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid subfield, try to restart the server'**
+  String get invalidSubfield;
+
+  /// No description provided for @couldNotWireBlueprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not wire blueprint for entry \${bpId}, report this to the discord!'**
+  String couldNotWireBlueprint(Object bpId);
+
+  /// No description provided for @couldNotWireEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not wire entry \${baseEntryId} to target entry \${targetEntryId}, report this to the discord!'**
+  String couldNotWireEntry(Object baseEntryId, Object targetEntryId);
+
+  /// No description provided for @couldNotReplaceEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not replace entry \${baseEntryId} with target entry \${targetEntryId}, report this to the discord!'**
+  String couldNotReplaceEntry(Object baseEntryId, Object targetEntryId);
+
+  /// No description provided for @dataBlueprintMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Data blueprint for path {path} did not match'**
+  String dataBlueprintMismatch(Object path);
+
+  /// No description provided for @pathNotAListWhileBlueprintRequiresAList.
+  ///
+  /// In en, this message translates to:
+  /// **'Path {path} is not a list while blueprint requires a list'**
+  String pathNotAListWhileBlueprintRequiresAList(Object path);
+
+  /// No description provided for @pathNotAMapWhileBlueprintRequiresAMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Path {path} is not a map while blueprint requires a map'**
+  String pathNotAMapWhileBlueprintRequiresAMap(Object path);
+
+  /// No description provided for @noDataBlueprintFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No data blueprint found for path {path}'**
+  String noDataBlueprintFound(Object path);
+
+  /// No description provided for @blueprintNotCompatibleWithGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'The generic blueprint of the entry is not compatible with the new blueprint'**
+  String get blueprintNotCompatibleWithGeneric;
+
+  /// No description provided for @potionEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Potion Effects'**
+  String get potionEffects;
+
+  /// No description provided for @variableReferenceNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find Variable Reference, '**
+  String get variableReferenceNotFound;
+
+  /// No description provided for @variableReferenceNotFoundReset.
+  ///
+  /// In en, this message translates to:
+  /// **'click to reset to default'**
+  String get variableReferenceNotFoundReset;
 }
 
 class _AppLocalizationsDelegate

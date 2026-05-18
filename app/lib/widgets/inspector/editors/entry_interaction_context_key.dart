@@ -1,6 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
@@ -111,6 +112,7 @@ class EntryInteractionContextKeyEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final generic = Generic.maybeOf(context);
     final ignoresBlueprint =
         customBlueprint.hasModifier("ignore_context_key_blueprint");
@@ -147,7 +149,7 @@ class EntryInteractionContextKeyEditor extends HookConsumerWidget {
 
             return EntrySelectorEditorDisplay(
               entryId: candidateData.firstOrNull?.entryId ?? entryId,
-              display: "Entry",
+              display: l10n.entry,
               isAccepting: isAccepting,
               selectEntry: () {
                 _select(ref.passing, targetBlueprint);

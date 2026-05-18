@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -37,6 +38,7 @@ class PositionEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final withRotation = customBlueprint.hasModifier("with_rotation");
 
     return Column(
@@ -70,13 +72,13 @@ class PositionEditor extends HookConsumerWidget {
             children: [
               CordPropertyEditor(
                 path: path.join("yaw"),
-                label: "Yaw",
+                label: l10n.yawFieldLabel,
                 color: Colors.deepPurpleAccent,
               ),
               const SizedBox(width: 8),
               CordPropertyEditor(
                 path: path.join("pitch"),
-                label: "Pitch",
+                label: l10n.pitchFieldLabel,
                 color: Colors.amberAccent,
               ),
             ],
@@ -96,6 +98,7 @@ class _WorldEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final focus = useFocusNode();
     final value = ref.watch(fieldValueProvider(path, ""));
 
@@ -108,7 +111,7 @@ class _WorldEditor extends HookConsumerWidget {
         focus: focus,
         text: value,
         icon: TWIcons.earth,
-        hintText: "World",
+        hintText: l10n.worldFieldHint,
         onChanged: (value) {
           ref
               .read(inspectingEntryDefinitionProvider)

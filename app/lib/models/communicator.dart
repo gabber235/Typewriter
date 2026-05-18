@@ -617,13 +617,14 @@ class Communicator {
 
     final json = jsonDecode(data) as Map<String, dynamic>;
     final response = Response.fromJson(json);
+    final l10n = ref.read(l10nProvider);
 
     if (!response.success) {
       debugPrint("Ack failed: ${response.message}");
       Toasts.showError(
         ref.passing,
         response.message,
-        description: "Reloading the full book to resync with the server.",
+        description: l10n.reloadBookResyncDescription,
       );
       fetchBook();
       return;

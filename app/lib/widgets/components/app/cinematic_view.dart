@@ -180,7 +180,7 @@ List<String> _cinematicEntryIds(Ref ref) {
   return page.entries.map((entry) => entry.id).toList();
 }
 
-void _deleteSegment(AppLocalizations l10n, PassingRef ref, String entryId, String segmentPath) {;
+void _deleteSegment(AppLocalizations l10n, PassingRef ref, String entryId, String segmentPath) {
   final page = ref.read(currentPageProvider);
   if (page == null) {
     Toasts.showError(

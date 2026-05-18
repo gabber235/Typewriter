@@ -65,8 +65,8 @@ class HomePage extends HookConsumerWidget {
               child: DropdownButton<Locale>(
                 value: currentLocale,
                 items: const [
-                  DropdownMenuItem(value: Locale('en'), child: Text('English')),
-                  DropdownMenuItem(value: Locale('ru'), child: Text('Русский')),
+                  DropdownMenuItem(value: Locale("en"), child: Text("English")),
+                  DropdownMenuItem(value: Locale("ru"), child: Text("Русский")),
                 ],
                 onChanged: (newLocale) {
                   if (newLocale != null) {

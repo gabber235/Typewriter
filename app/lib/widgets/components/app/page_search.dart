@@ -92,7 +92,7 @@ class PageFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Pages";
+  String title(AppLocalizations l10n) => l10n.pages;
 
   @override
   List<String> get quantifiers =>
@@ -152,7 +152,7 @@ class AddPageFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Add Page";
+  String title(AppLocalizations l10n) => l10n.addPage;
 
   @override
   List<String> get quantifiers => [

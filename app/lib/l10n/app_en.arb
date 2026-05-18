@@ -33,6 +33,12 @@
       "item": {}
     }
   },
+  "trueValue": "True",
+  "@trueValue": {},
+  "falseValue": "False",
+  "@falseValue": {},
+  "hexCode": "Hex Code",
+  "@hexCode": {},
   "open": "Open",
   "@open": {},
   "actions": "Actions",
@@ -91,6 +97,8 @@
   },
   "fetchSkin": "Fetch Skin",
   "@fetchSkin": {},
+  "fetch": "Fetch",
+  "@fetch": {},
   "fetchSkinHint": "Enter the {bodyKey} to fetch the skin",
   "@fetchSkinHint": {
     "placeholders": {
@@ -123,10 +131,76 @@
   "@pageSearch": {},
   "fields": "Fields",
   "@fields": {},
-  "pagesTitle": "Pages",
-  "@pagesTitle": {},
+  "entry": "Entry",
+  "@entry": {},
+  "name": "Name",
+  "@name": {},
+  "nameHint": "Enter a name",
+  "@nameHint": {},
+  "algebraicEditorInvalidData": "This field contains invalid data. ",
+  "@algebraicEditorInvalidData": {},
+  "algebraicEditorCaseNotFound": "Could not find a case for {name}. ",
+  "@algebraicEditorCaseNotFound": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "selectCase": "Select Case",
+  "@selectCase": {},
+  "valueReset": "Click to reset it to the default value.",
+  "@valueReset": {},
+  "setCaseType": "Set {name} as the type of the field",
+  "@setCaseType": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "newEntries": "New Entries",
+  "@newEntries": {},
+  "entries": "Entries",
+  "@entries": {},
+  "material": "Material",
+  "@material": {},
+  "materials": "Materials",
+  "@materials": {},
+  "itemName": "Item Name",
+  "@itemName": {},
+  "sounds": "Sounds",
+  "@sounds": {},
+  "selectSound": "Select Sound",
+  "@selectSound": {},
+  "removeSound": "Remove Sound",
+  "@removeSound": {},
+  "loadingSounds": "Loading Sounds...",
+  "@loadingSounds": {},
+  "faledToLoadSounds": "Failed to load sounds",
+  "@faledToLoadSounds": {},
+  "soundDescription": "{category} ({trackCount} Sound {trackWord})",
+  "@soundDescription": {
+    "placeholders": {
+      "category": {},
+      "trackCount": {},
+      "trackWord": {}
+    }
+  },
+  "texture": "Texture",
+  "@texture": {},
+  "signature": "Signature",
+  "@signature": {},
+  "pages": "Pages",
+  "@pages": {},
   "unknownPage": "Unknown page",
   "@unknownPage": {},
+  "invalidPageType": "Invalid page type",
+  "@invalidPageType": {},
+  "selectAPage": "Select a {type} page",
+  "@selectAPage": { 
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "pageNotAllowedHere": "Page is not allowed here",
+  "@pageNotAllowedHere": {},
   "newPage": "New Page",
   "@newPage": {},
   "change": "Change",
@@ -135,6 +209,8 @@
   "@changePriority": {},
   "reconnectTitle": "Connection lost, Reconnecting...",
   "@reconnectTitle": {},
+  "reloadBookResyncDescription": "Reloading the full book to resync with the server.",
+  "@reloadBookResyncDescription": {},
   "joinDiscord": "Join Discord",
   "@joinDiscord": {},
   "openWiki": "Open Wiki",
@@ -145,6 +221,10 @@
   "@fetchFromURL": {},
   "fetchFromUUID": "Fetch from UUID",
   "@fetchFromUUID": {},
+  "yawFieldLabel": "Yaw",
+  "@yawFieldLabel": {},
+  "pitchFieldLabel": "Pitch",
+  "@pitchFieldLabel": {},
   "componentsCinematicDeleteSegment": "Delete Segment",
   "@componentsCinematicDeleteSegment": {},
   "componentsCinematicDuplicateSegment": "Duplicate Segment",
@@ -406,12 +486,24 @@
   "@noBlueprintFoundForEntry": {},
   "noBlueprintFoundForSegment": "No blueprint is found for the selected segment.",
   "@noBlueprintFoundForSegment": {},
-  "deleteRefference": "Delete Reference",
-  "@deleteRefference": {},
+  "deleteReference": "Delete Reference",
+  "@deleteReference": {},
   "nonExistentEntry": "Non-existent entry",
   "@nonExistentEntry": {},
+  "selectEntry": "Select Entry",
+  "@selectEntry": {},
+  "selectAEntry": "Select a {name}",
+  "@selectAEntry": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "entryNotAllow": "Entry is not allowed here",
+  "@entryNotAllow": {},
   "entryReferenceNotAnEntry": "Entry reference is not an entry",
   "@entryReferenceNotAnEntry": {},
+  "navigateToEntry": "Navigate to entry",
+  "@navigateToEntry": {},
   "nonExistentBlueprint": "Non-existent blueprint",
   "@nonExistentBlueprint": {},
   "blueprintDoesNotExist": "Blueprint for this entry does not exist",
@@ -446,6 +538,10 @@
   "@manifestEmptyTitle": {},
   "searchHint": "Enter search query...",
   "@searchHint": {},
+  "worldFieldHint": "World",
+  "@worldFieldHint": {},
+  "materialSelectHint": "Select a material",
+  "@materialSelectHint": {},
   "noStaticEntries": "There are no static entries on this page.",
   "@noStaticEntries": {},
   "replaceWithVariable": "Replace with Variable",
@@ -463,5 +559,127 @@
   "entryDeprecatedWarningDocumentation": " documentation",
   "@entryDeprecatedWarningDocumentation": {},
   "entryDeprecatedWarningInfo": " for more information.",
-  "@entryDeprecatedWarningInfo": {}
+  "@entryDeprecatedWarningInfo": {},
+  "invalidCronExpression": "Invalid cron expression",
+  "@invalidCronExpression": {},
+  "validCron": "Valid cron expression: {humanReadable}",
+  "@validCron": {
+    "placeholders": {
+      "humanReadable": {}
+    }
+  },
+  "validDuration": "Valid duration: {duration}",
+  "@validDuration": {
+    "placeholders": {
+      "duration": {}
+    }
+  },
+  "genericNotFound": "Generic not found ",
+  "@genericNotFound": {},
+  "genericNotFoundDescription": "please report this in the Typewriter Discord",
+  "@genericNotFoundDescription": {},
+  "globalContextKeyEditor_noGlobalKeys": "No extension has a global key. Try using an entry key.",
+  "@globalContextKeyEditor_noGlobalKeys": {},
+  "itemEditor_invalidShape": "Shape for item field is not an algebraic blueprint: {path}",
+  "@itemEditor_invalidShape": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "itemEditor_itemFieldNotMap": "Value for serialized item field is not a map: {path}",
+  "@itemEditor_itemFieldNotMap": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "itemEditor_noItemCaptured": "You have not yet captured the item. Click on the blue camera icon to capture the item you are holding in game.",
+  "@itemEditor_noItemCaptured": {},
+  "itemEditor_itemIsCaptured": "This item has been captured from in game. If you want to change it, you can re-capture the item.",
+  "@itemEditor_itemIsCaptured": {},
+  "noElementsFound": "No {name} found",
+  "@noElementsFound": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "mapEditor_keyAlreadyExistsTitle": "Override key?",
+  "@mapEditor_keyAlreadyExistsTitle": {},
+  "mapEditor_keyAlreadyExistsContent": "The key '{key}' already exists.\nThis will delete all the data from the existing key.",
+  "@mapEditor_keyAlreadyExistsContent": {
+    "placeholders": {
+      "key": {}
+    }
+  },
+  "materialNotAvailable": "Unavailable on ${version} servers",
+  "@materialNotAvailable": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "numberEditorMinError": "Value must be at least {min}",
+  "@numberEditorMinError": {
+    "placeholders": {
+      "min": {}
+    }
+  },
+  "numberEditorMaxError": "Value must be at most {max}",
+  "@numberEditorMaxError": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "invalidSubfield": "Invalid subfield, try to restart the server",
+  "@invalidSubfield": {},
+  "couldNotWireBlueprint": "Could not wire blueprint for entry ${bpId}, report this to the discord!",
+  "@couldNotWireBlueprint": {
+    "placeholders": {
+      "bpId": {}
+    }
+  },
+  "couldNotWireEntry": "Could not wire entry ${baseEntryId} to target entry ${targetEntryId}, report this to the discord!",
+  "@couldNotWireEntry": {
+    "placeholders": {
+      "baseEntryId": {},
+      "targetEntryId": {}
+    }
+  },
+  "couldNotReplaceEntry": "Could not replace entry ${baseEntryId} with target entry ${targetEntryId}, report this to the discord!",
+  "@couldNotReplaceEntry": {
+    "placeholders": {
+      "baseEntryId": {},
+      "targetEntryId": {}
+    }
+  },
+  "dataBlueprintMismatch": "Data blueprint for path {path} did not match",
+  "@dataBlueprintMismatch": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "pathNotAListWhileBlueprintRequiresAList": "Path {path} is not a list while blueprint requires a list",
+  "@pathNotAListWhileBlueprintRequiresAList": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "pathNotAMapWhileBlueprintRequiresAMap": "Path {path} is not a map while blueprint requires a map",
+  "@pathNotAMapWhileBlueprintRequiresAMap": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "noDataBlueprintFound": "No data blueprint found for path {path}",
+  "@noDataBlueprintFound": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "blueprintNotCompatibleWithGeneric": "The generic blueprint of the entry is not compatible with the new blueprint",
+  "@blueprintNotCompatibleWithGeneric": {},
+  "potionEffects": "Potion Effects",
+  "@potionEffects": {},
+  "variableReferenceNotFound": "Could not find Variable Reference, ",
+  "@variableReferenceNotFound": {},
+  "variableReferenceNotFoundReset": "click to reset to default",
+  "@variableReferenceNotFoundReset": {}
 }

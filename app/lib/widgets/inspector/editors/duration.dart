@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/icons.dart";
@@ -31,6 +32,7 @@ class DurationEditor extends HookConsumerWidget {
   final CustomBlueprint customBlueprint;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return WritersIndicator(
       provider: fieldWritersProvider(path),
       shift: (_) => const Offset(15, 0),
@@ -62,7 +64,7 @@ class DurationEditor extends HookConsumerWidget {
             abbreviated: false,
             tersity: DurationTersity.millisecond,
           );
-          return "Valid Duration: $formatted";
+          return l10n.validDuration(formatted);
         },
       ),
     );

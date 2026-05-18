@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/icons.dart";
@@ -33,6 +34,7 @@ class NumberEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final isNegativeAllowed =
         primitiveBlueprint.get("negative") as bool? ?? true;
     final min = primitiveBlueprint.get("min") as num?;
@@ -64,8 +66,8 @@ class NumberEditor extends HookConsumerWidget {
           ],
         ],
         validator: (value) {
-          if (min != null && value < min) return "Value must be at least $min";
-          if (max != null && value > max) return "Value must be at most $max";
+          if (min != null && value < min) return l10n.numberEditorMinError(min);
+          if (max != null && value > max) return l10n.numberEditorMaxError(max);
           return null;
         },
       ),

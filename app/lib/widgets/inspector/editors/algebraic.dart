@@ -6,6 +6,7 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
@@ -76,6 +77,7 @@ class AlgebraicEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final selectedCase = ref.watch(fieldValueProvider(path.join("case"), ""));
 
     if (selectedCase is! String ||
@@ -92,11 +94,11 @@ class AlgebraicEditor extends HookConsumerWidget {
         child: Text.rich(
           TextSpan(
             text: selectedCase is! String || selectedCase.isEmpty
-                ? "This field contains invalid data. "
-                : "Could not find a case for $selectedCase. ",
-            children: const [
+                ? l10n.algebraicEditorInvalidData
+                : l10n.algebraicEditorCaseNotFound(selectedCase),
+            children: [
               TextSpan(
-                text: "Click to reset it to the default value.",
+                text: l10n.valueReset,
                 style: TextStyle(
                   decoration: TextDecoration.underline,
                   decorationColor: Colors.redAccent,
@@ -291,7 +293,7 @@ class _AlgebraicSearchFetcher extends SearchFetcher {
   final Fuzzy<MapEntry<String, DataBlueprint>> _fuzzy;
 
   @override
-  String get title => "Select Case";
+  String title(AppLocalizations l10n) => l10n.selectCase;
 
   @override
   List<SearchElement> fetch(PassingRef ref, String query) {
@@ -337,8 +339,10 @@ class _AlgebraicSearchElement extends SearchElement {
   }
 
   @override
-  String description(BuildContext context) =>
-      "Set ${caseName.titleCase()} as the type of the field";
+  String description(BuildContext context) {
+    final l10n = context.l10n;
+    return l10n.setCaseType(caseName.titleCase());
+  }
 
   @override
   Widget icon(BuildContext context) => Iconify(

@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
@@ -18,13 +19,14 @@ class NameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final focus = useFocusNode();
     useFocusedBasedCurrentEditingField(focus, ref.passing, "name");
     final name = ref.watch(fieldValueProvider("name"));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: "Name"),
+        SectionTitle(title: l10n.name),
         const SizedBox(height: 1),
         WritersIndicator(
           provider: fieldWritersProvider("name"),
@@ -41,7 +43,7 @@ class NameField extends HookConsumerWidget {
               snakeCaseFormatter(),
               FilteringTextInputFormatter.allow(RegExp("[a-z0-9_.]")),
             ],
-            hintText: "Enter a name",
+            hintText: l10n.nameHint,
             icon: TWIcons.signature,
           ),
         ),

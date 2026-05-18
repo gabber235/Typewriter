@@ -1,5 +1,6 @@
 import "package:flutter/material.dart" hide Page;
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
@@ -130,6 +131,7 @@ class EntrySelectorEditorDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final hasEntry = ref.watch(entryExistsProvider(entryId));
     final needsPadding = !hasEntry && !isAccepting;
 
@@ -141,7 +143,7 @@ class EntrySelectorEditorDisplay extends ConsumerWidget {
           return [
             if (hasEntry) ...[
               ContextMenuTile.button(
-                title: "Navigate to entry",
+                title: l10n.navigateToEntry,
                 icon: TWIcons.pencil,
                 onTap: () {
                   ref
@@ -151,7 +153,7 @@ class EntrySelectorEditorDisplay extends ConsumerWidget {
               ),
               if (entryId.isNotEmpty)
                 ContextMenuTile.button(
-                  title: "Remove reference",
+                  title: l10n.deleteReference,
                   icon: TWIcons.squareMinus,
                   color: Colors.redAccent,
                   onTap: onRemove,
@@ -159,7 +161,7 @@ class EntrySelectorEditorDisplay extends ConsumerWidget {
             ],
             if (!hasEntry) ...[
               ContextMenuTile.button(
-                title: "Select entry",
+                title: l10n.selectEntry,
                 icon: TWIcons.magnifyingGlass,
                 onTap: selectEntry,
               ),
@@ -209,7 +211,7 @@ class EntrySelectorEditorDisplay extends ConsumerWidget {
                 else
                   Expanded(
                     child: Text(
-                      "Select a $display",
+                      l10n.selectAEntry(display),
                       style: Theme.of(context).inputDecorationTheme.hintStyle,
                     ),
                   ),
@@ -236,6 +238,7 @@ class EntrySelectorRejectWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return Material(
       color: Theme.of(context).inputDecorationTheme.fillColor,
       borderRadius: BorderRadius.circular(8),
@@ -251,7 +254,7 @@ class EntrySelectorRejectWidget extends HookConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                "Entry is not allowed here",
+                l10n.entryNotAllow,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),

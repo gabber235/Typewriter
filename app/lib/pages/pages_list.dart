@@ -125,7 +125,7 @@ class _PagesSelector extends HookConsumerWidget {
                 children: [
                   const SizedBox(height: 12),
                   Text(
-                    l10n.pagesTitle,
+                    l10n.pages,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium

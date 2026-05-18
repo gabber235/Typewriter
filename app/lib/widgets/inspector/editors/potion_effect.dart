@@ -57,7 +57,7 @@ class PotionEffectsFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Potion Effects";
+  String title(AppLocalizations l10n) => l10n.potionEffects;
 
   @override
   List<SearchElement> fetch(PassingRef ref, String query) {
