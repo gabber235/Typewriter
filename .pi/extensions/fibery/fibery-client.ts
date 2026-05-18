@@ -114,7 +114,25 @@ export type FindItemsResult = {
 	kind: ItemKind;
 	type: string;
 	count: number;
-	items: Array<{ id: string; title: string; raw: Record<string, unknown> }>;
+	items: Array<{ id: string; title: string; score: number; isExact: boolean; raw: Record<string, unknown> }>;
+};
+
+export type CurrentTaskItem = {
+	kind: ItemKind;
+	id: string;
+	title: string;
+	status: string;
+	milestoneName: string | null;
+	milestoneState: string | null;
+};
+
+export type CurrentTasksResult = {
+	count: number;
+	items: CurrentTaskItem[];
+	filters: {
+		excludedStatuses: string[];
+		includedMilestoneState: string;
+	};
 };
 
 export type LinkedResult = {
@@ -405,12 +423,55 @@ async function queryTypeRecords(
 	return Array.isArray(result) ? result.map(asRecord) : [];
 }
 
-async function queryByName(
+function normalizeForSearch(value: string): string {
+	return value.toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function levenshteinDistance(a: string, b: string): number {
+	const al = a.length;
+	const bl = b.length;
+	if (al === 0) return bl;
+	if (bl === 0) return al;
+	const dp = Array.from({ length: al + 1 }, (_, i) => [i]);
+	for (let j = 1; j <= bl; j += 1) dp[0][j] = j;
+	for (let i = 1; i <= al; i += 1) {
+		for (let j = 1; j <= bl; j += 1) {
+			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+			dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+		}
+	}
+	return dp[al][bl];
+}
+
+function scoreNameMatch(queryRaw: string, candidateRaw: string): { score: number; isExact: boolean } {
+	const query = normalizeForSearch(queryRaw);
+	const candidate = normalizeForSearch(candidateRaw);
+	if (!query || !candidate) return { score: 0, isExact: false };
+	if (query === candidate) return { score: 1, isExact: true };
+
+	const queryTokens = query.split(" ").filter(Boolean);
+	const candidateTokens = candidate.split(" ").filter(Boolean);
+	const queryTokenSet = new Set(queryTokens);
+	const candidateTokenSet = new Set(candidateTokens);
+	const overlap = [...queryTokenSet].filter((token) => candidateTokenSet.has(token)).length;
+	const tokenScore = queryTokenSet.size > 0 ? overlap / queryTokenSet.size : 0;
+	const substringScore = candidate.includes(query) || query.includes(candidate) ? 1 : 0;
+	const distance = levenshteinDistance(query, candidate);
+	const maxLen = Math.max(query.length, candidate.length);
+	const editScore = maxLen > 0 ? 1 - distance / maxLen : 0;
+	const score = Math.max(0, Math.min(0.55 * tokenScore + 0.25 * substringScore + 0.2 * editScore, 0.999));
+	return { score, isExact: false };
+}
+
+type RankedEntity = { entity: Record<string, unknown>; score: number; isExact: boolean };
+
+async function queryByNameRanked(
 	config: FiberyConfig,
 	mapping: TypeMapping,
 	title: string,
 	limit = 10,
-): Promise<Array<Record<string, unknown>>> {
+	minScore = 0.35,
+): Promise<RankedEntity[]> {
 	const rows = await queryTypeRecords(
 		config,
 		mapping.typeId,
@@ -418,10 +479,32 @@ async function queryByName(
 			"fibery/id": "fibery/id",
 			[mapping.nameField]: mapping.nameField,
 		},
-		Math.max(limit * 20, 500),
+		Math.max(limit * 25, 750),
 	);
-	const exact = rows.filter((entity) => entityName(entity, mapping.nameField) === title);
-	return exact.slice(0, limit);
+	const ranked = rows
+		.map((entity) => {
+			const match = scoreNameMatch(title, entityName(entity, mapping.nameField));
+			return { entity, score: match.score, isExact: match.isExact };
+		})
+		.filter((entry) => entry.isExact || entry.score >= minScore)
+		.sort((a, b) => {
+			if (b.score !== a.score) return b.score - a.score;
+			return entityName(a.entity, mapping.nameField).localeCompare(entityName(b.entity, mapping.nameField));
+		});
+	return ranked.slice(0, limit);
+}
+
+async function queryByNameExact(
+	config: FiberyConfig,
+	mapping: TypeMapping,
+	title: string,
+	limit = 10,
+): Promise<Array<Record<string, unknown>>> {
+	const ranked = await queryByNameRanked(config, mapping, title, Math.max(limit * 2, 20), 0);
+	return ranked
+		.filter((entry) => entry.isExact)
+		.slice(0, limit)
+		.map((entry) => entry.entity);
 }
 
 async function resolveEntityIdsByName(
@@ -638,7 +721,7 @@ async function createItemInternal(kind: ItemKind, config: FiberyConfig, args: Cr
 	if (!sanitizeMarkdown(args.descriptionMarkdown)) {
 		throw new Error("descriptionMarkdown must not be empty");
 	}
-	const existing = await queryByName(config, mapping, title, 10);
+	const existing = await queryByNameExact(config, mapping, title, 10);
 	if (existing.length > 0) {
 		return {
 			action: "duplicate_detected",
@@ -768,16 +851,16 @@ async function resolveTargetEntity(
 	const normalized = idOrName.trim();
 	if (!normalized) throw new Error("idOrName must not be empty");
 	if (isUuid(normalized)) return { mapping, id: normalized };
-	const matches = await queryByName(config, mapping, normalized, 20);
+	const matches = await queryByNameRanked(config, mapping, normalized, 20);
 	if (matches.length === 0) throw new Error(`No ${kind} found with name: ${normalized}`);
 	if (matches.length > 1) {
 		return {
 			mapping,
 			id: "",
-			matches: matches.map((entity) => ({ id: primaryId(entity), title: entityName(entity, mapping.nameField) })),
+			matches: matches.map((entry) => ({ id: primaryId(entry.entity), title: entityName(entry.entity, mapping.nameField) })),
 		};
 	}
-	return { mapping, id: primaryId(matches[0]) };
+	return { mapping, id: primaryId(matches[0].entity) };
 }
 
 async function updateItemInternal(kind: "bug", config: FiberyConfig, args: UpdateBugArgs): Promise<unknown>;
@@ -964,12 +1047,92 @@ export async function findItems(
 	limit = 20,
 ): Promise<FindItemsResult> {
 	const mapping = await resolveTypeMapping(config, kind);
-	const entities = await queryByName(config, mapping, title, limit);
+	const ranked = await queryByNameRanked(config, mapping, title, limit);
 	return {
 		kind,
 		type: mapping.typeId,
-		count: entities.length,
-		items: entities.map((entity) => ({ id: primaryId(entity), title: entityName(entity, mapping.nameField), raw: entity })),
+		count: ranked.length,
+		items: ranked.map((entry) => ({
+			id: primaryId(entry.entity),
+			title: entityName(entry.entity, mapping.nameField),
+			score: Number(entry.score.toFixed(4)),
+			isExact: entry.isExact,
+			raw: entry.entity,
+		})),
+	};
+}
+
+function normalizeStateName(value: unknown): string {
+	const record = asRecord(value);
+	return String(record["enum/name"] ?? record[RELATED_TYPE_IDS.nameField] ?? value ?? "").trim();
+}
+
+function toCurrentTaskItem(kind: ItemKind, row: Record<string, unknown>, mapping: TypeMapping): CurrentTaskItem {
+	const milestone = asRecord(row[mapping.milestoneField]);
+	const milestoneState = asRecord(milestone["workflow/state"]);
+	return {
+		kind,
+		id: primaryId(row),
+		title: entityName(row, mapping.nameField),
+		status: normalizeStateName(row[mapping.statusField]),
+		milestoneName: milestone ? String(milestone[RELATED_TYPE_IDS.milestoneNameField] ?? "").trim() || null : null,
+		milestoneState: milestoneState ? normalizeStateName(milestoneState) || null : null,
+	};
+}
+
+function isCurrentTask(item: CurrentTaskItem): boolean {
+	if (["In Beta", "In Production"].includes(item.status)) return false;
+	if (!item.milestoneName) return true;
+	return item.milestoneState === "In Development";
+}
+
+async function queryCurrentTasksForKind(
+	config: FiberyConfig,
+	kind: ItemKind,
+	limitPerKind: number,
+): Promise<CurrentTaskItem[]> {
+	const mapping = await resolveTypeMapping(config, kind);
+	const rows = await executeCommand<Array<Record<string, unknown>>>(config, {
+		command: "fibery.entity/query",
+		args: {
+			query: {
+				"q/from": mapping.typeId,
+				"q/select": [
+					"fibery/id",
+					mapping.nameField,
+					{ [mapping.statusField]: ["fibery/id", "enum/name", RELATED_TYPE_IDS.nameField] },
+					{
+						[mapping.milestoneField]: [
+							"fibery/id",
+							RELATED_TYPE_IDS.milestoneNameField,
+							{ "workflow/state": ["fibery/id", "enum/name", RELATED_TYPE_IDS.nameField] },
+						],
+					},
+				],
+				"q/limit": Math.max(limitPerKind, 500),
+			},
+		},
+	});
+	return (Array.isArray(rows) ? rows : []).map(asRecord).map((row) => toCurrentTaskItem(kind, row, mapping));
+}
+
+export async function listCurrentTasks(config: FiberyConfig, limit = 200): Promise<CurrentTasksResult> {
+	const safeLimit = Math.max(1, Math.min(1000, Math.floor(limit)));
+	const [bugs, features] = await Promise.all([
+		queryCurrentTasksForKind(config, "bug", safeLimit),
+		queryCurrentTasksForKind(config, "feature", safeLimit),
+	]);
+	const items = [...bugs, ...features]
+		.filter(isCurrentTask)
+		.sort((a, b) => a.title.localeCompare(b.title))
+		.slice(0, safeLimit);
+	return {
+		count: items.length,
+		items,
+		filters: {
+			excludedStatuses: ["In Beta", "In Production"],
+			includedMilestoneState: "In Development",
+		},
 	};
 }
 

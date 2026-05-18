@@ -16,6 +16,7 @@ import {
 	getConfig,
 	getDiscoverySummary,
 	linkBugToFeature,
+	listCurrentTasks,
 	listMilestones,
 	listRecentBetas,
 	refreshSchemaCache,
@@ -135,17 +136,33 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "fibery_find_items",
 		label: "Fibery Find Items",
-		description: "Find Fibery bugs or features by exact title",
+		description: "Find Fibery bugs or features by fuzzy title search",
 		promptSnippet: "Look for an existing Fibery bug or feature before creating a duplicate.",
 		parameters: Type.Object({
 			kind: stringEnum(["bug", "feature"] as const),
-			title: Type.String({ description: "Exact title to search" }),
+			title: Type.String({ description: "Rough or exact title to search" }),
 			limit: Type.Optional(Type.Number({ description: "Maximum results to return" })),
 		}),
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const config = await getConfig(ctx.cwd);
 			const result = await findItems(config, params.kind, params.title, params.limit ?? 20);
 			return textResult(`Fibery find result: ${JSON.stringify(result, null, 2)}`, result);
+		},
+	});
+
+	pi.registerTool({
+		name: "fibery_list_current_tasks",
+		label: "Fibery List Current Tasks",
+		description:
+			"List current development tasks across bugs and features where milestone is empty or in development, excluding In Beta/In Production",
+		promptSnippet: "Use this to fetch active/current Fibery work items across bugs and features.",
+		parameters: Type.Object({
+			limit: Type.Optional(Type.Number({ description: "Maximum number of tasks to return" })),
+		}),
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+			const config = await getConfig(ctx.cwd);
+			const result = await listCurrentTasks(config, params.limit ?? 200);
+			return textResult(`Fibery current tasks: ${JSON.stringify(result, null, 2)}`, result);
 		},
 	});
 
