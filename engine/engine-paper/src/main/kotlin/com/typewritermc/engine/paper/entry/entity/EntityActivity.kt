@@ -37,6 +37,7 @@ interface SharedEntityActivity : EntityActivity<SharedActivityContext> {
     fun addedViewer(context: SharedActivityContext, viewer: Player) {}
     fun removedViewer(context: SharedActivityContext, viewer: Player) {}
 }
+
 interface IndividualEntityActivity : EntityActivity<IndividualActivityContext>
 interface GenericEntityActivity : EntityActivity<ActivityContext>
 
@@ -58,7 +59,8 @@ class IdleActivity(override var currentPosition: PositionProperty) : GenericEnti
 abstract class SingleChildActivity<Context : ActivityContext>(
     startLocation: PositionProperty,
 ) : EntityActivity<Context> {
-    private var child: Ref<out EntityActivityEntry> = emptyRef()
+    protected var child: Ref<out EntityActivityEntry> = emptyRef()
+        private set
     private var currentActivity: EntityActivity<in Context> = IdleActivity(startLocation)
 
     override fun initialize(context: Context) {

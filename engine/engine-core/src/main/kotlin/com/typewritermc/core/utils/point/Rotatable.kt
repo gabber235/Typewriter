@@ -43,6 +43,17 @@ interface Rotatable<R : Rotatable<R>> {
     fun withRotation(yaw: Float, pitch: Float): R
 
     /**
+     * Creates a new instance with inferred yaw and pitch angles.
+     *
+     * @param supplier the function that supplies the yaw and pitch angles
+     * @return a new instance with the inferred yaw and pitch angles
+     */
+    fun withRotation(supplier: (Float, Float) -> Pair<Float, Float>): R {
+        val (yaw, pitch) = supplier.invoke(yaw, pitch)
+        return withRotation(yaw, pitch)
+    }
+
+    /**
      * Rotates the yaw angle by the specified amount.
      *
      * @param angle the amount to rotate the yaw angle by
