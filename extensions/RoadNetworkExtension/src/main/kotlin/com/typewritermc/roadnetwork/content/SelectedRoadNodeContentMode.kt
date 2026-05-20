@@ -1,6 +1,5 @@
 package com.typewritermc.roadnetwork.content
 
-import com.extollit.gaming.ai.path.model.IPath
 import com.github.retrooper.packetevents.protocol.particle.Particle
 import com.github.retrooper.packetevents.protocol.particle.data.ParticleDustData
 import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes
@@ -22,8 +21,10 @@ import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.roadnetwork.*
+import com.typewritermc.roadnetwork.content.debug.findPathWithDebug
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
-import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import com.typewritermc.roadnetwork.pathfinding.pathetic.PathCalculationResult
+import de.bsommerfeld.pathetic.api.pathing.result.Path
 import kotlinx.coroutines.Dispatchers
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
@@ -47,6 +48,7 @@ class SelectedRoadNodeContentMode(
     private val ref: Ref<RoadNetworkEntry>,
     private val selectedNodeId: RoadNodeId,
     private val initiallyScrolling: Boolean,
+    private val recalculateOnExit: Boolean = false,
 ) : ContentMode(context, player), KoinComponent {
     private lateinit var editorComponent: RoadNetworkEditorComponent
 
@@ -98,6 +100,14 @@ class SelectedRoadNodeContentMode(
         }
 
         +ModificationComponent(::selectedNode, ::network)
+
+        +RecalculateNodeComponent(
+            nodeFetcher = ::selectedNode,
+            editorStateFetcher = { editorComponent.state },
+            onRecalculate = { editorComponent.recalculateEdgesForSingleNode(selectedNodeId) }
+        )
+
+        +PathfindingDebugInitiatorComponent()
 
         nodes({ network.nodes }, ::showingPosition) { node ->
             item = ItemStack(node.material(network.modifications))
@@ -152,14 +162,21 @@ class SelectedRoadNodeContentMode(
             return
         }
 
-        if (player.inventory.heldItemSlot == 5) {
-            edgeAddition(node)
-            return
-        }
+        when (player.inventory.heldItemSlot) {
+            5 -> {
+                edgeAddition(node)
+                return
+            }
 
-        if (player.inventory.heldItemSlot == 6) {
-            edgeRemoval(node)
-            return
+            6 -> {
+                edgeRemoval(node)
+                return
+            }
+
+            7 -> {
+                startDebugPathfinding(node)
+                return
+            }
         }
 
         if (player.inventory.itemInMainHand.isEmpty) {
@@ -254,6 +271,54 @@ class SelectedRoadNodeContentMode(
 
         super.tick(deltaTime)
     }
+
+    override suspend fun dispose() {
+        if (recalculateOnExit && selectedNode != null) {
+            editorComponent.recalculateEdgesForSingleNode(selectedNodeId)
+        }
+        super.dispose()
+    }
+
+    private fun startDebugPathfinding(targetNode: RoadNode) {
+        val startNode = selectedNode ?: return
+
+        Dispatchers.UntickedAsync.launch {
+            player.msg("<dark_purple>Starting debug pathfinding from ${startNode.id} to ${targetNode.id}...")
+
+            try {
+                val (result, debugSession) = findPathWithDebug(
+                    startNode,
+                    targetNode,
+                    nodes = network.nodes,
+                    negativeNodes = network.negativeNodes
+                )
+
+                debugSession?.let { session ->
+                    player.msg("<green>Debug session captured with ${session.steps.size} steps!")
+
+                    ContentModeTrigger(
+                        context,
+                        PathfindingDebugContentMode(context, player, ref, selectedNodeId, session)
+                    ).triggerFor(player, context())
+                } ?: run {
+                    player.msg("<red>Debug pathfinding failed - no session data captured")
+
+                    when (result) {
+                        is PathCalculationResult.Success -> {
+                            player.msg("<yellow>But pathfinding succeeded with path length ${result.length}")
+                        }
+
+                        is PathCalculationResult.Failure -> {
+                            player.msg("<red>Pathfinding failed")
+                        }
+                    }
+                }
+            } catch (exception: Exception) {
+                player.msg("<red>Debug pathfinding error: ${exception.message}")
+                exception.printStackTrace()
+            }
+        }
+    }
 }
 
 class RemoveNodeComponent(
@@ -276,63 +341,81 @@ private class SelectedNodePathsComponent(
     private val nodeFetcher: () -> RoadNode?,
     private val networkFetcher: () -> RoadNetwork,
 ) : ContentComponent {
-    private var paths: Map<RoadEdge, IPath>? = null
+    private var paths: Map<RoadEdge, Path>? = null
+    private var lastLoadHadFailure = false
+
     val isPathsLoaded: Boolean
         get() = paths != null
 
     override suspend fun initialize(player: Player) {
         Dispatchers.UntickedAsync.launch {
-            paths = loadEdgePaths()
+            paths = loadEdgePaths(player)
         }
     }
 
-    private fun loadEdgePaths(): Map<RoadEdge, IPath> {
+    private suspend fun loadEdgePaths(player: Player): Map<RoadEdge, Path> {
         val node = nodeFetcher() ?: return emptyMap()
         val network = networkFetcher()
         val nodes = network.nodes.associateBy { it.id }
-        val instance = node.position.world.instanceSpace
+        var hadFailure = false
+
         return network.edges.filter { it.start == node.id }
             .mapNotNull { edge ->
                 val start = nodes[edge.start] ?: return@mapNotNull null
                 val end = nodes[edge.end] ?: return@mapNotNull null
 
-                val path = roadNetworkFindPath(
+                val result = roadNetworkFindPath(
                     start,
                     end,
-                    instance = instance,
                     nodes = network.nodes,
                     negativeNodes = network.negativeNodes
-                ) ?: return@mapNotNull null
-                edge to path
+                )
+
+                if (result !is PathCalculationResult.Success) {
+                    hadFailure = true
+                    return@mapNotNull null
+                }
+
+                edge to result.path
             }
             .toMap()
+            .also {
+                when {
+                    hadFailure && !lastLoadHadFailure -> {
+                        player.msg("<red>Failed to load road network edges. You need to recalculate them.")
+                        lastLoadHadFailure = true
+                    }
+
+                    !hadFailure -> lastLoadHadFailure = false
+                }
+            }
     }
 
-    private fun refreshEdges() {
+    private suspend fun refreshEdges(player: Player) {
         val node = nodeFetcher() ?: return
         val network = networkFetcher()
         val edges = network.edges.filter { it.start == node.id }
         if (paths?.keys?.toSet() == edges.toSet()) return
-        paths = loadEdgePaths()
+        paths = loadEdgePaths(player)
     }
 
     private var tick = 0
     override suspend fun tick(player: Player) {
         if (paths == null) return
         if (tick++ % 20 == 0) {
-            refreshEdges()
+            refreshEdges(player)
         }
         if (tick++ % 3 != 0) return
 
-        paths?.forEach { (edge, path) ->
-            path.forEach {
+        paths?.forEach { (edge, pathPostion) ->
+            pathPostion.forEach {
                 WrapperPlayServerParticle(
                     Particle(
                         ParticleTypes.DUST,
                         ParticleDustData(1f, NetworkEdgesComponent.colorFromHash(edge.end.hashCode()).toPacketColor())
                     ),
                     true,
-                    Vector3d(it.coordinates().x + 0.5, it.coordinates().y + 0.5, it.coordinates().z + 0.5),
+                    Vector3d(it.x + 0.5, it.y + 0.5, it.z + 0.5),
                     Vector3f.zero(),
                     0f,
                     1
@@ -469,4 +552,87 @@ private class ModificationComponent(
     override suspend fun tick(player: Player) {}
 
     override suspend fun dispose(player: Player) {}
+}
+
+private class RecalculateNodeComponent(
+    private val nodeFetcher: () -> RoadNode?,
+    private val editorStateFetcher: () -> RoadNetworkEditorState,
+    private val onRecalculate: () -> Unit
+) : ContentComponent, ItemsComponent {
+    private var wasRecalculating = false
+
+    override fun items(player: Player): Map<Int, IntractableItem> {
+        val node = nodeFetcher() ?: return emptyMap()
+        val state = editorStateFetcher()
+        val isRecalculating = state is RoadNetworkEditorState.Calculating
+
+        val compassItem = if (isRecalculating) {
+            ItemStack(Material.CLOCK).apply {
+                editMeta { meta ->
+                    meta.name = "<yellow><b>Recalculating..."
+                    meta.loreString = """
+                        |<line> <gray>Recalculating edges for node ${node.id}
+                        |<line> <gray>and connected nodes...
+                        |
+                        |<line> <yellow>Progress: ${state.max - state.nodesTodo}/${state.max}
+                        |
+                        |<line> <red>Please wait...
+                        """.trimMargin()
+                    meta.unClickable()
+                }
+            }
+        } else {
+            ItemStack(Material.COMPASS).apply {
+                editMeta { meta ->
+                    meta.name = "<blue><b>Recalculate Node Edges"
+                    meta.loreString = """
+                        |<line> <gray>Recalculate edges for this node
+                        |<line> <gray>and connected nodes
+                        |
+                        |<line> <gray>Faster than recalculating all edges
+                        """.trimMargin()
+                }
+            }
+        }
+
+        return mapOf(3 to (compassItem onInteract {
+            if (it.type.isClick && !isRecalculating) {
+                onRecalculate()
+                player.playSound("ui.button.click")
+            }
+        }))
+    }
+
+    override suspend fun initialize(player: Player) {}
+
+    override suspend fun tick(player: Player) {
+        val state = editorStateFetcher()
+        val isRecalculating = state is RoadNetworkEditorState.Calculating
+
+        if (wasRecalculating && !isRecalculating) {
+            if (nodeFetcher() != null) {
+                player.playSound("entity.experience_orb.pickup")
+            }
+        }
+
+        wasRecalculating = isRecalculating
+    }
+
+    override suspend fun dispose(player: Player) {}
+}
+
+private class PathfindingDebugInitiatorComponent : ItemComponent {
+    override fun item(player: Player): Pair<Int, IntractableItem> {
+        val item = ItemStack(Material.SPYGLASS).apply {
+            editMeta { meta ->
+                meta.name = "<dark_purple><b>Debug Pathfinding"
+                meta.loreString = """
+                    |<line> <gray>Hold this item and click on another node
+                    |<line> <gray>to start a debug pathfinding session.
+                    """.trimMargin()
+                meta.unClickable()
+            }
+        }
+        return 7 to (item onInteract { })
+    }
 }

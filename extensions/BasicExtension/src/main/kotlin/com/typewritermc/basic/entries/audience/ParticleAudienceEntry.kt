@@ -9,7 +9,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.interactionContext
@@ -80,7 +80,7 @@ class ParticleAudienceFilter(
     val nextTimes = mutableMapOf<UUID, Instant>()
 
     override fun filter(player: Player): Boolean {
-        val distanceSquared = player.position.distanceSqrt(position.get(player)) ?: Double.MAX_VALUE
+        val distanceSquared = player.position.distanceSquared(position.get(player)) ?: Double.MAX_VALUE
         val showRange = radius.get(player)
         return distanceSquared <= showRange * showRange
     }

@@ -13,9 +13,20 @@ data class PositionProperty(
     override val yaw: Float,
     override val pitch: Float,
 ) : EntityProperty, Point<PositionProperty>, Rotatable<PositionProperty>, WorldHolder<PositionProperty> {
+    @Deprecated(
+        "The name is misleading, is not the distance square root, but the distance squared",
+        ReplaceWith("distanceSquared(other)")
+    )
     fun distanceSqrt(other: org.bukkit.Location): Double? {
-        if (world.identifier != other.world.uid.toString()) return null
-        return distanceSqrt(other.toPosition())
+        return distanceSquared(other)
+    }
+
+    fun distanceSquared(other: org.bukkit.Location): Double? {
+        return distanceSquared(other.toPosition())
+    }
+
+    fun distanceSquaredWeightedY(other: org.bukkit.Location): Double? {
+        return distanceSquaredWeightedY(other.toPosition())
     }
 
     override fun withX(x: Double) = copy(x = x)

@@ -6,12 +6,13 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.snippets.snippet
+import com.typewritermc.engine.paper.utils.firstWalkableLocationBelow
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.gps.PointToPointGPS
 
@@ -64,7 +65,7 @@ class TargetLocationActivity(
     private inner class IdleState : State {
         override val isValid: Boolean
             get() {
-                val distance = currentPosition.distanceSqrt(targetPosition) ?: return false
+                val distance = currentPosition.distanceSquared(targetPosition) ?: return false
                 return distance <= locationActivityRange * locationActivityRange
             }
 
@@ -81,7 +82,7 @@ class TargetLocationActivity(
     private inner class NavigatingState : State {
         override val isValid: Boolean
             get() {
-                val distance = currentPosition.distanceSqrt(targetPosition) ?: return true
+                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
                 return distance > locationActivityRange * locationActivityRange
             }
 
@@ -94,7 +95,10 @@ class TargetLocationActivity(
             return NavigationActivity(
                 PointToPointGPS(
                     network,
-                    { currentLocation.toPosition() },
+                    {
+                        val position = currentLocation.toPosition()
+                        position.firstWalkableLocationBelow() ?: position
+                    },
                     { targetPosition }
                 ), currentLocation)
         }

@@ -3,9 +3,9 @@ package com.typewritermc.roadnetwork
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.roadnetwork.gps.roadNetworkFindPath
-import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
-import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import com.typewritermc.roadnetwork.pathfinding.pathetic.PathCalculationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -28,13 +28,14 @@ class RoadNetworkEditor(
     private var job: Job? = null
     private var jobRecalculateEdges: Job? = null
     private var recalculateEdges = AtomicInteger(0)
+    private var totalNodesToRecalculate = AtomicInteger(0)
     private var mutex = Mutex()
 
     val state: RoadNetworkEditorState
         get() = when {
             jobRecalculateEdges != null -> RoadNetworkEditorState.Calculating(
                 recalculateEdges.get(),
-                network.nodes.size
+                totalNodesToRecalculate.get()
             )
 
             lastChange < 0 -> RoadNetworkEditorState.Loading
@@ -66,12 +67,18 @@ class RoadNetworkEditor(
             update {
                 it.copy(edges = emptyList())
             }
-            recalculateEdges.set(network.nodes.size)
+
+            val allNodes = network.nodes
+            recalculateEdges.set(allNodes.size)
+            totalNodesToRecalculate.set(allNodes.size)
+
             coroutineScope {
-                network.nodes.map {
+                allNodes.chunked(10).map { nodeChunk ->
                     launch {
-                        recalculateEdgesForNode(it, it.position.world.instanceSpace)
-                        recalculateEdges.decrementAndGet()
+                        nodeChunk.forEach { node ->
+                            recalculateEdgesForNode(node)
+                            recalculateEdges.decrementAndGet()
+                        }
                     }
                 }
             }
@@ -79,9 +86,63 @@ class RoadNetworkEditor(
         }
     }
 
-    private suspend fun recalculateEdgesForNode(node: RoadNode, instance: PFInstanceSpace) {
+    fun recalculateEdgesForSingleNode(nodeId: RoadNodeId) {
+        val node = network.nodes.find { it.id == nodeId } ?: return
+
+        jobRecalculateEdges?.cancel()
+
+        jobRecalculateEdges = Dispatchers.UntickedAsync.launch {
+            val affectedNodes = findAffectedNodes(node)
+
+            recalculateEdges.set(affectedNodes.size)
+            totalNodesToRecalculate.set(affectedNodes.size)
+
+            coroutineScope {
+                affectedNodes.chunked(5).map { nodeChunk ->
+                    launch {
+                        nodeChunk.forEach { affectedNode ->
+                            recalculateEdgesForNode(affectedNode)
+                            recalculateEdges.decrementAndGet()
+                        }
+                    }
+                }
+            }
+
+            jobRecalculateEdges = null
+        }
+    }
+
+    private fun findAffectedNodes(targetNode: RoadNode): Set<RoadNode> {
+        val affectedNodes = mutableSetOf(targetNode)
+
+        val nodesWithEdgesToTarget = network.edges
+            .filter { it.end == targetNode.id }
+            .mapNotNull { edge -> network.nodes.find { it.id == edge.start } }
+
+        val nodesWithEdgesFromTarget = network.edges
+            .filter { it.start == targetNode.id }
+            .mapNotNull { edge -> network.nodes.find { it.id == edge.end } }
+
+        val nodesInRange = network.nodes.filter {
+            it != targetNode
+                    && it.position.world == targetNode.position.world
+                    && it.position.distanceSquared(targetNode.position)!! < roadNetworkMaxDistance * roadNetworkMaxDistance
+        }
+
+        affectedNodes.addAll(nodesWithEdgesToTarget)
+        affectedNodes.addAll(nodesWithEdgesFromTarget)
+        affectedNodes.addAll(nodesInRange)
+
+        return affectedNodes
+    }
+
+    private suspend fun recalculateEdgesForNode(node: RoadNode) {
         val interestingNodes = network.nodes
-            .filter { it != node && it.position.world == node.position.world && it.position.distanceSquared(node.position) < roadNetworkMaxDistance * roadNetworkMaxDistance }
+            .filter {
+                it != node
+                        && it.position.world == node.position.world
+                        && it.position.distanceSquared(node.position)!! < roadNetworkMaxDistance * roadNetworkMaxDistance
+            }
         val generatedEdges =
             interestingNodes
                 .filter { !network.modifications.containsRemoval(node.id, it.id) }
@@ -89,12 +150,15 @@ class RoadNetworkEditor(
                     val path = roadNetworkFindPath(
                         node,
                         target,
-                        instance = instance,
                         nodes = interestingNodes,
                         negativeNodes = network.negativeNodes
-                    ) ?: return@mapNotNull null
+                    )
 
-                    RoadEdge(node.id, target.id, weight = path.length().toDouble(), length = path.length().toDouble())
+                    if (path !is PathCalculationResult.Success) {
+                        return@mapNotNull null
+                    }
+
+                    RoadEdge(node.id, target.id, weight = path.weight, length = path.length)
                 }
 
         val manualEdges = network.modifications
@@ -146,8 +210,8 @@ sealed class RoadNetworkEditorState(val message: String) {
     data object Saving : RoadNetworkEditorState(" <red><i>(saving)</i></red>")
 
     class Calculating(val nodesTodo: Int, val max: Int) :
-        RoadNetworkEditorState(" <red><i>(calculating ${max - nodesTodo}/$max)</i></red>") {
+        RoadNetworkEditorState(" <red><i>(calculating ${max - nodesTodo}/$max nodes)</i></red>") {
         val percentage: Float
-            get() = (max - nodesTodo) / max.toFloat()
+            get() = if (max > 0) (max - nodesTodo) / max.toFloat() else 1f
     }
 }

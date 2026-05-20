@@ -35,7 +35,7 @@ class GroupAudienceEntityDisplay(
     override fun filter(player: Player): Boolean {
         val groupId = group.groupId(player) ?: GroupId(player.uniqueId)
         val npcLocation = activityManagers[groupId]?.position ?: return false
-        val distance = npcLocation.distanceSqrt(player.location) ?: return false
+        val distance = npcLocation.distanceSquared(player.location) ?: return false
         val showRange = showRange.get(player)
         return distance <= showRange * showRange
     }
