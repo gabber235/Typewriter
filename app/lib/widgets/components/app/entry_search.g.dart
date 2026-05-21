@@ -28,7 +28,7 @@ String _$fuzzyBlueprintsHash() => r'fd1232d7ffe9bf12a820cf8835199d28f7fa2e13';
 /// See also [_fuzzyBlueprints].
 @ProviderFor(_fuzzyBlueprints)
 final _fuzzyBlueprintsProvider =
-    AutoDisposeProvider<Fuzzy<EntryBlueprint>>.internal(
+  AutoDisposeProvider<Fuzzy<_BlueprintSearchItem>>.internal(
   _fuzzyBlueprints,
   name: r'_fuzzyBlueprintsProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -40,6 +40,6 @@ final _fuzzyBlueprintsProvider =
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef _FuzzyBlueprintsRef = AutoDisposeProviderRef<Fuzzy<EntryBlueprint>>;
+typedef _FuzzyBlueprintsRef = AutoDisposeProviderRef<Fuzzy<_BlueprintSearchItem>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

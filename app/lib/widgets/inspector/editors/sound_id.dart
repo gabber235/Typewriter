@@ -107,7 +107,7 @@ class MinecraftSoundIdSearchElement extends SearchElement {
   final FutureOr<bool?> Function(MinecraftSound)? onSelect;
 
   @override
-  String title(AppLocalizations l10n) => sound.name.formatted;
+  String title(AppLocalizations l10n, PassingRef ref) => sound.name.formatted;
 
   @override
   Color color(BuildContext context) {
@@ -147,7 +147,7 @@ class MinecraftSoundIdSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  String description(BuildContext context) {
+  String description(BuildContext context, PassingRef ref) {
     final l10n = context.l10n;
     if (sound.value.length > 1) {
       return l10n.soundDescription(sound.category.formatted, sound.value.length, sound.value.length.pluralize("track"));

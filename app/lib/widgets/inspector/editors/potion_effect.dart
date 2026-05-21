@@ -100,7 +100,7 @@ class PotionEffectSearchElement extends SearchElement {
   late PotionEffectCategory category;
 
   @override
-  String title(AppLocalizations l10n) => potionEffect.formatted;
+  String title(AppLocalizations l10n, PassingRef ref) => potionEffect.formatted;
 
   @override
   Color color(BuildContext context) {
@@ -108,7 +108,7 @@ class PotionEffectSearchElement extends SearchElement {
   }
 
   @override
-  String description(BuildContext context) => category.name;
+  String description(BuildContext context, PassingRef ref) => category.name;
 
   @override
   Widget icon(BuildContext context) {

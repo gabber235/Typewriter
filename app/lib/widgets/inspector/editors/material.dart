@@ -123,7 +123,7 @@ class MaterialSearchElement extends SearchElement {
   final bool? Function(CombinedMaterial)? onSelect;
 
   @override
-  String title(AppLocalizations l10n) => material.value.name;
+  String title(AppLocalizations l10n, PassingRef ref) => material.value.name;
 
   @override
   Color color(BuildContext context) {
@@ -148,7 +148,7 @@ class MaterialSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  String description(BuildContext context) => material.key;
+  String description(BuildContext context, PassingRef ref) => material.key;
 
   @override
   List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {

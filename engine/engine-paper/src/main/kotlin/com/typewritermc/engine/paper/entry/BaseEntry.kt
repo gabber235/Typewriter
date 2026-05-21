@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Negative
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.InteractionContext
@@ -58,10 +59,13 @@ enum class CriteriaOperator {
 
 data class Criteria(
     @Help("The fact to check before triggering the entry")
+    @LabelKey("fact")
     val fact: Ref<ReadableFactEntry> = emptyRef(),
     @Help("The operator to use when comparing the fact value to the criteria value")
+    @LabelKey("operator")
     val operator: CriteriaOperator = CriteriaOperator.EQUALS,
     @Help("The value to compare the fact value to")
+    @LabelKey("value")
     @Negative
     val value: Var<Int> = ConstVar(0),
 ) {
@@ -94,10 +98,13 @@ enum class ModifierOperator {
 
 data class Modifier(
     @Help("The fact to modify after the entry is completed")
+    @LabelKey("fact")
     val fact: Ref<WritableFactEntry> = emptyRef(),
     @Help("The operator to use when modifying the fact value")
+    @LabelKey("operator")
     val operator: ModifierOperator = ModifierOperator.ADD,
     @Help("The value to modify the fact value by")
+    @LabelKey("value")
     @Negative
     val value: Var<Int> = ConstVar(0),
 )

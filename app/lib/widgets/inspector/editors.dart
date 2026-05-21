@@ -2,8 +2,11 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/extension_l10n_provider.dart";
+import "package:typewriter/l10n/locale_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
+import "package:typewriter/utils/localized_entry_metadata.dart";
 import "package:typewriter/widgets/inspector/editors/algebraic.dart";
 import "package:typewriter/widgets/inspector/editors/boolean.dart";
 import "package:typewriter/widgets/inspector/editors/closed_range.dart";
@@ -132,6 +135,20 @@ String pathDisplayName(Ref ref, String path) {
     final parent = parts.removeLast();
     if (parent == "") return "#$index";
     return "${parent.formatted} #$index";
+  }
+
+  final definition = ref.watch(inspectingEntryDefinitionProvider);
+  final blueprint = definition?.blueprint;
+  final field = blueprint?.getField(path);
+  if (blueprint != null && field != null) {
+    final labelKey = LocalizedEntryMetadata.getLabelKey(field) ??
+        LocalizedEntryMetadata.defaultFieldLabelKey(blueprint, path);
+    return ref.watch(extensionL10nResolverProvider).resolve(
+          blueprint.extension,
+          ref.watch(localeControllerProvider),
+          labelKey,
+          fallback: name.formatted,
+        );
   }
 
   return name.formatted;

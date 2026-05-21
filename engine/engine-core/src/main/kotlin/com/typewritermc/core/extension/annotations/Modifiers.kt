@@ -30,8 +30,9 @@ annotation class Generated
 @Retention(AnnotationRetention.RUNTIME)
 /**
  * This allows you to add a tooltip to the field.
+ * You can specify either [text] as a fallback string or [key] as a localization key.
  */
-annotation class Help(val text: String)
+annotation class Help(val text: String = "", val key: String = "")
 
 @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
@@ -173,3 +174,28 @@ annotation class WithAlpha
  * In other words, it allows any interaction context key to be used.
  */
 annotation class IgnoreContextKeyBlueprint
+
+@Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+/**
+ * Specifies a localization key for the field label.
+ * Example: "entity.random_patrol_activity.fields.radius.label"
+ */
+annotation class LabelKey(val value: String)
+
+@Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+/**
+ * Specifies a localization key for the field placeholder text.
+ * Example: "entity.random_patrol_activity.fields.radius.placeholder"
+ */
+annotation class PlaceholderKey(val value: String)
+
+@Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+/**
+ * Specifies localization keys for enum/option labels.
+ * Keys should be in the format: "namespace.field.options.{option_value}"
+ * Example: "entity.random_patrol_activity.fields.type.options.aggressive"
+ */
+annotation class OptionLabelsKey(val keyPrefix: String)

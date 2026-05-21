@@ -1,11 +1,14 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/extension_l10n_provider.dart";
 import "package:typewriter/l10n/l10n_provider.dart";
+import "package:typewriter/l10n/locale_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
+import "package:typewriter/utils/localized_entry_metadata.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/components/app/writers.dart";
 import "package:typewriter/widgets/components/general/formatted_text_field.dart";
@@ -54,6 +57,22 @@ class StringEditor extends HookConsumerWidget {
         ref.watch(fieldValueProvider(path, primitiveBlueprint.defaultValue()));
 
     final singleLine = !primitiveBlueprint.hasModifier("multiline");
+    final definition = ref.watch(inspectingEntryDefinitionProvider);
+    final placeholderKey = definition == null
+        ? null
+        : LocalizedEntryMetadata.getPlaceholderKey(primitiveBlueprint) ??
+            LocalizedEntryMetadata.defaultFieldPlaceholderKey(
+              definition.blueprint,
+              path,
+            );
+    final localizedHint = placeholderKey == null || definition == null
+        ? null
+        : ref.watch(extensionL10nResolverProvider).resolve(
+              definition.blueprint.extension,
+              ref.watch(localeControllerProvider),
+              placeholderKey,
+              fallback: l10n.enterAValue(primitiveBlueprint.type.name),
+            );
 
     return WritersIndicator(
       provider: fieldWritersProvider(path, exact: true),
@@ -61,8 +80,9 @@ class StringEditor extends HookConsumerWidget {
       child: FormattedTextField(
         focus: focus,
         icon: icon,
-        hintText:
-            hint.isNotEmpty ? hint : l10n.enterAValue(primitiveBlueprint.type.name),
+        hintText: hint.isNotEmpty
+            ? hint
+            : localizedHint ?? l10n.enterAValue(primitiveBlueprint.type.name),
         text: forcedValue ?? value,
         singleLine: singleLine,
         keyboardType: singleLine ? TextInputType.text : TextInputType.multiline,

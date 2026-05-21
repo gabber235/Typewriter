@@ -100,6 +100,8 @@ class EntryBlueprint with _$EntryBlueprint {
     @Default(null) DataBlueprint? variableDataBlueprint,
     @Default([]) List<ContextKey> contextKeys,
     @Default([]) List<EntryModifier> modifiers,
+    @Default("") String titleKey,
+    @Default("") String descriptionKey,
   }) = _EntryBlueprint;
 
   factory EntryBlueprint.fromJson(Map<String, dynamic> json) =>

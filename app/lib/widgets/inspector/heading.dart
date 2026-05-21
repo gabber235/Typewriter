@@ -5,6 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/models/localized_entry_blueprint_provider.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/widgets/components/general/admonition.dart";
 import "package:typewriter/widgets/components/general/identifier.dart";
@@ -133,8 +134,8 @@ class EntryBlueprintDisplay extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final blueprintName =
-        ref.watch(entryBlueprintProvider(blueprintId).select((e) => e?.name));
-    if (blueprintName == null) return const SizedBox();
+        ref.watch(entryBlueprintLocalizedTitleProvider(blueprintId));
+    if (blueprintName.isEmpty) return const SizedBox();
 
     final hovering = useState(false);
     return MouseRegion(
@@ -144,7 +145,7 @@ class EntryBlueprintDisplay extends HookConsumerWidget {
       child: GestureDetector(
         onTap: url.isNotEmpty ? _launceUrl : null,
         child: Text(
-          blueprintName.formatted,
+          blueprintName,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: color.withValues(alpha: 0.9),
                 decoration: hovering.value ? TextDecoration.underline : null,

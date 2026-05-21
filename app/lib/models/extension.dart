@@ -23,6 +23,7 @@ class Extension with _$Extension {
     required ExtensionInfo extension,
     @Default([]) List<EntryBlueprint> entries,
     @Default([]) List<GlobalContextKey> globalContextKeys,
+    @Default({}) Map<String, Map<String, String>> translations,
   }) = _Extension;
 
   factory Extension.fromJson(Map<String, dynamic> json) =>
@@ -36,6 +37,7 @@ class ExtensionInfo with _$ExtensionInfo {
     required String shortDescription,
     required String description,
     required String version,
+    @Default("") String key, // Unique extension identifier for translations
   }) = _ExtensionInfo;
 
   factory ExtensionInfo.fromJson(Map<String, dynamic> json) =>

@@ -330,7 +330,7 @@ class _AlgebraicSearchElement extends SearchElement {
   final FutureOr<bool?> Function(String, DataBlueprint)? onSelect;
 
   @override
-  String title(AppLocalizations l10n) => caseName.titleCase();
+  String title(AppLocalizations l10n, PassingRef ref) => caseName.titleCase();
 
   @override
   Color color(BuildContext context) {
@@ -339,7 +339,7 @@ class _AlgebraicSearchElement extends SearchElement {
   }
 
   @override
-  String description(BuildContext context) {
+  String description(BuildContext context, PassingRef ref) {
     final l10n = context.l10n;
     return l10n.setCaseType(caseName.titleCase());
   }

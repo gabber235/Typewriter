@@ -35,6 +35,8 @@ mixin _$EntryBlueprint {
       throw _privateConstructorUsedError;
   List<ContextKey> get contextKeys => throw _privateConstructorUsedError;
   List<EntryModifier> get modifiers => throw _privateConstructorUsedError;
+  String get titleKey => throw _privateConstructorUsedError;
+  String get descriptionKey => throw _privateConstructorUsedError;
 
   /// Serializes this EntryBlueprint to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -64,7 +66,9 @@ abstract class $EntryBlueprintCopyWith<$Res> {
       List<DataBlueprint>? genericConstraints,
       DataBlueprint? variableDataBlueprint,
       List<ContextKey> contextKeys,
-      List<EntryModifier> modifiers});
+      List<EntryModifier> modifiers,
+      String titleKey,
+      String descriptionKey});
 
   $DataBlueprintCopyWith<$Res>? get variableDataBlueprint;
 }
@@ -96,6 +100,8 @@ class _$EntryBlueprintCopyWithImpl<$Res, $Val extends EntryBlueprint>
     Object? variableDataBlueprint = freezed,
     Object? contextKeys = null,
     Object? modifiers = null,
+    Object? titleKey = null,
+    Object? descriptionKey = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -146,6 +152,14 @@ class _$EntryBlueprintCopyWithImpl<$Res, $Val extends EntryBlueprint>
           ? _value.modifiers
           : modifiers // ignore: cast_nullable_to_non_nullable
               as List<EntryModifier>,
+      titleKey: null == titleKey
+          ? _value.titleKey
+          : titleKey // ignore: cast_nullable_to_non_nullable
+              as String,
+      descriptionKey: null == descriptionKey
+          ? _value.descriptionKey
+          : descriptionKey // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 
@@ -184,7 +198,9 @@ abstract class _$$EntryBlueprintImplCopyWith<$Res>
       List<DataBlueprint>? genericConstraints,
       DataBlueprint? variableDataBlueprint,
       List<ContextKey> contextKeys,
-      List<EntryModifier> modifiers});
+      List<EntryModifier> modifiers,
+      String titleKey,
+      String descriptionKey});
 
   @override
   $DataBlueprintCopyWith<$Res>? get variableDataBlueprint;
@@ -215,6 +231,8 @@ class __$$EntryBlueprintImplCopyWithImpl<$Res>
     Object? variableDataBlueprint = freezed,
     Object? contextKeys = null,
     Object? modifiers = null,
+    Object? titleKey = null,
+    Object? descriptionKey = null,
   }) {
     return _then(_$EntryBlueprintImpl(
       id: null == id
@@ -265,6 +283,14 @@ class __$$EntryBlueprintImplCopyWithImpl<$Res>
           ? _value._modifiers
           : modifiers // ignore: cast_nullable_to_non_nullable
               as List<EntryModifier>,
+      titleKey: null == titleKey
+          ? _value.titleKey
+          : titleKey // ignore: cast_nullable_to_non_nullable
+              as String,
+      descriptionKey: null == descriptionKey
+          ? _value.descriptionKey
+          : descriptionKey // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -286,7 +312,9 @@ class _$EntryBlueprintImpl
       final List<DataBlueprint>? genericConstraints = null,
       this.variableDataBlueprint = null,
       final List<ContextKey> contextKeys = const [],
-      final List<EntryModifier> modifiers = const []})
+      final List<EntryModifier> modifiers = const [],
+      this.titleKey = "",
+      this.descriptionKey = ""})
       : _tags = tags,
         _genericConstraints = genericConstraints,
         _contextKeys = contextKeys,
@@ -355,8 +383,15 @@ class _$EntryBlueprintImpl
   }
 
   @override
+  @JsonKey()
+  final String titleKey;
+  @override
+  @JsonKey()
+  final String descriptionKey;
+
+  @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EntryBlueprint(id: $id, name: $name, description: $description, extension: $extension, dataBlueprint: $dataBlueprint, color: $color, icon: $icon, tags: $tags, genericConstraints: $genericConstraints, variableDataBlueprint: $variableDataBlueprint, contextKeys: $contextKeys, modifiers: $modifiers)';
+    return 'EntryBlueprint(id: $id, name: $name, description: $description, extension: $extension, dataBlueprint: $dataBlueprint, color: $color, icon: $icon, tags: $tags, genericConstraints: $genericConstraints, variableDataBlueprint: $variableDataBlueprint, contextKeys: $contextKeys, modifiers: $modifiers, titleKey: $titleKey, descriptionKey: $descriptionKey)';
   }
 
   @override
@@ -375,7 +410,9 @@ class _$EntryBlueprintImpl
       ..add(DiagnosticsProperty('genericConstraints', genericConstraints))
       ..add(DiagnosticsProperty('variableDataBlueprint', variableDataBlueprint))
       ..add(DiagnosticsProperty('contextKeys', contextKeys))
-      ..add(DiagnosticsProperty('modifiers', modifiers));
+      ..add(DiagnosticsProperty('modifiers', modifiers))
+      ..add(DiagnosticsProperty('titleKey', titleKey))
+      ..add(DiagnosticsProperty('descriptionKey', descriptionKey));
   }
 
   @override
@@ -401,7 +438,11 @@ class _$EntryBlueprintImpl
             const DeepCollectionEquality()
                 .equals(other._contextKeys, _contextKeys) &&
             const DeepCollectionEquality()
-                .equals(other._modifiers, _modifiers));
+                .equals(other._modifiers, _modifiers) &&
+            (identical(other.titleKey, titleKey) ||
+                other.titleKey == titleKey) &&
+            (identical(other.descriptionKey, descriptionKey) ||
+                other.descriptionKey == descriptionKey));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -419,7 +460,9 @@ class _$EntryBlueprintImpl
       const DeepCollectionEquality().hash(_genericConstraints),
       variableDataBlueprint,
       const DeepCollectionEquality().hash(_contextKeys),
-      const DeepCollectionEquality().hash(_modifiers));
+      const DeepCollectionEquality().hash(_modifiers),
+      titleKey,
+      descriptionKey);
 
   /// Create a copy of EntryBlueprint
   /// with the given fields replaced by the non-null parameter values.
@@ -451,7 +494,9 @@ abstract class _EntryBlueprint implements EntryBlueprint {
       final List<DataBlueprint>? genericConstraints,
       final DataBlueprint? variableDataBlueprint,
       final List<ContextKey> contextKeys,
-      final List<EntryModifier> modifiers}) = _$EntryBlueprintImpl;
+      final List<EntryModifier> modifiers,
+      final String titleKey,
+      final String descriptionKey}) = _$EntryBlueprintImpl;
 
   factory _EntryBlueprint.fromJson(Map<String, dynamic> json) =
       _$EntryBlueprintImpl.fromJson;
@@ -481,6 +526,10 @@ abstract class _EntryBlueprint implements EntryBlueprint {
   List<ContextKey> get contextKeys;
   @override
   List<EntryModifier> get modifiers;
+  @override
+  String get titleKey;
+  @override
+  String get descriptionKey;
 
   /// Create a copy of EntryBlueprint
   /// with the given fields replaced by the non-null parameter values.

@@ -90,7 +90,7 @@ List<FocusNode> searchFocusNodes(Ref ref) {
 List<GlobalKey> searchGlobalKeys(Ref ref) {
   final elements = ref.watch(searchElementsProvider);
   final l10n = ref.watch(l10nProvider);
-  return elements.map((e) => GlobalKey(debugLabel: e.title(l10n))).toList();
+  return elements.map((e) => GlobalKey(debugLabel: e.title(l10n, ref.passing))).toList();
 }
 
 @riverpod
@@ -357,7 +357,7 @@ class SearchBuilder {
 abstract class SearchElement {
   const SearchElement();
 
-  String title(AppLocalizations l10n);
+  String title(AppLocalizations l10n, PassingRef ref);
 
   List<SearchAction> actions(AppLocalizations l10n, PassingRef ref);
 
@@ -368,7 +368,7 @@ abstract class SearchElement {
 
   Color color(BuildContext context);
 
-  String description(BuildContext context);
+  String description(BuildContext context, PassingRef ref);
 
   Widget icon(BuildContext context);
 
@@ -1141,9 +1141,9 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
               key: globalKeys[i],
               onPressed: () => _activateItem(elements, i, context, ref.passing),
               focusNode: focusNodes[i],
-              title: elements[i].title(l10n),
+              title: elements[i].title(l10n, ref.passing),
               color: elements[i].color(context),
-              description: elements[i].description(context),
+              description: elements[i].description(context, ref.passing),
               icon: elements[i].icon(context),
               suffixIcon: elements[i].suffixIcon(context),
               actions: elements[i].actions(l10n, ref.passing),

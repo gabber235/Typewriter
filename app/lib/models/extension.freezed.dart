@@ -24,6 +24,8 @@ mixin _$Extension {
   List<EntryBlueprint> get entries => throw _privateConstructorUsedError;
   List<GlobalContextKey> get globalContextKeys =>
       throw _privateConstructorUsedError;
+  Map<String, Map<String, String>> get translations =>
+      throw _privateConstructorUsedError;
 
   /// Serializes this Extension to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -43,7 +45,8 @@ abstract class $ExtensionCopyWith<$Res> {
   $Res call(
       {ExtensionInfo extension,
       List<EntryBlueprint> entries,
-      List<GlobalContextKey> globalContextKeys});
+      List<GlobalContextKey> globalContextKeys,
+      Map<String, Map<String, String>> translations});
 
   $ExtensionInfoCopyWith<$Res> get extension;
 }
@@ -66,6 +69,7 @@ class _$ExtensionCopyWithImpl<$Res, $Val extends Extension>
     Object? extension = null,
     Object? entries = null,
     Object? globalContextKeys = null,
+    Object? translations = null,
   }) {
     return _then(_value.copyWith(
       extension: null == extension
@@ -80,6 +84,10 @@ class _$ExtensionCopyWithImpl<$Res, $Val extends Extension>
           ? _value.globalContextKeys
           : globalContextKeys // ignore: cast_nullable_to_non_nullable
               as List<GlobalContextKey>,
+      translations: null == translations
+          ? _value.translations
+          : translations // ignore: cast_nullable_to_non_nullable
+              as Map<String, Map<String, String>>,
     ) as $Val);
   }
 
@@ -105,7 +113,8 @@ abstract class _$$ExtensionImplCopyWith<$Res>
   $Res call(
       {ExtensionInfo extension,
       List<EntryBlueprint> entries,
-      List<GlobalContextKey> globalContextKeys});
+      List<GlobalContextKey> globalContextKeys,
+      Map<String, Map<String, String>> translations});
 
   @override
   $ExtensionInfoCopyWith<$Res> get extension;
@@ -127,6 +136,7 @@ class __$$ExtensionImplCopyWithImpl<$Res>
     Object? extension = null,
     Object? entries = null,
     Object? globalContextKeys = null,
+    Object? translations = null,
   }) {
     return _then(_$ExtensionImpl(
       extension: null == extension
@@ -141,6 +151,10 @@ class __$$ExtensionImplCopyWithImpl<$Res>
           ? _value._globalContextKeys
           : globalContextKeys // ignore: cast_nullable_to_non_nullable
               as List<GlobalContextKey>,
+      translations: null == translations
+          ? _value._translations
+          : translations // ignore: cast_nullable_to_non_nullable
+              as Map<String, Map<String, String>>,
     ));
   }
 }
@@ -151,9 +165,11 @@ class _$ExtensionImpl with DiagnosticableTreeMixin implements _Extension {
   const _$ExtensionImpl(
       {required this.extension,
       final List<EntryBlueprint> entries = const [],
-      final List<GlobalContextKey> globalContextKeys = const []})
+      final List<GlobalContextKey> globalContextKeys = const [],
+      final Map<String, Map<String, String>> translations = const {}})
       : _entries = entries,
-        _globalContextKeys = globalContextKeys;
+        _globalContextKeys = globalContextKeys,
+        _translations = translations;
 
   factory _$ExtensionImpl.fromJson(Map<String, dynamic> json) =>
       _$$ExtensionImplFromJson(json);
@@ -179,9 +195,18 @@ class _$ExtensionImpl with DiagnosticableTreeMixin implements _Extension {
     return EqualUnmodifiableListView(_globalContextKeys);
   }
 
+  final Map<String, Map<String, String>> _translations;
+  @override
+  @JsonKey()
+  Map<String, Map<String, String>> get translations {
+    if (_translations is EqualUnmodifiableMapView) return _translations;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_translations);
+  }
+
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Extension(extension: $extension, entries: $entries, globalContextKeys: $globalContextKeys)';
+    return 'Extension(extension: $extension, entries: $entries, globalContextKeys: $globalContextKeys, translations: $translations)';
   }
 
   @override
@@ -191,7 +216,8 @@ class _$ExtensionImpl with DiagnosticableTreeMixin implements _Extension {
       ..add(DiagnosticsProperty('type', 'Extension'))
       ..add(DiagnosticsProperty('extension', extension))
       ..add(DiagnosticsProperty('entries', entries))
-      ..add(DiagnosticsProperty('globalContextKeys', globalContextKeys));
+      ..add(DiagnosticsProperty('globalContextKeys', globalContextKeys))
+      ..add(DiagnosticsProperty('translations', translations));
   }
 
   @override
@@ -203,7 +229,9 @@ class _$ExtensionImpl with DiagnosticableTreeMixin implements _Extension {
                 other.extension == extension) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
             const DeepCollectionEquality()
-                .equals(other._globalContextKeys, _globalContextKeys));
+                .equals(other._globalContextKeys, _globalContextKeys) &&
+            const DeepCollectionEquality()
+                .equals(other._translations, _translations));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -212,7 +240,8 @@ class _$ExtensionImpl with DiagnosticableTreeMixin implements _Extension {
       runtimeType,
       extension,
       const DeepCollectionEquality().hash(_entries),
-      const DeepCollectionEquality().hash(_globalContextKeys));
+      const DeepCollectionEquality().hash(_globalContextKeys),
+      const DeepCollectionEquality().hash(_translations));
 
   /// Create a copy of Extension
   /// with the given fields replaced by the non-null parameter values.
@@ -234,7 +263,8 @@ abstract class _Extension implements Extension {
   const factory _Extension(
       {required final ExtensionInfo extension,
       final List<EntryBlueprint> entries,
-      final List<GlobalContextKey> globalContextKeys}) = _$ExtensionImpl;
+      final List<GlobalContextKey> globalContextKeys,
+      final Map<String, Map<String, String>> translations}) = _$ExtensionImpl;
 
   factory _Extension.fromJson(Map<String, dynamic> json) =
       _$ExtensionImpl.fromJson;
@@ -245,6 +275,8 @@ abstract class _Extension implements Extension {
   List<EntryBlueprint> get entries;
   @override
   List<GlobalContextKey> get globalContextKeys;
+  @override
+  Map<String, Map<String, String>> get translations;
 
   /// Create a copy of Extension
   /// with the given fields replaced by the non-null parameter values.
@@ -264,6 +296,7 @@ mixin _$ExtensionInfo {
   String get shortDescription => throw _privateConstructorUsedError;
   String get description => throw _privateConstructorUsedError;
   String get version => throw _privateConstructorUsedError;
+  String get key => throw _privateConstructorUsedError;
 
   /// Serializes this ExtensionInfo to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -285,7 +318,8 @@ abstract class $ExtensionInfoCopyWith<$Res> {
       {String name,
       String shortDescription,
       String description,
-      String version});
+      String version,
+      String key});
 }
 
 /// @nodoc
@@ -307,6 +341,7 @@ class _$ExtensionInfoCopyWithImpl<$Res, $Val extends ExtensionInfo>
     Object? shortDescription = null,
     Object? description = null,
     Object? version = null,
+    Object? key = null,
   }) {
     return _then(_value.copyWith(
       name: null == name
@@ -325,6 +360,10 @@ class _$ExtensionInfoCopyWithImpl<$Res, $Val extends ExtensionInfo>
           ? _value.version
           : version // ignore: cast_nullable_to_non_nullable
               as String,
+      key: null == key
+          ? _value.key
+          : key // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -341,7 +380,8 @@ abstract class _$$ExtensionInfoImplCopyWith<$Res>
       {String name,
       String shortDescription,
       String description,
-      String version});
+      String version,
+      String key});
 }
 
 /// @nodoc
@@ -361,6 +401,7 @@ class __$$ExtensionInfoImplCopyWithImpl<$Res>
     Object? shortDescription = null,
     Object? description = null,
     Object? version = null,
+    Object? key = null,
   }) {
     return _then(_$ExtensionInfoImpl(
       name: null == name
@@ -379,6 +420,10 @@ class __$$ExtensionInfoImplCopyWithImpl<$Res>
           ? _value.version
           : version // ignore: cast_nullable_to_non_nullable
               as String,
+      key: null == key
+          ? _value.key
+          : key // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -392,7 +437,8 @@ class _$ExtensionInfoImpl
       {required this.name,
       required this.shortDescription,
       required this.description,
-      required this.version});
+      required this.version,
+      this.key = ""});
 
   factory _$ExtensionInfoImpl.fromJson(Map<String, dynamic> json) =>
       _$$ExtensionInfoImplFromJson(json);
@@ -405,10 +451,13 @@ class _$ExtensionInfoImpl
   final String description;
   @override
   final String version;
+  @override
+  @JsonKey()
+  final String key;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'ExtensionInfo(name: $name, shortDescription: $shortDescription, description: $description, version: $version)';
+    return 'ExtensionInfo(name: $name, shortDescription: $shortDescription, description: $description, version: $version, key: $key)';
   }
 
   @override
@@ -419,7 +468,8 @@ class _$ExtensionInfoImpl
       ..add(DiagnosticsProperty('name', name))
       ..add(DiagnosticsProperty('shortDescription', shortDescription))
       ..add(DiagnosticsProperty('description', description))
-      ..add(DiagnosticsProperty('version', version));
+      ..add(DiagnosticsProperty('version', version))
+      ..add(DiagnosticsProperty('key', key));
   }
 
   @override
@@ -432,13 +482,14 @@ class _$ExtensionInfoImpl
                 other.shortDescription == shortDescription) &&
             (identical(other.description, description) ||
                 other.description == description) &&
-            (identical(other.version, version) || other.version == version));
+            (identical(other.version, version) || other.version == version) &&
+            (identical(other.key, key) || other.key == key));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, name, shortDescription, description, version);
+  int get hashCode => Object.hash(
+      runtimeType, name, shortDescription, description, version, key);
 
   /// Create a copy of ExtensionInfo
   /// with the given fields replaced by the non-null parameter values.
@@ -461,7 +512,8 @@ abstract class _ExtensionInfo implements ExtensionInfo {
       {required final String name,
       required final String shortDescription,
       required final String description,
-      required final String version}) = _$ExtensionInfoImpl;
+      required final String version,
+      final String key}) = _$ExtensionInfoImpl;
 
   factory _ExtensionInfo.fromJson(Map<String, dynamic> json) =
       _$ExtensionInfoImpl.fromJson;
@@ -474,6 +526,8 @@ abstract class _ExtensionInfo implements ExtensionInfo {
   String get description;
   @override
   String get version;
+  @override
+  String get key;
 
   /// Create a copy of ExtensionInfo
   /// with the given fields replaced by the non-null parameter values.

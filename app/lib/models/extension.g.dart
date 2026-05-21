@@ -18,6 +18,10 @@ _$ExtensionImpl _$$ExtensionImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => GlobalContextKey.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      translations: (json['translations'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, Map<String, String>.from(e as Map)),
+          ) ??
+          const {},
     );
 
 Map<String, dynamic> _$$ExtensionImplToJson(_$ExtensionImpl instance) =>
@@ -26,6 +30,7 @@ Map<String, dynamic> _$$ExtensionImplToJson(_$ExtensionImpl instance) =>
       'entries': instance.entries.map((e) => e.toJson()).toList(),
       'globalContextKeys':
           instance.globalContextKeys.map((e) => e.toJson()).toList(),
+      'translations': instance.translations,
     };
 
 _$ExtensionInfoImpl _$$ExtensionInfoImplFromJson(Map<String, dynamic> json) =>
@@ -34,6 +39,7 @@ _$ExtensionInfoImpl _$$ExtensionInfoImplFromJson(Map<String, dynamic> json) =>
       shortDescription: json['shortDescription'] as String,
       description: json['description'] as String,
       version: json['version'] as String,
+      key: json['key'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$ExtensionInfoImplToJson(_$ExtensionInfoImpl instance) =>
@@ -42,6 +48,7 @@ Map<String, dynamic> _$$ExtensionInfoImplToJson(_$ExtensionInfoImpl instance) =>
       'shortDescription': instance.shortDescription,
       'description': instance.description,
       'version': instance.version,
+      'key': instance.key,
     };
 
 _$GlobalContextKeyImpl _$$GlobalContextKeyImplFromJson(

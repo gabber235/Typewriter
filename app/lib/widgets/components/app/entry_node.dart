@@ -9,6 +9,7 @@ import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/book.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/models/localized_entry_blueprint_provider.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/pages/page_editor.dart";
@@ -110,7 +111,7 @@ class EntryNode extends HookConsumerWidget {
       id: entryId,
       type: blueprintId,
       backgroundColor: blueprint.color,
-      name: entryName.formatted,
+      name: ref.watch(entryBlueprintLocalizedTitleProvider(blueprint.id)),
       icon: SizedBox(
         width: 18,
         child: Iconify(blueprint.icon, size: 18),

@@ -215,10 +215,10 @@ class PageSearchElement extends SearchElement {
   final FutureOr<bool?> Function(Page)? onSelect;
 
   @override
-  String title(AppLocalizations l10n) => page.pageName.formatted;
+  String title(AppLocalizations l10n, PassingRef ref) => page.pageName.formatted;
 
   @override
-  String description(BuildContext context) {
+  String description(BuildContext context, PassingRef ref) {
     if (page.chapter.isEmpty) return page.type.name;
     return "~${page.chapter}";
   }
@@ -300,10 +300,11 @@ class AddPageSearchElement extends SearchElement {
   final void Function(Page)? onAdded;
 
   @override
-  String title(AppLocalizations l10n) => l10n.addPageTitle(type.name);
+  String title(AppLocalizations l10n, PassingRef ref) => l10n.addPageTitle(type.name);
 
   @override
-  String description(BuildContext context) => context.l10n.createPageDescription(type.name);
+  String description(BuildContext context, PassingRef ref) =>
+      context.l10n.createPageDescription(type.name);
 
   @override
   Widget icon(BuildContext context) => Iconify(type.icon);

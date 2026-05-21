@@ -29,6 +29,8 @@ EntryDefinition? entryDefinition(
     pageName: page.pageName,
     entry: entry,
     blueprint: blueprint,
+    localizedTitle: blueprint.name.formatted,
+    localizedDescription: blueprint.description,
   );
 }
 
@@ -65,11 +67,15 @@ class EntryDefinition {
     required this.pageName,
     required this.entry,
     required this.blueprint,
+    required this.localizedTitle,
+    required this.localizedDescription,
   });
   final String pageId;
   final String pageName;
   final Entry entry;
   final EntryBlueprint blueprint;
+  final String localizedTitle;
+  final String localizedDescription;
 
   Future<void> updateField(PassingRef ref, String path, dynamic value) async {
     final page = ref.read(pageProvider(pageId));
