@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("java")
     kotlin("jvm") version "2.3.20"
@@ -26,6 +28,9 @@ allprojects {
     }
     kotlin {
         jvmToolchain(25)
+    }
+    tasks.withType(KotlinCompile::class.java) {
+        compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

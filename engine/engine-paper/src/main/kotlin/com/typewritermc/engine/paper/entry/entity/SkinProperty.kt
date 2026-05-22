@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper.entry.entity
 
+import com.destroystokyo.paper.profile.PlayerProfile
 import com.google.common.cache.CacheBuilder
 import com.typewritermc.core.extension.Initializable
 import com.typewritermc.core.utils.UntickedAsync
@@ -27,22 +28,31 @@ class PlayerSkinCache : Initializable {
         .build<UUID, SkinProperty>()
     private val jobs = ConcurrentHashMap<UUID, Job>()
 
+    context(player: OfflinePlayer?)
     operator fun get(playerId: UUID): SkinProperty {
         cache.getIfPresent(playerId)?.let { return it }
+        val offlinePlayer = player ?: Bukkit.getOfflinePlayer(playerId)
+        val profile = offlinePlayer.playerProfile
+
+        if (profile.hasTextures()) {
+            cache(playerId, profile)?.let { return it }
+        }
+
         cache.put(playerId, SkinProperty())
         jobs[playerId]?.cancel()
         jobs[playerId] = Dispatchers.UntickedAsync.launch {
-            val offlinePlayer = Bukkit.getOfflinePlayer(playerId)
-            var profile = offlinePlayer.playerProfile
-            if (!profile.hasTextures()) {
-                profile = profile.update().await()
-            }
-
-            val textures = profile.properties.firstOrNull { it.name == "textures" } ?: return@launch
-            val skin = SkinProperty(textures.value, textures.signature ?: "")
-            cache.put(playerId, skin)
+            val offlinePlayer = player ?: Bukkit.getOfflinePlayer(playerId)
+            val profile = offlinePlayer.playerProfile.update().await()
+            cache(playerId, profile)
         }
         return SkinProperty()
+    }
+
+    private fun cache(playerId: UUID, profile: PlayerProfile): SkinProperty? {
+        val textures = profile.properties.firstOrNull { it.name == "textures" } ?: return null
+        val skin = SkinProperty(textures.value, textures.signature ?: "")
+        cache.put(playerId, skin)
+        return skin
     }
 
     override suspend fun initialize() {}
