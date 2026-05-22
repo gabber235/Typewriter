@@ -23,7 +23,8 @@ String _entryId(Ref ref) {
 @riverpod
 String _entryName(Ref ref) {
   final def = ref.watch(inspectingEntryDefinitionProvider);
-  return def?.entry.formattedName ?? "";
+  if (def == null) return "";
+  return ref.watch(entryNameProvider(def.entry.id)) ?? def.entry.formattedName;
 }
 
 @riverpod

@@ -681,5 +681,7 @@
   "variableReferenceNotFound": "Could not find Variable Reference, ",
   "@variableReferenceNotFound": {},
   "variableReferenceNotFoundReset": "click to reset to default",
-  "@variableReferenceNotFoundReset": {}
+  "@variableReferenceNotFoundReset": {},
+  "requestContentMode": "Request Content mode",
+  "@requestContentMode": {}
 }

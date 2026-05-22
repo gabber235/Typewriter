@@ -4,6 +4,7 @@ import "package:collection/collection.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/models/localized_entry_blueprint_provider.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/passing_reference.dart";
@@ -36,6 +37,15 @@ EntryDefinition? entryDefinition(
 
 @riverpod
 String? entryName(Ref ref, String entryId) {
+  final blueprintId = ref.watch(entryBlueprintIdProvider(entryId));
+  if (blueprintId == null) {
+    final entry = ref.watch(globalEntryProvider(entryId));
+    return entry?.formattedName;
+  }
+
+  final localizedTitle = ref.watch(entryBlueprintLocalizedTitleProvider(blueprintId));
+  if (localizedTitle.isNotEmpty) return localizedTitle;
+
   final entry = ref.watch(globalEntryProvider(entryId));
   return entry?.formattedName;
 }

@@ -249,5 +249,6 @@
   "blueprintNotCompatibleWithGeneric": "Генеративный чертеж записи несовместим с новым чертежом",
   "potionEffects": "Эффекты зелий",
   "variableReferenceNotFound": "Не удалось найти ссылку на переменную, ",
-  "variableReferenceNotFoundReset": "нажмите, чтобы сбросить до значения по умолчанию"
+  "variableReferenceNotFoundReset": "нажмите, чтобы сбросить до значения по умолчанию",
+  "requestContentMode": "Запросить из игры"
 }

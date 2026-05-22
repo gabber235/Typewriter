@@ -892,4 +892,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get variableReferenceNotFoundReset => 'click to reset to default';
+
+  @override
+  String get requestContentMode => 'Requesting content mode';
 }

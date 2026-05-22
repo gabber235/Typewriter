@@ -178,7 +178,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
       children: [
         Title(
           color: Colors.redAccent,
-          title: entry.formattedName,
+          title: ref.watch(entryNameProvider(entry.id)) ?? entry.formattedName,
         ),
         const SizedBox(height: 8),
         Wrap(

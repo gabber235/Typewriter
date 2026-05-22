@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/segment.dart";
@@ -115,9 +116,10 @@ class ContentModeHeaderAction extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final header = Header.maybeOf(context);
     return HeaderButton(
-      tooltip: "Request Content Mode",
+      tooltip: l10n.requestContentMode,
       icon: TWIcons.camera,
       onTap: () => _requestContentMode(ref.passing, header),
     );

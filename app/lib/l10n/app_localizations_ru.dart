@@ -895,4 +895,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get variableReferenceNotFoundReset =>
       'нажмите, чтобы сбросить до значения по умолчанию';
+
+  @override
+  String get requestContentMode => 'Запросить из игры';
 }

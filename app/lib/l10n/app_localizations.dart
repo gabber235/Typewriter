@@ -1591,6 +1591,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'click to reset to default'**
   String get variableReferenceNotFoundReset;
+
+  /// No description provided for @requestContentMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Requesting content mode'**
+  String get requestContentMode;
 }
 
 class _AppLocalizationsDelegate

@@ -668,6 +668,7 @@ class ExternalEntryNode extends HookConsumerWidget {
     final blueprint = ref.watch(entryBlueprintProvider(entry.blueprintId));
     final page = ref.watch(pageProvider(pageId));
     final pageName = page?.pageName.formatted ?? l10n.unknownPage;
+    final localizedName = ref.watch(entryNameProvider(entry.id)) ?? entry.formattedName;
 
     if (blueprint == null) {
       return const NonExistentEntry();
@@ -688,6 +689,7 @@ class ExternalEntryNode extends HookConsumerWidget {
           context,
           blueprint,
           pageName,
+          localizedName,
           blueprint.color,
           isDeprecated,
         ),
@@ -723,6 +725,7 @@ class ExternalEntryNode extends HookConsumerWidget {
                 context,
                 blueprint,
                 pageName,
+                localizedName,
                 Colors.white,
                 isDeprecated,
               ),
@@ -737,6 +740,7 @@ class ExternalEntryNode extends HookConsumerWidget {
     BuildContext context,
     EntryBlueprint blueprint,
     String pageName,
+    String name,
     Color color,
     bool isDeprecated,
   ) {
@@ -750,7 +754,7 @@ class ExternalEntryNode extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                entry.formattedName,
+                name,
                 style: TextStyle(
                   color: color,
                   fontSize: 13,

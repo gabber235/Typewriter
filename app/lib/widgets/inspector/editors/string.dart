@@ -65,13 +65,14 @@ class StringEditor extends HookConsumerWidget {
               definition.blueprint,
               path,
             );
+    final primitiveTypeName = _localizedPrimitiveTypeName(context, primitiveBlueprint.type);
     final localizedHint = placeholderKey == null || definition == null
         ? null
         : ref.watch(extensionL10nResolverProvider).resolve(
               definition.blueprint.extension,
               ref.watch(localeControllerProvider),
               placeholderKey,
-              fallback: l10n.enterAValue(primitiveBlueprint.type.name),
+              fallback: l10n.enterAValue(primitiveTypeName),
             );
 
     return WritersIndicator(
@@ -82,7 +83,7 @@ class StringEditor extends HookConsumerWidget {
         icon: icon,
         hintText: hint.isNotEmpty
             ? hint
-            : localizedHint ?? l10n.enterAValue(primitiveBlueprint.type.name),
+          : localizedHint ?? l10n.enterAValue(primitiveTypeName),
         text: forcedValue ?? value,
         singleLine: singleLine,
         keyboardType: singleLine ? TextInputType.text : TextInputType.multiline,
@@ -96,5 +97,26 @@ class StringEditor extends HookConsumerWidget {
                 ?.updateField(ref.passing, path, value),
       ),
     );
+  }
+
+  String _localizedPrimitiveTypeName(BuildContext context, PrimitiveType type) {
+    switch (type) {
+      case PrimitiveType.string:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "строку"
+            : "string";
+      case PrimitiveType.boolean:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "логическое значение"
+            : "boolean";
+      case PrimitiveType.double:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "число с плавающей точкой"
+            : "double";
+      case PrimitiveType.integer:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "целое число"
+            : "integer";
+    }
   }
 }

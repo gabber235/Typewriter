@@ -3,6 +3,7 @@ package com.typewritermc.engine.paper.entry
 import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.EntryContextBuilder
 import com.typewritermc.core.interaction.InteractionBound
@@ -17,7 +18,8 @@ import org.koin.java.KoinJavaComponent.get
 
 @Tags("trigger")
 interface TriggerEntry : Entry {
-    @Help("The entries that will be fired after this entry.")
+    @LabelKey("triggers")
+        @Help(key = "triggers.help")
     val triggers: List<Ref<TriggerableEntry>>
 
     val eventTriggers: List<EventTrigger>
@@ -26,16 +28,19 @@ interface TriggerEntry : Entry {
 
 @Tags("triggerable")
 interface TriggerableEntry : TriggerEntry {
-    @Help("The criteria that must be met before this entry is triggered")
+    @LabelKey("criteria")
+        @Help(key = "criteria.help")
     val criteria: List<Criteria>
 
-    @Help("The modifiers that will be applied when this entry is triggered")
+    @LabelKey("modifiers")
+        @Help(key = "modifiers.help")
     val modifiers: List<Modifier>
 }
 
 @Tags("interaction_bound")
 interface InteractionBoundEntry : TriggerableEntry {
-    @Help("Triggers that are fired if the interaction is interrupted")
+    @LabelKey("interruptTriggers")
+        @Help(key = "interruptTriggers.help")
     val interruptTriggers: List<Ref<TriggerableEntry>>
 
     fun build(player: Player): InteractionBound

@@ -1,8 +1,8 @@
 {
-  "citizens.reference_npc.title": "When the npc is not managed by TypeWriter",
-  "citizens.reference_npc.description": "An identifier that references an NPC in the Citizens plugin. But does not manage the NPC. This can be used to reference an NPC which is already in the world. This could be used to create a quest that requires the player to talk to an NPC.",
-  "citizens.reference_npc.fields.npcId.label": "Npc Id",
-  "citizens.reference_npc.fields.npcId.help": "The id of the NPC in the Citizens plugin.",
-  "citizens.on_npc_interact.title": "When a player clicks on an NPC",
-  "citizens.on_npc_interact.description": "The `NPC Interact Event` is fired when a player interacts with an NPC. This can be used to create a variety of interactions that can occur between an NPC and a player. For example, you could create an NPC that gives the player an item when they interact with it."
+  "citizens.reference_npc.title": "Когда NPC не управляется Typewriter'ом",
+  "citizens.reference_npc.description": "Идентификатор, ссылающийся на NPC из плагина Citizens, но не управляющий им. Используется для ссылки на уже существующего в мире NPC — например, для квеста, где игрок должен поговорить с NPC.",
+  "citizens.reference_npc.fields.npcId.label": "ID NPC",
+  "citizens.reference_npc.fields.npcId.help": "Идентификатор NPC в плагине Citizens.",
+  "citizens.on_npc_interact.title": "При клике игрока по NPC",
+  "citizens.on_npc_interact.description": "`Событие срабатывает, когда игрок взаимодействует с NPC. Позволяет создавать разные взаимодействия между NPC и игроком — например, выдавать предмет при взаимодействии."
 }

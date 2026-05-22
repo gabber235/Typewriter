@@ -2,6 +2,7 @@ import "dart:math";
 
 import "package:auto_size_text/auto_size_text.dart";
 import "package:collection/collection.dart";
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -9,7 +10,6 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:text_scroll/text_scroll.dart";
 import "package:typewriter/hooks/staggered_animation_controllers.dart";
 import "package:typewriter/hooks/ticker.dart";
 import "package:typewriter/l10n/app_localizations.dart";
@@ -28,6 +28,7 @@ import "package:typewriter/widgets/components/general/decorated_text_field.dart"
 import "package:typewriter/widgets/components/general/focused_notifier.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 import "package:typewriter/widgets/components/general/shortcut_label.dart";
+import "package:url_launcher/url_launcher_string.dart";
 
 part "search_bar.freezed.dart";
 part "search_bar.g.dart";
@@ -777,14 +778,9 @@ class _ResultTile extends HookConsumerWidget {
                                       ),
                                 ),
                                 if (focused.value || hover.value)
-                                  TextScroll(
+                                  _MarkdownLinkText(
                                     description,
-                                    delayBefore: 1.seconds,
-                                    pauseBetween: 3.seconds,
-                                    intervalSpaces: 5,
-                                    velocity: const Velocity(
-                                      pixelsPerSecond: Offset(30, 0),
-                                    ),
+                                    maxLines: 1,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
@@ -798,10 +794,9 @@ class _ResultTile extends HookConsumerWidget {
                                         ),
                                   )
                                 else
-                                  AutoSizeText(
-                                    maxLines: 1,
+                                  _MarkdownLinkText(
                                     description,
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
@@ -849,6 +844,93 @@ class _ResultTile extends HookConsumerWidget {
     if (action == null) return;
     final canEnd = await action.onTrigger?.call(context, ref) ?? false;
     if (canEnd) ref.read(searchProvider.notifier).endSearch();
+  }
+}
+
+class _MarkdownLinkText extends StatefulWidget {
+  const _MarkdownLinkText(
+    this.text, {
+    this.style,
+    this.maxLines = 1,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final int maxLines;
+
+  @override
+  State<_MarkdownLinkText> createState() => _MarkdownLinkTextState();
+}
+
+class _MarkdownLinkTextState extends State<_MarkdownLinkText> {
+  static final _linkPattern = RegExp(r"\[([^\]]+)\]\(([^)]+)\)");
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  @override
+  void didUpdateWidget(covariant _MarkdownLinkText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _disposeRecognizers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeRecognizers();
+    super.dispose();
+  }
+
+  void _disposeRecognizers() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  Future<void> _openUrl(String url) async {
+    if (!await canLaunchUrlString(url)) return;
+    await launchUrlString(url);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _disposeRecognizers();
+
+    final spans = <InlineSpan>[];
+    var index = 0;
+
+    for (final match in _linkPattern.allMatches(widget.text)) {
+      if (match.start > index) {
+        spans.add(TextSpan(text: widget.text.substring(index, match.start)));
+      }
+
+      final label = match.group(1) ?? "";
+      final url = match.group(2) ?? "";
+      final recognizer = TapGestureRecognizer()..onTap = () => _openUrl(url);
+      _recognizers.add(recognizer);
+
+      spans.add(
+        TextSpan(
+          text: label,
+          style: widget.style?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer: recognizer,
+        ),
+      );
+      index = match.end;
+    }
+
+    if (index < widget.text.length) {
+      spans.add(TextSpan(text: widget.text.substring(index)));
+    }
+
+    return Text.rich(
+      TextSpan(style: widget.style, children: spans),
+      maxLines: widget.maxLines,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 }
 
