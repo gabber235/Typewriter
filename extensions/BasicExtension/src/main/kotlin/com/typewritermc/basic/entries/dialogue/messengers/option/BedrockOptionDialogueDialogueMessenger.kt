@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.dialogue.messengers.option
 
 import com.typewritermc.basic.entries.dialogue.Option
+import com.typewritermc.basic.entries.dialogue.OptionContextKeys
 import com.typewritermc.basic.entries.dialogue.OptionDialogueEntry
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.InteractionContext
@@ -24,6 +25,12 @@ class BedrockOptionDialogueDialogueMessenger(player: Player, context: Interactio
     DialogueMessenger<OptionDialogueEntry>(player, context, entry) {
 
     private var selectedIndex = 0
+        set(value) {
+            field = value
+
+            // 1-based index
+            this.context[entry, OptionContextKeys.SELECTED_OPTION] = value + 1
+        }
     private val selected get() = usableOptions[selectedIndex]
 
     private var usableOptions: List<Option> = emptyList()
