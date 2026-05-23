@@ -17,6 +17,7 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.utils.Sound
+import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.move
 import com.typewritermc.engine.paper.utils.stripped
 import com.typewritermc.engine.paper.utils.toPacketLocation
@@ -25,6 +26,7 @@ import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
 import com.typewritermc.entity.entries.entity.custom.state
 import me.tofaa.entitylib.EntityLib
+import me.tofaa.entitylib.meta.other.ArmorStandMeta
 import me.tofaa.entitylib.meta.types.PlayerMeta
 import me.tofaa.entitylib.spigot.SpigotEntityLibAPI
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -73,6 +75,7 @@ class PlayerEntity(
     displayName: Var<String>,
 ) : FakeEntity(player) {
     private var sitEntity: WrapperEntity? = null
+    private val seat: Seat = if (player.isFloodgate) Seat.ARMOR_STAND else Seat.BLOCK_DISPLAY
 
     private var entity: WrapperPlayer
     override val entityId: Int
@@ -108,7 +111,7 @@ class PlayerEntity(
             when (property) {
                 is PositionProperty -> {
                     if (sitEntity?.isSpawned == true) {
-                        sitEntity?.move(property)
+                        sitEntity?.move(seat.at(property))
                     }
                     entity.move(property)
                 }
@@ -134,7 +137,7 @@ class PlayerEntity(
 
     override fun spawn(location: PositionProperty) {
         if (sitEntity != null) {
-            sitEntity?.spawn(location.toPacketLocation())
+            sitEntity?.spawn(seat.at(location).toPacketLocation())
             sitEntity?.addViewer(player.uniqueId)
         }
         entity.spawn(location.toPacketLocation())
@@ -198,11 +201,12 @@ class PlayerEntity(
     private fun sit(location: PositionProperty? = null) {
         val loc = location ?: property<PositionProperty>() ?: return
         if (sitEntity != null) return
-        sitEntity = WrapperEntity(EntityTypes.BLOCK_DISPLAY)
-        sitEntity?.spawn(loc.toPacketLocation())
-        sitEntity?.addViewer(player.uniqueId)
+        val sitEntity = seat.createEntity()
+        this.sitEntity = sitEntity
+        sitEntity.spawn(seat.at(loc).toPacketLocation())
+        sitEntity.addViewer(player.uniqueId)
         if (entity.isSpawned) {
-            sitEntity?.addPassengers(this.entity)
+            sitEntity.addPassengers(this.entity)
         }
     }
 
@@ -215,5 +219,27 @@ class PlayerEntity(
         entity.despawn()
         entity.remove()
         sitEntity = null
+    }
+
+    /**
+     * The entity a [PlayerEntity] is mounted on while sitting.
+     *
+     * Bedrock players can't see block displays, so they fall back to an armor stand.
+     * Because the two entities mount their passenger at a different height, each seat
+     * carries its own vertical [yOffset] to keep the player visually at the same spot.
+     */
+    private enum class Seat(private val yOffset: Double) {
+        BLOCK_DISPLAY(0.0),
+        ARMOR_STAND(-0.25);
+
+        fun createEntity(): WrapperEntity = when (this) {
+            BLOCK_DISPLAY -> WrapperEntity(EntityTypes.BLOCK_DISPLAY)
+            ARMOR_STAND -> WrapperEntity(EntityTypes.ARMOR_STAND).meta<ArmorStandMeta> {
+                isInvisible = true
+                isMarker = true
+            }
+        }
+
+        fun at(location: PositionProperty): PositionProperty = location.add(0.0, yOffset, 0.0)
     }
 }
