@@ -378,16 +378,15 @@ private fun CommandTree.factsCommand() = literal("facts") {
 }
 
 private val formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
-private fun ReadableFactEntry.format(player: Player, data: FactData? = null): String {
-    val factData = data ?: readForPlayersGroup(player)
+private fun ReadableFactEntry.format(player: Player, data: FactData = readForPlayersGroup(player)): String {
     return "<hover:show_text:'${
         comment.replace(
             Regex(" +"),
             " "
         ).replace("'", "\\'")
-    }\\n\\n<gray><i>Click to modify'><click:suggest_command:'/tw facts set $name ${factData.value} ${player.name}'><gray> - </gray><blue>${formattedName}:</blue> ${factData.value} <gray><i>(${
+    }\\n\\n<gray><i>Click to modify'><click:suggest_command:'/tw facts set $name ${data.value} ${player.name}'><gray> - </gray><blue>${formattedName}:</blue> ${data.value} <gray><i>(${
         formatter.format(
-            factData.lastUpdate
+            data.lastUpdate
         )
     })</i></gray>"
 }
