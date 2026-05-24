@@ -341,7 +341,7 @@ private fun CommandTree.factsCommand() = literal("facts") {
                 }
 
                 for ((fact, data) in facts) {
-                    sender.sendMini(fact.format(data, target))
+                    sender.sendMini(fact.format(target, data))
                 }
             }
         }
@@ -360,7 +360,7 @@ private fun CommandTree.factsCommand() = literal("facts") {
         sender.msg("<green>${target.name}</green> has the following facts:\n")
 
         for ((entry, data) in factEntries.take(10)) {
-            sender.sendMini(entry.format(data, target))
+            sender.sendMini(entry.format(target, data))
         }
 
         val remaining = factEntries.size - 10
