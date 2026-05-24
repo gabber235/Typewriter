@@ -16,6 +16,7 @@ import com.typewritermc.core.interaction.InteractionBound
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.dialogue.DialogueTrigger
@@ -45,7 +46,10 @@ import org.geysermc.geyser.api.connection.GeyserConnection
 import java.util.*
 
 // The max distance the entity can be from the player before it gets teleported.
-private const val MAX_DISTANCE_SQUARED = 25 * 25
+private const val MAX_PLAYER_DISTANCE_SQUARED = 4 * 4
+
+// The max distance between from and to before we cut
+private const val MAX_CUT_DISTANCE_SQUARED = 25 * 25
 
 @Entry(
     "lock_interaction_bound",
@@ -291,7 +295,7 @@ private class JavaLockInteractionBoundHandler(
 
         val target = to.withY { it + positionYCorrection }
         /// If the distance is too big, we make a jump.
-        if (from.distanceSquared(target) > MAX_DISTANCE_SQUARED) {
+        if ((from.distanceSquared(target) ?: Double.NEGATIVE_INFINITY) > MAX_CUT_DISTANCE_SQUARED) {
             moveToNewEntity(target)
             return
         }
@@ -299,7 +303,7 @@ private class JavaLockInteractionBoundHandler(
         entity.rotateHead(target.yaw, target.pitch)
         entity.teleport(target.toPacketLocation())
 
-        if (player.position.distanceSquared(to) > MAX_DISTANCE_SQUARED) {
+        if ((player.position.distanceSquared(to) ?: Double.NEGATIVE_INFINITY) > MAX_PLAYER_DISTANCE_SQUARED) {
             player.teleportAsync(to.toBukkitLocation()).await()
         }
     }
@@ -383,7 +387,7 @@ private class BedrockLockInteractionBoundHandler(
             return
         }
         geyserConnection.interpolateCameraPosition(position)
-        if (player.position.distanceSquared(to) > MAX_DISTANCE_SQUARED) {
+        if ((player.position.distanceSquared(to) ?: Double.NEGATIVE_INFINITY) > MAX_PLAYER_DISTANCE_SQUARED) {
             player.teleportAsync(to.toBukkitLocation()).await()
         }
     }

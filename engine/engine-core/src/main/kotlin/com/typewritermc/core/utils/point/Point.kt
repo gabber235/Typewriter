@@ -169,14 +169,19 @@ interface Point<P : Point<P>> {
     }
 
     /**
-     * Gets the squared distance between this point and another.
+     * Computes the squared distance with weighted Y-axis contribution.
      *
-     * @param point the other point
-     * @return the squared distance
+     * Use this when vertical distance should have different importance than horizontal distance.
+     *
+     * @param x the X coordinate
+     * @param y the Y coordinate
+     * @param z the Z coordinate
+     * @param yWeight weight multiplier for Y-axis distance (default 0.5, range typically 0.0-1.0)
+     * @return the weighted squared distance
      */
     @Contract(pure = true)
-    fun distanceSquared(point: Point<*>): Double {
-        return distanceSquared(point.x, point.y, point.z)
+    fun distanceSquaredWeightedY(x: Double, y: Double, z: Double, yWeight: Double = 0.5): Double {
+        return (this.x - x).squared() + ((this.y - y).squared() * yWeight) + (this.z - z).squared()
     }
 
     @Contract(pure = true)
@@ -249,6 +254,32 @@ interface Point<P : Point<P>> {
     fun isInRange(x: Double, y: Double, z: Double, range: Double): Boolean {
         return distanceSquared(x, y, z) <= range * range
     }
+}
+
+/**
+ * Gets the squared distance between this point and another.
+ *
+ * @param point the other point
+ * @return the squared distance
+ */
+@Contract(pure = true)
+fun Point<*>.distanceSquared(point: Point<*>): Double {
+    return distanceSquared(point.x, point.y, point.z)
+}
+
+/**
+ * Computes the squared distance to another point with weighted Y-axis contribution.
+ *
+ * Use this when vertical distance should have different importance than horizontal distance.
+ * See [Point.distanceSquaredWeightedY] for details.
+ *
+ * @param point the other point
+ * @param yWeight weight multiplier for Y-axis distance (default 0.5)
+ * @return the weighted squared distance
+ */
+@Contract(pure = true)
+fun Point<*>.distanceSquaredWeightedY(point: Point<*>, yWeight: Double = 0.5): Double {
+    return distanceSquaredWeightedY(point.x, point.y, point.z, yWeight)
 }
 
 fun <P> P.lerp(other: P, amount: Double): P where P : Point<P> {

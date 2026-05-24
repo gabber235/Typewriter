@@ -8,6 +8,7 @@ import com.typewritermc.roadnetwork.RoadNetwork
 import com.typewritermc.roadnetwork.RoadNetworkEditorState
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
+import com.typewritermc.roadnetwork.RoadNodeId
 import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
@@ -34,6 +35,9 @@ class RoadNetworkEditorComponent(
     }
 
     fun recalculateEdges() = networkManager.getEditorNetwork(ref).recalculateEdges()
+
+    fun recalculateEdgesForSingleNode(nodeId: RoadNodeId) =
+        networkManager.getEditorNetwork(ref).recalculateEdgesForSingleNode(nodeId)
 
     override suspend fun initialize(player: Player) {}
 

@@ -14,6 +14,10 @@ allprojects {
     repositories {
         // Required
         mavenCentral()
+        maven {
+            name = "JitPack"
+            url = uri("https://jitpack.io")
+        }
     }
 
     val targetJavaVersion = 25

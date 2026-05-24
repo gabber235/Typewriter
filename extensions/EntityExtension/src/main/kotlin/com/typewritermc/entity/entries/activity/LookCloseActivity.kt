@@ -2,6 +2,7 @@ package com.typewritermc.entity.entries.activity
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.core.utils.point.toVector
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
@@ -54,12 +55,12 @@ class LookCloseActivity(
     private fun findNewTarget(context: ActivityContext): Target? {
         val closestTarget = context.viewers
             .filter { it.isLookable }
-            .minByOrNull { currentPosition.distanceSqrt(it.location) ?: Double.POSITIVE_INFINITY }
+            .minByOrNull { currentPosition.distanceSquared(it.location) ?: Double.POSITIVE_INFINITY }
 
         if (closestTarget == null) {
             return null
         }
-        val distance = currentPosition.distanceSqrt(closestTarget.location)
+        val distance = currentPosition.distanceSquared(closestTarget.location)
 
         if (distance == null || distance > playerLookCloseRange * playerLookCloseRange) {
             return null
@@ -133,8 +134,8 @@ class LookCloseActivity(
         val shouldRefresh: Boolean
             get() {
                 if (!player.isValid) return true
-                if (player.location.world.uid.toString() != this@Target.position.world.identifier) return true
-                if (this@Target.position.distanceSquared(player.location.toProperty()) > playerLookCloseRange * playerLookCloseRange) return true
+                val distanceSquared = this@Target.position.distanceSquared(player.location.toProperty()) ?: return true
+                if (distanceSquared > playerLookCloseRange * playerLookCloseRange) return true
                 return System.currentTimeMillis() - lookupTime > 1000
             }
 

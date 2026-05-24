@@ -5,11 +5,11 @@ import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.utils.ComputedMap
 import com.typewritermc.roadnetwork.*
-import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import com.typewritermc.roadnetwork.pathfinding.pathetic.PathCalculationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -33,7 +33,7 @@ class PointToPointGPS(
 
         val start = startFetcher(network)
         val end = endFetcher(network)
-        if ((start.distanceSqrt(end) ?: Double.MAX_VALUE) < 1) return@switchContext ok(emptyList())
+        if ((start.distanceSquared(end) ?: Double.MAX_VALUE) < 1) return@switchContext ok(emptyList())
 
         val endPair = getOrCreateNode(network.nodes, network.negativeNodes, end, previousEnd, -2, asEnd = true)
         previousEnd = endPair
@@ -84,7 +84,7 @@ class PointToPointGPS(
         start: RoadNode,
         end: RoadNode,
     ): Result<List<RoadEdge>> {
-        val startEndDistance = start.position.distanceSqrt(end.position)
+        val startEndDistance = start.position.distanceSquared(end.position)
         val visited = mutableMapOf<RoadNodeId, VisitedNode>()
         val inspecting = PriorityQueue<InspectingNode>()
         inspecting += InspectingNode(
@@ -135,7 +135,7 @@ class PointToPointGPS(
         start: RoadNode,
         end: RoadNode
     ): Result<List<RoadEdge>> {
-        val startEndDistance = start.position.distanceSqrt(end.position)
+        val startEndDistance = start.position.distanceSquared(end.position)
         val visited = mutableMapOf<RoadNodeId, VisitedNode>()
         val inspecting = PriorityQueue<InspectingNode>()
         inspecting += InspectingNode(end.id, null, 0.0, distanceWeight(startEndDistance, end.position, start.position))
@@ -226,14 +226,14 @@ class PointToPointGPS(
         id: Int,
         asEnd: Boolean,
     ): Pair<RoadNode, List<RoadEdge>?> {
-        if (previous != null && (previous.first.position.distanceSqrt(position)
+        if (previous != null && (previous.first.position.distanceSquared(position)
                 ?: Double.MAX_VALUE) < previous.first.radius * previous.first.radius
         ) {
             return previous
         }
 
         val node = nodes.firstOrNull {
-            (it.position.distanceSqrt(position) ?: Double.MAX_VALUE) < it.radius * it.radius
+            (it.position.distanceSquared(position) ?: Double.MAX_VALUE) < it.radius * it.radius
         }
         if (node != null) return node to null
         val newNode = RoadNode(RoadNodeId(id), position, 0.5)
@@ -248,10 +248,9 @@ class PointToPointGPS(
         asEnd: Boolean,
     ): List<RoadEdge> =
         coroutineScope {
-            val instance = node.position.world.instanceSpace
             val intersectingNodes = nodes
                 .filter {
-                    it != node && it.position.world == node.position.world && (it.position.distanceSqrt(node.position)
+                    it != node && it.position.world == node.position.world && (it.position.distanceSquared(node.position)
                         ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
                 }
             intersectingNodes
@@ -263,12 +262,15 @@ class PointToPointGPS(
                             roadNetworkFindPath(
                                 start,
                                 end,
-                                instance = instance,
                                 nodes = intersectingNodes,
                                 negativeNodes = negativeNodes
-                            ) ?: return@async null
+                            )
 
-                        RoadEdge(start.id, end.id, weight = path.length().toDouble(), length = path.length().toDouble())
+                        if (path !is PathCalculationResult.Success) {
+                            return@async null
+                        }
+
+                        RoadEdge(start.id, end.id, weight = path.weight, length = path.length)
                     }
                 }.awaitAll()
                 .filterNotNull()
@@ -291,7 +293,7 @@ class PointToPointGPS(
 
     private fun distanceWeight(startEnd: Double?, end: Position, current: Position): Double? {
         if (startEnd == null) return null
-        val currentEnd = current.distanceSqrt(end) ?: return null
+        val currentEnd = current.distanceSquared(end) ?: return null
         if (currentEnd == 0.0) return 0.0
         return currentEnd / startEnd
     }

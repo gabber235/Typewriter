@@ -60,6 +60,19 @@ data class Vector(
         return Vector(this.x / x, this.y / y, this.z / z)
     }
 
+    /**
+     * Computes the dot product between this vector and another vector.
+     *
+     * Use this to calculate projections, determine if vectors are perpendicular (result = 0),
+     * or measure similarity in direction (positive = same direction, negative = opposite).
+     *
+     * @param other the vector to compute the dot product with
+     * @return the dot product value
+     */
+    fun dot(other: Vector): Double {
+        return x * other.x + y * other.y + z * other.z
+    }
+
     fun normalize(): Vector {
         val length = length
         return if (length < EPSILON) {

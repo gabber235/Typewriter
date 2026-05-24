@@ -8,6 +8,7 @@ import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.*
+import com.typewritermc.engine.paper.entry.entries.EntityData
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.Color
 import com.typewritermc.engine.paper.utils.Sound
@@ -45,6 +46,8 @@ class Hologram(
     @Max(127)
     val opacity: Int = -1,
     val lineWidth: Int = 200,
+    @Default("\"CENTER\"")
+    val textAlignment: TextAlignment = TextAlignment.CENTER,
     @OnlyTags("generic_entity_data", "display_data", "text_display_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityInstance, SimpleEntityDefinition {
@@ -83,7 +86,8 @@ class Hologram(
             seeThrough,
             backgroundColor,
             opacity,
-            lineWidth
+            lineWidth,
+            textAlignment,
         )
     }
 }
@@ -97,6 +101,7 @@ private class HologramEntity(
     backgroundColor: Color,
     opacity: Int,
     lineWidth: Int,
+    textAlignment: TextAlignment,
 ) : TextDisplayEntity(player) {
     init {
         consumeProperties(
@@ -106,6 +111,7 @@ private class HologramEntity(
             BackgroundColorProperty(backgroundColor),
             TextOpacityProperty(opacity.toByte()),
             LineWidthProperty(lineWidth),
+            TextAlignmentProperty(textAlignment),
             LinesProperty(text.get(player).parsePlaceholders(player)),
         )
     }

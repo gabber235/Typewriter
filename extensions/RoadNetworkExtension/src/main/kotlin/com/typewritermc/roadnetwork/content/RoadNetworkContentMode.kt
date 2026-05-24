@@ -12,7 +12,7 @@ import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.ok
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.core.utils.point.lerp
 import com.typewritermc.engine.paper.content.*
 import com.typewritermc.engine.paper.content.components.*
@@ -39,6 +39,12 @@ private val showEdgeDistance by snippet(
     "The distance at which the edge particles will still be shown"
 )
 
+private val autoRecalculateEdgesOnPlace by snippet(
+    "content.road_network.auto_recalculate_edges_on_place",
+    true,
+    "Automatically recalculate the edges of a road node right after it has been placed."
+)
+
 class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentMode(context, player), KoinComponent {
     private lateinit var ref: Ref<RoadNetworkEntry>
     private lateinit var editorComponent: RoadNetworkEditorComponent
@@ -47,6 +53,9 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
 
     // If all nodes need to be highlighted
     private var highlighting = false
+
+    // If only nodes that have no edges to other nodes need to be highlighted
+    private var highlightingDetached = false
 
     private val network get() = editorComponent.network
 
@@ -62,12 +71,14 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
             val componentState = editorComponent.state
             var suffix = ""
             if (highlighting) suffix += " <yellow>(highlighting)</yellow>"
+            if (highlightingDetached) suffix += " <red>(detached)</red>"
             suffix += componentState.message
 
             title = "Editing Road Network$suffix"
             color = when {
                 componentState == RoadNetworkEditorState.Dirty -> BossBar.Color.RED
                 componentState is RoadNetworkEditorState.Calculating -> BossBar.Color.PURPLE
+                highlightingDetached -> BossBar.Color.RED
                 highlighting -> BossBar.Color.YELLOW
                 else -> BossBar.Color.GREEN
             }
@@ -82,10 +93,15 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         +NetworkRecalculateAllEdgesComponent {
             editorComponent.recalculateEdges()
         }
+        +NetworkDetachedHighlightComponent(::toggleHighlightDetached)
         +NetworkAddNodeComponent(::addRoadNode, ::addNegativeNode)
         nodes({ network.nodes }, ::showingPosition) {
             item = ItemStack(it.material(network.modifications))
-            glow = if (highlighting) NamedTextColor.WHITE else null
+            glow = when {
+                highlightingDetached && isDetached(it.id) -> NamedTextColor.RED
+                highlighting -> NamedTextColor.WHITE
+                else -> null
+            }
             scale = Vector3f(0.5f, 0.5f, 0.5f)
             onInteract {
                 ContentModeTrigger(
@@ -129,6 +145,13 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         highlighting = !highlighting
     }
 
+    private fun toggleHighlightDetached() {
+        highlightingDetached = !highlightingDetached
+    }
+
+    private fun isDetached(nodeId: RoadNodeId): Boolean =
+        network.edges.none { it.start == nodeId || it.end == nodeId }
+
     private fun createNode(position: Position): RoadNode {
         val centerLocation = position.center().withRotation(0f, 0f)
         var id: Int
@@ -143,7 +166,14 @@ class RoadNetworkContentMode(context: ContentContext, player: Player) : ContentM
         editorComponent.update { it.copy(nodes = it.nodes + node) }
         ContentModeTrigger(
             context,
-            SelectedRoadNodeContentMode(context, player, ref, node.id, true)
+            SelectedRoadNodeContentMode(
+                context,
+                player,
+                ref,
+                node.id,
+                initiallyScrolling = true,
+                recalculateOnExit = autoRecalculateEdgesOnPlace,
+            )
         ).triggerFor(player, context())
     }
 
@@ -233,7 +263,29 @@ private class NetworkHighlightComponent(
             player.playSound("ui.button.click")
         }
 
-        return 0 to item
+        return 1 to item
+    }
+}
+
+private class NetworkDetachedHighlightComponent(
+    private val onToggle: () -> Unit = {}
+) : ItemComponent {
+    override fun item(player: Player): Pair<Int, IntractableItem> {
+        val item = ItemStack(Material.REDSTONE_TORCH).apply {
+            editMeta { meta ->
+                meta.name = "<red><b>Highlight Detached Nodes"
+                meta.loreString = """
+                    |<line> <gray>Click to highlight nodes that have no
+                    |<line> <gray>edges connecting them to other nodes.
+                    """.trimMargin()
+            }
+        } onInteract {
+            if (!it.type.isClick) return@onInteract
+            onToggle()
+            player.playSound("ui.button.click")
+        }
+
+        return 2 to item
     }
 }
 
@@ -252,7 +304,7 @@ private class NetworkRecalculateAllEdgesComponent(
             player.playSound("ui.button.click")
         }
 
-        return 1 to item
+        return 0 to item
     }
 }
 
@@ -270,7 +322,7 @@ internal class NetworkEdgesComponent(
         val nodes = fetchNodes().associateBy { it.id }
         showingEdges = fetchEdges()
             .filter {
-                (nodes[it.start]?.position?.distanceSqrt(player.position)
+                (nodes[it.start]?.position?.distanceSquared(player.position)
                     ?: Double.MAX_VALUE) < (showEdgeDistance * showEdgeDistance)
             }
             .mapNotNull { edge ->
@@ -349,7 +401,7 @@ class NegativeNodePulseComponent(
         if (cycle == 0) {
             showingNodes = negativeNodes()
                 .filter {
-                    (it.position.distanceSqrt(player.position)
+                    (it.position.distanceSquared(player.position)
                         ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
                 }
                 .map { Pulse(it.position, it.radius) }
