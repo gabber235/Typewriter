@@ -36,7 +36,7 @@ public class TypewriterPaperLoader implements PluginLoader {
 
         addDependency(classpathBuilder, "io.ktor:ktor-server-core-jvm:2.3.13", central);
         addDependency(classpathBuilder, "io.ktor:ktor-server-netty-jvm:2.3.13", central);
-        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0",
+        addDependency(classpathBuilder, "org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0",
                 central);
         addDependency(classpathBuilder, "org.bstats:bstats-bukkit:3.2.1", central);
     }

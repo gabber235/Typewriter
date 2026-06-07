@@ -53,9 +53,9 @@ enum class ShiftType {
 }
 
 enum class InteractionType(private vararg val actions: InteractAction) {
-    ALL(InteractAction.INTERACT, InteractAction.ATTACK),
+    ALL(InteractAction.INTERACT_AT, InteractAction.ATTACK),
     LEFT_CLICK(InteractAction.ATTACK),
-    RIGHT_CLICK(InteractAction.INTERACT);
+    RIGHT_CLICK(InteractAction.INTERACT_AT);
 
     fun isApplicable(action: InteractAction): Boolean {
         return actions.contains(action)
@@ -65,7 +65,7 @@ enum class InteractionType(private vararg val actions: InteractAction) {
 
 @EntryListener(EntityInteractEventEntry::class)
 fun onEntityInteract(event: AsyncEntityDefinitionInteract, query: Query<EntityInteractEventEntry>) {
-    if (event.hand != InteractionHand.MAIN_HAND || event.action == InteractAction.INTERACT_AT) return
+    if (event.hand != InteractionHand.MAIN_HAND || event.action == InteractAction.INTERACT) return
     val definition = event.definition.ref()
 
     query.findWhere {

@@ -15,6 +15,7 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.inAudience
 import com.typewritermc.engine.paper.entry.temporal.temporalCommand
 import com.typewritermc.engine.paper.entry.triggerFor
+import com.typewritermc.engine.paper.facts.FactData
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
@@ -329,7 +330,9 @@ private fun CommandTree.factsCommand() = literal("facts") {
     literal("inspect") {
         page("page", PageType.STATIC) { page ->
             executePlayerOrTarget { target ->
-                val facts = page().entries.filterIsInstance<ReadableFactEntry>().sortedBy { it.name }
+                val facts = page().entries.filterIsInstance<ReadableFactEntry>()
+                    .map { it to it.readForPlayersGroup(target) }
+                    .sortedByDescending { (_, data) -> data.value }
                 sender.sendMini("Facts on page <blue>${page().name}</blue> for <green>${target.name}</green>:")
 
                 if (facts.isEmpty()) {
@@ -337,8 +340,8 @@ private fun CommandTree.factsCommand() = literal("facts") {
                     return@executePlayerOrTarget
                 }
 
-                for (fact in facts) {
-                    sender.sendMini(fact.format(target))
+                for ((fact, data) in facts) {
+                    sender.sendMini(fact.format(target, data))
                 }
             }
         }
@@ -346,6 +349,8 @@ private fun CommandTree.factsCommand() = literal("facts") {
 
     executePlayerOrTarget { target ->
         val factEntries = Query.find<ReadableFactEntry>().toList()
+            .map { it to it.readForPlayersGroup(target) }
+            .sortedByDescending { (_, data) -> data.value }
         if (factEntries.isEmpty()) {
             sender.msg("There are no facts available.")
             return@executePlayerOrTarget
@@ -354,8 +359,8 @@ private fun CommandTree.factsCommand() = literal("facts") {
         sender.sendMini("\n\n")
         sender.msg("<green>${target.name}</green> has the following facts:\n")
 
-        for (entry in factEntries.take(10)) {
-            sender.sendMini(entry.format(target))
+        for ((entry, data) in factEntries.take(10)) {
+            sender.sendMini(entry.format(target, data))
         }
 
         val remaining = factEntries.size - 10
@@ -373,14 +378,13 @@ private fun CommandTree.factsCommand() = literal("facts") {
 }
 
 private val formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
-private fun ReadableFactEntry.format(player: Player): String {
-    val data = readForPlayersGroup(player)
+private fun ReadableFactEntry.format(player: Player, data: FactData = readForPlayersGroup(player)): String {
     return "<hover:show_text:'${
         comment.replace(
             Regex(" +"),
             " "
         ).replace("'", "\\'")
-    }\n\n<gray><i>Click to modify'><click:suggest_command:'/tw facts set $name ${data.value} ${player.name}'><gray> - </gray><blue>${formattedName}:</blue> ${data.value} <gray><i>(${
+    }\\n\\n<gray><i>Click to modify'><click:suggest_command:'/tw facts set $name ${data.value} ${player.name}'><gray> - </gray><blue>${formattedName}:</blue> ${data.value} <gray><i>(${
         formatter.format(
             data.lastUpdate
         )
@@ -435,7 +439,7 @@ private fun CommandTree.connectCommand() = literal("connect") {
             return@executes
         }
 
-        val book = Book.book(bookTitle, bookAuthor, bookPage)
+        val book = Book.book(bookTitle, bookAuthor, listOf(bookPage))
         player.openBook(book)
     }
 

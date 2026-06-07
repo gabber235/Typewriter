@@ -30,7 +30,7 @@ class SharedAudienceEntityDisplay(
 
     override fun filter(player: Player): Boolean {
         val npcLocation = activityManager?.position ?: return false
-        val distance = npcLocation.distanceSqrt(player.location) ?: return false
+        val distance = npcLocation.distanceSquared(player.location) ?: return false
         val showRange = showRange.get(player)
         return distance <= showRange * showRange
     }

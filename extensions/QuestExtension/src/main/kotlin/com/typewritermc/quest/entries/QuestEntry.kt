@@ -15,11 +15,8 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.engine.paper.utils.server
-import com.typewritermc.quest.QuestStatus
+import com.typewritermc.quest.*
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
-import com.typewritermc.quest.isQuestActive
-import com.typewritermc.quest.trackQuest
-import com.typewritermc.quest.trackedQuest
 import lirand.api.extensions.events.listen
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
@@ -171,11 +168,9 @@ class ObjectiveAudienceFilter(
             player.trackQuest(quest)
             return
         }
-        // If the player has a tracked quest, we only want to override it if the new quest has a higher priority.
-        val highestObjectivePriority = player.trackedShowingObjectives().maxOfOrNull { it.priority } ?: 0
-        if (objective.priority < highestObjectivePriority) {
-            return
-        }
+        // If the player has a tracked quest, we only want to override it if the new quest has a higher or equal priority.
+        val highestQuestPriority = player.activeQuests().maxByOrNull { it.priority } ?: return
+        if (quest.priority < highestQuestPriority.priority) return
 
         player.trackQuest(quest)
     }

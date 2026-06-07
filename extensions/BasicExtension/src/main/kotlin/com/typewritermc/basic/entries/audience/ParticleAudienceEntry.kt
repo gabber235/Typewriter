@@ -10,7 +10,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.interactionContext
@@ -20,6 +20,11 @@ import com.typewritermc.engine.paper.utils.toPacketVector3f
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
 import org.bukkit.Particle
 import org.bukkit.entity.Player
+import java.time.Duration
+import java.util.*
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlin.time.toKotlinDuration
 
 @Entry(
     "particle_audience",
@@ -50,6 +55,9 @@ class ParticleAudienceEntry(
     @LabelKey("basic.particle_audience.fields.speed.label")
     @Help(key = "basic.particle_audience.fields.speed.help")
     val speed: Var<Double> = ConstVar(0.0),
+    @Help("The delay between each particle spawn.")
+    @Default("50")
+    val delay: Var<Duration> = ConstVar(Duration.ofMillis(50)),
 ) : AudienceFilterEntry {
     override suspend fun display(): AudienceFilter = ParticleAudienceFilter(
         ref(),
@@ -59,6 +67,7 @@ class ParticleAudienceEntry(
         count,
         offset,
         speed,
+        delay,
     )
 }
 
@@ -69,29 +78,38 @@ class ParticleAudienceFilter(
     val particle: Var<Particle>,
     val count: Var<Int>,
     val offset: Var<Vector>,
-    val speed: Var<Double>
+    val speed: Var<Double>,
+    val delay: Var<Duration>,
 ) : AudienceFilter(ref), TickableDisplay {
+    val nextTimes = mutableMapOf<UUID, Instant>()
+
     override fun filter(player: Player): Boolean {
-        val distanceSquared = player.position.distanceSqrt(position.get(player)) ?: Double.MAX_VALUE
+        val distanceSquared = player.position.distanceSquared(position.get(player)) ?: Double.MAX_VALUE
         val showRange = radius.get(player)
         return distanceSquared <= showRange * showRange
     }
 
     override fun tick() {
-        consideredPlayers.filter { it.refresh() }.forEach { player ->
-            val context = player.interactionContext
+        val now = Clock.System.now()
+        consideredPlayers
+            .filter { it.refresh() }
+            .filter { nextTimes.getOrPut(it.uniqueId) { now } <= now }
+            .forEach { player ->
+                nextTimes.computeIfPresent(player.uniqueId) { _, time -> time + delay.get(player).toKotlinDuration() }
 
-            WrapperPlayServerParticle(
-                com.github.retrooper.packetevents.protocol.particle.Particle(
-                    SpigotConversionUtil.fromBukkitParticle(particle.get(player, context)),
-                ),
-                true,
-                position.get(player, context).toPacketVector3d(),
-                offset.get(player, context).toPacketVector3f(),
-                speed.get(player, context).toFloat(),
-                count.get(player, context),
-                true,
-            ) sendPacketTo player
-        }
+                val context = player.interactionContext
+
+                WrapperPlayServerParticle(
+                    com.github.retrooper.packetevents.protocol.particle.Particle(
+                        SpigotConversionUtil.fromBukkitParticle(particle.get(player, context)),
+                    ),
+                    true,
+                    position.get(player, context).toPacketVector3d(),
+                    offset.get(player, context).toPacketVector3f(),
+                    speed.get(player, context).toFloat(),
+                    count.get(player, context),
+                    true,
+                ) sendPacketTo player
+            }
     }
 }

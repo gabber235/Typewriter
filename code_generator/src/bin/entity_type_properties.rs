@@ -2,7 +2,7 @@
 /// It uses the data provided by https://joakimthorsen.github.io/MCPropertyEncyclopedia/entities.html?selection=eye_height,height,id,width
 /// To generate the different parts of the data.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fs::File;
 use std::io::Write;
 
@@ -18,6 +18,7 @@ struct Entity {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 enum EntityDimension {
+    NonExistant(String),
     Simple(f64),
     Complex(HashMap<String, f64>),
 }
@@ -43,49 +44,6 @@ fn format_property(property: &str, value: &str) -> String {
     }
 }
 
-fn generate_kotlin_code<F>(entities: &[Entity], property_accessor: F) -> Vec<String>
-where
-    F: Fn(&Entity) -> &EntityDimension,
-{
-    entities
-        .iter()
-        .flat_map(|entity| generate_entity_code(entity, &property_accessor))
-        .collect()
-}
-
-fn generate_entity_code<F>(entity: &Entity, property_accessor: F) -> Vec<String>
-where
-    F: Fn(&Entity) -> &EntityDimension,
-{
-    let entity_type = format!("EntityTypes.{}", entity.id.to_uppercase());
-
-    match property_accessor(entity) {
-        EntityDimension::Simple(value) => {
-            vec![format!(
-                "EntityDataMatcher({}) -> {}",
-                entity_type,
-                format_value(*value)
-            )]
-        }
-        EntityDimension::Complex(map) => map
-            .iter()
-            .flat_map(|(key, value)| {
-                key.split("<br>")
-                    .map(|condition_set| {
-                        let conditions = parse_conditions(condition_set);
-                        let matcher = format!(
-                            "EntityDataMatcher({}, {})",
-                            entity_type,
-                            conditions.join(", ")
-                        );
-                        format!("{} -> {}", matcher, format_value(*value))
-                    })
-                    .collect::<Vec<String>>()
-            })
-            .collect(),
-    }
-}
-
 fn parse_conditions(condition_set: &str) -> Vec<String> {
     condition_set
         .split(", ")
@@ -100,39 +58,150 @@ fn parse_conditions(condition_set: &str) -> Vec<String> {
         .collect()
 }
 
-fn write_kotlin_file(file_name: &str, content: &[String]) -> std::io::Result<()> {
-    let mut file = File::create(file_name)?;
-    writeln!(
-        file,
-        "//<editor-fold desc=\"Entity {} by properties\">",
-        file_name.split('.').next().unwrap()
-    )?;
-    for line in content {
-        writeln!(file, "        {}", line)?;
+fn should_use_default_eye_height(eye_height: Option<f64>, height: f64) -> bool {
+    let Some(eye_height) = eye_height else {
+        return true
+    };
+
+    const TOLERANCE: f64 = 0.001;
+    (eye_height - height * 0.85).abs() < TOLERANCE
+}
+
+fn extract_dimension_map(dimension: &EntityDimension) -> HashMap<String, f64> {
+    match dimension {
+        EntityDimension::NonExistant(_) => HashMap::new(),
+        EntityDimension::Simple(val) => {
+            let mut map = HashMap::new();
+            map.insert(String::new(), *val);
+            map
+        }
+        EntityDimension::Complex(map) => map.clone(),
+    }
+}
+
+fn find_matching_value(map: &HashMap<String, f64>, target_condition: &str) -> Option<f64> {
+    if let Some(value) = map.get(target_condition) {
+        return Some(*value);
+    }
+
+    for (key, value) in map {
+        if conditions_match(key, target_condition) {
+            return Some(*value);
+        }
+    }
+
+    if target_condition.is_empty() {
+        map.get("")
+            .copied()
+            .or_else(|| map.values().next().copied())
+    } else {
+        None
+    }
+}
+
+fn conditions_match(key: &str, target: &str) -> bool {
+    if key.contains(target) || target.contains(key) {
+        return true;
+    }
+
+    if !target.is_empty() && !key.is_empty() {
+        let target_parts: std::collections::HashSet<_> = target.split(", ").collect();
+        let key_parts: std::collections::HashSet<_> = key.split(", ").collect();
+        target_parts.intersection(&key_parts).count() > 0
+    } else {
+        false
+    }
+}
+
+fn collect_all_conditions(
+    width_map: &HashMap<String, f64>,
+    height_map: &HashMap<String, f64>,
+    eye_height_map: &HashMap<String, f64>,
+) -> BTreeSet<String> {
+    let mut all_conditions = BTreeSet::new();
+
+    for key in width_map
+        .keys()
+        .chain(height_map.keys())
+        .chain(eye_height_map.keys())
+    {
+        for condition_set in key.split("<br>") {
+            all_conditions.insert(condition_set.to_string());
+        }
+    }
+
+    all_conditions
+}
+
+fn generate_entity_kotlin_entries(entity: &Entity) -> Vec<String> {
+    let entity_type = format!("EntityTypes.{}", entity.id.to_uppercase());
+
+    let width_map = extract_dimension_map(&entity.width);
+    let height_map = extract_dimension_map(&entity.height);
+    let eye_height_map = extract_dimension_map(&entity.eye_height);
+
+    let all_conditions = collect_all_conditions(&width_map, &height_map, &eye_height_map);
+
+    all_conditions
+        .iter()
+        .filter_map(|condition_set| {
+            let width = find_matching_value(&width_map, condition_set)?;
+            let height = find_matching_value(&height_map, condition_set)?;
+            let eye_height = find_matching_value(&eye_height_map, condition_set);
+
+            let eye_height_str = if should_use_default_eye_height(eye_height, height) {
+                String::new()
+            } else {
+                format!(", eyeHeight = {}", format_value(eye_height.expect("Should have used default value of eye height")))
+            };
+
+            let matcher = if condition_set.is_empty() {
+                format!("EntityDataMatcher({})", entity_type)
+            } else {
+                let conditions = parse_conditions(condition_set);
+                format!(
+                    "EntityDataMatcher({}, {})",
+                    entity_type,
+                    conditions.join(", ")
+                )
+            };
+
+            Some(format!(
+                "{} to EntityData(width = {}, height = {}{})",
+                matcher,
+                format_value(width),
+                format_value(height),
+                eye_height_str
+            ))
+        })
+        .collect()
+}
+
+fn generate_kotlin_entries(entities: &[Entity]) -> Vec<String> {
+    entities
+        .iter()
+        .flat_map(generate_entity_kotlin_entries)
+        .collect()
+}
+
+fn write_entity_data_entries(entries: &[String]) -> std::io::Result<()> {
+    let mut file = File::create("EntityTypeProperty_generated.kt")?;
+    writeln!(file, "//<editor-fold desc=\"Entity Data Map Entries\">")?;
+    for entry in entries {
+        writeln!(file, "        {},", entry)?;
     }
     writeln!(file, "//</editor-fold>")?;
     Ok(())
-}
-
-fn generate_property(
-    entities: &[Entity],
-    property_name: &str,
-    accessor: impl Fn(&Entity) -> &EntityDimension,
-) -> String {
-    let kotlin_code = generate_kotlin_code(&entities, accessor);
-    let file_name = format!("Entity{}Property.kt", property_name);
-    write_kotlin_file(&file_name, &kotlin_code).unwrap();
-    println!("{} generated successfully!", file_name);
-    file_name
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let json_str = std::fs::read_to_string("entitylist.json")?;
     let entities = parse_json(&json_str)?;
 
-    generate_property(&entities, "EyeHeight", |e: &Entity| &e.eye_height);
-    generate_property(&entities, "Height", |e: &Entity| &e.height);
-    generate_property(&entities, "Width", |e: &Entity| &e.width);
+    let kotlin_entries = generate_kotlin_entries(&entities);
+    write_entity_data_entries(&kotlin_entries)?;
+
+    println!("Generated {} entity data entries", kotlin_entries.len());
 
     Ok(())
 }

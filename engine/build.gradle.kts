@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("java")
     kotlin("jvm") version "2.3.20"
@@ -25,7 +27,10 @@ allprojects {
         useJUnitPlatform()
     }
     kotlin {
-        jvmToolchain(21)
+        jvmToolchain(25)
+    }
+    tasks.withType(KotlinCompile::class.java) {
+        compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 
@@ -38,14 +43,14 @@ subprojects {
     version = rootProject.version
 
     dependencies {
-        api("io.insert-koin:koin-core:4.2.0")
+        api("io.insert-koin:koin-core:4.2.1")
         compileOnly("com.google.code.gson:gson:2.13.2")
 
         compileOnlyApi(kotlin("stdlib"))
         compileOnlyApi(kotlin("reflect"))
         compileOnlyApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
-        val kotestVersion = "6.1.10"
+        val kotestVersion = "6.1.11"
         testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
         testImplementation("io.kotest:kotest-framework-engine:$kotestVersion")
         testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")

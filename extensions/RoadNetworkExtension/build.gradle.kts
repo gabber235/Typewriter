@@ -1,6 +1,6 @@
 repositories {}
 dependencies {
-    api("com.extollit.gaming:hydrazine-path-engine:1.8.1")
+    api("com.github.bsommerfeld.pathetic-bukkit:core:5.4.7-a")
 }
 
 typewriter {

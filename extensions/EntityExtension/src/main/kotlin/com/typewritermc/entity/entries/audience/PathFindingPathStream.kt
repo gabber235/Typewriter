@@ -44,7 +44,7 @@ class PathFindingPathStreamProducer(
 
     override suspend fun refreshPath(): PathStream? {
         val (start, end) = points() ?: return null
-        val edges = findEdges() ?: return null
+        val edges = findEdges()
         val visibleEdges = edges.filterVisible(start, end)
         if (visibleEdges.isEmpty()) return null
         return PathFindingPathStream(

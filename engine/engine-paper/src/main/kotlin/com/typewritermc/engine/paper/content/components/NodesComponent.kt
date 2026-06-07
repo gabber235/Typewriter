@@ -5,7 +5,7 @@ import com.github.retrooper.packetevents.protocol.player.InteractionHand
 import com.github.retrooper.packetevents.util.Vector3f
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.content.ComponentContainer
 import com.typewritermc.engine.paper.content.ContentComponent
 import com.typewritermc.engine.paper.events.AsyncFakeEntityInteract
@@ -46,7 +46,7 @@ class NodesComponent<N>(
     private fun refreshNodes(player: Player) {
         val newNodes = nodeFetcher()
             .filter {
-                (nodePosition(it).distanceSqrt(player.position) ?: Double.MAX_VALUE) < NODE_SHOW_DISTANCE_SQUARED
+                (nodePosition(it).distanceSquared(player.position) ?: Double.MAX_VALUE) < NODE_SHOW_DISTANCE_SQUARED
             }
             .toSet()
 

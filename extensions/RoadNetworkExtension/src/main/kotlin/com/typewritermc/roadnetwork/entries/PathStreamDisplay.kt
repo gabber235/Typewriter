@@ -1,8 +1,5 @@
 package com.typewritermc.roadnetwork.entries
 
-import com.extollit.gaming.ai.path.HydrazinePathFinder
-import com.extollit.gaming.ai.path.model.Passibility
-import com.extollit.linalg.immutable.Vec3d
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.priority
 import com.typewritermc.core.entries.ref
@@ -12,9 +9,8 @@ import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.descendants
-import com.typewritermc.engine.paper.entry.entity.toProperty
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceFilterEntry
 import com.typewritermc.engine.paper.entry.entries.PassThroughFilter
@@ -23,20 +19,20 @@ import com.typewritermc.engine.paper.entry.inAudience
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.firstWalkableLocationBelow
 import com.typewritermc.engine.paper.utils.position
+import com.typewritermc.engine.paper.utils.toBukkitWorld
+import com.typewritermc.engine.paper.utils.toPosition
 import com.typewritermc.roadnetwork.RoadNetworkEntry
-import com.typewritermc.roadnetwork.RoadNetworkManager
 import com.typewritermc.roadnetwork.gps.GPSEdge
 import com.typewritermc.roadnetwork.gps.PointToPointGPS
-import com.typewritermc.roadnetwork.gps.isInRangeOf
-import com.typewritermc.roadnetwork.pathfinding.PFEmptyEntity
-import com.typewritermc.roadnetwork.pathfinding.instanceSpace
+import com.typewritermc.roadnetwork.gps.findPathBetweenPosition
+import com.typewritermc.roadnetwork.pathfinding.pathetic.PathCalculationResult
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
+import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.bukkit.entity.Player
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -225,9 +221,17 @@ abstract class PathStreamProducer(
     protected val displaySupplier: PathStreamDisplaysSupplier,
 ) : KoinComponent {
 
-    protected val roadNetworkManager: RoadNetworkManager by inject()
-
-    protected val gps = PointToPointGPS(roadNetwork, { startPosition(player) }, { endPosition(player) })
+    protected val gps = PointToPointGPS(
+        roadNetwork,
+        {
+            val position = startPosition(player)
+            position.firstWalkableLocationBelow() ?: position
+        },
+        {
+            val position = endPosition(player)
+            position.firstWalkableLocationBelow() ?: position
+        },
+    )
 
     protected var lastRefresh = 0L
     protected var job: Job? = null
@@ -295,9 +299,9 @@ abstract class PathStreamProducer(
 
     suspend fun calculatePathing(): Pair<List<GPSEdge>, List<List<Position>>>? {
         val (start, end) = points() ?: return null
-        val edges = findEdges() ?: return null
+        val edges = findEdges()
         val visibleEdges = edges.filterVisible(start, end)
-        val path = findPaths(visibleEdges) ?: return null
+        val path = findPaths(visibleEdges)
         return edges to path
     }
 
@@ -306,13 +310,13 @@ abstract class PathStreamProducer(
         val end = endPosition(player).firstWalkableLocationBelow() ?: return null
 
         // When the start and end location are the same, we don't need to find a path.
-        if ((start.distanceSqrt(end) ?: Double.MAX_VALUE) < 1) {
+        if ((start.distanceSquared(end) ?: Double.MAX_VALUE) < 1) {
             return null
         }
         return start to end
     }
 
-    suspend fun findEdges(): List<GPSEdge>? {
+    suspend fun findEdges(): List<GPSEdge> {
         return gps.findPath().getOrElse { emptyList() }
     }
 
@@ -320,18 +324,18 @@ abstract class PathStreamProducer(
         start: Position,
         end: Position,
     ) = filter {
-        ((it.start.distanceSqrt(start) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
-                || (it.end.distanceSqrt(start)
+        ((it.start.distanceSquared(start) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
+                || (it.end.distanceSquared(start)
             ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
                 ||
-                ((it.start.distanceSqrt(end) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
-                        || (it.end.distanceSqrt(end)
+                ((it.start.distanceSquared(end) ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance
+                        || (it.end.distanceSquared(end)
                     ?: Double.MAX_VALUE) < roadNetworkMaxDistance * roadNetworkMaxDistance)
     }
 
     suspend fun findPaths(
         edges: List<GPSEdge>,
-    ): List<List<Position>>? = coroutineScope {
+    ): List<List<Position>> = coroutineScope {
         edges
             .map { edge ->
                 async {
@@ -347,31 +351,19 @@ abstract class PathStreamProducer(
         start: Position,
         end: Position,
     ): Iterable<Position> {
-        val roadNetwork = roadNetworkManager.getNetwork(gps.roadNetwork)
-
-        val interestingNegativeNodes = roadNetwork.negativeNodes.filter {
-            val distance = start.distanceSqrt(it.position) ?: 0.0
-            distance > it.radius * it.radius && distance < roadNetworkMaxDistance * roadNetworkMaxDistance
-        }
-
-        val entity = PFEmptyEntity(start.toProperty(), searchRange = roadNetworkMaxDistance.toFloat())
-        val instance = start.world.instanceSpace
-        val pathfinder = HydrazinePathFinder(entity, instance)
-
-        val additionalRadius = pathfinder.subject().width().toDouble()
-
-        // We want to avoid going through negative nodes
-        pathfinder.withGraphNodeFilter { node ->
-            if (node.isInRangeOf(interestingNegativeNodes, additionalRadius)) {
-                return@withGraphNodeFilter Passibility.dangerous
+        return when (val pathResult =
+            findPathBetweenPosition(start, end, roadNetworkRef = gps.roadNetwork, checkIntermediateNodes = false, allowFallback = true)) {
+            is PathCalculationResult.Success -> {
+                pathResult.path.map {
+                    BukkitMapper.toLocation(
+                        it, pathResult.world.toBukkitWorld()
+                    ).toPosition()
+                }
             }
-            node.passibility()
-        }
 
-        val path = pathfinder.computePathTo(Vec3d(end.x, end.y, end.z)) ?: return emptyList()
-        return path.map {
-            val coordinate = it.coordinates()
-            Position(start.world, coordinate.x.toDouble(), coordinate.y.toDouble(), coordinate.z.toDouble())
+            is PathCalculationResult.Failure -> {
+                emptyList()
+            }
         }
     }
 }
