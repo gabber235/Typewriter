@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 21
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -33,7 +33,7 @@ jobs:
       - name: Build Engine
         uses: ./.github/actions/build-engine
 
-      #  ----------------------------------------------------------------------------------------------------
+#  ----------------------------------------------------------------------------------------------------
       - name: Build Extensions
         working-directory: ./extensions
         run: ./gradlew buildRelease --scan --no-daemon
@@ -48,7 +48,7 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-      #  ----------------------------------------------------------------------------------------------------
+#  ----------------------------------------------------------------------------------------------------
       - name: Publish Engine to Release Maven Repository
         working-directory: ./engine
         env:
