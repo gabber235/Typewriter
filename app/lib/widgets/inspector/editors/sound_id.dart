@@ -7,6 +7,8 @@ import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/hooks/audio_player.dart";
+import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/sound.dart";
 import "package:typewriter/models/sounds.dart";
@@ -66,7 +68,7 @@ class MinecraftSoundIdsFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Sounds";
+  String title(AppLocalizations l10n) => l10n.sounds;
 
   @override
   List<SearchElement> fetch(PassingRef ref, String query) {
@@ -105,7 +107,7 @@ class MinecraftSoundIdSearchElement extends SearchElement {
   final FutureOr<bool?> Function(MinecraftSound)? onSelect;
 
   @override
-  String get title => sound.name.formatted;
+  String title(AppLocalizations l10n, PassingRef ref) => sound.name.formatted;
 
   @override
   Color color(BuildContext context) {
@@ -145,19 +147,20 @@ class MinecraftSoundIdSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  String description(BuildContext context) {
+  String description(BuildContext context, PassingRef ref) {
+    final l10n = context.l10n;
     if (sound.value.length > 1) {
-      return "${sound.category.formatted} (${sound.value.length} Sound ${sound.value.length.pluralize("track")})";
+      return l10n.soundDescription(sound.category.formatted, sound.value.length, sound.value.length.pluralize("track"));
     } else {
       return sound.category.formatted;
     }
   }
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Select",
+      SearchAction(
+        l10n.select,
         TWIcons.check,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
@@ -397,6 +400,7 @@ class _Selector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return Material(
       color: Theme.of(context).inputDecorationTheme.fillColor,
       borderRadius: BorderRadius.circular(8),
@@ -404,13 +408,13 @@ class _Selector extends HookConsumerWidget {
         builder: (context) => [
           if (select != null)
             ContextMenuTile.button(
-              title: "Select Sound",
+              title: l10n.selectSound,
               icon: TWIcons.checkSquare,
               onTap: select,
             ),
           if (unselect != null)
             ContextMenuTile.button(
-              title: "Remove Sound",
+              title: l10n.removeSound,
               icon: TWIcons.squareMinus,
               onTap: unselect,
               color: Colors.redAccent,
@@ -438,6 +442,7 @@ class _EmptySelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return _Selector(
       select: select,
       unselect: null,
@@ -455,7 +460,7 @@ class _EmptySelector extends HookConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    "Select a sound",
+                    l10n.selectSound,
                     style: Theme.of(context).inputDecorationTheme.hintStyle,
                   ),
                 ],
@@ -479,6 +484,7 @@ class _LoadingSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return _Selector(
       select: null,
       unselect: null,
@@ -494,7 +500,7 @@ class _LoadingSelector extends HookConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                "Loading Sounds...",
+                l10n.loadingSounds,
                 style: Theme.of(context).inputDecorationTheme.hintStyle,
               ),
             ),
@@ -516,6 +522,7 @@ class _ErrorSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return _Selector(
       select: select,
       unselect: unselect,
@@ -527,7 +534,7 @@ class _ErrorSelector extends HookConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                "Failed to load sound",
+                l10n.faledToLoadSounds,
                 style: Theme.of(context)
                     .inputDecorationTheme
                     .hintStyle

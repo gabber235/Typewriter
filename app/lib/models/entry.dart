@@ -4,6 +4,7 @@ import "package:collection/collection.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/models/localized_entry_blueprint_provider.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/passing_reference.dart";
@@ -29,11 +30,22 @@ EntryDefinition? entryDefinition(
     pageName: page.pageName,
     entry: entry,
     blueprint: blueprint,
+    localizedTitle: blueprint.name.formatted,
+    localizedDescription: blueprint.description,
   );
 }
 
 @riverpod
 String? entryName(Ref ref, String entryId) {
+  final blueprintId = ref.watch(entryBlueprintIdProvider(entryId));
+  if (blueprintId == null) {
+    final entry = ref.watch(globalEntryProvider(entryId));
+    return entry?.formattedName;
+  }
+
+  final localizedTitle = ref.watch(entryBlueprintLocalizedTitleProvider(blueprintId));
+  if (localizedTitle.isNotEmpty) return localizedTitle;
+
   final entry = ref.watch(globalEntryProvider(entryId));
   return entry?.formattedName;
 }
@@ -65,11 +77,15 @@ class EntryDefinition {
     required this.pageName,
     required this.entry,
     required this.blueprint,
+    required this.localizedTitle,
+    required this.localizedDescription,
   });
   final String pageId;
   final String pageName;
   final Entry entry;
   final EntryBlueprint blueprint;
+  final String localizedTitle;
+  final String localizedDescription;
 
   Future<void> updateField(PassingRef ref, String path, dynamic value) async {
     final page = ref.read(pageProvider(pageId));

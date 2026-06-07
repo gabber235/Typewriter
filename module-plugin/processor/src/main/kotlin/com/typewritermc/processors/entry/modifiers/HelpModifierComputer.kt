@@ -7,6 +7,9 @@ import com.typewritermc.core.utils.ok
 import com.typewritermc.processors.entry.DataBlueprint
 import com.typewritermc.processors.entry.DataModifier
 import com.typewritermc.processors.entry.DataModifierComputer
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import kotlin.reflect.KClass
 
 object HelpModifierComputer : DataModifierComputer<Help> {
@@ -14,6 +17,14 @@ object HelpModifierComputer : DataModifierComputer<Help> {
 
     context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: Help): Result<DataModifier> {
-        return ok(DataModifier.Modifier("help", annotation.text))
+        // Prefer localization key over text fallback
+        val data = when {
+            annotation.key.isNotEmpty() -> JsonObject(mapOf(
+                "key" to JsonPrimitive(annotation.key)
+            ))
+            annotation.text.isNotEmpty() -> JsonPrimitive(annotation.text)
+            else -> JsonPrimitive("")
+        }
+        return ok(DataModifier.Modifier("help", data))
     }
 }

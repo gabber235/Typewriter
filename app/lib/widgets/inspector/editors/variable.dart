@@ -1,6 +1,7 @@
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -103,6 +104,7 @@ class VariableEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final value =
         ref.watch(fieldValueProvider(path, customBlueprint.defaultValue()));
     final data = variableData(value);
@@ -159,7 +161,7 @@ class VariableEditor extends HookConsumerWidget {
                   ContextMenuRegion(
                     builder: (context) => [
                       ContextMenuTile.button(
-                        title: "Navigate to entry",
+                        title: l10n.navigateToEntry,
                         icon: TWIcons.pencil,
                         onTap: () {
                           ref
@@ -222,14 +224,15 @@ class VariableEditor extends HookConsumerWidget {
   }
 
   Widget _buildError(PassingRef ref) {
+    final l10n = ref.l10n;
     return Admonition.danger(
       onTap: () => _removeVariable(ref),
       child: Text.rich(
         TextSpan(
-          text: "Could not find Variable Reference, ",
+          text: l10n.variableReferenceNotFound,
           children: [
             TextSpan(
-              text: "click to reset to default",
+              text: l10n.variableReferenceNotFoundReset,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),

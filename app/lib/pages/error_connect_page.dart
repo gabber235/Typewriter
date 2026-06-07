@@ -1,8 +1,9 @@
-import "package:auto_route/auto_route.dart";
+﻿import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart" hide FilledButton;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 import "package:typewriter/hooks/delayed_execution.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/widgets/components/general/copyable_text.dart";
 
@@ -14,17 +15,18 @@ class ErrorConnectPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     useDelayedExecution(() {
       // Make sure the socket gets cleaned up
       ref.invalidate(socketProvider);
     });
 
-    return const Scaffold(
+    return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(),
-          Expanded(
+          const Spacer(),
+          const Expanded(
             flex: 6,
             child: MouseRegion(
               cursor: SystemMouseCursors.zoomIn,
@@ -34,24 +36,24 @@ class ErrorConnectPage extends HookConsumerWidget {
               ),
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
-            "Communication error",
-            style: TextStyle(
+            l10n.errorConnectTitle,
+            style: const TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
           ),
           Text(
-            "There was an error while communicating to the server.\nPlease check your connection and try again.",
+            l10n.errorConnectSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, color: Colors.grey),
+            style: const TextStyle(fontSize: 20, color: Colors.grey),
           ),
-          SizedBox(height: 24),
-          CopyableText(text: "/typewriter connect"),
-          SizedBox(height: 24),
-          Spacer(),
+          const SizedBox(height: 24),
+          const CopyableText(text: "/typewriter connect"),
+          const SizedBox(height: 24),
+          const Spacer(),
         ],
       ),
     );

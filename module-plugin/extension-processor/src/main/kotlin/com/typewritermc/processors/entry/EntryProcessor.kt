@@ -58,6 +58,8 @@ class EntryProcessor(
                 variableDataBlueprint = clazz.variableDataBlueprint(),
                 contextKeys = clazz.contextKeys(),
                 modifiers = clazz.getModifiers(),
+                titleKey = annotation.titleKey.ifEmpty { "" },
+                descriptionKey = annotation.descriptionKey.ifEmpty { "" },
             )
         }
 
@@ -187,6 +189,8 @@ private data class EntryBlueprint(
     val variableDataBlueprint: DataBlueprint?,
     val contextKeys: List<ContextKey>,
     val modifiers: List<EntryModifier>,
+    val titleKey: String = "",
+    val descriptionKey: String = "",
 )
 
 @Serializable

@@ -3,8 +3,10 @@ package com.typewritermc.basic.entries.action
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
@@ -28,6 +30,8 @@ class ApplyVelocityActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @LabelKey("basic.apply_velocity.fields.force.label")
+    @Help(key = "basic.apply_velocity.fields.force.help")
     val force: Var<Vector> = ConstVar(Vector(0.0, 0.0, 0.0)),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

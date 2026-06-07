@@ -5,6 +5,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -99,6 +100,8 @@ class FieldHeader extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
+
     final parent = Header.maybeOf(context);
 
     // If there already is a header for this path, we don't need to create a new
@@ -109,7 +112,7 @@ class FieldHeader extends HookConsumerWidget {
     final actions = ref.watch(_actionsProvider(path));
 
     final name =
-        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Fields";
+        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? l10n.fields;
 
     final expanded = useState(defaultExpanded);
     final depth = (parent?.depth ?? -1) + 1;

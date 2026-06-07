@@ -5,6 +5,7 @@ import com.typewritermc.basic.entries.dialogue.messengers.option.JavaOptionDialo
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Criteria
@@ -37,7 +38,8 @@ class OptionDialogueEntry(
     @Colored
     val text: Var<String> = ConstVar(""),
     val options: List<Option> = emptyList(),
-    @Help("The duration it takes to type out the message. If the duration is zero, the message will be displayed instantly.")
+    @LabelKey("basic.option.fields.duration.label")
+    @Help(key = "basic.option.fields.duration.help")
     val duration: Var<Duration> = ConstVar(Duration.ZERO),
 ) : DialogueEntry {
     override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<OptionDialogueEntry> {
@@ -53,13 +55,17 @@ enum class OptionContextKeys(override val klass: KClass<*>) : EntryContextKey {
 
 
 data class Option(
-    @Help("Text for this option.")
+    @LabelKey("basic.option.option.fields.text.label")
+    @Help(key = "basic.option.option.fields.text.help")
     val text: Var<String> = ConstVar(""),
-    @Help("The criteria that must be met for this option to show.")
+    @LabelKey("basic.option.option.fields.criteria.label")
+    @Help(key = "basic.option.option.fields.criteria.help")
     val criteria: List<Criteria> = emptyList(),
-    @Help("The modifiers to apply when this option is chosen.")
+    @LabelKey("basic.option.option.fields.modifiers.label")
+    @Help(key = "basic.option.option.fields.modifiers.help")
     val modifiers: List<Modifier> = emptyList(),
-    @Help("The triggers to fire when this option is chosen.")
+    @LabelKey("basic.option.option.fields.triggers.label")
+    @Help(key = "basic.option.option.fields.triggers.help")
     val triggers: List<Ref<TriggerableEntry>> = emptyList()
 ) {
     val eventTriggers: List<EventTrigger> get() = triggers.map(::EntryTrigger)

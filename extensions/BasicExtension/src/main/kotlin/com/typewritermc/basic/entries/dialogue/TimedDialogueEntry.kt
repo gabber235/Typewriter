@@ -5,6 +5,7 @@ import com.typewritermc.basic.entries.dialogue.messengers.timed.JavaTimedDialogu
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -37,11 +38,14 @@ class TimedDialogueEntry(
     @Colored
     @MultiLine
     val text: Var<String> = ConstVar(""),
-    @Help("The duration it takes to type out the message.")
+    @LabelKey("basic.timed_dialogue.fields.typingDuration.label")
+    @Help(key = "basic.timed_dialogue.fields.typingDuration.help")
     val typingDuration: Var<Duration> = ConstVar(Duration.ZERO),
-    @Help("The duration to wait after typing completes before automatically continuing.")
+    @LabelKey("basic.timed_dialogue.fields.waitDuration.label")
+    @Help(key = "basic.timed_dialogue.fields.waitDuration.help")
     val waitDuration: Var<Duration> = ConstVar(Duration.ZERO),
-    @Help("Whether the confirmation key can be used to skip the dialogue. When enabled, first press completes typing, second press finishes.")
+    @LabelKey("basic.timed_dialogue.fields.allowSkip.label")
+    @Help(key = "basic.timed_dialogue.fields.allowSkip.help")
     @Default("true")
     val allowSkip: Var<Boolean> = ConstVar(true),
 ) : DialogueEntry {

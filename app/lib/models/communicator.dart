@@ -8,6 +8,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:socket_io_client/socket_io_client.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/book.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/extension.dart";
@@ -277,7 +278,9 @@ class Communicator {
     final extensions =
         jsonExtensions.map((a) => Extension.fromJson(a)).toList();
 
-    final book = Book(name: "Typewriter", extensions: extensions, pages: pages);
+    final l10n = ref.watch(l10nProvider);
+
+    final book = Book(name: l10n.appTitle, extensions: extensions, pages: pages);
     ref.read(bookProvider.notifier).book = book;
   }
 
@@ -614,13 +617,14 @@ class Communicator {
 
     final json = jsonDecode(data) as Map<String, dynamic>;
     final response = Response.fromJson(json);
+    final l10n = ref.read(l10nProvider);
 
     if (!response.success) {
       debugPrint("Ack failed: ${response.message}");
       Toasts.showError(
         ref.passing,
         response.message,
-        description: "Reloading the full book to resync with the server.",
+        description: l10n.reloadBookResyncDescription,
       );
       fetchBook();
       return;

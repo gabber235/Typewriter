@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.utils.item.Item
 import org.bukkit.entity.Player
@@ -25,9 +26,11 @@ class ItemInSlotAudienceEntry(
     override val id: String = "",
     override val name: String = "",
     override val children: List<Ref<AudienceEntry>> = emptyList(),
-    @Help("The item to check for.")
+    @LabelKey("basic.item_in_slot_audience.fields.item.label")
+    @Help(key = "basic.item_in_slot_audience.fields.item.help")
     val item: Var<Item> = ConstVar(Item.Empty),
-    @Help("The slot to check.")
+    @LabelKey("basic.item_in_slot_audience.fields.slot.label")
+    @Help(key = "basic.item_in_slot_audience.fields.slot.help")
     val slot: Var<Int> = ConstVar(0),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {

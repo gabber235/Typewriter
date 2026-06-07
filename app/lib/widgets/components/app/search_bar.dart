@@ -2,6 +2,7 @@ import "dart:math";
 
 import "package:auto_size_text/auto_size_text.dart";
 import "package:collection/collection.dart";
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -9,9 +10,10 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:text_scroll/text_scroll.dart";
 import "package:typewriter/hooks/staggered_animation_controllers.dart";
 import "package:typewriter/hooks/ticker.dart";
+import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/staging.dart";
 import "package:typewriter/utils/debouncer.dart";
@@ -26,6 +28,7 @@ import "package:typewriter/widgets/components/general/decorated_text_field.dart"
 import "package:typewriter/widgets/components/general/focused_notifier.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 import "package:typewriter/widgets/components/general/shortcut_label.dart";
+import "package:url_launcher/url_launcher_string.dart";
 
 part "search_bar.freezed.dart";
 part "search_bar.g.dart";
@@ -87,7 +90,8 @@ List<FocusNode> searchFocusNodes(Ref ref) {
 @riverpod
 List<GlobalKey> searchGlobalKeys(Ref ref) {
   final elements = ref.watch(searchElementsProvider);
-  return elements.map((e) => GlobalKey(debugLabel: e.title)).toList();
+  final l10n = ref.watch(l10nProvider);
+  return elements.map((e) => GlobalKey(debugLabel: e.title(l10n, ref.passing))).toList();
 }
 
 @riverpod
@@ -104,15 +108,17 @@ SearchElement? _focusedElement(Ref ref) {
 @riverpod
 List<SearchAction> _searchActions(Ref ref) {
   final focusedElement = ref.watch(_focusedElementProvider);
+  final l10n = ref.watch(l10nProvider);
 
-  return focusedElement?.actions(ref.passing) ?? [];
+  return focusedElement?.actions(l10n, ref.passing) ?? [];
 }
 
 @riverpod
 Set<ShortcutActivator> _searchActionShortcuts(Ref ref) {
   final elements = ref.watch(searchElementsProvider);
+  final l10n = ref.watch(l10nProvider);
   final activators = elements
-      .expand((e) => e.actions(ref.passing))
+      .expand((e) => e.actions(l10n, ref.passing))
       .where((a) => a.onTrigger != null)
       .map((a) => a.shortcut)
       .toSet();
@@ -352,9 +358,9 @@ class SearchBuilder {
 abstract class SearchElement {
   const SearchElement();
 
-  String get title;
+  String title(AppLocalizations l10n, PassingRef ref);
 
-  List<SearchAction> actions(PassingRef ref);
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref);
 
   /// Runs when the element is activated.
   ///
@@ -363,7 +369,7 @@ abstract class SearchElement {
 
   Color color(BuildContext context);
 
-  String description(BuildContext context);
+  String description(BuildContext context, PassingRef ref);
 
   Widget icon(BuildContext context);
 
@@ -381,7 +387,7 @@ abstract class SearchFetcher {
   /// When a quantifier is used, the fetcher will only be used if the search contains the quantifier.
   List<String> get quantifiers => const [];
 
-  String get title;
+  String title(AppLocalizations l10n);
 
   bool canFetch(String query) {
     return getFetchStatus(query) == FetchStatus.fetching;
@@ -600,6 +606,7 @@ class _FetcherChip extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final query =
         ref.watch(searchProvider.select((value) => value?.query ?? ""));
 
@@ -638,7 +645,7 @@ class _FetcherChip extends HookConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  fetcher.title,
+                  fetcher.title(l10n),
                   style: TextStyle(
                     color: status != FetchStatus.quantifierBlocked
                         ? Colors.white
@@ -771,14 +778,9 @@ class _ResultTile extends HookConsumerWidget {
                                       ),
                                 ),
                                 if (focused.value || hover.value)
-                                  TextScroll(
+                                  _MarkdownLinkText(
                                     description,
-                                    delayBefore: 1.seconds,
-                                    pauseBetween: 3.seconds,
-                                    intervalSpaces: 5,
-                                    velocity: const Velocity(
-                                      pixelsPerSecond: Offset(30, 0),
-                                    ),
+                                    maxLines: 1,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
@@ -792,10 +794,9 @@ class _ResultTile extends HookConsumerWidget {
                                         ),
                                   )
                                 else
-                                  AutoSizeText(
-                                    maxLines: 1,
+                                  _MarkdownLinkText(
                                     description,
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
@@ -846,11 +847,99 @@ class _ResultTile extends HookConsumerWidget {
   }
 }
 
+class _MarkdownLinkText extends StatefulWidget {
+  const _MarkdownLinkText(
+    this.text, {
+    this.style,
+    this.maxLines = 1,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final int maxLines;
+
+  @override
+  State<_MarkdownLinkText> createState() => _MarkdownLinkTextState();
+}
+
+class _MarkdownLinkTextState extends State<_MarkdownLinkText> {
+  static final _linkPattern = RegExp(r"\[([^\]]+)\]\(([^)]+)\)");
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  @override
+  void didUpdateWidget(covariant _MarkdownLinkText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _disposeRecognizers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeRecognizers();
+    super.dispose();
+  }
+
+  void _disposeRecognizers() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  Future<void> _openUrl(String url) async {
+    if (!await canLaunchUrlString(url)) return;
+    await launchUrlString(url);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _disposeRecognizers();
+
+    final spans = <InlineSpan>[];
+    var index = 0;
+
+    for (final match in _linkPattern.allMatches(widget.text)) {
+      if (match.start > index) {
+        spans.add(TextSpan(text: widget.text.substring(index, match.start)));
+      }
+
+      final label = match.group(1) ?? "";
+      final url = match.group(2) ?? "";
+      final recognizer = TapGestureRecognizer()..onTap = () => _openUrl(url);
+      _recognizers.add(recognizer);
+
+      spans.add(
+        TextSpan(
+          text: label,
+          style: widget.style?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer: recognizer,
+        ),
+      );
+      index = match.end;
+    }
+
+    if (index < widget.text.length) {
+      spans.add(TextSpan(text: widget.text.substring(index)));
+    }
+
+    return Text.rich(
+      TextSpan(style: widget.style, children: spans),
+      maxLines: widget.maxLines,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
 class _SearchActions extends HookConsumerWidget {
   const _SearchActions();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final actions = ref.watch(_searchActionsProvider);
 
     if (actions.isEmpty) {
@@ -867,7 +956,7 @@ class _SearchActions extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Actions",
+              l10n.actions,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
@@ -899,6 +988,7 @@ class _SearchBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final search = ref.watch(searchProvider);
     final controller = useTextEditingController(text: search?.query ?? "");
     final focusNode = ref.watch(searchBarFocusProvider);
@@ -942,8 +1032,8 @@ class _SearchBar extends HookConsumerWidget {
                 controller: controller,
                 focus: focusNode,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: "Enter search query...",
+                decoration: InputDecoration(
+                  hintText: l10n.searchHint,
                   border: InputBorder.none,
                   filled: false,
                 ),
@@ -1110,6 +1200,7 @@ class _SearchResults extends StatefulHookConsumerWidget {
 class _SearchResultsState extends ConsumerState<_SearchResults> {
   @override
   Widget build(BuildContext context) {
+    final l10n = ref.watch(l10nProvider);
     final animatedResults = min(8, ref.watch(searchElementsProvider).length);
     final elements = ref.watch(searchElementsProvider);
     final ticker = useTickerProvider();
@@ -1132,12 +1223,12 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
               key: globalKeys[i],
               onPressed: () => _activateItem(elements, i, context, ref.passing),
               focusNode: focusNodes[i],
-              title: elements[i].title,
+              title: elements[i].title(l10n, ref.passing),
               color: elements[i].color(context),
-              description: elements[i].description(context),
+              description: elements[i].description(context, ref.passing),
               icon: elements[i].icon(context),
               suffixIcon: elements[i].suffixIcon(context),
-              actions: elements[i].actions(ref.passing),
+              actions: elements[i].actions(l10n, ref.passing),
             );
 
             if (i >= animatedResults) {

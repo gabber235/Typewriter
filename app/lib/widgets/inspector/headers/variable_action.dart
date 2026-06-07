@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/icons.dart";
@@ -56,6 +57,8 @@ class VariableHeaderAction extends HookConsumerWidget {
   final CustomBlueprint customBlueprint;
 
   Future<void> _createVariable(PassingRef ref, BuildContext context) async {
+    final l10n = ref.l10n;
+
     var blueprint = customBlueprint.shape;
 
     // If the blueprint is a generic blueprint, we want to use the actual blueprint instead.
@@ -69,7 +72,7 @@ class VariableHeaderAction extends HookConsumerWidget {
           blueprint = b;
         } else {
           throw Exception(
-            "Could not find generic blueprint, this should not happen! For path: $path",
+            l10n.couldNotFindGenericBlueprint(path),
           );
         }
       }
@@ -118,11 +121,12 @@ class VariableHeaderAction extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final value = ref.watch(fieldValueProvider(path));
     final data = variableData(value);
     if (data == null) {
       return HeaderButton(
-        tooltip: "Replace with Variable",
+        tooltip: l10n.replaceWithVariable,
         icon: TWIcons.variable,
         color: Colors.green,
         onTap: () => _createVariable(ref.passing, context),
@@ -130,7 +134,7 @@ class VariableHeaderAction extends HookConsumerWidget {
     }
 
     return HeaderButton(
-      tooltip: "Remove Variable",
+      tooltip: l10n.removeVariable,
       icon: TWIcons.x,
       color: Colors.red,
       onTap: () => _removeVariable(ref.passing),

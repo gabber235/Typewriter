@@ -1,6 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/extension.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -36,12 +37,13 @@ class GlobalContextKeyEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final selectedKlassName = ref.watch(fieldValueProvider(path, ""));
     final keys = ref.watch(globalContextKeysProvider);
 
     if (keys.isEmpty) {
       return Admonition.warning(
-        child: Text("No extension has a global key. Try using an entry key."),
+        child: Text(l10n.globalContextKeyEditor_noGlobalKeys),
       );
     }
 

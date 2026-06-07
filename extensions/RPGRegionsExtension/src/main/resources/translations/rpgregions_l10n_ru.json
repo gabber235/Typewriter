@@ -1,0 +1,20 @@
+{
+  "rpgregions.discover_rpg_region.title": "Добавить обнаружение для региона RPGRegions",
+  "rpgregions.discover_rpg_region.description": "Добавляет запись об обнаружении в аккаунт игрока. Его можно использовать как награду за выполнение задания/квеста. Например, NPC может попросить игрока помочь в обмен на информацию о местоположении важного места — это действие подойдёт в качестве вознаграждения при завершении квеста.",
+  "rpgregions.discover_rpg_region.fields.region.label": "Регион",
+  "rpgregions.discover_rpg_region.fields.region.help": "Убедитесь, что указано ID региона, а не его отображаемое имя",
+  "rpgregions.on_discover_rpg_region.title": "При обнаружении игроком региона RPGRegions",
+  "rpgregions.on_discover_rpg_region.description": "Событие  срабатывает, когда игрок обнаруживает регион. Можно показывать приветственное сообщение игроку или запускать квест, диалог или кинематографическую сцену при обнаружении региона.",
+  "rpgregions.on_discover_rpg_region.fields.region.label": "Регион",
+  "rpgregions.on_discover_rpg_region.fields.region.help": "Убедитесь, что указано ID региона, а не его отображаемое имя.",
+  "rpgregions.on_enter_rpg_region.title": "При входе игрока в регион RPGRegions",
+  "rpgregions.on_enter_rpg_region.description": "Событие срабатывает, когда игрок входит в регион. Его можно использовать для показа сообщения при входе или для запуска квеста, диалога или кинематографической сцены.",
+  "rpgregions.in_rpg_region_fact.title": "Проверка: находится ли игрок в регионе RPGRegions",
+  "rpgregions.in_rpg_region_fact.description": "[Факт](/docs/creating-stories/facts), проверяющий, находится ли игрок в конкретном регионе. Значение будет `0`, если игрок не в регионе, и `1`, если находится. <fields.ReadonlyFactInfo /> Этот факт можно использовать, чтобы сделать квест доступным только в определённом регионе или как условие для способностей, действующих только в отдельных областях.",
+  "rpgregions.in_rpg_region_fact.fields.region.label": "Регион",
+  "rpgregions.in_rpg_region_fact.fields.region.help": "Убедитесь, что указано ID региона, а не его отображаемое имя.",
+  "rpgregions.rpg_region_group.title": "Группа игроков по регионам RPGRegions",
+  "rpgregions.rpg_region_group.description": "Группа, включающая всех игроков указанного региона RPGRegions. Для группы учитывается только выбранный регион. Можно применять факты, специфичные для региона (например, состояние боя с боссом), или отправлять заголовок всем игрокам в регионе.",
+  "rpgregions.rpg_region_group.fields.regions.label": "Регионы",
+  "rpgregions.rpg_region_group.fields.regions.help": "Имена регионов, которые следует учитывать при формировании группы"
+}

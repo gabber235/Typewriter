@@ -21,15 +21,15 @@ import net.kyori.adventure.sound.Sound as AdventureSound
 
 data class Sound(
     val soundId: SoundId = SoundId.EMPTY,
-    @Help("The source of the location to play the sound from. (Defaults to player's location)")
+    @Help(key = "engine.sound.fields.soundSource.help")
     val soundSource: SoundSource = SelfSoundSource,
-    @Help("Corresponds to the Minecraft sound category")
+    @Help(key = "engine.sound.fields.track.help")
     val track: AdventureSound.Source = AdventureSound.Source.MASTER,
-    @Help("A value of 1.0 is normal volume.")
+    @Help(key = "engine.sound.fields.volume.help")
     @InnerMin(Min(0))
     @Default("1.0")
     val volume: Var<Float> = ConstVar(1.0f),
-    @Help("A value of 1.0 is normal pitch.")
+    @Help(key = "engine.sound.fields.pitch.help")
     @InnerMin(Min(0))
     @InnerMax(Max(2))
     @Default("1.0")

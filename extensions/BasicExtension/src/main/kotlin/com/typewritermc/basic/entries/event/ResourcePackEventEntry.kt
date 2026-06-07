@@ -24,7 +24,8 @@ class ResourcePackEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
 
-    @Help("List of resource pack statuses that will trigger this event.")
+    @LabelKey("basic.resource_pack_event.fields.statuses.label")
+    @Help(key = "basic.resource_pack_event.fields.statuses.help")
     @Default("""["SUCCESSFULLY_LOADED"]""")
     val statuses: List<Status> = listOf(Status.SUCCESSFULLY_LOADED)
 

@@ -2,6 +2,7 @@ import "package:flutter/material.dart" hide FilledButton;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
@@ -108,7 +109,7 @@ class ListEditor extends HookConsumerWidget {
       child: length > 0
           ? ReorderableList(
               itemCount: length,
-              onReorderItem: (oldIndex, newIndex) {
+              onReorder: (oldIndex, newIndex) {
                 _reorder(ref.passing, oldIndex, newIndex);
                 _reorderList(globalKeys, oldIndex, newIndex);
               },
@@ -142,8 +143,9 @@ class NoElements extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final name =
-        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Fields";
+        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? l10n.fields;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: SizedBox(
@@ -152,13 +154,13 @@ class NoElements extends HookConsumerWidget {
           spacing: 8,
           children: [
             Text(
-              "No $name found",
+              l10n.noElementsFound(name),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             OutlineButton.icon(
               onPressed: onAdd,
               icon: const Iconify(TWIcons.plus),
-              label: Text("Add ${name.singular}"),
+              label: Text(l10n.addNew(name.singular)),
               color: Theme.of(context).colorScheme.primary,
             ),
           ],

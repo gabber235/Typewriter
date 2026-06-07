@@ -1,10 +1,14 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/extension_l10n_provider.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
+import "package:typewriter/l10n/locale_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
+import "package:typewriter/utils/localized_entry_metadata.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/components/app/writers.dart";
 import "package:typewriter/widgets/components/general/formatted_text_field.dart";
@@ -46,12 +50,30 @@ class StringEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final focus = useFocusNode();
     useFocusedBasedCurrentEditingField(focus, ref.passing, path);
     final value =
         ref.watch(fieldValueProvider(path, primitiveBlueprint.defaultValue()));
 
     final singleLine = !primitiveBlueprint.hasModifier("multiline");
+    final definition = ref.watch(inspectingEntryDefinitionProvider);
+    final placeholderKey = definition == null
+        ? null
+        : LocalizedEntryMetadata.getPlaceholderKey(primitiveBlueprint) ??
+            LocalizedEntryMetadata.defaultFieldPlaceholderKey(
+              definition.blueprint,
+              path,
+            );
+    final primitiveTypeName = _localizedPrimitiveTypeName(context, primitiveBlueprint.type);
+    final localizedHint = placeholderKey == null || definition == null
+        ? null
+        : ref.watch(extensionL10nResolverProvider).resolve(
+              definition.blueprint.extension,
+              ref.watch(localeControllerProvider),
+              placeholderKey,
+              fallback: l10n.enterAValue(primitiveTypeName),
+            );
 
     return WritersIndicator(
       provider: fieldWritersProvider(path, exact: true),
@@ -59,8 +81,9 @@ class StringEditor extends HookConsumerWidget {
       child: FormattedTextField(
         focus: focus,
         icon: icon,
-        hintText:
-            hint.isNotEmpty ? hint : "Enter a ${primitiveBlueprint.type.name}",
+        hintText: hint.isNotEmpty
+            ? hint
+          : localizedHint ?? l10n.enterAValue(primitiveTypeName),
         text: forcedValue ?? value,
         singleLine: singleLine,
         keyboardType: singleLine ? TextInputType.text : TextInputType.multiline,
@@ -74,5 +97,26 @@ class StringEditor extends HookConsumerWidget {
                 ?.updateField(ref.passing, path, value),
       ),
     );
+  }
+
+  String _localizedPrimitiveTypeName(BuildContext context, PrimitiveType type) {
+    switch (type) {
+      case PrimitiveType.string:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "строку"
+            : "string";
+      case PrimitiveType.boolean:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "логическое значение"
+            : "boolean";
+      case PrimitiveType.double:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "число с плавающей точкой"
+            : "double";
+      case PrimitiveType.integer:
+        return Localizations.localeOf(context).languageCode == "ru"
+            ? "целое число"
+            : "integer";
+    }
   }
 }

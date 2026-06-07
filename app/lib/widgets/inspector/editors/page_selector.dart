@@ -1,6 +1,7 @@
 import "package:flutter/material.dart" hide Page;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/pages/pages_list.dart";
@@ -41,11 +42,12 @@ class PageSelectorEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final typeTag = primitiveBlueprint.get("page");
     final type = typeTag == null ? null : PageType.fromName(typeTag);
 
     if (type == null) {
-      return const Text("Invalid page type");
+      return Text(l10n.invalidPageType);
     }
 
     final pageId =
@@ -81,14 +83,14 @@ class PageSelectorEditor extends HookConsumerWidget {
               return [
                 if (hasPage) ...[
                   ContextMenuTile.button(
-                    title: "Navigate to entry",
+                    title: l10n.navigateToEntry,
                     icon: TWIcons.pencil,
                     onTap: () {
                       ref.read(appRouter).navigateToPage(ref.passing, pageId);
                     },
                   ),
                   ContextMenuTile.button(
-                    title: "Remove reference",
+                    title: l10n.deleteReference,
                     icon: TWIcons.squareMinus,
                     color: Colors.redAccent,
                     onTap: () {
@@ -100,7 +102,7 @@ class PageSelectorEditor extends HookConsumerWidget {
                 ],
                 if (!hasPage) ...[
                   ContextMenuTile.button(
-                    title: "Select entry",
+                    title: l10n.selectEntry,
                     icon: TWIcons.magnifyingGlass,
                     onTap: () {
                       _select(ref.passing, type);
@@ -150,7 +152,7 @@ class PageSelectorEditor extends HookConsumerWidget {
                     else
                       Expanded(
                         child: Text(
-                          "Select a ${type.tag} page",
+                          l10n.selectAPage(type.tag),
                           style:
                               Theme.of(context).inputDecorationTheme.hintStyle,
                         ),
@@ -175,6 +177,7 @@ class PageSelectorEditor extends HookConsumerWidget {
   }
 
   Widget _rejectWidget(BuildContext context) {
+    final l10n = context.l10n;
     return Material(
       color: Theme.of(context).inputDecorationTheme.fillColor,
       borderRadius: BorderRadius.circular(8),
@@ -190,7 +193,7 @@ class PageSelectorEditor extends HookConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                "Page is not allowed here",
+                l10n.pageNotAllowedHere,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),

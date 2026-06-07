@@ -31,7 +31,7 @@ class Operations extends HookConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: "Operations"),
+        SectionTitle(title: context.l10n.inspectorOperations),
         const SizedBox(height: 8),
         for (final action in actions) ...[
           if (action is ContextMenuDivider) const Divider(),
@@ -85,7 +85,7 @@ class _LinkWithEntry extends HookConsumerWidget {
         page.linkWith(ref.passing, entryId!, path);
       },
       icon: const Iconify(TWIcons.plus),
-      label: const Text("Link with ..."),
+      label: Text(context.l10n.linkWith),
       color: Colors.blue,
     );
   }
@@ -111,7 +111,7 @@ class _LinkWithDuplicate extends HookConsumerWidget {
         await page.linkWithDuplicate(ref.passing, entryId!, path);
       },
       icon: const Iconify(TWIcons.duplicate),
-      label: const Text("Link with Duplicate"),
+      label: Text(context.l10n.linkWithDuplicate),
       color: Colors.blue,
     );
   }
@@ -131,7 +131,7 @@ class _DuplicateEntry extends HookConsumerWidget {
         page.duplicateEntry(ref.passing, entryId!);
       },
       icon: const Iconify(TWIcons.duplicate),
-      label: const Text("Duplicate"),
+      label: Text(context.l10n.duplicate),
       color: Colors.blue,
     );
   }
@@ -152,7 +152,7 @@ class _MoveEntry extends HookConsumerWidget {
         );
       },
       icon: const Iconify(TWIcons.moveEntry),
-      label: const Text("Move Entry"),
+      label: Text(context.l10n.moveEntry),
       color: Theme.of(context).colorScheme.primary,
     );
   }
@@ -172,7 +172,7 @@ class _ReplaceWithBlueprint extends HookConsumerWidget {
         page.replaceWithConfirmation(context, ref.passing, entryId!);
       },
       icon: const Iconify(TWIcons.replace),
-      label: const Text("Replace with ..."),
+      label: Text(context.l10n.replaceWith),
       color: Colors.orange,
     );
   }
@@ -192,7 +192,7 @@ class DeleteEntry extends HookConsumerWidget {
         page.deleteEntryWithConfirmation(context, ref.passing, entryId!);
       },
       icon: const Iconify(TWIcons.trash),
-      label: const Text("Delete Entry"),
+      label: Text(context.l10n.deleteEntry),
       color: Theme.of(context).colorScheme.error,
     );
   }

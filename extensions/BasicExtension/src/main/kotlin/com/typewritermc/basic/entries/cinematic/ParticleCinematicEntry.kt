@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Segments
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.Criteria
@@ -29,10 +30,12 @@ class ParticleCinematicEntry(
     override val criteria: List<Criteria> = emptyList(),
     val location: Var<Position> = ConstVar(Position.ORIGIN),
     val particle: Var<Particle> = ConstVar(Particle.FLAME),
-    @Help("The amount of particles to spawn every tick.")
+    @LabelKey("basic.particle_cinematic.fields.count.label")
+    @Help(key = "basic.particle_cinematic.fields.count.help")
     val count: Var<Int> = ConstVar(1),
     val offset: Var<Vector> = ConstVar(Vector.ZERO),
-    @Help("The speed of the particles. For some particles, this is the \"extra\" data value to control particle behavior.")
+    @LabelKey("basic.particle_cinematic.fields.speed.label")
+    @Help(key = "basic.particle_cinematic.fields.speed.help")
     val speed: Var<Double> = ConstVar(0.0),
     @Segments(icon = "fa6-solid:fire-flame-simple")
     val segments: List<ParticleSegment> = emptyList(),

@@ -6,6 +6,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Min
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
@@ -35,7 +36,8 @@ class PlayerNearLocationEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val location: Var<Position> = ConstVar(Position.ORIGIN),
-    @Help("How close the player must be to the location to trigger the event.")
+    @LabelKey("basic.player_near_location_event.fields.range.label")
+    @Help(key = "basic.player_near_location_event.fields.range.help")
     @Min(1)
     val range: Var<Double> = ConstVar(1.0),
 ) : EventEntry

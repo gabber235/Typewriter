@@ -17,7 +17,7 @@ interface SimpleEntityDefinition : EntityDefinitionEntry
 interface SimpleEntityInstance : EntityInstanceEntry {
     override val definition: Ref<out SimpleEntityDefinition>
     val data: List<Ref<EntityData<*>>>
-    @Help("What the entity will do.")
+    @Help(key = "engine.simple_entity_instance.fields.activity.help")
     @OnlyTags("shared_entity_activity")
     val activity: Ref<out EntityActivityEntry>
 

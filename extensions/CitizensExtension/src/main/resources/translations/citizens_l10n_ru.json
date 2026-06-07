@@ -1,0 +1,8 @@
+{
+  "citizens.reference_npc.title": "Когда NPC не управляется Typewriter'ом",
+  "citizens.reference_npc.description": "Идентификатор, ссылающийся на NPC из плагина Citizens, но не управляющий им. Используется для ссылки на уже существующего в мире NPC — например, для квеста, где игрок должен поговорить с NPC.",
+  "citizens.reference_npc.fields.npcId.label": "ID NPC",
+  "citizens.reference_npc.fields.npcId.help": "Идентификатор NPC в плагине Citizens.",
+  "citizens.on_npc_interact.title": "При клике игрока по NPC",
+  "citizens.on_npc_interact.description": "`Событие срабатывает, когда игрок взаимодействует с NPC. Позволяет создавать разные взаимодействия между NPC и игроком — например, выдавать предмет при взаимодействии."
+}

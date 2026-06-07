@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/cron.dart";
@@ -30,6 +31,7 @@ class CronEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10 = ref.watch(l10nProvider);
     return WritersIndicator(
       provider: fieldWritersProvider(path),
       shift: (_) => const Offset(15, 0),
@@ -58,9 +60,9 @@ class CronEditor extends HookConsumerWidget {
         formatted: (value) {
           final cron = CronExpression.parse(value);
           if (cron == null) {
-            return "Invalid cron expression";
+            return l10.invalidCronExpression;
           }
-          return "Valid Cron: ${cron.toHumanReadableString()}";
+          return l10.validCron(cron.toHumanReadableString());
         },
       ),
     );

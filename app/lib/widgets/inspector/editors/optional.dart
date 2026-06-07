@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/color_filter.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -80,6 +81,7 @@ class OptionalEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final enabled = ref.watch(fieldValueProvider(path.join("enabled"), false));
 
     final subDataBlueprint = useMemoized(() => this.subDataBlueprint);
@@ -91,7 +93,7 @@ class OptionalEditor extends HookConsumerWidget {
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
-          "Invalid subfield, try to restart the server",
+          l10n.invalidSubfield,
           style: Theme.of(context).textTheme.bodySmall,
         ),
       );

@@ -3,6 +3,7 @@ package com.typewritermc.basic.entries.audience
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
@@ -24,10 +25,12 @@ import java.util.concurrent.ConcurrentHashMap
 class SetFakeBlockAudienceEntry(
     override val id: String = "",
     override val name: String = "",
-    @Help("The location where the fake block will be set")
+    @LabelKey("basic.set_fake_block_audience.fields.location.label")
+    @Help(key = "basic.set_fake_block_audience.fields.location.help")
     val location: Var<Position> = ConstVar(Position.ORIGIN),
     @MaterialProperties(MaterialProperty.BLOCK)
-    @Help("The block to fake.")
+    @LabelKey("basic.set_fake_block_audience.fields.block.label")
+    @Help(key = "basic.set_fake_block_audience.fields.block.help")
     val block: Var<Material> = ConstVar(Material.AIR),
 ) : AudienceEntry {
     override suspend fun display() = SetFakeBlockDisplay(location, block)

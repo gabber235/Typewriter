@@ -22,7 +22,7 @@ interface PriorityEntry : Entry {
      * Subtypes may want to allow the user to override the priority for that specific entry.
      * This is useful when entries need to have fine-grained control over their priority.
      */
-    @Help("The priority of the entry. If not set, the priority of the page will be used.")
+    @Help(key = "core.entry.fields.priorityOverride.help")
     val priorityOverride: Optional<Int>
 }
 

@@ -1,0 +1,20 @@
+{
+  "mythicmobs.despawn_mythicmobs_mob.title": "Despawn a mob from MythicMobs",
+  "mythicmobs.despawn_mythicmobs_mob.description": "The `Despawn Mob Action` action removes MythicMobs mobs from the world. This action could be used in stories or quests in various ways. For instance, if a player fails a quest to kill 10 zombies, then the zombies could be despawned to signal that the quest is no longer active. One could even use this action for a quest to kill a certain amount of mobs within a time limit!",
+  "mythicmobs.execute_mythicmob_skill.title": "Executes a MythicMobs skill",
+  "mythicmobs.execute_mythicmob_skill.description": "The `Execute Skill Action` action executes a MythicMobs skill. Create fancy particle animations. For example, you can create a little animation when a player opens a door.",
+  "mythicmobs.spawn_mythicmobs_mob.title": "Spawn a mob from MythicMobs",
+  "mythicmobs.spawn_mythicmobs_mob.description": "The `Spawn Mob Action` action spawn MythicMobs mobs to the world. This action could be used in a plethora of scenarios. From simple quests requiring you to kill some spawned mobs, to complex storylines that simulate entire battles, this action knows no bounds!",
+  "mythicmobs.mythicmob_cinematic.title": "Spawn a MythicMob during a cinematic",
+  "mythicmobs.mythicmob_cinematic.description": "The `Spawn MythicMob Cinematic` cinematic entry spawns a MythicMob during a cinematic. This can be used to animate a MythicMob spawning during a cinematic.",
+  "mythicmobs.mythicskill_cinematic.title": "Trigger a MythicSkill during a cinematic",
+  "mythicmobs.mythicskill_cinematic.description": "The `Mythic Skill Cinematic` cinematic entry triggers a skill during a cinematic. :::caution A skill itself needs to define the group to be self using `group=self` ``` - effect:particlesphere{particle=flame;amount=200;radius=2;group=self} @self ``` ::: This can be used to animate fancy particle effects during a cinematic.",
+  "mythicmobs.on_mythic_mob_die.title": "When a player kill a MythicMobs mob.",
+  "mythicmobs.on_mythic_mob_die.description": "The `Mob Death Event` event is triggered when a player kill a mob. After killing a final boss, a dialogue or cinematic section can start. The player could also get a special reward the first time they kill a specific mob.",
+  "mythicmobs.mythicmobs_interact_event.title": "MythicMob Interact Event",
+  "mythicmobs.mythicmobs_interact_event.description": "The `MythicMob Interact Event` is fired when a player interacts with a MythicMob. This can be used to create a variety of interactions that can occur between a MythicMob and a player. For example, you could create a MythicMob that gives the player an item when they interact with it.",
+  "mythicmobs.mythicmobs_kill_player_event.title": "MythicMob Kill Player Event",
+  "mythicmobs.mythicmobs_kill_player_event.description": "The `MythicMob Kill Player Event` event is triggered when MythicMob kills a player. When the player is killed by a certain monster, there is a probability that the monster will drag them back to their lair.",
+  "mythicmobs.mythic_mob_count_fact.title": "Count the number of active Mythic Mobs of the specified type",
+  "mythicmobs.mythic_mob_count_fact.description": "A [fact](/docs/creating-stories/facts) that represents how many specific MythicMobs mob are in the world. <fields.ReadonlyFactInfo /> This fact could be used to change dialogue sent by an NPC or mob when a boss exists. It could also be used in conjunction with the Spawn Mob action to spawn specific mobs if one or more mobs exist/doesn't exist."
+}

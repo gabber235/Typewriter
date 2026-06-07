@@ -45,7 +45,7 @@ interface AudienceFilterEntry : AudienceEntry {
 }
 
 interface Invertible {
-    @Help("The audience will be the players that do not match the criteria.")
+    @Help(key = "engine.invertible.fields.inverted.help")
     val inverted: Boolean
 }
 

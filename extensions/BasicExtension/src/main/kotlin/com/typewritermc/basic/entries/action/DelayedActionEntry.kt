@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
@@ -32,7 +33,8 @@ class DelayedActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    @Help("The duration before the next triggers are fired.")
+    @LabelKey("basic.delayed_action.fields.duration.label")
+    @Help(key = "basic.delayed_action.fields.duration.help")
     private val duration: Var<Duration> = ConstVar(Duration.ZERO),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

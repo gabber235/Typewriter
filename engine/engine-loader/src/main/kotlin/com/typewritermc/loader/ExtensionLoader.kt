@@ -2,6 +2,7 @@ package com.typewritermc.loader
 
 import com.google.gson.Gson
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
@@ -195,7 +196,12 @@ private class ExtensionLoadPipeline(
                     null,
                     FailureReason.MissingJsonFile
                 )
-                zip.getInputStream(entry).bufferedReader().use { it.readText() }
+                val extensionJson = JsonParser.parseReader(zip.getInputStream(entry).bufferedReader()).asJsonObject
+                val translations = zip.loadTranslations()
+                if (translations.size() > 0) {
+                    extensionJson.add("translations", translations)
+                }
+                gson.toJson(extensionJson)
             }
         } catch (e: Exception) {
             return Extension.FailedExtension(
@@ -222,6 +228,28 @@ private class ExtensionLoadPipeline(
                 FailureReason.InvalidJson(e.message ?: "Unknown parsing error")
             )
         }
+    }
+
+    private fun ZipFile.loadTranslations(): JsonObject {
+        val translations = JsonObject()
+        entries().asSequence()
+            .filter { !it.isDirectory }
+            .filter { it.name.startsWith("translations/") && it.name.endsWith(".json") }
+            .forEach { entry ->
+                val locale = entry.name.substringAfterLast("_l10n_").substringBeforeLast(".json")
+                if (locale.isBlank() || locale == entry.name) return@forEach
+
+                val localeTranslations = translations.getAsJsonObject(locale) ?: JsonObject().also {
+                    translations.add(locale, it)
+                }
+                val data = JsonParser.parseReader(getInputStream(entry).bufferedReader()).asJsonObject
+                data.entrySet().forEach { (key, value) ->
+                    if (value.isJsonPrimitive && value.asJsonPrimitive.isString) {
+                        localeTranslations.addProperty(key, value.asString)
+                    }
+                }
+            }
+        return translations
     }
 
     private fun List<Extension>.validateExtensionDependencies(): List<Extension> {

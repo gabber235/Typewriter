@@ -4,8 +4,10 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/models/localized_entry_blueprint_provider.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/pages/page_editor.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -137,6 +139,18 @@ class NonGenericAddEntryFilter extends HiddenSearchFilter {
   }
 }
 
+class _BlueprintSearchItem {
+  const _BlueprintSearchItem({
+    required this.blueprint,
+    required this.localizedTitle,
+    required this.localizedDescription,
+  });
+
+  final EntryBlueprint blueprint;
+  final String localizedTitle;
+  final String localizedDescription;
+}
+
 @riverpod
 Fuzzy<EntryDefinition> _fuzzyEntries(Ref ref) {
   final pages = ref.watch(pagesProvider);
@@ -144,11 +158,19 @@ Fuzzy<EntryDefinition> _fuzzyEntries(Ref ref) {
     return page.entries.map((entry) {
       final blueprint = ref.watch(entryBlueprintProvider(entry.blueprintId));
       if (blueprint == null) return null;
+      final localizedTitle = ref.watch(
+        entryBlueprintLocalizedTitleProvider(blueprint.id),
+      );
+      final localizedDescription = ref.watch(
+        entryBlueprintLocalizedDescriptionProvider(blueprint.id),
+      );
       return EntryDefinition(
         pageId: page.id,
         pageName: page.pageName,
         blueprint: blueprint,
         entry: entry,
+        localizedTitle: localizedTitle,
+        localizedDescription: localizedDescription,
       );
     }).nonNulls;
   }).toList();
@@ -173,13 +195,18 @@ Fuzzy<EntryDefinition> _fuzzyEntries(Ref ref) {
         ),
         WeightedKey(
           name: "name-full",
-          getter: (definition) => definition.entry.name.formatted,
+          getter: (definition) => definition.localizedTitle,
           weight: 0.15,
         ),
         WeightedKey(
           name: "blueprint",
-          getter: (definition) => definition.blueprint.name.formatted,
+          getter: (definition) => definition.localizedTitle,
           weight: 0.4,
+        ),
+        WeightedKey(
+          name: "description",
+          getter: (definition) => definition.localizedDescription,
+          weight: 0.25,
         ),
         WeightedKey(
           name: "tags",
@@ -202,7 +229,7 @@ Fuzzy<EntryDefinition> _fuzzyEntries(Ref ref) {
 }
 
 @riverpod
-Fuzzy<EntryBlueprint> _fuzzyBlueprints(Ref ref) {
+Fuzzy<_BlueprintSearchItem> _fuzzyBlueprints(Ref ref) {
   // If the blueprint has the "deprecated" tag, we don't want to show it.
   final blueprints = ref
       .watch(entryBlueprintsProvider)
@@ -211,8 +238,22 @@ Fuzzy<EntryBlueprint> _fuzzyBlueprints(Ref ref) {
       )
       .toList();
 
+  final localizedBlueprints = blueprints
+      .map(
+        (blueprint) => _BlueprintSearchItem(
+          blueprint: blueprint,
+          localizedTitle: ref.watch(
+            entryBlueprintLocalizedTitleProvider(blueprint.id),
+          ),
+          localizedDescription: ref.watch(
+            entryBlueprintLocalizedDescriptionProvider(blueprint.id),
+          ),
+        ),
+      )
+      .toList();
+
   return Fuzzy(
-    blueprints,
+    localizedBlueprints,
     options: FuzzyOptions(
       threshold: 0.3,
       sortFn: (a, b) => a.matches
@@ -222,22 +263,22 @@ Fuzzy<EntryBlueprint> _fuzzyBlueprints(Ref ref) {
       keys: [
         WeightedKey(
           name: "name",
-          getter: (blueprint) => "Add ${blueprint.name.formatted}",
+          getter: (item) => "Add ${item.localizedTitle}",
           weight: 0.5,
         ),
         WeightedKey(
           name: "tags",
-          getter: (blueprint) => blueprint.tags.join(" "),
+          getter: (item) => item.blueprint.tags.join(" "),
           weight: 0.2,
         ),
         WeightedKey(
           name: "description",
-          getter: (blueprint) => blueprint.description,
+          getter: (item) => item.localizedDescription,
           weight: 0.4,
         ),
         WeightedKey(
           name: "extension",
-          getter: (blueprint) => blueprint.extension,
+          getter: (item) => item.blueprint.extension,
           weight: 0.2,
         ),
       ],
@@ -261,7 +302,7 @@ class NewEntryFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "New Entries";
+  String title(AppLocalizations l10n) => l10n.newEntries;
 
   @override
   List<String> get quantifiers => [
@@ -292,7 +333,7 @@ class NewEntryFetcher extends SearchFetcher {
     return results
         .map(
           (result) => AddEntrySearchElement(
-            result.item,
+            result.item.blueprint,
             genericBlueprint: genericBlueprint,
             onAdd: onAdd,
             onAdded: onAdded,
@@ -326,7 +367,7 @@ class EntryFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Entries";
+  String title(AppLocalizations l10n) => l10n.entries;
 
   @override
   List<String> get quantifiers =>
@@ -413,7 +454,8 @@ class EntrySearchElement extends SearchElement {
   Entry get entry => definition.entry;
 
   @override
-  String get title => entry.formattedName;
+  String title(AppLocalizations l10n, PassingRef ref) =>
+      ref.read(entryBlueprintLocalizedTitleProvider(blueprint.id));
 
   @override
   Color color(BuildContext context) => blueprint.color;
@@ -426,18 +468,18 @@ class EntrySearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  String description(BuildContext context) => definition.pageName.formatted;
+  String description(BuildContext context, PassingRef ref) => definition.pageName.formatted;
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Open",
+      SearchAction(
+        l10n.open,
         TWIcons.externalLink,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
       SearchAction(
-        "Open Wiki",
+        l10n.openWiki,
         TWIcons.book,
         SmartSingleActivator(LogicalKeyboardKey.keyO, control: true),
         onTrigger: (_, __) {
@@ -474,7 +516,10 @@ class AddEntrySearchElement extends SearchElement {
   final FutureOr<bool?> Function(Entry)? onAdded;
 
   @override
-  String get title => "Add ${blueprint.name.formatted}";
+  String title(AppLocalizations l10n, PassingRef ref) =>
+      l10n.addEntryTitle(
+        ref.read(entryBlueprintLocalizedTitleProvider(blueprint.id)),
+      );
 
   @override
   Color color(BuildContext context) => blueprint.color;
@@ -487,18 +532,19 @@ class AddEntrySearchElement extends SearchElement {
   Widget suffixIcon(BuildContext context) => const Iconify(TWIcons.plus);
 
   @override
-  String description(BuildContext context) => blueprint.description;
+  String description(BuildContext context, PassingRef ref) =>
+      ref.read(entryBlueprintLocalizedDescriptionProvider(blueprint.id));
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Add",
+      SearchAction(
+        l10n.add,
         TWIcons.plus,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
       SearchAction(
-        "Open Wiki",
+        l10n.openWiki,
         TWIcons.book,
         SmartSingleActivator(LogicalKeyboardKey.keyO, control: true),
         onTrigger: (_, __) {

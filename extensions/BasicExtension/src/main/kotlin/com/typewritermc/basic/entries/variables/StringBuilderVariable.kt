@@ -43,7 +43,8 @@ private class StringBuilderVariable(
 private data class StringBuilderVariableData(
     val parts: List<StringPart> = emptyList(),
     @Placeholder
-    @Help("Use <key> to insert the part")
+    @LabelKey("basic.string_builder_variable.fields.text.label")
+    @Help(key = "basic.string_builder_variable.fields.text.help")
     val text: String = "",
 )
 

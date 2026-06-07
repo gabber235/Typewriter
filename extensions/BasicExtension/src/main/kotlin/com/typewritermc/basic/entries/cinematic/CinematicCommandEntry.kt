@@ -2,6 +2,7 @@ package com.typewritermc.basic.entries.cinematic
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
@@ -85,7 +86,8 @@ class CinematicPlayerCommandEntry(
 data class CommandSegment(
     override val startFrame: Int = 0,
     override val endFrame: Int = 0,
-    @Help("Each line is a different command. Commands should not be prefixed with <code>/</code>.")
+    @LabelKey("basic.cinematic_command.fields.command.label")
+    @Help(key = "basic.cinematic_command.fields.command.help")
     @Placeholder
     @MultiLine
     val command: String = "",

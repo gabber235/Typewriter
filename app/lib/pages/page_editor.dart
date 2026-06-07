@@ -1,10 +1,11 @@
-import "package:auto_route/auto_route.dart";
+﻿import "package:auto_route/auto_route.dart";
 import "package:collection/collection.dart";
 import "package:flutter/material.dart" hide Page, SearchBar;
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -127,7 +128,9 @@ class _SearchBar extends HookConsumerWidget {
   const _SearchBar() : super();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Material(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
+    return Material(
         color: Theme.of(context).inputDecorationTheme.fillColor,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
@@ -143,7 +146,7 @@ class _SearchBar extends HookConsumerWidget {
                   color: Colors.grey,
                 ),
                 const SizedBox(width: 5),
-                const Text("Search", style: TextStyle(color: Colors.grey)),
+                Text(l10n.pageSearch, style: const TextStyle(color: Colors.grey)),
                 const SizedBox(width: 50),
                 ShortcutLabel(
                   activator: SmartSingleActivator(
@@ -156,6 +159,7 @@ class _SearchBar extends HookConsumerWidget {
           ),
         ),
       );
+  }
 }
 
 class _AddEntryButton extends HookConsumerWidget {

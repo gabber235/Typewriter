@@ -1,0 +1,20 @@
+{
+  "mythicmobs.despawn_mythicmobs_mob.title": "Задеспавнить моба из MythicMobs",
+  "mythicmobs.despawn_mythicmobs_mob.description": "Удаляет из мира мобов MythicMobs. Это действие может быть использовано в сюжетах или квестах различными способами. Например, если игрок не выполнит задание по уничтожению 10 зомби, то зомби могут быть уничтожены, что сигнализирует о том, что задание больше не действует. Это действие можно даже использовать для выполнения задания по уничтожению определенного количества мобов за определенное время!",
+  "mythicmobs.execute_mythicmob_skill.title": "Выполнить навык MythicMobs",
+  "mythicmobs.execute_mythicmob_skill.description": "Выполняет навык MythicMobs. Создавайте красивые анимации частиц. Например, вы можете создать маленькую анимацию, когда игрок открывает дверь.",
+  "mythicmobs.spawn_mythicmobs_mob.title": "Заспавнить моба из MythicMobs",
+  "mythicmobs.spawn_mythicmobs_mob.description": "Спавнит мобов MythicMobs в мир. Это действие может быть использовано в различных сценариях. От простых квестов, требующих убийства некоторых заспавненных мобов, до сложных сюжетных линий, имитирующих целые битвы, это действие не имеет границ!",
+  "mythicmobs.mythicmob_cinematic.title": "Заспавнить моба из MythicMobs во время синематики",
+  "mythicmobs.mythicmob_cinematic.description": "Синематика спавнит моба из MythicMobs во время показа. Ее можно использовать для анимации появления моба во время синематики.",
+  "mythicmobs.mythicskill_cinematic.title": "Выполнить навык MythicMobs во время синематики",
+  "mythicmobs.mythicskill_cinematic.description": "Синематика запускает навык во время показа. :::caution Навык должен определять группу как self, используя `group=self` ``` - effect:particlesphere{particle=flame;amount=200;radius=2;group=self} @self ``` ::: Это можно использовать для анимации эффектов частиц во время синематики.",
+  "mythicmobs.on_mythic_mob_die.title": "Когда игрок убивает моба MythicMobs.",
+  "mythicmobs.on_mythic_mob_die.description": "Событие запускается, когда игрок убивает моба. После убийства финального босса может начаться диалог или синематика. Игрок также может получить специальную награду, убив определенного моба в первый раз.",
+  "mythicmobs.mythicmobs_interact_event.title": "Когда игрок взаимодействует с мобом MythicMobs",
+  "mythicmobs.mythicmobs_interact_event.description": "Событие запускается, когда игрок взаимодействует с мобом MythicMobs. Это можно использовать для создания различных взаимодействий между мобом и игроком. Например, вы можете создать моба, который дает игроку предмет при взаимодействии с ним.",
+  "mythicmobs.mythicmobs_kill_player_event.title": "Событие убийства игрока мобом MythicMobs",
+  "mythicmobs.mythicmobs_kill_player_event.description": "Событие запускается, когда моб MythicMobs убивает игрока. Когда игрок убивается определенным монстром, существует вероятность, что монстр отведет его обратно в его логово.",
+  "mythicmobs.mythic_mob_count_fact.title": "Подсчитать количество активных мобов MythicMobs указанного типа",
+  "mythicmobs.mythic_mob_count_fact.description": "[Факт](/docs/creating-stories/facts), представляющий количество конкретных мобов MythicMobs в мире. <fields.ReadonlyFactInfo /> Этот факт может быть использован для изменения диалога, отправленного NPC или мобом, когда существует босс. Он также может быть использован в сочетании с действием `Spawn Mob` для спавна конкретных мобов, если один или несколько мобов существуют/не существуют."
+}

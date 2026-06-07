@@ -1,8 +1,8 @@
-import "package:flutter/material.dart" hide Title;
+﻿import "package:flutter/material.dart" hide Title;
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:indent/indent.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -14,6 +14,7 @@ import "package:typewriter/widgets/inspector/editors/name.dart";
 import "package:typewriter/widgets/inspector/editors/object.dart";
 import "package:typewriter/widgets/inspector/heading.dart";
 import "package:typewriter/widgets/inspector/operations.dart";
+
 
 part "inspector.g.dart";
 
@@ -78,13 +79,14 @@ class EmptyInspector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Inspector"),
+        Text(l10n.inspectorEmptyTitle),
         const SizedBox(height: 12),
         Text(
-          "Click on an entry to inspect its properties.",
+          l10n.inspectorEmptySubtitle,
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 40),
@@ -167,6 +169,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entry = ref.watch(inspectingEntryProvider);
+    final l10n = ref.watch(l10nProvider);
 
     if (entry == null) return const SizedBox();
 
@@ -175,7 +178,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
       children: [
         Title(
           color: Colors.redAccent,
-          title: entry.formattedName,
+          title: ref.watch(entryNameProvider(entry.id)) ?? entry.formattedName,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -194,17 +197,7 @@ class NoBlueprintEntryInspector extends HookConsumerWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          """
-          |The blueprint for this entry does not exist.
-          |
-          |This can happen if the extension for this entry is no longer installed.
-          |Or if the extension removed the entry type.
-          |
-          |To fix this, you can either:
-          | - Install the extension again.
-          | - Remove the entry.
-        """
-              .trimMargin(),
+          l10n.missingBlueprint,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(),
         ),
         const SizedBox(height: 12),

@@ -1,4 +1,6 @@
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 
 /// As riverpod does not have a unified reference type, we need to create one so that we can pass it around to functions that need to read providers.
 /// The reference may never be cached, as it may be invalidated at any time.
@@ -16,6 +18,16 @@ class PassingRef {
   final Ref<dynamic>? providerRef;
   final WidgetRef? widgetRef;
   final ProviderContainer? container;
+
+  AppLocalizations get l10n {
+    if (providerRef != null) {
+      return providerRef!.watch(l10nProvider);
+    } else if (widgetRef != null) {
+      return widgetRef!.watch(l10nProvider);
+    } else {
+      return container!.read(l10nProvider);
+    }
+  }
 
   T read<T>(ProviderListenable<T> provider) {
     if (providerRef != null) {

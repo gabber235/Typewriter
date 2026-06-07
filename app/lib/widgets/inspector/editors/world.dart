@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/writers.dart";
 import "package:typewriter/utils/icons.dart";
@@ -31,6 +32,7 @@ class WorldEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final focus = useFocusNode();
     final value = ref.watch(fieldValueProvider(path, ""));
 
@@ -43,7 +45,7 @@ class WorldEditor extends HookConsumerWidget {
         focus: focus,
         text: value,
         icon: TWIcons.earth,
-        hintText: "World",
+        hintText: l10n.worldFieldHint,
         onChanged: (value) {
           ref
               .read(inspectingEntryDefinitionProvider)

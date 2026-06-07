@@ -191,7 +191,7 @@ final editorFiltersProvider = AutoDisposeProvider<List<EditorFilter>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef EditorFiltersRef = AutoDisposeProviderRef<List<EditorFilter>>;
-String _$pathDisplayNameHash() => r'4cb4a7c76014fdfb5b467087fff861b000a9b4f2';
+String _$pathDisplayNameHash() => r'0aaa7ed9dece787bdeb95ac3f9841dad38ae87bb';
 
 /// See also [pathDisplayName].
 @ProviderFor(pathDisplayName)

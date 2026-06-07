@@ -5,6 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/models/localized_entry_blueprint_provider.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/widgets/components/general/admonition.dart";
 import "package:typewriter/widgets/components/general/identifier.dart";
@@ -22,7 +23,8 @@ String _entryId(Ref ref) {
 @riverpod
 String _entryName(Ref ref) {
   final def = ref.watch(inspectingEntryDefinitionProvider);
-  return def?.entry.formattedName ?? "";
+  if (def == null) return "";
+  return ref.watch(entryNameProvider(def.entry.id)) ?? def.entry.formattedName;
 }
 
 @riverpod
@@ -133,8 +135,8 @@ class EntryBlueprintDisplay extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final blueprintName =
-        ref.watch(entryBlueprintProvider(blueprintId).select((e) => e?.name));
-    if (blueprintName == null) return const SizedBox();
+        ref.watch(entryBlueprintLocalizedTitleProvider(blueprintId));
+    if (blueprintName.isEmpty) return const SizedBox();
 
     final hovering = useState(false);
     return MouseRegion(
@@ -144,7 +146,7 @@ class EntryBlueprintDisplay extends HookConsumerWidget {
       child: GestureDetector(
         onTap: url.isNotEmpty ? _launceUrl : null,
         child: Text(
-          blueprintName.formatted,
+          blueprintName,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: color.withValues(alpha: 0.9),
                 decoration: hovering.value ? TextDecoration.underline : null,
@@ -172,20 +174,21 @@ class _DeperecationWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Admonition.danger(
       onTap: _launceUrl,
       child: Text.rich(
         TextSpan(
-          text: "This entry has been marked as deprecated. Take a look at the ",
+          text: l10n.entryDeprecatedWarning,
           children: [
             TextSpan(
-              text: "documentation",
+              text: l10n.entryDeprecatedWarningDocumentation,
               style: TextStyle(
                 decoration: TextDecoration.underline,
                 decorationColor: Colors.redAccent,
               ),
             ),
-            TextSpan(text: " for more information."),
+            TextSpan(text: ""),
             if (reason.isNotEmpty) ...[
               TextSpan(
                 text: "\n$reason",

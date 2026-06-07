@@ -5,6 +5,7 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.VariableData
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.entries.*
 
@@ -56,7 +57,8 @@ class CaseVariable(
 }
 
 data class CaseVariableData(
-    @Help("Value is 1-based")
+    @LabelKey("basic.case_variable.fields.selection.label")
+    @Help(key = "basic.case_variable.fields.selection.help")
     @Default("1")
     val selection: Var<Int> = ConstVar(1),
     val cases: List<Generic> = emptyList(),

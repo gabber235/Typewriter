@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.priority
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.audience.PlayerSingleDisplay
 import com.typewritermc.engine.paper.entry.audience.SingleFilter
@@ -33,9 +34,11 @@ import kotlin.reflect.KClass
 class TabListHeaderFooterEntry(
     override val id: String = "",
     override val name: String = "",
-    @Help("The lines to display in the header of the tab list")
+    @LabelKey("basic.tab_list_header_footer.fields.header.label")
+    @Help(key = "basic.tab_list_header_footer.fields.header.help")
     val header: List<Ref<out AudienceEntry>> = emptyList(),
-    @Help("The lines to display in the footer of the tab list")
+    @LabelKey("basic.tab_list_header_footer.fields.footer.label")
+    @Help(key = "basic.tab_list_header_footer.fields.footer.help")
     val footer: List<Ref<out AudienceEntry>> = emptyList(),
     override val priorityOverride: Optional<Int> = Optional.empty(),
 ) : AudienceFilterEntry, PriorityEntry {

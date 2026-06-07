@@ -11,7 +11,7 @@ import org.koin.java.KoinJavaComponent
 
 @Tags("asset")
 interface AssetEntry : StaticEntry {
-    @Help("The path to the asset.")
+    @Help(key = "engine.asset.fields.path.help")
     val path: String
 }
 
@@ -35,7 +35,7 @@ suspend fun AssetEntry.binaryData(): ByteArray? {
  */
 @Tags("artifact")
 interface ArtifactEntry : AssetEntry {
-    @Help("A unique identifier for the artifact. SHOULD NOT BE CHANGED!")
+    @Help(key = "engine.artifact.fields.artifactId.help")
     @Generated
     val artifactId: String
 

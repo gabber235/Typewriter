@@ -1,0 +1,687 @@
+﻿{
+  "@@locale": "en",
+  "@@author": "Gabber235",
+  "appTitle": "TypeWriter",
+  "@appTitle": {},
+  "settingsLanguage": "Language",
+  "@settingsLanguage": {},
+  "homeTitle": "Your journey starts here",
+  "@homeTitle": {},
+  "homeSubtitle": "Run the following command on your server to start editing",
+  "@homeSubtitle": {},
+  "connectToTitle": "Connect to",
+  "@connectToTitle": {},
+  "connectToHint": "Fill in the url to connect to",
+  "@connectToHint": {},
+  "unexpectedError": "An error occurred, please report on the Typewriter Discord",
+  "@unexpectedError": {},
+  "noSkinDataError": "Could not find the skin data in the response",
+  "@noSkinDataError": {},
+  "invalidTextureDataError": "Invalid texture data in response",
+  "@invalidTextureDataError": {},
+  "textureAndSignatureMustBeStrings": "Invalid texture or signature in response",
+  "@textureAndSignatureMustBeStrings": {},
+  "noEntryChecked": "Currently not inspecting an entry",
+  "@noEntryChecked": {},
+  "cancel": "Cancel",
+  "@cancel": {},
+  "add": "Add",
+  "@add": {},
+  "addNew": "Add new {item}",
+  "@addNew": {
+    "placeholders": {
+      "item": {}
+    }
+  },
+  "trueValue": "True",
+  "@trueValue": {},
+  "falseValue": "False",
+  "@falseValue": {},
+  "hexCode": "Hex Code",
+  "@hexCode": {},
+  "open": "Open",
+  "@open": {},
+  "actions": "Actions",
+  "@actions": {},
+  "rename": "Rename",
+  "@rename": {},
+  "connect": "Connect",
+  "@connect": {},
+  "publish": "Publish",
+  "@publish": {},
+  "stagingProduction": "Production",
+  "@stagingProduction": {},
+  "stagingStaging": "Staging",
+  "@stagingStaging": {},
+  "stagingPublishing": "Publishing",
+  "@stagingPublishing": {},
+  "priority": "Priority",
+  "@priority": {},
+  "delete": "Delete",
+  "@delete": {},
+  "deleteThis": "Remove {item}?",
+  "@deleteThis": {
+    "placeholders": {
+      "item": {}
+    }
+  },
+  "deleteEntry": "Delete entry?",
+  "@deleteEntry": {},
+  "deleteEntryConfirmation": "Are you sure you want to delete {entry}?",
+  "@deleteEntryConfirmation": {
+    "placeholders": {
+      "entry": {}
+    }
+  },
+  "replaceEntry": "Replace Entry",
+  "replaceEntryConfirmation": "Replacing entries is not reversible.\nIt may result in data loss or data corruption.\nAre you sure you want to replace {entry}?",
+  "@replaceEntryConfirmation": {
+    "placeholders": {
+      "entry": {}
+    }
+  },
+  "replace": "Replace",
+  "@replace": {}, 
+  "@replaceEntry": {},
+  "confirm": "Confirm",
+  "@confirm": {},
+  "select": "Select",
+  "@select": {},
+  "duplicate": "Duplicate",
+  "@duplicate": {},
+  "duplicateThis": "Duplicate {item}",
+  "@duplicateThis": {
+    "placeholders": {
+      "item": {}
+    }
+  },
+  "fetchSkin": "Fetch Skin",
+  "@fetchSkin": {},
+  "fetch": "Fetch",
+  "@fetch": {},
+  "fetchSkinHint": "Enter the {bodyKey} to fetch the skin",
+  "@fetchSkinHint": {
+    "placeholders": {
+      "bodyKey": {}
+    }
+  },
+  "duration": "Duration",
+  "@duration": {},
+  "areYouSure": "Are you sure?",
+  "@areYouSure": {},
+  "thisActionCannotBeUndone": "This action cannot be undone.",
+  "@thisActionCannotBeUndone": {},
+  "connectLocalhost": "Connect Localhost",
+  "@connectLocalhost": {},
+  "connectCustom": "Connect Custom",
+  "@connectCustom": {},
+  "waitingForConnection": "Waiting for connection",
+  "@waitingForConnection": {},
+  "errorConnectTitle": "Communication error",
+  "@errorConnectTitle": {},
+  "errorConnectSubtitle": "There was an error while communicating to the server.\nPlease check your connection and try again.",
+  "@errorConnectSubtitle": {},
+  "placeholderInfo": "Placeholders like %player_name% are supported. Click for more info.",
+  "@placeholderInfo": {},
+  "regexInfo": "Regular expressions are supported. Click for more info.",
+  "@regexInfo": {},
+  "coloredInfo": "Adventure Mini Format is supported. Click for more info.",
+  "@coloredInfo": {},
+  "pageSearch": "Search",
+  "@pageSearch": {},
+  "fields": "Fields",
+  "@fields": {},
+  "entry": "Entry",
+  "@entry": {},
+  "name": "Name",
+  "@name": {},
+  "nameHint": "Enter a name",
+  "@nameHint": {},
+  "algebraicEditorInvalidData": "This field contains invalid data. ",
+  "@algebraicEditorInvalidData": {},
+  "algebraicEditorCaseNotFound": "Could not find a case for {name}. ",
+  "@algebraicEditorCaseNotFound": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "selectCase": "Select Case",
+  "@selectCase": {},
+  "valueReset": "Click to reset it to the default value.",
+  "@valueReset": {},
+  "setCaseType": "Set {name} as the type of the field",
+  "@setCaseType": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "newEntries": "New Entries",
+  "@newEntries": {},
+  "entries": "Entries",
+  "@entries": {},
+  "material": "Material",
+  "@material": {},
+  "materials": "Materials",
+  "@materials": {},
+  "itemName": "Item Name",
+  "@itemName": {},
+  "sounds": "Sounds",
+  "@sounds": {},
+  "selectSound": "Select Sound",
+  "@selectSound": {},
+  "removeSound": "Remove Sound",
+  "@removeSound": {},
+  "loadingSounds": "Loading Sounds...",
+  "@loadingSounds": {},
+  "faledToLoadSounds": "Failed to load sounds",
+  "@faledToLoadSounds": {},
+  "soundDescription": "{category} ({trackCount} Sound {trackWord})",
+  "@soundDescription": {
+    "placeholders": {
+      "category": {},
+      "trackCount": {},
+      "trackWord": {}
+    }
+  },
+  "texture": "Texture",
+  "@texture": {},
+  "signature": "Signature",
+  "@signature": {},
+  "pages": "Pages",
+  "@pages": {},
+  "unknownPage": "Unknown page",
+  "@unknownPage": {},
+  "invalidPageType": "Invalid page type",
+  "@invalidPageType": {},
+  "selectAPage": "Select a {type} page",
+  "@selectAPage": { 
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "pageNotAllowedHere": "Page is not allowed here",
+  "@pageNotAllowedHere": {},
+  "newPage": "New Page",
+  "@newPage": {},
+  "change": "Change",
+  "@change": {},
+  "changePriority": "Change Priority",
+  "@changePriority": {},
+  "reconnectTitle": "Connection lost, Reconnecting...",
+  "@reconnectTitle": {},
+  "reloadBookResyncDescription": "Reloading the full book to resync with the server.",
+  "@reloadBookResyncDescription": {},
+  "joinDiscord": "Join Discord",
+  "@joinDiscord": {},
+  "openWiki": "Open Wiki",
+  "@openWiki": {},
+  "reloadData": "Reload Data",
+  "@reloadData": {},
+  "fetchFromURL": "Fetch from URL",
+  "@fetchFromURL": {},
+  "fetchFromUUID": "Fetch from UUID",
+  "@fetchFromUUID": {},
+  "yawFieldLabel": "Yaw",
+  "@yawFieldLabel": {},
+  "pitchFieldLabel": "Pitch",
+  "@pitchFieldLabel": {},
+  "componentsCinematicDeleteSegment": "Delete Segment",
+  "@componentsCinematicDeleteSegment": {},
+  "componentsCinematicDuplicateSegment": "Duplicate Segment",
+  "@componentsCinematicDuplicateSegment": {},
+  "componentsCinematicNoSegments": "No segments",
+  "@componentsCinematicNoSegments": {},
+  "establishingInterstellarConnection": "Establishing interstellar connection",
+  "@establishingInterstellarConnection": {},
+  "tuningCommunicationFrequency": "Tuning communication frequency",
+  "@tuningCommunicationFrequency": {},
+  "initiatingCommunicationProtocol": "Initiating communication protocol",
+  "@initiatingCommunicationProtocol": {},
+  "negotiatingConnectionParameters": "Negotiating connection parameters",
+  "@negotiatingConnectionParameters": {},
+  "analyzingNetworkTraffic": "Analyzing network traffic",
+  "@analyzingNetworkTraffic": {},
+  "establishingTelepathicLink": "Establishing telepathic link",
+  "@establishingTelepathicLink": {},
+  "activatingQuantumCommunication": "Activating quantum communication",
+  "@activatingQuantumCommunication": {},
+  "settingUpVirtualPrivateConnection": "Setting up virtual private connection",
+  "@settingUpVirtualPrivateConnection": {},
+  "checkingForNetworkInterference": "Checking for network interference",
+  "@checkingForNetworkInterference": {},
+  "hackingIntoTheMatrix": "Hacking into the matrix",
+  "@hackingIntoTheMatrix": {},
+  "summoningTheInterdimensionalPortal": "Summoning the interdimensional portal",
+  "@summoningTheInterdimensionalPortal": {},
+  "openingTheGatewayToTheAstralPlane": "Opening the gateway to the astral plane",
+  "@openingTheGatewayToTheAstralPlane": {},
+  "establishingConnectionToTheOtherSide": "Establishing connection to the other side",
+  "@establishingConnectionToTheOtherSide": {},
+  "connectingToTheCosmicMind": "Connecting to the cosmic mind",
+  "@connectingToTheCosmicMind": {},
+  "contactingExtraterrestrialIntelligence": "Contacting extraterrestrial intelligence",
+  "@contactingExtraterrestrialIntelligence": {},
+  "dialingUpTheTimeSpaceContinuum": "Dialing up the time-space continuum",
+  "@dialingUpTheTimeSpaceContinuum": {},
+  "downloadingThoughtsFromTheFuture": "Downloading thoughts from the future",
+  "@downloadingThoughtsFromTheFuture": {},
+  "establishingLinkToParallelUniverse": "Establishing link to parallel universe",
+  "@establishingLinkToParallelUniverse": {},
+  "establishingLinkToTheUniversalConsciousness": "Establishing link to the universal consciousness",
+  "@establishingLinkToTheUniversalConsciousness": {},
+  "tuningIntoTheCosmicFrequency": "Tuning into the cosmic frequency",
+  "@tuningIntoTheCosmicFrequency": {},
+  "initiatingIntergalacticCommunication": "Initiating intergalactic communication",
+  "@initiatingIntergalacticCommunication": {},
+  "bendingTheFabricOfReality": "Bending the fabric of reality",
+  "@bendingTheFabricOfReality": {},
+  "syncingWithTheCosmicClock": "Syncing with the cosmic clock",
+  "@syncingWithTheCosmicClock": {},
+  "activatingTheTransDimensionalRelay": "Activating the trans-dimensional relay",
+  "@activatingTheTransDimensionalRelay": {},
+  "establishingTelekineticConnection": "Establishing telekinetic connection",
+  "@establishingTelekineticConnection": {},
+  "channelingTheUniversalEnergy": "Channeling the universal energy",
+  "@channelingTheUniversalEnergy": {},
+  "unlockingTheSecretsOfTheUniverse": "Unlocking the secrets of the universe",
+  "@unlockingTheSecretsOfTheUniverse": {},
+  "contactingTheAllSeeingEye": "Contacting the all-seeing eye",
+  "@contactingTheAllSeeingEye": {},
+  "teleportingThroughTimeAndSpace": "Teleporting through time and space",
+  "@teleportingThroughTimeAndSpace": {},
+  "tuningIntoTheHigherDimensions": "Tuning into the higher dimensions",
+  "@tuningIntoTheHigherDimensions": {},
+  "connectingToTheGreatBeyond": "Connecting to the great beyond",
+  "@connectingToTheGreatBeyond": {},
+  "downloadingKnowledgeFromTheAkashicRecords": "Downloading knowledge from the Akashic records",
+  "@downloadingKnowledgeFromTheAkashicRecords": {},
+  "establishingAPsychicLink": "Establishing a psychic link",
+  "@establishingAPsychicLink": {},
+  "activatingTheCosmicGateway": "Activating the cosmic gateway",
+  "@activatingTheCosmicGateway": {},
+  "syncingWithTheUniverseFrequency": "Syncing with the universe frequency",
+  "@syncingWithTheUniverseFrequency": {},
+  "tuningIntoTheCosmicVibration": "Tuning into the cosmic vibration",
+  "@tuningIntoTheCosmicVibration": {},
+  "connectingToTheQuantumField": "Connecting to the quantum field",
+  "@connectingToTheQuantumField": {},
+  "establishingAConnectionToTheDivine": "Establishing a connection to the divine",
+  "@establishingAConnectionToTheDivine": {},
+  "channelingTheUniversalWisdom": "Channeling the universal wisdom",
+  "@channelingTheUniversalWisdom": {},
+  "emptyPageTitle": "Select a page to edit or",
+  "@emptyPageTitle": {},
+  "addPage": "Add Page",
+  "@addPage": {},
+  "addNewPage": "Add New Page",
+  "@addNewPage": {},
+  "addNewPageForType": "Add a new {type} page",
+  "@addNewPageForType": {
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "pageNameField": "Page Name",
+  "@pageNameField": {},
+  "pageNameCannotBeEmpty": "Page name cannot be empty",
+  "@pageNameCannotBeEmpty": {},
+  "pageNameCannotBeSame": "Page name cannot be the same",
+  "@pageNameCannotBeSame": {},
+  "advancedSettings": "Advanced",
+  "@advancedSettings": {},
+  "chapterNameField": "Chapter Name",
+  "@chapterNameField": {},
+  "pagePriorityField": "Page priority",
+  "@pagePriorityField": {},
+  "renamePage": "Rename ${oldName}",
+  "@renamePage": {
+    "placeholders": {
+      "oldName": {}
+    }
+  },
+  "changeChapterTitle": "Change chapter",
+  "@changeChapterTitle": {},
+  "changeChapter": "Change chapter of ${pageId}",
+  "@changeChapter": {
+    "placeholders": {
+      "pageId": {}
+    }
+  },
+  "changePagePriority": "Change priority of ${pageId}",
+  "@changePagePriority": {
+    "placeholders": {
+      "pageId": {}
+    }
+  },
+  "deletePage": "Delete ${pageName}",
+  "@deletePage": {
+    "placeholders": {
+      "pageName": {}
+    }
+  },
+  "deletePageContent": "This will delete the page and all its content.\nTHIS CANNOT BE UNDONE.",
+  "@deletePageContent": {},
+  "enterAValueEmpty": "Enter a value",
+  "@enterAValueEmpty": {},
+  "enterAValue": "Enter a {type}",
+  "@enterAValue": {
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "invalidValue": "Invalid {name}: {value}",
+  "@invalidValue": {
+    "placeholders": {
+      "name": {},
+      "value": {}
+    }
+  },
+  "validValue": "Valid {name}: {value}",
+  "@validValue": {
+    "placeholders": {
+      "name": {},
+      "value": {}
+    }
+  },
+  "noGraphableEntries": "There are no graphable entries on this page.",
+  "@noGraphableEntries": {},
+  "addEntry": "Add Entry",
+  "@addEntry": {},
+  "deleteSegment": "Delete Segment",
+  "@deleteSegment": {},
+  "deleteSegmentConfirmation": "Are you sure you want to delete this segment?",
+  "@deleteSegmentConfirmation": {},
+  "couldNotAddSegment": "Could not add segment",
+  "@couldNotAddSegment": {},
+  "notEnoughSpace": "There is not enough space to add a segment.",
+  "@notEnoughSpace": {},
+  "addSegmentButton": "Add {title}",
+  "@addSegmentButton": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "segment": "Segment {index}",
+  "@segment": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "segments": "Segments",
+  "@segments": {},
+  "noSegments": "No segments",
+  "@noSegments": {},
+  "operations": "Operations",
+  "@operations": {},
+  "segmentDuration": "Total Duration: {seconds} seconds ({frames} frames)",
+  "@segmentDuration": {
+    "placeholders": {
+      "seconds": {},
+      "frames": {}
+    }
+  },
+  "segmentInspectorTitle": "Segment Inspector",
+  "@segmentInspectorTitle": {},
+  "inspectorEmptyTitle": "Select an entry to inspect",
+  "@inspectorEmptyTitle": {},
+  "inspectorEmptySubtitle": "Select an entry from the list to view and edit its details",
+  "@inspectorEmptySubtitle": {},
+  "inspectorOperations": "Operations",
+  "@inspectorOperations": {},
+  "moveEntry": "Move Entry",
+  "@moveEntry": {},
+  "missingBlueprint": "Missing Blueprint",
+  "@missingBlueprint": {},
+  "trackDurationLabel": "Track Duration",
+  "@trackDurationLabel": {},
+  "frame": "Frame",
+  "@frame": {},
+  "startFrame": "Start Frame",
+  "@startFrame": {},
+  "endFrame": "End Frame",
+  "@endFrame": {},
+  "enterFrameNumber": "Enter a frame number",
+  "@enterFrameNumber": {},
+  "noEntrySelected": "No entry selected",
+  "@noEntrySelected": {},
+  "noEntrySelectedDescriptionContent": "An entry must be selected to capture a field.",
+  "@noEntrySelectedDescriptionContent": {},
+  "noSegmentSelected": "No segment selected",
+  "@noSegmentSelected": {},
+  "frameBeforeStart": "Cannot be before start frame",
+  "@frameBeforeStart": {},
+  "frameAfterEnd": "Cannot be after end frame",
+  "@frameAfterEnd": {},
+  "segmentTooShort": "The segment must be at least {minFrames} frames long",
+  "@segmentTooShort": {
+    "placeholders": {
+      "minFrames": {}
+    }
+  },
+  "segmentTooLong": "The segment must be at most {maxFrames} frames long",
+  "@segmentTooLong": {
+    "placeholders": {
+      "maxFrames": {}
+    }
+  },
+  "cannotExtendPastEndOfTrack": "Cannot extend past the end of the track",
+  "@cannotExtendPastEndOfTrack": {},
+  "cannotOverlapWithNextSegment": "Cannot overlap with next segment",
+  "@cannotOverlapWithNextSegment": {},
+  "cannotOverlapWithPreviousSegment": "Cannot overlap with previous segment",
+  "@cannotOverlapWithPreviousSegment": {},
+  "frameAlreadyUsed": "A segment already exists at this frame",
+  "@frameAlreadyUsed": {},
+  "duplicateSegment": "Duplicate Segment",
+  "@duplicateSegment": {},
+  "noCinematicEntries": "There are no cinematic entries on this page.",
+  "@noCinematicEntries": {},
+  "couldNotDeleteSegment": "Could not delete segment",
+  "@couldNotDeleteSegment": {},
+  "noPageSelected": "No page is selected.",
+  "@noPageSelected": {},
+  "noPageSelectedDescriptionContent": "A page must be selected to capture a field.",
+  "@noPageSelectedDescriptionContent": {},
+  "noBlueprintFoundForEntry": "No blueprint is found for the selected entry.",
+  "@noBlueprintFoundForEntry": {},
+  "noBlueprintFoundForSegment": "No blueprint is found for the selected segment.",
+  "@noBlueprintFoundForSegment": {},
+  "deleteReference": "Delete Reference",
+  "@deleteReference": {},
+  "nonExistentEntry": "Non-existent entry",
+  "@nonExistentEntry": {},
+  "selectEntry": "Select Entry",
+  "@selectEntry": {},
+  "selectAEntry": "Select a {name}",
+  "@selectAEntry": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "entryNotAllow": "Entry is not allowed here",
+  "@entryNotAllow": {},
+  "entryReferenceNotAnEntry": "Entry reference is not an entry",
+  "@entryReferenceNotAnEntry": {},
+  "navigateToEntry": "Navigate to entry",
+  "@navigateToEntry": {},
+  "nonExistentBlueprint": "Non-existent blueprint",
+  "@nonExistentBlueprint": {},
+  "blueprintDoesNotExist": "Blueprint for this entry does not exist",
+  "@blueprintDoesNotExist": {},
+  "linkWith": "Link with ...",
+  "@linkWith": {},
+  "linkWithDuplicate": "Link with duplicate",
+  "@linkWithDuplicate": {},
+  "moveTo": "Move to ...",
+  "@moveTo": {},
+  "replaceWith": "Replace with ...",
+  "@replaceWith": {},
+  "addEntryTitle": "Add {type}",
+  "@addEntryTitle": {
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "addPageTitle": "Add {type}",
+  "@addPageTitle": {
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "createPageDescription": "Add description for {type}",
+  "@createPageDescription": {
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "manifestEmptyTitle": "There are no manifest entries on this page.",
+  "@manifestEmptyTitle": {},
+  "searchHint": "Enter search query...",
+  "@searchHint": {},
+  "worldFieldHint": "World",
+  "@worldFieldHint": {},
+  "materialSelectHint": "Select a material",
+  "@materialSelectHint": {},
+  "noStaticEntries": "There are no static entries on this page.",
+  "@noStaticEntries": {},
+  "replaceWithVariable": "Replace with Variable",
+  "@replaceWithVariable": {},
+  "removeVariable": "Remove Variable",
+  "@removeVariable": {},
+  "couldNotFindGenericBlueprint": "Could not find generic blueprint, this should not happen! For path: {path}",
+  "@couldNotFindGenericBlueprint": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "entryDeprecatedWarning": "This entry has been marked as deprecated. Take a look at the ",
+  "@entryDeprecatedWarning": {},
+  "entryDeprecatedWarningDocumentation": " documentation",
+  "@entryDeprecatedWarningDocumentation": {},
+  "entryDeprecatedWarningInfo": " for more information.",
+  "@entryDeprecatedWarningInfo": {},
+  "invalidCronExpression": "Invalid cron expression",
+  "@invalidCronExpression": {},
+  "validCron": "Valid cron expression: {humanReadable}",
+  "@validCron": {
+    "placeholders": {
+      "humanReadable": {}
+    }
+  },
+  "validDuration": "Valid duration: {duration}",
+  "@validDuration": {
+    "placeholders": {
+      "duration": {}
+    }
+  },
+  "genericNotFound": "Generic not found ",
+  "@genericNotFound": {},
+  "genericNotFoundDescription": "please report this in the Typewriter Discord",
+  "@genericNotFoundDescription": {},
+  "globalContextKeyEditor_noGlobalKeys": "No extension has a global key. Try using an entry key.",
+  "@globalContextKeyEditor_noGlobalKeys": {},
+  "itemEditor_invalidShape": "Shape for item field is not an algebraic blueprint: {path}",
+  "@itemEditor_invalidShape": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "itemEditor_itemFieldNotMap": "Value for serialized item field is not a map: {path}",
+  "@itemEditor_itemFieldNotMap": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "itemEditor_noItemCaptured": "You have not yet captured the item. Click on the blue camera icon to capture the item you are holding in game.",
+  "@itemEditor_noItemCaptured": {},
+  "itemEditor_itemIsCaptured": "This item has been captured from in game. If you want to change it, you can re-capture the item.",
+  "@itemEditor_itemIsCaptured": {},
+  "noElementsFound": "No {name} found",
+  "@noElementsFound": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "mapEditor_keyAlreadyExistsTitle": "Override key?",
+  "@mapEditor_keyAlreadyExistsTitle": {},
+  "mapEditor_keyAlreadyExistsContent": "The key '{key}' already exists.\nThis will delete all the data from the existing key.",
+  "@mapEditor_keyAlreadyExistsContent": {
+    "placeholders": {
+      "key": {}
+    }
+  },
+  "materialNotAvailable": "Unavailable on ${version} servers",
+  "@materialNotAvailable": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "numberEditorMinError": "Value must be at least {min}",
+  "@numberEditorMinError": {
+    "placeholders": {
+      "min": {}
+    }
+  },
+  "numberEditorMaxError": "Value must be at most {max}",
+  "@numberEditorMaxError": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "invalidSubfield": "Invalid subfield, try to restart the server",
+  "@invalidSubfield": {},
+  "couldNotWireBlueprint": "Could not wire blueprint for entry ${bpId}, report this to the discord!",
+  "@couldNotWireBlueprint": {
+    "placeholders": {
+      "bpId": {}
+    }
+  },
+  "couldNotWireEntry": "Could not wire entry ${baseEntryId} to target entry ${targetEntryId}, report this to the discord!",
+  "@couldNotWireEntry": {
+    "placeholders": {
+      "baseEntryId": {},
+      "targetEntryId": {}
+    }
+  },
+  "couldNotReplaceEntry": "Could not replace entry ${baseEntryId} with target entry ${targetEntryId}, report this to the discord!",
+  "@couldNotReplaceEntry": {
+    "placeholders": {
+      "baseEntryId": {},
+      "targetEntryId": {}
+    }
+  },
+  "dataBlueprintMismatch": "Data blueprint for path {path} did not match",
+  "@dataBlueprintMismatch": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "pathNotAListWhileBlueprintRequiresAList": "Path {path} is not a list while blueprint requires a list",
+  "@pathNotAListWhileBlueprintRequiresAList": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "pathNotAMapWhileBlueprintRequiresAMap": "Path {path} is not a map while blueprint requires a map",
+  "@pathNotAMapWhileBlueprintRequiresAMap": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "noDataBlueprintFound": "No data blueprint found for path {path}",
+  "@noDataBlueprintFound": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "blueprintNotCompatibleWithGeneric": "The generic blueprint of the entry is not compatible with the new blueprint",
+  "@blueprintNotCompatibleWithGeneric": {},
+  "potionEffects": "Potion Effects",
+  "@potionEffects": {},
+  "variableReferenceNotFound": "Could not find Variable Reference, ",
+  "@variableReferenceNotFound": {},
+  "variableReferenceNotFoundReset": "click to reset to default",
+  "@variableReferenceNotFoundReset": {},
+  "requestContentMode": "Request Content mode",
+  "@requestContentMode": {}
+}

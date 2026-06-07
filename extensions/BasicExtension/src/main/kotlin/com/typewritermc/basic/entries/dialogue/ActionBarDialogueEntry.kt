@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Criteria
@@ -39,7 +40,8 @@ class ActionBarDialogueEntry(
     @Colored
     @Placeholder
     val text: Var<String> = ConstVar(""),
-    @Help("The duration it takes to type out the message.")
+    @LabelKey("basic.action_bar_dialogue.fields.duration.label")
+    @Help(key = "basic.action_bar_dialogue.fields.duration.help")
     val duration: Var<Duration> = ConstVar(Duration.ZERO),
 ) : DialogueEntry {
     override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<ActionBarDialogueEntry> {

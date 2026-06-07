@@ -66,7 +66,8 @@ data class RelativePositionVariableData(
     @WithRotation
     val coordinate: Var<Coordinate> = ConstVar(Coordinate.ORIGIN),
 
-    @Help("Select which parts of the position will use absolute values")
+    @LabelKey("basic.relative_position_variable.fields.absolute.label")
+    @Help(key = "basic.relative_position_variable.fields.absolute.help")
     val absolute: List<CoordinatePart> = emptyList(),
 )
 

@@ -6,6 +6,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -26,9 +27,11 @@ class InteractEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val location: Optional<Var<Position>> = Optional.empty(),
-    @Help("The item the player must be holding when the block is interacted with.")
+    @LabelKey("basic.interact_event_entry.fields.itemInHand.label")
+    @Help(key = "basic.interact_event_entry.fields.itemInHand.help")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
-    @Help("The hand the player must be holding the item in")
+    @LabelKey("basic.interact_event_entry.fields.hand.label")
+    @Help(key = "basic.interact_event_entry.fields.hand.help")
     val hand: HoldingHand = HoldingHand.BOTH,
     override val cancel: Var<Boolean> = ConstVar(false),
     val interactionType: InteractionType = InteractionType.ALL,

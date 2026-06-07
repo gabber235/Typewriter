@@ -8,12 +8,11 @@ class PublishPagesIntent extends Intent {
 final stagingStateProvider = StateProvider((ref) => StagingState.production);
 
 enum StagingState {
-  publishing("Publishing", Colors.lightBlue),
-  staging("Staging", Colors.orange),
-  production("Production", Colors.green);
+  publishing(Colors.lightBlue),
+  staging(Colors.orange),
+  production(Colors.green);
 
-  const StagingState(this.label, this.color);
+  const StagingState(this.color);
 
-  final String label;
   final Color color;
 }

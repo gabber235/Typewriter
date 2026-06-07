@@ -1,11 +1,14 @@
-import "dart:math";
+﻿import "dart:math";
 
 import "package:dart_casing/dart_casing.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 
 extension BuildContextExtension on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
+
+  AppLocalizations get l10n => AppLocalizations.of(this) ?? lookupAppLocalizations(const Locale("en"));
 }
 
 extension StringExtension on String {

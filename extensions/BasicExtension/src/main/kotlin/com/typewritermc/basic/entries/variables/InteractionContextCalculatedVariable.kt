@@ -72,13 +72,15 @@ private data class InteractionContextCalculatedVariableData(
     val keys: List<CalculatedKeyValue> = emptyList(),
     @Colored
     @Placeholder
-    @Help("Use <1> to insert the value from the first variable in your mathematical expression.")
+    @LabelKey("basic.interaction_context_calculated_variable.fields.expression.label")
+    @Help(key = "basic.interaction_context_calculated_variable.fields.expression.help")
     val expression: String = "",
     val roundingMode: RoundingMode = RoundingMode.ROUND,
 )
 
 private data class CalculatedKeyValue(
     val key: InteractionContextKey<*> = InteractionContextKey.Empty,
-    @Help("What to use in the calculation if the key is not in the context.")
+    @LabelKey("basic.interaction_context_calculated_variable.fields.default.label")
+    @Help(key = "basic.interaction_context_calculated_variable.fields.default.help")
     val default: Double = 0.0,
 )

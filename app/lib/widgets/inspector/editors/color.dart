@@ -4,6 +4,7 @@ import "package:flutter_colorpicker/flutter_colorpicker.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter/hooks/select_on_focus.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/utils/passing_reference.dart";
@@ -24,6 +25,7 @@ class ColorEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10 = ref.watch(l10nProvider);
     final startColor =
         ref.watch(fieldValueProvider(path, customBlueprint.defaultValue()));
 
@@ -64,7 +66,7 @@ class ColorEditor extends HookConsumerWidget {
                   focus: focus,
                   controller: hexController,
                   icon: TWIcons.hashtag,
-                  hintText: "Hex Code",
+                  hintText: l10.hexCode,
                   inputFormatters: [
                     UpperCaseTextFormatter(),
                     FilteringTextInputFormatter.allow(RegExp(kValidHexPattern)),

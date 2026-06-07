@@ -3,6 +3,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:graphview/GraphView.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
@@ -98,6 +99,7 @@ class ManifestView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final entryIds = ref.watch(manifestEntryIdsProvider);
     final graph = ref.watch(manifestGraphProvider);
 
@@ -110,8 +112,8 @@ class ManifestView extends HookConsumerWidget {
 
     if (entryIds.isEmpty) {
       return EmptyScreen(
-        title: "There are no manifest entries on this page.",
-        buttonText: "Add Entry",
+        title: l10n.manifestEmptyTitle,
+        buttonText: l10n.addEntry,
         onButtonPressed: () => ref.read(searchProvider.notifier).asBuilder()
           ..fetchNewEntry()
           ..nonGenericAddEntry()

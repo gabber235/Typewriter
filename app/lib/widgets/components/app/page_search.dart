@@ -5,6 +5,7 @@ import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/app_router.dart";
+import "package:typewriter/l10n/app_localizations.dart";
 import "package:typewriter/models/page.dart";
 import "package:typewriter/pages/pages_list.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -91,7 +92,7 @@ class PageFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Pages";
+  String title(AppLocalizations l10n) => l10n.pages;
 
   @override
   List<String> get quantifiers =>
@@ -151,7 +152,7 @@ class AddPageFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Add Page";
+  String title(AppLocalizations l10n) => l10n.addPage;
 
   @override
   List<String> get quantifiers => [
@@ -214,10 +215,10 @@ class PageSearchElement extends SearchElement {
   final FutureOr<bool?> Function(Page)? onSelect;
 
   @override
-  String get title => page.pageName.formatted;
+  String title(AppLocalizations l10n, PassingRef ref) => page.pageName.formatted;
 
   @override
-  String description(BuildContext context) {
+  String description(BuildContext context, PassingRef ref) {
     if (page.chapter.isEmpty) return page.type.name;
     return "~${page.chapter}";
   }
@@ -233,15 +234,15 @@ class PageSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Open",
+      SearchAction(
+        l10n.open,
         TWIcons.externalLink,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
       SearchAction(
-        "Rename",
+        l10n.rename,
         TWIcons.pencil,
         SmartSingleActivator(LogicalKeyboardKey.keyR, control: true),
         onTrigger: (context, __) async =>
@@ -253,7 +254,7 @@ class PageSearchElement extends SearchElement {
             false,
       ),
       SearchAction(
-        "Change Chapter",
+        l10n.changeChapterTitle,
         TWIcons.bookMarker,
         SmartSingleActivator(LogicalKeyboardKey.keyC, control: true),
         onTrigger: (context, __) async =>
@@ -267,7 +268,7 @@ class PageSearchElement extends SearchElement {
             false,
       ),
       SearchAction(
-        "Delete",
+        l10n.delete,
         TWIcons.trash,
         SmartSingleActivator(LogicalKeyboardKey.backspace, control: true),
         color: Colors.red,
@@ -299,10 +300,11 @@ class AddPageSearchElement extends SearchElement {
   final void Function(Page)? onAdded;
 
   @override
-  String get title => "Add ${type.name}";
+  String title(AppLocalizations l10n, PassingRef ref) => l10n.addPageTitle(type.name);
 
   @override
-  String description(BuildContext context) => "Create a new ${type.name}";
+  String description(BuildContext context, PassingRef ref) =>
+      context.l10n.createPageDescription(type.name);
 
   @override
   Widget icon(BuildContext context) => Iconify(type.icon);
@@ -314,10 +316,10 @@ class AddPageSearchElement extends SearchElement {
   Widget suffixIcon(BuildContext context) => const Icon(Icons.add);
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Add",
+      SearchAction(
+        l10n.add,
         TWIcons.plus,
         SingleActivator(LogicalKeyboardKey.enter),
       ),

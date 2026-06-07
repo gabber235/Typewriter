@@ -99,6 +99,9 @@ private val computers: List<DataModifierComputer<*>> = listOf(
     MaxModifierComputer,
     InnerMinModifierComputer,
     InnerMaxModifierComputer,
+    LabelKeyModifierComputer,
+    PlaceholderKeyModifierComputer,
+    OptionLabelsKeyModifierComputer,
 )
 
 context(logger: KSPLogger, resolver: Resolver)

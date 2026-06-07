@@ -1,6 +1,7 @@
 import "package:auto_size_text/auto_size_text.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/materials.dart";
 import "package:typewriter/utils/extensions.dart";
@@ -59,13 +60,14 @@ class ItemEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final algebraicBlueprint = customBlueprint.shape is AlgebraicBlueprint
         ? customBlueprint.shape as AlgebraicBlueprint?
         : null;
     if (algebraicBlueprint == null) {
       return Admonition.danger(
         child:
-            Text("Shape for item field is not an algebraic blueprint: $path"),
+            Text(l10n.itemEditor_invalidShape(path)),
       );
     }
     return FieldHeader(
@@ -138,12 +140,13 @@ class SerializedItemEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final value =
         ref.watch(fieldValueProvider(path, customBlueprint.defaultValue()));
 
     if (value is! Map<String, dynamic>) {
       return Admonition.danger(
-        child: Text("Value for serialized item field is not a map: $path"),
+        child: Text(l10n.itemEditor_itemFieldNotMap(path)),
       );
     }
 
@@ -152,9 +155,9 @@ class SerializedItemEditor extends HookConsumerWidget {
     final bytes = value["bytes"] as String? ?? "";
 
     if (bytes.isEmpty) {
-      return const Admonition.warning(
+      return Admonition.warning(
         child: Text(
-          "You have not yet captured the item. Click on the blue camera icon to capture the item you are holding in game.",
+          l10n.itemEditor_noItemCaptured,
         ),
       );
     }
@@ -166,7 +169,7 @@ class SerializedItemEditor extends HookConsumerWidget {
       spacing: 8,
       children: [
         if (minecraftMaterial != null) ...[
-          const SectionTitle(title: "Material"),
+          SectionTitle(title: l10n.material),
           Opacity(
             opacity: 0.5,
             child: InputField(
@@ -178,7 +181,7 @@ class SerializedItemEditor extends HookConsumerWidget {
           ),
         ],
         if (name.isNotEmpty) ...[
-          const SectionTitle(title: "Item Name"),
+          SectionTitle(title: l10n.itemName),
           Opacity(
             opacity: 0.5,
             child: InputField.icon(
@@ -195,8 +198,8 @@ class SerializedItemEditor extends HookConsumerWidget {
             dataBlueprint: amountBlueprint,
           ),
           const SizedBox(height: 0),
-          const Text(
-            "This item has been captured from in game. If you want to change it, you can re-capture the item.",
+          Text(
+            l10n.itemEditor_itemIsCaptured,
           ),
         ],
       ],

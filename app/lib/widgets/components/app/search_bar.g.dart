@@ -93,7 +93,7 @@ final searchFocusNodesProvider = AutoDisposeProvider<List<FocusNode>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SearchFocusNodesRef = AutoDisposeProviderRef<List<FocusNode>>;
-String _$searchGlobalKeysHash() => r'b7d07803139dfa9fd0249a16527402e80c99d0b7';
+String _$searchGlobalKeysHash() => r'3167548c2f8635b16b1426fa34aba75ed20bdb33';
 
 /// See also [searchGlobalKeys].
 @ProviderFor(searchGlobalKeys)
@@ -127,7 +127,7 @@ final _focusedElementProvider = AutoDisposeProvider<SearchElement?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef _FocusedElementRef = AutoDisposeProviderRef<SearchElement?>;
-String _$searchActionsHash() => r'2ff49d3c872ae2d9db7ef13696761fa7fa4b2a88';
+String _$searchActionsHash() => r'41b82fd7224f48a7ef7ce33dfb05d0cc3cc0c023';
 
 /// See also [_searchActions].
 @ProviderFor(_searchActions)
@@ -145,7 +145,7 @@ final _searchActionsProvider = AutoDisposeProvider<List<SearchAction>>.internal(
 // ignore: unused_element
 typedef _SearchActionsRef = AutoDisposeProviderRef<List<SearchAction>>;
 String _$searchActionShortcutsHash() =>
-    r'c40d8abbd6ba50fbe0fcace8ab587dca55e10c54';
+    r'd6095d1f0083c64f9155a3958391f56df664b327';
 
 /// See also [_searchActionShortcuts].
 @ProviderFor(_searchActionShortcuts)

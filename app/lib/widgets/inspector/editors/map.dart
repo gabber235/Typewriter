@@ -157,12 +157,13 @@ class _MapEntry extends HookConsumerWidget {
     PassingRef ref,
     String key,
   ) async {
+    final l10n = ref.l10n;
     if (_alreadyContainsKey(key)) {
       final confirm = await showConfirmationDialogue(
         context: context,
-        title: "Override key?",
+        title: l10n.mapEditor_keyAlreadyExistsTitle,
         content:
-            "The key '$key' already exists.\nThis will delete all the data from the existing key.",
+            l10n.mapEditor_keyAlreadyExistsContent(key),
         confirmIcon: TWIcons.warning,
         onConfirm: () => _changeKeyField(ref, key),
       );

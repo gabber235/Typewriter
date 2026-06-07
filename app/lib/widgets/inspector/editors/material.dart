@@ -4,6 +4,8 @@ import "package:flutter/services.dart";
 import "package:fuzzy/fuzzy.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/communicator.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/materials.dart";
@@ -89,7 +91,7 @@ class MaterialsFetcher extends SearchFetcher {
   final bool disabled;
 
   @override
-  String get title => "Materials";
+  String title(AppLocalizations l10n) => l10n.materials;
 
   @override
   List<SearchElement> fetch(PassingRef ref, String query) {
@@ -121,7 +123,7 @@ class MaterialSearchElement extends SearchElement {
   final bool? Function(CombinedMaterial)? onSelect;
 
   @override
-  String get title => material.value.name;
+  String title(AppLocalizations l10n, PassingRef ref) => material.value.name;
 
   @override
   Color color(BuildContext context) {
@@ -146,13 +148,13 @@ class MaterialSearchElement extends SearchElement {
       const Iconify(TWIcons.externalLink);
 
   @override
-  String description(BuildContext context) => material.key;
+  String description(BuildContext context, PassingRef ref) => material.key;
 
   @override
-  List<SearchAction> actions(PassingRef ref) {
+  List<SearchAction> actions(AppLocalizations l10n, PassingRef ref) {
     return [
-      const SearchAction(
-        "Select",
+      SearchAction(
+        l10n.select,
         TWIcons.check,
         SingleActivator(LogicalKeyboardKey.enter),
       ),
@@ -234,6 +236,7 @@ class MaterialEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final value =
         ref.watch(fieldValueProvider(path, customBlueprint.defaultValue()));
     final propertiesModifier =
@@ -270,7 +273,7 @@ class MaterialEditor extends HookConsumerWidget {
               else
                 Expanded(
                   child: Text(
-                    "Select a material",
+                    l10n.materialSelectHint,
                     style: Theme.of(context).inputDecorationTheme.hintStyle,
                   ),
                 ),
@@ -302,6 +305,7 @@ class MaterialItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return ListTile(
       leading: Padding(
         padding: const EdgeInsets.symmetric(vertical: 3.0),
@@ -324,7 +328,7 @@ class MaterialItem extends ConsumerWidget {
           ),
           if (!isAvailable)
             Text(
-              "Unavailable on ${ref.watch(serverVersionProvider).name} servers",
+              l10n.materialNotAvailable(ref.watch(serverVersionProvider).name),
               style: Theme.of(context)
                   .textTheme
                   .labelSmall

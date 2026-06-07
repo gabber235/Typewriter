@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/pages/page_editor.dart";
 import "package:typewriter/widgets/components/app/empty_screen.dart";
@@ -33,12 +34,13 @@ class StaticEntriesList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final entryIds = ref.watch(_staticEntryIdsProvider);
 
     if (entryIds.isEmpty) {
       return EmptyScreen(
-        title: "There are no static entries on this page.",
-        buttonText: "Add Entry",
+        title: l10n.noStaticEntries,
+        buttonText: l10n.addEntry,
         onButtonPressed: () => ref.read(searchProvider.notifier).asBuilder()
           ..fetchNewEntry()
           ..nonGenericAddEntry()

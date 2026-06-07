@@ -51,13 +51,15 @@ private data class InteractionContextTextVariableData(
     val keys: List<TextKeyValue> = emptyList(),
     @Colored
     @Placeholder
-    @Help("Use <1> to insert the text from the first variable.")
+    @LabelKey("basic.interaction_context_text_variable.fields.text.label")
+    @Help(key = "basic.interaction_context_text_variable.fields.text.help")
     val text: String = "",
 )
 
 private data class TextKeyValue(
     @IgnoreContextKeyBlueprint
     val key: InteractionContextKey<*> = InteractionContextKey.Empty,
-    @Help("What to display if the key is not in the context.")
+    @LabelKey("basic.interaction_context_text_variable.fields.default.label")
+    @Help(key = "basic.interaction_context_text_variable.fields.default.help")
     val default: String = "",
 )

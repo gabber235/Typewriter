@@ -120,7 +120,8 @@ data class AdvancedCameraSettings(
 data class PathPoint(
     @WithRotation
     val location: Var<Position> = ConstVar(Position.ORIGIN),
-    @Help("The duration of the path point in frames.")
+    @LabelKey("basic.camera_cinematic.fields.duration.label")
+    @Help(key = "basic.camera_cinematic.fields.duration.help")
     /**
      * The duration of the path point in frames.
      * If not set,

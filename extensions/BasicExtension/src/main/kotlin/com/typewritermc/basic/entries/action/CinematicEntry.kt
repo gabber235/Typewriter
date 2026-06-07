@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Page
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -38,13 +39,16 @@ class CinematicEntry(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @SerializedName("page")
     @Page(PageType.CINEMATIC)
-    @Help("The cinematic page to start.")
+    @LabelKey("basic.cinematic.fields.page.label")
+    @Help(key = "basic.cinematic.fields.page.help")
     val pageId: String = "",
+    @LabelKey("basic.cinematic.fields.blockChatMessages.label")
+    @Help(key = "basic.cinematic.fields.blockChatMessages.help")
     @Default("true")
-    @Help("Whether to block chat messages from showing to the player while in the cinematic.")
     val blockChatMessages: Boolean = true,
+    @LabelKey("basic.cinematic.fields.blockActionBarMessages.label")
+    @Help(key = "basic.cinematic.fields.blockActionBarMessages.help")
     @Default("true")
-    @Help("Whether to block actionbar messages from showing to the player while in the cinematic.")
     val blockActionBarMessages: Boolean = true
 ) : ActionEntry {
     override val eventTriggers: List<EventTrigger>

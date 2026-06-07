@@ -37,6 +37,8 @@ _$EntryBlueprintImpl _$$EntryBlueprintImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => EntryModifier.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      titleKey: json['titleKey'] as String? ?? "",
+      descriptionKey: json['descriptionKey'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$EntryBlueprintImplToJson(
@@ -55,6 +57,8 @@ Map<String, dynamic> _$$EntryBlueprintImplToJson(
       'variableDataBlueprint': instance.variableDataBlueprint?.toJson(),
       'contextKeys': instance.contextKeys.map((e) => e.toJson()).toList(),
       'modifiers': instance.modifiers.map((e) => e.toJson()).toList(),
+      'titleKey': instance.titleKey,
+      'descriptionKey': instance.descriptionKey,
     };
 
 _$DataBlueprintTypeImpl _$$DataBlueprintTypeImplFromJson(

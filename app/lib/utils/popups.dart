@@ -3,6 +3,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter/hooks/timer.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/widgets/components/general/filled_button.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
@@ -107,18 +108,19 @@ class ConfirmationDialogue extends HookWidget {
 Future<bool> showConfirmationDialogue({
   required BuildContext context,
   required Function onConfirm,
-  String title = "Are you sure?",
-  String content = "This action cannot be undone.",
-  String confirmText = "Confirm",
+  String? title,
+  String? content,
+  String? confirmText,
   String confirmIcon = TWIcons.trash,
   Color confirmColor = Colors.redAccent,
   Duration delayConfirm = Duration.zero,
-  String cancelText = "Cancel",
+  String? cancelText,
   String cancelIcon = TWIcons.x,
   Function? onCancel,
 }) async {
   // If the user has its shift key pressed, we skip the confirmation dialogue.
   // But only if the delay is 0.
+  final l10n = context.l10n;
   final hasShiftDown = HardwareKeyboard.instance
       .isLogicalKeyPressed(LogicalKeyboardKey.shiftLeft);
   if (hasShiftDown && delayConfirm.inSeconds == 0) {
@@ -130,13 +132,13 @@ Future<bool> showConfirmationDialogue({
         context: context,
         builder: (context) => ConfirmationDialogue(
           onConfirm: onConfirm,
-          title: title,
-          content: content,
-          confirmText: confirmText,
+          title: title ?? l10n.areYouSure,
+          content: content ?? l10n.thisActionCannotBeUndone,
+          confirmText: confirmText ?? l10n.confirm,
           confirmIcon: confirmIcon,
           confirmColor: confirmColor,
           delayConfirm: hasShiftDown ? Duration.zero : delayConfirm,
-          cancelText: cancelText,
+          cancelText: cancelText ?? l10n.cancel,
           cancelIcon: cancelIcon,
           onCancel: onCancel,
         ),

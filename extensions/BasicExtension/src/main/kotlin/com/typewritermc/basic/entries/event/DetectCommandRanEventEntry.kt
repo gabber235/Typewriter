@@ -6,6 +6,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Regex
 import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -36,7 +37,8 @@ class DetectCommandRanEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Regex
-    @Help("The command that was ran. Can be a regular expression.")
+    @LabelKey("basic.detect_command_ran_event.fields.command.label")
+    @Help(key = "basic.detect_command_ran_event.fields.command.help")
     /**
      * The command to listen for.
      * This can be partial, so if you wanted to listen for any warp command,

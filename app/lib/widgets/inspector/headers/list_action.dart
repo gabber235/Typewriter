@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
@@ -165,11 +166,12 @@ class DuplicateListItemAction extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final name = ref.watch(pathDisplayNameProvider(path)).singular;
     return IconButton(
       icon: const Iconify(TWIcons.duplicate, size: 12),
       color: Colors.green,
-      tooltip: "Duplicate $name",
+      tooltip: l10n.duplicateThis(name),
       onPressed: () => _duplicate(ref.passing),
     );
   }

@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:flutter/material.dart" hide FilledButton;
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/widgets/inspector/editors.dart";
@@ -54,6 +55,7 @@ class SkinEditor extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final texture = ref.watch(fieldValueProvider(path.join("texture"), ""));
     final url = useMemoized(() => _getSkinUrl(texture), [texture]);
     return FieldHeader(
@@ -98,7 +100,7 @@ class SkinEditor extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 12),
-                const SectionTitle(title: "Texture"),
+                SectionTitle(title: l10n.texture),
                 const SizedBox(height: 8),
                 StringEditor(
                   path: path.join("texture"),
@@ -106,7 +108,7 @@ class SkinEditor extends HookConsumerWidget {
                       const PrimitiveBlueprint(type: PrimitiveType.string),
                 ),
                 const SizedBox(height: 8),
-                const SectionTitle(title: "Signature"),
+                SectionTitle(title: l10n.signature),
                 const SizedBox(height: 8),
                 StringEditor(
                   path: path.join("signature"),

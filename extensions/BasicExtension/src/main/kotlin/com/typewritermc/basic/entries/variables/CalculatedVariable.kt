@@ -25,7 +25,8 @@ private class CalculatedVariable(
     override val id: String = "",
     override val name: String = "",
     val variables: List<CalculationVariable> = emptyList(),
-    @Help("Rounding mode is only applied if the variable is of type Int")
+    @LabelKey("basic.calculated_variable.fields.roundingMode.label")
+    @Help(key = "basic.calculated_variable.fields.roundingMode.help")
     val roundingMode: RoundingMode = RoundingMode.ROUND,
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
@@ -64,6 +65,7 @@ private data class CalculationVariable(
 private data class CalculatedVariableData(
     val variables: List<CalculationVariable> = emptyList(),
     @Placeholder
-    @Help("Use <var> to insert a variable")
+    @LabelKey("basic.calculated_variable.fields.expression.label")
+    @Help(key = "basic.calculated_variable.fields.expression.help")
     val expression: String = "",
 )

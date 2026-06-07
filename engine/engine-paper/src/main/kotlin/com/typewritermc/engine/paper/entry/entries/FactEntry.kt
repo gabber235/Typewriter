@@ -23,10 +23,10 @@ import kotlin.time.toDuration
 @Tags("fact")
 interface FactEntry : StaticEntry {
     @MultiLine
-    @Help("A comment to keep track of what this fact is used for.")
+    @Help(key = "engine.fact.fields.comment.help")
     val comment: String
 
-    @Help("If left empty, every player has its own group.")
+    @Help(key = "engine.fact.fields.group.help")
     val group: Ref<GroupEntry>
 
     fun identifier(player: Player): FactId? {

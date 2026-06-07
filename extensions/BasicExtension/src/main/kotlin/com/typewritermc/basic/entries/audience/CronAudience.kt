@@ -3,6 +3,7 @@ package com.typewritermc.basic.entries.audience
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
@@ -30,10 +31,14 @@ import java.time.LocalDateTime
 class CronAudience(
     override val id: String = "",
     override val name: String = "",
+    @LabelKey("basic.cron_audience.fields.children.label")
     override val children: List<Ref<out AudienceEntry>> = emptyList(),
-    @Help("The cron expression to filter the audience by.")
+    @LabelKey("basic.cron_audience.fields.cron.label")
+    @Help(key = "basic.cron_audience.fields.cron.help")
     // The <Link to="https://www.netiq.com/documentation/cloud-manager-2-5/ncm-reference/data/bexyssf.html">Cron Expression</Link> when the fact expires.
     val cron: CronExpression = CronExpression.default(),
+    @LabelKey("basic.cron_audience.fields.inverted.label")
+    @Help(key = "basic.cron_audience.fields.inverted.help")
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
     override suspend fun display(): AudienceFilter {

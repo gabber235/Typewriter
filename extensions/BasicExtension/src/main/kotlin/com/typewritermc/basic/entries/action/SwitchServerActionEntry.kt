@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.core.entries.Ref
@@ -29,7 +30,8 @@ class SwitchServerActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    @Help("The server the player will connect to.")
+    @LabelKey("basic.switch_server_action.fields.server.label")
+    @Help(key = "basic.switch_server_action.fields.server.help")
     val server: Var<String> = ConstVar(""),
 ): ActionEntry {
     override fun ActionTrigger.execute() {

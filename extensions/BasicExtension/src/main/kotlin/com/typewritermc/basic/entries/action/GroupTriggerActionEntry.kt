@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -37,7 +38,8 @@ class GroupTriggerActionEntry(
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val group: Ref<GroupEntry> = emptyRef(),
-    @Help("The group to trigger the next entries for. If not set, the action will trigger for the group of the player that triggered the action.")
+    @LabelKey("basic.group_trigger_action.fields.forceGroup.label")
+    @Help(key = "basic.group_trigger_action.fields.forceGroup.help")
     val forceGroup: Optional<Var<String>> = Optional.empty(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

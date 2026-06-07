@@ -10,6 +10,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter/hooks/global_key.dart";
 import "package:typewriter/hooks/text_size.dart";
+import "package:typewriter/l10n/app_localizations.dart";
+import "package:typewriter/l10n/l10n_provider.dart";
 import "package:typewriter/models/entry.dart";
 import "package:typewriter/models/entry_blueprint.dart";
 import "package:typewriter/models/page.dart";
@@ -76,13 +78,14 @@ void deleteSegmentConfirmation(
   String entryId,
   String segmentId,
 ) {
+  final l10n = ref.l10n;
   showConfirmationDialogue(
     context: context,
-    title: "Delete Segment",
-    content: "Are you sure you want to delete this segment?",
-    confirmText: "Delete",
+    title: l10n.deleteSegment,
+    content: l10n.deleteSegmentConfirmation,
+    confirmText: l10n.delete,
     onConfirm: () {
-      _deleteSegment(ref, entryId, segmentId);
+      _deleteSegment(l10n, ref, entryId, segmentId);
     },
   );
 }
@@ -100,6 +103,7 @@ Segment? inspectingSegment(Ref ref) {
 }
 
 String? _addSegment(
+  AppLocalizations l10n,
   PassingRef ref,
   String entryId,
   String segmentPath, [
@@ -131,8 +135,8 @@ String? _addSegment(
   if (timings == null) {
     Toasts.showError(
       ref,
-      "Could not add segment",
-      description: "There is not enough space to add a segment.",
+      l10n.couldNotAddSegment,
+      description: l10n.notEnoughSpace,
     );
     return null;
   }
@@ -176,13 +180,13 @@ List<String> _cinematicEntryIds(Ref ref) {
   return page.entries.map((entry) => entry.id).toList();
 }
 
-void _deleteSegment(PassingRef ref, String entryId, String segmentPath) {
+void _deleteSegment(AppLocalizations l10n, PassingRef ref, String entryId, String segmentPath) {
   final page = ref.read(currentPageProvider);
   if (page == null) {
     Toasts.showError(
       ref,
-      "Could not delete segment",
-      description: "No page is selected.",
+      l10n.couldNotDeleteSegment,
+      description: l10n.noPageSelected,
     );
     return;
   }
@@ -190,8 +194,8 @@ void _deleteSegment(PassingRef ref, String entryId, String segmentPath) {
   if (entry == null) {
     Toasts.showError(
       ref,
-      "Could not delete segment",
-      description: "No entry is selected.",
+      l10n.couldNotDeleteSegment,
+      description: l10n.noEntrySelected,
     );
     return;
   }
@@ -200,8 +204,8 @@ void _deleteSegment(PassingRef ref, String entryId, String segmentPath) {
   if (blueprint == null) {
     Toasts.showError(
       ref,
-      "Could not delete segment",
-      description: "No blueprint is found for the selected entry.",
+      l10n.couldNotDeleteSegment,
+      description: l10n.noBlueprintFoundForEntry,
     );
     return;
   }
@@ -209,8 +213,8 @@ void _deleteSegment(PassingRef ref, String entryId, String segmentPath) {
   if (segmentBlueprint == null) {
     Toasts.showError(
       ref,
-      "Could not delete segment",
-      description: "No blueprint is found for the selected segment.",
+      l10n.couldNotDeleteSegment,
+      description: l10n.noBlueprintFoundForSegment,
     );
     return;
   }
@@ -225,13 +229,13 @@ void _deleteSegment(PassingRef ref, String entryId, String segmentPath) {
   page.updateEntryValue(ref, entry, listPath, newList);
 }
 
-void _duplicateSelectedSegment(PassingRef ref) {
+void _duplicateSelectedSegment(AppLocalizations l10n, PassingRef ref) {
   final entryId = ref.read(inspectingEntryIdProvider);
   if (entryId == null) return;
   final segment = ref.read(inspectingSegmentProvider);
   if (segment == null) return;
 
-  final segmentId = _addSegment(ref, entryId, segment.path, segment.data);
+  final segmentId = _addSegment(l10n,ref, entryId, segment.path, segment.data);
   if (segmentId == null) return;
   ref.read(inspectingSegmentIdProvider.notifier).select(entryId, segmentId);
 }
@@ -247,6 +251,7 @@ List<ContextMenuTile> _entryContextActions(
   Ref ref,
   String entryId,
 ) {
+  final l10n = ref.watch(l10nProvider);
   final paths = ref.watch(_segmentPathsProvider(entryId));
 
   return paths.entries.map((e) {
@@ -269,9 +274,9 @@ List<ContextMenuTile> _entryContextActions(
     final icon = modifierData["icon"] as String? ?? TWIcons.plus;
 
     return ContextMenuTile.button(
-      title: "Add $title",
+      title: l10n.addEntryTitle(title),
       onTap: () {
-        _addSegment(ref.passing, entryId, path);
+        _addSegment(l10n,ref.passing, entryId, path);
       },
       icon: icon,
       color: color,
@@ -632,12 +637,13 @@ class CinematicView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final entryIds = ref.watch(_cinematicEntryIdsProvider);
 
     if (entryIds.isEmpty) {
       return EmptyScreen(
-        title: "There are no cinematic entries on this page.",
-        buttonText: "Add Entry",
+        title: l10n.noCinematicEntries,
+        buttonText: l10n.addEntry,
         onButtonPressed: () => ref.read(searchProvider.notifier).asBuilder()
           ..fetchNewEntry()
           ..nonGenericAddEntry()
@@ -655,7 +661,7 @@ class CinematicView extends HookConsumerWidget {
         final entryId = entryIds[index];
         return _EntryRow(index: index, entryId: entryId, key: Key(entryId));
       },
-      onReorderItem: (oldIndex, newIndex) {
+      onReorder: (oldIndex, newIndex) {
         final page = ref.read(currentPageProvider);
         if (page == null) return;
         final adjustedIndex = newIndex > oldIndex ? newIndex + 1 : newIndex;
@@ -737,6 +743,7 @@ class _DeleteSegment extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     return FilledButton.icon(
       onPressed: () {
         final segmentId = ref.read(inspectingSegmentIdProvider);
@@ -747,7 +754,7 @@ class _DeleteSegment extends HookConsumerWidget {
         deleteSegmentConfirmation(context, ref.passing, entryId, segmentId);
       },
       icon: const Iconify(TWIcons.trash),
-      label: const Text("Delete Segment"),
+      label: Text(l10n.deleteSegment),
       color: Theme.of(context).colorScheme.error,
     );
   }
@@ -758,13 +765,14 @@ class _DuplicateSegment extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final color =
         ref.watch(inspectingSegmentProvider.select((s) => s?.color)) ??
             Theme.of(context).colorScheme.primary;
     return FilledButton.icon(
-      onPressed: () => _duplicateSelectedSegment(ref.passing),
+      onPressed: () => _duplicateSelectedSegment(l10n, ref.passing),
       icon: const Iconify(TWIcons.duplicate),
-      label: const Text("Duplicate Segment"),
+      label: Text(l10n.duplicateSegment),
       color: color,
     );
   }
@@ -775,6 +783,7 @@ class _DurationField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final focus = useFocusNode();
     final totalFrames =
         ref.watch(_trackStateProvider.select((state) => state.totalFrames));
@@ -792,8 +801,8 @@ class _DurationField extends HookConsumerWidget {
             FilteringTextInputFormatter.digitsOnly,
           ],
           style: const TextStyle(fontSize: 12),
-          decoration: const InputDecoration(
-            hintText: "Duration",
+          decoration: InputDecoration(
+            hintText: l10n.duration,
             hintStyle: TextStyle(fontSize: 13),
           ),
           onChanged: (value) {
@@ -812,31 +821,32 @@ class _EndFrameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final segmentId = ref.watch(inspectingSegmentIdProvider);
 
     if (segmentId == null) return const SizedBox.shrink();
 
     return _FrameField(
-      title: "End Frame",
+      title: l10n.endFrame,
       path: "$segmentId.endFrame",
       icon: TWIcons.stepBackward,
-      hintText: "Enter a frame number",
+      hintText: l10n.enterFrameNumber,
       onValidate: (frame) {
         final entryId = ref.read(inspectingEntryIdProvider);
-        if (entryId == null) return "No entry selected";
+        if (entryId == null) return l10n.noEntrySelected;
         final segment = ref.read(inspectingSegmentProvider);
-        if (segment == null) return "No segment selected";
+        if (segment == null) return l10n.noSegmentSelected;
 
-        if (frame < segment.startFrame) return "Cannot be before start frame";
-
+        if (frame < segment.startFrame) return l10n.frameBeforeStart;
+  
         if (segment.minFrames != null &&
             frame - segment.startFrame < segment.minFrames!) {
-          return "The segment must be at least ${segment.minFrames} frames long";
+          return l10n.segmentTooShort(segment.minFrames!);
         }
 
         if (segment.maxFrames != null &&
             frame - segment.startFrame > segment.maxFrames!) {
-          return "The segment must be at most ${segment.maxFrames} frames long";
+          return l10n.segmentTooLong(segment.maxFrames!);
         }
 
         final segments = ref.read(_segmentsProvider(entryId, segmentId.wild()));
@@ -846,10 +856,10 @@ class _EndFrameField extends HookConsumerWidget {
         final maximumFrame = nextSegment?.startFrame;
         if (maximumFrame == null &&
             frame > ref.read(_trackStateProvider).totalFrames) {
-          return "Cannot extend past the end of the track";
+          return l10n.cannotExtendPastEndOfTrack;
         }
         if (maximumFrame != null && frame > maximumFrame) {
-          return "Cannot overlap with next segment";
+          return l10n.cannotOverlapWithNextSegment;
         }
         return null;
       },
@@ -1046,6 +1056,7 @@ class _Heading extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final longestName = ref.watch(_longestEntryNameProvider);
     final longestNameSize = useTextSize(
       context,
@@ -1066,8 +1077,8 @@ class _Heading extends HookConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const SizedBox(width: 8),
-                const Text(
-                  "Track Duration",
+                Text(
+                  l10n.trackDurationLabel,
                   style: TextStyle(
                     fontSize: 15,
                     fontVariations: [boldWeight],
@@ -1123,12 +1134,13 @@ class _InspectorHeader extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final color = ref.watch(
           inspectingSegmentProvider.select((segment) => segment?.color),
         ) ??
         Theme.of(context).primaryColor;
     return Title(
-      title: "Segment Inspector",
+      title: l10n.segmentInspectorTitle,
       color: color,
     );
   }
@@ -1294,6 +1306,7 @@ class _SegmentDurationDisplay extends HookConsumerWidget {
   const _SegmentDurationDisplay();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final startTime =
         ref.watch(inspectingSegmentProvider.select((s) => s?.startFrame)) ?? 0;
     final endTime =
@@ -1304,7 +1317,7 @@ class _SegmentDurationDisplay extends HookConsumerWidget {
     final secondsWithDecimal = totalDuration.inMilliseconds / 1000;
 
     return Text(
-      "Total Duration: $secondsWithDecimal seconds ($totalTime frames)",
+      l10n.segmentDuration(secondsWithDecimal, totalTime),
       style: Theme.of(context).textTheme.bodySmall?.apply(
             color: Theme.of(context)
                 .textTheme
@@ -1358,10 +1371,11 @@ class _SegmentOperations extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Column(
+    final l10n = ref.watch(l10nProvider);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionTitle(title: "Operations"),
+        SectionTitle(title: l10n.operations),
         SizedBox(height: 8),
         _DuplicateSegment(),
         SizedBox(height: 8),
@@ -1408,13 +1422,14 @@ class _SegmentSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final entryId = ref.watch(inspectingEntryIdProvider);
     if (entryId == null) return const SizedBox.shrink();
     final segments = ref.watch(_allSegmentsProvider(entryId));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: "Segments"),
+        SectionTitle(title: l10n.segments),
         const SizedBox(height: 8),
         if (segments.isEmpty) ...[
           Container(
@@ -1423,7 +1438,7 @@ class _SegmentSelector extends HookConsumerWidget {
               color: Theme.of(context).inputDecorationTheme.fillColor,
             ),
             padding: const EdgeInsets.all(8),
-            child: const Center(child: Text("No segments")),
+            child: Center(child: Text(l10n.noSegments)),
           ),
         ] else ...[
           for (final segment in segments)
@@ -1442,6 +1457,7 @@ class _SegmentSelectorTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final entryId = ref.watch(inspectingEntryIdProvider);
     if (entryId == null) return const SizedBox.shrink();
     final color = segment.color;
@@ -1451,7 +1467,7 @@ class _SegmentSelectorTile extends HookConsumerWidget {
       child: ContextMenuRegion(
         builder: (context) => [
           ContextMenuTile.button(
-            title: "Select",
+            title: l10n.select,
             icon: TWIcons.checkSquare,
             onTap: () {
               ref
@@ -1460,14 +1476,14 @@ class _SegmentSelectorTile extends HookConsumerWidget {
             },
           ),
           ContextMenuTile.button(
-            title: "Duplicate",
+            title: l10n.duplicate,
             icon: TWIcons.duplicate,
             onTap: () {
-              _duplicateSelectedSegment(ref.passing);
+              _duplicateSelectedSegment(l10n, ref.passing);
             },
           ),
           ContextMenuTile.button(
-            title: "Delete",
+            title: l10n.delete,
             icon: TWIcons.trash,
             color: Theme.of(context).colorScheme.error,
             onTap: () {
@@ -1504,7 +1520,7 @@ class _SegmentSelectorTile extends HookConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    "Segment ${segment.display}",
+                    l10n.segment(segment.display),
                     style: TextStyle(
                       fontSize: 14,
                       color: color.computeLuminance() > 0.5
@@ -1572,6 +1588,7 @@ class _SegmentWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final localKey = useGlobalKey();
     final grabbing = useState(false);
     final showThumbs =
@@ -1588,12 +1605,12 @@ class _SegmentWidget extends HookConsumerWidget {
       child: ContextMenuRegion(
         builder: (context) => [
           ContextMenuTile.button(
-            title: "Duplicate",
+            title: l10n.duplicate,
             icon: TWIcons.duplicate,
-            onTap: () => _duplicateSelectedSegment(ref.passing),
+            onTap: () => _duplicateSelectedSegment(l10n, ref.passing),
           ),
           ContextMenuTile.button(
-            title: "Delete",
+            title: l10n.delete,
             icon: TWIcons.trash,
             color: Theme.of(context).colorScheme.error,
             onTap: () {
@@ -1730,26 +1747,27 @@ class _SingleFrameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final segmentId = ref.watch(inspectingSegmentIdProvider);
 
     if (segmentId == null) return const SizedBox.shrink();
 
     return _FrameField(
-      title: "Frame",
+      title: l10n.frame,
       path: "$segmentId.startFrame",
       icon: TWIcons.stepForward,
-      hintText: "Enter a frame number",
+      hintText: l10n.enterFrameNumber,
       onValidate: (frame) {
         final entryId = ref.read(inspectingEntryIdProvider);
-        if (entryId == null) return "No entry selected";
+        if (entryId == null) return l10n.noEntrySelected;
         final segment = ref.read(inspectingSegmentProvider);
-        if (segment == null) return "No segment selected";
+        if (segment == null) return l10n.noSegmentSelected;
 
         final segments = ref.read(_segmentsProvider(entryId, segmentId.wild()));
         if (segments
             .where((s) => s.truePath != segmentId)
             .any((s) => s.startFrame == frame)) {
-          return "A segment already exists at this frame";
+          return l10n.frameAlreadyUsed;
         }
         return null;
       },
@@ -1797,30 +1815,31 @@ class _StartFrameField extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = ref.watch(l10nProvider);
     final segmentId = ref.watch(inspectingSegmentIdProvider);
 
     if (segmentId == null) return const SizedBox.shrink();
 
     return _FrameField(
-      title: "Start Frame",
+      title: l10n.startFrame,
       path: "$segmentId.startFrame",
       icon: TWIcons.stepBackward,
-      hintText: "Enter a frame number",
+      hintText: l10n.enterFrameNumber,
       onValidate: (frame) {
         final entryId = ref.read(inspectingEntryIdProvider);
-        if (entryId == null) return "No entry selected";
+        if (entryId == null) return l10n.noEntrySelected;
         final segment = ref.read(inspectingSegmentProvider);
-        if (segment == null) return "No segment selected";
+        if (segment == null) return l10n.noSegmentSelected;
 
-        if (frame > segment.endFrame) return "Cannot be after end frame";
+        if (frame > segment.endFrame) return l10n.frameAfterEnd;
 
         if (segment.minFrames != null &&
             segment.endFrame - frame < segment.minFrames!) {
-          return "The segment must be at least ${segment.minFrames} frames long";
+          return l10n.segmentTooShort(segment.minFrames!);
         }
         if (segment.maxFrames != null &&
             segment.endFrame - frame > segment.maxFrames!) {
-          return "The segment must be at most ${segment.maxFrames} frames long";
+          return l10n.segmentTooLong(segment.maxFrames!);
         }
 
         final segments = ref.read(_segmentsProvider(entryId, segmentId.wild()));
@@ -1828,7 +1847,7 @@ class _StartFrameField extends HookConsumerWidget {
             .where((s) => s.endFrame <= segment.startFrame)
             .maxBy((_, s) => s.endFrame);
         final minimumFrame = previousSegment?.endFrame ?? 0;
-        if (frame < minimumFrame) return "Cannot overlap with previous segment";
+        if (frame < minimumFrame) return l10n.cannotOverlapWithPreviousSegment;
         return null;
       },
     );

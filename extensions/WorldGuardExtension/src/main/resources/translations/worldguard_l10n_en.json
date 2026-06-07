@@ -1,0 +1,16 @@
+{
+  "worldguard.region_audience.title": "Filter players based on if they are in a region",
+  "worldguard.region_audience.description": "The `Region Audience` is used to filter players based on if they are in a specific WorldGuard region. To show players information when they enter a specific region. For example, when a player enters a town, you could show them information about the town.",
+  "worldguard.on_enter_region.title": "When a player enters a WorldGuard region",
+  "worldguard.on_enter_region.description": "The `Enter Region Event` is triggered when a player enters a region. This event could be used to trigger a message to the player when they enter a region, like a welcome. Or when they enter a region, it could trigger a quest to start and start a dialogue or cinematic.",
+  "worldguard.on_enter_region.fields.region.label": "Region",
+  "worldguard.on_enter_region.fields.region.help": "If left blank, it will trigger for all regions",
+  "worldguard.on_exit_region.title": "When a player exits a WorldGuard region",
+  "worldguard.on_exit_region.description": "The `Exit Region Event` is triggered when a player leaves a region. This event could be used to trigger a message when a player leaves a region, and give them a farewell message. Or if you wanted to make a region that is a \"safe zone\" where players can't be attacked, you could use this event to trigger a message when a player leaves the region.",
+  "worldguard.on_exit_region.fields.region.label": "Region",
+  "worldguard.on_exit_region.fields.region.help": "If left blank, it will trigger for all regions",
+  "worldguard.in_region_fact.title": "If the player is in a WorldGuard region",
+  "worldguard.in_region_fact.description": "A [fact](/docs/creating-stories/facts) that checks if the player is in a specific region. The value will be `0` if the player is not in the region, and `1` if the player is in the region. <fields.ReadonlyFactInfo /> This fact could be used to make a quest only available in a specific region.",
+  "worldguard.region_group.title": "All players grouped by WorldGuard regions",
+  "worldguard.region_group.description": "The `WorldGuardRegionGroup` is a group that includes all the players in a specific WorldGuard region. Only the given region will be considered for the group. This could be used to have facts that are specific to a region, like the state of a boss fight. It could also be used to send a title to all the players in the region."
+}

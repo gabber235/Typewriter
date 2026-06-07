@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.Criteria
@@ -36,8 +37,11 @@ class DropItemActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @LabelKey("basic.drop_item.fields.item.label")
+    @Help(key = "basic.drop_item.fields.item.help")
     val item: Var<Item> = ConstVar(Item.Empty),
-    @Help("The location to drop the item. (Defaults to the player's location)")
+    @LabelKey("basic.drop_item.fields.location.label")
+    @Help(key = "basic.drop_item.fields.location.help")
     private val location: Optional<Var<Position>> = Optional.empty(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

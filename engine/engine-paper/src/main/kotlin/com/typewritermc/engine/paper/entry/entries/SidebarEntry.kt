@@ -31,7 +31,7 @@ private const val SCOREBOARD_OBJECTIVE = "typewriter"
 
 @Tags("sidebar")
 interface SidebarEntry : AudienceFilterEntry, PlaceholderEntry, PriorityEntry {
-    @Help("The title of the sidebar")
+    @Help(key = "engine.sidebar.fields.title.help")
     @Colored
     @Placeholder
     val title: Var<String>
