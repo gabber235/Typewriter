@@ -36,10 +36,12 @@ class ChangeWorldEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Regex
-    @Help("The world the player must be coming from. If empty, any world matches.")
+    @LabelKey("basic.change_world_event.fields.fromWorld.label")
+    @Help(key = "basic.change_world_event.fields.fromWorld.help")
     val fromWorld: Optional<Var<String>> = Optional.empty(),
     @Regex
-    @Help("The world the player must be going to. If empty, any world matches.")
+    @LabelKey("basic.change_world_event.fields.toWorld.label")
+    @Help(key = "basic.change_world_event.fields.toWorld.help")
     val toWorld: Optional<Var<String>> = Optional.empty(),
     override val cancel: Var<Boolean> = ConstVar(false),
 ) : CancelableEventEntry

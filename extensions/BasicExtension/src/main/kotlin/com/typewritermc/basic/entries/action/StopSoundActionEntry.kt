@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -29,7 +30,8 @@ class StopSoundActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    @Help("The sound to stop. If this field is left blank, all sounds will be stopped.")
+    @LabelKey("basic.stop_sound.fields.sound.label")
+    @Help(key = "basic.stop_sound.fields.sound.help")
     val sound: Optional<Var<SoundId>> = Optional.empty(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

@@ -5,6 +5,7 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Segments
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
@@ -53,7 +54,8 @@ data class PotionEffectSegment(
     val strength: Var<Int> = ConstVar(1),
     val ambient: Boolean = false,
     val particles: Boolean = false,
-    @Help("Whether the icon should be displayed in the top left corner of the screen.")
+    @LabelKey("basic.potion_effect_cinematic.fields.icon.label")
+    @Help(key = "basic.potion_effect_cinematic.fields.icon.help")
     val icon: Boolean = false,
 ) : Segment
 

@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -47,7 +48,8 @@ class AddPotionEffectActionEntry(
     val ambient: Boolean = false,
     @Default("true")
     val particles: Boolean = true,
-    @Help("Whether or not to show the potion effect icon in the player's inventory.")
+    @LabelKey("basic.add_potion_effect.fields.icon.label")
+    @Help(key = "basic.add_potion_effect.fields.icon.help")
     @Default("true")
     val icon: Boolean = true,
 ) : ActionEntry {

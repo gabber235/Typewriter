@@ -3,6 +3,7 @@ package com.typewritermc.basic.entries.audience
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.entries.emptyRef
@@ -27,9 +28,11 @@ import org.bukkit.entity.Player
 class TriggerAudienceEntry(
     override val id: String = "",
     override val name: String = "",
-    @Help("The sequence to trigger when the player enters the audience.")
+    @LabelKey("basic.trigger_audience.fields.onEnter.label")
+    @Help(key = "basic.trigger_audience.fields.onEnter.help")
     val onEnter: Ref<TriggerableEntry> = emptyRef(),
-    @Help("The sequence to trigger when the player exits the audience.")
+    @LabelKey("basic.trigger_audience.fields.onExit.label")
+    @Help(key = "basic.trigger_audience.fields.onExit.help")
     val onExit: Ref<TriggerableEntry> = emptyRef(),
 ) : AudienceEntry {
     override suspend fun display(): AudienceDisplay = TriggerAudienceDisplay(onEnter, onExit)

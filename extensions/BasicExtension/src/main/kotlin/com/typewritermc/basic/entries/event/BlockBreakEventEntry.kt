@@ -37,9 +37,11 @@ class BlockBreakEventEntry(
     @MaterialProperties(MaterialProperty.BLOCK)
     val block: Optional<Material> = Optional.empty(),
     val location: Optional<Var<Position>> = Optional.empty(),
-    @Help("The item the player must be holding when the block is broken.")
+    @LabelKey("basic.block_break_event.fields.itemInHand.label")
+    @Help(key = "basic.block_break_event.fields.itemInHand.help")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
-    @Help("The hand the player must be holding the item in")
+    @LabelKey("basic.block_break_event.fields.hand.label")
+    @Help(key = "basic.block_break_event.fields.hand.help")
     val hand: HoldingHand = HoldingHand.BOTH,
     override val cancel: Var<Boolean> = ConstVar(false),
 ) : CancelableEventEntry

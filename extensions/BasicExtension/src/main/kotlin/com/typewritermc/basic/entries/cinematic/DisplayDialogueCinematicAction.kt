@@ -4,6 +4,7 @@ import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.MultiLine
 import com.typewritermc.core.extension.annotations.Placeholder
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.dialogue.playSpeakerSound
 import com.typewritermc.engine.paper.entry.entries.*
@@ -33,7 +34,8 @@ data class MultiLineDisplayDialogueSegment(
 interface DisplayDialogueSegment : Segment {
     @Placeholder
     @Colored
-    @Help("The text to display to the player.")
+    @LabelKey("basic.display_dialogue_cinematic.fields.text.label")
+    @Help(key = "basic.display_dialogue_cinematic.fields.text.help")
     val text: Var<String>
 }
 

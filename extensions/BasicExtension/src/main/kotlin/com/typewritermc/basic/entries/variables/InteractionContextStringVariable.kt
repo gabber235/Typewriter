@@ -35,6 +35,7 @@ class InteractionContextStringVariable(
 private data class InteractionContextStringVariableData(
     @IgnoreContextKeyBlueprint
     val key: InteractionContextKey<*> = InteractionContextKey.Empty,
-    @Help("What to display if the key is not in the context.")
+    @LabelKey("basic.interaction_context_string_variable.fields.default.label")
+    @Help(key = "basic.interaction_context_string_variable.fields.default.help")
     val default: String = "",
 )

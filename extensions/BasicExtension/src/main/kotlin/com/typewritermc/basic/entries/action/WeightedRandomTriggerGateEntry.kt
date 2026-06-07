@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -31,7 +32,8 @@ class WeightedRandomTriggerGateEntry(
     override val modifiers: List<Modifier> = emptyList(),
     @SerializedName("triggers")
     val customTriggers: Map<Ref<TriggerableEntry>, Int> = emptyMap(),
-    @Help("The number of triggers to fire next.")
+    @LabelKey("basic.weighted_random_trigger_gate.fields.amount.label")
+    @Help(key = "basic.weighted_random_trigger_gate.fields.amount.help")
     @Default("1")
     private val amount: Var<Int> = ConstVar(1),
 ) : ActionEntry {

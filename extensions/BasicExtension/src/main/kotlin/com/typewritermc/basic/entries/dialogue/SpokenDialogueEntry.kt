@@ -5,6 +5,7 @@ import com.typewritermc.basic.entries.dialogue.messengers.spoken.JavaSpokenDialo
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.*
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -37,7 +38,8 @@ class SpokenDialogueEntry(
     @Colored
     @MultiLine
     val text: Var<String> = ConstVar(""),
-    @Help("The duration it takes to type out the message.")
+    @LabelKey("basic.spoken.fields.duration.label")
+    @Help(key = "basic.spoken.fields.duration.help")
     val duration: Var<Duration> = ConstVar(Duration.ZERO),
 ) : DialogueEntry {
     override fun messenger(player: Player, context: InteractionContext): DialogueMessenger<SpokenDialogueEntry> {

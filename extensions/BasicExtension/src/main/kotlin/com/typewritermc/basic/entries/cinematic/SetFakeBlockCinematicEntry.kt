@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBl
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Segments
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.Criteria
@@ -23,7 +24,8 @@ class SetFakeBlockCinematicEntry(
     override val name: String = "",
     override val criteria: List<Criteria> = emptyList(),
     @Segments(icon = "mingcute:cube-3d-fill")
-    @Help("The segments that will be displayed in the cinematic")
+    @LabelKey("basic.set_fake_block_cinematic.fields.segments.label")
+    @Help(key = "basic.set_fake_block_cinematic.fields.segments.help")
     val segments: List<SetFakeBlockSegment> = emptyList(),
 ) : CinematicEntry {
     override fun create(player: Player): CinematicAction {

@@ -5,6 +5,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Segments
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
@@ -41,7 +42,8 @@ class ScreenShakeCinematicEntry(
 data class ScreenShakeSegment(
     override val startFrame: Int = 0,
     override val endFrame: Int = 0,
-    @Help("The number of frames to wait before the next shake.")
+    @LabelKey("basic.screen_shake_cinematic.fields.frameDelay.label")
+    @Help(key = "basic.screen_shake_cinematic.fields.frameDelay.help")
     val frameDelay: Int = 0,
 ) : Segment
 

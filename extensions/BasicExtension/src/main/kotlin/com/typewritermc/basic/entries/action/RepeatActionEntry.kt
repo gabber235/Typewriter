@@ -6,6 +6,7 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Min
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
@@ -42,7 +43,8 @@ class RepeatActionEntry(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Default("1")
     private val amount: Var<Int> = ConstVar(1),
-    @Help("The delay between each repetition. Minimum delay is 50ms.")
+    @LabelKey("basic.repeat_action.fields.interval.label")
+    @Help(key = "basic.repeat_action.fields.interval.help")
     @Default("50")
     @Min(50)
     private val interval: Var<Duration> = ConstVar(Duration.ofMillis(50)),

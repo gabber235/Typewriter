@@ -11,6 +11,7 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.audience.PlayerSingleDisplay
 import com.typewritermc.engine.paper.entry.audience.SingleFilter
 import com.typewritermc.engine.paper.entry.entries.*
@@ -50,7 +51,8 @@ class ExperienceAudienceEntry(
     override val name: String = "",
     val experience: Var<Int> = ConstVar(0),
     @Default("\"L^2 + L*10\"")
-    @Help("Can be mathematical expression. The expression may contain the variable L, which will be replaced with the player's level.")
+    @LabelKey("basic.experience_audience.fields.levelRequirement.label")
+    @Help(key = "basic.experience_audience.fields.levelRequirement.help")
     val levelRequirement: String = "L^2 + L*10",
     override val priorityOverride: Optional<Int> = Optional.empty()
 ) : AudienceFilterEntry, PriorityEntry {

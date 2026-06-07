@@ -5,6 +5,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini
@@ -26,15 +27,20 @@ class BossBarEntry(
     override val name: String = "",
     @Colored
     @Placeholder
-    @Help("The title of the boss bar")
+    @LabelKey("basic.boss_bar.fields.title.label")
+    @Help(key = "basic.boss_bar.fields.title.help")
     val title: Var<String> = ConstVar(""),
-    @Help("How filled up the bar is. 0.0 is empty, 1.0 is full.")
+    @LabelKey("basic.boss_bar.fields.progress.label")
+    @Help(key = "basic.boss_bar.fields.progress.help")
     val progress: Var<Double> = ConstVar(1.0),
-    @Help("The color of the boss bar")
+    @LabelKey("basic.boss_bar.fields.color.label")
+    @Help(key = "basic.boss_bar.fields.color.help")
     val color: Var<BossBar.Color> = ConstVar(BossBar.Color.WHITE),
-    @Help("If the bossbar has notches")
+    @LabelKey("basic.boss_bar.fields.style.label")
+    @Help(key = "basic.boss_bar.fields.style.help")
     val style: Var<BossBar.Overlay> = ConstVar(BossBar.Overlay.PROGRESS),
-    @Help("Any flags to apply to the boss bar")
+    @LabelKey("basic.boss_bar.fields.flags.label")
+    @Help(key = "basic.boss_bar.fields.flags.help")
     val flags: List<BossBar.Flag> = emptyList(),
 ) : AudienceEntry {
     override suspend fun display(): AudienceDisplay {

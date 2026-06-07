@@ -40,9 +40,11 @@ class InteractBlockEventEntry(
     @MaterialProperties(BLOCK)
     val block: Material = Material.AIR,
     val location: Optional<Var<Position>> = Optional.empty(),
-    @Help("The item the player must be holding when the block is interacted with.")
+    @LabelKey("basic.interact_block_event.fields.itemInHand.label")
+    @Help(key = "basic.interact_block_event.fields.itemInHand.help")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
-    @Help("The hand the player must be holding the item in")
+    @LabelKey("basic.interact_block_event.fields.hand.label")
+    @Help(key = "basic.interact_block_event.fields.hand.help")
     val hand: HoldingHand = HoldingHand.BOTH,
     val interactionType: InteractionType = InteractionType.ALL,
     val shiftType: ShiftType = ShiftType.ANY,

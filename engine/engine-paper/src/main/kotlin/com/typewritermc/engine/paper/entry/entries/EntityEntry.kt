@@ -18,10 +18,10 @@ import kotlin.reflect.KClass
 interface SpeakerEntry : PlaceholderEntry {
     @Colored
     @Placeholder
-    @Help("The name of the entity that will be displayed in the chat (e.g. 'Steve' or 'Alex').")
+    @Help(key = "engine.speaker.fields.displayName.help")
     val displayName: Var<String>
-
-    @Help("The sound that will be played when the entity speaks.")
+    
+    @Help(key = "engine.speaker.fields.sound.help")
     val sound: Var<Sound>
 
     override fun parser(): PlaceholderParser = placeholderParser {

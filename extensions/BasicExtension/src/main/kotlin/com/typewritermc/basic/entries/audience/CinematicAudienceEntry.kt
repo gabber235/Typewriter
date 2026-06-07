@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.Page
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
@@ -36,7 +37,8 @@ class CinematicAudienceEntry(
     override val id: String = "",
     override val name: String = "",
     override val children: List<Ref<AudienceEntry>> = emptyList(),
-    @Help("When not set it will filter based on if any cinematic is active.")
+    @LabelKey("basic.cinematic_audience.fields.pageId.label")
+    @Help(key = "basic.cinematic_audience.fields.pageId.help")
     @Page(PageType.CINEMATIC)
     @SerializedName("cinematic")
     val pageId: String = "",

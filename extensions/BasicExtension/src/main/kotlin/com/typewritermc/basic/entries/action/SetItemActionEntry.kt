@@ -3,6 +3,8 @@ package com.typewritermc.basic.entries.action
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -29,7 +31,11 @@ class SetItemActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @LabelKey("basic.set_item.fields.item.label")
+    @Help(key = "basic.set_item.fields.item.help")
     val item: Var<Item> = ConstVar(Item.Empty),
+    @LabelKey("basic.set_item.fields.slot.label")
+    @Help(key = "basic.set_item.fields.slot.help")
     val slot: Var<Int> = ConstVar(0),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

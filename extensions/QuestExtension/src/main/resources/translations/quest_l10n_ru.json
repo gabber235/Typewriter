@@ -34,7 +34,7 @@
   "quest.quest_status_update_event.fields.from.label": "От",
   "quest.quest_status_update_event.fields.from.help": "Если не указано, срабатывает для переходов из любого статуса.",
   "quest.quest_status_fact.title": "Статус конкретного квеста",
-  "quest.quest_status_fact.description": "`QuestStatusFact` — факт, возвращающий статус указанного квеста. <fields.ReadonlyFactInfo /> | Status | Value | |--------|-------| | Inactive | 0 | | Active | 1 | | Active and Tracked | 2 | | Completed | -1 | :::warning Статус __completed__ имеет значение **-1**, это сделано для удобства проверки активности квеста через `>= 1`. ::: Этот факт удобно использовать для абстрагирования статуса квеста, особенно если у квеста несколько критериев.",
+  "quest.quest_status_fact.description": "Факт, возвращающий статус указанного квеста. <fields.ReadonlyFactInfo /> | Status | Value | |--------|-------| | Inactive | 0 | | Active | 1 | | Active and Tracked | 2 | | Completed | -1 | :::warning Статус __completed__ имеет значение **-1**, это сделано для удобства проверки активности квеста через `>= 1`. ::: Этот факт удобно использовать для абстрагирования статуса квеста, особенно если у квеста несколько критериев.",
   "quest.completable_objective.title": "Цель, которая может отображать завершённый этап",
   "quest.completable_objective.description": "Цель, которая может показывать состояние «завершено». Отображается игроку, когда выполнены критерии показа, независимо от того, выполнены ли критерии завершения. Полезно, если цели квеста могут выполняться в любом порядке (напр., сбор ингредиентов для рецепта).",
   "quest.completable_objective.fields.showCriteria.label": "Критерии показа",

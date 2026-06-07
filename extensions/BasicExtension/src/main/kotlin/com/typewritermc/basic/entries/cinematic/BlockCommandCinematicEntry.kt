@@ -8,6 +8,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Regex
 import com.typewritermc.core.extension.annotations.Segments
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
@@ -44,7 +45,8 @@ data class BlockCommandSegment(
     override val startFrame: Int = 0,
     override val endFrame: Int = 0,
     @Regex
-    @Help("No need to include the slash. For example, use `say` instead of `/say`")
+    @LabelKey("basic.block_command_cinematic.fields.allowedCommands.label")
+    @Help(key = "basic.block_command_cinematic.fields.allowedCommands.help")
     val allowedCommands: List<String> = emptyList(),
 ) : Segment
 

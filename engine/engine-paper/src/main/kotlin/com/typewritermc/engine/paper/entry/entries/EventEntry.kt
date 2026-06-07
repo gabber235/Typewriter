@@ -19,12 +19,7 @@ interface EventEntry : TriggerEntry
 
 @Tags("cancelable_event")
 interface CancelableEventEntry : EventEntry {
-    @Help(
-        """
-        Cancel the event when triggered.
-        If set to false, it will not modify the event.
-        """
-    )
+    @Help(key = "engine.cancelable_event.fields.cancel.help")
     val cancel: Var<Boolean>
 
 }

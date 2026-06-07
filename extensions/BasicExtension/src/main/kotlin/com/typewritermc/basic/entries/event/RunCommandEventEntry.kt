@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.command.dsl.playersResolver
 import com.typewritermc.engine.paper.command.dsl.sender
@@ -31,7 +32,8 @@ class RunCommandEventEntry(
     override val id: String = "",
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    @Help("The command to register. Do not include the leading slash.")
+    @LabelKey("basic.run_command_event.fields.command.label")
+    @Help(key = "basic.run_command_event.fields.command.help")
     val command: String = "",
 ) : CustomCommandEntry, EventEntry {
     @Suppress("UnstableApiUsage")

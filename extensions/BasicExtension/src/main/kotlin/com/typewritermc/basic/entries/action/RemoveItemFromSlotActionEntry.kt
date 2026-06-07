@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -46,7 +47,8 @@ class RemoveItemFromSlotActionEntry(
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     val slot: Var<Int> = ConstVar(0),
-    @Help("If not specified, any item will be removed from the slot")
+    @LabelKey("basic.remove_item_from_slot.fields.item.label")
+    @Help(key = "basic.remove_item_from_slot.fields.item.help")
     val item: Optional<Var<Item>> = Optional.empty(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

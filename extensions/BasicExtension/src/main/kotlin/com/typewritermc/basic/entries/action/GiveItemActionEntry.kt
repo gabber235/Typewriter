@@ -3,6 +3,8 @@ package com.typewritermc.basic.entries.action
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
@@ -37,6 +39,8 @@ class GiveItemActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @LabelKey("basic.give_item.fields.item.label")
+    @Help(key = "basic.give_item.fields.item.help")
     val item: Var<Item> = ConstVar(Item.Empty),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

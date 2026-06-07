@@ -1595,7 +1595,7 @@ abstract class AppLocalizations {
   /// No description provided for @requestContentMode.
   ///
   /// In en, this message translates to:
-  /// **'Requesting content mode'**
+  /// **'Request Content mode'**
   String get requestContentMode;
 }
 

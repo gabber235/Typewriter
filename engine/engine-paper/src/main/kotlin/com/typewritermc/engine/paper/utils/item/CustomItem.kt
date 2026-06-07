@@ -2,6 +2,8 @@ package com.typewritermc.engine.paper.utils.item
 
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.AlgebraicTypeInfo
+import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.utils.item.components.ItemAmountComponent
 import com.typewritermc.engine.paper.utils.item.components.ItemComponent
@@ -11,6 +13,8 @@ import org.bukkit.inventory.ItemStack
 
 @AlgebraicTypeInfo("custom_item", Colors.BLUE, "mdi:shape")
 class CustomItem(
+    @LabelKey("basic.give_item.fields.item.fields.components.label")
+    @Help(key = "basic.give_item.fields.item.fields.components.help")
     val components: List<ItemComponent> = emptyList(),
 ) : Item {
     inline fun <reified C : ItemComponent> components(): List<C> = components.filterIsInstance<C>()

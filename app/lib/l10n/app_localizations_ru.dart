@@ -306,10 +306,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fetchFromUUID => 'Получить из UUID';
 
   @override
-  String get yawFieldLabel => 'Yaw (Горизонтальный угол)';
+  String get yawFieldLabel => 'Yaw (Гор. угол)';
 
   @override
-  String get pitchFieldLabel => 'Pitch (Вертикальный угол)';
+  String get pitchFieldLabel => 'Pitch (Верт. угол)';
 
   @override
   String get componentsCinematicDeleteSegment => 'Удалить сегмент';

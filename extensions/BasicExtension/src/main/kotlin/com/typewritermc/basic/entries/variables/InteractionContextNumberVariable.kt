@@ -44,6 +44,7 @@ class InteractionContextNumberVariable(
 private data class InteractionContextNumberVariableData(
     @IgnoreContextKeyBlueprint
     val key: InteractionContextKey<*> = InteractionContextKey.Empty,
-    @Help("What to display if the key is not in the context.")
+    @LabelKey("basic.interaction_context_number_variable.fields.default.label")
+    @Help(key = "basic.interaction_context_number_variable.fields.default.help")
     val default: Generic = Generic.Empty,
 )

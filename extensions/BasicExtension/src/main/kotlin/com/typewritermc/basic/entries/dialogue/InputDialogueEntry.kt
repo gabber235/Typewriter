@@ -122,7 +122,8 @@ class FilterInputDialogueEntry(
     override val text: Var<String> = ConstVar(""),
     override val duration: Var<Duration> = ConstVar(Duration.ZERO),
     val filters: List<Filter> = emptyList(),
-    @Help("Triggers if none of the filters are matched. If not set, the user must match at a filter.")
+    @LabelKey("basic.filter_input_dialogue.fields.incorrectTriggers.label")
+    @Help(key = "basic.filter_input_dialogue.fields.incorrectTriggers.help")
     val incorrectTriggers: Optional<List<Ref<TriggerableEntry>>> = Optional.empty(),
 ) : InputDialogueEntry {
     override val triggers: List<Ref<TriggerableEntry>> get() = emptyList()

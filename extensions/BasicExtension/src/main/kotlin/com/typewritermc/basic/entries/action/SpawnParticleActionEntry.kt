@@ -5,6 +5,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.Criteria
@@ -36,12 +37,14 @@ class SpawnParticleActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    @Help("The location to spawn the particles at. (Defaults to player's location)")
+    @LabelKey("basic.spawn_particles.fields.location.label")
+    @Help(key = "basic.spawn_particles.fields.location.help")
     val location: Optional<Var<Position>> = Optional.empty(),
     val particle: Var<Particle> = ConstVar(Particle.FLAME),
     val count: Var<Int> = ConstVar(1),
     val offset: Var<Vector> = ConstVar(Vector.ZERO),
-    @Help("The speed of the particles. For some particles, this is the \"extra\" data value to control particle behavior.")
+    @LabelKey("basic.spawn_particles.fields.speed.label")
+    @Help(key = "basic.spawn_particles.fields.speed.help")
     val speed: Var<Double> = ConstVar(0.0),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {

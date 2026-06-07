@@ -6,6 +6,7 @@ import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -39,7 +40,8 @@ class ShowTitleActionEntry(
     @Placeholder
     @Colored
     val subtitle: Var<String> = ConstVar(""),
-    @Help("Optional duration settings for the title. Duration of the title: Fade in, how long it stays, fade out.")
+    @LabelKey("basic.show_title.fields.durations.label")
+    @Help(key = "basic.show_title.fields.durations.help")
     val durations: Optional<TitleDurations> = Optional.empty(),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
@@ -66,10 +68,13 @@ class ShowTitleActionEntry(
 }
 
 data class TitleDurations(
-    @Help("The duration of the fade in effect.")
+    @LabelKey("basic.show_title.fields.durations.fadeIn.label")
+    @Help(key = "basic.show_title.fields.durations.fadeIn.help")
     val fadeIn: Duration = Duration.ofSeconds(1),
-    @Help("The duration that it stays.")
+    @LabelKey("basic.show_title.fields.durations.stay.label")
+    @Help(key = "basic.show_title.fields.durations.stay.help")
     val stay: Duration = Duration.ofSeconds(1),
-    @Help("The duration of the fade out effect.")
+    @LabelKey("basic.show_title.fields.durations.fadeOut.label")
+    @Help(key = "basic.show_title.fields.durations.fadeOut.help")
     val fadeOut: Duration = Duration.ofSeconds(1),
 )

@@ -4,6 +4,7 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.extension.annotations.MultiLine
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.core.utils.launch
@@ -40,9 +41,10 @@ class PlayerCommandActionEntry(
     override val criteria: List<Criteria> = emptyList(),
     override val modifiers: List<Modifier> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+    @LabelKey("basic.player_run_command.fields.command.label")
     @Placeholder
     @MultiLine
-    @Help("Every line is a different command. Commands should not be prefixed with <code>/</code>.")
+    @Help(key = "basic.player_run_command.fields.command.help")
     val command: Var<String> = ConstVar(""),
     val sudo: Boolean = false,
 ) : ActionEntry {

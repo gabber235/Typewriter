@@ -45,7 +45,7 @@ interface GroupAdvancedEntityInstance : EntityInstanceEntry {
 
     val showRange: Optional<Var<Double>>
 
-    @Help("The group that this entity instance belongs to.")
+    @Help(key = "engine.group_advanced_entity_instance.fields.group.help")
     val group: Ref<out GroupEntry>
 
     override suspend fun display(): AudienceFilter {

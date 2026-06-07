@@ -7,6 +7,7 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.core.utils.point.distanceSqrt
@@ -37,14 +38,17 @@ class ParticleAudienceEntry(
     override val name: String = "",
     override val children: List<Ref<out AudienceEntry>> = emptyList(),
     val position: Var<Position> = ConstVar(Position.ORIGIN),
-    @Help("The distance the player needs to be from the location to spawn the particle.")
+    @LabelKey("basic.particle_audience.fields.radius.label")
+    @Help(key = "basic.particle_audience.fields.radius.help")
     @Default("30.0")
     val radius: Var<Double> = ConstVar(30.0),
     val particle: Var<Particle> = ConstVar(Particle.FLAME),
-    @Help("The amount of particles to spawn every tick.")
+    @LabelKey("basic.particle_audience.fields.count.label")
+    @Help(key = "basic.particle_audience.fields.count.help")
     val count: Var<Int> = ConstVar(1),
     val offset: Var<Vector> = ConstVar(Vector.ZERO),
-    @Help("The speed of the particles. For some particles, this is the \"extra\" data value to control particle behavior.")
+    @LabelKey("basic.particle_audience.fields.speed.label")
+    @Help(key = "basic.particle_audience.fields.speed.help")
     val speed: Var<Double> = ConstVar(0.0),
 ) : AudienceFilterEntry {
     override suspend fun display(): AudienceFilter = ParticleAudienceFilter(

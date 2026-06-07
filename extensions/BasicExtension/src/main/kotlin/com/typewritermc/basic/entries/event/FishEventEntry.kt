@@ -6,6 +6,7 @@ import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.core.extension.annotations.LabelKey
 import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
@@ -26,9 +27,11 @@ class FishEventEntry(
     override val id: String = "",
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
-    @Help("The item the player must be holding when the fish or item is caught.")
+    @LabelKey("basic.fish_event.fields.itemInHand.label")
+    @Help(key = "basic.fish_event.fields.itemInHand.help")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
-    @Help("The hand the player must be holding the item in")
+    @LabelKey("basic.fish_event.fields.hand.label")
+    @Help(key = "basic.fish_event.fields.hand.help")
     val hand: HoldingHand = HoldingHand.BOTH,
     val caught: Var<Item> = ConstVar(Item.Empty),
 ) : EventEntry

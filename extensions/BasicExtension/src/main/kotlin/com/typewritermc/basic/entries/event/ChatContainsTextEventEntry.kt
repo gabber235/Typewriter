@@ -32,9 +32,11 @@ class ChatContainsTextEventEntry(
     override val name: String = "",
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Regex
-    @Help("The text to look for in the message.")
+    @LabelKey("basic.chat_contains_text_event.fields.text.label")
+    @Help(key = "basic.chat_contains_text_event.fields.text.help")
     val text: String = "",
-    @Help("If the text should be matched exactly or if it should be a substring.")
+    @LabelKey("basic.chat_contains_text_event.fields.exactSame.label")
+    @Help(key = "basic.chat_contains_text_event.fields.exactSame.help")
     val exactSame: Boolean = false
 ) : EventEntry
 
