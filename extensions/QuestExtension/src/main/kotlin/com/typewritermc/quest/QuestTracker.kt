@@ -8,8 +8,6 @@ import com.typewritermc.core.extension.annotations.Parameter
 import com.typewritermc.core.interaction.SessionTracker
 import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
-import com.typewritermc.engine.paper.facts.FactListenerSubscription
-import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.interaction.PlayerSessionManager
 import com.typewritermc.quest.entries.QuestEntry
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
@@ -27,36 +25,15 @@ class QuestTracker(
     private val quests = ConcurrentHashMap<Ref<QuestEntry>, QuestStatus>()
     private var trackedQuest: Ref<QuestEntry>? = null
 
-    private var factWatchSubscription: FactListenerSubscription? = null
-
     override fun setup() {
         Query.find<QuestEntry>().forEach { refresh(it.ref()) }
-
-        refreshWatchedFacts()
-    }
-
-    private fun refreshWatchedFacts() {
-        factWatchSubscription?.cancel(player)
-        val facts = Query.find<QuestEntry>().flatMap { it.facts }.toList()
-        factWatchSubscription = player.listenForFacts(
-            facts,
-            listener = {
-                Query.findWhere<QuestEntry> { quest ->
-                    quest.facts.contains(ref)
-                }.forEach {
-                    refresh(it.ref())
-                }
-            }
-        )
     }
 
     override fun tick() {
         Query.find<QuestEntry>().forEach { refresh(it.ref()) }
     }
 
-    override fun teardown() {
-        factWatchSubscription?.cancel(player)
-    }
+    override fun teardown() {}
 
     private fun refresh(ref: Ref<QuestEntry>) {
         val quest = ref.get() ?: return

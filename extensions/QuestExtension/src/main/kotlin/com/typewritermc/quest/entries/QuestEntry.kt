@@ -8,13 +8,9 @@ import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
-import com.typewritermc.engine.paper.facts.FactListenerSubscription
-import com.typewritermc.engine.paper.facts.FactUpdateContext
-import com.typewritermc.engine.paper.facts.listenForFacts
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
-import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.quest.*
 import com.typewritermc.quest.events.AsyncQuestStatusUpdate
 import lirand.api.extensions.events.listen
@@ -22,8 +18,6 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerEvent
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 @Tags("quest")
@@ -104,8 +98,7 @@ interface ObjectiveEntry : AudienceFilterEntry, PlaceholderEntry, PriorityEntry 
 class ObjectiveAudienceFilter(
     private val objective: Ref<ObjectiveEntry>,
     private val criteria: List<Criteria>,
-) : AudienceFilter(objective) {
-    private val factWatcherSubscriptions = ConcurrentHashMap<UUID, FactListenerSubscription>()
+) : AudienceFilter(objective), TickableDisplay {
     private val listenersCallbacks = mutableMapOf<KClass<Event>, (Event) -> Unit>()
 
     // TODO: This should probably be moved later on to the AudienceDisplay.
@@ -135,25 +128,8 @@ class ObjectiveAudienceFilter(
     override fun filter(player: Player): Boolean =
         criteria.matches(player)
 
-    override fun onPlayerAdd(player: Player) {
-        factWatcherSubscriptions.compute(player.uniqueId) { _, subscription ->
-            subscription?.cancel(player)
-            return@compute player.listenForFacts(
-                (criteria).map { it.fact },
-                ::onFactChange,
-            )
-        }
-
-        super.onPlayerAdd(player)
-    }
-
-    private fun onFactChange(context: FactUpdateContext) {
-        context.player.refresh()
-    }
-
-    override fun onPlayerRemove(player: Player) {
-        super.onPlayerRemove(player)
-        factWatcherSubscriptions.remove(player.uniqueId)?.cancel(player)
+    override fun tick() {
+        consideredPlayers.forEach { it.refresh() }
     }
 
     override fun onPlayerFilterAdded(player: Player) {
@@ -173,14 +149,6 @@ class ObjectiveAudienceFilter(
         if (quest.priority < highestQuestPriority.priority) return
 
         player.trackQuest(quest)
-    }
-
-    override fun dispose() {
-        super.dispose()
-        factWatcherSubscriptions.forEach { (playerId, subscription) ->
-            val player = server.getPlayer(playerId) ?: return@forEach
-            subscription.cancel(player)
-        }
     }
 }
 
