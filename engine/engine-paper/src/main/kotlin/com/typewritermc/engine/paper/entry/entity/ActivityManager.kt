@@ -13,7 +13,7 @@ class ActivityManager<Context : ActivityContext>(
         get() = activity.currentProperties
 
     fun initialize(context: Context) {
-        activity.initialize(context)
+        activity.initialize(context, position)
     }
 
     fun tick(context: Context) {

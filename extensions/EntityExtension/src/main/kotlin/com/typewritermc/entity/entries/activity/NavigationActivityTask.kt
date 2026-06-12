@@ -26,15 +26,17 @@ import kotlin.math.*
 
 class NavigationActivity(
     private val gps: GPS,
-    startLocation: PositionProperty,
+    startPosition: PositionProperty,
 ) : GenericEntityActivity {
     private var path: List<GPSEdge>? = null
-    private var state: NavigationActivityTaskState = NavigationActivityTaskState.Searching(gps, startLocation)
+    private var state: NavigationActivityTaskState = NavigationActivityTaskState.Idle(startPosition)
 
     override val currentPosition: PositionProperty
         get() = state.position()
 
-    override fun initialize(context: ActivityContext) {}
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        state = NavigationActivityTaskState.Searching(gps, position)
+    }
 
     override fun tick(context: ActivityContext): TickResult {
         val speed = context.entityState.speed
@@ -63,7 +65,7 @@ class NavigationActivity(
         }
 
         val state = state
-        // The fake navigation is used to improve the performance, it however, goes through buildings
+        // The fake navigation is used to improve the performance; it however, goes through buildings
         // So, we switch to walking when the entity is viewed
         if (state is NavigationActivityTaskState.FakeNavigation && context.isViewed) {
             this.state = NavigationActivityTaskState.Walking(gps.roadNetwork, state.edge, currentPosition, speed)
@@ -89,9 +91,16 @@ sealed interface NavigationActivityTaskState {
     fun tick(context: ActivityContext) {}
     fun dispose() {}
 
+    class Idle(
+        private val position: PositionProperty,
+    ) : NavigationActivityTaskState {
+        override fun position(): PositionProperty = position
+        override fun isComplete(): Boolean = true
+    }
+
     class Searching(
         private val gps: GPS,
-        private val location: PositionProperty,
+        private val position: PositionProperty,
     ) : NavigationActivityTaskState {
         var path: List<GPSEdge>? = null
         private val job: Job = Dispatchers.UntickedAsync.launch {
@@ -104,7 +113,7 @@ sealed interface NavigationActivityTaskState {
             }
         }
 
-        override fun position(): PositionProperty = location
+        override fun position(): PositionProperty = position
 
         override fun isComplete(): Boolean = path != null
 
@@ -152,7 +161,7 @@ sealed interface NavigationActivityTaskState {
     class Walking(
         private val roadNetwork: Ref<RoadNetworkEntry>,
         val edge: GPSEdge,
-        startLocation: PositionProperty,
+        startPosition: PositionProperty,
         val speed: Float,
         private val rotationLookAhead: Int = 3,
         private val stuckThreshold: Int = 60,
@@ -170,7 +179,7 @@ sealed interface NavigationActivityTaskState {
             private val DEFAULT_PLAYER_BOUNDINGBOX_SIZE = 0.6 to 1.8
         }
 
-        private var location: PositionProperty = startLocation
+        private var location: PositionProperty = startPosition
         private var velocity = Vector.ZERO
 
         private var yawVelocity = Velocity(0f)
@@ -180,8 +189,10 @@ sealed interface NavigationActivityTaskState {
         private var patheticPath: Path? = null
         private var pathIndex: Int = 0
         private var pathCalculationJob: Job? = null
+
         @Volatile
         private var pathCalculationFailed: Boolean = false
+
         @Volatile
         private var pathIsFallback: Boolean = false
 
@@ -190,7 +201,7 @@ sealed interface NavigationActivityTaskState {
         private lateinit var capabilities: EntityPathingCapabilities
         private lateinit var blockCollision: BlockCollision
 
-        private var lastPosition: PositionProperty = startLocation
+        private var lastPosition: PositionProperty = startPosition
         private var stuckTicks: Int = 0
 
         private var lastPhysicsResult: PhysicsResult? = null

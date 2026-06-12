@@ -1,17 +1,15 @@
 package com.typewritermc.entity.entries.activity
 
-import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
+import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entity.ActivityContext
 import com.typewritermc.engine.paper.entry.entity.EntityActivity
 import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import com.typewritermc.engine.paper.entry.entity.SingleChildActivity
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
-import com.typewritermc.engine.paper.utils.logErrorIfNull
 import com.typewritermc.engine.paper.utils.toBukkitWorld
 
 @Entry("game_time_activity", "A game time activity", Colors.PALATINATE_BLUE, "bi:clock-fill")
@@ -54,7 +52,7 @@ class GameTimeActivityEntry(
 
 class GameTimeRange(
     val start: Long = 0,
-    val end: Long = 0,
+    val end: Long = 1,
 ) {
     operator fun contains(time: Long): Boolean {
         return time in start until end

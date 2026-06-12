@@ -52,7 +52,9 @@ class EyeHeightDebugActivity(
     val showHitbox: Boolean,
 ) : GenericEntityActivity {
 
-    override fun initialize(context: ActivityContext) {}
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        currentPosition = position
+    }
 
     override fun tick(context: ActivityContext): TickResult {
         val pos = currentPosition

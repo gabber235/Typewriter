@@ -3,18 +3,9 @@ package com.typewritermc.entity.entries.activity
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
-import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.extension.annotations.InnerMax
-import com.typewritermc.core.extension.annotations.InnerMin
-import com.typewritermc.core.extension.annotations.Max
-import com.typewritermc.core.extension.annotations.Min
+import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.engine.paper.entry.entity.*
-import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
-import com.typewritermc.engine.paper.entry.entries.EntityProperty
-import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
-import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.entries.*
 
 @Entry("look_at_pitch_yaw_activity", "A look at pitch and yaw activity", Colors.BLUE, "fa6-solid:compass")
 /**
@@ -54,8 +45,9 @@ class LookAtPitchYawActivity(
     private val pitchVelocity = Velocity(0f)
     private var currentDirection: LookDirection = LookDirection(startLocation.yaw, startLocation.pitch)
 
-    override fun initialize(context: ActivityContext) {
-        childActivity.initialize(context)
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        currentDirection = LookDirection(position.yaw, position.pitch)
+        childActivity.initialize(context, position)
     }
 
     override fun tick(context: ActivityContext): TickResult {

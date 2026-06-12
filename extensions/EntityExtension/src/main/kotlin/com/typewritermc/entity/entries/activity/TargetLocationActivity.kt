@@ -34,12 +34,14 @@ class TargetLocationActivityEntry(
     val targetLocation: Position = Position.ORIGIN,
     @Help("The activity that will be used when the entity is at the target location.")
     val idleActivity: Ref<out EntityActivityEntry> = emptyRef(),
+    @Help("If true, the activity will only activate once. Once the entity reaches the target location, it will not trigger again and defer to idle activity.")
+    val once: Boolean = false,
 ) : GenericEntityActivityEntry {
     override fun create(
         context: ActivityContext,
         currentLocation: PositionProperty
     ): EntityActivity<in ActivityContext> {
-        return TargetLocationActivity(roadNetwork, targetLocation, idleActivity, currentLocation)
+        return TargetLocationActivity(roadNetwork, targetLocation, idleActivity, once, currentLocation)
     }
 }
 
@@ -47,9 +49,11 @@ class TargetLocationActivity(
     private val network: Ref<RoadNetworkEntry>,
     private val targetPosition: Position,
     private val idleActivity: Ref<out EntityActivityEntry>,
+    val once: Boolean,
     startPosition: PositionProperty,
 ) : GenericEntityActivity {
-    private var state: State = IdleState()
+    private val states = listOf(NavigatingState(), IdleState())
+    private var state: State = states.first()
     private var currentActivity: EntityActivity<ActivityContext> = IdleActivity(startPosition)
 
 
@@ -58,24 +62,29 @@ class TargetLocationActivity(
         fun nextState(): State
         fun createActivity(
             context: ActivityContext,
-            currentLocation: PositionProperty
+            currentPosition: PositionProperty
         ): EntityActivity<ActivityContext>
     }
 
     private inner class IdleState : State {
         override val isValid: Boolean
             get() {
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return false
+                if (once) return true
+                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
                 return distance <= locationActivityRange * locationActivityRange
             }
 
-        override fun nextState(): State = NavigatingState()
+        private var cachedActivity: EntityActivity<ActivityContext>? = null
+
+        override fun nextState(): State = states[0]
 
         override fun createActivity(
             context: ActivityContext,
-            currentLocation: PositionProperty
+            currentPosition: PositionProperty
         ): EntityActivity<ActivityContext> {
-            return (idleActivity.get() ?: IdleActivity).create(context, currentLocation)
+            if (cachedActivity != null) return cachedActivity!!
+            cachedActivity = (idleActivity.get() ?: IdleActivity).create(context, currentPosition)
+            return cachedActivity!!
         }
     }
 
@@ -86,31 +95,32 @@ class TargetLocationActivity(
                 return distance > locationActivityRange * locationActivityRange
             }
 
-        override fun nextState(): State = IdleState()
+        override fun nextState(): State = states[1]
 
         override fun createActivity(
             context: ActivityContext,
-            currentLocation: PositionProperty
+            currentPosition: PositionProperty
         ): EntityActivity<ActivityContext> {
             return NavigationActivity(
                 PointToPointGPS(
                     network,
                     {
-                        val position = currentLocation.toPosition()
+                        val position = currentPosition.toPosition()
                         position.firstWalkableLocationBelow() ?: position
                     },
                     { targetPosition }
-                ), currentLocation)
+                ), currentPosition)
         }
     }
 
-    override fun initialize(context: ActivityContext) {
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
         if (!state.isValid) {
             state = state.nextState()
         }
 
-        currentActivity = state.createActivity(context, currentPosition)
-        currentActivity.initialize(context)
+        currentActivity = state.createActivity(context, position).also {
+            it.initialize(context, position)
+        }
     }
 
     override fun tick(context: ActivityContext): TickResult {
@@ -118,7 +128,7 @@ class TargetLocationActivity(
             currentActivity.dispose(context)
             state = state.nextState()
             currentActivity = state.createActivity(context, currentPosition)
-            currentActivity.initialize(context)
+            currentActivity.initialize(context, currentPosition)
         }
 
         return currentActivity.tick(context)

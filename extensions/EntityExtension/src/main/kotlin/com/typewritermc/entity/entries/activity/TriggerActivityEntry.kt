@@ -1,18 +1,24 @@
 package com.typewritermc.entity.entries.activity
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
-import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
+import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.entry.triggerFor
 
-@Entry("trigger_activity", "Triggers a sequence when the activity active or inactive", Colors.PALATINATE_BLUE, "fa-solid:play")
+@Entry(
+    "trigger_activity",
+    "Triggers a sequence when the activity active or inactive",
+    Colors.PALATINATE_BLUE,
+    "fa-solid:play"
+)
 /**
  * The `Trigger Activity` entry is an activity that triggers a sequence when the activity starts or stops.
  *
@@ -38,15 +44,17 @@ class TriggerActivityEntry(
 
 private class TriggerActivity(
     private val ref: Ref<out EntityActivityEntry>,
-    startLocation: PositionProperty,
+    startPosition: PositionProperty,
     private val onStart: Ref<TriggerableEntry>,
     private val onStop: Ref<TriggerableEntry>,
 ) : GenericEntityActivity {
-    private var activity: EntityActivity<in ActivityContext> = IdleActivity(startLocation)
+    private var activity: EntityActivity<in ActivityContext> = IdleActivity(startPosition)
 
-    override fun initialize(context: ActivityContext) {
-        activity = ref.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-        activity.initialize(context)
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        if (activity is IdleActivity) {
+            activity = ref.get()?.create(context, position) ?: IdleActivity(position)
+        }
+        activity.initialize(context, position)
         context.viewers.forEach {
             onStart.triggerFor(it, context())
         }
@@ -65,4 +73,7 @@ private class TriggerActivity(
 
     override val currentPosition: PositionProperty
         get() = activity.currentPosition
+
+    override val currentProperties: List<EntityProperty>
+        get() = activity.currentProperties
 }

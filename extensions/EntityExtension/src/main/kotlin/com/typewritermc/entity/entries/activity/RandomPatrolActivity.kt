@@ -26,6 +26,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.KoinComponent
 import org.koin.java.KoinJavaComponent
+import kotlin.time.Duration.Companion.seconds
 
 @Entry("random_patrol_activity", "Randomly patrol nodes in the network", Colors.BLUE, "fa6-solid:shuffle")
 /**
@@ -65,25 +66,24 @@ class RandomPatrolActivity(
     fun refreshActivity(context: ActivityContext, network: RoadNetwork): TickResult {
         if (searchMutex.isLocked) return TickResult.CONSUMED
 
-        val currentPos = currentPosition.toPosition()
         val candidateNodes = network.nodes
-            .filter { (it.position.distanceSquared(currentPos) ?: Double.MAX_VALUE) <= radiusSquared }
+            .filter { (it.position.distanceSquared(currentPosition) ?: Double.MAX_VALUE) <= radiusSquared }
             .toMutableList()
 
         if (candidateNodes.isEmpty()) return TickResult.IGNORED
 
         val job = Dispatchers.UntickedAsync.launch {
             try {
-                withTimeout(30000) {
+                withTimeout(30.seconds) {
                     searchMutex.withLock {
                         if (!isActive) return@withLock
 
-                        val gps = findReachableNode(network, currentPos)
+                        val gps = findReachableNode(network, currentPosition.toPosition())
 
                         if (gps != null) {
                             setNavigationActivity(context, gps)
                         } else {
-                            setIdleFallbackActivity(context, network, currentPos)
+                            setIdleFallbackActivity(context, network, currentPosition.toPosition())
                         }
                     }
                 }
@@ -98,7 +98,10 @@ class RandomPatrolActivity(
         return TickResult.CONSUMED
     }
 
-    override fun initialize(context: ActivityContext) = setup(context)
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        activity = IdleActivity(position)
+        setup(context)
+    }
 
     private fun setup(context: ActivityContext) {
         network =
@@ -177,8 +180,7 @@ class RandomPatrolActivity(
 
     private fun setNavigationActivity(context: ActivityContext, gps: PointToPointGPS) {
         activity.dispose(context)
-        activity = NavigationActivity(gps, currentPosition)
-        activity.initialize(context)
+        activity = NavigationActivity(gps, currentPosition).also { it.initialize(context, currentPosition) }
     }
 
     private fun setIdleFallbackActivity(
@@ -192,8 +194,9 @@ class RandomPatrolActivity(
             .logErrorIfNull("No reachable nodes found")
 
         activity.dispose(context)
-        activity = IdleActivity(teleportNode?.position?.toProperty() ?: currentPosition).also {
-            it.initialize(context)
+        val newPosition = teleportNode?.position?.toProperty() ?: currentPosition
+        activity = IdleActivity(newPosition).also {
+            it.initialize(context, newPosition)
         }
     }
 }
