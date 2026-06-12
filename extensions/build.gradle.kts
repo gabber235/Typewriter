@@ -20,7 +20,7 @@ allprojects {
         }
     }
 
-    val targetJavaVersion = 25
+    val targetJavaVersion = 21
     java {
         val javaVersion = JavaVersion.toVersion(targetJavaVersion)
         sourceCompatibility = javaVersion

@@ -27,7 +27,7 @@ allprojects {
         useJUnitPlatform()
     }
     kotlin {
-        jvmToolchain(25)
+        jvmToolchain(21)
     }
     tasks.withType(KotlinCompile::class.java) {
         compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
