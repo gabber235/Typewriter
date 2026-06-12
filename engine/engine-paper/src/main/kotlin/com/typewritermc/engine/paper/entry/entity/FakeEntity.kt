@@ -59,9 +59,13 @@ abstract class FakeEntity(
 open class EntityState(
     val eyeHeight: Double = 0.0,
     val speed: Float = 0.2085f,
+    val width: Double = 0.6,
+    val height: Double = 1.8,
 ) {
     operator fun component1(): Double = eyeHeight
     operator fun component2(): Float = speed
+    operator fun component3(): Double = width
+    operator fun component4(): Double = height
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -69,6 +73,8 @@ open class EntityState(
 
         if (eyeHeight != other.eyeHeight) return false
         if (speed != other.speed) return false
+        if (width != other.width) return false
+        if (height != other.height) return false
 
         return true
     }
@@ -76,11 +82,13 @@ open class EntityState(
     override fun hashCode(): Int {
         var result = eyeHeight.hashCode()
         result = 31 * result + speed.hashCode()
+        result = 31 * result + width.hashCode()
+        result = 31 * result + height.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "EntityState(eyeHeight=$eyeHeight, speed=$speed)"
+        return "EntityState(eyeHeight=$eyeHeight, speed=$speed, width=$width, height=$height)"
     }
 }
 

@@ -6,6 +6,7 @@ import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.typewritermc.engine.paper.entry.entity.EntityPathingCapabilities
 import com.typewritermc.engine.paper.entry.entity.EntityState
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import com.typewritermc.entity.entries.data.minecraft.BoxSizeProperty
 import com.typewritermc.entity.entries.data.minecraft.PoseProperty
 import com.typewritermc.entity.entries.data.minecraft.SpeedProperty
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
@@ -477,8 +478,63 @@ private val generatedEntityDataMap = mapOf(
 private val manualEntityDataMap = mapOf(
     EntityDataMatcher(EntityTypes.PLAYER, pose = EntityPose.SITTING) to EntityData(
         width = 0.6,
-        height = 1.8,
-        eyeHeight = 1.62
+        height = 1.3,
+        eyeHeight = 1.02
+    ),
+    EntityDataMatcher(EntityTypes.ZOMBIE, isBaby = false, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.3,
+        eyeHeight = 1.02
+    ),
+    EntityDataMatcher(EntityTypes.ZOMBIE, isBaby = true, pose = EntityPose.SITTING) to EntityData(
+        width = 0.46,
+        height = 0.8,
+        eyeHeight = 0.54
+    ),
+    EntityDataMatcher(EntityTypes.HUSK, isBaby = false, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.4,
+        eyeHeight = 1.12
+    ),
+    EntityDataMatcher(EntityTypes.HUSK, isBaby = true, pose = EntityPose.SITTING) to EntityData(
+        width = 0.46,
+        height = 0.8,
+        eyeHeight = 0.54
+    ),
+    EntityDataMatcher(EntityTypes.SKELETON, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.3,
+        eyeHeight = 1.02
+    ),
+    EntityDataMatcher(EntityTypes.PILLAGER, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.35,
+        eyeHeight = 1.02
+    ),
+    EntityDataMatcher(EntityTypes.VINDICATOR, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.35,
+        eyeHeight = 1.02
+    ),
+    EntityDataMatcher(EntityTypes.ILLUSIONER, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.35,
+        eyeHeight = 1.02
+    ),
+    EntityDataMatcher(EntityTypes.PIGLIN, isBaby = false, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.3,
+        eyeHeight = 1.09
+    ),
+    EntityDataMatcher(EntityTypes.PIGLIN, isBaby = true, pose = EntityPose.SITTING) to EntityData(
+        width = 0.48,
+        height = 0.8,
+        eyeHeight = 0.54
+    ),
+    EntityDataMatcher(EntityTypes.PIGLIN_BRUTE, pose = EntityPose.SITTING) to EntityData(
+        width = 0.6,
+        height = 1.3,
+        eyeHeight = 1.09
     ),
     EntityDataMatcher(EntityTypes.CAT, isBaby = false, pose = EntityPose.SITTING) to EntityData(
         width = 0.6,
@@ -494,15 +550,17 @@ private val manualEntityDataMap = mapOf(
     EntityDataMatcher(EntityTypes.CAT, isBaby = false) to EntityData(width = 0.6, height = 0.7, eyeHeight = 0.48),
 )
 
-private val entityDataMap = generatedEntityDataMap + manualEntityDataMap
+private val entityDataMap = manualEntityDataMap + generatedEntityDataMap
 
-private fun EntityType.pose(properties: Map<KClass<*>, EntityProperty>): EntityPose {
-    val pose = properties.property(PoseProperty::class)?.pose
-    if (pose != null) return pose
+private fun pose(properties: Map<KClass<*>, EntityProperty>): EntityPose {
     val isSitting = properties.property(SittingProperty::class)?.sitting
     if (isSitting == true) return EntityPose.SITTING
     val isSleeping = properties.property(SleepingProperty::class)?.sleeping
     if (isSleeping == true) return EntityPose.SLEEPING
+
+    val pose = properties.property(PoseProperty::class)?.pose
+    if (pose != null) return pose
+
     return EntityPose.STANDING
 }
 
@@ -533,27 +591,38 @@ private val EntityDataMatcher.eyeHeight: Double
 
 fun EntityType.state(properties: Map<KClass<*>, EntityProperty>): EntityState {
     val matcher = matcher(properties)
+    val scale = properties.property(ScaleProperty::class)?.scale ?: 1.0
+    val boxSize = properties.property(BoxSizeProperty::class)
+
     return EntityState(
-        eyeHeight = matcher.eyeHeight * (properties.property(ScaleProperty::class)?.scale ?: 1.0),
+        eyeHeight = matcher.eyeHeight * scale,
         speed = properties.property(SpeedProperty::class)?.speed ?: 0.2085f,
+        width = (boxSize?.width ?: matcher.width) * scale,
+        height = (boxSize?.height ?: matcher.height) * scale,
     )
 }
 
-fun EntityType.width(properties: Map<KClass<*>, EntityProperty>): Double {
-    return matcher(properties).width * (properties.property(ScaleProperty::class)?.scale ?: 1.0)
+private fun EntityDataMatcher.width(properties: Map<KClass<*>, EntityProperty>): Double {
+    val scale = properties.property(ScaleProperty::class)?.scale ?: 1.0
+    val boxSize = properties.property(BoxSizeProperty::class)
+    return (boxSize?.width ?: width) * scale
 }
 
-fun EntityType.height(properties: Map<KClass<*>, EntityProperty>): Double {
-    return matcher(properties).height * (properties.property(ScaleProperty::class)?.scale ?: 1.0)
+private fun EntityDataMatcher.height(properties: Map<KClass<*>, EntityProperty>): Double {
+    val scale = properties.property(ScaleProperty::class)?.scale ?: 1.0
+    val boxSize = properties.property(BoxSizeProperty::class)
+    return (boxSize?.height ?: height) * scale
 }
 
-fun EntityType.eyeHeight(properties: Map<KClass<*>, EntityProperty>): Double {
-    return matcher(properties).eyeHeight * (properties.property(ScaleProperty::class)?.scale ?: 1.0)
+private fun EntityDataMatcher.eyeHeight(properties: Map<KClass<*>, EntityProperty>): Double {
+    val scale = properties.property(ScaleProperty::class)?.scale ?: 1.0
+    return eyeHeight * scale
 }
 
 fun EntityType.pathingCapabilities(properties: Map<KClass<*>, EntityProperty>): EntityPathingCapabilities {
+    val matcher = matcher(properties)
     return EntityPathingCapabilities.DEFAULT.copy(
-        width = this.width(properties),
-        height = this.height(properties)
+        width = matcher.width(properties),
+        height = matcher.height(properties)
     )
 }
