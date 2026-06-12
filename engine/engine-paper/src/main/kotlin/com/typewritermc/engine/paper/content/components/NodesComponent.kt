@@ -81,7 +81,7 @@ class NodesComponent<N>(
 
     @EventHandler
     private fun onFakeEntityInteract(event: AsyncFakeEntityInteract) {
-        if (event.hand != InteractionHand.MAIN_HAND || event.action == WrapperPlayClientInteractEntity.InteractAction.INTERACT_AT) return
+        if (event.hand != InteractionHand.MAIN_HAND || event.action == WrapperPlayClientInteractEntity.InteractAction.INTERACT) return
         val entityId = event.entityId
         nodes.values.firstOrNull { it.entityId == entityId }?.interact()
     }
