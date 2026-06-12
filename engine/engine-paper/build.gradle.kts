@@ -29,7 +29,8 @@ repositories {
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:26.1.2.build.63-stable")
+    val paperVersion = "1.21.11-R0.1-SNAPSHOT"
+    compileOnlyApi("io.papermc.paper:paper-api:$paperVersion")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
@@ -60,7 +61,7 @@ dependencies {
     compileOnlyApi("org.geysermc.geyser:api:2.9.5-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
 
-    testImplementation("io.papermc.paper:paper-api:26.1.2.build.63-stable")
+    testImplementation("io.papermc.paper:paper-api:$paperVersion")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0")
 }
 
