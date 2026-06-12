@@ -2,7 +2,7 @@
 
 [![Discord](https://img.shields.io/discord/1054708062520360960?label=discord&logo=discord&logoColor=white)](https://discord.gg/HtbKyuDDBw)
 
-Typewriter is a plugin for Paper Minecraft servers that enables you to create immersive and interactive gameplay experiences, such as custom quests, NPC dialogues, and cinematic events, all while maintaining a simple and powerful interface.
+Typewriter is a plugin for Paper and Folia Minecraft servers that enables you to create immersive and interactive gameplay experiences, such as custom quests, NPC dialogues, and cinematic events, all while maintaining a simple and powerful interface.
 
 ## Features
 
