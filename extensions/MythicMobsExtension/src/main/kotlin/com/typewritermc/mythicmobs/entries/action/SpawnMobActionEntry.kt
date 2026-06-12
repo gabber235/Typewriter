@@ -49,15 +49,18 @@ class SpawnMobActionEntry(
         if (!mob.isPresent) return
 
         val location = spawnLocation.get(player, context).toBukkitLocation()
+        val mobLevel = level.get(player, context)
         location.syncDispatcher.launch {
             mob.get().spawn(
                 BukkitAdapter.adapt(location),
-                level.get(player, context),
+                mobLevel,
                 SpawnReason.OTHER
-            ) {
+            ) { spawned ->
                 if (onlyVisibleForPlayer) {
-                    it.isVisibleByDefault = false
-                    player.showEntity(plugin, it)
+                    spawned.isVisibleByDefault = false
+                    player.syncDispatcher.launch {
+                        player.showEntity(plugin, spawned)
+                    }
                 }
             }
         }

@@ -407,7 +407,16 @@ class EntityCinematicRecording(
     }
 
     override fun applyState(value: EntityFrame) {
-        value.location?.let { player.teleportAsync(it.toBukkitLocation(player.world)) }
+        val location = value.location
+        if (location == null) {
+            applyNonLocationState(value)
+            return
+        }
+        player.teleportAsync(location.toBukkitLocation(player.world))
+            .thenRun { applyNonLocationState(value) }
+    }
+
+    private fun applyNonLocationState(value: EntityFrame) {
         value.pose?.let {
             player.pose = it.toBukkitPose()
             player.isGliding = it == EntityPose.SWIMMING

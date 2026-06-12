@@ -49,8 +49,8 @@ class PotionEffectAudienceDisplay(
 ) : AudienceDisplay(), TickableDisplay {
     private val strengths = ConcurrentHashMap<UUID, Int>()
     override fun onPlayerAdd(player: Player) {
-        val strength = strength.get(player).coerceAtLeast(1) - 1
         player.syncDispatcher.launch {
+            val strength = strength.get(player).coerceAtLeast(1) - 1
             player.removePotionEffect(potionEffect)
             player.addPotionEffect(
                 PotionEffect(
@@ -62,20 +62,20 @@ class PotionEffectAudienceDisplay(
                     icon
                 )
             )
+            strengths[player.uniqueId] = strength
         }
-        strengths[player.uniqueId] = strength
     }
 
     override fun tick() {
         strengths.forEach { (playerId, strength) ->
             val player = server.getPlayer(playerId) ?: return@forEach
-            val newStrength = this.strength.get(player).coerceAtLeast(1) - 1
-            if (strength == newStrength) return@forEach
             player.syncDispatcher.launch {
+                val newStrength = this@PotionEffectAudienceDisplay.strength.get(player).coerceAtLeast(1) - 1
+                if (strength == newStrength) return@launch
                 player.removePotionEffect(potionEffect)
                 player.addPotionEffect(potionEffect.createEffect(PotionEffect.INFINITE_DURATION, newStrength))
+                strengths[playerId] = newStrength
             }
-            strengths[playerId] = newStrength
         }
     }
 

@@ -116,8 +116,12 @@ class LockInteractionBound(
 
         player.switchContext {
             server.onlinePlayers.forEach {
-                it.hidePlayer(plugin, player)
                 player.hidePlayer(plugin, it)
+            }
+        }
+        server.onlinePlayers.forEach { other ->
+            other.switchContext {
+                other.hidePlayer(plugin, player)
             }
         }
 

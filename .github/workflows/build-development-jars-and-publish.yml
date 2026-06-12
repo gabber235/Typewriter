@@ -91,6 +91,7 @@ jobs:
           version-type: "beta"
           loaders: |
             paper
+            folia
           game-versions: |
             [1.21.3, 26.1.2]
           dependencies: |

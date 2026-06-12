@@ -11,6 +11,7 @@ import com.github.retrooper.packetevents.util.Dummy
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
@@ -62,8 +63,11 @@ enum class GenericPlayerStateProvider(private val store: Player.() -> Any, priva
         server.onlinePlayers.filter { it != this && it.canSee(this) }.map { it.uniqueId.toString() }.toList()
     }, { data ->
         val showing = data as List<*>
-        server.onlinePlayers.filter { it != this && it.uniqueId.toString() in showing }
-            .forEach { it.showPlayer(plugin, this) }
+        val self = this
+        server.onlinePlayers.filter { it != self && it.uniqueId.toString() in showing }
+            .forEach { other ->
+                other.syncDispatcher.launch { other.showPlayer(plugin, self) }
+            }
     })
     ;
 

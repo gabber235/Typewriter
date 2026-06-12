@@ -42,9 +42,12 @@ class SetBlockActionEntry(
     val location: Var<Position> = ConstVar(Position.ORIGIN),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        val bukkitLocation = location.get(player, context).toBukkitLocation()
-        bukkitLocation.syncDispatcher.launch {
-            bukkitLocation.block.type = material.get(player, context)
+        player.syncDispatcher.launch {
+            val bukkitLocation = location.get(player, context).toBukkitLocation()
+            val blockMaterial = material.get(player, context)
+            bukkitLocation.syncDispatcher.launch {
+                bukkitLocation.block.type = blockMaterial
+            }
         }
     }
 }

@@ -6,6 +6,8 @@ import com.github.shynixn.mccoroutine.folia.globalRegionDispatcher
 import com.github.shynixn.mccoroutine.folia.regionDispatcher
 import com.github.shynixn.mccoroutine.folia.registerSuspendingEvents
 import com.typewritermc.core.utils.TypewriterDispatcher
+import com.typewritermc.core.utils.point.Point
+import com.typewritermc.core.utils.point.WorldHolder
 import com.typewritermc.engine.paper.plugin
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -56,16 +58,27 @@ suspend fun <T> Location.switchContext(block: suspend CoroutineScope.() -> T): T
     withContext(plugin.regionDispatcher(this), block)
 
 /**
+ * Dispatcher that ticks with the region owning this point on Folia.
+ * Falls back to the main thread on Paper.
+ */
+val <PW> PW.syncDispatcher: CoroutineContext where PW : Point<PW>, PW : WorldHolder<PW>
+    get() = plugin.regionDispatcher(world.toBukkitWorld(), blockX shr 4, blockZ shr 4)
+
+/** Runs [block] on the thread that owns the region of this point. */
+suspend fun <PW, T> PW.switchContext(block: suspend CoroutineScope.() -> T): T where PW : Point<PW>, PW : WorldHolder<PW> =
+    withContext(plugin.regionDispatcher(world.toBukkitWorld(), blockX shr 4, blockZ shr 4), block)
+
+/**
  * Registers a suspending listener with an automatically derived event-dispatcher map.
  * Folia requires every handled event class to be mapped to the scheduler that owns it:
  * player events run on the player's entity scheduler, entity events on the entity's,
  * block events on the owning region, everything else on the global region.
  */
 fun PluginManager.registerSuspendingEvents(listener: Listener, plugin: Plugin) {
-    registerSuspendingEvents(listener, plugin, eventDispatchersFor(listener))
+    registerSuspendingEvents(listener, plugin, eventDispatchersFor(plugin, listener))
 }
 
-private val eventContextResolver: (Event) -> CoroutineContext = { event ->
+private fun eventContextResolver(plugin: Plugin): (Event) -> CoroutineContext = { event ->
     when (event) {
         is PlayerEvent -> plugin.entityDispatcher(event.player)
         is EntityEvent -> plugin.entityDispatcher(event.entity)
@@ -74,12 +87,17 @@ private val eventContextResolver: (Event) -> CoroutineContext = { event ->
     }
 }
 
-private fun eventDispatchersFor(listener: Listener): Map<Class<out Event>, (Event) -> CoroutineContext> =
-    generateSequence<Class<*>>(listener.javaClass) { it.superclass }
+private fun eventDispatchersFor(
+    plugin: Plugin,
+    listener: Listener,
+): Map<Class<out Event>, (Event) -> CoroutineContext> {
+    val resolver = eventContextResolver(plugin)
+    return generateSequence<Class<*>>(listener.javaClass) { it.superclass }
         .flatMap { it.declaredMethods.asSequence() }
         .filter { it.getAnnotation(EventHandler::class.java) != null }
         .filter { it.parameterCount >= 1 && Event::class.java.isAssignableFrom(it.parameterTypes[0]) }
         .associate {
             @Suppress("UNCHECKED_CAST")
-            (it.parameterTypes[0] as Class<out Event>) to eventContextResolver
+            (it.parameterTypes[0] as Class<out Event>) to resolver
         }
+}

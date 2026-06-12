@@ -46,7 +46,6 @@ class DropItemActionEntry(
             player.location
         }
         val item = item.get(player, context).build(player, context)
-        // Run on the thread that owns the region of the location
         location.syncDispatcher.launch {
             location.world.dropItem(location, item)
         }

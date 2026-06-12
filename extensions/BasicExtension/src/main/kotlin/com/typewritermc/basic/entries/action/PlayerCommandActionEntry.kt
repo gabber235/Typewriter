@@ -47,18 +47,20 @@ class PlayerCommandActionEntry(
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         val command = command.get(player, context)
-        // Run on the player's thread
         if (command.isBlank()) return
         player.syncDispatcher.launch {
             val attachment = if (sudo) {
                 player.addAttachment(plugin)
             } else null
-            attachment?.setPermission("*", true)
-            val commands = command.parsePlaceholders(player).lines()
-            for (cmd in commands) {
-                server.dispatchCommand(player, cmd)
+            try {
+                attachment?.setPermission("*", true)
+                val commands = command.parsePlaceholders(player).lines()
+                for (cmd in commands) {
+                    server.dispatchCommand(player, cmd)
+                }
+            } finally {
+                attachment?.remove()
             }
-            attachment?.remove()
         }
     }
 }
