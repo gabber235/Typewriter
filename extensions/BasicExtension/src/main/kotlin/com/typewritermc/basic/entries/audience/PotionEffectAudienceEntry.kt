@@ -5,9 +5,8 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.entry.entries.*
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.server
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -51,7 +50,7 @@ class PotionEffectAudienceDisplay(
     private val strengths = ConcurrentHashMap<UUID, Int>()
     override fun onPlayerAdd(player: Player) {
         val strength = strength.get(player).coerceAtLeast(1) - 1
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             player.removePotionEffect(potionEffect)
             player.addPotionEffect(
                 PotionEffect(
@@ -72,7 +71,7 @@ class PotionEffectAudienceDisplay(
             val player = server.getPlayer(playerId) ?: return@forEach
             val newStrength = this.strength.get(player).coerceAtLeast(1) - 1
             if (strength == newStrength) return@forEach
-            Dispatchers.Sync.launch {
+            player.syncDispatcher.launch {
                 player.removePotionEffect(potionEffect)
                 player.addPotionEffect(potionEffect.createEffect(PotionEffect.INFINITE_DURATION, newStrength))
             }
@@ -82,7 +81,7 @@ class PotionEffectAudienceDisplay(
 
     override fun onPlayerRemove(player: Player) {
         strengths.remove(player.uniqueId)
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             player.removePotionEffect(potionEffect)
         }
     }

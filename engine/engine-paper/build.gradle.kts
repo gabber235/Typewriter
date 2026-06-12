@@ -38,8 +38,8 @@ dependencies {
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
     api("me.tofaa2:spigot:3.2.0-SNAPSHOT")
-    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
-    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
+    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-folia-api:2.22.0")
+    compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-folia-core:2.22.0")
 
     // Doesn't want to load properly using the spigot api.
     compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.13")
@@ -159,7 +159,7 @@ paperPluginYaml {
     main = "com.typewritermc.engine.paper.TypewriterPaperPlugin"
     apiVersion = "1.21.3"
 
-    foliaSupported = false
+    foliaSupported = true
 
     dependencies {
         server("packetevents", load = PaperPluginYaml.Load.BEFORE, required = true, joinClasspath = true)

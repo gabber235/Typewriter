@@ -11,7 +11,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerChatMessage
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDisguisedChat
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSystemChatMessage
-import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
+import com.typewritermc.engine.paper.utils.registerSuspendingEvents
 import com.google.common.cache.CacheBuilder
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.plugin

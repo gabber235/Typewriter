@@ -11,9 +11,8 @@ import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.item.Item
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.syncDispatcher
 
 @Entry("set_item", "Set an item in a specific slot", Colors.RED, "fluent:tray-item-add-24-filled")
 /**
@@ -33,7 +32,7 @@ class SetItemActionEntry(
     val slot: Var<Int> = ConstVar(0),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             player.inventory.setItem(slot.get(player, context), item.get(player, context).build(player, context))
         }
     }

@@ -13,10 +13,9 @@ import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.item.Item
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import com.typewritermc.engine.paper.utils.toBukkitLocation
-import kotlinx.coroutines.Dispatchers
 import java.util.*
 
 @Entry("drop_item", "Drop an item at location, or on player", Colors.RED, "fa-brands:dropbox")
@@ -47,8 +46,8 @@ class DropItemActionEntry(
             player.location
         }
         val item = item.get(player, context).build(player, context)
-        // Run on main thread
-        Dispatchers.Sync.launch {
+        // Run on the thread that owns the region of the location
+        location.syncDispatcher.launch {
             location.world.dropItem(location, item)
         }
     }

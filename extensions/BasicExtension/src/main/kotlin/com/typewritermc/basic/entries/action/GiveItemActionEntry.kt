@@ -13,10 +13,9 @@ import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.item.Item
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.syncDispatcher
 
 private val dropMessage by snippet(
     "give_item.drop",
@@ -42,7 +41,7 @@ class GiveItemActionEntry(
     override fun ActionTrigger.execute() {
         // Build the item before modifying fact or continuing other triggers to ensure that the item is built with the correct state and context.
         val itemStack = item.get(player, context).build(player, context)
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             val leftOver = player.inventory.addItem(itemStack)
             leftOver.values.forEach {
                 player.world.dropItemNaturally(player.location, it)

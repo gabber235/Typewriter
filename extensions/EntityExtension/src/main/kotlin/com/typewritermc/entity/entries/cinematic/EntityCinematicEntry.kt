@@ -407,7 +407,7 @@ class EntityCinematicRecording(
     }
 
     override fun applyState(value: EntityFrame) {
-        value.location?.let { player.teleport(it.toBukkitLocation(player.world)) }
+        value.location?.let { player.teleportAsync(it.toBukkitLocation(player.world)) }
         value.pose?.let {
             player.pose = it.toBukkitPose()
             player.isGliding = it == EntityPose.SWIMMING

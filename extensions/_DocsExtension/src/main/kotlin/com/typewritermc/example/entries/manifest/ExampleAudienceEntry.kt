@@ -8,9 +8,8 @@ import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.TickableDisplay
 import com.typewritermc.engine.paper.entry.inAudience
-import com.typewritermc.engine.paper.utils.Sync
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import com.typewritermc.example.entries.trigger.SomeBukkitEvent
-import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 
@@ -65,9 +64,11 @@ class TickableAudienceDisplay : AudienceDisplay(), TickableDisplay {
         }
 
         // This is running asynchronously
-        // If you need to do something on the main thread
-        Dispatchers.Sync.launch {
-            // Though this will run a tick later, to sync with the bukkit scheduler.
+        // If you need to modify the player, do it on the player's scheduler
+        players.forEach { player ->
+            player.syncDispatcher.launch {
+                // Though this will run a tick later, to sync with the player's scheduler.
+            }
         }
     }
     // highlight-end

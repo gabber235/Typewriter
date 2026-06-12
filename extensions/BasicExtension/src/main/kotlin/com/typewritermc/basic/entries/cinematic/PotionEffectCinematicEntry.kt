@@ -5,13 +5,11 @@ import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Segments
-import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.utils.*
-import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -72,7 +70,7 @@ class PotionEffectCinematicAction(
         val potionEffectType = segment.potionEffectType.get(player, context)
         state = player.state(EffectStateProvider(potionEffectType))
 
-        Dispatchers.Sync.switchContext {
+        player.switchContext {
             player.addPotionEffect(
                 PotionEffect(
                     potionEffectType,
@@ -94,7 +92,7 @@ class PotionEffectCinematicAction(
     private suspend fun restoreState() {
         val state = state ?: return
         this.state = null
-        Dispatchers.Sync.switchContext {
+        player.switchContext {
             player.restore(state)
         }
     }

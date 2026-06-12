@@ -4,17 +4,15 @@ import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.MultiLine
 import com.typewritermc.core.extension.annotations.Placeholder
-import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.dialogue.playSpeakerSound
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.EXP
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.LEVEL
 import com.typewritermc.engine.paper.utils.PlayerState
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.restore
 import com.typewritermc.engine.paper.utils.state
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.switchContext
 import org.bukkit.entity.Player
 
 data class SingleLineDisplayDialogueSegment(
@@ -106,7 +104,7 @@ class DisplayDialogueCinematicAction(
         super.teardown()
         teardown?.invoke(player)
         reset?.invoke(player)
-        Dispatchers.Sync.switchContext {
+        player.switchContext {
             player.restore(state)
         }
     }

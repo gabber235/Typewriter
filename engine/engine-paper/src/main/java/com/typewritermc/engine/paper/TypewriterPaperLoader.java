@@ -30,9 +30,9 @@ public class TypewriterPaperLoader implements PluginLoader {
                 central);
 
         addDependency(classpathBuilder,
-                "com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0", central);
+                "com.github.shynixn.mccoroutine:mccoroutine-folia-api:2.22.0", central);
         addDependency(classpathBuilder,
-                "com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0", central);
+                "com.github.shynixn.mccoroutine:mccoroutine-folia-core:2.22.0", central);
 
         addDependency(classpathBuilder, "io.ktor:ktor-server-core-jvm:2.3.13", central);
         addDependency(classpathBuilder, "io.ktor:ktor-server-netty-jvm:2.3.13", central);

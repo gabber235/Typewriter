@@ -8,7 +8,6 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Regex
 import com.typewritermc.core.extension.annotations.Segments
-import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.CinematicAction
 import com.typewritermc.engine.paper.entry.entries.CinematicEntry
@@ -16,8 +15,7 @@ import com.typewritermc.engine.paper.entry.entries.Segment
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.interceptPackets
-import com.typewritermc.engine.paper.utils.Sync
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.switchContext
 import org.bukkit.entity.Player
 
 @Entry("block_command_cinematic", "Block commands during the cinematic", Colors.RED, "mdi:console")
@@ -85,7 +83,7 @@ class BlockCommandCinematicAction(
         bundle?.cancel()
         bundle = null
         if (ranCommands.isNotEmpty()) {
-            Dispatchers.Sync.switchContext {
+            player.switchContext {
                 ranCommands.forEach {
                     player.performCommand(it)
                 }

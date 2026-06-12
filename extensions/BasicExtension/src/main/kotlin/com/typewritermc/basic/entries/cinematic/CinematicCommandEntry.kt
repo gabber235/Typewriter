@@ -11,8 +11,10 @@ import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.Sync
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.bukkit.entity.Player
+import kotlin.coroutines.CoroutineContext
 
 interface CinematicCommandEntry : CinematicEntry {
     val segments: List<CommandSegment>
@@ -43,7 +45,8 @@ class CinematicConsoleCommandEntry(
     override fun create(player: Player): CinematicAction {
         return CommandAction(
             player,
-            this
+            this,
+            Dispatchers.Sync
         ) { command ->
             player.server.dispatchCommand(player.server.consoleSender, command)
         }
@@ -75,7 +78,8 @@ class CinematicPlayerCommandEntry(
     override fun create(player: Player): CinematicAction {
         return CommandAction(
             player,
-            this
+            this,
+            player.syncDispatcher
         ) { command ->
             player.performCommand(command)
         }
@@ -95,6 +99,7 @@ data class CommandSegment(
 class CommandAction(
     private val player: Player,
     entry: CinematicCommandEntry,
+    private val dispatcher: CoroutineContext,
     private val run: (String) -> Unit,
 ) : SimpleCinematicAction<CommandSegment>() {
     override val segments: List<CommandSegment> = entry.segments
@@ -102,7 +107,7 @@ class CommandAction(
     override suspend fun startSegment(segment: CommandSegment) {
         super.startSegment(segment)
         if (segment.command.isBlank()) return
-        Dispatchers.Sync.switchContext {
+        dispatcher.switchContext {
             val attachment = if (segment.sudo) {
                 player.addAttachment(plugin)
             } else null

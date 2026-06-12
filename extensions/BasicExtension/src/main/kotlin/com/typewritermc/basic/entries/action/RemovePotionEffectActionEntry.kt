@@ -11,8 +11,7 @@ import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.Sync
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import org.bukkit.potion.PotionEffectType
 
 @Entry(
@@ -37,7 +36,7 @@ class RemovePotionEffectActionEntry(
     val potionEffect: Var<PotionEffectType> = ConstVar(PotionEffectType.SPEED),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             player.removePotionEffect(potionEffect.get(player, context))
         }
     }

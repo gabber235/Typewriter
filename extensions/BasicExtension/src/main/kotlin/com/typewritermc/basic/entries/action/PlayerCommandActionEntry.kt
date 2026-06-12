@@ -16,9 +16,8 @@ import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.server
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.syncDispatcher
 
 @Entry("player_run_command", "Make player run command", Colors.RED, "mingcute:terminal-fill")
 /**
@@ -48,9 +47,9 @@ class PlayerCommandActionEntry(
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         val command = command.get(player, context)
-        // Run in main thread
+        // Run on the player's thread
         if (command.isBlank()) return
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             val attachment = if (sudo) {
                 player.addAttachment(plugin)
             } else null

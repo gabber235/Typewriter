@@ -1,6 +1,6 @@
 package com.typewritermc.engine.paper.interaction
 
-import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
+import com.typewritermc.engine.paper.utils.registerSuspendingEvents
 import com.typewritermc.core.interaction.*
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.entries.InteractionEndTrigger

@@ -1,6 +1,6 @@
 package lirand.api.extensions.server
 
-import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
+import com.typewritermc.engine.paper.utils.registerSuspendingEvents
 import org.bukkit.NamespacedKey
 import org.bukkit.event.Listener
 import org.bukkit.plugin.Plugin

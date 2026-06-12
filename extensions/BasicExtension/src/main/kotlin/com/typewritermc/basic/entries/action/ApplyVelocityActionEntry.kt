@@ -5,14 +5,15 @@ import com.typewritermc.engine.paper.entry.Modifier
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.utils.launch
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import com.typewritermc.engine.paper.utils.toBukkitVector
-import org.bukkit.entity.Player
 
 @Entry("apply_velocity", "Apply a velocity to the player", Colors.RED, "fa-solid:wind")
 /**
@@ -31,6 +32,9 @@ class ApplyVelocityActionEntry(
     val force: Var<Vector> = ConstVar(Vector(0.0, 0.0, 0.0)),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        player.velocity = player.velocity.add(force.get(player, context).toBukkitVector())
+        val force = force.get(player, context).toBukkitVector()
+        player.syncDispatcher.launch {
+            player.velocity = player.velocity.add(force)
+        }
     }
 }

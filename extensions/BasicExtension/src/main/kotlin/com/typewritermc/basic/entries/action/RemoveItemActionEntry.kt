@@ -14,12 +14,11 @@ import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.item.CustomItem
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.item.SerializedItem
 import com.typewritermc.engine.paper.utils.item.components.ItemAmountComponent
-import kotlinx.coroutines.Dispatchers
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import kotlin.reflect.KClass
 
 @Entry("remove_item", "Remove an item from the players inventory", Colors.RED, "icomoon-free:user-minus")
@@ -47,7 +46,7 @@ class RemoveItemActionEntry(
     val item: Var<Item> = ConstVar(Item.Empty),
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
-        Dispatchers.Sync.launch {
+        player.syncDispatcher.launch {
             val item = item.get(player, context)
             var removedAmount = 0
             var remainingAmount = 0

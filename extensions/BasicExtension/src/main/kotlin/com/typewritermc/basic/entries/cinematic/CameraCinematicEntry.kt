@@ -12,7 +12,6 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.interaction.*
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.core.utils.switchContext
 import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
@@ -25,7 +24,6 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.*
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import lirand.api.extensions.events.SimpleListener
 import lirand.api.extensions.events.listen
@@ -211,7 +209,7 @@ class CameraCinematicAction(
             context[PlayerPositionOverride] = position
         }
 
-        Dispatchers.Sync.switchContext {
+        switchContext {
             allowFlight = true
             isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
@@ -278,7 +276,7 @@ class CameraCinematicAction(
         listener?.unregister()
         listener = null
 
-        Dispatchers.Sync.switchContext {
+        switchContext {
             interceptor?.cancel()
             interceptor = null
 
@@ -376,8 +374,10 @@ private class DisplayCameraAction(
         setupPath(segment)
 
         player.teleportAsync(path.first().position.toBukkitLocation()).await()
-        player.allowFlight = true
-        player.isFlying = true
+        player.switchContext {
+            player.allowFlight = true
+            player.isFlying = true
+        }
 
         entity.spawn(path.first().position.toPacketLocation())
         entity.addViewer(player.uniqueId)
@@ -448,8 +448,8 @@ private class TeleportCameraAction(
 
     override suspend fun tickSegment(frame: Int) {
         val position = path.interpolate(frame)
-        Dispatchers.Sync.switchContext {
-            player.teleport(position.toBukkitLocation())
+        player.teleportAsync(position.toBukkitLocation()).await()
+        player.switchContext {
             player.allowFlight = true
             player.isFlying = true
         }

@@ -13,9 +13,8 @@ import com.typewritermc.engine.paper.entry.entries.ActionEntry
 import com.typewritermc.engine.paper.entry.entries.ActionTrigger
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.utils.TickedAsync
+import com.typewritermc.engine.paper.utils.syncDispatcher
 import com.typewritermc.engine.paper.utils.toBukkitLocation
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 
 @Entry("teleport", "Teleport a player", Colors.RED, "teenyicons:google-streetview-solid")
@@ -37,7 +36,7 @@ class TeleportActionEntry(
 ) : ActionEntry {
     override fun ActionTrigger.execute() {
         disableAutomaticTriggering()
-        Dispatchers.TickedAsync.launch {
+        player.syncDispatcher.launch {
             player.teleportAsync(location.get(player, context).toBukkitLocation()).await()
             applyModifiers()
             triggerManually()

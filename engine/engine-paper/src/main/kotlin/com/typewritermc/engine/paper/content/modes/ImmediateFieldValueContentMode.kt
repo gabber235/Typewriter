@@ -1,6 +1,7 @@
 package com.typewritermc.engine.paper.content.modes
 
-import com.github.shynixn.mccoroutine.bukkit.launch
+import com.github.shynixn.mccoroutine.folia.entityDispatcher
+import com.github.shynixn.mccoroutine.folia.launch
 import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.utils.failure
@@ -32,7 +33,7 @@ abstract class ImmediateFieldValueContentMode<T : Any>(context: ContentContext, 
             ?: return failure("No fieldPath found for ${this::class.simpleName}. This is a bug. Please report it.")
 
         // Needs to complete the initialisation so that we can properly get the value and end the content mode
-        plugin.launch {
+        plugin.launch(plugin.entityDispatcher(player)) {
             delay(200.milliseconds)
             try {
                 val value = value()
