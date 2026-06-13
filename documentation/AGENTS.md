@@ -4,9 +4,15 @@ Astro 6 + Starlight documentation site using TypeScript, Tailwind CSS 4, and Bun
 
 ## Validation
 
-Run `bun check` (alias for `astro check`) to validate TypeScript and Astro files. **Never start the dev server** (`bun dev`, `bun start`, `astro dev`). Only use `bun check` for validation.
+Run `bun run validate` to validate everything — it chains `biome check .` (formatting, linting, import organization) and `astro check` (TypeScript and Astro types). This is the gate to run before committing and in CI; it is read-only and exits non-zero if anything is off.
 
-Parse check output in this format:
+Run `bun run fix` to auto-apply every Biome fix and then re-run `astro check` to confirm types still pass.
+
+Narrower scripts when you need them: `bun check` (types only, alias for `astro check`), `bun run format` / `bun run lint` (Biome write/read), `bun run biome` / `bun run biome:fix`.
+
+**Never start the dev server** (`bun dev`, `bun start`, `astro dev`). Only use the validation scripts above.
+
+`astro check` output is in this format:
 
 ```bash
 src/components/header/ThemeSelect.astro:191:5 - error ts(2304): Cannot find name 'StarlightThemeProvider'.

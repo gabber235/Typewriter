@@ -1,10 +1,10 @@
-import { z } from 'astro/zod';
+import { z } from "astro/zod";
 
 /**
  * Available badge variants for the documentation.
  * Only supports: new, experimental, deprecated
  */
-export const badgeVariants = ['new', 'experimental', 'deprecated'] as const;
+export const badgeVariants = ["new", "experimental", "deprecated"] as const;
 
 export type BadgeVariant = (typeof badgeVariants)[number];
 

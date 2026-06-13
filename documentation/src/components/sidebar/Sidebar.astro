@@ -1,10 +1,10 @@
 ---
-import SidebarList from "./SidebarList.astro";
 import { processSidebarBadges } from "../badge";
+import SidebarList from "./SidebarList.astro";
 
 const { sidebar } = Astro.locals.starlightRoute;
 const sidebarWithBadges = await processSidebarBadges(
-  sidebar as Parameters<typeof processSidebarBadges>[0],
+	sidebar as Parameters<typeof processSidebarBadges>[0],
 );
 ---
 

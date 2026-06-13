@@ -1,15 +1,15 @@
 ---
 import {
-  type AsideVariant,
-  defaultTitles,
-  variantStyles,
-  icons,
-  asideClasses,
+	type AsideVariant,
+	asideClasses,
+	defaultTitles,
+	icons,
+	variantStyles,
 } from "./aside-config";
 
 interface Props {
-  type?: AsideVariant;
-  title?: string;
+	type?: AsideVariant;
+	title?: string;
 }
 
 const { type = "info", title } = Astro.props;

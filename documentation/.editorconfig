@@ -1,0 +1,21 @@
+# EditorConfig — keeps formatting identical across Linux, macOS and Windows.
+# https://editorconfig.org · Biome reads this too (formatter.useEditorconfig).
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = tab
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Markdown: two trailing spaces are a hard line break, so keep them.
+[*.md]
+trim_trailing_whitespace = false
+
+# Lockfiles and generated output are not hand-edited.
+[{bun.lock,package-lock.json,pnpm-lock.yaml,yarn.lock}]
+indent_style = space
+indent_size = 2

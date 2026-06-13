@@ -3,42 +3,42 @@ import SidebarItem from "./SidebarItem.astro";
 import type { LinkEntry, SidebarEntry } from "./types";
 
 interface Props {
-  sublist: Array<SidebarEntry>;
-  nested?: boolean;
-  level?: number;
+	sublist: Array<SidebarEntry>;
+	nested?: boolean;
+	level?: number;
 }
 
 const { sublist, level = 1 } = Astro.props as Props;
 
 const filteredSublist = sublist.filter(
-  (entry) => entry.type !== "link" || entry.href !== "/",
+	(entry) => entry.type !== "link" || entry.href !== "/",
 );
 
 function formatLabel(label: string): string {
-  return label
-    .replace(/^\d+-/, "")
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+	return label
+		.replace(/^\d+-/, "")
+		.replace(/-/g, " ")
+		.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function processGroupEntries(entries: Array<SidebarEntry>) {
-  const indexEntry = entries.find(
-    (e) =>
-      e.type === "link" && (e.href.endsWith("/") || e.href.endsWith("/index")),
-  ) as LinkEntry | undefined;
+	const indexEntry = entries.find(
+		(e) =>
+			e.type === "link" && (e.href.endsWith("/") || e.href.endsWith("/index")),
+	) as LinkEntry | undefined;
 
-  const filteredEntries = entries.filter((e) => e !== indexEntry);
-  const groupHref = indexEntry?.href;
-  const isCurrent = indexEntry?.isCurrent || false;
-  const renderAsLink = filteredEntries.length === 0 && indexEntry;
+	const filteredEntries = entries.filter((e) => e !== indexEntry);
+	const groupHref = indexEntry?.href;
+	const isCurrent = indexEntry?.isCurrent || false;
+	const renderAsLink = filteredEntries.length === 0 && indexEntry;
 
-  return { filteredEntries, groupHref, isCurrent, renderAsLink, indexEntry };
+	return { filteredEntries, groupHref, isCurrent, renderAsLink, indexEntry };
 }
 
 function hasCurrentDescendant(entries: Array<SidebarEntry>): boolean {
-  return entries.some((e) =>
-    e.type === "link" ? Boolean(e.isCurrent) : hasCurrentDescendant(e.entries),
-  );
+	return entries.some((e) =>
+		e.type === "link" ? Boolean(e.isCurrent) : hasCurrentDescendant(e.entries),
+	);
 }
 ---
 

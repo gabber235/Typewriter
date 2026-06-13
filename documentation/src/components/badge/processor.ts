@@ -1,18 +1,18 @@
-import { getCollection } from 'astro:content';
-import { getBadge } from './styles';
-import type { Badge, BadgeVariant } from './types';
+import { getCollection } from "astro:content";
+import { getBadge } from "./styles";
+import type { Badge, BadgeVariant } from "./types";
 
 interface LinkEntry {
-	type: 'link';
+	type: "link";
 	label: string;
 	href: string;
-	attrs?: Record<string, any>;
+	attrs?: Record<string, string | number | boolean | undefined>;
 	isCurrent?: boolean;
 	badge?: Badge;
 }
 
 interface GroupEntry {
-	type: 'group';
+	type: "group";
 	label: string;
 	entries: Array<LinkEntry | GroupEntry>;
 	collapsed?: boolean;
@@ -25,9 +25,11 @@ type SidebarEntry = LinkEntry | GroupEntry;
  * Process sidebar entries to add badges from frontmatter.
  * Call this in Sidebar.astro to merge badge data into the sidebar.
  */
-export async function processSidebarBadges(sidebar: SidebarEntry[]): Promise<SidebarEntry[]> {
+export async function processSidebarBadges(
+	sidebar: SidebarEntry[],
+): Promise<SidebarEntry[]> {
 	// Get all docs entries to access badge frontmatter
-	const docsEntries = await getCollection('docs');
+	const docsEntries = await getCollection("docs");
 
 	// Create a map of href to badge variant
 	const badgeMap = new Map<string, BadgeVariant>();
@@ -35,7 +37,7 @@ export async function processSidebarBadges(sidebar: SidebarEntry[]): Promise<Sid
 		const badge = entry.data.badge as BadgeVariant | undefined;
 		if (badge) {
 			// Convert slug to href format (e.g., "guides/03-test/index" -> "/guides/03-test/")
-			const href = '/' + entry.id.replace(/\/index$/, '').replace(/\.mdx?$/, '') + '/';
+			const href = `/${entry.id.replace(/\/index$/, "").replace(/\.mdx?$/, "")}/`;
 			badgeMap.set(href, badge);
 		}
 	}
@@ -43,7 +45,7 @@ export async function processSidebarBadges(sidebar: SidebarEntry[]): Promise<Sid
 	// Recursively merge badges into sidebar entries
 	function mergeBadges(entries: SidebarEntry[]): SidebarEntry[] {
 		return entries.map((entry) => {
-			if (entry.type === 'link') {
+			if (entry.type === "link") {
 				const variant = badgeMap.get(entry.href);
 				const badge = getBadge(variant);
 				if (badge && !entry.badge) {
@@ -53,7 +55,9 @@ export async function processSidebarBadges(sidebar: SidebarEntry[]): Promise<Sid
 			} else {
 				// Group entry - check for index page badge and recurse
 				const indexHref = entry.entries.find(
-					(e): e is LinkEntry => e.type === 'link' && (e.href.endsWith('/') || e.href.endsWith('/index'))
+					(e): e is LinkEntry =>
+						e.type === "link" &&
+						(e.href.endsWith("/") || e.href.endsWith("/index")),
 				)?.href;
 
 				const variant = indexHref ? badgeMap.get(indexHref) : undefined;

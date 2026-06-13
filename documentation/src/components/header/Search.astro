@@ -2,19 +2,19 @@
 import project from "virtual:starlight/project-context";
 
 const pagefindTranslations = {
-  placeholder: Astro.locals.t("search.label"),
-  ...Object.fromEntries(
-    Object.entries(Astro.locals.t.all())
-      .filter(([key]) => key.startsWith("pagefind."))
-      .map(([key, value]) => [key.replace("pagefind.", ""), value]),
-  ),
+	placeholder: Astro.locals.t("search.label"),
+	...Object.fromEntries(
+		Object.entries(Astro.locals.t.all())
+			.filter(([key]) => key.startsWith("pagefind."))
+			.map(([key, value]) => [key.replace("pagefind.", ""), value]),
+	),
 };
 
 const dataAttributes: Record<string, string> = {
-  "data-translations": JSON.stringify(pagefindTranslations),
+	"data-translations": JSON.stringify(pagefindTranslations),
 };
 if (project.trailingSlash === "never")
-  dataAttributes["data-strip-trailing-slash"] = "";
+	dataAttributes["data-strip-trailing-slash"] = "";
 
 const searchLabel = Astro.locals.t("search.label");
 const cancelLabel = Astro.locals.t("search.cancelLabel");

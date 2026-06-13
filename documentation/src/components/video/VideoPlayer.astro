@@ -1,27 +1,27 @@
 ---
-import type { VideoPlayerProps } from "./types";
+import { fullscreenIcon, playIcon, volumeHighIcon } from "./icons";
 import { videoStyles as s } from "./styles";
-import { playIcon, volumeHighIcon, fullscreenIcon } from "./icons";
+import type { VideoPlayerProps } from "./types";
 
 interface Props extends VideoPlayerProps {}
 
 const {
-  src,
-  poster,
-  audio = false,
-  loop = !audio,
-  chapters = [],
+	src,
+	poster,
+	audio = false,
+	loop = !audio,
+	chapters = [],
 } = Astro.props;
 
 const videos = import.meta.glob<string>("/src/assets/**/*.{webm,mp4,ogg,mov}", {
-  eager: true,
-  import: "default",
+	eager: true,
+	import: "default",
 });
 
 function resolveVideoSrc(input: string): string {
-  if (!input.startsWith("@assets/")) return input;
-  const key = `/src/assets/${input.slice("@assets/".length)}`;
-  return videos[key] ?? input;
+	if (!input.startsWith("@assets/")) return input;
+	const key = `/src/assets/${input.slice("@assets/".length)}`;
+	return videos[key] ?? input;
 }
 
 const videoSrc = resolveVideoSrc(src);

@@ -3,19 +3,19 @@ import type { Badge } from "../badge";
 import { getBadgeClasses } from "../badge";
 
 const {
-  label,
-  href,
-  isCurrent = false,
-  level = 1,
-  isGroup = false,
-  hasCurrentDescendant = false,
-  badge,
+	label,
+	href,
+	isCurrent = false,
+	level = 1,
+	isGroup = false,
+	hasCurrentDescendant = false,
+	badge,
 } = Astro.props;
 
 const paddingLeftValue = (level - 1) * 12; // 12px per level starting at 12px
 const groupId = isGroup
-  ? `sidebar-group-${(href || label).replace(/[^a-zA-Z0-9]/g, "-")}`
-  : undefined;
+	? `sidebar-group-${(href || label).replace(/[^a-zA-Z0-9]/g, "-")}`
+	: undefined;
 
 // Badge is already normalized from processor
 const badgeData = badge as Badge | undefined;

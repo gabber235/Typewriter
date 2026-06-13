@@ -72,9 +72,10 @@ Targeted testing:
 task test FILTER=test_name   # Run specific test by name
 ```
 
-### Documentation
+### Documentation (run from `documentation/`)
 ```bash
-npm run test                 # Validate docs build
+bun run validate             # Biome (format + lint) + astro check — the gate
+bun run fix                  # Auto-apply Biome fixes, then re-check types
 ```
 
 ## WHERE TO LOOK

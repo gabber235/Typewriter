@@ -2,9 +2,9 @@
 import type { TocItem } from "./types";
 
 interface Props {
-  toc: TocItem[];
-  depth?: number;
-  isMobile?: boolean;
+	toc: TocItem[];
+	depth?: number;
+	isMobile?: boolean;
 }
 
 const { toc, isMobile = false, depth = 0 } = Astro.props;

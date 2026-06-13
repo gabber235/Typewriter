@@ -3,16 +3,16 @@ import config from "virtual:starlight/user-config";
 
 import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
 import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
+import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import Search from "./Search.astro";
 import SiteTitle from "./SiteTitle.astro";
-import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import ThemeSelect from "./ThemeSelect.astro";
+
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
  */
 const shouldRenderSearch =
-  config.pagefind ||
-  config.components.Search !== "./Search.astro";
+	config.pagefind || config.components.Search !== "./Search.astro";
 ---
 
 <div

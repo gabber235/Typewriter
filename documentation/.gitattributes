@@ -1,0 +1,36 @@
+# Normalize line endings across Linux, macOS and Windows.
+# Text files are stored with LF in the repo and checked out with LF
+# everywhere, so Biome's `lineEnding: "lf"` never fights git.
+* text=auto eol=lf
+
+# Explicit text types (belt-and-suspenders for git's auto-detection).
+*.ts       text eol=lf
+*.tsx      text eol=lf
+*.js       text eol=lf
+*.mjs      text eol=lf
+*.cjs      text eol=lf
+*.astro    text eol=lf
+*.css      text eol=lf
+*.json     text eol=lf
+*.md       text eol=lf
+*.mdx      text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.svg      text eol=lf
+
+# Binary assets — never touch line endings or attempt diffs.
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.webp     binary
+*.ico      binary
+*.webm     binary
+*.mp4      binary
+*.woff     binary
+*.woff2    binary
+*.ttf      binary
+*.eot      binary
+
+# Lockfile: text, but excluded from language stats and diffs.
+bun.lock   text eol=lf -diff linguist-generated
