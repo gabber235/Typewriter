@@ -1894,6 +1894,54 @@ Success
 
 Happy brewing! May your potions be potent and your explosions be minor.
 
+# Steps Test Page
+
+> A page to test the Steps component for sequential instructions.
+
+## Basic Steps
+
+[Section titled “Basic Steps”](#basic-steps)
+
+1. Install the package using your preferred package manager.
+
+2. Import the component where you need it.
+
+3. Add it to your page and configure the props.
+
+## Steps With Rich Content
+
+[Section titled “Steps With Rich Content”](#steps-with-rich-content)
+
+1. **Create the config file.**
+
+   Add a `typewriter.config.ts` file at the root of your project:
+
+   ```ts
+   export default {
+     name: "my-adventure",
+   };
+   ```
+
+2. **Register your first entry.**
+
+   Entries are the building blocks of a story.
+
+   Tip
+
+   Keep entry names short and descriptive.
+
+3. **Run the validator.**
+
+   ```bash
+   bun run validate
+   ```
+
+## Pagination
+
+[Section titled “Pagination”](#pagination)
+
+The Previous / Next navigation cards at the bottom of this page are rendered by the custom `Pagination` override.
+
 # Tabs Test Page
 
 > A page to test the Tabs component with various content types.
