@@ -207,6 +207,90 @@ player.listenForFacts(listOf(factRef)) {
 
 The listener now receives a context with `player`, `ref`, `oldValue`, and `newValue` properties instead of separate parameters.
 
+## Entity Activity Lifecycle Changes
+
+Entity activities are no longer recreated every time they become active.
+Each activity instance is created once per NPC and reused for the lifetime of that entity display.
+This allows activities to hold runtime state and resume where they left off when interrupted.
+
+A common example is pathing: an NPC walking a predefined path can be interrupted by an
+`InDialogueActivity`. When the dialogue ends, the path activity resumes from the next node
+instead of restarting from the beginning.
+
+:::note[Entries remain stateless]
+`@Entry` classes must still be stateless. Only the runtime activity instances created by
+`create()` may hold state. Store progress, caches, and other runtime data on the activity
+class, not on the entry.
+:::
+
+### `initialize` Signature
+
+The `initialize` method now receives the entity's current position as a second parameter.
+
+```kotlin showLineNumbers
+// highlight-red
+override fun initialize(context: ActivityContext) {
+// highlight-green
+override fun initialize(context: ActivityContext, position: PositionProperty) {
+```
+
+This applies to all `EntityActivity` implementations, including `GenericEntityActivity`,
+`SharedEntityActivity`, and `IndividualEntityActivity`.
+
+### Designing Stateful Activities
+
+Because activity instances are reused, `initialize` may be called multiple times during an
+NPC's lifetime, for example when switching between child activities in a
+`SingleChildActivity`. Follow these guidelines when implementing custom activities:
+
+1. **Do not reset progress in `initialize`.** Use `initialize` to sync the current position
+   or start child activities. Preserve fields like path indices, timers, or navigation state
+   across calls.
+2. **Do not reset persistent state in `dispose`.** `dispose` is called whenever an activity is
+   deactivated, including when `SingleChildActivity` switches between children (e.g. when
+   dialogue interrupts pathing). Activity instances are cached and reused, so fields like path
+   indices or navigation progress must survive `dispose`. Use `dispose` only to cancel jobs,
+   release listeners, or clean up other temporary resources.
+3. **Lazy-create child activities.** Create child activity instances once and reuse them.
+   Check whether a child already exists before calling `create()`:
+
+```kotlin showLineNumbers
+// highlight-red-start
+override fun initialize(context: ActivityContext) {
+    childActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
+    childActivity.initialize(context)
+}
+// highlight-red-end
+
+// highlight-green-start
+override fun initialize(context: ActivityContext, position: PositionProperty) {
+    if (childActivity is IdleActivity) {
+        childActivity = child.get()?.create(context, position) ?: IdleActivity(position)
+    }
+    childActivity.initialize(context, position)
+}
+// highlight-green-end
+```
+
+### `SingleChildActivity` Caching
+
+`SingleChildActivity` now caches child activity instances per child entry reference.
+When switching between children (e.g. between a talking and idle activity in
+`InDialogueActivity`), the current child is disposed and the cached instance is reactivated
+with `initialize` instead of calling `create()` again.
+
+The `refreshActivity` method signature has also changed:
+
+```kotlin showLineNumbers
+// highlight-red
+fun refreshActivity(context: Context)
+// highlight-green
+fun refreshActivity(context: Context, position: PositionProperty)
+```
+
+If you extend `SingleChildActivity`, override `currentChild` to select the active child.
+The base class handles caching and reuse automatically.
+
 ## Questing Extension Changes
 The Questing extension has undergone several changes in its API and structure. Below are the key updates:
 

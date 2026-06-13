@@ -48,8 +48,9 @@ class LookAtBlockActivity(
     private val pitchVelocity = Velocity(0f)
     private var currentDirection: LookDirection = LookDirection(startLocation.yaw, startLocation.pitch)
 
-    override fun initialize(context: ActivityContext) {
-        childActivity.initialize(context)
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        currentDirection = LookDirection(position.yaw, position.pitch)
+        childActivity.initialize(context, position)
     }
 
     override fun tick(context: ActivityContext): TickResult {

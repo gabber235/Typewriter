@@ -50,7 +50,11 @@ class LookCloseActivity(
 
     override var currentPosition: PositionProperty = startPosition
 
-    override fun initialize(context: ActivityContext) {}
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        currentPosition = position
+        yawVelocity.value = 0f
+        pitchVelocity.value = 0f
+    }
 
     private fun findNewTarget(context: ActivityContext): Target? {
         val closestTarget = context.viewers

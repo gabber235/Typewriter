@@ -48,8 +48,8 @@ class OffsetActivity(
     private val childActivity: EntityActivity<ActivityContext>
 ) : EntityActivity<ActivityContext> {
     private var lastOffset: Vector = Vector.ZERO
-    override fun initialize(context: ActivityContext) {
-        childActivity.initialize(context)
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        childActivity.initialize(context, position)
         lastOffset = offset.get(context.randomViewer) ?: Vector.ZERO
     }
 
