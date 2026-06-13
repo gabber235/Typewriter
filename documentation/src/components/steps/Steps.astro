@@ -1,0 +1,66 @@
+---
+import { stepsStyles as s } from "./styles";
+---
+
+<div class={s.container}>
+  <slot />
+</div>
+
+<style>
+  .steps-root :global(ol) {
+    list-style: none;
+    counter-reset: step;
+    margin: 0;
+    padding: 0;
+  }
+
+  .steps-root :global(ol > li) {
+    counter-increment: step;
+    position: relative;
+    padding-left: 3rem;
+    padding-bottom: 1.5rem;
+    min-height: 2rem;
+  }
+
+  .steps-root :global(ol > li::before) {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: 1px solid var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.12);
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .steps-root :global(ol > li::after) {
+    content: "";
+    position: absolute;
+    left: calc(1rem - 1px);
+    top: 2.25rem;
+    bottom: 0;
+    width: 2px;
+    background: var(--sl-color-hairline-shade);
+  }
+
+  .steps-root :global(ol > li:last-child::after) {
+    display: none;
+  }
+
+  .steps-root :global(ol > li > :first-child) {
+    margin-top: 0.25rem;
+  }
+
+  .steps-root :global(ol > li > :last-child) {
+    margin-bottom: 0;
+  }
+</style>

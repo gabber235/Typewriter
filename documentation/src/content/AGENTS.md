@@ -55,6 +55,21 @@ import Aside from '@components/aside/Aside.astro';
 </Aside>
 ```
 
+Wrap a numbered list in `Steps` for sequential instructions:
+
+```mdx
+import { Steps } from '@components/steps';
+
+<Steps>
+
+1. First step.
+2. Second step.
+
+</Steps>
+```
+
+Previous/Next navigation cards at the bottom of every page are rendered automatically by the `Pagination` override — no authoring needed.
+
 ## Links
 
 - Prefer relative paths over absolute — `../guides/01-example.md` not `/guides/01-example`
