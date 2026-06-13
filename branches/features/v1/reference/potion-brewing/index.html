@@ -1,0 +1,883 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-bguv2lll"> <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Potion Brewing Reference | Typewriter</title><link rel="canonical" href="https://docs.typewritermc.com/branches/features/v1/reference/potion-brewing/"/><link rel="sitemap" href="/branches/features/v1/sitemap-index.xml"/><link rel="shortcut icon" href="/branches/features/v1/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v6.0.8"/><meta name="generator" content="Starlight v0.38.2"/><meta property="og:title" content="Potion Brewing Reference"/><meta property="og:type" content="article"/><meta property="og:url" content="https://docs.typewritermc.com/branches/features/v1/reference/potion-brewing/"/><meta property="og:locale" content="en"/><meta property="og:description" content="Complete API reference for the Cauldron SDK and potion crafting system."/><meta property="og:site_name" content="Typewriter"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="Complete API reference for the Cauldron SDK and potion crafting system."/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/branches/features/v1/_astro/print.DNXP8c50.css" media="print"><link rel="stylesheet" href="/branches/features/v1/_astro/common.DGwGN4co.css">
+<link rel="stylesheet" href="/branches/features/v1/_astro/Code.CXIiJ_if.css"><script type="module" src="/branches/features/v1/_astro/page.B2qoJ4LT.js"></script></head> <body class="astro-bguv2lll"> <a href="#_top" class="astro-7q3lir66">Skip to content</a> <div class="flex flex-col min-h-screen bg-(--surface)"> <header class="fixed inset-0 top-0 z-50 w-full h-fit px-4 p-2 bg-(--surface) overflow-hidden"> <div class="flex items-center justify-between h-full min-[50rem]:grid min-[50rem]:grid-cols-3 min-[50rem]:gap-0"> <div class="flex items-center gap-2 overflow-clip min-w-0"> <div class="min-[50rem]:hidden flex items-center"> <starlight-menu-button class="print:hidden astro-jif73yzw"> <button aria-expanded="false" aria-label="Menu" aria-controls="starlight__sidebar" class="sl-flex md:sl-hidden astro-jif73yzw"> <svg aria-hidden="true" class="open-menu astro-jif73yzw astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg> <svg aria-hidden="true" class="close-menu astro-jif73yzw astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg> </button> </starlight-menu-button> <script type="module">class s extends HTMLElement{constructor(){super(),this.btn=this.querySelector("button"),this.btn.addEventListener("click",()=>this.toggleExpanded());const t=this.closest("nav");t&&t.addEventListener("keyup",e=>this.closeOnEscape(e))}setExpanded(t){this.setAttribute("aria-expanded",String(t)),document.body.toggleAttribute("data-mobile-menu-expanded",t)}toggleExpanded(){this.setExpanded(this.getAttribute("aria-expanded")!=="true")}closeOnEscape(t){t.code==="Escape"&&(this.setExpanded(!1),this.btn.focus())}}customElements.define("starlight-menu-button",s);</script>  </div> <a href="/branches/features/v1/" style="height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));" class="flex items-center gap-2 max-w-full text-(--sl-text-h4) hover:text-(--color-primary) duration-200 font-extrabold no-underline whitespace-nowrap min-w-0">  <img class="light:hidden print:hidden w-auto max-w-full object-contain rounded-lg" alt="Typewriter Logo" src="/branches/features/v1/_astro/logo.BZDSnePA.png" width="512" height="512" style="height: calc(var(--sl-nav-height) - 3 * var(--sl-nav-pad-y));">  <span class="overflow-hidden" translate="no"> Typewriter </span> </a> </div> <div class="hidden min-[50rem]:flex items-center justify-center print:hidden"> <site-search data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}" class="contents astro-2wyhcnp4">  <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="group flex items-center gap-2 h-10 border-0 bg-transparent text-(--sl-color-gray-1) cursor-pointer text-xl
+           md:border md:border-(--sl-color-gray-5) md:rounded-lg md:ps-3 md:pe-2 md:bg-(--sl-color-black) md:text-(--sl-color-gray-2) md:text-sm md:w-full md:max-w-10/12
+           md:hover:border-(--sl-color-gray-2) md:hover:text-white
+           md:focus-visible:outline-none md:focus-visible:ring-2 md:focus-visible:ring-(--sl-color-accent) md:focus-visible:ring-offset-2 md:focus-visible:ring-offset-(--sl-color-black)
+           transition-all duration-200 ease-out astro-2wyhcnp4"> <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110 astro-2wyhcnp4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" class="astro-2wyhcnp4"></path> </svg> <span class="hidden md:block astro-2wyhcnp4" aria-hidden="true">Search</span> <kbd class="hidden md:inline-flex items-center gap-1 ms-auto rounded px-1.5 py-0.5 text-xs bg-(--sl-color-gray-6) text-(--sl-color-gray-3) font-mono
+             transition-colors duration-200 group-hover:bg-(--sl-color-gray-5) group-hover:text-(--sl-color-gray-1) astro-2wyhcnp4" style="display: none;"> <kbd class="font-mono astro-2wyhcnp4">Ctrl</kbd><kbd class="font-mono astro-2wyhcnp4">K</kbd> </kbd> </button>  <dialog id="search-dialog" aria-labelledby="search-dialog-title" aria-describedby="search-dialog-description" class="search-dialog fixed inset-0 m-0 p-0 w-full max-w-full h-full max-h-full bg-transparent
+           md:mt-16 md:mx-auto md:mb-auto md:rounded-xl md:w-[90%] md:max-w-2xl md:h-max md:min-h-60 md:max-h-[calc(100%-8rem)]
+           md:bg-(--sl-color-gray-6) md:border md:border-(--sl-color-gray-5) md:shadow-2xl
+           backdrop:bg-black/60 backdrop:backdrop-blur-md astro-2wyhcnp4">  <h2 id="search-dialog-title" class="sr-only astro-2wyhcnp4">Search</h2> <p id="search-dialog-description" class="sr-only astro-2wyhcnp4">
+Press Escape to close. Use Tab to navigate results.
+</p> <div class="dialog-frame flex flex-col w-full h-full md:h-auto overflow-hidden
+                bg-(--sl-color-gray-6) md:bg-transparent
+                rounded-none md:rounded-xl astro-2wyhcnp4">  <div class="flex items-center justify-between p-4 shrink-0 border-b border-(--sl-color-gray-5) md:border-none astro-2wyhcnp4"> <span class="text-sm text-(--sl-color-white) md:hidden astro-2wyhcnp4">Search</span>  <button data-close-modal type="button" aria-label="Cancel" class="size-8 flex items-center justify-center rounded-lg ms-auto
+                 text-(--sl-color-gray-3) hover:text-(--sl-color-white)
+                 hover:bg-(--sl-color-gray-5) transition-colors cursor-pointer astro-2wyhcnp4"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 astro-2wyhcnp4" aria-hidden="true"> <path d="m13.41 12 6.3-6.29a1 1 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1 1 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 .33 1.64 1 1 0 0 0 1.09-.22l6.29-6.3 6.29 6.3a1 1 0 0 0 1.64-.33 1 1 0 0 0-.22-1.09L13.41 12Z" class="astro-2wyhcnp4"></path> </svg> </button> </div>  <div class="flex-1 overflow-auto p-4 md:p-6 md:pt-2 astro-2wyhcnp4"> <search role="search" class="w-full astro-2wyhcnp4"> <div class="starlight-search astro-2wyhcnp4"> <div class="starlight-search-container astro-2wyhcnp4"></div> </div> </search> </div> </div> </dialog> </site-search>  <script>
+  (() => {
+    const openBtn = document.querySelector("button[data-open-modal]");
+    const shortcut = openBtn?.querySelector("kbd");
+    if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+    const platformKey = shortcut.querySelector("kbd");
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
+      platformKey.textContent = "⌘";
+      openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
+    }
+    shortcut.style.display = "";
+  })();
+</script>  <script type="module" src="/branches/features/v1/_astro/Search.astro_astro_type_script_index_0_lang.ChczjZ97.js"></script>    </div> <div class="flex items-center justify-end gap-3 print:hidden min-[50rem]:flex"> <div class="min-[50rem]:hidden"> <site-search data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}" class="contents astro-2wyhcnp4">  <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="group flex items-center gap-2 h-10 border-0 bg-transparent text-(--sl-color-gray-1) cursor-pointer text-xl
+           md:border md:border-(--sl-color-gray-5) md:rounded-lg md:ps-3 md:pe-2 md:bg-(--sl-color-black) md:text-(--sl-color-gray-2) md:text-sm md:w-full md:max-w-10/12
+           md:hover:border-(--sl-color-gray-2) md:hover:text-white
+           md:focus-visible:outline-none md:focus-visible:ring-2 md:focus-visible:ring-(--sl-color-accent) md:focus-visible:ring-offset-2 md:focus-visible:ring-offset-(--sl-color-black)
+           transition-all duration-200 ease-out astro-2wyhcnp4"> <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110 astro-2wyhcnp4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" class="astro-2wyhcnp4"></path> </svg> <span class="hidden md:block astro-2wyhcnp4" aria-hidden="true">Search</span> <kbd class="hidden md:inline-flex items-center gap-1 ms-auto rounded px-1.5 py-0.5 text-xs bg-(--sl-color-gray-6) text-(--sl-color-gray-3) font-mono
+             transition-colors duration-200 group-hover:bg-(--sl-color-gray-5) group-hover:text-(--sl-color-gray-1) astro-2wyhcnp4" style="display: none;"> <kbd class="font-mono astro-2wyhcnp4">Ctrl</kbd><kbd class="font-mono astro-2wyhcnp4">K</kbd> </kbd> </button>  <dialog id="search-dialog" aria-labelledby="search-dialog-title" aria-describedby="search-dialog-description" class="search-dialog fixed inset-0 m-0 p-0 w-full max-w-full h-full max-h-full bg-transparent
+           md:mt-16 md:mx-auto md:mb-auto md:rounded-xl md:w-[90%] md:max-w-2xl md:h-max md:min-h-60 md:max-h-[calc(100%-8rem)]
+           md:bg-(--sl-color-gray-6) md:border md:border-(--sl-color-gray-5) md:shadow-2xl
+           backdrop:bg-black/60 backdrop:backdrop-blur-md astro-2wyhcnp4">  <h2 id="search-dialog-title" class="sr-only astro-2wyhcnp4">Search</h2> <p id="search-dialog-description" class="sr-only astro-2wyhcnp4">
+Press Escape to close. Use Tab to navigate results.
+</p> <div class="dialog-frame flex flex-col w-full h-full md:h-auto overflow-hidden
+                bg-(--sl-color-gray-6) md:bg-transparent
+                rounded-none md:rounded-xl astro-2wyhcnp4">  <div class="flex items-center justify-between p-4 shrink-0 border-b border-(--sl-color-gray-5) md:border-none astro-2wyhcnp4"> <span class="text-sm text-(--sl-color-white) md:hidden astro-2wyhcnp4">Search</span>  <button data-close-modal type="button" aria-label="Cancel" class="size-8 flex items-center justify-center rounded-lg ms-auto
+                 text-(--sl-color-gray-3) hover:text-(--sl-color-white)
+                 hover:bg-(--sl-color-gray-5) transition-colors cursor-pointer astro-2wyhcnp4"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 astro-2wyhcnp4" aria-hidden="true"> <path d="m13.41 12 6.3-6.29a1 1 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1 1 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 .33 1.64 1 1 0 0 0 1.09-.22l6.29-6.3 6.29 6.3a1 1 0 0 0 1.64-.33 1 1 0 0 0-.22-1.09L13.41 12Z" class="astro-2wyhcnp4"></path> </svg> </button> </div>  <div class="flex-1 overflow-auto p-4 md:p-6 md:pt-2 astro-2wyhcnp4"> <search role="search" class="w-full astro-2wyhcnp4"> <div class="starlight-search astro-2wyhcnp4"> <div class="starlight-search-container astro-2wyhcnp4"></div> </div> </search> </div> </div> </dialog> </site-search>  <script>
+  (() => {
+    const openBtn = document.querySelector("button[data-open-modal]");
+    const shortcut = openBtn?.querySelector("kbd");
+    if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+    const platformKey = shortcut.querySelector("kbd");
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
+      platformKey.textContent = "⌘";
+      openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
+    }
+    shortcut.style.display = "";
+  })();
+</script>      </div> <div class="hidden min-[50rem]:flex items-center gap-3"> <a href="https://github.com/Gabber235/typewriter" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">GitHub</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg></a> <div class="h-5 w-px bg-material-grey-300 dark:bg-material-grey-800"></div> </div> <div class="flex items-center justify-center"> <starlight-theme-select class="astro-nkga3s3v"> <button class="theme-toggle astro-nkga3s3v" id="theme-toggle" title="Toggles light & dark" aria-label="auto" aria-live="polite"> <svg class="sun-and-moon astro-nkga3s3v" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24"> <circle class="sun astro-nkga3s3v" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor"></circle> <g class="sun-beams astro-nkga3s3v" stroke="currentColor" stroke-width="2"> <line x1="12" y1="1" x2="12" y2="3" class="astro-nkga3s3v"></line> <line x1="12" y1="21" x2="12" y2="23" class="astro-nkga3s3v"></line> <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" class="astro-nkga3s3v"></line> <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" class="astro-nkga3s3v"></line> <line x1="1" y1="12" x2="3" y2="12" class="astro-nkga3s3v"></line> <line x1="21" y1="12" x2="23" y2="12" class="astro-nkga3s3v"></line> <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" class="astro-nkga3s3v"></line> <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" class="astro-nkga3s3v"></line> </g> <mask class="moon astro-nkga3s3v" id="moon-mask"> <rect x="0" y="0" width="100%" height="100%" fill="white" class="astro-nkga3s3v"></rect> <circle cx="24" cy="10" r="6" fill="black" class="astro-nkga3s3v"></circle> </mask> </svg> </button> </starlight-theme-select>  <script>
+  StarlightThemeProvider.updatePickers();
+</script> <script type="module">const l="starlight-theme",i=e=>e==="auto"||e==="dark"||e==="light"?e:"auto",o=()=>i(typeof localStorage<"u"&&localStorage.getItem(l));function d(e){typeof localStorage<"u"&&localStorage.setItem(l,e==="light"||e==="dark"?e:"")}const n=()=>matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";function r(e){StarlightThemeProvider.updatePickers(e);const t=e==="auto"?n():e;document.documentElement.dataset.theme=t,d(e),document.querySelectorAll("#theme-toggle").forEach(a=>{a.setAttribute("aria-label",e)})}matchMedia("(prefers-color-scheme: light)").addEventListener("change",()=>{o()==="auto"&&r("auto")});class h extends HTMLElement{constructor(){super();const t=o();r(t),this.querySelector(".theme-toggle")?.addEventListener("click",()=>{const c=o(),s=(c==="auto"?n():c)==="light"?"dark":"light";r(s)})}}customElements.define("starlight-theme-select",h);</script> </div> <script type="module">class s extends HTMLElement{constructor(){super();const e=this.querySelector("select");e&&(e.addEventListener("change",t=>{t.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=t.currentTarget.value)}),window.addEventListener("pageshow",t=>{if(!t.persisted)return;const n=e.querySelector("option[selected]")?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}}customElements.define("starlight-lang-select",s);</script> </div> </div> </header> <nav class="print:hidden" aria-label="Main">  <div id="sidebar-backdrop" class="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-10 opacity-0 invisible transition-opacity duration-200 md:hidden" aria-hidden="true"></div> <div id="starlight__sidebar" class="fixed top-14 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3rem)] md:top-14 md:bottom-0 md:left-0 md:right-auto md:w-xs md:max-h-none md:h-auto md:translate-y-0 md:translate-x-0 md:rounded-none transition-transform duration-300 md:visible md:z-30"> <div class="flex flex-col h-full min-h-max gap-4 pt-1 px-1 pb-1 md:pb-4"> <nav class="py-2" aria-label="Main"> <ul class="list-none p-0 m-0 text-base"> <li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/" style="margin-left: 0px; padding-left: 0.75rem; width: calc(100% - 0px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Welcome To Starlight</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/01-typewiter/" style="margin-left: 0px; padding-left: 0.75rem; width: calc(100% - 0px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">What Is Typewriter</span></a> </li><li class="mt-0.5 first:mt-0"> <details class="group sidebar-group" data-group-id="sidebar-group--branches-features-v1-guides-" data-href="/branches/features/v1/guides/"><summary style="margin-left: 0px; padding-left: 0.75rem" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 list-none leading-snug cursor-pointer no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">Asides</span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0 text-slate-500 transition-transform duration-200"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="sidebar-content overflow-hidden opacity-0 transition-opacity duration-150" data-level="1"><div class="pt-0.5"> <ul class="list-none p-0 m-0 text-base"> <li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/guides/01-example/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Installation Guide</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/guides/02-test/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Test 2</span></a> </li><li class="mt-0.5 first:mt-0"> <details class="group sidebar-group" data-group-id="sidebar-group--branches-features-v1-guides-03-test-" data-href="/branches/features/v1/guides/03-test/"><summary style="margin-left: 12px; padding-left: 0.75rem" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 list-none leading-snug cursor-pointer no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">Folder Test 2</span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0 text-slate-500 transition-transform duration-200"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="sidebar-content overflow-hidden opacity-0 transition-opacity duration-150" data-level="2"><div class="pt-0.5"> <ul class="list-none p-0 m-0 text-base"> <li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/guides/03-test/01-hello/" style="margin-left: 24px; padding-left: 0.75rem; width: calc(100% - 24px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Test 2a</span></a> </li> </ul> </div></div></details> </li> </ul> </div></div></details> </li><li class="mt-0.5 first:mt-0"> <details class="group sidebar-group" data-group-id="sidebar-group--branches-features-v1-reference-" data-href="/branches/features/v1/reference/"><summary style="margin-left: 0px; padding-left: 0.75rem" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 list-none leading-snug cursor-pointer no-underline select-none text-(--color-primary) hover:bg-(--surface-container)"><span class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">Folder Test</span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0 text-slate-500 transition-transform duration-200"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="sidebar-content overflow-hidden opacity-0 transition-opacity duration-150" data-level="1"><div class="pt-0.5"> <ul class="list-none p-0 m-0 text-base"> <li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/reference/cat-psychology/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Cat Psychology Reference</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/reference/cloud-types/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Cloud Classification Guide</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/reference/example/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Build Your First Space Station</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/reference/haunted-house-api/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Haunted House API Reference</span></a> </li><li class="mt-0.5 first:mt-0"> <span aria-current="page" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-medium rounded-md leading-snug select-none text-(--color-primary) bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Potion Brewing Reference</span></span> </li> </ul> </div></div></details> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/tabstest/" style="margin-left: 0px; padding-left: 0.75rem; width: calc(100% - 0px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Tabs Test Page</span></a> </li><li class="mt-0.5 first:mt-0"> <details class="group sidebar-group" data-group-id="sidebar-group--branches-features-v1-training-dragon-training-" data-href="/branches/features/v1/training/dragon-training/"><summary style="margin-left: 0px; padding-left: 0.75rem" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 list-none leading-snug cursor-pointer no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">Dragon Training 101</span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0 text-slate-500 transition-transform duration-200"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="sidebar-content overflow-hidden opacity-0 transition-opacity duration-150" data-level="1"><div class="pt-0.5"> <ul class="list-none p-0 m-0 text-base"> <li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/training/interdimensional-cooking/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Interdimensional Cooking</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/training/plant-communication/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Talking To Plants</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/training/time-travel-etiquette/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Time Travel Etiquette</span></a> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/training/underwater-basket-weaving/" style="margin-left: 12px; padding-left: 0.75rem; width: calc(100% - 12px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Underwater Basket Weaving</span></a> </li> </ul> </div></div></details> </li><li class="mt-0.5 first:mt-0"> <a href="/branches/features/v1/videotest/" style="margin-left: 0px; padding-left: 0.75rem; width: calc(100% - 0px)" class="flex items-center py-1.5 pr-3 font-normal rounded-md transition-colors duration-200 cursor-pointer leading-snug no-underline select-none text-(--sl-color-text) hover:bg-(--surface-container)"><span class="overflow-hidden whitespace-nowrap text-ellipsis flex-1">Video Test Page</span></a> </li> </ul> </nav> <script>
+  (function () {
+    // ========================================
+    // CONSTANTS
+    // ========================================
+    const STORAGE_KEY = "sidebar-groups-state";
+    const ANIMATION_DURATION = 200;
+    const SELECTORS = {
+      group: ".sidebar-group",
+      content: ".sidebar-content",
+      toggle: ".sidebar-toggle",
+      groupLink: ".sidebar-group-link",
+    };
+
+    // ========================================
+    // STATE MANAGEMENT (localStorage)
+    // ========================================
+    let cachedState = null;
+
+    function getStoredState() {
+      if (cachedState !== null) return cachedState;
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        cachedState = stored ? JSON.parse(stored) : {};
+      } catch {
+        cachedState = {};
+      }
+      return cachedState;
+    }
+
+    function saveState(groupId, isOpen) {
+      const state = getStoredState();
+      state[groupId] = isOpen;
+      cachedState = state;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // Ignore storage errors
+      }
+    }
+
+    // ========================================
+    // SIBLING ACCORDION LOGIC
+    // ========================================
+    function getSiblingToCollapse(openedDetails) {
+      const parentLi = openedDetails.closest("li");
+      if (!parentLi) return null;
+
+      const parentUl = parentLi.parentElement;
+      if (!parentUl) return null;
+
+      const siblingDetails = parentUl.querySelectorAll(
+        `:scope > li > .sidebar-group`,
+      );
+
+      for (let i = 0; i < siblingDetails.length; i++) {
+        const details = siblingDetails[i];
+        if (details !== openedDetails && details.open) {
+          return details;
+        }
+      }
+      return null;
+    }
+
+    // ========================================
+    // ANIMATION HELPERS
+    // ========================================
+    function createTransition() {
+      return `height ${ANIMATION_DURATION}ms ease-in-out`;
+    }
+
+    function animateCollapse(content, onComplete) {
+      const currentHeight = content.scrollHeight;
+      content.style.transition = "none";
+      content.style.height = currentHeight + "px";
+      content.offsetHeight; // Force reflow
+
+      content.style.transition = createTransition();
+      content.style.height = "0px";
+
+      function cleanup() {
+        content.removeEventListener("transitionend", cleanup);
+        content.style.transition = "";
+        content.style.height = "0px";
+        if (onComplete) onComplete();
+      }
+      content.addEventListener("transitionend", cleanup);
+    }
+
+    // ========================================
+    // GROUP TOGGLE OPERATIONS
+    // ========================================
+    function toggleGroup(details) {
+      const groupId = details.dataset.groupId;
+      if (!groupId) return;
+
+      const willOpen = !details.open;
+      const content = details.querySelector(SELECTORS.content);
+      if (!content) return;
+
+      if (willOpen) {
+        openGroupWithSiblingCollapse(details, content, groupId);
+      } else {
+        closeGroup(details, content, groupId);
+      }
+    }
+
+    function openGroupWithSiblingCollapse(details, content, groupId) {
+      // Find and prepare sibling to collapse
+      const siblingToCollapse = getSiblingToCollapse(details);
+      let siblingContent = null;
+      let siblingHeight = 0;
+
+      if (siblingToCollapse) {
+        siblingContent = siblingToCollapse.querySelector(SELECTORS.content);
+        if (siblingContent) {
+          siblingHeight = siblingContent.scrollHeight;
+        }
+      }
+
+      // Open and measure target
+      details.open = true;
+      content.style.height = "auto";
+      const targetHeight = content.scrollHeight;
+
+      // Prepare for synchronized animation
+      content.style.transition = "none";
+      content.style.height = "0px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = "none";
+        siblingContent.style.height = siblingHeight + "px";
+      }
+
+      content.offsetHeight; // Force reflow
+
+      // Animate both simultaneously
+      const transition = createTransition();
+      content.style.transition = transition;
+      content.style.height = targetHeight + "px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = transition;
+        siblingContent.style.height = "0px";
+      }
+
+      // Cleanup handlers
+      function cleanupExpand() {
+        content.removeEventListener("transitionend", cleanupExpand);
+        content.style.transition = "";
+        content.style.height = "auto";
+      }
+      content.addEventListener("transitionend", cleanupExpand);
+
+      if (siblingContent) {
+        const siblingDetails = siblingToCollapse;
+        function cleanupCollapse() {
+          siblingContent.removeEventListener("transitionend", cleanupCollapse);
+          siblingContent.style.transition = "";
+          siblingContent.style.height = "0px";
+          siblingDetails.open = false;
+        }
+        siblingContent.addEventListener("transitionend", cleanupCollapse);
+
+        const siblingId = siblingDetails.dataset.groupId;
+        if (siblingId) {
+          saveState(siblingId, false);
+        }
+      }
+
+      saveState(groupId, true);
+    }
+
+    function closeGroup(details, content, groupId) {
+      animateCollapse(content, function () {
+        details.open = false;
+      });
+      saveState(groupId, false);
+    }
+
+    // Expand group without toggle (for navigation)
+    function expandGroup(details) {
+      if (details.open) return;
+
+      const groupId = details.dataset.groupId;
+      const content = details.querySelector(SELECTORS.content);
+      if (!content) return;
+
+      // Find sibling to collapse
+      const siblingToCollapse = getSiblingToCollapse(details);
+      let siblingContent = null;
+      let siblingHeight = 0;
+
+      if (siblingToCollapse) {
+        siblingContent = siblingToCollapse.querySelector(SELECTORS.content);
+        if (siblingContent) {
+          siblingHeight = siblingContent.scrollHeight;
+        }
+      }
+
+      details.open = true;
+      content.style.height = "auto";
+      const targetHeight = content.scrollHeight;
+
+      content.style.transition = "none";
+      content.style.height = "0px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = "none";
+        siblingContent.style.height = siblingHeight + "px";
+      }
+
+      content.offsetHeight;
+
+      const transition = createTransition();
+      content.style.transition = transition;
+      content.style.height = targetHeight + "px";
+
+      if (siblingContent) {
+        siblingContent.style.transition = transition;
+        siblingContent.style.height = "0px";
+      }
+
+      function cleanupExpand() {
+        content.removeEventListener("transitionend", cleanupExpand);
+        content.style.transition = "";
+        content.style.height = "auto";
+      }
+      content.addEventListener("transitionend", cleanupExpand);
+
+      if (siblingContent) {
+        const siblingDetails = siblingToCollapse;
+        function cleanupCollapse() {
+          siblingContent.removeEventListener("transitionend", cleanupCollapse);
+          siblingContent.style.transition = "";
+          siblingContent.style.height = "0px";
+          siblingDetails.open = false;
+        }
+        siblingContent.addEventListener("transitionend", cleanupCollapse);
+
+        const siblingId = siblingDetails.dataset.groupId;
+        if (siblingId) {
+          saveState(siblingId, false);
+        }
+      }
+
+      if (groupId) {
+        saveState(groupId, true);
+      }
+    }
+
+    // ========================================
+    // STATE RESTORATION (on page load)
+    // ========================================
+    function restoreGroupStates() {
+      cachedState = null;
+      const state = getStoredState();
+      const groups = document.querySelectorAll(SELECTORS.group);
+      const nav = document.querySelector("nav[aria-label]");
+
+      // Check if we need to animate a specific group
+      const animateGroupId = sessionStorage.getItem("sidebar-animate-group");
+      sessionStorage.removeItem("sidebar-animate-group");
+
+      // First pass: set all states immediately (while hidden)
+      groups.forEach(function (details) {
+        const groupId = details.dataset.groupId;
+        if (!groupId) return;
+
+        const shouldBeOpen = state[groupId] === true;
+        const content = details.querySelector(SELECTORS.content);
+
+        // Skip the animated group for now - leave it closed
+        if (animateGroupId === groupId && shouldBeOpen) {
+          details.open = false;
+          if (content) content.style.height = "0px";
+        } else {
+          // Close siblings if this group should be open
+          if (shouldBeOpen) {
+            const siblingToClose = getSiblingToCollapse(details);
+            if (siblingToClose) {
+              siblingToClose.open = false;
+              const siblingContent = siblingToClose.querySelector(
+                SELECTORS.content,
+              );
+              if (siblingContent) siblingContent.style.height = "0px";
+              // Update state for closed sibling
+              const siblingId = siblingToClose.dataset.groupId;
+              if (siblingId) {
+                state[siblingId] = false;
+              }
+            }
+          }
+
+          details.open = shouldBeOpen;
+          if (content) {
+            content.style.height = shouldBeOpen ? "auto" : "0px";
+          }
+        }
+      });
+
+      // Save updated state after sibling closures
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        cachedState = state;
+      } catch {
+        // Ignore storage errors
+      }
+
+      // Reveal sidebar now that states are set
+      if (nav) nav.classList.add("sidebar-ready");
+
+      // Second pass: animate the target group after reveal
+      if (animateGroupId) {
+        const targetGroup = document.querySelector(
+          `${SELECTORS.group}[data-group-id="${animateGroupId}"]`,
+        );
+        if (targetGroup && !targetGroup.open) {
+          // Small delay to let opacity transition start first
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              expandGroup(targetGroup);
+            });
+          });
+        }
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS (delegated)
+    // ========================================
+    function handleToggleClick(e, toggleBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const details = toggleBtn.closest(SELECTORS.group);
+      if (details) {
+        toggleGroup(details);
+      }
+    }
+
+    function handleLabelClick(e, labelSpan) {
+      // Only handle non-link labels (for groups without index pages)
+      const summary = labelSpan.closest("summary");
+      const details = summary ? summary.closest(SELECTORS.group) : null;
+      if (!details) return;
+
+      const href = details.dataset.href || "";
+      const groupId = details.dataset.groupId || "";
+      const currentPathname = window.location.pathname;
+      const isCurrentPage =
+        href &&
+        (currentPathname.endsWith(href.replace(/\/$/, "") + "/") ||
+          currentPathname.endsWith(href));
+
+      e.preventDefault();
+      e.stopPropagation();
+      // If there's an href and we're not on this page, navigate without toggling
+      if (href && !isCurrentPage) {
+        if (groupId) {
+          saveState(groupId, true);
+          // Set animation flag only if group is currently closed
+          if (!details.open) {
+            sessionStorage.setItem("sidebar-animate-group", groupId);
+          }
+        }
+        window.location.href = href;
+      } else {
+        // Otherwise toggle (on same page or no href)
+        toggleGroup(details);
+      }
+    }
+
+    // Single delegated click listener
+    document.addEventListener("click", function (e) {
+      const target = e.target;
+
+      // Handle toggle button clicks (highest priority)
+      const toggleBtn = target.closest(SELECTORS.toggle);
+      if (toggleBtn) {
+        handleToggleClick(e, toggleBtn);
+        return;
+      }
+
+      // Handle SVG chevron clicks (toggle group)
+      const svg = target.closest(`${SELECTORS.group} > summary svg`);
+      if (svg) {
+        e.preventDefault();
+        e.stopPropagation();
+        const details = svg.closest(SELECTORS.group);
+        if (details) {
+          toggleGroup(details);
+        }
+        return;
+      }
+
+      // Handle non-link label clicks
+      const labelSpan = target.closest(`${SELECTORS.group} > summary > span`);
+      if (labelSpan) {
+        handleLabelClick(e, labelSpan);
+        return;
+      }
+
+      // Handle summary clicks (for groups with href)
+      const summary = target.closest(`${SELECTORS.group} > summary`);
+      if (summary) {
+        e.preventDefault();
+        const details = summary.closest(SELECTORS.group);
+        const href = details ? details.dataset.href : "";
+        const groupId = details ? details.dataset.groupId : "";
+        const currentPathname = window.location.pathname;
+        const isCurrentPage =
+          href &&
+          (currentPathname.endsWith(href.replace(/\/$/, "") + "/") ||
+            currentPathname.endsWith(href));
+
+        // If there's an href and we're not on this page, navigate
+        if (href && !isCurrentPage) {
+          if (groupId) {
+            saveState(groupId, true);
+            // Set animation flag only if group is currently closed
+            if (!details.open) {
+              sessionStorage.setItem("sidebar-animate-group", groupId);
+            }
+          }
+          window.location.href = href;
+        } else {
+          // Otherwise toggle the group (if on current page or no href)
+          if (details) {
+            toggleGroup(details);
+          }
+        }
+        return;
+      }
+    });
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    restoreGroupStates();
+
+    // Re-initialize after Astro view transitions
+    document.addEventListener("astro:after-swap", restoreGroupStates);
+
+    // ========================================
+    // MOBILE DRAWER FUNCTIONALITY
+    // ========================================
+    const sidebar = document.getElementById("starlight__sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const mobileToggle = document.querySelector("starlight-menu-button");
+
+    if (sidebar && backdrop && mobileToggle) {
+      let isOpen = false;
+      let touchStartY = 0;
+      let touchStartX = 0;
+      let currentTranslateY = 0;
+      let isDragging = false;
+      let canDrag = false;
+
+      function openDrawer() {
+        isOpen = true;
+        sidebar.classList.remove("translate-y-[calc(-100%-3rem)]");
+        sidebar.classList.add("translate-y-0");
+        backdrop.classList.remove("invisible", "opacity-0");
+        backdrop.classList.add("visible", "opacity-100");
+        document.body.style.overflow = "hidden";
+        mobileToggle.setAttribute("aria-expanded", "true");
+      }
+
+      function closeDrawer() {
+        isOpen = false;
+        sidebar.classList.add("translate-y-[calc(-100%-3rem)]");
+        sidebar.classList.remove("translate-y-0");
+        backdrop.classList.add("invisible", "opacity-0");
+        backdrop.classList.remove("visible", "opacity-100");
+        document.body.style.overflow = "";
+        mobileToggle.setAttribute("aria-expanded", "false");
+        sidebar.style.transform = "";
+      }
+
+      function toggleDrawer() {
+        if (isOpen) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+      }
+
+      // Touch event handlers for swipe gestures
+      function handleTouchStart(e) {
+        if (window.innerWidth >= 768) return;
+        if (!isOpen) return;
+
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        currentTranslateY = 0;
+        isDragging = false;
+        canDrag = false;
+
+        // Check if sidebar is scrolled to top - only allow drag if at top
+        if (sidebar.scrollTop === 0) {
+          canDrag = true;
+        }
+      }
+
+      function handleTouchMove(e) {
+        if (window.innerWidth >= 768) return;
+        if (!isOpen || !canDrag) return;
+
+        const touchCurrentY = e.touches[0].clientY;
+        const touchCurrentX = e.touches[0].clientX;
+        const diffY = touchCurrentY - touchStartY;
+        const diffX = Math.abs(touchCurrentX - touchStartX);
+
+        // Only drag if vertical movement is greater than horizontal
+        if (Math.abs(diffY) > 10 && Math.abs(diffY) > diffX) {
+          // Allow dragging up (negative diffY) to close
+          if (diffY < 0) {
+            if (!isDragging) {
+              isDragging = true;
+            }
+            currentTranslateY = diffY;
+            sidebar.style.transition = "none";
+            sidebar.style.transform = `translateY(${diffY}px)`;
+
+            // Fade backdrop proportionally
+            const opacity = Math.max(0, 1 - Math.abs(diffY) / 300);
+            backdrop.style.opacity = opacity.toString();
+          }
+        }
+      }
+
+      function handleTouchEnd(_e) {
+        if (window.innerWidth >= 768) return;
+        if (!isOpen || !isDragging) {
+          sidebar.style.transition = "";
+          isDragging = false;
+          canDrag = false;
+          return;
+        }
+
+        sidebar.style.transition = "";
+        backdrop.style.opacity = "";
+
+        // If dragged up more than 100px, close the drawer
+        if (Math.abs(currentTranslateY) > 100) {
+          closeDrawer();
+        } else {
+          // Snap back to open position
+          sidebar.style.transform = "";
+        }
+
+        isDragging = false;
+        canDrag = false;
+        currentTranslateY = 0;
+      }
+
+      // Add touch event listeners to sidebar
+      sidebar.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      sidebar.addEventListener("touchmove", handleTouchMove, { passive: true });
+      sidebar.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+      // Listen for Starlight's mobile menu toggle
+      mobileToggle.addEventListener("click", toggleDrawer);
+
+      // Close drawer on backdrop click
+      backdrop.addEventListener("click", closeDrawer);
+
+      // Close drawer on ESC key
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && isOpen) {
+          closeDrawer();
+        }
+      });
+
+      // Close drawer on navigation (when clicking a link)
+      sidebar.addEventListener("click", function (e) {
+        const link = e.target.closest("a");
+        if (link && window.innerWidth < 768) {
+          // Small delay to allow navigation to start
+          setTimeout(closeDrawer, 150);
+        }
+      });
+
+      // Reset drawer state after view transitions
+      document.addEventListener("astro:after-swap", function () {
+        closeDrawer();
+      });
+
+      // Handle window resize - close drawer and reset if resized to desktop
+      let resizeTimer;
+      window.addEventListener("resize", function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          if (window.innerWidth >= 768 && isOpen) {
+            closeDrawer();
+          }
+        }, 150);
+      });
+    }
+  })();
+</script> </div> <div class="flex justify-center py-2 md:hidden sticky bottom-0 bg-(--surface)"> <div class="w-12 h-1 bg-gray-400 dark:bg-gray-600 rounded-full"></div> </div> </div> </nav> <div class="content-pane fixed top-14 right-0 bottom-0 left-0 md:left-80 md:rounded-tl-2xl z-40 bg-(--surface-container-lowest) overflow-y-auto">   <script type="module">const a=document.getElementById("starlight__sidebar"),n=a?.querySelector("sl-sidebar-state-persist"),o="sl-sidebar-state",i=()=>{let t=[];const e=n?.dataset.hash||"";try{const s=sessionStorage.getItem(o),r=JSON.parse(s||"{}");Array.isArray(r.open)&&r.hash===e&&(t=r.open)}catch{}return{hash:e,open:t,scroll:a?.scrollTop||0}},c=t=>{try{sessionStorage.setItem(o,JSON.stringify(t))}catch{}},d=()=>c(i()),l=(t,e)=>{const s=i();s.open[e]=t,c(s)};n?.addEventListener("click",t=>{if(!(t.target instanceof Element))return;const e=t.target.closest("summary")?.closest("details");if(!e)return;const s=e.querySelector("sl-sidebar-restore"),r=parseInt(s?.dataset.index||"");isNaN(r)||l(!e.open,r)});addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&d()});addEventListener("pageHide",d);</script> <div class="lg:sl-flex astro-67yu43on"> <aside class="right-sidebar-container print:hidden astro-67yu43on"> <div class="right-sidebar astro-67yu43on"> <script type="module" src="/branches/features/v1/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.0pfC2Poo.js"></script><script type="module" src="/branches/features/v1/_astro/TableOfContents.astro_astro_type_script_index_0_lang.DZusw4Sk.js"></script><div class="min-[72em]:hidden"><mobile-starlight-toc data-min-h="2" data-max-h="4" class="astro-r77fn2wx"><!-- Mobile TOC Navigation --><nav aria-labelledby="starlight__on-this-page--mobile" class="mobile-toc-container astro-r77fn2wx"><!-- Backdrop for dropdown --><div class="mobile-toc-backdrop astro-r77fn2wx" aria-hidden="true"></div><!-- Dropdown Panel (appears above the pill) --><div class="mobile-toc-dropdown astro-r77fn2wx"><div class="dropdown-header astro-r77fn2wx"><span class="dropdown-title astro-r77fn2wx">On this page</span><button class="close-btn astro-r77fn2wx" aria-label="Close table of contents"><svg viewBox="0 0 20 20" fill="currentColor" class="astro-r77fn2wx"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" class="astro-r77fn2wx"></path></svg></button></div><div class="dropdown-content astro-r77fn2wx"><ul class="is-mobile astro-ntw6bfm6" data-depth="0"> <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="_top" data-toc-depth="0" data-has-children="true"> <a href="#_top" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Potion Brewing Reference</span> </a> <ul class="is-mobile astro-ntw6bfm6" data-depth="1">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="quick-start" data-toc-depth="1" data-has-children="false"> <a href="#quick-start" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Quick Start</span> </a>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="ingredient-reference" data-toc-depth="1" data-has-children="true"> <a href="#ingredient-reference" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Ingredient Reference</span> </a> <ul class="is-mobile astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="common-ingredients" data-toc-depth="2" data-has-children="false"> <a href="#common-ingredients" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Common Ingredients</span> </a>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="ingredient-compatibility-matrix" data-toc-depth="2" data-has-children="false"> <a href="#ingredient-compatibility-matrix" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Ingredient Compatibility Matrix</span> </a>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="potion-types" data-toc-depth="1" data-has-children="true"> <a href="#potion-types" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Potion Types</span> </a> <ul class="is-mobile astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="healthpotion" data-toc-depth="2" data-has-children="false"> <a href="#healthpotion" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">HealthPotion</span> </a>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="invisibilitypotion" data-toc-depth="2" data-has-children="false"> <a href="#invisibilitypotion" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">InvisibilityPotion</span> </a>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="transformationpotion" data-toc-depth="2" data-has-children="false"> <a href="#transformationpotion" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">TransformationPotion</span> </a>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="brewing-methods" data-toc-depth="1" data-has-children="true"> <a href="#brewing-methods" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Brewing Methods</span> </a> <ul class="is-mobile astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="cauldronbrewoptions" data-toc-depth="2" data-has-children="false"> <a href="#cauldronbrewoptions" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Cauldron.brew(options)</span> </a>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="cauldronsimmeroptions" data-toc-depth="2" data-has-children="false"> <a href="#cauldronsimmeroptions" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Cauldron.simmer(options)</span> </a>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="error-handling" data-toc-depth="1" data-has-children="true"> <a href="#error-handling" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Error Handling</span> </a> <ul class="is-mobile astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="common-exceptions" data-toc-depth="2" data-has-children="false"> <a href="#common-exceptions" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Common Exceptions</span> </a>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="error-codes" data-toc-depth="2" data-has-children="false"> <a href="#error-codes" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Error Codes</span> </a>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="best-practices" data-toc-depth="1" data-has-children="false"> <a href="#best-practices" class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4 astro-ntw6bfm6"> <span class="flex-1 astro-ntw6bfm6">Best Practices</span> </a>  </li> </ul> </li>  </ul></div></div><!-- Pill Indicator (always visible) --><button class="mobile-toc-pill astro-r77fn2wx" id="starlight__on-this-page--mobile" aria-label="Open table of contents" aria-expanded="false"><svg class="pill-progress-ring astro-r77fn2wx" viewBox="0 0 36 36"><circle class="pill-progress-bg astro-r77fn2wx" cx="18" cy="18" r="15.5" fill="none" stroke-width="3"></circle><circle class="pill-progress-fill astro-r77fn2wx" cx="18" cy="18" r="15.5" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="97.39" stroke-dashoffset="97.39" transform="rotate(-90 18 18)"></circle></svg><span class="pill-progress-text astro-r77fn2wx">0%</span><span class="pill-current-section astro-r77fn2wx"></span><svg class="pill-expand-icon astro-r77fn2wx" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.47 6.47a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 1 1-1.06 1.06L10 8.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06l4.25-4.25Z" clip-rule="evenodd" class="astro-r77fn2wx"></path></svg></button></nav></mobile-starlight-toc></div><div class="hidden min-[72em]:block px-4 py-4"><div class="w-[calc(var(--sl-sidebar-width,15rem)-2rem)] max-w-full"><starlight-toc data-min-h="2" data-max-h="4" class="astro-6g4zedl2"><nav aria-labelledby="starlight__on-this-page" class="toc-nav flex flex-col max-h-[calc(100vh-5rem)] astro-6g4zedl2"><!-- Progress Pill (always visible at top) --><div class="toc-progress-pill astro-6g4zedl2"><span class="pill-title astro-6g4zedl2">On this page</span><div class="pill-progress-ring astro-6g4zedl2"><svg viewBox="0 0 36 36" class="astro-6g4zedl2"><circle class="pill-ring-bg astro-6g4zedl2" cx="18" cy="18" r="15.5" fill="none" stroke-width="3"></circle><circle class="pill-ring-fill progress-circle astro-6g4zedl2" cx="18" cy="18" r="15.5" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="97.39" stroke-dashoffset="97.39" transform="rotate(-90 18 18)"></circle></svg><span class="pill-ring-text progress-text astro-6g4zedl2">0%</span></div></div><div class="toc-scroll-container flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2 mt-3 astro-6g4zedl2"><ul class="toc-list p-0 list-none relative m-0 astro-ntw6bfm6" data-depth="0"> <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="_top" data-toc-depth="0" data-has-children="true"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#_top" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: 1.25rem;"> <span class="relative astro-ntw6bfm6">Potion Brewing Reference</span> </a> </div> <ul class="toc-list p-0 list-none relative m-0 astro-ntw6bfm6" data-depth="1">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="quick-start" data-toc-depth="1" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#quick-start" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(1rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Quick Start</span> </a> </div>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="ingredient-reference" data-toc-depth="1" data-has-children="true"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#ingredient-reference" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(1rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Ingredient Reference</span> </a> </div> <ul class="toc-list p-0 list-none relative m-0 astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="common-ingredients" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#common-ingredients" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Common Ingredients</span> </a> </div>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="ingredient-compatibility-matrix" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#ingredient-compatibility-matrix" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Ingredient Compatibility Matrix</span> </a> </div>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="potion-types" data-toc-depth="1" data-has-children="true"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#potion-types" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(1rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Potion Types</span> </a> </div> <ul class="toc-list p-0 list-none relative m-0 astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="healthpotion" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#healthpotion" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">HealthPotion</span> </a> </div>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="invisibilitypotion" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#invisibilitypotion" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">InvisibilityPotion</span> </a> </div>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="transformationpotion" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#transformationpotion" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">TransformationPotion</span> </a> </div>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="brewing-methods" data-toc-depth="1" data-has-children="true"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#brewing-methods" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(1rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Brewing Methods</span> </a> </div> <ul class="toc-list p-0 list-none relative m-0 astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="cauldronbrewoptions" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#cauldronbrewoptions" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Cauldron.brew(options)</span> </a> </div>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="cauldronsimmeroptions" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#cauldronsimmeroptions" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Cauldron.simmer(options)</span> </a> </div>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="error-handling" data-toc-depth="1" data-has-children="true"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#error-handling" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(1rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Error Handling</span> </a> </div> <ul class="toc-list p-0 list-none relative m-0 astro-ntw6bfm6" data-depth="2">  <li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="common-exceptions" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#common-exceptions" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Common Exceptions</span> </a> </div>  </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="error-codes" data-toc-depth="2" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#error-codes" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(2rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Error Codes</span> </a> </div>  </li> </ul> </li><li class="toc-item relative mb-0.5 astro-ntw6bfm6" data-heading-slug="best-practices" data-toc-depth="1" data-has-children="false"> <div class="toc-link-wrapper relative astro-ntw6bfm6"> <a href="#best-practices" class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10 astro-ntw6bfm6" style="padding-left: calc(1rem + 1.25rem);"> <span class="relative astro-ntw6bfm6">Best Practices</span> </a> </div>  </li> </ul> </li>  </ul></div></nav><!-- Back to Top Button (fixed bottom right) --><button class="back-to-top-pill-fixed astro-6g4zedl2" aria-label="Back to top" type="button"><svg viewBox="0 0 20 20" fill="currentColor" class="astro-6g4zedl2"><path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" class="astro-6g4zedl2"></path></svg></button></starlight-toc></div></div> </div> </aside> <div class="main-pane astro-67yu43on">  <main data-pagefind-body class="astro-bguv2lll" lang="en" dir="ltr">    <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <h1 id="_top" class="astro-j6tvhyss">Potion Brewing Reference</h1> </div> </div> <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <div class="sl-markdown-content"> <p>This reference documents all available potions, ingredients, and brewing methods in the Cauldron SDK v3.2.</p>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-blue-500)] bg-[var(--material-blue-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-blue-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg></span><p class="font-semibold text-[var(--material-blue-500)]">Info</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-blue-500)]"><p>All potions require a valid Brewing License. Unlicensed brewing may result in explosions, curses, or worse — audits.</p></div></aside>
+<hr>
+<div class="sl-heading-wrapper level-h2"><h2 id="quick-start">Quick Start</h2><a class="sl-anchor-link" href="#quick-start"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Quick Start”</span></a></div>
+<div class="expressive-code"><link rel="stylesheet" href="/branches/features/v1/_astro/ec.v4551.css"><script type="module" src="/branches/features/v1/_astro/ec.0vx5m.js"></script><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="typescript"><code><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">import</span><span style="--0:#D6DEEB;--1:#403F53"> { Cauldron, Ingredient, Potion } </span><span style="--0:#C792EA;--1:#8844AE">from</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">@magic/cauldron-sdk</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">;</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">cauldron</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">new</span><span style="--0:#C792EA;--1:#8844AE"> </span><span style="--0:#82AAFF;--1:#3B61B0">Cauldron</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">size: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">medium</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">material: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">copper</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">enchantments:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">auto-stir</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">temperature-control</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">]</span></div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">healthPotion</span><span style="--0:#C792EA;--1:#8844AE"> = await </span><span style="--0:#D6DEEB;--1:#403F53">cauldron</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">brew</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">ingredients:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">moonflower</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">redcap-mushroom</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">spring-water</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">temperature: </span><span style="--0:#F78C6C;--1:#AA0982">180</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">duration: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">2 hours</span><span style="--0:#D9F5DD;--1:#111111">'</span></div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="import { Cauldron, Ingredient, Potion } from &#x27;@magic/cauldron-sdk&#x27;;const cauldron = new Cauldron({  size: &#x27;medium&#x27;,  material: &#x27;copper&#x27;,  enchantments: [&#x27;auto-stir&#x27;, &#x27;temperature-control&#x27;]});const healthPotion = await cauldron.brew({  ingredients: [&#x27;moonflower&#x27;, &#x27;redcap-mushroom&#x27;, &#x27;spring-water&#x27;],  temperature: 180,  duration: &#x27;2 hours&#x27;});"><div></div></button></div></figure></div>
+<hr>
+<div class="sl-heading-wrapper level-h2"><h2 id="ingredient-reference">Ingredient Reference</h2><a class="sl-anchor-link" href="#ingredient-reference"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Ingredient Reference”</span></a></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="common-ingredients">Common Ingredients</h3><a class="sl-anchor-link" href="#common-ingredients"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Common Ingredients”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">Ingredient</th><th align="left">Effect</th><th align="center">Rarity</th><th align="right">Notes</th></tr></thead><tbody><tr><td align="left">Moonflower</td><td align="left">Healing</td><td align="center">Common</td><td align="right">Harvest at night</td></tr><tr><td align="left">Dragon Scale</td><td align="left">Fire resistance</td><td align="center">Rare</td><td align="right">Ethically sourced only</td></tr><tr><td align="left">Unicorn Hair</td><td align="left">Purification</td><td align="center">Very Rare</td><td align="right">Donated, not plucked</td></tr><tr><td align="left">Toad Sweat</td><td align="left">Transformation</td><td align="center">Common</td><td align="right">Gross but effective</td></tr><tr><td align="left">Phoenix Feather</td><td align="left">Resurrection</td><td align="center">Legendary</td><td align="right">One-time use</td></tr></tbody></table>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-orange-500)] bg-[var(--material-orange-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-orange-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"></path></svg></span><p class="font-semibold text-[var(--material-orange-500)]">Warning</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-orange-500)]"><p>Never substitute ingredients without consulting the Substitution Table. Swapping dragon scale for lizard skin WILL explode.</p></div></aside>
+<div class="sl-heading-wrapper level-h3"><h3 id="ingredient-compatibility-matrix">Ingredient Compatibility Matrix</h3><a class="sl-anchor-link" href="#ingredient-compatibility-matrix"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Ingredient Compatibility Matrix”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="mermaid"><code><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">graph LR</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">A[Moonflower] -->|Enhances| B[Healing Herbs]</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">A -->|Neutralizes| C[Toxins]</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">D[Dragon Scale] -->|Conflicts| E[Ice Crystals]</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">D -->|Synergizes| F[Fire Salts]</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">G[Unicorn Hair] -->|Purifies| H[Everything]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="graph LR  A[Moonflower] -->|Enhances| B[Healing Herbs]  A -->|Neutralizes| C[Toxins]  D[Dragon Scale] -->|Conflicts| E[Ice Crystals]  D -->|Synergizes| F[Fire Salts]  G[Unicorn Hair] -->|Purifies| H[Everything]"><div></div></button></div></figure></div>
+<hr>
+<div class="sl-heading-wrapper level-h2"><h2 id="potion-types">Potion Types</h2><a class="sl-anchor-link" href="#potion-types"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Potion Types”</span></a></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="healthpotion"><code dir="auto">HealthPotion</code></h3><a class="sl-anchor-link" href="#healthpotion"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “HealthPotion”</span></a></div>
+<p>Restores vitality and heals minor wounds.</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="typescript"><code><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">interface</span><span style="--0:#D6DEEB;--1:#403F53"> HealthPotion </span><span style="--0:#C792EA;--1:#8844AE">extends</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">Potion</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">healingPower</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">number</span><span style="--0:#D6DEEB;--1:#403F53">; </span><span style="--0:#919F9F;--1:#5D6376">// 1-100</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">duration</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">number</span><span style="--0:#D6DEEB;--1:#403F53">; </span><span style="--0:#919F9F;--1:#5D6376">// in seconds</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">sideEffects</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">string</span><span style="--0:#D6DEEB;--1:#403F53">[];</span></div></div><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">recipe</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#C792EA;--1:#8844AE"> </span><span style="--0:#FFCB8B;--1:#111111">HealthPotion</span><span style="--0:#C792EA;--1:#8844AE"> = {</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">name: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">Greater Health Potion</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">healingPower: </span><span style="--0:#F78C6C;--1:#AA0982">75</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">duration: </span><span style="--0:#F78C6C;--1:#AA0982">3600</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">sideEffects:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">mild euphoria</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">temporary glow</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">]</span></div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">;</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="interface HealthPotion extends Potion {  healingPower: number; // 1-100  duration: number; // in seconds  sideEffects: string[];}const recipe: HealthPotion = {  name: &#x22;Greater Health Potion&#x22;,  healingPower: 75,  duration: 3600,  sideEffects: [&#x22;mild euphoria&#x22;, &#x22;temporary glow&#x22;]};"><div></div></button></div></figure></div>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-cyan-500)] bg-[var(--material-cyan-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-cyan-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.4 3-5.7 0-3.9-3.1-7-7-7z"></path></svg></span><p class="font-semibold text-[var(--material-cyan-500)]">Tip</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-cyan-500)]"><p>Add a drop of honey for better taste without affecting potency.</p></div></aside>
+<div class="sl-heading-wrapper level-h3"><h3 id="invisibilitypotion"><code dir="auto">InvisibilityPotion</code></h3><a class="sl-anchor-link" href="#invisibilitypotion"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “InvisibilityPotion”</span></a></div>
+<p>Renders the drinker invisible for a limited time.</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="typescript"><code><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">interface</span><span style="--0:#D6DEEB;--1:#403F53"> InvisibilityPotion </span><span style="--0:#C792EA;--1:#8844AE">extends</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">Potion</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">opacity</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">number</span><span style="--0:#D6DEEB;--1:#403F53">; </span><span style="--0:#919F9F;--1:#5D6376">// 0 = fully invisible</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">duration</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">number</span><span style="--0:#D6DEEB;--1:#403F53">;</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">affectsClothing</span><span style="--0:#7FDBCA;--1:#096E72">:</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C5E478;--1:#3B61B0">boolean</span><span style="--0:#D6DEEB;--1:#403F53">;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="interface InvisibilityPotion extends Potion {  opacity: number; // 0 = fully invisible  duration: number;  affectsClothing: boolean;}"><div></div></button></div></figure></div>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-red-500)] bg-[var(--material-red-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-red-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M227.31,80.24,175.76,28.69A16.13,16.13,0,0,0,164.45,24H91.55a16.13,16.13,0,0,0-11.31,4.69L28.69,80.24A16.13,16.13,0,0,0,24,91.55v72.9a16.13,16.13,0,0,0,4.69,11.31l51.55,51.55A16.13,16.13,0,0,0,91.55,232h72.9a16.13,16.13,0,0,0,11.31-4.69l51.55-51.55A16.13,16.13,0,0,0,232,164.45V91.55A16.13,16.13,0,0,0,227.31,80.24ZM120,80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z"></path></svg></span><p class="font-semibold text-[var(--material-red-500)]">Danger</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-red-500)]"><p>The <code dir="auto">affectsClothing</code> parameter defaults to <code dir="auto">false</code>. Check twice before drinking in public.</p></div></aside>
+<div class="sl-heading-wrapper level-h3"><h3 id="transformationpotion"><code dir="auto">TransformationPotion</code></h3><a class="sl-anchor-link" href="#transformationpotion"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “TransformationPotion”</span></a></div>
+<p>Transforms the drinker into another creature.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Target Form</th><th>Difficulty</th><th>Reversal Time</th></tr></thead><tbody><tr><td>Cat</td><td>Easy</td><td>1 hour</td></tr><tr><td>Bird</td><td>Medium</td><td>2 hours</td></tr><tr><td>Dragon</td><td>Expert</td><td>Good luck</td></tr><tr><td>Tax Collector</td><td>Forbidden</td><td>Eternal</td></tr></tbody></table>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-pink-500)] bg-[var(--material-pink-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-pink-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z"></path></svg></span><p class="font-semibold text-[var(--material-pink-500)]">Known Issue</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-pink-500)]"><p>Transforming into aquatic creatures while indoors may cause flooding. We’re working on a fix.</p></div></aside>
+<hr>
+<div class="sl-heading-wrapper level-h2"><h2 id="brewing-methods">Brewing Methods</h2><a class="sl-anchor-link" href="#brewing-methods"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Brewing Methods”</span></a></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="cauldronbrewoptions"><code dir="auto">Cauldron.brew(options)</code></h3><a class="sl-anchor-link" href="#cauldronbrewoptions"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Cauldron.brew(options)”</span></a></div>
+<p>Primary brewing method for all potions.</p>
+<p><strong>Parameters:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Parameter</th><th>Type</th><th align="center">Required</th><th>Default</th></tr></thead><tbody><tr><td><code dir="auto">ingredients</code></td><td><code dir="auto">string[]</code></td><td align="center">Yes</td><td>—</td></tr><tr><td><code dir="auto">temperature</code></td><td><code dir="auto">number</code></td><td align="center">No</td><td>100°C</td></tr><tr><td><code dir="auto">duration</code></td><td><code dir="auto">string</code></td><td align="center">No</td><td>”1 hour”</td></tr><tr><td><code dir="auto">stirDirection</code></td><td><code dir="auto">'clockwise' | 'counter'</code></td><td align="center">No</td><td>”clockwise”</td></tr></tbody></table>
+<p><strong>Returns:</strong> <code dir="auto">Promise&#x3C;Potion></code></p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="typescript"><code><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">potion</span><span style="--0:#C792EA;--1:#8844AE"> = await </span><span style="--0:#D6DEEB;--1:#403F53">cauldron</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">brew</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">ingredients:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">wolfsbane</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">silver-dust</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">moonwater</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">temperature: </span><span style="--0:#F78C6C;--1:#AA0982">150</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">duration: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">3 hours</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">stirDirection: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">counter</span><span style="--0:#D9F5DD;--1:#111111">'</span></div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="const potion = await cauldron.brew({  ingredients: [&#x27;wolfsbane&#x27;, &#x27;silver-dust&#x27;, &#x27;moonwater&#x27;],  temperature: 150,  duration: &#x27;3 hours&#x27;,  stirDirection: &#x27;counter&#x27;});"><div></div></button></div></figure></div>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-blue-grey-500)] bg-[var(--material-blue-grey-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-blue-grey-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H4.99c-1.11 0-1.98.89-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z"></path></svg></span><p class="font-semibold text-[var(--material-blue-grey-500)]">Note</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-blue-grey-500)]"><p>Counter-clockwise stirring is required for all curse-related potions. The magic has opinions.</p></div></aside>
+<div class="sl-heading-wrapper level-h3"><h3 id="cauldronsimmeroptions"><code dir="auto">Cauldron.simmer(options)</code></h3><a class="sl-anchor-link" href="#cauldronsimmeroptions"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Cauldron.simmer(options)”</span></a></div>
+<p>Low-temperature brewing for delicate ingredients.</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="typescript"><code><div class="ec-line"><div class="code"><span style="--0:#919F9F;--1:#5D6376">// Gentle brewing for sensitive ingredients</span></div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">delicatePotion</span><span style="--0:#C792EA;--1:#8844AE"> = await </span><span style="--0:#D6DEEB;--1:#403F53">cauldron</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">simmer</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">ingredients:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">fairy-dust</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">morning-dew</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">butterfly-wings</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">temperature: </span><span style="--0:#F78C6C;--1:#AA0982">45</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#919F9F;--1:#5D6376">// Never exceed 50°C</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#C792EA;--1:#8844AE">  </span></span><span style="--0:#C792EA;--1:#8844AE">duration: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">6 hours</span><span style="--0:#D9F5DD;--1:#111111">'</span></div></div><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="// Gentle brewing for sensitive ingredientsconst delicatePotion = await cauldron.simmer({  ingredients: [&#x27;fairy-dust&#x27;, &#x27;morning-dew&#x27;, &#x27;butterfly-wings&#x27;],  temperature: 45, // Never exceed 50°C  duration: &#x27;6 hours&#x27;});"><div></div></button></div></figure></div>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-orange-500)] bg-[var(--material-orange-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-orange-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"></path></svg></span><p class="font-semibold text-[var(--material-orange-500)]">Warning</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-orange-500)]"><p>Fairy dust ignites above 50°C. The cleanup is not worth it.</p></div></aside>
+<hr>
+<div class="sl-heading-wrapper level-h2"><h2 id="error-handling">Error Handling</h2><a class="sl-anchor-link" href="#error-handling"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Error Handling”</span></a></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="common-exceptions">Common Exceptions</h3><a class="sl-anchor-link" href="#common-exceptions"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Common Exceptions”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="typescript"><code><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8844AE">try</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">potion</span><span style="--0:#C792EA;--1:#8844AE"> = await </span><span style="--0:#D6DEEB;--1:#403F53">cauldron</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">brew</span><span style="--0:#D6DEEB;--1:#403F53">(recipe);</span></div></div><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">} </span><span style="--0:#C792EA;--1:#8844AE">catch</span><span style="--0:#D6DEEB;--1:#403F53"> (error) {</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#C792EA;--1:#8844AE">if</span><span style="--0:#D6DEEB;--1:#403F53"> (error </span><span style="--0:#C792EA;--1:#8844AE">instanceof</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#FFCB8B;--1:#111111">IngredientConflictError</span><span style="--0:#D6DEEB;--1:#403F53">) {</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">    </span></span><span style="--0:#D6DEEB;--1:#403F53">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">Incompatible ingredients detected</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">} </span><span style="--0:#C792EA;--1:#8844AE">else</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">if</span><span style="--0:#D6DEEB;--1:#403F53"> (error </span><span style="--0:#C792EA;--1:#8844AE">instanceof</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#FFCB8B;--1:#111111">CauldronOverflowError</span><span style="--0:#D6DEEB;--1:#403F53">) {</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">    </span></span><span style="--0:#D6DEEB;--1:#403F53">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">Too many ingredients! Duck!</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">} </span><span style="--0:#C792EA;--1:#8844AE">else</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">if</span><span style="--0:#D6DEEB;--1:#403F53"> (error </span><span style="--0:#C792EA;--1:#8844AE">instanceof</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#FFCB8B;--1:#111111">CurseBackfireError</span><span style="--0:#D6DEEB;--1:#403F53">) {</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">    </span></span><span style="--0:#D6DEEB;--1:#403F53">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">The curse returned to sender</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">);</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#919F9F;--1:#5D6376">// Seek medical attention immediately</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">}</span></div></div><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="try {  const potion = await cauldron.brew(recipe);} catch (error) {  if (error instanceof IngredientConflictError) {    console.log(&#x22;Incompatible ingredients detected&#x22;);  } else if (error instanceof CauldronOverflowError) {    console.log(&#x22;Too many ingredients! Duck!&#x22;);  } else if (error instanceof CurseBackfireError) {    console.log(&#x22;The curse returned to sender&#x22;);    // Seek medical attention immediately  }}"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="error-codes">Error Codes</h3><a class="sl-anchor-link" href="#error-codes"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Error Codes”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Code</th><th>Name</th><th>Solution</th></tr></thead><tbody><tr><td><code dir="auto">E001</code></td><td>Temperature exceeded</td><td>Let it cool, start over</td></tr><tr><td><code dir="auto">E002</code></td><td>Ingredient missing</td><td>Check your pantry</td></tr><tr><td><code dir="auto">E003</code></td><td>Cauldron cursed</td><td>Buy a new cauldron</td></tr><tr><td><code dir="auto">E404</code></td><td>Potion not found</td><td>Recipe doesn’t exist</td></tr><tr><td><code dir="auto">E666</code></td><td>Demon summoned</td><td>Call an exorcist</td></tr></tbody></table>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-orange-700)] bg-[var(--material-orange-700)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-orange-700)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8 18.4L14 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81H9.04c-.42 0-.65.48-.39.81L10 6.5v4.17L4.2 18.4c-.49.66-.02 1.6.8 1.6h14c.82 0 1.29-.94.8-1.6z"></path></svg></span><p class="font-semibold text-[var(--material-orange-700)]">Experimental</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-orange-700)]"><p>We’re testing automatic demon banishment in v4.0. Beta testers needed (liability waiver required).</p></div></aside>
+<hr>
+<div class="sl-heading-wrapper level-h2"><h2 id="best-practices">Best Practices</h2><a class="sl-anchor-link" href="#best-practices"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Best Practices”</span></a></div>
+<ol>
+<li><strong>Always label your potions</strong> — Unlabeled bottles lead to very interesting mornings</li>
+<li><strong>Clean your cauldron</strong> — Residue affects future brews</li>
+<li><strong>Source ethically</strong> — Dragon scales from live dragons only with consent</li>
+<li><strong>Test on plants first</strong> — If the fern survives, you probably will too</li>
+<li><strong>Keep antidotes handy</strong> — Mistakes happen</li>
+</ol>
+<aside class="my-4 rounded-lg border px-4 py-2.5 border-[var(--material-green-500)] bg-[var(--material-green-500)]/10"><div class="flex items-center gap-3"><span class="flex-shrink-0 text-[var(--material-green-500)]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg></span><p class="font-semibold text-[var(--material-green-500)]">Success</p></div><div class="mt-2 [&#x26;>p]:my-0 text-[var(--material-green-500)]"><p>Happy brewing! May your potions be potent and your explosions be minor.</p></div></aside> </div> <footer class="sl-flex astro-3yyafb3n"> <div class="meta sl-flex astro-3yyafb3n">   </div> <div class="pagination-links print:hidden astro-u2l5gyhi" dir="ltr"> <a href="/branches/features/v1/reference/haunted-house-api/" rel="prev" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg> <span class="astro-u2l5gyhi"> Previous <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Haunted House API Reference</span> </span> </a> <a href="/branches/features/v1/tabstest/" rel="next" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg> <span class="astro-u2l5gyhi"> Next <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Tabs Test Page</span> </span> </a> </div>  </footer> </div> </div>  </main> </div> </div>  </div> </div> </body></html>
