@@ -48,6 +48,7 @@ export default defineConfig({
 				SiteTitle: "./src/components/header/SiteTitle.astro",
 				ThemeSelect: "./src/components/header/ThemeSelect.astro",
 				PageSidebar: "./src/components/pagesidebar/PageSidebar.astro",
+				Pagination: "./src/components/pagination/Pagination.astro",
 			},
 			markdown: {},
 			plugins: [starlightLlmsTxt(), starlightDotMd()],

@@ -1,0 +1,36 @@
+---
+import { arrowLeftIcon, arrowRightIcon } from "./icons";
+import { paginationStyles as s } from "./styles";
+
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const isRtl = dir === "rtl";
+
+const prevIcon = isRtl ? arrowRightIcon : arrowLeftIcon;
+const nextIcon = isRtl ? arrowLeftIcon : arrowRightIcon;
+---
+
+<nav class={s.container} aria-label="Page navigation" dir={dir}>
+  {
+    prev && (
+      <a href={prev.href} rel="prev" class:list={[s.link, s.linkPrev]}>
+        <span class={s.eyebrow}>
+          <span class:list={[s.icon, s.iconPrev]} set:html={prevIcon} />
+          {Astro.locals.t("page.previousLink")}
+        </span>
+        <span class={s.title}>{prev.label}</span>
+      </a>
+    )
+  }
+  {
+    next && (
+      <a href={next.href} rel="next" class:list={[s.link, s.linkNext]}>
+        <span class={s.eyebrow}>
+          {Astro.locals.t("page.nextLink")}
+          <span class:list={[s.icon, s.iconNext]} set:html={nextIcon} />
+        </span>
+        <span class={s.title}>{next.label}</span>
+      </a>
+    )
+  }
+</nav>
