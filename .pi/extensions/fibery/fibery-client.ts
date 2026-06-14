@@ -1,7 +1,11 @@
 import { access, readFile } from "node:fs/promises";
 import {
+	BETA_PUBLICATION_FIELD,
+	BUG_PRIORITY_SORT,
 	DEFAULT_STATUS_BY_KIND,
 	DOMAIN_ID_BY_NAME,
+	FEATURE_IMPORTANCE_SORT,
+	MILESTONE_IN_DEVELOPMENT_STATE,
 	type DomainName,
 	type BugPriority,
 	type BugStatus,
@@ -647,10 +651,15 @@ export async function listMilestones(config: FiberyConfig): Promise<Array<{ id: 
 	return listMilestonesInternal(config);
 }
 
-export async function listRecentBetas(
-	config: FiberyConfig,
-	limit: number,
-): Promise<Array<{ id: string; name: string; identifier: number }>> {
+export type RecentBeta = {
+	id: string;
+	name: string;
+	identifier: number;
+	published: boolean;
+	publicationDate: string | null;
+};
+
+export async function listRecentBetas(config: FiberyConfig, limit: number): Promise<RecentBeta[]> {
 	const rows = await queryTypeRecords(
 		config,
 		RELATED_TYPE_IDS.beta,
@@ -658,15 +667,25 @@ export async function listRecentBetas(
 			"fibery/id": "fibery/id",
 			[RELATED_TYPE_IDS.milestoneNameField]: RELATED_TYPE_IDS.milestoneNameField,
 			[RELATED_TYPE_IDS.betaIdentifierField]: RELATED_TYPE_IDS.betaIdentifierField,
+			[BETA_PUBLICATION_FIELD]: BETA_PUBLICATION_FIELD,
 		},
 		1000,
 	);
 	return rows
-		.map((row) => ({
-			id: primaryId(row),
-			name: String(row[RELATED_TYPE_IDS.milestoneNameField] ?? ""),
-			identifier: Number(row[RELATED_TYPE_IDS.betaIdentifierField] ?? 0),
-		}))
+		.map((row) => {
+			const publicationDate = row[BETA_PUBLICATION_FIELD];
+			const publication =
+				publicationDate === null || publicationDate === undefined
+					? null
+					: String(publicationDate);
+			return {
+				id: primaryId(row),
+				name: String(row[RELATED_TYPE_IDS.milestoneNameField] ?? ""),
+				identifier: Number(row[RELATED_TYPE_IDS.betaIdentifierField] ?? 0),
+				published: publication !== null,
+				publicationDate: publication,
+			};
+		})
 		.filter((row) => row.id && Number.isFinite(row.identifier) && row.identifier > 0)
 		.sort((a, b) => b.identifier - a.identifier)
 		.slice(0, Math.max(1, Math.min(20, Math.floor(limit))));
@@ -1189,6 +1208,372 @@ export async function getDiscoverySummary(config: FiberyConfig): Promise<Discove
 			id: typeIdentifier(bugType),
 			displayName: typeDisplayName(bugType),
 			fieldCount: extractFields(bugType).length,
+		},
+	};
+}
+
+export type ReleaseType = "beta" | "full";
+
+export type ChangelogItem = {
+	kind: "bug" | "feature";
+	id: string;
+	title: string;
+	descriptionMarkdown: string;
+	status: string;
+	severity?: BugPriority;
+	importance?: FeatureImportance;
+};
+
+export type ChangelogBetaTarget = {
+	releaseType: "beta";
+	id: string;
+	name: string;
+	identifier: number;
+	published: false;
+};
+
+export type ChangelogMilestoneTarget = {
+	releaseType: "full";
+	id: string;
+	name: string;
+	state: string;
+	published: false;
+};
+
+export type ChangelogTarget = ChangelogBetaTarget | ChangelogMilestoneTarget;
+
+export type ChangelogItemsResult = {
+	releaseType: ReleaseType;
+	target: ChangelogTarget;
+	bugs: ChangelogItem[];
+	features: ChangelogItem[];
+	counts: { bugs: number; features: number; total: number };
+};
+
+export type GetChangelogItemsArgs = {
+	releaseType: ReleaseType;
+	targetIdentifier?: number;
+	targetName?: string;
+	includeDescriptions?: boolean;
+};
+
+type RawChangelogItem = {
+	kind: "bug" | "feature";
+	id: string;
+	title: string;
+	status: string;
+	severity?: BugPriority;
+	importance?: FeatureImportance;
+	descriptionSecret?: string;
+};
+
+const DESCRIPTION_BATCH_SIZE = 10;
+
+async function readDocumentMarkdown(config: FiberyConfig, secret: string): Promise<string> {
+	let attempt = 0;
+	while (attempt <= config.maxRetries) {
+		const response = await fetch(
+			`https://${normalizeWorkspace(config.workspace)}/api/documents/${secret}?format=md`,
+			{
+				headers: { Authorization: `Token ${config.token}` },
+			},
+		);
+		if (response.status === 429 && attempt < config.maxRetries) {
+			await wait(config.retryDelayMs * Math.pow(2, attempt));
+			attempt += 1;
+			continue;
+		}
+		if (!response.ok) {
+			throw new Error(`Failed to read document (${response.status}): ${await response.text()}`);
+		}
+		const payload = (await response.json()) as { content?: string };
+		return String(payload.content ?? "").trim();
+	}
+	throw new Error("Failed to read document after retries");
+}
+
+async function fetchDescriptionsInBatches(
+	config: FiberyConfig,
+	items: RawChangelogItem[],
+): Promise<Map<string, string>> {
+	const secrets = items
+		.map((item) => item.descriptionSecret)
+		.filter((secret): secret is string => Boolean(secret));
+	const uniqueSecrets = uniqueIds(secrets);
+	const result = new Map<string, string>();
+	for (let index = 0; index < uniqueSecrets.length; index += DESCRIPTION_BATCH_SIZE) {
+		const batch = uniqueSecrets.slice(index, index + DESCRIPTION_BATCH_SIZE);
+		const contents = await Promise.all(batch.map((secret) => readDocumentMarkdown(config, secret)));
+		for (let batchIndex = 0; batchIndex < batch.length; batchIndex += 1) {
+			result.set(batch[batchIndex], contents[batchIndex]);
+		}
+	}
+	return result;
+}
+
+function extractDescriptionSecret(row: Record<string, unknown>, descriptionField: string): string | undefined {
+	const document = asRecord(row[descriptionField]);
+	const secret = String(document["Collaboration~Documents/secret"] ?? document.secret ?? "").trim();
+	return secret || undefined;
+}
+
+function extractEnumName(row: Record<string, unknown>, field: string): string {
+	return normalizeStateName(row[field]);
+}
+
+export async function resolveUnpublishedBeta(
+	config: FiberyConfig,
+	identifier?: number,
+): Promise<ChangelogBetaTarget | { error: string }> {
+	const betas = await listRecentBetas(config, 1000);
+	const unpublished = betas.filter((beta) => !beta.published);
+	if (identifier !== undefined) {
+		const match = betas.find((beta) => beta.identifier === identifier);
+		if (!match) {
+			return { error: `No beta found with identifier ${identifier}` };
+		}
+		if (match.published) {
+			return { error: `Beta ${identifier} is already published` };
+		}
+		return {
+			releaseType: "beta",
+			id: match.id,
+			name: match.name,
+			identifier: match.identifier,
+			published: false,
+		};
+	}
+	if (unpublished.length === 0) {
+		return { error: "No unpublished beta found" };
+	}
+	const latest = unpublished.sort((a, b) => b.identifier - a.identifier)[0];
+	return {
+		releaseType: "beta",
+		id: latest.id,
+		name: latest.name,
+		identifier: latest.identifier,
+		published: false,
+	};
+}
+
+type MilestoneRow = {
+	id: string;
+	name: string;
+	publication: string | null;
+	changes: number;
+	state: string;
+};
+
+async function listMilestonesWithPublication(config: FiberyConfig): Promise<MilestoneRow[]> {
+	const rows = await executeCommand<Array<Record<string, unknown>>>(config, {
+		command: "fibery.entity/query",
+		args: {
+			query: {
+				"q/from": RELATED_TYPE_IDS.milestone,
+				"q/select": [
+					"fibery/id",
+					RELATED_TYPE_IDS.milestoneNameField,
+					BETA_PUBLICATION_FIELD,
+					"Milestone/Changes",
+					{ "workflow/state": ["enum/name"] },
+				],
+				"q/limit": 500,
+			},
+		},
+	});
+	return (Array.isArray(rows) ? rows : []).map(asRecord).map((row) => {
+		const publicationValue = row[BETA_PUBLICATION_FIELD];
+		const publication =
+			publicationValue === null || publicationValue === undefined ? null : String(publicationValue);
+		return {
+			id: primaryId(row),
+			name: String(row[RELATED_TYPE_IDS.milestoneNameField] ?? ""),
+			publication,
+			changes: Number(row["Milestone/Changes"] ?? 0),
+			state: extractEnumName(row, "workflow/state"),
+		};
+	});
+}
+
+export async function resolveUnpublishedMilestone(
+	config: FiberyConfig,
+	name?: string,
+): Promise<ChangelogMilestoneTarget | { error: string }> {
+	const milestones = await listMilestonesWithPublication(config);
+	if (name?.trim()) {
+		const match = milestones.find(
+			(milestone) => milestone.name.toLowerCase() === name.trim().toLowerCase(),
+		);
+		if (!match) {
+			return { error: `No milestone found with name '${name.trim()}'` };
+		}
+		if (match.publication !== null) {
+			return { error: `Milestone '${match.name}' is already published` };
+		}
+		return {
+			releaseType: "full",
+			id: match.id,
+			name: match.name,
+			state: match.state,
+			published: false,
+		};
+	}
+	const candidates = milestones.filter(
+		(milestone) =>
+			milestone.publication === null && milestone.state === MILESTONE_IN_DEVELOPMENT_STATE,
+	);
+	if (candidates.length === 0) {
+		return { error: "No unpublished in-development milestone found" };
+	}
+	const selected = candidates.sort((a, b) => {
+		if (b.changes !== a.changes) return b.changes - a.changes;
+		return a.name.localeCompare(b.name);
+	})[0];
+	return {
+		releaseType: "full",
+		id: selected.id,
+		name: selected.name,
+		state: selected.state,
+		published: false,
+	};
+}
+
+async function queryChangelogItemsForTarget(
+	config: FiberyConfig,
+	releaseType: ReleaseType,
+	targetId: string,
+): Promise<RawChangelogItem[]> {
+	const bugMapping = await resolveTypeMapping(config, "bug");
+	const featureMapping = await resolveTypeMapping(config, "feature");
+	const linkField =
+		releaseType === "beta" ? bugMapping.betaField : bugMapping.milestoneField;
+	const featureLinkField =
+		releaseType === "beta" ? featureMapping.betaField : featureMapping.milestoneField;
+
+	const bugRows = await executeCommand<Array<Record<string, unknown>>>(config, {
+		command: "fibery.entity/query",
+		args: {
+			query: {
+				"q/from": bugMapping.typeId,
+				"q/select": [
+					"fibery/id",
+					bugMapping.nameField,
+					{ [bugMapping.statusField]: ["enum/name"] },
+					{ [bugMapping.priorityField]: ["enum/name"] },
+					{ [bugMapping.descriptionField]: ["Collaboration~Documents/secret"] },
+				],
+				"q/where": ["=", [linkField, "fibery/id"], "$targetId"],
+				"q/limit": 500,
+			},
+			params: { $targetId: targetId },
+		},
+	});
+
+	const featureRows = await executeCommand<Array<Record<string, unknown>>>(config, {
+		command: "fibery.entity/query",
+		args: {
+			query: {
+				"q/from": featureMapping.typeId,
+				"q/select": [
+					"fibery/id",
+					featureMapping.nameField,
+					{ [featureMapping.statusField]: ["enum/name"] },
+					{ [featureMapping.importanceField]: ["enum/name"] },
+					{ [featureMapping.descriptionField]: ["Collaboration~Documents/secret"] },
+				],
+				"q/where": ["=", [featureLinkField, "fibery/id"], "$targetId"],
+				"q/limit": 500,
+			},
+			params: { $targetId: targetId },
+		},
+	});
+
+	const bugs: RawChangelogItem[] = (Array.isArray(bugRows) ? bugRows : []).map(asRecord).map((row) => ({
+		kind: "bug" as const,
+		id: primaryId(row),
+		title: entityName(row, bugMapping.nameField),
+		status: extractEnumName(row, bugMapping.statusField),
+		severity: extractEnumName(row, bugMapping.priorityField) as BugPriority,
+		descriptionSecret: extractDescriptionSecret(row, bugMapping.descriptionField),
+	}));
+
+	const features: RawChangelogItem[] = (Array.isArray(featureRows) ? featureRows : [])
+		.map(asRecord)
+		.map((row) => ({
+			kind: "feature" as const,
+			id: primaryId(row),
+			title: entityName(row, featureMapping.nameField),
+			status: extractEnumName(row, featureMapping.statusField),
+			importance: extractEnumName(row, featureMapping.importanceField) as FeatureImportance,
+			descriptionSecret: extractDescriptionSecret(row, featureMapping.descriptionField),
+		}));
+
+	return [...bugs, ...features];
+}
+
+function sortChangelogItems(items: RawChangelogItem[]): { bugs: RawChangelogItem[]; features: RawChangelogItem[] } {
+	const bugs = items
+		.filter((item) => item.kind === "bug")
+		.sort((a, b) => {
+			const aRank = BUG_PRIORITY_SORT[a.severity ?? "Low"] ?? 99;
+			const bRank = BUG_PRIORITY_SORT[b.severity ?? "Low"] ?? 99;
+			if (aRank !== bRank) return aRank - bRank;
+			return a.title.localeCompare(b.title);
+		});
+	const features = items
+		.filter((item) => item.kind === "feature")
+		.sort((a, b) => {
+			const aRank = FEATURE_IMPORTANCE_SORT[a.importance ?? "Internal"] ?? 99;
+			const bRank = FEATURE_IMPORTANCE_SORT[b.importance ?? "Internal"] ?? 99;
+			if (aRank !== bRank) return aRank - bRank;
+			return a.title.localeCompare(b.title);
+		});
+	return { bugs, features };
+}
+
+export async function getChangelogItems(
+	config: FiberyConfig,
+	args: GetChangelogItemsArgs,
+): Promise<ChangelogItemsResult | { error: string }> {
+	const releaseType = args.releaseType ?? "beta";
+	const target =
+		releaseType === "beta"
+			? await resolveUnpublishedBeta(config, args.targetIdentifier)
+			: await resolveUnpublishedMilestone(config, args.targetName);
+	if ("error" in target) return target;
+
+	const rawItems = await queryChangelogItemsForTarget(config, releaseType, target.id);
+	const { bugs: rawBugs, features: rawFeatures } = sortChangelogItems(rawItems);
+
+	let descriptionBySecret = new Map<string, string>();
+	if (args.includeDescriptions !== false) {
+		descriptionBySecret = await fetchDescriptionsInBatches(config, [...rawBugs, ...rawFeatures]);
+	}
+
+	const toChangelogItem = (item: RawChangelogItem): ChangelogItem => ({
+		kind: item.kind,
+		id: item.id,
+		title: item.title,
+		status: item.status,
+		descriptionMarkdown: item.descriptionSecret
+			? (descriptionBySecret.get(item.descriptionSecret) ?? "")
+			: "",
+		...(item.severity ? { severity: item.severity } : {}),
+		...(item.importance ? { importance: item.importance } : {}),
+	});
+
+	const bugs = rawBugs.map(toChangelogItem);
+	const features = rawFeatures.map(toChangelogItem);
+
+	return {
+		releaseType,
+		target,
+		bugs,
+		features,
+		counts: {
+			bugs: bugs.length,
+			features: features.length,
+			total: bugs.length + features.length,
 		},
 	};
 }

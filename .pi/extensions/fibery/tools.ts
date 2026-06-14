@@ -13,6 +13,7 @@ import {
 	createFeature,
 	discoverDomains,
 	findItems,
+	getChangelogItems,
 	getConfig,
 	getDiscoverySummary,
 	linkBugToFeature,
@@ -255,6 +256,30 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			const config = await getConfig(ctx.cwd);
 			const result = await getDiscoverySummary(config);
 			return textResult(`Fibery discovery summary: ${JSON.stringify(result, null, 2)}`, result);
+		},
+	});
+
+	pi.registerTool({
+		name: "fibery_get_changelog_items",
+		label: "Fibery Get Changelog Items",
+		description:
+			"Fetch sorted bugs and features for the latest unpublished beta or in-development milestone, including markdown descriptions",
+		promptSnippet: "Use before writing a Discord or release changelog from Fibery data.",
+		parameters: Type.Object({
+			releaseType: Type.Optional(stringEnum(["beta", "full"] as const)),
+			targetIdentifier: Type.Optional(Type.Number({ description: "Beta identifier such as 174" })),
+			targetName: Type.Optional(Type.String({ description: "Milestone name such as Interim (0.9)" })),
+			includeDescriptions: Type.Optional(Type.Boolean({ description: "Fetch document markdown descriptions" })),
+		}),
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+			const config = await getConfig(ctx.cwd);
+			const result = await getChangelogItems(config, {
+				releaseType: params.releaseType ?? "beta",
+				targetIdentifier: params.targetIdentifier,
+				targetName: params.targetName,
+				includeDescriptions: params.includeDescriptions ?? true,
+			});
+			return textResult(`Fibery changelog items: ${JSON.stringify(result, null, 2)}`, result);
 		},
 	});
 }

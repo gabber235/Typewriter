@@ -1,3 +1,3 @@
-import { buildFiberyMaintenancePrompt, buildFiberyNewPrompt } from "./workflow.ts";
+import { buildFiberyChangelogPrompt, buildFiberyMaintenancePrompt, buildFiberyNewPrompt } from "./workflow.ts";
 
-export { buildFiberyMaintenancePrompt, buildFiberyNewPrompt };
+export { buildFiberyChangelogPrompt, buildFiberyMaintenancePrompt, buildFiberyNewPrompt };

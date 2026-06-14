@@ -107,3 +107,21 @@ export const DEFAULT_STATUS_BY_KIND: { bug: BugStatus; feature: FeatureStatus } 
 	bug: "Investigating",
 	feature: "Backlog",
 };
+
+export const BETA_PUBLICATION_FIELD = "Milestone/Publication" as const;
+
+export const BUG_PRIORITY_SORT: Record<BugPriority, number> = {
+	Critical: 0,
+	High: 1,
+	Normal: 2,
+	Low: 3,
+};
+
+export const FEATURE_IMPORTANCE_SORT: Record<FeatureImportance, number> = {
+	Major: 0,
+	Notable: 1,
+	Minor: 2,
+	Internal: 3,
+};
+
+export const MILESTONE_IN_DEVELOPMENT_STATE = "In Development" as const;

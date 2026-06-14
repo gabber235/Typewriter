@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { buildFiberyMaintenancePrompt, buildFiberyNewPrompt } from "./prompts.ts";
+import { buildFiberyChangelogPrompt, buildFiberyMaintenancePrompt, buildFiberyNewPrompt } from "./prompts.ts";
 
 export function registerFiberyCommands(pi: ExtensionAPI): void {
 	pi.registerCommand("fibery-new", {
@@ -31,6 +31,17 @@ export function registerFiberyCommands(pi: ExtensionAPI): void {
 					mode: "slash-command-only",
 				}),
 			);
+		},
+	});
+
+	pi.registerCommand("fibery-changelog", {
+		description: "Generate docs/changelog.md from Fibery beta or milestone items",
+		handler: async (args, ctx) => {
+			if (!ctx.isIdle()) {
+				ctx.ui.notify("Wait for the current agent turn before starting Fibery changelog.", "warning");
+				return;
+			}
+			pi.sendUserMessage(buildFiberyChangelogPrompt(args, { cwd: ctx.cwd }));
 		},
 	});
 }

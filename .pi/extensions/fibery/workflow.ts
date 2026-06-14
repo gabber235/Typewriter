@@ -78,6 +78,45 @@ export function buildFiberyNewPrompt(args: string, options: FiberyNewPromptOptio
 	].join("\n");
 }
 
+export type FiberyChangelogPromptOptions = {
+	cwd: string;
+};
+
+export function buildFiberyChangelogPrompt(args: string, options: FiberyChangelogPromptOptions): string {
+	const trimmed = args.trim().toLowerCase();
+	const releaseHint =
+		trimmed === "beta" || trimmed === "full"
+			? trimmed
+			: trimmed.includes("full") || trimmed.includes("milestone")
+				? "full"
+				: trimmed.includes("beta")
+					? "beta"
+					: "";
+	const releaseLine = releaseHint
+		? `Release type from command args: ${releaseHint}.`
+		: "Release type not specified. Ask the user: beta or full.";
+	return [
+		"Generate a Discord-ready changelog from Fibery data.",
+		"",
+		"Follow the project skill at .pi/skills/fibery-changelog/SKILL.md and references/formatting.md.",
+		releaseLine,
+		"",
+		"Workflow:",
+		"1. If release type is missing, ask_user: beta vs full.",
+		"2. Call fibery_get_changelog_items with the chosen releaseType.",
+		"3. Distill user-facing prose from Fibery descriptions. Do not paste intake templates verbatim.",
+		"4. Apply formatting rules: features first, bugs second (beta only), :mx: discord-font headings.",
+		"5. Write docs/changelog.md in the repo root.",
+		"6. Summarize what was included and omitted.",
+		"",
+		"Preferred tool:",
+		"- fibery_get_changelog_items",
+		"",
+		`Working directory: ${options.cwd}`,
+		trimmed && !releaseHint ? `\nUser provided context:\n${args.trim()}` : "",
+	].join("\n");
+}
+
 export function buildFiberyMaintenancePrompt(args: string, options: FiberyMaintenancePromptOptions): string {
 	const trimmed = args.trim();
 	const extraScope = trimmed ? `\n\nExtra maintenance scope from user:\n${trimmed}` : "";
