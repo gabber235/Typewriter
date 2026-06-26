@@ -1962,11 +1962,7 @@ Here you would place images, previews, or visual content.
 - **v1.1.0** — Video player improvements
 - **v1.0.0** — Initial release
 
-| Version | Date       | Status |
-| ------- | ---------- | ------ |
-| 1.2.0   | 2026-04-04 | Latest |
-| 1.1.0   | 2026-03-01 | Stable |
-| 1.0.0   | 2026-01-15 | Legacy |
+\| Version | Date | Status | |---------|------------|---------| | 1.2.0 | 2026-04-04 | Latest | | 1.1.0 | 2026-03-01 | Stable | | 1.0.0 | 2026-01-15 | Legacy |
 
 ## With Code Blocks
 
@@ -3111,12 +3107,6 @@ Congratulations! You now know more about underwater basket weaving than 99.9% of
 
 [](/branches/features/v1/_astro/world-specific.BacefuuM.webm)
 
-<!-- Center play/pause indicator -->
-
-<!-- Progress bar: always visible at bottom, lifts on hover -->
-
-<!-- Overlay with controls: visible on hover -->
-
 0:00 / 0:00
 
 ## With Audio — Unmuted, Manual Play, No Loop
@@ -3124,12 +3114,6 @@ Congratulations! You now know more about underwater basket weaving than 99.9% of
 [Section titled “With Audio — Unmuted, Manual Play, No Loop”](#with-audio--unmuted-manual-play-no-loop)
 
 [](/branches/features/v1/_astro/world-specific.BacefuuM.webm)
-
-<!-- Center play/pause indicator -->
-
-<!-- Progress bar: always visible at bottom, lifts on hover -->
-
-<!-- Overlay with controls: visible on hover -->
 
 0:00 / 0:00
 
@@ -3139,12 +3123,6 @@ Congratulations! You now know more about underwater basket weaving than 99.9% of
 
 [](/branches/features/v1/_astro/world-specific.BacefuuM.webm)
 
-<!-- Center play/pause indicator -->
-
-<!-- Progress bar: always visible at bottom, lifts on hover -->
-
-<!-- Overlay with controls: visible on hover -->
-
 0:00 / 0:00
 
 ## With Chapters
@@ -3152,11 +3130,5 @@ Congratulations! You now know more about underwater basket weaving than 99.9% of
 [Section titled “With Chapters”](#with-chapters)
 
 [](/branches/features/v1/_astro/world-specific.BacefuuM.webm)
-
-<!-- Center play/pause indicator -->
-
-<!-- Progress bar: always visible at bottom, lifts on hover -->
-
-<!-- Overlay with controls: visible on hover -->
 
 0:00 / 0:00
