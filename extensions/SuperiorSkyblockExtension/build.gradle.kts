@@ -19,7 +19,7 @@ typewriter {
             |It includes many events for you to use in your dialogue, as well as a few actions and conditions.
         """.trimMargin()
         flag(ExtensionFlag.Deprecated)
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 

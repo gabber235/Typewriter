@@ -23,7 +23,7 @@ typewriter {
         description = """
             |The Vault Extension is an extension that makes it easy to use Vault's economy system in your dialogue.
         """.trimMargin()
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 

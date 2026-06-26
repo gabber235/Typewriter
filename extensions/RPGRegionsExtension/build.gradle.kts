@@ -19,7 +19,7 @@ typewriter {
             |Create dialogues that are triggered when the player enters or leaves a region.
         """.trimMargin()
         flag(ExtensionFlag.Deprecated)
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 

@@ -1,4 +1,14 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.tomlj.Toml
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.tomlj:tomlj:1.1.1")
+    }
+}
 
 plugins {
     id("java")
@@ -8,9 +18,22 @@ plugins {
     id("com.gradleup.shadow") version "9.4.1" apply false
 }
 
+val typewriterSettingsFile = rootProject.file("../settings.toml")
+val typewriterSettings = Toml.parse(typewriterSettingsFile.toPath())
+
+if (typewriterSettings.hasErrors()) {
+    error(typewriterSettings.errors().joinToString("\n"))
+}
+
+val configuredTypewriterVersion = typewriterSettings.getString("version") ?: error("Missing version in settings.toml")
+val configuredTypewriterJavaVersion = typewriterSettings.getLong("java")?.toInt() ?: error("Missing java in settings.toml")
+val typewriterVersion = providers.gradleProperty("typewriter.version").getOrElse(configuredTypewriterVersion)
+val typewriterJavaVersion = providers.gradleProperty("typewriter.java")
+    .map(String::toInt)
+    .getOrElse(configuredTypewriterJavaVersion)
+
 group = "com.typewritermc"
-val versionFile = if (file("version.txt").exists()) file("version.txt") else file("../version.txt")
-version = versionFile.readText().trim()
+version = typewriterVersion
 
 allprojects {
     apply(plugin = "java")
@@ -27,7 +50,7 @@ allprojects {
         useJUnitPlatform()
     }
     kotlin {
-        jvmToolchain(21)
+        jvmToolchain(typewriterJavaVersion)
     }
     tasks.withType(KotlinCompile::class.java) {
         compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")

@@ -24,7 +24,7 @@ typewriter {
             |It is **not** necessary to use this extension for quests.
             |It is just a visual novelty.
             """.trimMargin()
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
         dependencies {

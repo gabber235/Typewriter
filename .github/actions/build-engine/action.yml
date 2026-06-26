@@ -1,6 +1,12 @@
 name: Build Paper Engine
 description: "Builds the plugin and runs tests"
 
+inputs:
+  gradle-arguments:
+    required: false
+    default: ""
+    description: "Additional Gradle arguments"
+
 runs:
   using: "composite"
   steps:
@@ -32,10 +38,10 @@ runs:
 
       - name: Test Paper Engine
         working-directory: ./engine
-        run: ./gradlew engine-paper:test --stacktrace --warning-mode all
+        run: ./gradlew engine-paper:test ${{ inputs.gradle-arguments }} --stacktrace --warning-mode all
         shell: bash
 
       - name: Build Plugin
         working-directory: ./engine
-        run: ./gradlew engine-paper:buildRelease --stacktrace --warning-mode all
+        run: ./gradlew engine-paper:buildRelease ${{ inputs.gradle-arguments }} --stacktrace --warning-mode all
         shell: bash

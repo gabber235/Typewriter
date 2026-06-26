@@ -19,7 +19,7 @@ typewriter {
             |Create cool particles during cinematics or have dialgues triggered when interacting with a MythicMob.
         """.trimMargin()
         flag(ExtensionFlag.Deprecated)
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 

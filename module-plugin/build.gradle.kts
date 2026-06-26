@@ -1,3 +1,14 @@
+import org.tomlj.Toml
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.tomlj:tomlj:1.1.1")
+    }
+}
+
 plugins {
     kotlin("jvm") version "2.3.20"
     `java-gradle-plugin`
@@ -7,10 +18,24 @@ plugins {
     `maven-publish`
 }
 
+val typewriterSettingsFile = rootProject.file("../settings.toml")
+val typewriterSettings = Toml.parse(typewriterSettingsFile.toPath())
+
+if (typewriterSettings.hasErrors()) {
+    error(typewriterSettings.errors().joinToString("\n"))
+}
+
+val configuredTypewriterVersion = typewriterSettings.getString("version") ?: error("Missing version in settings.toml")
+val configuredTypewriterJavaVersion = typewriterSettings.getLong("java")?.toInt() ?: error("Missing java in settings.toml")
+val typewriterVersion = providers.gradleProperty("typewriter.version").getOrElse(configuredTypewriterVersion)
+val typewriterJavaVersion = providers.gradleProperty("typewriter.java")
+    .map(String::toInt)
+    .getOrElse(configuredTypewriterJavaVersion)
+
 group = "com.typewritermc.module-plugin"
 version = "2.1.0"
 
-val engineVersion = file("../version.txt").readText().trim().substringBefore("-beta")
+val engineVersion = typewriterVersion.substringBefore("-beta")
 
 subprojects {
     group = rootProject.group
@@ -47,7 +72,7 @@ allprojects {
         useJUnitPlatform()
     }
     kotlin {
-        jvmToolchain(21)
+        jvmToolchain(typewriterJavaVersion)
     }
 
     publishing {
