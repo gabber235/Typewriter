@@ -30,6 +30,7 @@ repositories {
 
 dependencies {
     val paperVersion = "1.21.11-R0.1-SNAPSHOT"
+//    val paperVersion = "26.2.build.34-alpha"
     compileOnlyApi("io.papermc.paper:paper-api:$paperVersion")
 
     api(project(":engine-core"))
