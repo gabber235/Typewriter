@@ -25,7 +25,12 @@ const id = crypto.randomUUID();
 </div>
 
 <script>
-  import { initTabs } from "./tabs";
+  import { setupTabs } from "./tabs";
 
-  document.querySelectorAll<HTMLElement>("[data-tabs]").forEach(initTabs);
+  // `astro:after-swap` runs after the new DOM is in place but before it is
+  // painted, so tabs reached via the view-transitions router are built with no
+  // visible flash. `astro:page-load` covers the initial load. The idempotency
+  // guard in initTabs keeps the double-fire from rebuilding anything.
+  document.addEventListener("astro:after-swap", setupTabs);
+  document.addEventListener("astro:page-load", setupTabs);
 </script>

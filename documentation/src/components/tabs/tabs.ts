@@ -5,6 +5,11 @@ const syncGroups = new Map<string, Set<HTMLElement>>();
 const tabActivators = new WeakMap<HTMLElement, (idx: number) => void>();
 
 export function initTabs(container: HTMLElement): void {
+	// Guard against double-initialization (e.g. if setup runs more than once on
+	// the same DOM). Re-running would append duplicate tab buttons.
+	if (container.dataset.tabsReady === "true") return;
+	container.dataset.tabsReady = "true";
+
 	const tablist = container.querySelector<HTMLElement>("[role='tablist']");
 	const panelsWrap = container.querySelector<HTMLElement>("[data-tab-panels]");
 	const pill = container.querySelector<HTMLElement>("[data-tab-pill]");
@@ -217,4 +222,18 @@ function slugify(text: string): string {
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.max(min, Math.min(max, value));
+}
+
+/**
+ * Initialize every tab group on the current page. Safe to call on each
+ * `astro:page-load`: it forgets tab containers from previously-visited pages
+ * (whose DOM was swapped out by the client router) and skips already-initialized
+ * containers.
+ */
+export function setupTabs(): void {
+	for (const [key, set] of syncGroups) {
+		for (const el of set) if (!el.isConnected) set.delete(el);
+		if (set.size === 0) syncGroups.delete(key);
+	}
+	document.querySelectorAll<HTMLElement>("[data-tabs]").forEach(initTabs);
 }

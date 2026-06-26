@@ -2,7 +2,6 @@
 import TableOfContentsList from "./TableOfContentsList.astro";
 
 const { toc } = Astro.locals.starlightRoute;
-console.log(toc);
 ---
 
 {
@@ -50,8 +49,9 @@ console.log(toc);
       </nav>
 
       <!-- Back to Top Button (fixed bottom right) -->
+      <!-- Starts hidden so it doesn't flash in before the scroll handler runs. -->
       <button
-        class="back-to-top-pill-fixed"
+        class="back-to-top-pill-fixed hidden"
         aria-label="Back to top"
         type="button">
         <svg viewBox="0 0 20 20" fill="currentColor">

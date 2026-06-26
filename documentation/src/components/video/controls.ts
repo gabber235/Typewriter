@@ -15,6 +15,10 @@ function formatTime(seconds: number): string {
 }
 
 export function initVideoPlayer(container: HTMLElement) {
+	// Guard against double-initialization (avoids duplicate event listeners).
+	if (container.dataset.videoReady === "true") return;
+	container.dataset.videoReady = "true";
+
 	const video = container.querySelector<HTMLVideoElement>("[data-video]");
 	const progressTrack = container.querySelector<HTMLElement>(
 		"[data-progress-track]",

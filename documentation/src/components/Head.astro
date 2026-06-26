@@ -1,0 +1,11 @@
+---
+// Custom Head override: render Starlight's default <head> tags, then enable
+// Astro's client-side router so navigation swaps content instead of doing a full
+// page reload. This is what makes the persisted header/sidebar and the
+// `astro:page-load` listeners across the site actually fire.
+import { ClientRouter } from "astro:transitions";
+import Default from "@astrojs/starlight/components/Head.astro";
+---
+
+<Default><slot /></Default>
+<ClientRouter />

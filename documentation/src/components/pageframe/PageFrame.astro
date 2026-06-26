@@ -4,12 +4,14 @@ const { hasSidebar } = Astro.locals.starlightRoute;
 
 <div class="flex flex-col min-h-screen bg-(--surface)">
   <header
-    class="fixed inset-0 top-0 z-50 w-full h-fit px-4 p-2 bg-(--surface) overflow-hidden">
+    transition:persist="header"
+    class="fixed top-0 left-0 right-0 z-50 h-14 px-4 p-2 bg-(--surface) overflow-hidden">
     <slot name="header" />
   </header>
   {
     hasSidebar && (
       <nav
+        transition:persist="sidebar"
         class="print:hidden"
         aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
         {/* Backdrop overlay for mobile drawer */}
@@ -36,3 +38,38 @@ const { hasSidebar } = Astro.locals.starlightRoute;
     <slot />
   </div>
 </div>
+
+<script>
+  // The content pane (not the window) is the scroll container, so Astro's
+  // built-in scroll restoration doesn't cover it. Save its scroll position per
+  // path and restore it on history traversal (Back/Forward) only — fresh link
+  // clicks should still land at the top of the new page.
+  //
+  // We track the displayed path in `currentPath` rather than reading
+  // `location.pathname` while leaving: on a Back/Forward navigation the URL has
+  // already changed to the destination by the time `astro:before-preparation`
+  // fires, so it can't tell us which page we're leaving.
+  const scrollPositions = new Map<string, number>();
+  let currentPath = location.pathname;
+  let restoreOnSwap = false;
+
+  const getPane = () => document.querySelector<HTMLElement>(".content-pane");
+
+  document.addEventListener("astro:before-preparation", (event) => {
+    const pane = getPane();
+    if (pane) scrollPositions.set(currentPath, pane.scrollTop);
+    const navType = (event as unknown as { navigationType?: string })
+      .navigationType;
+    restoreOnSwap = navType === "traverse";
+  });
+
+  document.addEventListener("astro:after-swap", () => {
+    const pane = getPane();
+    if (pane && restoreOnSwap) {
+      const y = scrollPositions.get(location.pathname);
+      if (y != null) pane.scrollTop = y;
+    }
+    restoreOnSwap = false;
+    currentPath = location.pathname;
+  });
+</script>

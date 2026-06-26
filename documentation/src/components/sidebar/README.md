@@ -21,13 +21,14 @@ src/components/sidebar/
 
 ### Sidebar.astro
 
-Main sidebar container that receives data from Starlight's `Astro.locals.starlightRoute.sidebar`. Contains all client-side JavaScript (inline to prevent flash of incorrect state).
+Main sidebar container that receives data from Starlight's `Astro.locals.starlightRoute.sidebar`. Contains all client-side JavaScript (a bundled module script that initializes once).
 
 **JavaScript Responsibilities:**
-- State persistence (localStorage)
+- State persistence (localStorage), applied once on first load
 - Sibling accordion behavior (collapse one when another opens)
 - Animated expand/collapse transitions
-- View transition support (`astro:after-swap`)
+- Client-side navigation via `navigate()` (`astro:transitions/client`)
+- Active-state sync + auto-expand on each `astro:page-load`
 
 ### SidebarList.astro
 
@@ -92,9 +93,13 @@ The inline script uses these classes to identify elements:
 - `data-level` - Nesting depth
 - `data-is-current` - Whether this link/group is the current page
 
-## Why Inline Script?
+## Persistence & View Transitions
 
-The sidebar script must be `is:inline` to run synchronously before first paint. This prevents a flash of incorrect state (all groups collapsed) while localStorage is read. The trade-off is that this code cannot be extracted to a separate bundled module.
+The site runs with Astro's `<ClientRouter />` (enabled in `src/components/Head.astro`), and the sidebar `<nav>` is marked `transition:persist` in `PageFrame.astro`. This means the sidebar DOM — including open/closed groups, scroll position, and event listeners — survives navigation untouched, so there is no per-navigation flicker or re-initialization.
+
+Because the persisted DOM is not re-rendered by the server on navigation, the active link/group highlight is updated by JavaScript on each `astro:page-load` (see `updateActiveState`), which also auto-expands the current page's parent groups and scrolls the active link into view.
+
+A short `.sidebar-ready` reveal still guards the very first paint (and hard refresh) to avoid a flash of incorrect group state while localStorage is read.
 
 ## Badges
 

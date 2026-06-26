@@ -95,7 +95,15 @@ const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
 <script>
   import { initVideoPlayer } from "./controls";
 
-  document
-    .querySelectorAll<HTMLElement>("[data-video-player]")
-    .forEach(initVideoPlayer);
+  function setup() {
+    document
+      .querySelectorAll<HTMLElement>("[data-video-player]")
+      .forEach(initVideoPlayer);
+  }
+
+  // `astro:after-swap` initializes before the new page is painted (no flash);
+  // `astro:page-load` covers the initial load. The guard in initVideoPlayer
+  // prevents the double-fire from double-binding.
+  document.addEventListener("astro:after-swap", setup);
+  document.addEventListener("astro:page-load", setup);
 </script>

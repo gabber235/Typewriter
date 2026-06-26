@@ -87,6 +87,19 @@
 	--sl-color-text: var(--material-grey-800);
 }
 
+/* ############################## */
+/* View transitions: instant swaps */
+/* ############################## */
+/* The ClientRouter (enabled via the custom Head override) handles navigation
+   without a full reload. We deliberately disable the default root cross-fade so
+   page switches are instant — header and sidebar are persisted, so only the
+   content pane swaps. Kept unlayered so it wins over Astro's default animation. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
 @layer utilities {
 	.text-label-large {
 		font-family: var(--font-mono);

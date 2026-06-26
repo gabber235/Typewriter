@@ -371,6 +371,7 @@ const { toc } = Astro.locals.starlightRoute;
     private pillProgressRing: SVGCircleElement | null = null;
     private pillProgressText: HTMLSpanElement | null = null;
     private readonly circumference = 2 * Math.PI * 15.5; // r=15.5
+    private onKeydown?: (e: KeyboardEvent) => void;
 
     protected override set current(link: HTMLAnchorElement) {
       super.current = link;
@@ -414,13 +415,20 @@ const { toc } = Astro.locals.starlightRoute;
         });
       });
 
-      // Handle Escape key
-      window.addEventListener("keydown", (e) => {
+      // Handle Escape key (stored so disconnectedCallback can remove it)
+      this.onKeydown = (e) => {
         if (e.key === "Escape" && this.container?.classList.contains("is-open")) {
           this.closeDropdown();
           this.pillBtn?.focus();
         }
-      });
+      };
+      window.addEventListener("keydown", this.onKeydown);
+    }
+
+    override disconnectedCallback(): void {
+      super.disconnectedCallback();
+      if (this.onKeydown) window.removeEventListener("keydown", this.onKeydown);
+      document.body.style.overflow = "";
     }
 
     private setupProgressTracking(): void {

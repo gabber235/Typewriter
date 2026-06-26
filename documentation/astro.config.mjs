@@ -16,7 +16,7 @@ export default defineConfig({
 	output: "static",
 	prefetch: {
 		prefetchAll: true,
-		defaultStrategy: "hover",
+		defaultStrategy: "viewport",
 	},
 	integrations: [
 		starlight({
@@ -38,6 +38,7 @@ export default defineConfig({
 				maxHeadingLevel: 4,
 			},
 			components: {
+				Head: "./src/components/Head.astro",
 				Sidebar: "./src/components/sidebar/Sidebar.astro",
 				PageFrame: "./src/components/pageframe/PageFrame.astro",
 				Header: "./src/components/header/Header.astro",

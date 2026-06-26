@@ -27,6 +27,15 @@ export class StarlightTOC extends HTMLElement {
 	protected resizeTimeout: ReturnType<typeof setTimeout> | null = null;
 	protected scrollContainer: HTMLElement | null = null;
 
+	// Stored listener references so they can be removed in disconnectedCallback.
+	// Without this, the window `resize` listener (and any window-level `scroll`
+	// listener) would accumulate one leaked copy per page visited.
+	protected onResize?: () => void;
+	protected onScroll?: () => void;
+	protected onBackToTopScroll?: () => void;
+	protected scrollTarget: HTMLElement | Window | null = null;
+	protected backToTopScrollTarget: HTMLElement | Window | null = null;
+
 	protected get tocHeadingSelector(): string {
 		const headingLevels = Array.from(
 			{ length: 1 + this.maxH - this.minH },
@@ -53,6 +62,23 @@ export class StarlightTOC extends HTMLElement {
 	constructor() {
 		super();
 		onIdle(() => this.init());
+	}
+
+	disconnectedCallback(): void {
+		// Runs when the client router swaps this element out. Tear down the
+		// observer and any window/scroll listeners so they don't pile up.
+		this.observer?.disconnect();
+		if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+		if (this.onResize) window.removeEventListener("resize", this.onResize);
+		if (this.onScroll && this.scrollTarget) {
+			this.scrollTarget.removeEventListener("scroll", this.onScroll);
+		}
+		if (this.onBackToTopScroll && this.backToTopScrollTarget) {
+			this.backToTopScrollTarget.removeEventListener(
+				"scroll",
+				this.onBackToTopScroll,
+			);
+		}
 	}
 
 	protected init(): void {
@@ -89,6 +115,25 @@ export class StarlightTOC extends HTMLElement {
 	}
 
 	protected setupIntersectionObserver(): void {
+		this.observeTargets();
+
+		// Add the resize listener exactly once (re-observing on resize must not
+		// re-register it, which is why observation lives in observeTargets()).
+		this.onResize = () => {
+			this.observer?.disconnect();
+			this.observer = undefined;
+
+			if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+
+			this.resizeTimeout = setTimeout(() => {
+				this.observeTargets();
+				this.updateProgress();
+			}, 200);
+		};
+		window.addEventListener("resize", this.onResize);
+	}
+
+	protected observeTargets(): void {
 		const toObserve = document.querySelectorAll(
 			[
 				`main :where(${this.tocHeadingSelector})`,
@@ -120,24 +165,14 @@ export class StarlightTOC extends HTMLElement {
 		toObserve.forEach((el) => {
 			this.observer?.observe(el);
 		});
-
-		window.addEventListener("resize", () => {
-			this.observer?.disconnect();
-			this.observer = undefined;
-
-			if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
-
-			this.resizeTimeout = setTimeout(() => {
-				this.setupIntersectionObserver();
-				this.updateProgress();
-			}, 200);
-		});
 	}
 
 	protected setupScrollTracking(): void {
-		const throttledUpdate = throttleRAF(() => this.updateProgress());
-		const target = this.scrollContainer || window;
-		target.addEventListener("scroll", throttledUpdate, { passive: true });
+		this.onScroll = throttleRAF(() => this.updateProgress());
+		this.scrollTarget = this.scrollContainer || window;
+		this.scrollTarget.addEventListener("scroll", this.onScroll, {
+			passive: true,
+		});
 	}
 
 	protected updateProgress(): void {
@@ -310,10 +345,13 @@ export class StarlightTOC extends HTMLElement {
 		};
 
 		// Use throttled scroll handler for performance
-		const throttledScroll = throttleRAF(handleScroll);
-
-		const scrollTarget = this.scrollContainer || window;
-		scrollTarget.addEventListener("scroll", throttledScroll, { passive: true });
+		this.onBackToTopScroll = throttleRAF(handleScroll);
+		this.backToTopScrollTarget = this.scrollContainer || window;
+		this.backToTopScrollTarget.addEventListener(
+			"scroll",
+			this.onBackToTopScroll,
+			{ passive: true },
+		);
 
 		// Setup click handlers
 		const backToTopButtons = document.querySelectorAll<HTMLButtonElement>(
