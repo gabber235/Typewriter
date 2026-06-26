@@ -18,19 +18,19 @@ import org.bukkit.event.HandlerList
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 @Singleton
 class RoadNetworkManager : Initializable, KoinComponent {
     private val gson by inject<Gson>(named("roadNetworkParser"))
     private val networks = CacheBuilder.newBuilder()
-        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .expireAfterAccess(Duration.ofMinutes(10))
         .build(CacheLoader.from(::loadRoadNetwork))
 
     private var job: Job? = null
 
     private val editors = CacheBuilder.newBuilder()
-        .expireAfterAccess(2, TimeUnit.MINUTES)
+        .expireAfterAccess(Duration.ofMinutes(2))
         .removalListener<Ref<out RoadNetworkEntry>, RoadNetworkEditor> { notification ->
             Dispatchers.UntickedAsync.launch {
                 notification.value?.dispose()

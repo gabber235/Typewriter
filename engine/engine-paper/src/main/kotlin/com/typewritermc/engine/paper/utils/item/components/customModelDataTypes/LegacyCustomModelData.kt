@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.typewritermc.engine.paper.utils.item.components.customModelDataTypes
 
 import com.typewritermc.core.books.pages.Colors

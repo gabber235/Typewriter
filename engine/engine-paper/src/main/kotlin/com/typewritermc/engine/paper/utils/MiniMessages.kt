@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.typewritermc.engine.paper.utils
 
 import com.github.retrooper.packetevents.manager.server.ServerVersion

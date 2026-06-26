@@ -31,9 +31,9 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.java.KoinJavaComponent.get
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.min
@@ -70,7 +70,7 @@ class ResendTokenRegistry {
 
     private val tokenCountsCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(2, TimeUnit.SECONDS)
+        .expireAfterWrite(Duration.ofSeconds(2))
         .build<MessageToken, AtomicInteger>()
 
     fun issue(recipientId: UUID, message: Component) {

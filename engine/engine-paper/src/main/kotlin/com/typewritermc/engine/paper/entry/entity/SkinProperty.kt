@@ -12,6 +12,7 @@ import kotlinx.coroutines.future.await
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.koin.java.KoinJavaComponent
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -24,7 +25,7 @@ data class SkinProperty(
 
 class PlayerSkinCache : Initializable {
     private val cache = CacheBuilder.newBuilder()
-        .expireAfterAccess(10, java.util.concurrent.TimeUnit.MINUTES)
+        .expireAfterAccess(Duration.ofMinutes(10))
         .build<UUID, SkinProperty>()
     private val jobs = ConcurrentHashMap<UUID, Job>()
 
