@@ -18,10 +18,6 @@ export default defineConfig({
 		prefetchAll: true,
 		defaultStrategy: "hover",
 	},
-	experimental: {
-		clientPrerender: true,
-		svgo: true,
-	},
 	integrations: [
 		starlight({
 			title: "Typewriter",
@@ -50,7 +46,6 @@ export default defineConfig({
 				PageSidebar: "./src/components/pagesidebar/PageSidebar.astro",
 				Pagination: "./src/components/pagination/Pagination.astro",
 			},
-			markdown: {},
 			plugins: [starlightLlmsTxt(), starlightDotMd()],
 		}),
 	],

@@ -19,22 +19,22 @@
 		"fix": "biome check --write . && astro check"
 	},
 	"dependencies": {
-		"@astrojs/check": "^0.9.8",
-		"@astrojs/starlight": "^0.38.2",
+		"@astrojs/check": "^0.9.9",
+		"@astrojs/starlight": "^0.38.5",
 		"@astrojs/starlight-docsearch": "^0.7.0",
 		"@astrojs/starlight-tailwind": "^5.0.0",
-		"@tailwindcss/vite": "^4.2.2",
-		"astro": "^6.0.8",
+		"@tailwindcss/vite": "^4.3.1",
+		"astro": "^6.4.8",
 		"hastscript": "^9.0.1",
 		"remark-directive": "^4.0.0",
-		"sharp": "^0.34.5",
-		"starlight-dot-md": "^0.2.0",
-		"starlight-llms-txt": "^0.8.0",
-		"tailwindcss": "^4.2.2",
-		"typescript": "^5.9.3",
+		"sharp": "^0.35.2",
+		"starlight-dot-md": "^0.2.1",
+		"starlight-llms-txt": "^0.8.1",
+		"tailwindcss": "^4.3.1",
+		"typescript": "^7.0.1-rc",
 		"unist-util-visit": "^5.1.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.5.0"
+		"@biomejs/biome": "2.5.1"
 	}
 }
