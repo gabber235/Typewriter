@@ -1,6 +1,6 @@
 package com.typewritermc.engine.paper.entry.entity
 
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.PropertyCollector
 import com.typewritermc.engine.paper.entry.entries.PropertyCollectorSupplier
@@ -41,7 +41,7 @@ class DisplayEntity(
 
         // When the entity has moved far enough, play a sound
         // FIXME: Magic number
-        if ((lastSoundLocation.distanceSqrt(activityManager.position) ?: 0.0) > 1.7) {
+        if ((lastSoundLocation.distanceSquared(activityManager.position) ?: 0.0) > 1.7) {
             lastSoundLocation = activityManager.position
             val sound = lastSoundLocation.toBukkitLocation().block.blockData.soundGroup.stepSound
             player.playSound(lastSoundLocation.toBukkitLocation(), sound, SoundCategory.NEUTRAL, 0.4f, 1.0f)

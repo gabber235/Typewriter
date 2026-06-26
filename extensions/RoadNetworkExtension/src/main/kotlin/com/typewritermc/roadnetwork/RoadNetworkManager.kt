@@ -11,23 +11,26 @@ import com.typewritermc.core.utils.UntickedAsync
 import com.typewritermc.core.utils.launch
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
+import de.bsommerfeld.pathetic.bukkit.PatheticBukkit
+import de.bsommerfeld.pathetic.bukkit.listener.ChunkInvalidateListener
 import kotlinx.coroutines.*
+import org.bukkit.event.HandlerList
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 @Singleton
 class RoadNetworkManager : Initializable, KoinComponent {
     private val gson by inject<Gson>(named("roadNetworkParser"))
     private val networks = CacheBuilder.newBuilder()
-        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .expireAfterAccess(Duration.ofMinutes(10))
         .build(CacheLoader.from(::loadRoadNetwork))
 
     private var job: Job? = null
 
     private val editors = CacheBuilder.newBuilder()
-        .expireAfterAccess(2, TimeUnit.MINUTES)
+        .expireAfterAccess(Duration.ofMinutes(2))
         .removalListener<Ref<out RoadNetworkEntry>, RoadNetworkEditor> { notification ->
             Dispatchers.UntickedAsync.launch {
                 notification.value?.dispose()
@@ -42,6 +45,20 @@ class RoadNetworkManager : Initializable, KoinComponent {
                 editors.asMap().values.forEach { it.refresh() }
             }
         }
+
+        initializePathetic()
+    }
+
+    // Replaces PatheticBukkit.initialize to skip its bStats setup. bStats spins up a
+    // ScheduledExecutorService that has no public shutdown hook, so on extension reload
+    // it keeps firing tasks against the dead extension classloader and throws
+    // NoClassDefFoundError. Registering only the chunk listener gives us pathfinding
+    // without the leak.
+    private fun initializePathetic() {
+        val instanceField = PatheticBukkit::class.java.getDeclaredField("instance").apply { isAccessible = true }
+        if (instanceField.get(null) != null) return
+        instanceField.set(null, plugin)
+        plugin.server.pluginManager.registerEvents(ChunkInvalidateListener(), plugin)
     }
 
     private fun loadRoadNetwork(id: String): CompletableDeferred<RoadNetwork> {
@@ -95,5 +112,22 @@ class RoadNetworkManager : Initializable, KoinComponent {
         editors.asMap().values.forEach { it.dispose() }
         editors.invalidateAll()
         networks.invalidateAll()
+        shutdownPathetic()
+    }
+
+    // TODO: Drop this once pathetic-bukkit ships its own PatheticBukkit.shutdown.
+    private fun shutdownPathetic() {
+        runCatching {
+            HandlerList.getHandlerLists().forEach { list ->
+                list.registeredListeners
+                    .map { it.listener }
+                    .filter { it.javaClass.name.contains("de.bsommerfeld.pathetic") }
+                    .toSet()
+                    .forEach(HandlerList::unregisterAll)
+            }
+            PatheticBukkit::class.java.getDeclaredField("instance")
+                .apply { isAccessible = true }
+                .set(null, null)
+        }.onFailure { logger.warning("Failed to shutdown Pathetic: ${it.message}") }
     }
 }

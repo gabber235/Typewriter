@@ -3,11 +3,7 @@ package com.typewritermc.basic.entries.audience
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
-import com.typewritermc.core.extension.annotations.Entry
-import com.typewritermc.core.extension.annotations.InnerMax
-import com.typewritermc.core.extension.annotations.InnerMin
-import com.typewritermc.core.extension.annotations.Max
-import com.typewritermc.core.extension.annotations.Min
+import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.engine.paper.entry.audience.MultiKey
 import com.typewritermc.engine.paper.entry.audience.PlayerSingleKeyedDisplay
 import com.typewritermc.engine.paper.entry.audience.SingleKeyedFilter
@@ -15,16 +11,19 @@ import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.asMini
 import com.typewritermc.engine.paper.utils.item.Item
-import lirand.api.extensions.events.unregister
 import com.typewritermc.engine.paper.utils.server
+import lirand.api.extensions.events.unregister
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataType
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -113,6 +112,7 @@ class ItemSlotBinderDisplay(
     displayKClass: KClass<out SingleKeyedFilter<ItemSlotBinderAudienceEntry, Int, *>>,
     current: Ref<ItemSlotBinderAudienceEntry>,
 ) : PlayerSingleKeyedDisplay<ItemSlotBinderAudienceEntry, Int>(player, slot, displayKClass, current), Listener {
+    val namespacedKey = NamespacedKey(plugin, "item_slot_binder_display_${slot}")
     private var resetItem = ItemStack.empty()
     private var lastItem = ItemStack.empty()
 
@@ -171,7 +171,6 @@ class ItemSlotBinderDisplay(
                 }
 
                 SlotReplacementStrategy.MOVE_OR_REPLACE -> resetItem = currentItem
-                else -> throw IllegalStateException("Impossible to reach this point")
             }
             setItem(item(entry))
         }
@@ -180,17 +179,21 @@ class ItemSlotBinderDisplay(
 
     @JvmName("itemNullable")
     private fun item(entry: ItemSlotBinderAudienceEntry? = null): ItemStack? {
-        var e = entry
-        if (entry == null) {
-            e = ref.get() ?: return null
-        }
-        return item(e!!)
+        val e = entry ?: ref.get() ?: return null
+        return item(e)
     }
 
     private fun item(entry: ItemSlotBinderAudienceEntry): ItemStack {
         val item = entry.item.get(player)
         val itemStack = item.build(player)
+        itemStack.editPersistentDataContainer {
+            it[namespacedKey, PersistentDataType.BOOLEAN] = true
+        }
         return itemStack
+    }
+
+    private fun isItem(itemStack: ItemStack): Boolean {
+        return itemStack.persistentDataContainer.has(namespacedKey, PersistentDataType.BOOLEAN)
     }
 
     private fun setItem(itemStack: ItemStack) {
@@ -201,10 +204,13 @@ class ItemSlotBinderDisplay(
     override fun tick() {
         super.tick()
 
-        val itemStack = item(ref.get()) ?: return
-        if (itemStack.isSimilar(lastItem)) {
-            return
-        }
+        val entry = ref.get() ?: return
+        if (entry.item is ConstVar) return
+
+        val item = item(entry)
+        if (lastItem == item) return
+        lastItem = item
+        setItem(lastItem)
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -218,8 +224,8 @@ class ItemSlotBinderDisplay(
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onItemDrop(event: PlayerDropItemEvent) {
         if (event.player.uniqueId != player.uniqueId) return
-        if (event.itemDrop.itemStack.isSimilar(item()))
-            event.isCancelled = true
+        if (!isItem(event.itemDrop.itemStack)) return
+        event.isCancelled = true
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -229,6 +235,20 @@ class ItemSlotBinderDisplay(
             event.isCancelled = true
         if (event.player.inventory.heldItemSlot == slot)
             event.isCancelled = true
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerDeath(event: PlayerDeathEvent) {
+        if (event.entity.uniqueId != player.uniqueId) return
+
+        val drops = event.drops.iterator()
+        while (drops.hasNext()) {
+            val drop = drops.next()
+            if (isItem(drop)) {
+                drops.remove()
+                event.itemsToKeep.add(drop)
+            }
+        }
     }
 
     override fun tearDown() {

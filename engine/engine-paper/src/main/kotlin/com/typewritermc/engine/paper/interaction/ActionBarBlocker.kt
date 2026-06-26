@@ -21,7 +21,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class ActionBarBlockerHandler :
-    PacketListenerAbstract(PacketListenerPriority.HIGH), Listener {
+    PacketListenerAbstract(PacketListenerPriority.LOW), Listener {
     fun initialize() {
         PacketEvents.getAPI().eventManager.registerListener(this)
         server.pluginManager.registerSuspendingEvents(this, plugin)

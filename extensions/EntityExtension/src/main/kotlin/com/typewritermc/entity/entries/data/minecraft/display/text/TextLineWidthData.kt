@@ -14,7 +14,6 @@ import kotlin.reflect.KClass
 
 @Entry("text_line_width_data", "LineWidth for a TextDisplay.", Colors.RED, "mdi:format-letter-spacing")
 @Tags("text_line_width_data")
-
 class TextLineWidthData(
     override val id: String = "",
     override val name: String = "",

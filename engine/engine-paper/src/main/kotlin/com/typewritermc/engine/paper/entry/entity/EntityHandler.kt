@@ -34,7 +34,7 @@ class EntityHandler : PacketListenerAbstract(), KoinComponent {
         if (event.packetType != Play.Client.INTERACT_ENTITY) return
         val packet = WrapperPlayClientInteractEntity(event)
 
-        val player = event.getPlayer<Player>() ?: server.getPlayer(event.user.uuid) ?: return
+        val player = event.getPlayer<Player?>() ?: server.getPlayer(event.user.uuid) ?: return
         val entityId = packet.entityId
 
         AsyncFakeEntityInteract(player, entityId, packet.hand, packet.action).callEvent()

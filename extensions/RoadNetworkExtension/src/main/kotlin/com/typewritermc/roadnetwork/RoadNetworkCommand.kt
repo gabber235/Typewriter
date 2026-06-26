@@ -10,9 +10,7 @@ import com.typewritermc.engine.paper.content.ContentContext
 import com.typewritermc.engine.paper.content.ContentModeTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.utils.asMini
-import com.typewritermc.engine.paper.utils.msg
 import com.typewritermc.roadnetwork.content.RoadNetworkContentMode
-import com.typewritermc.roadnetwork.pathfinding.InstanceSpaceCache
 import kotlinx.coroutines.Dispatchers
 import org.koin.java.KoinJavaComponent
 
@@ -57,14 +55,6 @@ fun CommandTree.roadNetworkCommand() = literal("roadNetwork") {
                     )
                 }
             }
-        }
-    }
-
-    literal("clearCache") {
-        withPermission("typewriter.roadNetwork.clearCache")
-        executes {
-            KoinJavaComponent.get<InstanceSpaceCache>(InstanceSpaceCache::class.java).clear()
-            sender.msg("Cleared the instance space cache")
         }
     }
 }

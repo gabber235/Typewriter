@@ -1,6 +1,14 @@
 repositories {}
 dependencies {
     compileOnly(project(":RoadNetworkExtension"))
+
+    val kotestVersion = "6.1.11"
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 typewriter {
@@ -16,7 +24,7 @@ typewriter {
             |It is **not** necessary to use this extension for quests.
             |It is just a visual novelty.
             """.trimMargin()
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
         dependencies {

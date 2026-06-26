@@ -1,0 +1,52 @@
+# Flutter Demon Configuration
+# See: https://github.com/example/flutter-demon#configuration
+
+[behavior]
+confirm_quit = true     # Ask before quitting with running apps
+
+[watcher]
+paths = ["lib"]
+debounce_ms = 500
+auto_reload = true
+extensions = ["dart"]
+
+[ui]
+log_buffer_size = 10000
+show_timestamps = true
+compact_logs = false
+theme = "default"
+stack_trace_collapsed = true
+stack_trace_max_frames = 3
+# Icon style: "nerd_fonts" (default) or "unicode"
+# Set to "unicode" if your terminal does not have a Nerd Font installed
+icons = "nerd_fonts"
+
+[devtools]
+auto_open = false
+browser = ""                          # Empty = system default
+default_panel = "inspector"           # "inspector", "performance", or "network"
+performance_refresh_ms = 2000         # Memory polling interval (min 500ms)
+memory_history_size = 60              # Memory snapshots to retain
+tree_max_depth = 0                    # Widget tree depth (0 = unlimited)
+inspector_fetch_timeout_secs = 60     # Widget tree fetch timeout with retries (min 5s)
+allocation_profile_interval_ms = 5000 # Class allocation fetch interval (min 1000ms)
+max_network_entries = 500             # Max HTTP entries per session (FIFO eviction)
+network_auto_record = true            # Auto-start recording when entering Network tab
+network_poll_interval_ms = 1000       # HTTP profile poll interval (min 500ms)
+# Inspector readiness-poll budget: attempts × (call_timeout_ms + interval_ms) ≤ 2500 ms
+inspector_readiness_poll_attempts = 2           # isWidgetTreeReady poll attempts before proceeding
+inspector_readiness_poll_interval_ms = 250      # Sleep between poll attempts (ms)
+inspector_readiness_poll_call_timeout_ms = 1000 # Per-call timeout for isWidgetTreeReady RPC (ms)
+
+[editor]
+# Editor command (leave empty for auto-detection)
+# Auto-detected from: parent IDE, $VISUAL, $EDITOR, or common editors in PATH
+command = ""
+# Pattern for opening file at line/column
+# Variables: $EDITOR, $FILE, $LINE, $COLUMN
+open_pattern = "$EDITOR $FILE:$LINE"
+
+# [flutter]
+# Explicit Flutter SDK path override (highest priority in detection chain).
+# If not set, fdemon auto-detects via version managers and system PATH.
+# sdk_path = "/path/to/flutter"

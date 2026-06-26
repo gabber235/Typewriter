@@ -45,10 +45,12 @@ class PlayerWorldActivity(
     private var childActivity: EntityActivity<in IndividualActivityContext> = IdleActivity(startPosition)
     private var world: World = startPosition.world
 
-    override fun initialize(context: IndividualActivityContext) {
+    override fun initialize(context: IndividualActivityContext, position: PositionProperty) {
         world = context.viewer.position.world
-        childActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-        childActivity.initialize(context)
+        if (childActivity is IdleActivity) {
+            childActivity = child.get()?.create(context, position) ?: IdleActivity(position)
+        }
+        childActivity.initialize(context, position)
     }
 
     override fun tick(context: IndividualActivityContext): TickResult {
@@ -56,22 +58,19 @@ class PlayerWorldActivity(
         if (playerWorld != world) {
             childActivity.dispose(context)
             world = playerWorld
-            childActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-            childActivity.initialize(context)
+            childActivity.initialize(context, currentPosition)
         }
 
         return childActivity.tick(context)
     }
 
     override fun dispose(context: IndividualActivityContext) {
-        val oldPosition = currentPosition
         childActivity.dispose(context)
-        childActivity = IdleActivity(oldPosition)
     }
 
     override val currentPosition: PositionProperty
         get() = childActivity.currentPosition.withWorld(world)
 
     override val currentProperties: List<EntityProperty>
-        get() = childActivity.currentProperties
+        get() = childActivity.currentProperties.filter { it !is PositionProperty } + currentPosition
 }

@@ -72,6 +72,7 @@ open class TextDisplayEntity(player: Player) : WrapperFakeEntity(
             is LineWidthProperty -> applyLineWidthData(entity, property)
             is TextShadowProperty -> applyShadowData(entity, property)
             is SeeThroughProperty -> applySeeThroughData(entity, property)
+            is TextAlignmentProperty -> applyTextAlignmentData(entity, property)
             else -> {}
         }
         if (applyGenericEntityData(entity, property)) return

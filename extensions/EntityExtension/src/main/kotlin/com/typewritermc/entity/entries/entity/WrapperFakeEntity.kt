@@ -40,16 +40,17 @@ abstract class WrapperFakeEntity(
 
     override fun applyProperties(properties: List<EntityProperty>) {
         entity.entityMeta.setNotifyAboutChanges(false)
-        properties.forEach {
-            when (it) {
-                is PositionProperty -> {
-                    entity.move(it)
-                }
-
-                else -> applyProperty(it)
+        properties.forEach { property ->
+            when (property) {
+                is PositionProperty -> applyPosition(property)
+                else -> applyProperty(property)
             }
         }
         entity.entityMeta.setNotifyAboutChanges(true)
+    }
+
+    protected open fun applyPosition(property: PositionProperty) {
+        entity.move(property)
     }
 
     abstract fun applyProperty(property: EntityProperty)

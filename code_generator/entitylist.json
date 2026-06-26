@@ -1,1310 +1,1324 @@
 [
-    {
-        "entity": "Allay",
-        "eye_height": 0.36,
-        "height": 0.6,
-        "id": "allay",
-        "width": 0.35
-    },
-    {
-        "entity": "Area Effect Cloud",
-        "eye_height": 0.425,
-        "height": 0.5,
-        "id": "area_effect_cloud",
-        "width": 6
-    },
-    {
-        "entity": "Armadillo",
-        "eye_height": {
-            "is_baby: false": 0.26,
-            "is_baby: true": 0.156
-        },
-        "height": {
-            "is_baby: false": 0.65,
-            "is_baby: true": 0.39
-        },
-        "id": "armadillo",
-        "width": {
-            "is_baby: false": 0.7,
-            "is_baby: true": 0.42
-        }
-    },
-    {
-        "entity": "Armor Stand",
-        "eye_height": {
-            "small: false, marker: false": 1.7775,
-            "small: true, marker: false": 0.49375,
-            "small: true, marker: true<br>small: false, marker: true": 0
-        },
-        "height": {
-            "small: false, marker: false": 1.975,
-            "small: false, marker: true": 0,
-            "small: true, marker: false": 0.9875,
-            "small: true, marker: true": 0
-        },
-        "id": "armor_stand",
-        "width": {
-            "small: false, marker: false": 0.5,
-            "small: false, marker: true": 0,
-            "small: true, marker: false": 0.25,
-            "small: true, marker: true": 0
-        }
-    },
-    {
-        "entity": "Arrow",
-        "eye_height": 0.13,
-        "height": 0.5,
-        "id": "arrow",
-        "width": 0.5
-    },
-    {
-        "entity": "Axolotl",
-        "eye_height": {
-            "is_baby: false": 0.2751,
-            "is_baby: true": 0.137549
-        },
-        "height": {
-            "is_baby: false": 0.42,
-            "is_baby: true": 0.21
-        },
-        "id": "axolotl",
-        "width": {
-            "is_baby: false": 0.75,
-            "is_baby: true": 0.375
-        }
-    },
-    {
-        "entity": "Bat",
-        "eye_height": 0.45,
-        "height": 0.9,
-        "id": "bat",
-        "width": 0.5
-    },
-    {
-        "entity": "Bee",
-        "eye_height": {
-            "is_baby: false": 0.3,
-            "is_baby: true": 0.15
-        },
-        "height": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        },
-        "id": "bee",
-        "width": {
-            "is_baby: false": 0.7,
-            "is_baby: true": 0.35
-        }
-    },
-    {
-        "entity": "Blaze",
-        "eye_height": 1.53,
-        "height": 1.8,
-        "id": "blaze",
-        "width": 0.6
-    },
-    {
-        "entity": "Block Display",
-        "eye_height": 0,
-        "height": 0,
-        "id": "block_display",
-        "width": 0
-    },
-    {
-        "entity": "Boat",
-        "eye_height": 0.5625,
-        "height": 0.5625,
-        "id": "boat",
-        "width": 1.375
-    },
-    {
-        "entity": "Boat with Chest",
-        "eye_height": 0.5625,
-        "height": 0.5625,
-        "id": "chest_boat",
-        "width": 1.375
-    },
-    {
-        "entity": "Bogged",
-        "eye_height": 1.74,
-        "height": 1.99,
-        "id": "bogged",
-        "width": 0.6
-    },
-    {
-        "entity": "Breeze",
-        "eye_height": 1.3452,
-        "height": 1.77,
-        "id": "breeze",
-        "width": 0.6
-    },
-    {
-        "entity": "Camel",
-        "eye_height": {
-            "is_baby: false, pose: sitting": 0.845,
-            "is_baby: false, pose: standing": 2.275,
-            "is_baby: true, pose: sitting": 0.38025,
-            "is_baby: true, pose: standing": 1.02375
-        },
-        "height": {
-            "is_baby: false, pose: sitting": 0.945,
-            "is_baby: false, pose: standing": 2.375,
-            "is_baby: true, pose: sitting": 0.42525,
-            "is_baby: true, pose: standing": 1.06875
-        },
-        "id": "camel",
-        "width": {
-            "is_baby: false": 1.7,
-            "is_baby: true": 0.765
-        }
-    },
-    {
-        "entity": "Cat",
-        "eye_height": {
-            "is_baby: false": 0.35,
-            "is_baby: true": 0.175
-        },
-        "height": {
-            "is_baby: false": 0.7,
-            "is_baby: true": 0.35
-        },
-        "id": "cat",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Cave Spider",
-        "eye_height": 0.45,
-        "height": 0.5,
-        "id": "cave_spider",
-        "width": 0.699999
-    },
-    {
-        "entity": "Chicken",
-        "eye_height": {
-            "is_baby: false": 0.644,
-            "is_baby: true": 0.2975
-        },
-        "height": {
-            "is_baby: false": 0.7,
-            "is_baby: true": 0.35
-        },
-        "id": "chicken",
-        "width": {
-            "is_baby: false": 0.4,
-            "is_baby: true": 0.2
-        }
-    },
-    {
-        "entity": "Cod",
-        "eye_height": 0.195,
-        "height": 0.3,
-        "id": "cod",
-        "width": 0.5
-    },
-    {
-        "entity": "Cow",
-        "eye_height": {
-            "is_baby: false": 1.3,
-            "is_baby: true": 0.665
-        },
-        "height": {
-            "is_baby: false": 1.4,
-            "is_baby: true": 0.7
-        },
-        "id": "cow",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Creeper",
-        "eye_height": 1.445,
-        "height": 1.7,
-        "id": "creeper",
-        "width": 0.6
-    },
-    {
-        "entity": "Dolphin",
-        "eye_height": 0.3,
-        "height": 0.6,
-        "id": "dolphin",
-        "width": 0.9
-    },
-    {
-        "entity": "Donkey",
-        "eye_height": {
-            "is_baby: false": 1.425,
-            "is_baby: true": 0.7125
-        },
-        "height": {
-            "is_baby: false": 1.5,
-            "is_baby: true": 0.75
-        },
-        "id": "donkey",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Dragon Fireball",
-        "eye_height": 0.85,
-        "height": 1,
-        "id": "dragon_fireball",
-        "width": 1
-    },
-    {
-        "entity": "Drowned",
-        "eye_height": {
-            "is_baby: false": 1.74,
-            "is_baby: true": 0.93
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "drowned",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Elder Guardian",
-        "eye_height": 0.998749,
-        "height": 1.9975,
-        "id": "elder_guardian",
-        "width": 1.9975
-    },
-    {
-        "entity": "End Crystal",
-        "eye_height": 1.7,
-        "height": 2,
-        "id": "end_crystal",
-        "width": 2
-    },
-    {
-        "entity": "Ender Dragon",
-        "eye_height": 6.8,
-        "height": 8,
-        "id": "ender_dragon",
-        "width": 16
-    },
-    {
-        "entity": "Enderman",
-        "eye_height": 2.55,
-        "height": 2.9,
-        "id": "enderman",
-        "width": 0.6
-    },
-    {
-        "entity": "Endermite",
-        "eye_height": 0.13,
-        "height": 0.3,
-        "id": "endermite",
-        "width": 0.4
-    },
-    {
-        "entity": "Evoker",
-        "eye_height": 1.6575,
-        "height": 1.95,
-        "id": "evoker",
-        "width": 0.6
-    },
-    {
-        "entity": "Evoker Fangs",
-        "eye_height": 0.68,
-        "height": 0.8,
-        "id": "evoker_fangs",
-        "width": 0.5
-    },
-    {
-        "entity": "Experience Orb",
-        "eye_height": 0.425,
-        "height": 0.5,
-        "id": "experience_orb",
-        "width": 0.5
-    },
-    {
-        "entity": "Eye of Ender",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "eye_of_ender",
-        "width": 0.25
-    },
-    {
-        "entity": "Falling Block",
-        "eye_height": 0.833,
-        "height": 0.98,
-        "id": "falling_block",
-        "width": 0.98
-    },
-    {
-        "entity": "Fireball",
-        "eye_height": 0.85,
-        "height": 1,
-        "id": "fireball",
-        "width": 1
-    },
-    {
-        "entity": "Firework Rocket",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "firework_rocket",
-        "width": 0.25
-    },
-    {
-        "entity": "Fishing Bobber",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "fishing_bobber",
-        "width": 0.25
-    },
-    {
-        "entity": "Fox",
-        "eye_height": {
-            "is_baby: false": 0.4,
-            "is_baby: true": 0.2975
-        },
-        "height": {
-            "is_baby: false": 0.7,
-            "is_baby: true": 0.35
-        },
-        "id": "fox",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Frog",
-        "eye_height": 0.425,
-        "height": 0.5,
-        "id": "frog",
-        "width": 0.5
-    },
-    {
-        "entity": "Ghast",
-        "eye_height": 2.6,
-        "height": 4,
-        "id": "ghast",
-        "width": 4
-    },
-    {
-        "entity": "Giant",
-        "eye_height": 10.44,
-        "height": 12,
-        "id": "giant",
-        "width": 3.6
-    },
-    {
-        "entity": "Glow Item Frame",
-        "eye_height": 0,
-        "height": 0.5,
-        "id": "glow_item_frame",
-        "width": 0.5
-    },
-    {
-        "entity": "Glow Squid",
-        "eye_height": 0.4,
-        "height": 0.8,
-        "id": "glow_squid",
-        "width": 0.8
-    },
-    {
-        "entity": "Goat",
-        "eye_height": {
-            "pose: long_jumping, is_baby: false": 0.7735,
-            "pose: long_jumping, is_baby: true": 0.38675,
-            "pose: standing, is_baby: false": 1.105,
-            "pose: standing, is_baby: true": 0.5525
-        },
-        "height": {
-            "pose: long_jumping, is_baby: false": 0.91,
-            "pose: long_jumping, is_baby: true": 0.455,
-            "pose: standing, is_baby: false": 1.3,
-            "pose: standing, is_baby: true": 0.65
-        },
-        "id": "goat",
-        "width": {
-            "pose: long_jumping, is_baby: false": 0.63,
-            "pose: long_jumping, is_baby: true": 0.315,
-            "pose: standing, is_baby: false": 0.9,
-            "pose: standing, is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Guardian",
-        "eye_height": 0.425,
-        "height": 0.85,
-        "id": "guardian",
-        "width": 0.85
-    },
-    {
-        "entity": "Hoglin",
-        "eye_height": {
-            "is_baby: false": 1.19,
-            "is_baby: true": 0.595
-        },
-        "height": {
-            "is_baby: false": 1.4,
-            "is_baby: true": 0.7
-        },
-        "id": "hoglin",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Horse",
-        "eye_height": {
-            "is_baby: false": 1.52,
-            "is_baby: true": 0.76
-        },
-        "height": {
-            "is_baby: false": 1.6,
-            "is_baby: true": 0.8
-        },
-        "id": "horse",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Husk",
-        "eye_height": {
-            "is_baby: false": 1.74,
-            "is_baby: true": 0.93
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "husk",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Illusioner",
-        "eye_height": 1.6575,
-        "height": 1.95,
-        "id": "illusioner",
-        "width": 0.6
-    },
-    {
-        "entity": "Interaction",
-        "eye_height": 0.85,
-        "height": 0,
-        "id": "interaction",
-        "width": 0
-    },
-    {
-        "entity": "Iron Golem",
-        "eye_height": 2.295,
-        "height": 2.7,
-        "id": "iron_golem",
-        "width": 1.4
-    },
-    {
-        "entity": "Item",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "item",
-        "width": 0.25
-    },
-    {
-        "entity": "Item Display",
-        "eye_height": 0,
-        "height": 0,
-        "id": "item_display",
-        "width": 0
-    },
-    {
-        "entity": "Item Frame",
-        "eye_height": 0,
-        "height": 0.5,
-        "id": "item_frame",
-        "width": 0.5
-    },
-    {
-        "entity": "Leash Knot",
-        "eye_height": 0.0625,
-        "height": 0.5,
-        "id": "leash_knot",
-        "width": 0.375
-    },
-    {
-        "entity": "Lightning Bolt",
-        "eye_height": 0,
-        "height": 0,
-        "id": "lightning_bolt",
-        "width": 0
-    },
-    {
-        "entity": "Llama",
-        "eye_height": {
-            "is_baby: false": 1.7765,
-            "is_baby: true": 0.888249
-        },
-        "height": {
-            "is_baby: false": 1.87,
-            "is_baby: true": 0.935
-        },
-        "id": "llama",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Magma Cube",
-        "eye_height": {
-            "size: 1": 0.325,
-            "size: 2": 0.65,
-            "size: 4": 1.3
-        },
-        "height": {
-            "size: 1": 0.52,
-            "size: 2": 1.04,
-            "size: 4": 2.08
-        },
-        "id": "magma_cube",
-        "width": {
-            "size: 1": 0.52,
-            "size: 2": 1.04,
-            "size: 4": 2.08
-        }
-    },
-    {
-        "entity": "Marker",
-        "eye_height": 0,
-        "height": 0,
-        "id": "marker",
-        "width": 0
-    },
-    {
-        "entity": "Minecart",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Minecart with Chest",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "chest_minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Minecart with Command Block",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "command_block_minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Minecart with Furnace",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "furnace_minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Minecart with Hopper",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "hopper_minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Minecart with Monster Spawner",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "spawner_minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Minecart with TNT",
-        "eye_height": 0.595,
-        "height": 0.7,
-        "id": "tnt_minecart",
-        "width": 0.98
-    },
-    {
-        "entity": "Mooshroom",
-        "eye_height": {
-            "is_baby: false": 1.3,
-            "is_baby: true": 0.665
-        },
-        "height": {
-            "is_baby: false": 1.4,
-            "is_baby: true": 0.7
-        },
-        "id": "mooshroom",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Mule",
-        "eye_height": {
-            "is_baby: false": 1.52,
-            "is_baby: true": 0.76
-        },
-        "height": {
-            "is_baby: false": 1.6,
-            "is_baby: true": 0.8
-        },
-        "id": "mule",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Ocelot",
-        "eye_height": {
-            "is_baby: false": 0.595,
-            "is_baby: true": 0.2975
-        },
-        "height": {
-            "is_baby: false": 0.7,
-            "is_baby: true": 0.35
-        },
-        "id": "ocelot",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Ominous Item Spawner",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "ominous_item_spawner",
-        "width": 0.25
-    },
-    {
-        "entity": "Painting",
-        "eye_height": 0.425,
-        "height": 0.5,
-        "id": "painting",
-        "width": 0.5
-    },
-    {
-        "entity": "Panda",
-        "eye_height": {
-            "is_baby: false": 1.0625,
-            "is_baby: true": 0.53125
-        },
-        "height": {
-            "is_baby: false": 1.25,
-            "is_baby: true": 0.625
-        },
-        "id": "panda",
-        "width": {
-            "is_baby: false": 1.3,
-            "is_baby: true": 0.65
-        }
-    },
-    {
-        "entity": "Parrot",
-        "eye_height": 0.54,
-        "height": 0.9,
-        "id": "parrot",
-        "width": 0.5
-    },
-    {
-        "entity": "Phantom",
-        "eye_height": 0.175,
-        "height": 0.5,
-        "id": "phantom",
-        "width": 0.9
-    },
-    {
-        "entity": "Pig",
-        "eye_height": {
-            "is_baby: false": 0.765,
-            "is_baby: true": 0.3825
-        },
-        "height": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        },
-        "id": "pig",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Piglin",
-        "eye_height": {
-            "is_baby: false": 1.79,
-            "is_baby: true": 0.97
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "piglin",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Piglin Brute",
-        "eye_height": 1.79,
-        "height": 1.95,
-        "id": "piglin_brute",
-        "width": 0.6
-    },
-    {
-        "entity": "Pillager",
-        "eye_height": 1.6575,
-        "height": 1.95,
-        "id": "pillager",
-        "width": 0.6
-    },
-    {
-        "entity": "Player",
-        "eye_height": {
-            "pose: crouching": 1.27,
-            "pose: dying": 1.62,
-            "pose: fall_flying": 0.4,
-            "pose: sleeping": 0.2,
-            "pose: spin_attack": 0.4,
-            "pose: standing": 1.62,
-            "pose: swimming": 0.4
-        },
-        "height": {
-            "pose: crouching": 1.5,
-            "pose: dying<br>pose: sleeping": 0.2,
-            "pose: spin_attack<br>pose: fall_flying<br>pose: swimming": 0.6,
-            "pose: standing": 1.8
-        },
-        "id": "player",
-        "width": {
-            "pose: dying<br>pose: sleeping": 0.2,
-            "pose: standing<br>pose: spin_attack<br>pose: crouching<br>pose: fall_flying<br>pose: swimming": 0.6
-        }
-    },
-    {
-        "entity": "Polar Bear",
-        "eye_height": {
-            "is_baby: false": 1.19,
-            "is_baby: true": 0.595
-        },
-        "height": {
-            "is_baby: false": 1.4,
-            "is_baby: true": 0.7
-        },
-        "id": "polar_bear",
-        "width": {
-            "is_baby: false": 1.4,
-            "is_baby: true": 0.7
-        }
-    },
-    {
-        "entity": "Potion",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "potion",
-        "width": 0.25
-    },
-    {
-        "entity": "Primed TNT",
-        "eye_height": 0.15,
-        "height": 0.98,
-        "id": "tnt",
-        "width": 0.98
-    },
-    {
-        "entity": "Pufferfish",
-        "eye_height": {
-            "puff_state: 0": 0.2275,
-            "puff_state: 1": 0.3185,
-            "puff_state: 2": 0.455
-        },
-        "height": {
-            "puff_state: 0": 0.35,
-            "puff_state: 1": 0.49,
-            "puff_state: 2": 0.7
-        },
-        "id": "pufferfish",
-        "width": {
-            "puff_state: 0": 0.35,
-            "puff_state: 1": 0.49,
-            "puff_state: 2": 0.7
-        }
-    },
-    {
-        "entity": "Rabbit",
-        "eye_height": {
-            "is_baby: false": 0.425,
-            "is_baby: true": 0.2125
-        },
-        "height": {
-            "is_baby: false": 0.5,
-            "is_baby: true": 0.25
-        },
-        "id": "rabbit",
-        "width": {
-            "is_baby: false": 0.4,
-            "is_baby: true": 0.2
-        }
-    },
-    {
-        "entity": "Ravager",
-        "eye_height": 1.87,
-        "height": 2.2,
-        "id": "ravager",
-        "width": 1.95
-    },
-    {
-        "entity": "Salmon",
-        "eye_height": 0.26,
-        "height": 0.4,
-        "id": "salmon",
-        "width": 0.7
-    },
-    {
-        "entity": "Sheep",
-        "eye_height": {
-            "is_baby: false": 1.235,
-            "is_baby: true": 0.6175
-        },
-        "height": {
-            "is_baby: false": 1.3,
-            "is_baby: true": 0.65
-        },
-        "id": "sheep",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Shulker",
-        "eye_height": 0.5,
-        "height": 1,
-        "id": "shulker",
-        "width": 1
-    },
-    {
-        "entity": "Shulker Bullet",
-        "eye_height": 0.265625,
-        "height": 0.3125,
-        "id": "shulker_bullet",
-        "width": 0.3125
-    },
-    {
-        "entity": "Silverfish",
-        "eye_height": 0.13,
-        "height": 0.3,
-        "id": "silverfish",
-        "width": 0.4
-    },
-    {
-        "entity": "Skeleton",
-        "eye_height": 1.74,
-        "height": 1.99,
-        "id": "skeleton",
-        "width": 0.6
-    },
-    {
-        "entity": "Skeleton Horse",
-        "eye_height": {
-            "is_baby: false": 1.52,
-            "is_baby: true": 0.76
-        },
-        "height": {
-            "is_baby: false": 1.6,
-            "is_baby: true": 0.8
-        },
-        "id": "skeleton_horse",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Slime",
-        "eye_height": {
-            "size: 1": 0.325,
-            "size: 2": 0.65,
-            "size: 4": 1.3
-        },
-        "height": {
-            "size: 1": 0.52,
-            "size: 2": 1.04,
-            "size: 4": 2.08
-        },
-        "id": "slime",
-        "width": {
-            "size: 1": 0.52,
-            "size: 2": 1.04,
-            "size: 4": 2.08
-        }
-    },
-    {
-        "entity": "Small Fireball",
-        "eye_height": 0.265625,
-        "height": 0.3125,
-        "id": "small_fireball",
-        "width": 0.3125
-    },
-    {
-        "entity": "Sniffer",
-        "eye_height": {
-            "is_baby: false": 1.05,
-            "is_baby: true": 0.525
-        },
-        "height": {
-            "is_baby: false": 1.75,
-            "is_baby: true": 0.875
-        },
-        "id": "sniffer",
-        "width": {
-            "is_baby: false": 1.9,
-            "is_baby: true": 0.95
-        }
-    },
-    {
-        "entity": "Snow Golem",
-        "eye_height": 1.7,
-        "height": 1.9,
-        "id": "snow_golem",
-        "width": 0.7
-    },
-    {
-        "entity": "Snowball",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "snowball",
-        "width": 0.25
-    },
-    {
-        "entity": "Spider",
-        "eye_height": 0.65,
-        "height": 0.9,
-        "id": "spider",
-        "width": 1.4
-    },
-    {
-        "entity": "Squid",
-        "eye_height": 0.4,
-        "height": 0.8,
-        "id": "squid",
-        "width": 0.8
-    },
-    {
-        "entity": "Stray",
-        "eye_height": 1.74,
-        "height": 1.99,
-        "id": "stray",
-        "width": 0.6
-    },
-    {
-        "entity": "Strider",
-        "eye_height": {
-            "is_baby: false": 1.445,
-            "is_baby: true": 0.7225
-        },
-        "height": {
-            "is_baby: false": 1.7,
-            "is_baby: true": 0.85
-        },
-        "id": "strider",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Tadpole",
-        "eye_height": 0.195,
-        "height": 0.3,
-        "id": "tadpole",
-        "width": 0.4
-    },
-    {
-        "entity": "Text Display",
-        "eye_height": 0,
-        "height": 0,
-        "id": "text_display",
-        "width": 0
-    },
-    {
-        "entity": "Thrown Bottle o' Enchanting",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "experience_bottle",
-        "width": 0.25
-    },
-    {
-        "entity": "Thrown Egg",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "egg",
-        "width": 0.25
-    },
-    {
-        "entity": "Thrown Ender Pearl",
-        "eye_height": 0.2125,
-        "height": 0.25,
-        "id": "ender_pearl",
-        "width": 0.25
-    },
-    {
-        "entity": "Trader Llama",
-        "eye_height": {
-            "is_baby: false": 1.7765,
-            "is_baby: true": 0.88825
-        },
-        "height": {
-            "is_baby: false": 1.87,
-            "is_baby: true": 0.935
-        },
-        "id": "trader_llama",
-        "width": {
-            "is_baby: false": 0.9,
-            "is_baby: true": 0.45
-        }
-    },
-    {
-        "entity": "Trident",
-        "eye_height": 0.13,
-        "height": 0.5,
-        "id": "trident",
-        "width": 0.5
-    },
-    {
-        "entity": "Tropical Fish",
-        "eye_height": 0.26,
-        "height": 0.4,
-        "id": "tropical_fish",
-        "width": 0.5
-    },
-    {
-        "entity": "Turtle",
-        "eye_height": {
-            "is_baby: false": 0.34,
-            "is_baby: true": 0.102
-        },
-        "height": {
-            "is_baby: false": 0.4,
-            "is_baby: true": 0.12
-        },
-        "id": "turtle",
-        "width": {
-            "is_baby: false": 1.2,
-            "is_baby: true": 0.36
-        }
-    },
-    {
-        "entity": "Vex",
-        "eye_height": 0.51875,
-        "height": 0.8,
-        "id": "vex",
-        "width": 0.4
-    },
-    {
-        "entity": "Villager",
-        "eye_height": {
-            "is_baby: false, pose: standing": 1.62,
-            "is_baby: true, pose: sleeping<br>is_baby: false, pose: sleeping": 0.2,
-            "is_baby: true, pose: standing": 0.81
-        },
-        "height": {
-            "is_baby: false, pose: standing": 1.95,
-            "is_baby: true, pose: sleeping<br>is_baby: false, pose: sleeping": 0.2,
-            "is_baby: true, pose: standing": 0.975
-        },
-        "id": "villager",
-        "width": {
-            "pose: sleeping, is_baby: false": 0.2,
-            "pose: sleeping, is_baby: true": 0.2,
-            "pose: standing, is_baby: false": 0.6,
-            "pose: standing, is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Vindicator",
-        "eye_height": 1.6575,
-        "height": 1.95,
-        "id": "vindicator",
-        "width": 0.6
-    },
-    {
-        "entity": "Wandering Trader",
-        "eye_height": {
-            "is_baby: false": 1.62,
-            "is_baby: true": 0.81
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "wandering_trader",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Warden",
-        "eye_height": {
-            "pose: digging<br>pose: emerging": 0.85,
-            "pose: roaring<br>pose: sniffing<br>pose: standing": 2.4650002
-        },
-        "height": {
-            "pose: digging<br>pose: emerging": 1,
-            "pose: roaring<br>pose: sniffing<br>pose: standing": 2.9
-        },
-        "id": "warden",
-        "width": 0.9
-    },
-    {
-        "entity": "Wind Charge",
-        "eye_height": 0,
-        "height": 0.3125,
-        "id": "wind_charge",
-        "width": 0.3125
-    },
-    {
-        "entity": "Witch",
-        "eye_height": 1.62,
-        "height": 1.95,
-        "id": "witch",
-        "width": 0.6
-    },
-    {
-        "entity": "Wither",
-        "eye_height": 2.975,
-        "height": 3.5,
-        "id": "wither",
-        "width": 0.9
-    },
-    {
-        "entity": "Wither Skeleton",
-        "eye_height": 2.1,
-        "height": 2.4,
-        "id": "wither_skeleton",
-        "width": 0.7
-    },
-    {
-        "entity": "Wither Skull",
-        "eye_height": 0.265625,
-        "height": 0.3125,
-        "id": "wither_skull",
-        "width": 0.3125
-    },
-    {
-        "entity": "Wolf",
-        "eye_height": {
-            "is_baby: false": 0.68,
-            "is_baby: true": 0.34
-        },
-        "height": {
-            "is_baby: false": 0.85,
-            "is_baby: true": 0.425
-        },
-        "id": "wolf",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Zoglin",
-        "eye_height": {
-            "is_baby: false": 1.19,
-            "is_baby: true": 0.595
-        },
-        "height": {
-            "is_baby: false": 1.4,
-            "is_baby: true": 0.7
-        },
-        "id": "zoglin",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Zombie",
-        "eye_height": {
-            "is_baby: false": 1.74,
-            "is_baby: true": 0.93
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "zombie",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Zombie Horse",
-        "eye_height": {
-            "is_baby: false": 1.52,
-            "is_baby: true": 0.76
-        },
-        "height": {
-            "is_baby: false": 1.6,
-            "is_baby: true": 0.8
-        },
-        "id": "zombie_horse",
-        "width": {
-            "is_baby: false": 1.396484,
-            "is_baby: true": 0.698242
-        }
-    },
-    {
-        "entity": "Zombie Villager",
-        "eye_height": {
-            "is_baby: false": 1.74,
-            "is_baby: true": 0.93
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "zombie_villager",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    },
-    {
-        "entity": "Zombified Piglin",
-        "eye_height": {
-            "is_baby: false": 1.79,
-            "is_baby: true": 0.97
-        },
-        "height": {
-            "is_baby: false": 1.95,
-            "is_baby: true": 0.975
-        },
-        "id": "zombified_piglin",
-        "width": {
-            "is_baby: false": 0.6,
-            "is_baby: true": 0.3
-        }
-    }
+   {
+      "entity":"Allay",
+      "eye_height":0.36,
+      "height":0.6,
+      "id":"allay",
+      "width":0.35
+   },
+   {
+      "entity":"Area Effect Cloud",
+      "eye_height":0.425,
+      "height":0.5,
+      "id":"area_effect_cloud",
+      "width":6
+   },
+   {
+      "entity":"Armadillo",
+      "eye_height":{
+         "is_baby: false":0.26,
+         "is_baby: true":0.156
+      },
+      "height":{
+         "is_baby: false":0.65,
+         "is_baby: true":0.39
+      },
+      "id":"armadillo",
+      "width":{
+         "is_baby: false":0.7,
+         "is_baby: true":0.42
+      }
+   },
+   {
+      "entity":"Armor Stand",
+      "eye_height":{
+         "small: false, marker: false":1.7775,
+         "small: true, marker: false":0.49375,
+         "small: true, marker: true<br>small: false, marker: true":0
+      },
+      "height":{
+         "small: false, marker: false":1.975,
+         "small: false, marker: true":0,
+         "small: true, marker: false":0.9875,
+         "small: true, marker: true":0
+      },
+      "id":"armor_stand",
+      "width":{
+         "small: false, marker: false":0.5,
+         "small: false, marker: true":0,
+         "small: true, marker: false":0.25,
+         "small: true, marker: true":0
+      }
+   },
+   {
+      "entity":"Arrow",
+      "eye_height":0.13,
+      "height":0.5,
+      "id":"arrow",
+      "width":0.5
+   },
+   {
+      "entity":"Axolotl",
+      "eye_height":{
+         "is_baby: false":0.2751,
+         "is_baby: true":0.137549
+      },
+      "height":{
+         "is_baby: false":0.42,
+         "is_baby: true":0.21
+      },
+      "id":"axolotl",
+      "width":{
+         "is_baby: false":0.75,
+         "is_baby: true":0.375
+      }
+   },
+   {
+      "entity":"Bat",
+      "eye_height":0.45,
+      "height":0.9,
+      "id":"bat",
+      "width":0.5
+   },
+   {
+      "entity":"Bee",
+      "eye_height":{
+         "is_baby: false":0.3,
+         "is_baby: true":0.15
+      },
+      "height":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      },
+      "id":"bee",
+      "width":{
+         "is_baby: false":0.7,
+         "is_baby: true":0.35
+      }
+   },
+   {
+      "entity":"Blaze",
+      "eye_height":1.53,
+      "height":1.8,
+      "id":"blaze",
+      "width":0.6
+   },
+   {
+      "entity":"Block Display",
+      "eye_height":0,
+      "height":0,
+      "id":"block_display",
+      "width":0
+   },
+   {
+      "entity":"Boat",
+      "eye_height":0.5625,
+      "height":0.5625,
+      "id":"boat",
+      "width":1.375
+   },
+   {
+      "entity":"Boat with Chest",
+      "eye_height":0.5625,
+      "height":0.5625,
+      "id":"chest_boat",
+      "width":1.375
+   },
+   {
+      "entity":"Bogged",
+      "eye_height":1.74,
+      "height":1.99,
+      "id":"bogged",
+      "width":0.6
+   },
+   {
+      "entity":"Breeze",
+      "eye_height":1.3452,
+      "height":1.77,
+      "id":"breeze",
+      "width":0.6
+   },
+   {
+      "entity":"Camel",
+      "eye_height":{
+         "is_baby: false, pose: sitting":0.845,
+         "is_baby: false, pose: standing":2.275,
+         "is_baby: true, pose: sitting":0.38025,
+         "is_baby: true, pose: standing":1.02375
+      },
+      "height":{
+         "is_baby: false, pose: sitting":0.945,
+         "is_baby: false, pose: standing":2.375,
+         "is_baby: true, pose: sitting":0.42525,
+         "is_baby: true, pose: standing":1.06875
+      },
+      "id":"camel",
+      "width":{
+         "is_baby: false":1.7,
+         "is_baby: true":0.765
+      }
+   },
+   {
+      "entity":"Cat",
+      "eye_height":{
+         "is_baby: false":0.35,
+         "is_baby: true":0.175
+      },
+      "height":{
+         "is_baby: false":0.7,
+         "is_baby: true":0.35
+      },
+      "id":"cat",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Cave Spider",
+      "eye_height":0.45,
+      "height":0.5,
+      "id":"cave_spider",
+      "width":0.699999
+   },
+   {
+      "entity":"Chicken",
+      "eye_height":{
+         "is_baby: false":0.644,
+         "is_baby: true":0.2975
+      },
+      "height":{
+         "is_baby: false":0.7,
+         "is_baby: true":0.35
+      },
+      "id":"chicken",
+      "width":{
+         "is_baby: false":0.4,
+         "is_baby: true":0.2
+      }
+   },
+   {
+      "entity":"Cod",
+      "eye_height":0.195,
+      "height":0.3,
+      "id":"cod",
+      "width":0.5
+   },
+   {
+      "entity":"Cow",
+      "eye_height":{
+         "is_baby: false":1.3,
+         "is_baby: true":0.665
+      },
+      "height":{
+         "is_baby: false":1.4,
+         "is_baby: true":0.7
+      },
+      "id":"cow",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Creeper",
+      "eye_height":1.445,
+      "height":1.7,
+      "id":"creeper",
+      "width":0.6
+   },
+   {
+      "entity":"Dolphin",
+      "eye_height":0.3,
+      "height":0.6,
+      "id":"dolphin",
+      "width":0.9
+   },
+   {
+      "entity":"Donkey",
+      "eye_height":{
+         "is_baby: false":1.425,
+         "is_baby: true":0.7125
+      },
+      "height":{
+         "is_baby: false":1.5,
+         "is_baby: true":0.75
+      },
+      "id":"donkey",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Dragon Fireball",
+      "eye_height":0.85,
+      "height":1,
+      "id":"dragon_fireball",
+      "width":1
+   },
+   {
+      "entity":"Drowned",
+      "eye_height":{
+         "is_baby: false":1.74,
+         "is_baby: true":0.93
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"drowned",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Elder Guardian",
+      "eye_height":0.998749,
+      "height":1.9975,
+      "id":"elder_guardian",
+      "width":1.9975
+   },
+   {
+      "entity":"End Crystal",
+      "eye_height":1.7,
+      "height":2,
+      "id":"end_crystal",
+      "width":2
+   },
+   {
+      "entity":"Ender Dragon",
+      "eye_height":6.8,
+      "height":8,
+      "id":"ender_dragon",
+      "width":16
+   },
+   {
+      "entity":"Enderman",
+      "eye_height":2.55,
+      "height":2.9,
+      "id":"enderman",
+      "width":0.6
+   },
+   {
+      "entity":"Endermite",
+      "eye_height":0.13,
+      "height":0.3,
+      "id":"endermite",
+      "width":0.4
+   },
+   {
+      "entity":"Evoker",
+      "eye_height":1.6575,
+      "height":1.95,
+      "id":"evoker",
+      "width":0.6
+   },
+   {
+      "entity":"Evoker Fangs",
+      "eye_height":0.68,
+      "height":0.8,
+      "id":"evoker_fangs",
+      "width":0.5
+   },
+   {
+      "entity":"Experience Orb",
+      "eye_height":0.425,
+      "height":0.5,
+      "id":"experience_orb",
+      "width":0.5
+   },
+   {
+      "entity":"Eye of Ender",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"eye_of_ender",
+      "width":0.25
+   },
+   {
+      "entity":"Falling Block",
+      "eye_height":0.833,
+      "height":0.98,
+      "id":"falling_block",
+      "width":0.98
+   },
+   {
+      "entity":"Fireball",
+      "eye_height":0.85,
+      "height":1,
+      "id":"fireball",
+      "width":1
+   },
+   {
+      "entity":"Firework Rocket",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"firework_rocket",
+      "width":0.25
+   },
+   {
+      "entity":"Fishing Bobber",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"fishing_bobber",
+      "width":0.25
+   },
+   {
+      "entity":"Fox",
+      "eye_height":{
+         "is_baby: false":0.4,
+         "is_baby: true":0.2975
+      },
+      "height":{
+         "is_baby: false":0.7,
+         "is_baby: true":0.35
+      },
+      "id":"fox",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Frog",
+      "eye_height":0.425,
+      "height":0.5,
+      "id":"frog",
+      "width":0.5
+   },
+   {
+      "entity":"Ghast",
+      "eye_height":2.6,
+      "height":4,
+      "id":"ghast",
+      "width":4
+   },
+   {
+      "entity":"Giant",
+      "eye_height":10.44,
+      "height":12,
+      "id":"giant",
+      "width":3.6
+   },
+   {
+      "entity":"Glow Item Frame",
+      "eye_height":0,
+      "height":0.5,
+      "id":"glow_item_frame",
+      "width":0.5
+   },
+   {
+      "entity":"Glow Squid",
+      "eye_height":0.4,
+      "height":0.8,
+      "id":"glow_squid",
+      "width":0.8
+   },
+   {
+      "entity":"Goat",
+      "eye_height":{
+         "pose: long_jumping, is_baby: false":0.7735,
+         "pose: long_jumping, is_baby: true":0.38675,
+         "pose: standing, is_baby: false":1.105,
+         "pose: standing, is_baby: true":0.5525
+      },
+      "height":{
+         "pose: long_jumping, is_baby: false":0.91,
+         "pose: long_jumping, is_baby: true":0.455,
+         "pose: standing, is_baby: false":1.3,
+         "pose: standing, is_baby: true":0.65
+      },
+      "id":"goat",
+      "width":{
+         "pose: long_jumping, is_baby: false":0.63,
+         "pose: long_jumping, is_baby: true":0.315,
+         "pose: standing, is_baby: false":0.9,
+         "pose: standing, is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Guardian",
+      "eye_height":0.425,
+      "height":0.85,
+      "id":"guardian",
+      "width":0.85
+   },
+   {
+      "entity":"Hoglin",
+      "eye_height":{
+         "is_baby: false":1.19,
+         "is_baby: true":0.595
+      },
+      "height":{
+         "is_baby: false":1.4,
+         "is_baby: true":0.7
+      },
+      "id":"hoglin",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Horse",
+      "eye_height":{
+         "is_baby: false":1.52,
+         "is_baby: true":0.76
+      },
+      "height":{
+         "is_baby: false":1.6,
+         "is_baby: true":0.8
+      },
+      "id":"horse",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Husk",
+      "eye_height":{
+         "is_baby: false":1.74,
+         "is_baby: true":0.93
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"husk",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Illusioner",
+      "eye_height":1.6575,
+      "height":1.95,
+      "id":"illusioner",
+      "width":0.6
+   },
+   {
+      "entity":"Interaction",
+      "eye_height":0.85,
+      "height":0,
+      "id":"interaction",
+      "width":0
+   },
+   {
+      "entity":"Iron Golem",
+      "eye_height":2.295,
+      "height":2.7,
+      "id":"iron_golem",
+      "width":1.4
+   },
+   {
+      "entity":"Item",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"item",
+      "width":0.25
+   },
+   {
+      "entity":"Item Display",
+      "eye_height":0,
+      "height":0,
+      "id":"item_display",
+      "width":0
+   },
+   {
+      "entity":"Item Frame",
+      "eye_height":0,
+      "height":0.5,
+      "id":"item_frame",
+      "width":0.5
+   },
+   {
+      "entity":"Leash Knot",
+      "eye_height":0.0625,
+      "height":0.5,
+      "id":"leash_knot",
+      "width":0.375
+   },
+   {
+      "entity":"Lightning Bolt",
+      "eye_height":0,
+      "height":0,
+      "id":"lightning_bolt",
+      "width":0
+   },
+   {
+      "entity":"Llama",
+      "eye_height":{
+         "is_baby: false":1.7765,
+         "is_baby: true":0.888249
+      },
+      "height":{
+         "is_baby: false":1.87,
+         "is_baby: true":0.935
+      },
+      "id":"llama",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Llama Spit",
+      "eye_height":"No default value has been assigned.",
+      "height":0.25,
+      "id":"llama_spit",
+      "width":0.25
+   },
+   {
+      "entity":"Magma Cube",
+      "eye_height":{
+         "size: 1":0.325,
+         "size: 2":0.65,
+         "size: 4":1.3
+      },
+      "height":{
+         "size: 1":0.52,
+         "size: 2":1.04,
+         "size: 4":2.08
+      },
+      "id":"magma_cube",
+      "width":{
+         "size: 1":0.52,
+         "size: 2":1.04,
+         "size: 4":2.08
+      }
+   },
+   {
+      "entity":"Marker",
+      "eye_height":0,
+      "height":0,
+      "id":"marker",
+      "width":0
+   },
+   {
+      "entity":"Minecart",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Minecart with Chest",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"chest_minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Minecart with Command Block",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"command_block_minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Minecart with Furnace",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"furnace_minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Minecart with Hopper",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"hopper_minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Minecart with Monster Spawner",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"spawner_minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Minecart with TNT",
+      "eye_height":0.595,
+      "height":0.7,
+      "id":"tnt_minecart",
+      "width":0.98
+   },
+   {
+      "entity":"Mooshroom",
+      "eye_height":{
+         "is_baby: false":1.3,
+         "is_baby: true":0.665
+      },
+      "height":{
+         "is_baby: false":1.4,
+         "is_baby: true":0.7
+      },
+      "id":"mooshroom",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Mule",
+      "eye_height":{
+         "is_baby: false":1.52,
+         "is_baby: true":0.76
+      },
+      "height":{
+         "is_baby: false":1.6,
+         "is_baby: true":0.8
+      },
+      "id":"mule",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Ocelot",
+      "eye_height":{
+         "is_baby: false":0.595,
+         "is_baby: true":0.2975
+      },
+      "height":{
+         "is_baby: false":0.7,
+         "is_baby: true":0.35
+      },
+      "id":"ocelot",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Ominous Item Spawner",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"ominous_item_spawner",
+      "width":0.25
+   },
+   {
+      "entity":"Painting",
+      "eye_height":0.425,
+      "height":0.5,
+      "id":"painting",
+      "width":0.5
+   },
+   {
+      "entity":"Panda",
+      "eye_height":{
+         "is_baby: false":1.0625,
+         "is_baby: true":0.53125
+      },
+      "height":{
+         "is_baby: false":1.25,
+         "is_baby: true":0.625
+      },
+      "id":"panda",
+      "width":{
+         "is_baby: false":1.3,
+         "is_baby: true":0.65
+      }
+   },
+   {
+      "entity":"Parrot",
+      "eye_height":0.54,
+      "height":0.9,
+      "id":"parrot",
+      "width":0.5
+   },
+   {
+      "entity":"Phantom",
+      "eye_height":0.175,
+      "height":0.5,
+      "id":"phantom",
+      "width":0.9
+   },
+   {
+      "entity":"Pig",
+      "eye_height":{
+         "is_baby: false":0.765,
+         "is_baby: true":0.3825
+      },
+      "height":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      },
+      "id":"pig",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Piglin",
+      "eye_height":{
+         "is_baby: false":1.79,
+         "is_baby: true":0.97
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"piglin",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Piglin Brute",
+      "eye_height":1.79,
+      "height":1.95,
+      "id":"piglin_brute",
+      "width":0.6
+   },
+   {
+      "entity":"Pillager",
+      "eye_height":1.6575,
+      "height":1.95,
+      "id":"pillager",
+      "width":0.6
+   },
+   {
+      "entity":"Player",
+      "eye_height":{
+         "pose: crouching":1.27,
+         "pose: dying":1.62,
+         "pose: fall_flying":0.4,
+         "pose: sleeping":0.2,
+         "pose: spin_attack":0.4,
+         "pose: standing":1.62,
+         "pose: swimming":0.4
+      },
+      "height":{
+         "pose: crouching":1.5,
+         "pose: dying<br>pose: sleeping":0.2,
+         "pose: spin_attack<br>pose: fall_flying<br>pose: swimming":0.6,
+         "pose: standing":1.8
+      },
+      "id":"player",
+      "width":{
+         "pose: dying<br>pose: sleeping":0.2,
+         "pose: standing<br>pose: spin_attack<br>pose: crouching<br>pose: fall_flying<br>pose: swimming":0.6
+      }
+   },
+   {
+      "entity":"Polar Bear",
+      "eye_height":{
+         "is_baby: false":1.19,
+         "is_baby: true":0.595
+      },
+      "height":{
+         "is_baby: false":1.4,
+         "is_baby: true":0.7
+      },
+      "id":"polar_bear",
+      "width":{
+         "is_baby: false":1.4,
+         "is_baby: true":0.7
+      }
+   },
+   {
+      "entity":"Potion",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"potion",
+      "width":0.25
+   },
+   {
+      "entity":"Primed TNT",
+      "eye_height":0.15,
+      "height":0.98,
+      "id":"tnt",
+      "width":0.98
+   },
+   {
+      "entity":"Pufferfish",
+      "eye_height":{
+         "puff_state: 0":0.2275,
+         "puff_state: 1":0.3185,
+         "puff_state: 2":0.455
+      },
+      "height":{
+         "puff_state: 0":0.35,
+         "puff_state: 1":0.49,
+         "puff_state: 2":0.7
+      },
+      "id":"pufferfish",
+      "width":{
+         "puff_state: 0":0.35,
+         "puff_state: 1":0.49,
+         "puff_state: 2":0.7
+      }
+   },
+   {
+      "entity":"Rabbit",
+      "eye_height":{
+         "is_baby: false":0.425,
+         "is_baby: true":0.2125
+      },
+      "height":{
+         "is_baby: false":0.5,
+         "is_baby: true":0.25
+      },
+      "id":"rabbit",
+      "width":{
+         "is_baby: false":0.4,
+         "is_baby: true":0.2
+      }
+   },
+   {
+      "entity":"Ravager",
+      "eye_height":1.87,
+      "height":2.2,
+      "id":"ravager",
+      "width":1.95
+   },
+   {
+      "entity":"Salmon",
+      "eye_height":0.26,
+      "height":0.4,
+      "id":"salmon",
+      "width":0.7
+   },
+   {
+      "entity":"Sheep",
+      "eye_height":{
+         "is_baby: false":1.235,
+         "is_baby: true":0.6175
+      },
+      "height":{
+         "is_baby: false":1.3,
+         "is_baby: true":0.65
+      },
+      "id":"sheep",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Shulker",
+      "eye_height":0.5,
+      "height":1,
+      "id":"shulker",
+      "width":1
+   },
+   {
+      "entity":"Shulker Bullet",
+      "eye_height":0.265625,
+      "height":0.3125,
+      "id":"shulker_bullet",
+      "width":0.3125
+   },
+   {
+      "entity":"Silverfish",
+      "eye_height":0.13,
+      "height":0.3,
+      "id":"silverfish",
+      "width":0.4
+   },
+   {
+      "entity":"Skeleton",
+      "eye_height":1.74,
+      "height":1.99,
+      "id":"skeleton",
+      "width":0.6
+   },
+   {
+      "entity":"Skeleton Horse",
+      "eye_height":{
+         "is_baby: false":1.52,
+         "is_baby: true":0.76
+      },
+      "height":{
+         "is_baby: false":1.6,
+         "is_baby: true":0.8
+      },
+      "id":"skeleton_horse",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Slime",
+      "eye_height":{
+         "size: 1":0.325,
+         "size: 2":0.65,
+         "size: 4":1.3
+      },
+      "height":{
+         "size: 1":0.52,
+         "size: 2":1.04,
+         "size: 4":2.08
+      },
+      "id":"slime",
+      "width":{
+         "size: 1":0.52,
+         "size: 2":1.04,
+         "size: 4":2.08
+      }
+   },
+   {
+      "entity":"Small Fireball",
+      "eye_height":0.265625,
+      "height":0.3125,
+      "id":"small_fireball",
+      "width":0.3125
+   },
+   {
+      "entity":"Sniffer",
+      "eye_height":{
+         "is_baby: false":1.05,
+         "is_baby: true":0.525
+      },
+      "height":{
+         "is_baby: false":1.75,
+         "is_baby: true":0.875
+      },
+      "id":"sniffer",
+      "width":{
+         "is_baby: false":1.9,
+         "is_baby: true":0.95
+      }
+   },
+   {
+      "entity":"Snow Golem",
+      "eye_height":1.7,
+      "height":1.9,
+      "id":"snow_golem",
+      "width":0.7
+   },
+   {
+      "entity":"Snowball",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"snowball",
+      "width":0.25
+   },
+   {
+      "entity":"Spectral Arrow",
+      "eye_height":0.13,
+      "height":0.5,
+      "id":"spectral_arrow",
+      "width":"No default value has been assigned."
+   },
+   {
+      "entity":"Spider",
+      "eye_height":0.65,
+      "height":0.9,
+      "id":"spider",
+      "width":1.4
+   },
+   {
+      "entity":"Squid",
+      "eye_height":0.4,
+      "height":0.8,
+      "id":"squid",
+      "width":0.8
+   },
+   {
+      "entity":"Stray",
+      "eye_height":1.74,
+      "height":1.99,
+      "id":"stray",
+      "width":0.6
+   },
+   {
+      "entity":"Strider",
+      "eye_height":{
+         "is_baby: false":1.445,
+         "is_baby: true":0.7225
+      },
+      "height":{
+         "is_baby: false":1.7,
+         "is_baby: true":0.85
+      },
+      "id":"strider",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Tadpole",
+      "eye_height":0.195,
+      "height":0.3,
+      "id":"tadpole",
+      "width":0.4
+   },
+   {
+      "entity":"Text Display",
+      "eye_height":0,
+      "height":0,
+      "id":"text_display",
+      "width":0
+   },
+   {
+      "entity":"Thrown Bottle o' Enchanting",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"experience_bottle",
+      "width":0.25
+   },
+   {
+      "entity":"Thrown Egg",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"egg",
+      "width":0.25
+   },
+   {
+      "entity":"Thrown Ender Pearl",
+      "eye_height":0.2125,
+      "height":0.25,
+      "id":"ender_pearl",
+      "width":0.25
+   },
+   {
+      "entity":"Trader Llama",
+      "eye_height":{
+         "is_baby: false":1.7765,
+         "is_baby: true":0.88825
+      },
+      "height":{
+         "is_baby: false":1.87,
+         "is_baby: true":0.935
+      },
+      "id":"trader_llama",
+      "width":{
+         "is_baby: false":0.9,
+         "is_baby: true":0.45
+      }
+   },
+   {
+      "entity":"Trident",
+      "eye_height":0.13,
+      "height":0.5,
+      "id":"trident",
+      "width":0.5
+   },
+   {
+      "entity":"Tropical Fish",
+      "eye_height":0.26,
+      "height":0.4,
+      "id":"tropical_fish",
+      "width":0.5
+   },
+   {
+      "entity":"Turtle",
+      "eye_height":{
+         "is_baby: false":0.34,
+         "is_baby: true":0.102
+      },
+      "height":{
+         "is_baby: false":0.4,
+         "is_baby: true":0.12
+      },
+      "id":"turtle",
+      "width":{
+         "is_baby: false":1.2,
+         "is_baby: true":0.36
+      }
+   },
+   {
+      "entity":"Vex",
+      "eye_height":0.51875,
+      "height":0.8,
+      "id":"vex",
+      "width":0.4
+   },
+   {
+      "entity":"Villager",
+      "eye_height":{
+         "is_baby: false, pose: standing":1.62,
+         "is_baby: true, pose: sleeping<br>is_baby: false, pose: sleeping":0.2,
+         "is_baby: true, pose: standing":0.81
+      },
+      "height":{
+         "is_baby: false, pose: standing":1.95,
+         "is_baby: true, pose: sleeping<br>is_baby: false, pose: sleeping":0.2,
+         "is_baby: true, pose: standing":0.975
+      },
+      "id":"villager",
+      "width":{
+         "pose: sleeping, is_baby: false":0.2,
+         "pose: sleeping, is_baby: true":0.2,
+         "pose: standing, is_baby: false":0.6,
+         "pose: standing, is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Vindicator",
+      "eye_height":1.6575,
+      "height":1.95,
+      "id":"vindicator",
+      "width":0.6
+   },
+   {
+      "entity":"Wandering Trader",
+      "eye_height":{
+         "is_baby: false":1.62,
+         "is_baby: true":0.81
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"wandering_trader",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Warden",
+      "eye_height":{
+         "pose: digging<br>pose: emerging":0.85,
+         "pose: roaring<br>pose: sniffing<br>pose: standing":2.4650002
+      },
+      "height":{
+         "pose: digging<br>pose: emerging":1,
+         "pose: roaring<br>pose: sniffing<br>pose: standing":2.9
+      },
+      "id":"warden",
+      "width":0.9
+   },
+   {
+      "entity":"Wind Charge",
+      "eye_height":0,
+      "height":0.3125,
+      "id":"wind_charge",
+      "width":0.3125
+   },
+   {
+      "entity":"Witch",
+      "eye_height":1.62,
+      "height":1.95,
+      "id":"witch",
+      "width":0.6
+   },
+   {
+      "entity":"Wither",
+      "eye_height":2.975,
+      "height":3.5,
+      "id":"wither",
+      "width":0.9
+   },
+   {
+      "entity":"Wither Skeleton",
+      "eye_height":2.1,
+      "height":2.4,
+      "id":"wither_skeleton",
+      "width":0.7
+   },
+   {
+      "entity":"Wither Skull",
+      "eye_height":0.265625,
+      "height":0.3125,
+      "id":"wither_skull",
+      "width":0.3125
+   },
+   {
+      "entity":"Wolf",
+      "eye_height":{
+         "is_baby: false":0.68,
+         "is_baby: true":0.34
+      },
+      "height":{
+         "is_baby: false":0.85,
+         "is_baby: true":0.425
+      },
+      "id":"wolf",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Zoglin",
+      "eye_height":{
+         "is_baby: false":1.19,
+         "is_baby: true":0.595
+      },
+      "height":{
+         "is_baby: false":1.4,
+         "is_baby: true":0.7
+      },
+      "id":"zoglin",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Zombie",
+      "eye_height":{
+         "is_baby: false":1.74,
+         "is_baby: true":0.93
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"zombie",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Zombie Horse",
+      "eye_height":{
+         "is_baby: false":1.52,
+         "is_baby: true":0.76
+      },
+      "height":{
+         "is_baby: false":1.6,
+         "is_baby: true":0.8
+      },
+      "id":"zombie_horse",
+      "width":{
+         "is_baby: false":1.396484,
+         "is_baby: true":0.698242
+      }
+   },
+   {
+      "entity":"Zombie Villager",
+      "eye_height":{
+         "is_baby: false":1.74,
+         "is_baby: true":0.93
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"zombie_villager",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   },
+   {
+      "entity":"Zombified Piglin",
+      "eye_height":{
+         "is_baby: false":1.79,
+         "is_baby: true":0.97
+      },
+      "height":{
+         "is_baby: false":1.95,
+         "is_baby: true":0.975
+      },
+      "id":"zombified_piglin",
+      "width":{
+         "is_baby: false":0.6,
+         "is_baby: true":0.3
+      }
+   }
 ]

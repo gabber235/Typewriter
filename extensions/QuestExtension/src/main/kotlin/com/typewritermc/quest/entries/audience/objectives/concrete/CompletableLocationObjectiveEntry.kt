@@ -77,11 +77,13 @@ class CompletableLocationObjectiveEntry(
     }
 
     override fun positions(player: Player?): List<Position> {
+        if (player != null && completedCriteria.matches(player)) return emptyList()
         val position = targetLocation.get(player) ?: return emptyList()
         return listOf(position)
     }
 
     override fun streamProducers(player: Player, pathStreamDisplay: Ref<PathStreamDisplayEntry>): List<StreamProducer> {
+        if (completedCriteria.matches(player)) return emptyList()
         return listOf(
             StreamProducer(
                 id,

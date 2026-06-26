@@ -48,7 +48,12 @@ class RandomLookActivity(
     private var nextChangeTime = Instant.now()
 
 
-    override fun initialize(context: ActivityContext) {}
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        currentPosition = position
+        pitchVelocity.value = 0f
+        yawVelocity.value = 0f
+        nextChangeTime = Instant.now() + (duration.get(context.randomViewer) ?: Duration.ofSeconds(1))
+    }
 
     override fun tick(context: ActivityContext): TickResult {
         val currentTime = Instant.now()

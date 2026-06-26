@@ -44,3 +44,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter Demon user preferences (not tracked)
+.fdemon/settings.local.toml

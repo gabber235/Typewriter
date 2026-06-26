@@ -16,11 +16,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Read build settings
+        id: settings
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import tomllib
+          with open('settings.toml', 'rb') as file:
+              settings = tomllib.load(file)
+          print(f"version={settings['version']}")
+          print(f"java={settings['java']}")
+          PY
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ steps.settings.outputs.java }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -33,19 +45,20 @@ jobs:
       - name: Get version
         id: vars
         run: |
-          version=$(cat version.txt)
+          version="${{ steps.settings.outputs.version }}"
           run_number=${{ github.run_number }}
           full_version="${version}-beta-${run_number}"
-          echo $full_version > version.txt
-          echo "version=$full_version" >> $GITHUB_OUTPUT
+          echo "version=$full_version" >> "$GITHUB_OUTPUT"
 
       - name: Build Engine
         uses: ./.github/actions/build-engine
+        with:
+          gradle-arguments: -Ptypewriter.version=${{ steps.vars.outputs.version }}
 
       #  ----------------------------------------------------------------------------------------------------
       - name: Test Extensions
         working-directory: ./extensions
-        run: ./gradlew test --scan
+        run: ./gradlew test -Ptypewriter.version=${{ steps.vars.outputs.version }} --scan
 
       #  ----------------------------------------------------------------------------------------------------
       - name: Publish Engine to Beta Maven Repository
@@ -53,27 +66,27 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_TypewriterBetaUsername: ${{ secrets.MAVEN_USERNAME }}
           ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
-        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
+        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository -Ptypewriter.version=${{ steps.vars.outputs.version }} --scan
 
       - name: Publish All Extensions to Beta Maven Repository
         working-directory: ./extensions
         env:
           ORG_GRADLE_PROJECT_TypewriterBetaUsername: ${{ secrets.MAVEN_USERNAME }}
           ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
-        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
+        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository -Ptypewriter.version=${{ steps.vars.outputs.version }} --scan
 
       - name: Publish Module-Plugin to Beta Maven Repository
         working-directory: ./module-plugin
         env:
           ORG_GRADLE_PROJECT_TypewriterBetaUsername: ${{ secrets.MAVEN_USERNAME }}
           ORG_GRADLE_PROJECT_TypewriterBetaPassword: ${{ secrets.MAVEN_PASSWORD }}
-        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository --scan
+        run: ./gradlew publishAllPublicationsToTypewriterBetaRepository -Ptypewriter.version=${{ steps.vars.outputs.version }} --scan
 
       #  ----------------------------------------------------------------------------------------------------
       # Has to be after the publish, because it needs to delete the slim jars and only keep the shadowed jars for the modrinth upload
       - name: Build Extensions
         working-directory: ./extensions
-        run: ./gradlew buildRelease --scan
+        run: ./gradlew buildRelease -Ptypewriter.version=${{ steps.vars.outputs.version }} --scan
 
       #  ----------------------------------------------------------------------------------------------------
       - name: Publish Modrinth
@@ -92,7 +105,7 @@ jobs:
           loaders: |
             paper
           game-versions: |
-            [1.21.3, 1.21.11]
+            [1.21.3, 26.1.2]
           dependencies: |
             packetevents(required)
             placeholderapi(recommended)
@@ -102,7 +115,7 @@ jobs:
         continue-on-error: true
         env:
           HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
-        run: ./gradlew engine-paper:publishPluginPublicationToHangar --scan
+        run: ./gradlew engine-paper:publishPluginPublicationToHangar -Ptypewriter.version=${{ steps.vars.outputs.version }} --scan
 
       - name: Add Tag
         uses: mathieudutour/github-tag-action@v6.2

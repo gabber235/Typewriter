@@ -33,7 +33,7 @@ abstract class MultipleEntityDisplayBase(
         return entityList
             .mapNotNull { entity ->
                 val distSq =
-                    entity.activityManager.position.distanceSqrt(actualPlayer.location) ?: return@mapNotNull null
+                    entity.activityManager.position.distanceSquared(actualPlayer.location) ?: return@mapNotNull null
                 entity to distSq
             }
             .minByOrNull { it.second }
@@ -46,7 +46,7 @@ abstract class MultipleEntityDisplayBase(
 
         return managers(playerId)
             .mapNotNull { manager ->
-                val distSq = manager.position.distanceSqrt(actualPlayer.location) ?: return@mapNotNull null
+                val distSq = manager.position.distanceSquared(actualPlayer.location) ?: return@mapNotNull null
                 manager.position.toPosition() to distSq
             }
             .minByOrNull { it.second }
@@ -140,7 +140,7 @@ abstract class MultipleEntityDisplayBase(
         currentEntities: List<DisplayEntity>,
         rangeSq: Double
     ): DisplayEntity? {
-        val distance = manager.position.distanceSqrt(player.location)
+        val distance = manager.position.distanceSquared(player.location)
         val currentEntity = currentEntities.find { it.activityManager === manager }
 
         return when {
@@ -241,7 +241,7 @@ class MultipleSharedAudienceEntityDisplay(
     override fun filter(player: Player): Boolean {
         val rangeSq = showRangeSq(player)
         return activityManagers.any { manager ->
-            manager.position.distanceSqrt(player.location)?.let { it <= rangeSq } ?: false
+            manager.position.distanceSquared(player.location)?.let { it <= rangeSq } ?: false
         }
     }
 
@@ -250,7 +250,7 @@ class MultipleSharedAudienceEntityDisplay(
         val rangeSq = showRangeSq(player)
 
         val newEntities = activityManagers.mapNotNull { manager ->
-            manager.position.distanceSqrt(player.location)
+            manager.position.distanceSquared(player.location)
                 ?.takeIf { it <= rangeSq }
                 ?.let { createDisplayEntity(player, manager) }
         }
@@ -350,7 +350,7 @@ class MultipleIndividualAudienceEntityDisplay(
 
         val showRangeSq = showRangeSq(player)
         return managers(player.uniqueId).any { manager ->
-            manager.position.distanceSqrt(player.location)?.let { it <= showRangeSq } ?: false
+            manager.position.distanceSquared(player.location)?.let { it <= showRangeSq } ?: false
         }
     }
 
@@ -383,7 +383,7 @@ class MultipleIndividualAudienceEntityDisplay(
         val managerList = managers(player.uniqueId)
 
         val newEntities = managerList.mapNotNull { manager ->
-            manager.position.distanceSqrt(player.location)?.takeIf { it <= showRangeSq }?.let {
+            manager.position.distanceSquared(player.location)?.takeIf { it <= showRangeSq }?.let {
                 createDisplayEntity(player, manager)
             }
         }
@@ -595,7 +595,7 @@ class MultipleGroupAudienceEntityDisplay(
         val showRangeSq = showRangeSq(player)
 
         return managerList.any { manager ->
-            manager.position.distanceSqrt(player.location)?.let { it <= showRangeSq } ?: false
+            manager.position.distanceSquared(player.location)?.let { it <= showRangeSq } ?: false
         }
     }
 
@@ -629,7 +629,7 @@ class MultipleGroupAudienceEntityDisplay(
         val showRangeSq = showRangeSq(player)
 
         val newEntities = managerList.mapNotNull { manager ->
-            manager.position.distanceSqrt(player.location)?.takeIf { it <= showRangeSq }?.let {
+            manager.position.distanceSquared(player.location)?.takeIf { it <= showRangeSq }?.let {
                 createDisplayEntity(player, manager).also {
                     onEntityAddedToPlayer(manager, player)
                 }

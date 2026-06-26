@@ -29,24 +29,26 @@ repositories {
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    val paperVersion = "1.21.11-R0.1-SNAPSHOT"
+//    val paperVersion = "26.2.build.34-alpha"
+    compileOnlyApi("io.papermc.paper:paper-api:$paperVersion")
 
     api(project(":engine-core"))
     api(project(":engine-loader"))
 
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("io.github.tofaa2:spigot:3.1.0-SNAPSHOT")
+    api("me.tofaa2:spigot:3.2.0-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 
     // Doesn't want to load properly using the spigot api.
     compileOnlyApi("io.ktor:ktor-server-core-jvm:2.3.13")
     compileOnlyApi("io.ktor:ktor-server-netty-jvm:2.3.13")
-    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+    compileOnlyApi("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
     compileOnlyApi("org.bstats:bstats-bukkit:3.2.1")
 
-    val adventureVersion = "4.26.1"
+    val adventureVersion = "5.1.1"
     compileOnlyApi("net.kyori:adventure-api:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-minimessage:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-plain:$adventureVersion")
@@ -56,11 +58,11 @@ dependencies {
     compileOnlyApi("com.github.retrooper:packetevents-api:2.11.1")
     compileOnlyApi("com.github.retrooper:packetevents-spigot:2.11.1")
 
-    compileOnly("me.clip:placeholderapi:2.11.7")
+    compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnlyApi("org.geysermc.geyser:api:2.9.5-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
 
-    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation("io.papermc.paper:paper-api:$paperVersion")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0")
 }
 

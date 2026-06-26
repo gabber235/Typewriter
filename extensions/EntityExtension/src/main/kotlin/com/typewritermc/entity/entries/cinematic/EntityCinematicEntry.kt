@@ -13,7 +13,7 @@ import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.core.utils.point.Coordinate
-import com.typewritermc.core.utils.point.distanceSqrt
+import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.content.ContentContext
 import com.typewritermc.engine.paper.content.ContentMode
 import com.typewritermc.engine.paper.content.components.cinematic
@@ -204,7 +204,7 @@ class EntityCinematicAction(
             return
         }
 
-        val distance = location.distanceSqrt(lastLocation) ?: 0.0
+        val distance = location.distanceSquared(lastLocation) ?: 0.0
         if (distance < 1.7) return
         playStepSound()
         lastSoundLocation = location
@@ -431,9 +431,9 @@ class EntityCinematicRecording(
 
         value.mainHand?.let { player.inventory.setItemInMainHand(it) }
         value.offHand?.let { player.inventory.setItemInOffHand(it) }
-        value.helmet?.let { player.inventory.helmet = it }
-        value.chestplate?.let { player.inventory.chestplate = it }
-        value.leggings?.let { player.inventory.leggings = it }
-        value.boots?.let { player.inventory.boots = it }
+        value.helmet?.let { player.inventory.setHelmet(it) }
+        value.chestplate?.let { player.inventory.setChestplate(it) }
+        value.leggings?.let { player.inventory.setLeggings(it) }
+        value.boots?.let { player.inventory.setBoots(it) }
     }
 }

@@ -19,11 +19,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Read build settings
+        id: settings
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import tomllib
+          with open('settings.toml', 'rb') as file:
+              settings = tomllib.load(file)
+          print(f"version={settings['version']}")
+          print(f"java={settings['java']}")
+          PY
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ steps.settings.outputs.java }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4

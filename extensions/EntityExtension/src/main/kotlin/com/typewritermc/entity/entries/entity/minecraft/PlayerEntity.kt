@@ -23,11 +23,11 @@ import com.typewritermc.engine.paper.utils.toPacketLocation
 import com.typewritermc.entity.entries.data.minecraft.PoseProperty
 import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
+import com.typewritermc.entity.entries.entity.RideableSittingSupport
 import com.typewritermc.entity.entries.entity.custom.state
 import me.tofaa.entitylib.EntityLib
 import me.tofaa.entitylib.meta.types.PlayerMeta
 import me.tofaa.entitylib.spigot.SpigotEntityLibAPI
-import me.tofaa.entitylib.wrapper.WrapperEntity
 import me.tofaa.entitylib.wrapper.WrapperPlayer
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -72,7 +72,12 @@ class PlayerEntity(
     player: Player,
     displayName: Var<String>,
 ) : FakeEntity(player) {
-    private var sitEntity: WrapperEntity? = null
+    private val rideableSitting = RideableSittingSupport(
+        player,
+        passenger = { entity },
+        isPassengerSpawned = { entity.isSpawned },
+        location = { property<PositionProperty>() },
+    )
 
     private var entity: WrapperPlayer
     override val entityId: Int
@@ -106,41 +111,38 @@ class PlayerEntity(
     override fun applyProperties(properties: List<EntityProperty>) {
         properties.forEach { property ->
             when (property) {
-                is PositionProperty -> {
-                    if (sitEntity?.isSpawned == true) {
-                        sitEntity?.move(property)
-                    }
-                    entity.move(property)
-                }
-
-                is SkinProperty -> entity.textureProperties =
-                    listOf(TextureProperty("textures", property.texture, property.signature))
-
-                is PoseProperty -> {
-                    if (property.pose == EntityPose.SITTING) {
-                        sit()
-                    } else {
-                        unsit()
-                    }
-                }
-
-                else -> {
-                }
+                is PositionProperty -> applyPosition(property)
+                else -> applyProperty(property)
             }
-            if (applyGenericEntityData(entity, property)) return@forEach
-            if (applyLivingEntityData(entity, property)) return@forEach
         }
     }
 
-    override fun spawn(location: PositionProperty) {
-        if (sitEntity != null) {
-            sitEntity?.spawn(location.toPacketLocation())
-            sitEntity?.addViewer(player.uniqueId)
+    private fun applyProperty(property: EntityProperty) {
+        when (property) {
+            is PoseProperty -> {
+                rideableSitting.applyPose(property.pose, property<PositionProperty>())
+                if (property.pose == EntityPose.SITTING) return
+            }
+
+            is SkinProperty -> entity.textureProperties =
+                listOf(TextureProperty("textures", property.texture, property.signature))
+
+            else -> {}
         }
+        if (applyGenericEntityData(entity, property)) return
+        if (applyLivingEntityData(entity, property)) return
+    }
+
+    private fun applyPosition(property: PositionProperty) {
+        rideableSitting.move(property)
+        entity.move(property)
+    }
+
+    override fun spawn(location: PositionProperty) {
+        rideableSitting.onSpawn(location)
         entity.spawn(location.toPacketLocation())
         entity.addViewer(player.uniqueId)
-
-        sitEntity?.addPassengers(this.entity)
+        rideableSitting.mountIfNeeded()
 
         val info = WrapperPlayServerTeams.ScoreBoardTeamInfo(
             Component.empty(),
@@ -174,9 +176,7 @@ class PlayerEntity(
     }
 
     override fun contains(entityId: Int): Boolean {
-        sitEntity?.let {
-            if (it.entityId == entityId) return true
-        }
+        if (rideableSitting.contains(entityId)) return true
         return this.entityId == entityId
     }
 
@@ -187,33 +187,8 @@ class PlayerEntity(
             WrapperPlayServerTeams.TeamMode.REMOVE,
             Optional.empty()
         ) sendPacketTo player
+        rideableSitting.dispose()
         entity.despawn()
         entity.remove()
-
-        sitEntity?.despawn()
-        sitEntity?.remove()
-        sitEntity = null
-    }
-
-    private fun sit(location: PositionProperty? = null) {
-        val loc = location ?: property<PositionProperty>() ?: return
-        if (sitEntity != null) return
-        sitEntity = WrapperEntity(EntityTypes.BLOCK_DISPLAY)
-        sitEntity?.spawn(loc.toPacketLocation())
-        sitEntity?.addViewer(player.uniqueId)
-        if (entity.isSpawned) {
-            sitEntity?.addPassengers(this.entity)
-        }
-    }
-
-    private fun unsit() {
-        val entity = sitEntity ?: return
-        if (entity.hasPassenger(this.entity)) {
-            entity.removePassengers(this.entity)
-        }
-        entity.removeViewer(player.uniqueId)
-        entity.despawn()
-        entity.remove()
-        sitEntity = null
     }
 }

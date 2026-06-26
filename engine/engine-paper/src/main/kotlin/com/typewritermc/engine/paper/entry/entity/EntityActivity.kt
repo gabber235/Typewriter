@@ -12,7 +12,7 @@ interface ActivityCreator {
 }
 
 interface EntityActivity<Context : ActivityContext> {
-    fun initialize(context: Context)
+    fun initialize(context: Context, position: PositionProperty)
     fun tick(context: Context): TickResult
     fun dispose(context: Context)
 
@@ -37,11 +37,12 @@ interface SharedEntityActivity : EntityActivity<SharedActivityContext> {
     fun addedViewer(context: SharedActivityContext, viewer: Player) {}
     fun removedViewer(context: SharedActivityContext, viewer: Player) {}
 }
+
 interface IndividualEntityActivity : EntityActivity<IndividualActivityContext>
 interface GenericEntityActivity : EntityActivity<ActivityContext>
 
 class IdleActivity(override var currentPosition: PositionProperty) : GenericEntityActivity {
-    override fun initialize(context: ActivityContext) {}
+    override fun initialize(context: ActivityContext, position: PositionProperty) {}
 
     override fun tick(context: ActivityContext): TickResult = TickResult.IGNORED
 
@@ -58,20 +59,23 @@ class IdleActivity(override var currentPosition: PositionProperty) : GenericEnti
 abstract class SingleChildActivity<Context : ActivityContext>(
     startLocation: PositionProperty,
 ) : EntityActivity<Context> {
-    private var child: Ref<out EntityActivityEntry> = emptyRef()
+    protected var child: Ref<out EntityActivityEntry> = emptyRef()
+        private set
     private var currentActivity: EntityActivity<in Context> = IdleActivity(startLocation)
 
-    override fun initialize(context: Context) {
+    private val activityCache = mutableMapOf<Ref<out EntityActivityEntry>, EntityActivity<in Context>>()
+
+    override fun initialize(context: Context, position: PositionProperty) {
         child = currentChild(context)
-        currentActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-        currentActivity.initialize(context)
+        refreshActivity(context, position)
     }
 
-    fun refreshActivity(context: Context) {
-        val currentLocation = this.currentPosition
+    fun refreshActivity(context: Context, position: PositionProperty) {
         currentActivity.dispose(context)
-        currentActivity = child.get()?.create(context, currentLocation) ?: IdleActivity(currentLocation)
-        currentActivity.initialize(context)
+        currentActivity = activityCache.getOrPut(child) {
+            child.get()?.create(context, position) ?: IdleActivity(position)
+        }
+        currentActivity.initialize(context, position)
     }
 
 
@@ -79,7 +83,7 @@ abstract class SingleChildActivity<Context : ActivityContext>(
         val correctChild = currentChild(context)
         if (child != correctChild) {
             child = correctChild
-            refreshActivity(context)
+            refreshActivity(context, currentPosition)
         }
         return currentActivity.tick(context)
     }

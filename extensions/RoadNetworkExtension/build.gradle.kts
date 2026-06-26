@@ -1,6 +1,6 @@
 repositories {}
 dependencies {
-    api("com.extollit.gaming:hydrazine-path-engine:1.8.1")
+    api("com.github.bsommerfeld.pathetic-bukkit:core:5.4.7-a")
 }
 
 typewriter {
@@ -14,7 +14,7 @@ typewriter {
             |It can be used by NPCs to navigate to certain locations, or by players to know how to get somewhere.
             """.trimMargin()
 
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 

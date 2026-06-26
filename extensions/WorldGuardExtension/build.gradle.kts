@@ -21,7 +21,7 @@ typewriter {
             |Have dialogues that only show up when a player enters or leaves a specific region.
             |Have sidebars that only show when the player is in a specific region.
         """.trimMargin()
-        engineVersion = file("../../version.txt").readText().trim()
+        engineVersion = rootProject.extra["typewriterEngineVersion"] as String
         channel = com.typewritermc.moduleplugin.ReleaseChannel.NONE
 
 
