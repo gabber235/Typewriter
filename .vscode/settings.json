@@ -1,5 +1,0 @@
-{
-    "java.autobuild.enabled": false,
-    "java.configuration.updateBuildConfiguration": "disabled",
-    "java.compile.nullAnalysis.mode": "disabled"
-}

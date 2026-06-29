@@ -1,4 +1,0 @@
-include:
-  - docker/marketplace.compose.yml
-  - docker/surrealdb.compose.yml
-  - docker/wasmcloud.compose.yml

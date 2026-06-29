@@ -32,9 +32,6 @@ Minecraft Paper plugin for interactive quests, NPC dialogues, and cinematics. Po
 **Dart** (panel):
 Double quotes required, trailing commas on multiline args, package imports only (no relative), files under 300 lines
 
-**Protobuf**:
-snake_case fields, PascalCase messages. Enums: prefix with type name, `_UNSPECIFIED = 0` first
-
 ## COMMANDS
 
 ### Panel (run from `panel/`)
@@ -103,9 +100,3 @@ Reference in docs: `<CodeSnippet tag="my-tag" />`
 ### Panel Testing
 Use `testApp()` and `pumpTestApp()` from `test/test_utils.dart`.
 Widgetbook components: wrap with `FakeApp`.
-
-### Proto Changes
-After editing `.proto` files:
-- Panel: run `task proto` in panel/
-- Backend: automatic via build.rs
-- Services: automatic via protokt
