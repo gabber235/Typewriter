@@ -1,0 +1,4 @@
+generators:
+  - mod: skir-dart-gen
+    outDir: ./panel/lib/skirout
+    config: {}

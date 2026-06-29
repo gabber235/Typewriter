@@ -40,6 +40,7 @@ dependencies:
   responsive_framework: ^1.5.1
   rive: ^0.14.0
   riverpod_annotation: ^4.0.2
+  skir_client: any
   url_launcher: ^6.3.1
   uuid: ^4.5.1
   vector_math: ^2.2.0
