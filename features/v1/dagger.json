@@ -1,0 +1,15 @@
+{
+  "name": "typewriter",
+  "engineVersion": "v0.21.7",
+  "sdk": {
+    "source": "go"
+  },
+  "toolchains": [
+    {
+      "name": "gitops",
+      "source": "github.com/seamlezz/daggerverse/gitops@gitops/v0.5.0",
+      "pin": "557b92234cd63469e3b04bbc3f649602b7ab984d"
+    }
+  ],
+  "source": ".dagger"
+}
