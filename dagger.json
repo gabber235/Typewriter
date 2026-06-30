@@ -4,5 +4,12 @@
   "sdk": {
     "source": "go"
   },
+  "toolchains": [
+    {
+      "name": "gitops",
+      "source": "github.com/seamlezz/daggerverse/gitops@gitops/v0.4.0",
+      "pin": "faae777c513465df8f74c86b60b87765a2008ff0"
+    }
+  ],
   "source": ".dagger"
 }
