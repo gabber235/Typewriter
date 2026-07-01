@@ -1,0 +1,35 @@
+[workspace]
+resolver = "3"
+members = ["access/auth-callout", "wasmcloud-utils"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.95.0"
+repository = "https://github.com/gabber235/Typewriter"
+
+[workspace.dependencies]
+anyhow = "1"
+base64 = "0.22"
+jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
+nats-jwt-rs = "0.1"
+nkeys = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+url = "2"
+
+skir-client = "0.1"
+wasmcloud-component = "0.2.0"
+
+opentelemetry = "0.32"
+otel-wasi = {
+  package = "otel-wasi",
+  git = "https://github.com/Seamlezz/otel-wasi",
+  branch = "main"
+}
+tracing = "0.1"
+tracing-opentelemetry = "0.33"
+
+wit-bindgen = {
+  version = "0.58",
+  features = ["async-spawn", "inter-task-wakeup"]
+}

@@ -1,0 +1,8 @@
+package seamlezz:auth-callout@0.1.0;
+
+world auth-callout {
+  import wasi:http/outgoing-handler@0.2.2;
+  import wasmcloud:messaging/consumer@0.2.0;
+
+  export wasmcloud:messaging/handler@0.2.0;
+}

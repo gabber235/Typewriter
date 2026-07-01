@@ -1,9 +1,0 @@
-kubernetes_context = "k3s-prod"
-
-openbao_address = "https://vault.seamlezz.com"
-
-panel_issuer_url = "https://auth.typewritermc.com/application/o/typewriter-panel/"
-panel_jwks_url   = "https://auth.typewritermc.com/application/o/typewriter-panel/jwks/"
-
-services_issuer_url = "https://auth.typewritermc.com/application/o/typewriter-services/"
-services_jwks_url   = "https://auth.typewritermc.com/application/o/typewriter-services/jwks/"

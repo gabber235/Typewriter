@@ -1,0 +1,3 @@
+- op: add
+  path: /spec/template/spec/components/0/image
+  value: oci.seamlezz.com/wasmcloud/auth-auth-callout:0.1.0

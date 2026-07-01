@@ -1,0 +1,9 @@
+package seamlezz:auth-typewriter-permissions@0.1.0;
+
+world auth-typewriter-permissions {
+  import wasmcloud:messaging/consumer@0.2.0;
+
+  import seamlezz:surrealdb/call@0.1.0;
+
+  export wasmcloud:messaging/handler@0.2.0;
+}

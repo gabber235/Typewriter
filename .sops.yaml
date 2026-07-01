@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: .*/secrets/.*\.enc\.ya?ml$
+    encrypted_regex: ^(data|stringData)$
+    gcp_kms: projects/seamlezz-5e5c3/locations/global/keyRings/seamlezz-infrastructure/cryptoKeys/sops-secrets
