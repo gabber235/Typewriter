@@ -1,13 +1,20 @@
 [package]
 name = "wasmcloud-utils"
-version = "1.0.12"
-edition = "2024"
+version = "0.0.1"
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = "Utilities for wasmcloud components"
+repository = { workspace = true }
 
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-wit-bindgen = "0.41"
-wasmcloud-component = "0.2"
-anyhow = "1"
+anyhow = { workspace = true }
+skir-client = { workspace = true }
+
+opentelemetry = { workspace = true }
+otel-wasi = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+wit-bindgen = { workspace = true }

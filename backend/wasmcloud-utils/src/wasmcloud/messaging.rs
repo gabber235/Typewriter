@@ -1,0 +1,488 @@
+use std::collections::HashMap;
+
+pub use crate::bindings::exports::wasmcloud::messaging::*;
+pub use crate::bindings::wasmcloud::messaging::*;
+
+/// Parse the subject and collect certain components.
+///
+/// If the subject doesn't match the template an error is returned.
+///
+/// When a placeholder like `<action>` is the last part of the template,
+/// it will capture all remaining segments of the subject (greedy match).
+/// This allows for multi-segment actions like `join_requests.list`.
+///
+/// Suppose a template is `test.<id>.something.<type>.*.<action>.>`
+/// Then the following subjects will be parsed:
+///
+/// ```rust
+/// # use wasmcloud_utils::wasmcloud::messaging::parse_subject;
+/// let m = parse_subject("test.<id>.something.<type>.*.<action>.>",
+///                        "test.123.something.foo.bar.baz.qux.zab")
+///                        .expect("Failed to parse subject");
+/// assert_eq!(m.get("id"), Some(&"123".to_string()));
+/// assert_eq!(m.get("type"), Some(&"foo".to_string()));
+/// assert_eq!(m.get("action"), Some(&"baz".to_string()));
+/// assert_eq!(m.get(">"), Some(&"qux.zab".to_string()));
+///
+/// // If the template doesn't match, an error is returned:
+/// let m2 = parse_subject("test.<id>.something.<type>.*.<action>.>",
+///                         "test.abc.whatever.foo.bar.baz.qux");
+/// assert_eq!(m2, Err("Subject 'test.abc.whatever.foo.bar.baz.qux' doesn't match template 'test.<id>.something.<type>.*.<action>.>', expected 'something' but got 'whatever'".to_string()));
+///
+///
+/// // If the subject is too short, an error is returned:
+/// let m3 = parse_subject("test.<id>.something.<type>.*.<action>.>",
+///                         "test.123.something");
+/// assert_eq!(m3, Err("Subject 'test.123.something' doesn't match template 'test.<id>.something.<type>.*.<action>.>', missing part '<type>.*.<action>.>'".to_string()));
+///
+/// // When a placeholder is the last template part, it captures all remaining segments:
+/// let m4 = parse_subject("user.<user_id>.organization.<action>",
+///                         "user.123.organization.join_requests.list")
+///                         .expect("Failed to parse subject");
+/// assert_eq!(m4.get("action"), Some(&"join_requests.list".to_string()));
+///
+/// // Optional segments can be specified with []:
+/// let m5 = parse_subject("[typewriter.in.]user.<user_id>.organization.<action>",
+///                         "typewriter.in.user.abc.organization.list")
+///                         .expect("Failed to parse subject");
+/// assert_eq!(m5.get("user_id"), Some(&"abc".to_string()));
+///
+/// let m6 = parse_subject("[typewriter.in.]user.<user_id>.organization.<action>",
+///                         "user.abc.organization.list")
+///                         .expect("Failed to parse subject");
+/// assert_eq!(m6.get("user_id"), Some(&"abc".to_string()));
+/// ```
+pub fn parse_subject(
+    template: &str,
+    subject: &str,
+) -> Result<HashMap<String, String>, String> {
+    let expanded_templates = expand_optional_segments(template);
+
+    let mut last_error = String::new();
+    for expanded_template in &expanded_templates {
+        match parse_subject_inner(expanded_template, subject) {
+            Ok(map) => return Ok(map),
+            Err(e) => last_error = e,
+        }
+    }
+
+    Err(last_error)
+}
+
+fn expand_optional_segments(template: &str) -> Vec<String> {
+    let mut optional_segments: Vec<&str> = Vec::new();
+    let mut remaining = template;
+    let mut base_parts: Vec<&str> = Vec::new();
+
+    while let Some(start) = remaining.find('[') {
+        if start > 0 {
+            base_parts.push(&remaining[..start]);
+        }
+        let end = remaining[start..].find(']').map(|e| start + e);
+        if let Some(end_idx) = end {
+            optional_segments.push(&remaining[start + 1..end_idx]);
+            remaining = &remaining[end_idx + 1..];
+        } else {
+            break;
+        }
+    }
+    base_parts.push(remaining);
+
+    let num_optionals = optional_segments.len();
+    if num_optionals == 0 {
+        return vec![template.to_string()];
+    }
+
+    let mut results = Vec::new();
+    for mask in 0..(1 << num_optionals) {
+        let mut result = String::new();
+        let mut opt_idx = 0;
+        let mut remaining = template;
+
+        while let Some(start) = remaining.find('[') {
+            result.push_str(&remaining[..start]);
+            let end = remaining[start..].find(']').map(|e| start + e).unwrap();
+            if (mask >> opt_idx) & 1 == 1 {
+                result.push_str(&remaining[start + 1..end]);
+            }
+            opt_idx += 1;
+            remaining = &remaining[end + 1..];
+        }
+        result.push_str(remaining);
+        results.push(result);
+    }
+
+    results.sort_by_key(|b| std::cmp::Reverse(b.len()));
+    results
+}
+
+fn parse_subject_inner(
+    template: &str,
+    subject: &str,
+) -> Result<HashMap<String, String>, String> {
+    let mut map = HashMap::new();
+    let template_parts = template.split(".").collect::<Vec<&str>>();
+    let subject_parts = subject.split(".").collect::<Vec<&str>>();
+    for i in 0..template_parts.len() {
+        if subject_parts.len() <= i {
+            return Err(format!(
+                "Subject '{}' doesn't match template '{}', missing part '{}'",
+                subject,
+                template,
+                template_parts[i..].join(".")
+            ));
+        }
+
+        let template_part = template_parts[i];
+        if template_part == "*" {
+            continue;
+        }
+        if template_part == ">" {
+            let left_over = subject_parts[i..].join(".");
+            map.insert(template_part.to_string(), left_over);
+            break;
+        }
+
+        let subject_part = subject_parts[i];
+        if !template_part.starts_with("<") || !template_part.ends_with(">") {
+            if template_part != subject_part {
+                return Err(format!(
+                    "Subject '{}' doesn't match template '{}', expected '{}' but got '{}'",
+                    subject, template, template_part, subject_part
+                ));
+            }
+            continue;
+        }
+
+        let key = template_part[1..template_part.len() - 1].to_string();
+        if key.is_empty() {
+            continue;
+        }
+
+        // If this is the last template part and there are more subject parts,
+        // capture all remaining segments (greedy match for trailing placeholders)
+        let is_last_template_part = i == template_parts.len() - 1;
+        if is_last_template_part && subject_parts.len() > i + 1 {
+            let remaining = subject_parts[i..].join(".");
+            map.insert(key, remaining);
+        } else {
+            map.insert(key, subject_part.to_string());
+        }
+    }
+    Ok(map)
+}
+
+/// Send a message to the reply_to field of the message
+pub fn reply(
+    reply_to: types::BrokerMessage,
+    data: impl Into<Vec<u8>>,
+) -> Result<(), String> {
+    if let Some(reply_to) = reply_to.reply_to {
+        consumer::publish(&types::BrokerMessage {
+            subject: reply_to,
+            reply_to: None,
+            body: data.into(),
+        })
+    } else {
+        Err("No reply_to field in message, ignoring message".to_string())
+    }
+}
+
+/// Send a message with a specific reply_to
+pub fn send(
+    subject: String,
+    reply_to: String,
+    data: impl Into<Vec<u8>>,
+) -> Result<(), String> {
+    consumer::publish(&types::BrokerMessage {
+        subject,
+        reply_to: Some(reply_to),
+        body: data.into(),
+    })
+}
+
+/// Dispatch a message to one of multiple action handlers based on the <action> value in the subject.
+///
+/// This function parses the subject using the provided template (which must include an <action> placeholder),
+/// extracts the action value, and dispatches to the corresponding handler function.
+///
+/// Each action can optionally have an error handler. When an error occurs and an error handler
+/// is provided for that action, it will call the error handler to generate error response bytes
+/// and send them as a reply to the original message.
+///
+/// # Arguments
+/// * `msg` - The incoming broker message
+/// * `subject_template` - Subject template that includes `<action>` (e.g., "user.<user_id>.organization.<action>")
+/// * `actions` - A slice of tuples containing (action_name, handler_function, optional_error_handler)
+///
+/// # Returns
+/// Returns `Ok(())` if the action was handled successfully, or an error if:
+/// - The subject doesn't match the template
+/// - The action is not found in the provided actions list
+/// - The handler function returns an error
+pub fn dispatch_action(
+    msg: types::BrokerMessage,
+    subject_template: &str,
+    actions: &[(
+        &str,
+        fn(
+            types::BrokerMessage,
+            std::collections::HashMap<String, String>,
+        ) -> Result<(), String>,
+        Option<fn() -> Vec<u8>>,
+    )],
+) -> Result<(), String> {
+    if !subject_template.contains("<action>") {
+        return Err(format!(
+            "Subject template '{}' must contain '<action>' placeholder",
+            subject_template
+        ));
+    }
+
+    let params = parse_subject(subject_template, &msg.subject)?;
+
+    let action = params.get("action").ok_or_else(|| {
+        format!(
+            "Failed to extract action from subject '{}' using template '{}'",
+            msg.subject, subject_template
+        )
+    })?;
+
+    let Some((_, handler, error_handler)) =
+        actions.iter().find(|(name, _, _)| *name == action)
+    else {
+        let valid_actions: Vec<&str> = actions.iter().map(|(name, _, _)| *name).collect();
+        return Err(format!(
+            "Unknown action '{}' for subject '{}'. Valid actions are: {}",
+            action,
+            msg.subject,
+            valid_actions.join(", ")
+        ));
+    };
+
+    let error_handler = *error_handler;
+    let result = handler(msg.clone(), params);
+
+    if let Err(_) = result {
+        if let Some(err_fn) = error_handler {
+            let error_response = err_fn();
+            if let Some(ref reply_to) = msg.reply_to {
+                let _ = consumer::publish(&types::BrokerMessage {
+                    subject: reply_to.clone(),
+                    reply_to: None,
+                    body: error_response,
+                });
+            }
+        }
+    }
+
+    result
+}
+
+pub fn expand_template_pattern(pattern: &str, templates: &[(&str, &str)]) -> String {
+    let mut result = pattern.to_string();
+    for (template_name, template_value) in templates {
+        let placeholder = format!("{{{}}}", template_name);
+        result = result.replace(&placeholder, template_value);
+    }
+    result
+}
+
+pub fn dispatch_action_with_templates(
+    msg: types::BrokerMessage,
+    templates: &[(&str, &str)],
+    actions: &[(
+        &str,
+        fn(types::BrokerMessage, std::collections::HashMap<String, String>) -> Result<(), String>,
+        Option<fn() -> Vec<u8>>,
+    )],
+) -> Result<(), String> {
+    for (pattern, handler, error_handler) in actions {
+        let expanded = expand_template_pattern(pattern, templates);
+
+        let Ok(params) = parse_subject(&expanded, &msg.subject) else {
+            continue;
+        };
+
+        let error_handler = *error_handler;
+        let result = handler(msg.clone(), params);
+
+        let Err(_) = result else {
+            return result;
+        };
+
+        let Some(err_fn) = error_handler else {
+            return result;
+        };
+
+        let error_response = err_fn();
+        let Some(ref reply_to) = msg.reply_to else {
+            return result;
+        };
+
+        let _ = consumer::publish(&types::BrokerMessage {
+            subject: reply_to.clone(),
+            reply_to: None,
+            body: error_response,
+        });
+
+        return result;
+    }
+
+    Err(format!("No matching action for subject '{}'", msg.subject))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_subject_single_segment_action() {
+        let template = "user.<user_id>.organization.<action>";
+        let subject = "user.123.organization.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"123".to_string()));
+        assert_eq!(result.get("action"), Some(&"list".to_string()));
+    }
+
+    #[test]
+    fn test_parse_subject_optional_prefix_present() {
+        let template = "[typewriter.in.]user.<user_id>.organization.<action>";
+        let subject = "typewriter.in.user.abc.organization.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"abc".to_string()));
+        assert_eq!(result.get("action"), Some(&"list".to_string()));
+    }
+
+    #[test]
+    fn test_parse_subject_optional_prefix_absent() {
+        let template = "[typewriter.in.]user.<user_id>.organization.<action>";
+        let subject = "user.abc.organization.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"abc".to_string()));
+        assert_eq!(result.get("action"), Some(&"list".to_string()));
+    }
+
+    #[test]
+    fn test_parse_subject_multiple_optional_segments() {
+        let template = "[prefix.][middle.]user.<user_id>";
+        let subject_both = "prefix.middle.user.123";
+        let subject_first = "prefix.user.123";
+        let subject_second = "middle.user.123";
+        let subject_none = "user.123";
+
+        let result_both = parse_subject(template, subject_both).unwrap();
+        assert_eq!(result_both.get("user_id"), Some(&"123".to_string()));
+
+        let result_first = parse_subject(template, subject_first).unwrap();
+        assert_eq!(result_first.get("user_id"), Some(&"123".to_string()));
+
+        let result_second = parse_subject(template, subject_second).unwrap();
+        assert_eq!(result_second.get("user_id"), Some(&"123".to_string()));
+
+        let result_none = parse_subject(template, subject_none).unwrap();
+        assert_eq!(result_none.get("user_id"), Some(&"123".to_string()));
+    }
+
+    #[test]
+    fn test_parse_subject_multi_segment_action() {
+        let template = "user.<user_id>.organization.<action>";
+        let subject = "user.123.organization.join_requests.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"123".to_string()));
+        assert_eq!(
+            result.get("action"),
+            Some(&"join_requests.list".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_subject_multi_segment_action_deep() {
+        let template = "typewriter.in.user.<user_id>.organization.<org_id>.members.<action>";
+        let subject = "typewriter.in.user.abc123.organization.org456.members.join_requests.list";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("user_id"), Some(&"abc123".to_string()));
+        assert_eq!(result.get("org_id"), Some(&"org456".to_string()));
+        assert_eq!(
+            result.get("action"),
+            Some(&"join_requests.list".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_subject_multi_segment_action_three_parts() {
+        let template = "members.<action>";
+        let subject = "members.join_codes.generate";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(
+            result.get("action"),
+            Some(&"join_codes.generate".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_subject_action_in_middle_stays_single() {
+        let template = "user.<action>.details.<id>";
+        let subject = "user.list.details.123";
+
+        let result = parse_subject(template, subject).unwrap();
+        assert_eq!(result.get("action"), Some(&"list".to_string()));
+        assert_eq!(result.get("id"), Some(&"123".to_string()));
+    }
+
+    #[test]
+    fn test_expand_template_pattern_single() {
+        let templates: &[(&str, &str)] = &[("services", "typewriter.in.service.<service_id>")];
+        let pattern = "{services}.status";
+
+        let expanded = expand_template_pattern(pattern, templates);
+        assert_eq!(expanded, "typewriter.in.service.<service_id>.status");
+    }
+
+    #[test]
+    fn test_expand_template_pattern_multiple() {
+        let templates: &[(&str, &str)] = &[
+            ("services", "typewriter.in.service.<service_id>"),
+            (
+                "user_services",
+                "typewriter.in.user.<user_id>.organization.<org_id>.services",
+            ),
+        ];
+
+        let pattern1 = "{services}.status";
+        let pattern2 = "{user_services}.bind";
+
+        assert_eq!(
+            expand_template_pattern(pattern1, templates),
+            "typewriter.in.service.<service_id>.status"
+        );
+        assert_eq!(
+            expand_template_pattern(pattern2, templates),
+            "typewriter.in.user.<user_id>.organization.<org_id>.services.bind"
+        );
+    }
+
+    #[test]
+    fn test_expand_template_pattern_in_middle() {
+        let templates: &[(&str, &str)] = &[("base", "typewriter.in.user.<user_id>")];
+        let pattern = "hey.{base}.something.<id>";
+
+        let expanded = expand_template_pattern(pattern, templates);
+        assert_eq!(expanded, "hey.typewriter.in.user.<user_id>.something.<id>");
+    }
+
+    #[test]
+    fn test_expand_template_pattern_no_match() {
+        let templates: &[(&str, &str)] = &[("services", "typewriter.in.service.<service_id>")];
+        let pattern = "{unknown}.status";
+
+        let expanded = expand_template_pattern(pattern, templates);
+        assert_eq!(expanded, "{unknown}.status");
+    }
+}
