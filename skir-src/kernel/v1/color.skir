@@ -1,0 +1,3 @@
+struct Color {
+  argb: int32 = 0;
+}

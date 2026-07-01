@@ -50,3 +50,17 @@ func (m *Typewriter) SkirSnapshot(
 
 	return generated.Changes(source), nil
 }
+
+// +generate
+func (m *Typewriter) SkirGenerate(
+	// +optional
+	// +defaultPath="/"
+	// +ignore=["*", "!skir.yml", "!skir-src", "!panel/lib/skirout", "!backend/wasmcloud-utils/src/skirout"]
+	source *dagger.Directory,
+) (*dagger.Changeset, error) {
+	generated := m.skirContainer(source).
+		WithExec([]string{"bunx", "skir", "gen"}).
+		Directory("/workspace")
+
+	return generated.Changes(source), nil
+}

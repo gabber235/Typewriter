@@ -1,0 +1,3 @@
+struct Duration {
+  milliseconds: int64;
+}

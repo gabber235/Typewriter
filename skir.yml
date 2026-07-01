@@ -2,3 +2,6 @@ generators:
   - mod: skir-dart-gen
     outDir: ./panel/lib/skirout
     config: {}
+  - mod: skir-rust-gen
+    outDir: ./backend/wasmcloud-utils/src/skirout
+    config: {}
