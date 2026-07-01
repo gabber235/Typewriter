@@ -2,7 +2,7 @@ apiVersion: runtime.wasmcloud.dev/v1alpha1
 kind: WorkloadDeployment
 metadata:
   name: organization-roles
-  namespace: wasmcloud
+  namespace: typewriter
 spec:
   replicas: 1
   template:
