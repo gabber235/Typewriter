@@ -8,7 +8,6 @@ wit_bindgen::generate!({
 
 use std::collections::HashMap;
 
-use anyhow::{Result, anyhow};
 use base64::Engine;
 use config::IssuerConfig;
 use jose::UntypedAdditionalProperties;
@@ -19,7 +18,7 @@ use nats_jwt_rs::{
     user::User,
 };
 use nkeys::KeyPair;
-use otel_wasi::{attribute, main_attribute};
+use otel_wasi::{ResultWithSlug, WithSlug, attribute, main_attribute, wasi_error};
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
     skir::base::access::v1::permission::{
@@ -39,32 +38,16 @@ wasmcloud_utils::export!(AuthCallout);
 const PERMISSIONS_REQUEST_TIMEOUT_MS: u32 = 1000;
 const EXPECTED_AUDIENCE: &str = "nats-authorization-request";
 
-pub(crate) fn record_error(slug: &'static str, message: &str) {
-    main_attribute!(
-        "error" = true,
-        "exception.slug" = slug,
-        "exception.message" = message.to_string(),
-    );
-}
-
 impl Guest for AuthCallout {
-    #[otel_wasi::wasi_instrument(service = "auth_callout")]
-    fn handle_message(msg: types::BrokerMessage) -> Result<(), String> {
+    #[otel_wasi::wasi_instrument(service = "auth_callout", export)]
+    fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
         main_attribute!(
             "messaging.destination.name" = msg.subject.clone(),
             "messaging.reply_to.present" = msg.reply_to.is_some(),
         );
 
-        let keypair = match get_nats_issuer_keypair() {
-            Ok(kp) => {
-                main_attribute!("auth.nats_issuer_keypair.loaded" = true);
-                kp
-            }
-            Err(e) => {
-                record_error("auth-callout-keypair-load-failed", &e);
-                return Err(e);
-            }
-        };
+        let keypair = get_nats_issuer_keypair()?;
+        main_attribute!("auth.nats_issuer_keypair.loaded" = true);
 
         let request = match decode_auth_request(&msg.body) {
             Ok(req) => {
@@ -83,8 +66,7 @@ impl Guest for AuthCallout {
             }
             Err(e) => {
                 main_attribute!("auth.request.decode.success" = false);
-                record_error("auth-callout-request-decode-failed", &e.to_string());
-                return Err(e.to_string());
+                return Err(e);
             }
         };
 
@@ -98,15 +80,15 @@ impl Guest for AuthCallout {
             "auth.response.server.id" = server_id,
         );
 
-        match process_user_jwt(&request) {
-            Ok(Some(jwt)) => {
+        match process_user_jwt(&request)? {
+            Some(jwt) => {
                 main_attribute!(
                     "auth.outcome" = "authorized",
                     "auth.response.jwt.present" = true,
                 );
                 response.payload_mut().jwt = jwt;
             }
-            Ok(None) => {
+            None => {
                 main_attribute!(
                     "auth.outcome" = "denied",
                     "auth.response.jwt.present" = false,
@@ -114,27 +96,20 @@ impl Guest for AuthCallout {
                 );
                 response.payload_mut().error = "user not authorized".to_string();
             }
-            Err(e) => {
-                main_attribute!("auth.outcome" = "failed");
-                record_error("auth-callout-jwt-processing-failed", &e.to_string());
-                return Err(e.to_string());
-            }
         };
 
         let data = match response.encode(&keypair) {
             Ok(data) => data,
             Err(e) => {
                 main_attribute!("auth.outcome" = "failed");
-                record_error("auth-callout-response-encode-failed", &e.to_string());
-                return Err(e.to_string());
+                return Err(e.with_slug("auth-callout-response-encode-failed"));
             }
         };
         main_attribute!("auth.response.encoded.size" = data.len() as i64);
 
         if let Err(e) = reply(msg, data) {
             main_attribute!("auth.outcome" = "failed");
-            record_error("auth-callout-reply-failed", &e);
-            return Err(e);
+            return Err(e.with_slug("auth-callout-reply-failed"));
         }
         main_attribute!("auth.reply.sent" = true);
         Ok(())
@@ -142,11 +117,15 @@ impl Guest for AuthCallout {
 }
 
 #[tracing::instrument]
-fn get_nats_issuer_keypair() -> Result<KeyPair, String> {
-    let seed = std::env::var("NATS_ISSUER_SEED")
-        .map_err(|_| "NATS_ISSUER_SEED not found in environment".to_string())?;
+fn get_nats_issuer_keypair() -> Result<KeyPair, otel_wasi::Error> {
+    let seed = std::env::var("NATS_ISSUER_SEED").map_err(|_| {
+        wasi_error!(
+            "auth-callout-keypair-load-failed",
+            "NATS_ISSUER_SEED not found in environment"
+        )
+    })?;
 
-    KeyPair::from_seed(&seed).map_err(|e| e.to_string())
+    KeyPair::from_seed(&seed).error_with_slug("auth-callout-keypair-load-failed")
 }
 
 #[tracing::instrument]
@@ -157,15 +136,13 @@ fn create_auth_response(user_nkey: String, server_id: String) -> Claims<AuthResp
 }
 
 #[tracing::instrument]
-fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, anyhow::Error> {
+fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, otel_wasi::Error> {
     let Some(raw_jwt) = request.payload().connect_opts.pass.clone() else {
         main_attribute!("auth.jwt.present" = false, "auth.outcome" = "denied",);
         return Ok(None);
     };
-    main_attribute!(
-        "auth.jwt.present" = true,
-        "auth.jwt.raw.size" = raw_jwt.len() as i64,
-    );
+    main_attribute!("auth.jwt.present" = true,);
+    attribute!("auth.jwt.raw.size" = raw_jwt.len() as i64);
 
     let configs = load_issuer_configs()?;
     main_attribute!("auth.issuer_config.count" = configs.len() as i64);
@@ -178,12 +155,11 @@ fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, any
             );
             result
         }
-        Err(e) => {
+        Err(_) => {
             main_attribute!(
                 "auth.jwt.validation.success" = false,
                 "auth.outcome" = "denied",
             );
-            record_error("auth-callout-jwt-validation-failed", &e.to_string());
             return Ok(None);
         }
     };
@@ -195,43 +171,43 @@ fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, any
     );
 
     let Some(qualifier) = request.payload().connect_opts.nkey.clone() else {
-        return Err(anyhow::anyhow!(
+        return Err(wasi_error!(
+            "auth-callout-connect-opts-nkey-required",
             "connect_opts.nkey is required, missing entity permission qualifier"
         ));
     };
 
     let qualifier = base64::engine::general_purpose::STANDARD
         .decode(&qualifier)
-        .map_err(|e| anyhow::anyhow!("failed to decode entity permission qualifier: {}", e))?;
+        .error_with_slug("auth-callout-connect-opts-nkey-invalid")?;
 
-    let qualifier = EntityPermissionQualifier::serializer().from_bytes(&qualifier, Drop)?;
+    let qualifier = EntityPermissionQualifier::serializer()
+        .from_bytes(&qualifier, Drop)
+        .error_with_slug("auth-callout-connect-opts-nkey-invalid")?;
 
     let claims = create_user_claims(&jwt, &request.payload().user_nkey, &issuer, qualifier)?;
     main_attribute!("auth.user_claims.created" = true);
 
-    let encoded = claims.encode(&keypair).map_err(|e| {
-        record_error("auth-callout-user-claims-failed", &e.to_string());
-        e
-    })?;
+    let encoded = claims
+        .encode(&keypair)
+        .error_with_slug("auth-callout-user-claims-failed")?;
     main_attribute!("auth.response.jwt.size" = encoded.len() as i64);
 
     Ok(Some(encoded))
 }
 
 #[tracing::instrument]
-fn load_issuer_configs() -> Result<Vec<IssuerConfig>> {
+fn load_issuer_configs() -> Result<Vec<IssuerConfig>, otel_wasi::Error> {
     let config_str = std::env::var("ISSUERS").map_err(|_| {
-        record_error(
+        wasi_error!(
             "auth-callout-issuer-config-load-failed",
             "ISSUERS not found in environment",
-        );
-        anyhow!("ISSUERS not found in environment")
+        )
     })?;
 
-    let configs: Vec<IssuerConfig> = serde_json::from_str(&config_str).map_err(|e| {
-        record_error("auth-callout-issuer-config-load-failed", &e.to_string());
-        anyhow!("Failed to parse auth config: {}", e)
-    })?;
+    let configs: Vec<IssuerConfig> = serde_json::from_str(&config_str)
+        .error_with_slug("auth-callout-issuer-config-load-failed")?;
+
     attribute!("auth.issuer_config.count" = configs.len() as i64);
     main_attribute!("auth.issuer_config.count" = configs.len() as i64);
     Ok(configs)
@@ -242,10 +218,13 @@ fn validate_user_jwt<'a>(
     raw_jwt: &str,
     configs: &'a Vec<IssuerConfig>,
     request: &Claims<AuthRequest>,
-) -> Result<(
-    jose::jwt::Claims<UntypedAdditionalProperties>,
-    &'a IssuerConfig,
-)> {
+) -> Result<
+    (
+        jose::jwt::Claims<UntypedAdditionalProperties>,
+        &'a IssuerConfig,
+    ),
+    otel_wasi::Error,
+> {
     attribute!(
         "auth.jwt.raw.size" = raw_jwt.len() as i64,
         "auth.jwt.issuer_config.candidate.count" = configs.len() as i64,
@@ -263,38 +242,29 @@ fn validate_user_jwt<'a>(
                 "auth.jwt.validation.success" = false,
                 "auth.request.connect.user" = username.clone(),
             );
-            Err(anyhow!("Invalid JWT for {}: {}", username, e))
+            Err(e.with_slug("auth-callout-jwt-validation-failed"))
         }
     }
 }
 
 #[tracing::instrument]
-fn get_signing_keypair(issuer_id: &str) -> Result<KeyPair> {
-    let signing_keys_json = std::env::var("NATS_SIGNING_KEYS").map_err(|_| {
-        record_error(
-            "auth-callout-signing-keypair-failed",
-            "NATS_SIGNING_KEYS not found in environment",
-        );
-        anyhow!("NATS_SIGNING_KEYS not found in environment")
-    })?;
+fn get_signing_keypair(issuer_id: &str) -> Result<KeyPair, otel_wasi::Error> {
+    let signing_keys_json = std::env::var("NATS_SIGNING_KEYS")
+        .error_with_slug("auth-callout-signing-keypair-failed")?;
 
-    let signing_keys: HashMap<String, String> =
-        serde_json::from_str(&signing_keys_json).map_err(|e| {
-            record_error("auth-callout-signing-keypair-failed", &e.to_string());
-            e
-        })?;
+    let signing_keys: HashMap<String, String> = serde_json::from_str(&signing_keys_json)
+        .error_with_slug("auth-callout-signing-keypair-failed")?;
     attribute!("auth.signing_keypair.config.count" = signing_keys.len() as i64);
 
     let seed = signing_keys.get(issuer_id).ok_or_else(|| {
-        let message = format!("No seed found for issuer {}", issuer_id);
-        record_error("auth-callout-signing-keypair-failed", &message);
-        anyhow!(message)
+        wasi_error!(
+            "auth-callout-signing-keypair-failed",
+            "No seed found for issuer {}",
+            issuer_id
+        )
     })?;
 
-    KeyPair::from_seed(seed).map_err(|e| {
-        record_error("auth-callout-signing-keypair-failed", &e.to_string());
-        anyhow!("Failed to create keypair: {}", e)
-    })
+    KeyPair::from_seed(seed).error_with_slug("auth-callout-signing-keypair-failed")
 }
 
 #[tracing::instrument(skip(jwt, qualifier))]
@@ -303,7 +273,7 @@ fn create_user_claims(
     user_nkey: &str,
     issuer: &IssuerConfig,
     qualifier: EntityPermissionQualifier,
-) -> Result<Claims<User>> {
+) -> Result<Claims<User>, otel_wasi::Error> {
     let name = jwt
         .additional
         .get("name")
@@ -380,13 +350,11 @@ fn request_permissions(
     jwt: &jose::jwt::Claims<UntypedAdditionalProperties>,
     issuer_id: &str,
     qualifier: EntityPermissionQualifier,
-) -> Result<GetEntityPermissionResponse> {
+) -> Result<GetEntityPermissionResponse, otel_wasi::Error> {
     let subject = format!("auth.permissions.{}", issuer_id);
 
-    let jwt_bytes = serde_json::to_vec(jwt).map_err(|e| {
-        record_error("auth-callout-permissions-request-failed", &e.to_string());
-        e
-    })?;
+    let jwt_bytes =
+        serde_json::to_vec(jwt).error_with_slug("auth-callout-permissions-request-failed")?;
     attribute!("auth.permissions.request.jwt_claims.size" = jwt_bytes.len() as i64);
 
     let request = GetEntityPermissionRequest {
@@ -396,25 +364,15 @@ fn request_permissions(
     };
 
     let body = GetEntityPermissionRequest::serializer().to_bytes(&request);
-    attribute!(
-        "auth.permissions.request.timeout_ms" = PERMISSIONS_REQUEST_TIMEOUT_MS as i64,
-    );
-    main_attribute!(
-        "auth.permissions.subject" = subject.clone(),
-    );
+    attribute!("auth.permissions.request.timeout_ms" = PERMISSIONS_REQUEST_TIMEOUT_MS as i64,);
+    main_attribute!("auth.permissions.subject" = subject.clone(),);
 
     let response = consumer::request(subject.as_str(), &body, PERMISSIONS_REQUEST_TIMEOUT_MS)
-        .map_err(|e| {
-            record_error("auth-callout-permissions-request-failed", &e);
-            anyhow!(e)
-        })?;
+        .error_with_slug("auth-callout-permissions-request-failed")?;
 
     let permission_response = GetEntityPermissionResponse::serializer()
         .from_bytes(&response.body[..], UnrecognizedValues::Drop)
-        .map_err(|e| {
-            record_error("auth-callout-permissions-decode-failed", &e.to_string());
-            e
-        })?;
+        .error_with_slug("auth-callout-permissions-decode-failed")?;
     main_attribute!("auth.permissions.response.decode.success" = true);
 
     Ok(permission_response)
@@ -452,18 +410,20 @@ fn convert_permissions(permissions: Permissions) -> NatsPermissions {
     }
 }
 
-fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>> {
+fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>, otel_wasi::Error> {
     if !body.starts_with(b"eyJ0") {
         main_attribute!("auth.request.decode.success" = false);
-        return Err(anyhow!(
-            "bad request: encryption mismatch: payload is encrypted"
+        return Err(wasi_error!(
+            "auth-callout-request-decode-failed",
+            "encryption mismatch: payload is encrypted"
         ));
     }
 
-    let jwt = std::str::from_utf8(body)?;
+    let jwt = std::str::from_utf8(body).error_with_slug("auth-callout-request-decode-failed")?;
     attribute!("auth.request.jwt.size" = jwt.len() as i64);
 
-    let claims: Claims<FixedAuthRequest> = Claims::decode(jwt)?;
+    let claims: Claims<FixedAuthRequest> =
+        Claims::decode(jwt).error_with_slug("auth-callout-request-decode-failed")?;
     let claims: Claims<AuthRequest> = Claims {
         aud: claims.aud,
         exp: claims.exp,
@@ -528,35 +488,45 @@ impl Into<AuthRequest> for FixedAuthRequest {
     }
 }
 
-fn validate_auth_request_claims(claims: &Claims<AuthRequest>) -> Result<()> {
+fn validate_auth_request_claims(claims: &Claims<AuthRequest>) -> Result<(), otel_wasi::Error> {
     if !claims.iss.starts_with('N') {
-        let message = format!("bad request: expected server: {}", claims.iss);
         main_attribute!("auth.request.claims.valid" = false,);
-        return Err(anyhow!(message));
+        return Err(wasi_error!(
+            "auth-callout-request-claims-validate-failed",
+            "expected server: {}",
+            claims.iss,
+        ));
     }
 
     if claims.iss != claims.payload().server.id {
-        let message = format!(
-            "bad request: issuers don't match: {} != {}",
-            claims.iss,
-            claims.payload().server.id
-        );
         main_attribute!("auth.request.claims.valid" = false,);
-        return Err(anyhow!(message));
+        return Err(wasi_error!(
+            "auth-callout-request-claims-validate-failed",
+            "issuers don't match: {} != {}",
+            claims.iss,
+            claims.payload().server.id,
+        ));
     }
 
     let Some(audience) = &claims.aud else {
         main_attribute!("auth.request.claims.valid" = false,);
-        return Err(anyhow!("bad request: missing audience"));
+        return Err(wasi_error!(
+            "auth-callout-request-claims-validate-failed",
+            "missing audience",
+        ));
     };
 
     if *audience != *EXPECTED_AUDIENCE {
-        let message = format!("bad request: unexpected audience: {}", EXPECTED_AUDIENCE);
         main_attribute!(
             "auth.request.claims.valid" = false,
             "auth.request.audience" = audience.clone(),
         );
-        return Err(anyhow!(message));
+        return Err(wasi_error!(
+            "auth-callout-request-claims-validate-failed",
+            "unexpected audience: {} (expected: {})",
+            audience,
+            EXPECTED_AUDIENCE,
+        ));
     }
 
     main_attribute!(

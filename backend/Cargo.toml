@@ -39,3 +39,8 @@ wit-bindgen = {
   version = "0.58",
   features = ["async-spawn", "inter-task-wakeup"]
 }
+
+[workspace.metadata.dylint]
+libraries = [
+  { git = "https://github.com/Seamlezz/otel-wasi", pattern = "otel-wasi-dylint" }
+]

@@ -1355,7 +1355,7 @@ dependencies = [
 [[package]]
 name = "otel-wasi"
 version = "0.2.0"
-source = "git+https://github.com/Seamlezz/otel-wasi?branch=main#030e4d8f1445e864df58096bf048f7791f29c6ae"
+source = "git+https://github.com/Seamlezz/otel-wasi?branch=main#1a6f929a1f0f9fde6885b21b10b166681f355053"
 dependencies = [
  "opentelemetry 0.31.0",
  "opentelemetry-wasi",
@@ -1369,7 +1369,7 @@ dependencies = [
 [[package]]
 name = "otel-wasi-macros"
 version = "0.2.0"
-source = "git+https://github.com/Seamlezz/otel-wasi?branch=main#030e4d8f1445e864df58096bf048f7791f29c6ae"
+source = "git+https://github.com/Seamlezz/otel-wasi?branch=main#1a6f929a1f0f9fde6885b21b10b166681f355053"
 dependencies = [
  "proc-macro2",
  "quote",
