@@ -52,7 +52,6 @@ impl Guest for AuthCallout {
     fn handle_message(msg: types::BrokerMessage) -> Result<(), String> {
         main_attribute!(
             "messaging.destination.name" = msg.subject.clone(),
-            "messaging.message.body.size" = msg.body.len() as i64,
             "messaging.reply_to.present" = msg.reply_to.is_some(),
         );
 
@@ -399,11 +398,9 @@ fn request_permissions(
     let body = GetEntityPermissionRequest::serializer().to_bytes(&request);
     attribute!(
         "auth.permissions.request.timeout_ms" = PERMISSIONS_REQUEST_TIMEOUT_MS as i64,
-        "auth.permissions.request.body.size" = body.len() as i64,
     );
     main_attribute!(
         "auth.permissions.subject" = subject.clone(),
-        "auth.permissions.request.body.size" = body.len() as i64,
     );
 
     let response = consumer::request(subject.as_str(), &body, PERMISSIONS_REQUEST_TIMEOUT_MS)
@@ -411,8 +408,6 @@ fn request_permissions(
             record_error("auth-callout-permissions-request-failed", &e);
             anyhow!(e)
         })?;
-    attribute!("auth.permissions.response.body.size" = response.body.len() as i64);
-    main_attribute!("auth.permissions.response.body.size" = response.body.len() as i64);
 
     let permission_response = GetEntityPermissionResponse::serializer()
         .from_bytes(&response.body[..], UnrecognizedValues::Drop)
@@ -458,7 +453,6 @@ fn convert_permissions(permissions: Permissions) -> NatsPermissions {
 }
 
 fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>> {
-    attribute!("auth.request.body.size" = body.len() as i64);
     if !body.starts_with(b"eyJ0") {
         main_attribute!("auth.request.decode.success" = false);
         return Err(anyhow!(

@@ -17,6 +17,7 @@ nkeys = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 url = { workspace = true }
+
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 wit-bindgen = { workspace = true }
 
