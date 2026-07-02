@@ -6,26 +6,19 @@ wit_bindgen::generate!({
     generate_all,
 });
 
-use prost::Message;
-use wasmcloud_component::debug;
-use wasmcloud_utils::wasmcloud::messaging::{handler::Guest, reply, types};
+use otel_wasi::{ResultWithSlug, WithSlug, main_attribute, wasi_error};
+use wasmcloud_utils::{
+    skir::base::access::v1::permission::{
+        EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
+        Permissions,
+    },
+    skir_client::UnrecognizedValues::Drop,
+    wasmcloud::messaging::{handler::Guest, reply, types},
+};
 
 mod common;
 mod services;
 mod users;
-
-mod typewriter {
-    pub mod models {
-        pub mod v1 {
-            include!("generated/typewriter.models.v1.rs");
-        }
-    }
-    pub mod api {
-        pub mod v1 {
-            include!("generated/typewriter.api.v1.rs");
-        }
-    }
-}
 
 struct TypewriterPermissions;
 wasmcloud_utils::export!(TypewriterPermissions);
@@ -34,34 +27,104 @@ const PANEL_SUBJECT: &str = "auth.permissions.typewriter-panel";
 const SERVICES_SUBJECT: &str = "auth.permissions.typewriter-services";
 
 impl Guest for TypewriterPermissions {
-    fn handle_message(msg: types::BrokerMessage) -> Result<(), String> {
-        let request = typewriter::api::v1::PermissionRequest::decode(&msg.body[..])
-            .map_err(|e| format!("failed to decode request: {}", e))?;
+    #[otel_wasi::wasi_instrument(service = "auth_typewriter_permissions", export)]
+    fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+        main_attribute!("messaging.destination.name" = msg.subject.clone());
 
-        let organization_id = request.organization_id;
-
-        // Route based on the subject the message arrived on
-        let (nats_permissions, tags) = match msg.subject.as_str() {
-            PANEL_SUBJECT => {
-                debug!("Handling panel user permission request");
-                let claims: jose::jwt::Claims<common::AuthentikClaims> =
-                    serde_json::from_slice(&request.jwt_claims).map_err(|e| e.to_string())?;
-                users::handle_panel_user(claims, organization_id).map_err(|e| e.to_string())?
+        let request = match GetEntityPermissionRequest::serializer().from_bytes(&msg.body[..], Drop)
+        {
+            Ok(req) => {
+                main_attribute!("auth.request.decode.success" = true);
+                req
             }
-            SERVICES_SUBJECT => {
-                debug!("Handling service permission request");
-                let claims: jose::jwt::Claims<services::ServiceClaims> =
-                    serde_json::from_slice(&request.jwt_claims).map_err(|e| e.to_string())?;
-                services::handle_service(claims, organization_id).map_err(|e| e.to_string())?
-            }
-            other => {
-                return Err(format!("Unknown subject: {}", other));
+            Err(e) => {
+                main_attribute!("auth.outcome" = "failed");
+                return Err(e.with_slug("permissions-request-decode-failed"));
             }
         };
 
-        let response = common::build_permission_response(nats_permissions, tags);
-        let response_bytes = response.encode_to_vec();
+        wstd::runtime::block_on(async {
+            let (permissions, tags) = match msg.subject.as_str() {
+                PANEL_SUBJECT => handle_panel_subject(request).await,
+                SERVICES_SUBJECT => handle_services_subject(request).await,
+                other => Err(wasi_error!(
+                    "permissions-unknown-subject",
+                    "Unknown subject: {}",
+                    other
+                )),
+            }
+            .map_err(|e| {
+                main_attribute!("auth.outcome" = "failed");
+                e
+            })?;
 
-        reply(msg, response_bytes)
+            let response = GetEntityPermissionResponse {
+                permissions,
+                tags,
+                ..Default::default()
+            };
+            let body = GetEntityPermissionResponse::serializer().to_bytes(&response);
+            main_attribute!(
+                "auth.outcome" = "authorized",
+                "auth.response.permissions.tags.count" = response.tags.len() as i64,
+                "auth.permissions.publish.deny.count" =
+                    response.permissions.publish.deny.len() as i64,
+                "auth.permissions.subscribe.deny.count" =
+                    response.permissions.subscribe.deny.len() as i64,
+            );
+            reply(msg, body).error_with_slug("message-reply-failed")
+        })
     }
+}
+
+#[tracing::instrument(skip(request))]
+async fn handle_panel_subject(
+    request: GetEntityPermissionRequest,
+) -> Result<(Permissions, Vec<String>), otel_wasi::Error> {
+    main_attribute!("auth.request.route" = "panel");
+    let claims: jose::jwt::Claims<common::AuthentikClaims> =
+        serde_json::from_slice(&request.jwt_claims)
+            .error_with_slug("permissions-panel-claims-decode-failed")?;
+
+    if let Some(ref issuer) = claims.issuer {
+        main_attribute!("auth.jwt.issuer" = issuer.clone());
+    }
+    if let Some(exp) = claims.expiration {
+        main_attribute!("auth.jwt.expires_at" = exp as i64);
+    }
+
+    let qualifier_type = match &request.qualifier {
+        EntityPermissionQualifier::User(_) => "user",
+        EntityPermissionQualifier::Service(_) => "service",
+        EntityPermissionQualifier::Unknown(_) => "unknown",
+    };
+    main_attribute!("auth.request.qualifier_type" = qualifier_type);
+
+    users::handle_panel_user(claims, request.qualifier).await
+}
+
+#[tracing::instrument(skip(request))]
+async fn handle_services_subject(
+    request: GetEntityPermissionRequest,
+) -> Result<(Permissions, Vec<String>), otel_wasi::Error> {
+    main_attribute!("auth.request.route" = "services");
+    let claims: jose::jwt::Claims<services::ServiceClaims> =
+        serde_json::from_slice(&request.jwt_claims)
+            .error_with_slug("permissions-service-claims-decode-failed")?;
+
+    if let Some(ref issuer) = claims.issuer {
+        main_attribute!("auth.jwt.issuer" = issuer.clone());
+    }
+    if let Some(exp) = claims.expiration {
+        main_attribute!("auth.jwt.expires_at" = exp as i64);
+    }
+
+    let qualifier_type = match &request.qualifier {
+        EntityPermissionQualifier::User(_) => "user",
+        EntityPermissionQualifier::Service(_) => "service",
+        EntityPermissionQualifier::Unknown(_) => "unknown",
+    };
+    main_attribute!("auth.request.qualifier_type" = qualifier_type);
+
+    services::handle_service(claims).await
 }

@@ -1,26 +1,27 @@
 [package]
 name = "auth-typewriter-permissions"
-edition = "2021"
 version = "0.1.0"
-
-[workspace]
+edition = { workspace = true }
+rust-version = { workspace = true }
+repository = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-wit-bindgen = "0.41"
-wasmcloud-component = "0.2"
-anyhow = "1"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
-nats-jwt-rs = "0.1"
-base64 = "0.22"
-surrealdb-component = { path = "../../providers/surrealdb/surrealdb-component" }
-wasmcloud-utils = { path = "../../wasmcloud-utils" }
-prost = "0.13"
-prost-types = "0.13"
+anyhow = { workspace = true }
+base64 = { workspace = true }
+jose = { workspace = true }
+nats-jwt-rs = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wstd = { workspace = true }
 
-[build-dependencies]
-prost-build = "0.13"
+surrealdb-component-sdk = { workspace = true }
+wasmcloud-utils = { path = "../../wasmcloud-utils" }
+wit-bindgen = { workspace = true }
+
+opentelemetry = { workspace = true }
+otel-wasi = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }

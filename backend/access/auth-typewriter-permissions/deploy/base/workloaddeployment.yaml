@@ -7,16 +7,22 @@ spec:
   replicas: 1
   template:
     spec:
+      environment: wasmcloud
       hostSelector:
         hostgroup: default
       components:
         - name: auth-auth-typewriter-permissions
-          image: oci.seamlezz.test/wasmcloud/auth-auth-typewriter-permissions:0.1.0
           imagePullSecret:
-            name: harbor-registry-credentials
+            name: artifact-keeper-pull-secret
       hostInterfaces:
+        - namespace: wasi
+          package: otel
+          version: "0.2.0-rc.2"
+          interfaces:
+            - tracing
         - namespace: wasmcloud
           package: messaging
+          version: "0.2.0"
           interfaces:
             - handler
             - consumer
@@ -24,9 +30,13 @@ spec:
             subscriptions: auth.permissions.typewriter-panel,auth.permissions.typewriter-services
         - namespace: seamlezz
           package: surrealdb
+          version: "0.2.0"
           interfaces:
             - call
-        - namespace: wasi
-          package: logging
-          interfaces:
-            - logging
+          config:
+            url: http://surrealdb.surrealdb.svc.cluster.local:8000
+            namespace: typewriter
+            database: production
+            username: root
+          secretFrom:
+            - name: TODO

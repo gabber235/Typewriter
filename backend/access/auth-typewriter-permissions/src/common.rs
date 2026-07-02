@@ -1,7 +1,5 @@
-use nats_jwt_rs::types::{Permission as NatsPermission, Permissions as NatsPermissions};
 use serde::{Deserialize, Serialize};
-
-use crate::typewriter;
+use wasmcloud_utils::skir::base::access::v1::permission::{Permission, Permissions};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DiscordData {
@@ -37,67 +35,23 @@ pub struct User {
     pub avatar_url: Option<String>,
 }
 
-/// Build a permission response from NATS permissions and tags
-pub fn build_permission_response(
-    nats_permissions: NatsPermissions,
-    tags: Vec<String>,
-) -> typewriter::api::v1::PermissionResponse {
-    let proto_permissions = (&nats_permissions).into();
-    typewriter::api::v1::PermissionResponse {
-        permissions: Some(proto_permissions),
-        tags,
-    }
-}
-
-/// Build default NATS permissions structure with response limits
-pub fn build_nats_permissions(
+/// Build skir Permissions directly from allow vectors.
+pub fn build_permissions(
     allow_publish: Vec<String>,
     allow_subscribe: Vec<String>,
-) -> NatsPermissions {
-    NatsPermissions {
-        publish: NatsPermission {
+) -> Permissions {
+    Permissions {
+        publish: Permission {
             allow: allow_publish,
             deny: vec![],
+            _unrecognized: None,
         },
-        subscribe: NatsPermission {
+        subscribe: Permission {
             allow: allow_subscribe,
             deny: vec![],
+            _unrecognized: None,
         },
-        resp: None,
-    }
-}
-
-impl From<&NatsPermissions> for typewriter::models::v1::Permissions {
-    fn from(nats_permissions: &NatsPermissions) -> Self {
-        use prost_types::Duration;
-
-        let publish = Some(typewriter::models::v1::Permission {
-            allow: nats_permissions.publish.allow.clone(),
-            deny: nats_permissions.publish.deny.clone(),
-        });
-
-        let subscribe = Some(typewriter::models::v1::Permission {
-            allow: nats_permissions.subscribe.allow.clone(),
-            deny: nats_permissions.subscribe.deny.clone(),
-        });
-
-        let resp = nats_permissions.resp.as_ref().map(|r| {
-            let total_seconds = r.ttl.as_secs();
-            let nanos = r.ttl.subsec_nanos();
-
-            typewriter::models::v1::ResponsePermission {
-                max_messages: Some(r.max_messages as i32),
-                ttl: Some(Duration {
-                    seconds: total_seconds as i64,
-                    nanos: nanos as i32,
-                }),
-            }
-        });
-
-        typewriter::models::v1::Permissions {
-            publish,
-            subscribe,
-            resp,
-        }
+        response: None,
+        _unrecognized: None,
     }
 }
