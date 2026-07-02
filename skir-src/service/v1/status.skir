@@ -1,0 +1,19 @@
+enum ServiceBinding {
+  bound: struct {
+    organization_id: string;
+    organization_name: string?;
+  };
+  unbound: struct {
+    registration_token: string?;
+  };
+}
+
+method GetServiceStatus(
+  struct {}
+): enum {
+  status: struct {
+    binding: ServiceBinding;
+  };
+  service_not_found: struct {};
+  internal_error: struct {};
+} = 955610;
