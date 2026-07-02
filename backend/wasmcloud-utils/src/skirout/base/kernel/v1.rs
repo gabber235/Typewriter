@@ -12,6 +12,6 @@
 //
 // To install the Skir client library, run:
 //   cargo add skir-client
+pub mod duration;
 pub mod id;
 pub mod color;
-pub mod duration;
