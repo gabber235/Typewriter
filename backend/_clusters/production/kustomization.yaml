@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - secrets/artifact-keeper-pull-secret.enc.yaml
   - ../../access/auth-callout/deploy/production
+  - ../../access/auth-typewriter-permissions/deploy/production
