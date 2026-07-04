@@ -168,7 +168,7 @@ fun Player.fakeClearInventory() {
 fun Player.restoreInventory() {
     // I can't be bother to transform the ids from the normal version to the weird version need for the WrapperPlayServerWindowItems
     // So we just send many packets instead
-    for (i in 0..46) {
+    for (i in 0..45) {
         val item = inventory.getItem(i) ?: ItemStack.empty()
 
         val packet = WrapperPlayServerSetSlot(-2, 0, i, SpigotReflectionUtil.decodeBukkitItemStack(item))
