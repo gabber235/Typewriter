@@ -10,14 +10,6 @@ extra_args = ["--web-port=2350", "--dart-define-from-file=config/local.json"]
 auto_start = false
 
 [[configurations]]
-name = "Panel web hybrid"
-device = "chrome"
-mode = "debug"
-entry_point = "lib/main.dart"
-extra_args = ["--web-port=2350", "--dart-define-from-file=config/hybrid.json"]
-auto_start = false
-
-[[configurations]]
 name = "Panel web production"
 device = "chrome"
 mode = "debug"
@@ -31,14 +23,6 @@ device = "macos"
 mode = "debug"
 entry_point = "lib/main.dart"
 extra_args = ["--dart-define-from-file=config/local.json"]
-auto_start = false
-
-[[configurations]]
-name = "Panel macOS hybrid"
-device = "macos"
-mode = "debug"
-entry_point = "lib/main.dart"
-extra_args = ["--dart-define-from-file=config/hybrid.json"]
 auto_start = false
 
 [[configurations]]
