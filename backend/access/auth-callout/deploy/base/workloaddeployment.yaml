@@ -12,8 +12,6 @@ spec:
         hostgroup: default
       components:
         - name: auth-auth-callout
-          imagePullSecret:
-            name: artifact-keeper-pull-secret
           localResources:
             environment:
               secretFrom:

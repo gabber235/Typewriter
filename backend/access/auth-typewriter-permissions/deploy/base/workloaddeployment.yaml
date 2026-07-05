@@ -12,8 +12,6 @@ spec:
         hostgroup: default
       components:
         - name: auth-auth-typewriter-permissions
-          imagePullSecret:
-            name: artifact-keeper-pull-secret
       hostInterfaces:
         - namespace: wasi
           package: otel
