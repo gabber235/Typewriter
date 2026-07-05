@@ -10,8 +10,13 @@ interface Props {
 
 const { sublist, level = 1 } = Astro.props as Props;
 
+// Starlight prefixes sidebar hrefs with the configured base path, so the
+// homepage isn't always "/" (e.g. PR previews build with a `DOCS_BASE_PATH`
+// like "/branches/pr-123/"). Compare against the actual base to hide it
+// consistently in dev and in every build.
+const homeHref = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/`;
 const filteredSublist = sublist.filter(
-	(entry) => entry.type !== "link" || entry.href !== "/",
+	(entry) => entry.type !== "link" || entry.href !== homeHref,
 );
 
 function formatLabel(label: string): string {

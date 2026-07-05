@@ -1,6 +1,7 @@
 import type { Root } from "hast";
 import { h } from "hastscript";
 import type { Plugin } from "unified";
+import { BASE_PATH } from "../../base-path";
 import { glossaryStyles } from "./styles";
 import { loadTermIndex } from "./term-index";
 import type { GlossaryMode, RehypeGlossaryOptions, TermIndex } from "./types";
@@ -29,9 +30,6 @@ const SKIP_TAGS = new Set([
 	"style",
 	"svg",
 ]);
-
-// Same expression as `base` in astro.config.mjs, normalized to end with "/".
-const BASE = (process.env.DOCS_BASE_PATH || "/").replace(/\/?$/, "/");
 
 /**
  * Pragmatic node shape covering hast elements/text plus the MDX JSX nodes
@@ -139,9 +137,9 @@ function linkify(value: string, ctx: MatchContext): WalkNode[] | null {
 		const custom = slugToLink.get(slug);
 		const href = custom
 			? custom.startsWith("/")
-				? `${BASE}${custom.slice(1)}`
+				? `${BASE_PATH}${custom.slice(1)}`
 				: custom
-			: `${BASE}glossary/#${slug}`;
+			: `${BASE_PATH}glossary/#${slug}`;
 		out.push(
 			h(
 				"a",

@@ -7,13 +7,15 @@ import { defineConfig } from "astro/config";
 import remarkDirective from "remark-directive";
 import starlightDotMd from "starlight-dot-md";
 import starlightLlmsTxt from "starlight-llms-txt";
+import { BASE_PATH } from "./src/base-path";
 import { remarkAside } from "./src/components/aside/remark-aside";
 import { rehypeGlossary } from "./src/components/glossary/rehype-glossary";
+import { rehypeBaseLinks } from "./src/plugins/rehype-base-links";
 
 // https://astro.build/config
 export default defineConfig({
 	site: "https://docs.typewritermc.com",
-	base: process.env.DOCS_BASE_PATH || "/",
+	base: BASE_PATH,
 	output: "static",
 	prefetch: {
 		prefetchAll: true,
@@ -33,20 +35,24 @@ export default defineConfig({
 					attrs: {
 						rel: "icon",
 						type: "image/png",
-						href: "/favicon-96x96.png",
+						href: `${BASE_PATH}favicon-96x96.png`,
 						sizes: "96x96",
 					},
 				},
 				{
 					tag: "link",
-					attrs: { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+					attrs: {
+						rel: "icon",
+						type: "image/svg+xml",
+						href: `${BASE_PATH}favicon.svg`,
+					},
 				},
 				{
 					tag: "link",
 					attrs: {
 						rel: "apple-touch-icon",
 						sizes: "180x180",
-						href: "/apple-touch-icon.png",
+						href: `${BASE_PATH}apple-touch-icon.png`,
 					},
 				},
 				{
@@ -55,7 +61,7 @@ export default defineConfig({
 				},
 				{
 					tag: "link",
-					attrs: { rel: "manifest", href: "/site.webmanifest" },
+					attrs: { rel: "manifest", href: `${BASE_PATH}site.webmanifest` },
 				},
 			],
 			social: [
@@ -90,7 +96,10 @@ export default defineConfig({
 		// "first-per-page" links each term only once per page — with a growing
 		// glossary, linking every occurrence turned term-dense pages into a wall
 		// of underlines.
-		rehypePlugins: [[rehypeGlossary, { mode: "first-per-page" }]],
+		rehypePlugins: [
+			[rehypeGlossary, { mode: "first-per-page" }],
+			rehypeBaseLinks,
+		],
 	},
 
 	vite: {
