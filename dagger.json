@@ -16,5 +16,12 @@
       "pin": "4757d973533ab5f5f2fa34a41e8115349d9ca805"
     }
   ],
+  "dependencies": [
+    {
+      "name": "flutter-container",
+      "source": "github.com/daniel-naegele/daggerverse/flutter-container@c1726f379484cbd7c24af3b1997e5cac894db069",
+      "pin": "c1726f379484cbd7c24af3b1997e5cac894db069"
+    }
+  ],
   "source": ".dagger"
 }
