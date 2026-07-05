@@ -371,7 +371,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
-                name: 'Dropdown',
+                name: 'Dropdown<Object>',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
                     name: 'Default',
@@ -698,71 +698,76 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookFolder(
-                name: 'search_result_item',
+                name: 'search',
                 children: [
-                  _widgetbook.WidgetbookComponent(
-                    name: 'BlueprintSearchResultItem',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Blueprint',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_search_result_item_stories
-                                .blueprintSearchResultItemUseCase,
+                  _widgetbook.WidgetbookFolder(
+                    name: 'result_item',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'BlueprintSearchResultItem',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Blueprint',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                    .blueprintSearchResultItemUseCase,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'BookSearchResultItem',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Book',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_search_result_item_stories
-                                .bookSearchResultItemUseCase,
+                      _widgetbook.WidgetbookComponent(
+                        name: 'BookSearchResultItem',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Book',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                    .bookSearchResultItemUseCase,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'EntrySearchResultItem',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Entry',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_search_result_item_stories
-                                .entrySearchResultItemUseCase,
+                      _widgetbook.WidgetbookComponent(
+                        name: 'EntrySearchResultItem',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Entry',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                    .entrySearchResultItemUseCase,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'PageSearchResultItem',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Page',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_search_result_item_stories
-                                .pageSearchResultItemUseCase,
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PageSearchResultItem',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Page',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                    .pageSearchResultItemUseCase,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'SearchResultCard',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Catalog',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_search_result_item_stories
-                                .searchResultItemCatalogUseCase,
+                      _widgetbook.WidgetbookComponent(
+                        name: 'SearchResultCard',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Catalog',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                    .searchResultItemCatalogUseCase,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'TagSearchResultItem',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Tag',
-                        builder:
-                            _widgetbook_workspace_stories_app_components_search_result_item_stories
-                                .tagSearchResultItemUseCase,
+                      _widgetbook.WidgetbookComponent(
+                        name: 'TagSearchResultItem',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Tag',
+                            builder:
+                                _widgetbook_workspace_stories_app_components_search_result_item_stories
+                                    .tagSearchResultItemUseCase,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1019,7 +1024,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
-                name: 'MultiselectDropdown',
+                name: 'MultiselectDropdown<Object>',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
                     name: 'Default',
