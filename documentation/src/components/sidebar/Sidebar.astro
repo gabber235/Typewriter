@@ -32,9 +32,9 @@ const sidebarWithBadges = await processSidebarBadges(
     // ========================================
     // STATE MANAGEMENT (localStorage)
     // ========================================
-    let cachedState = null;
+    let cachedState: Record<string, boolean> | null = null;
 
-    function getStoredState() {
+    function getStoredState(): Record<string, boolean> {
       if (cachedState !== null) return cachedState;
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -42,10 +42,10 @@ const sidebarWithBadges = await processSidebarBadges(
       } catch {
         cachedState = {};
       }
-      return cachedState;
+      return cachedState ?? {};
     }
 
-    function saveState(groupId, isOpen) {
+    function saveState(groupId: string, isOpen: boolean) {
       const state = getStoredState();
       state[groupId] = isOpen;
       cachedState = state;
@@ -59,14 +59,16 @@ const sidebarWithBadges = await processSidebarBadges(
     // ========================================
     // SIBLING ACCORDION LOGIC
     // ========================================
-    function getSiblingToCollapse(openedDetails) {
+    function getSiblingToCollapse(
+      openedDetails: HTMLDetailsElement,
+    ): HTMLDetailsElement | null {
       const parentLi = openedDetails.closest("li");
       if (!parentLi) return null;
 
       const parentUl = parentLi.parentElement;
       if (!parentUl) return null;
 
-      const siblingDetails = parentUl.querySelectorAll(
+      const siblingDetails = parentUl.querySelectorAll<HTMLDetailsElement>(
         `:scope > li > .sidebar-group`,
       );
 
@@ -86,7 +88,7 @@ const sidebarWithBadges = await processSidebarBadges(
       return `height ${ANIMATION_DURATION}ms ease-in-out`;
     }
 
-    function animateCollapse(content, onComplete) {
+    function animateCollapse(content: HTMLElement, onComplete?: () => void) {
       const currentHeight = content.scrollHeight;
       content.style.transition = "none";
       content.style.height = currentHeight + "px";
@@ -107,12 +109,12 @@ const sidebarWithBadges = await processSidebarBadges(
     // ========================================
     // GROUP TOGGLE OPERATIONS
     // ========================================
-    function toggleGroup(details) {
+    function toggleGroup(details: HTMLDetailsElement) {
       const groupId = details.dataset.groupId;
       if (!groupId) return;
 
       const willOpen = !details.open;
-      const content = details.querySelector(SELECTORS.content);
+      const content = details.querySelector<HTMLElement>(SELECTORS.content);
       if (!content) return;
 
       if (willOpen) {
@@ -122,14 +124,20 @@ const sidebarWithBadges = await processSidebarBadges(
       }
     }
 
-    function openGroupWithSiblingCollapse(details, content, groupId) {
+    function openGroupWithSiblingCollapse(
+      details: HTMLDetailsElement,
+      content: HTMLElement,
+      groupId: string,
+    ) {
       // Find and prepare sibling to collapse
       const siblingToCollapse = getSiblingToCollapse(details);
-      let siblingContent = null;
+      let siblingContent: HTMLElement | null = null;
       let siblingHeight = 0;
 
       if (siblingToCollapse) {
-        siblingContent = siblingToCollapse.querySelector(SELECTORS.content);
+        siblingContent = siblingToCollapse.querySelector<HTMLElement>(
+          SELECTORS.content,
+        );
         if (siblingContent) {
           siblingHeight = siblingContent.scrollHeight;
         }
@@ -170,14 +178,15 @@ const sidebarWithBadges = await processSidebarBadges(
       content.addEventListener("transitionend", cleanupExpand);
 
       if (siblingContent) {
-        const siblingDetails = siblingToCollapse;
+        const sc = siblingContent;
+        const siblingDetails = siblingToCollapse as HTMLDetailsElement;
         function cleanupCollapse() {
-          siblingContent.removeEventListener("transitionend", cleanupCollapse);
-          siblingContent.style.transition = "";
-          siblingContent.style.height = "0px";
+          sc.removeEventListener("transitionend", cleanupCollapse);
+          sc.style.transition = "";
+          sc.style.height = "0px";
           siblingDetails.open = false;
         }
-        siblingContent.addEventListener("transitionend", cleanupCollapse);
+        sc.addEventListener("transitionend", cleanupCollapse);
 
         const siblingId = siblingDetails.dataset.groupId;
         if (siblingId) {
@@ -188,7 +197,11 @@ const sidebarWithBadges = await processSidebarBadges(
       saveState(groupId, true);
     }
 
-    function closeGroup(details, content, groupId) {
+    function closeGroup(
+      details: HTMLDetailsElement,
+      content: HTMLElement,
+      groupId: string,
+    ) {
       animateCollapse(content, function () {
         details.open = false;
       });
@@ -196,20 +209,22 @@ const sidebarWithBadges = await processSidebarBadges(
     }
 
     // Expand group without toggle (for navigation)
-    function expandGroup(details) {
+    function expandGroup(details: HTMLDetailsElement) {
       if (details.open) return;
 
       const groupId = details.dataset.groupId;
-      const content = details.querySelector(SELECTORS.content);
+      const content = details.querySelector<HTMLElement>(SELECTORS.content);
       if (!content) return;
 
       // Find sibling to collapse
       const siblingToCollapse = getSiblingToCollapse(details);
-      let siblingContent = null;
+      let siblingContent: HTMLElement | null = null;
       let siblingHeight = 0;
 
       if (siblingToCollapse) {
-        siblingContent = siblingToCollapse.querySelector(SELECTORS.content);
+        siblingContent = siblingToCollapse.querySelector<HTMLElement>(
+          SELECTORS.content,
+        );
         if (siblingContent) {
           siblingHeight = siblingContent.scrollHeight;
         }
@@ -238,22 +253,24 @@ const sidebarWithBadges = await processSidebarBadges(
         siblingContent.style.height = "0px";
       }
 
+      const c = content;
       function cleanupExpand() {
-        content.removeEventListener("transitionend", cleanupExpand);
-        content.style.transition = "";
-        content.style.height = "auto";
+        c.removeEventListener("transitionend", cleanupExpand);
+        c.style.transition = "";
+        c.style.height = "auto";
       }
-      content.addEventListener("transitionend", cleanupExpand);
+      c.addEventListener("transitionend", cleanupExpand);
 
       if (siblingContent) {
-        const siblingDetails = siblingToCollapse;
+        const sc = siblingContent;
+        const siblingDetails = siblingToCollapse as HTMLDetailsElement;
         function cleanupCollapse() {
-          siblingContent.removeEventListener("transitionend", cleanupCollapse);
-          siblingContent.style.transition = "";
-          siblingContent.style.height = "0px";
+          sc.removeEventListener("transitionend", cleanupCollapse);
+          sc.style.transition = "";
+          sc.style.height = "0px";
           siblingDetails.open = false;
         }
-        siblingContent.addEventListener("transitionend", cleanupCollapse);
+        sc.addEventListener("transitionend", cleanupCollapse);
 
         const siblingId = siblingDetails.dataset.groupId;
         if (siblingId) {
@@ -288,7 +305,9 @@ const sidebarWithBadges = await processSidebarBadges(
     function restoreGroupStates() {
       cachedState = null;
       const state = getStoredState();
-      const groups = document.querySelectorAll(SELECTORS.group);
+      const groups = document.querySelectorAll<HTMLDetailsElement>(
+        SELECTORS.group,
+      );
       const nav = getSidebarNav();
 
       groups.forEach(function (details) {
@@ -296,14 +315,14 @@ const sidebarWithBadges = await processSidebarBadges(
         if (!groupId) return;
 
         const shouldBeOpen = state[groupId] === true;
-        const content = details.querySelector(SELECTORS.content);
+        const content = details.querySelector<HTMLElement>(SELECTORS.content);
 
         // Close siblings if this group should be open (accordion behaviour)
         if (shouldBeOpen) {
           const siblingToClose = getSiblingToCollapse(details);
           if (siblingToClose) {
             siblingToClose.open = false;
-            const siblingContent = siblingToClose.querySelector(
+            const siblingContent = siblingToClose.querySelector<HTMLElement>(
               SELECTORS.content,
             );
             if (siblingContent) siblingContent.style.height = "0px";
@@ -339,7 +358,7 @@ const sidebarWithBadges = await processSidebarBadges(
     // active highlight no longer changes via a server re-render. This recomputes
     // which link/group is current from the URL, expands the relevant groups, and
     // scrolls the active link into view.
-    function normalizePath(path) {
+    function normalizePath(path: string): string {
       try {
         path = new URL(path, window.location.href).pathname;
       } catch {
@@ -363,61 +382,75 @@ const sidebarWithBadges = await processSidebarBadges(
         .forEach((s) => s.removeAttribute("data-has-current"));
 
       // Find the active element: a leaf link or a group whose index page matches
-      let activeEl = null;
-      document.querySelectorAll("a[data-sidebar-link]").forEach((a) => {
-        if (!activeEl && normalizePath(a.getAttribute("href") || "") === current) {
-          a.setAttribute("aria-current", "page");
-          activeEl = a;
-        }
-      });
+      let activeEl: HTMLAnchorElement | HTMLDetailsElement | null = null;
+      document
+        .querySelectorAll<HTMLAnchorElement>("a[data-sidebar-link]")
+        .forEach((a) => {
+          if (
+            !activeEl &&
+            normalizePath(a.getAttribute("href") || "") === current
+          ) {
+            a.setAttribute("aria-current", "page");
+            activeEl = a;
+          }
+        });
 
-      document.querySelectorAll(SELECTORS.group).forEach((details) => {
-        const groupHref = details.dataset.href;
-        if (!groupHref) return;
-        const summary = details.querySelector(":scope > summary");
-        if (!summary) return;
-        if (normalizePath(groupHref) === current) {
-          summary.setAttribute("data-current", "true");
-          if (!activeEl) activeEl = details;
-        }
-      });
+      document
+        .querySelectorAll<HTMLDetailsElement>(SELECTORS.group)
+        .forEach((details) => {
+          const groupHref = details.dataset.href;
+          if (!groupHref) return;
+          const summary = details.querySelector(":scope > summary");
+          if (!summary) return;
+          if (normalizePath(groupHref) === current) {
+            summary.setAttribute("data-current", "true");
+            if (!activeEl) activeEl = details;
+          }
+        });
 
       if (!activeEl) return;
+      // TS can't track assignments made inside the forEach closures above,
+      // so it still sees `activeEl` as possibly `null` here.
+      const active = activeEl as HTMLAnchorElement | HTMLDetailsElement;
 
       // Mark + expand every ancestor group of the active element
-      let group = activeEl.closest(SELECTORS.group);
+      let group = active.closest<HTMLDetailsElement>(SELECTORS.group);
       while (group) {
         const summary = group.querySelector(":scope > summary");
         if (summary) summary.setAttribute("data-has-current", "true");
         expandGroup(group);
         const parent = group.parentElement;
-        group = parent ? parent.closest(SELECTORS.group) : null;
+        group = parent
+          ? parent.closest<HTMLDetailsElement>(SELECTORS.group)
+          : null;
       }
 
       // Bring the active link into view within the sidebar scroller
       const target =
-        activeEl.tagName === "DETAILS"
-          ? activeEl.querySelector(":scope > summary") || activeEl
-          : activeEl;
+        active.tagName === "DETAILS"
+          ? active.querySelector(":scope > summary") || active
+          : active;
       target.scrollIntoView({ block: "nearest" });
     }
 
     // ========================================
     // EVENT HANDLERS (delegated)
     // ========================================
-    function handleToggleClick(e, toggleBtn) {
+    function handleToggleClick(e: Event, toggleBtn: HTMLElement) {
       e.preventDefault();
       e.stopPropagation();
-      const details = toggleBtn.closest(SELECTORS.group);
+      const details = toggleBtn.closest<HTMLDetailsElement>(SELECTORS.group);
       if (details) {
         toggleGroup(details);
       }
     }
 
-    function handleLabelClick(e, labelSpan) {
+    function handleLabelClick(e: Event, labelSpan: HTMLElement) {
       // Only handle non-link labels (for groups without index pages)
       const summary = labelSpan.closest("summary");
-      const details = summary ? summary.closest(SELECTORS.group) : null;
+      const details = summary
+        ? summary.closest<HTMLDetailsElement>(SELECTORS.group)
+        : null;
       if (!details) return;
 
       const href = details.dataset.href || "";
@@ -439,10 +472,11 @@ const sidebarWithBadges = await processSidebarBadges(
 
     // Single delegated click listener
     document.addEventListener("click", function (e) {
-      const target = e.target;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
 
       // Handle toggle button clicks (highest priority)
-      const toggleBtn = target.closest(SELECTORS.toggle);
+      const toggleBtn = target.closest<HTMLElement>(SELECTORS.toggle);
       if (toggleBtn) {
         handleToggleClick(e, toggleBtn);
         return;
@@ -453,7 +487,7 @@ const sidebarWithBadges = await processSidebarBadges(
       if (svg) {
         e.preventDefault();
         e.stopPropagation();
-        const details = svg.closest(SELECTORS.group);
+        const details = svg.closest<HTMLDetailsElement>(SELECTORS.group);
         if (details) {
           toggleGroup(details);
         }
@@ -461,7 +495,9 @@ const sidebarWithBadges = await processSidebarBadges(
       }
 
       // Handle non-link label clicks
-      const labelSpan = target.closest(`${SELECTORS.group} > summary > span`);
+      const labelSpan = target.closest<HTMLElement>(
+        `${SELECTORS.group} > summary > span`,
+      );
       if (labelSpan) {
         handleLabelClick(e, labelSpan);
         return;
@@ -471,7 +507,7 @@ const sidebarWithBadges = await processSidebarBadges(
       const summary = target.closest(`${SELECTORS.group} > summary`);
       if (summary) {
         e.preventDefault();
-        const details = summary.closest(SELECTORS.group);
+        const details = summary.closest<HTMLDetailsElement>(SELECTORS.group);
         const href = details ? details.dataset.href : "";
         const groupId = details ? details.dataset.groupId : "";
         const isCurrentPage =
@@ -507,13 +543,14 @@ const sidebarWithBadges = await processSidebarBadges(
     // Leaf links prefetch via `data-astro-prefetch="hover"`, but group rows
     // navigate with navigate() rather than a real <a>, so Astro's prefetch
     // can't see them. Prefetch the group's index page on hover, once per href.
-    const prefetched = new Set();
+    const prefetched = new Set<string>();
     document.addEventListener("mouseover", function (e) {
-      const summary = e.target.closest
-        ? e.target.closest(`${SELECTORS.group} > summary`)
+      const target = e.target as HTMLElement | null;
+      const summary = target?.closest
+        ? target.closest(`${SELECTORS.group} > summary`)
         : null;
       if (!summary) return;
-      const details = summary.closest(SELECTORS.group);
+      const details = summary.closest<HTMLDetailsElement>(SELECTORS.group);
       const href = details && details.dataset.href;
       if (!href || prefetched.has(href)) return;
       prefetched.add(href);
@@ -534,7 +571,8 @@ const sidebarWithBadges = await processSidebarBadges(
     // (re)attached whenever a new sidebar appears.
     const getSidebar = () => document.getElementById("starlight__sidebar");
     const getBackdrop = () => document.getElementById("sidebar-backdrop");
-    const getToggle = () => document.querySelector("starlight-menu-button");
+    const getToggle = () =>
+      document.querySelector<HTMLElement>("starlight-menu-button");
 
     let isOpen = false;
     let touchStartY = 0;
@@ -579,7 +617,7 @@ const sidebarWithBadges = await processSidebarBadges(
     }
 
     // Touch event handlers for swipe gestures
-    function handleTouchStart(e) {
+    function handleTouchStart(e: TouchEvent) {
       if (window.innerWidth >= 768 || !isOpen) return;
       const sidebar = getSidebar();
       touchStartY = e.touches[0].clientY;
@@ -590,7 +628,7 @@ const sidebarWithBadges = await processSidebarBadges(
       canDrag = sidebar ? sidebar.scrollTop === 0 : false;
     }
 
-    function handleTouchMove(e) {
+    function handleTouchMove(e: TouchEvent) {
       if (window.innerWidth >= 768 || !isOpen || !canDrag) return;
       const sidebar = getSidebar();
       const backdrop = getBackdrop();
@@ -651,7 +689,8 @@ const sidebarWithBadges = await processSidebarBadges(
         });
         sidebar.addEventListener("touchend", handleTouchEnd, { passive: true });
         sidebar.addEventListener("click", function (e) {
-          const link = e.target.closest("a");
+          const target = e.target as HTMLElement | null;
+          const link = target?.closest("a");
           if (link && window.innerWidth < 768) setTimeout(closeDrawer, 150);
         });
       }
@@ -674,7 +713,7 @@ const sidebarWithBadges = await processSidebarBadges(
       if (e.key === "Escape" && isOpen) closeDrawer();
     });
 
-    let resizeTimer;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     window.addEventListener("resize", function () {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {

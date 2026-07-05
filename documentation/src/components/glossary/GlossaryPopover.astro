@@ -1,0 +1,12 @@
+---
+// Renders nothing itself: this component only carries the client script for
+// the glossary hover cards. It is included once from Head.astro; the script
+// uses document-level event delegation, so it binds a single time and keeps
+// working across view-transition navigations without re-initialization.
+---
+
+<script>
+	import { setupGlossaryPopover } from "./popover";
+
+	setupGlossaryPopover();
+</script>

@@ -5,7 +5,9 @@
 // `astro:page-load` listeners across the site actually fire.
 import { ClientRouter } from "astro:transitions";
 import Default from "@astrojs/starlight/components/Head.astro";
+import GlossaryPopover from "./glossary/GlossaryPopover.astro";
 ---
 
 <Default><slot /></Default>
 <ClientRouter />
+<GlossaryPopover />

@@ -1,0 +1,31 @@
+---
+// Page partial: builds each glossary entry's rendered MDX as a bare HTML
+// fragment at /glossary-card/<slug>/, fetched by popover.ts on hover.
+// Partials strip scoped styles/scripts, so all card styling lives in the
+// globally generated classes from styles.ts.
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+import { glossaryStyles as s } from "@components/glossary/styles";
+
+export const partial = true;
+
+export async function getStaticPaths() {
+	const entries = await getCollection("glossary");
+	return entries.map((entry) => ({
+		params: { slug: entry.id },
+		props: { entry },
+	}));
+}
+
+interface Props {
+	entry: CollectionEntry<"glossary">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<div class={s.cardTitle}>{entry.data.title}</div>
+<div class:list={["sl-markdown-content", s.cardBody]}>
+	<Content />
+</div>

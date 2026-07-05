@@ -1,0 +1,33 @@
+---
+// Renders every glossary entry as an anchor-addressable section for the
+// /glossary index page. Term links produced by rehype-glossary point at
+// /glossary/#<slug>, which resolves to these sections. Markup stays native
+// (h2 + prose inside sl-markdown-content) so the page looks like any other
+// docs page; aliases render as inline-code chips.
+import { getCollection, render } from "astro:content";
+import { glossaryStyles as s } from "./styles";
+
+const entries = (await getCollection("glossary")).sort((a, b) =>
+	a.data.title.localeCompare(b.data.title),
+);
+const rendered = await Promise.all(
+	entries.map(async (entry) => ({
+		entry,
+		Content: (await render(entry)).Content,
+	})),
+);
+---
+
+{
+	rendered.map(({ entry, Content }) => (
+		<section id={entry.id} class={s.entrySection}>
+			<h2>{entry.data.title}</h2>
+			<p class={s.entryAliases}>
+				{entry.data.aliases.map((alias) => (
+					<code>{alias}</code>
+				))}
+			</p>
+			<Content />
+		</section>
+	))
+}

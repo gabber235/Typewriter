@@ -23,6 +23,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
           src={logos.dark.src}
           width={logos.dark.width}
           height={logos.dark.height}
+          loading="lazy"
           style="height: calc(var(--sl-nav-height) - 3 * var(--sl-nav-pad-y));"
         />
         {/* Show light alternate if a user configure both light and dark logos. */}
@@ -33,6 +34,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
             src={logos.light?.src}
             width={logos.light?.width}
             height={logos.light?.height}
+            loading="lazy"
             style="height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));"
           />
         )}

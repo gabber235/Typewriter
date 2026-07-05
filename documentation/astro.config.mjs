@@ -8,6 +8,7 @@ import remarkDirective from "remark-directive";
 import starlightDotMd from "starlight-dot-md";
 import starlightLlmsTxt from "starlight-llms-txt";
 import { remarkAside } from "./src/components/aside/remark-aside";
+import { rehypeGlossary } from "./src/components/glossary/rehype-glossary";
 
 // https://astro.build/config
 export default defineConfig({
@@ -85,6 +86,11 @@ export default defineConfig({
 
 	markdown: {
 		remarkPlugins: [remarkDirective, remarkAside],
+		// mode: "all" | "first-per-page" | "first-per-section"
+		// "first-per-page" links each term only once per page — with a growing
+		// glossary, linking every occurrence turned term-dense pages into a wall
+		// of underlines.
+		rehypePlugins: [[rehypeGlossary, { mode: "first-per-page" }]],
 	},
 
 	vite: {
