@@ -23,9 +23,7 @@ Map<String, HeaderActions> currentHeaderActions(
   Ref ref,
   EditorMode editorMode,
 ) {
-  final blueprint = ref.watch(
-    selectedDataBlueprintProvider,
-  );
+  final blueprint = ref.watch(selectedDataBlueprintProvider);
   if (blueprint == null) return {};
   final queue = <(String, HeaderContext, DataBlueprint)>[
     ("", HeaderContext(), blueprint),
@@ -35,8 +33,13 @@ Map<String, HeaderActions> currentHeaderActions(
   while (queue.isNotEmpty) {
     final (path, context, dataBlueprint) = queue.removeLast();
 
-    final (actions, children) =
-        headerActionsFor(ref, path, dataBlueprint, context, editorMode);
+    final (actions, children) = headerActionsFor(
+      ref,
+      path,
+      dataBlueprint,
+      context,
+      editorMode,
+    );
     result[path] = actions;
     queue.addAll(children);
   }
@@ -45,23 +48,18 @@ Map<String, HeaderActions> currentHeaderActions(
 }
 
 (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
-    headerActionsFor(
+headerActionsFor(
   Ref ref,
   String path,
   DataBlueprint dataBlueprint,
   HeaderContext context,
   EditorMode editorMode,
 ) =>
-        ref
-            .watch(editorsProvider)
-            .firstWhereOrNull(
-              (filter) => filter.canEdit(dataBlueprint),
-            )
-            ?.headerActions(ref, path, dataBlueprint, context, editorMode) ??
-        (
-          const HeaderActions(),
-          [],
-        );
+    ref
+        .watch(editorsProvider)
+        .firstWhereOrNull((filter) => filter.canEdit(dataBlueprint))
+        ?.headerActions(ref, path, dataBlueprint, context, editorMode) ??
+    (const HeaderActions(), []);
 
 @freezed
 sealed class HeaderContext with _$HeaderContext {
@@ -116,7 +114,8 @@ class FieldHeader extends HookConsumerWidget {
         ? ref.watch(_actionsProvider(path, editorMode))
         : HeaderActions();
 
-    final name = title ??
+    final name =
+        title ??
         ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ??
         "Editor";
 
@@ -139,8 +138,9 @@ class FieldHeader extends HookConsumerWidget {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(4),
-                onTap:
-                    canExpand ? () => expanded.value = !expanded.value : null,
+                onTap: canExpand
+                    ? () => expanded.value = !expanded.value
+                    : null,
                 child: Row(
                   children: [
                     if (canExpand && editorMode.hasHeaderActions)
@@ -150,40 +150,32 @@ class FieldHeader extends HookConsumerWidget {
                     else if (canExpand)
                       const SizedBox(width: 8),
                     if (editorMode.hasHeaderActions)
-                      ...createActions(
-                        actions,
-                        HeaderActionLocation.leading,
-                      ),
+                      ...createActions(actions, HeaderActionLocation.leading),
                     Padding(
                       padding: EdgeInsets.symmetric(
                         vertical: canExpand ? 10 : 0,
                       ),
-                      child: SectionTitle(
-                        title: name,
-                      ),
+                      child: SectionTitle(title: name),
                     ),
                     if (editorMode.hasHeaderActions)
-                      ...createActions(
-                        actions,
-                        HeaderActionLocation.trailing,
-                      ),
+                      ...createActions(actions, HeaderActionLocation.trailing),
                     const Spacer(),
                     if (editorMode.hasHeaderActions)
-                      ...createActions(
-                        actions,
-                        HeaderActionLocation.actions,
-                      ),
+                      ...createActions(actions, HeaderActionLocation.actions),
                   ],
                 ),
               ),
             ),
             if (canExpand)
+              // TODO: look into replacing this with native Expansible widget
               Collapsible(
                 collapsed: !expanded.value,
                 axis: CollapsibleAxis.vertical,
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
                   child: child,
                 ),
               )
@@ -267,30 +259,30 @@ class HeaderActions {
 
 @riverpod
 List<HeaderAction> headerActions(Ref ref) => [
-      // HelpHeaderActionFilter(),
-      // ColoredHeaderActionFilter(),
-      // PlaceholderHeaderActionFilter(),
-      // RegexHeaderActionFilter(),
-      // LengthHeaderActionFilter(),
-      // ContentModeHeaderActionFilter(),
-      // VariableHeaderActionFilter(),
-      //
-      BooleanHeaderAction(),
-      // ClosedRangeHeaderActionFilter(),
-      //
-      // // List Actions
-      AddListHeaderAction(),
-      ReorderListHeaderAction(),
-      DuplicateListItemAction(),
-      RemoveListItemAction(),
-      //
-      // // Map Actions
-      // AddMapHeaderActionFilter(),
-      //
-      // // Skin Actions
-      // SkinFetchFromUUIDHeaderActionFilter(),
-      // SkinFetchFromURLHeaderActionFilter(),
-    ];
+  // HelpHeaderActionFilter(),
+  // ColoredHeaderActionFilter(),
+  // PlaceholderHeaderActionFilter(),
+  // RegexHeaderActionFilter(),
+  // LengthHeaderActionFilter(),
+  // ContentModeHeaderActionFilter(),
+  // VariableHeaderActionFilter(),
+  //
+  BooleanHeaderAction(),
+  // ClosedRangeHeaderActionFilter(),
+  //
+  // // List Actions
+  AddListHeaderAction(),
+  ReorderListHeaderAction(),
+  DuplicateListItemAction(),
+  RemoveListItemAction(),
+  //
+  // // Map Actions
+  // AddMapHeaderActionFilter(),
+  //
+  // // Skin Actions
+  // SkinFetchFromUUIDHeaderActionFilter(),
+  // SkinFetchFromURLHeaderActionFilter(),
+];
 
 abstract class HeaderAction {
   bool shouldShow(
@@ -315,8 +307,4 @@ abstract class HeaderAction {
   );
 }
 
-enum HeaderActionLocation {
-  leading,
-  trailing,
-  actions,
-}
+enum HeaderActionLocation { leading, trailing, actions }
