@@ -15,7 +15,7 @@ hero:
       format: webp
   actions:
     - text: Example Guide
-      link: /guides/
+      link: guides/
       variant: primary
       icon:
         type: icon
