@@ -86,7 +86,8 @@ class TypewriterPanel extends HookConsumerWidget {
     SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateIntent(),
 
     // Focus Navigation
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyN, control: true):
+        NextFocusIntent(),
     AdaptiveSingleActivator(LogicalKeyboardKey.keyP, control: true):
         PreviousFocusIntent(),
 
@@ -99,28 +100,30 @@ class TypewriterPanel extends HookConsumerWidget {
       direction: AxisDirection.up,
       type: ScrollIncrementType.page,
     ),
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyU, control: true): ScrollIntent(
+    AdaptiveSingleActivator(
+      LogicalKeyboardKey.keyU,
+      control: true,
+    ): ScrollIntent(
       direction: AxisDirection.up,
       type: ScrollIncrementType.page,
     ),
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyD, control: true): ScrollIntent(
+    AdaptiveSingleActivator(
+      LogicalKeyboardKey.keyD,
+      control: true,
+    ): ScrollIntent(
       direction: AxisDirection.down,
       type: ScrollIncrementType.page,
     ),
 
     // Pane Navigation
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyH, control: true): NavigatePaneIntent(
-      AxisDirection.left,
-    ),
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyL, control: true): NavigatePaneIntent(
-      AxisDirection.right,
-    ),
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyJ, control: true): NavigatePaneIntent(
-      AxisDirection.down,
-    ),
-    AdaptiveSingleActivator(LogicalKeyboardKey.keyK, control: true): NavigatePaneIntent(
-      AxisDirection.up,
-    ),
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyH, control: true):
+        NavigatePaneIntent(AxisDirection.left),
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyL, control: true):
+        NavigatePaneIntent(AxisDirection.right),
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyJ, control: true):
+        NavigatePaneIntent(AxisDirection.down),
+    AdaptiveSingleActivator(LogicalKeyboardKey.keyK, control: true):
+        NavigatePaneIntent(AxisDirection.up),
     AdaptiveSingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
         NavigatePaneIntent(AxisDirection.left),
     AdaptiveSingleActivator(LogicalKeyboardKey.arrowRight, control: true):
