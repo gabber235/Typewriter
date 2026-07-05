@@ -473,7 +473,7 @@ class _Loading extends HookWidget {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
-      home: const LoadingScreen(title: "Authenticating User"),
+      home: Scaffold(body: const LoadingScreen(title: "Authenticating User")),
     );
   }
 }
@@ -489,7 +489,9 @@ class _Error extends HookConsumerWidget {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
-      home: ErrorScreen(message: "$error", child: SignOutButton()),
+      home: Scaffold(
+        body: ErrorScreen(message: "$error", child: SignOutButton()),
+      ),
     );
   }
 }
