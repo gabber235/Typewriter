@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
+@import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/jetbrains-mono/wght-italic.css";
+@import "@fontsource-variable/lilex";
 
 @layer base, starlight, theme, components, utilities;
 
@@ -8,8 +10,9 @@
 @import "./colors.css";
 
 :root {
-	--font-sans: "JetBrains Mono", monospace;
-	--font-mono: "JetBrains Mono", monospace;
+	--font-sans: "JetBrains Mono Variable", monospace;
+	--font-mono: "JetBrains Mono Variable", monospace;
+	--font-reading: "Lilex Variable", "JetBrains Mono Variable", monospace;
 }
 
 @theme {
@@ -85,6 +88,23 @@
 	--sl-color-hairline-light: var(--sl-color-gray-6);
 	--sl-color-hairline-shade: var(--sl-color-gray-6);
 	--sl-color-text: var(--material-grey-800);
+}
+
+/* ############################## */
+/* Typography: titles vs. reading */
+/* ############################## */
+/* Headings (and other title-like labels) stay in JetBrains Mono, the site's
+   brand font. The prose itself reads in Lilex, a monospace font tuned for
+   long-form reading, so long pages of body text aren't a wall of JetBrains. */
+.sl-markdown-content {
+	font-family: var(--font-reading);
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
+.sl-markdown-content .starlight-aside__title,
+.sl-markdown-content summary,
+.sl-markdown-content th {
+	font-family: var(--font-sans);
 }
 
 /* ############################## */
