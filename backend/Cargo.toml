@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
   "access/auth-callout",
+  "access/auth-sentinel",
   "access/auth-typewriter-permissions",
   "wasmcloud-utils"
 ]

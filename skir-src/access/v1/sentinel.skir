@@ -1,0 +1,12 @@
+// Public unauthenticated query used to bootstrap NATS auth callout.
+// These credentials identify the sentinel user and carry no publish/subscribe permissions.
+method GetSentinelCredentials(
+  struct {}
+): enum {
+  success: struct {
+    jwt: string;
+    seed: string;
+  };
+  configuration_error: struct {};
+  invalid_credentials: struct {};
+} = 403062;

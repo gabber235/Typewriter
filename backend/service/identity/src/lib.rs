@@ -38,7 +38,7 @@ use wasmcloud_component::{
 };
 use wasmcloud_utils::error_response_bytes;
 
-use crate::typewriter::api::v1::{GetSentinelCredentialsResponse, IssueServiceIdentityResponse};
+use crate::typewriter::api::v1::IssueServiceIdentityResponse;
 
 struct ServiceIdentity;
 
@@ -59,7 +59,6 @@ impl http::Server for ServiceIdentity {
         // TODO: Once path based routing is implemented, remove this.
         match (method, path) {
             (&Method::POST, "/service/identity/issue") => handle_issue_identity(request),
-            (&Method::GET, "/auth/sentinel") => handle_get_sentinel_credentials(),
             _ => {
                 trace!("Not found: {} {}", method, path);
                 Ok(http::Response::builder()
@@ -111,44 +110,10 @@ fn handle_issue_identity(
                 handlers::HandlerError::DatabaseError(_) => 500,
                 handlers::HandlerError::DecodeError(_) => 400,
                 handlers::HandlerError::EncodeError(_) => 500,
-                handlers::HandlerError::ConfigError(_) => 500,
             };
             let error_response = error_response_bytes!(
                 IssueServiceIdentityResponse,
                 issue_service_identity_response,
-                error_code as u32,
-                e.to_string()
-            );
-            Ok(http::Response::builder()
-                .status(error_code)
-                .header("content-type", "application/x-protobuf")
-                .body(error_response)
-                .unwrap())
-        }
-    }
-}
-
-fn handle_get_sentinel_credentials() -> http::Result<http::Response<ResponseBody>> {
-    trace!("Processing sentinel credentials request");
-
-    match handlers::handle_get_sentinel_credentials() {
-        Ok(response_bytes) => {
-            info!("Successfully retrieved sentinel credentials");
-            Ok(http::Response::builder()
-                .status(200)
-                .header("content-type", "application/x-protobuf")
-                .body(response_bytes)
-                .unwrap())
-        }
-        Err(e) => {
-            error!("Handler error: {}", e);
-            let error_code = match e {
-                handlers::HandlerError::ConfigError(_) => 500,
-                _ => 500,
-            };
-            let error_response = error_response_bytes!(
-                GetSentinelCredentialsResponse,
-                get_sentinel_credentials_response,
                 error_code as u32,
                 e.to_string()
             );

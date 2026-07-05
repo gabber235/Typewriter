@@ -15,7 +15,7 @@ dependencies:
   collection:
   cupertino_icons: ^1.0.8
   dart_casing: ^3.0.1
-  dart_nats: ^0.6.5
+  dart_nats: ^1.1.1
   dotted_border: ^3.1.0
   duration: ^4.0.3
   expandable_page_view: ^1.2.0
@@ -55,8 +55,8 @@ dev_dependencies:
   icons_launcher:
   json_serializable:
   protoc_plugin:
-  riverpod_generator: ^4.0.3
-  riverpod_lint: ^3.1.3
+  riverpod_generator:
+  riverpod_lint:
   test_screenshot:
   typewriter_testkit:
     path: testkit

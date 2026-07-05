@@ -17,7 +17,7 @@ dependencies:
   faker:
   pub_semver:
   collection:
-  dart_nats: ^0.6.5
+  dart_nats: ^1.1.1
   mocktail: ^1.0.4
   iconify_flutter_plus: ^1.0.4
 

@@ -48,6 +48,7 @@ class MockNatsClient extends Mock implements Client {
     Uint8List data, {
     Duration timeout = const Duration(seconds: 2),
     T Function(String)? jsonDecoder,
+    Header? header,
   }) async {
     if (_status != Status.connected) {
       throw NatsException("request error: client not connected");
@@ -58,7 +59,7 @@ class MockNatsClient extends Mock implements Client {
     }
 
     final responseData = _handlers[subj]!(data);
-    return Message<T>(subj, 0, responseData, this);
+    return Message<T>(subj, 0, responseData, this, jsonDecoder: jsonDecoder);
   }
 
   @override
@@ -149,11 +150,20 @@ class MockSubscription<T> implements Subscription<T> {
 
   @override
   Future<void> close() async {
-    await _controller.close();
+    if (!_controller.isClosed) {
+      await _controller.close();
+    }
+  }
+
+  @override
+  Future<void> drain() async {
+    await close();
   }
 
   void closeStream() {
-    _controller.close();
+    if (!_controller.isClosed) {
+      _controller.close();
+    }
   }
 
   @override

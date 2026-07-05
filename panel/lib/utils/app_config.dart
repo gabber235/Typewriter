@@ -14,16 +14,13 @@ class NatsConfig {
 
   String get webUrl => const String.fromEnvironment(
     "NATS_WEB_URL",
-    defaultValue: "ws://localhost:4223",
+    defaultValue: "ws://nats.seamlezz.com:4223",
   );
 
   String get desktopUrl => const String.fromEnvironment(
     "NATS_DESKTOP_URL",
-    defaultValue: "nats://localhost:4222",
+    defaultValue: "nats://nats.seamlezz.com:4222",
   );
-
-  bool get acceptBadCert =>
-      const bool.fromEnvironment("NATS_ACCEPT_BAD_CERT", defaultValue: false);
 
   String get url => kIsWeb ? webUrl : desktopUrl;
 }
@@ -36,29 +33,26 @@ class AuthConfig {
     defaultValue: "https://auth.typewritermc.com/",
   );
 
-  String get clientId => const String.fromEnvironment(
-    "AUTH_CLIENT_ID",
-    defaultValue: "xqytbpo52htzlkhoh0wt3",
-  );
+  String get clientId => const String.fromEnvironment("AUTH_CLIENT_ID");
 
   String get scopes => const String.fromEnvironment(
     "AUTH_SCOPES",
-    defaultValue: "openid profile email",
+    defaultValue: "openid profile email entitlements discord",
   );
 
   String get redirectUri => const String.fromEnvironment(
     "AUTH_REDIRECT_URI",
-    defaultValue: "http://localhost:2350/redirect.html",
+    defaultValue: "https://panel.typewritermc.com/redirect.html",
   );
 
   String get postLogoutRedirectUri => const String.fromEnvironment(
     "AUTH_POST_LOGOUT_REDIRECT_URI",
-    defaultValue: "http://localhost:2350/redirect.html",
+    defaultValue: "https://panel.typewritermc.com/redirect.html",
   );
 
   String get frontChannelLogoutUri => const String.fromEnvironment(
     "AUTH_FRONT_CHANNEL_LOGOUT_URI",
-    defaultValue: "http://localhost:2350/redirect.html",
+    defaultValue: "https://panel.typewritermc.com/redirect.html",
   );
 
   String get discoveryDocumentUri => const String.fromEnvironment(

@@ -79,6 +79,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "auth-sentinel"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "otel-wasi",
+ "tracing",
+ "wasmcloud-utils",
+ "wit-bindgen 0.58.0",
+]
+
+[[package]]
 name = "auth-typewriter-permissions"
 version = "0.1.0"
 dependencies = [

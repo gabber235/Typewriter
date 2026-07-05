@@ -5,18 +5,18 @@ import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
 import "package:protobuf/protobuf.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/generated/api/auth.pb.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/skirout/access/v1/sentinel.dart";
 import "package:typewriter_panel/utils/app_config.dart";
 
 part "nats.g.dart";
 
-final _natsAcceptBadCert = AppConfig.nats.acceptBadCert;
-
 /// Fetches the sentinel credentials from the API.
 @Riverpod(keepAlive: true)
-Future<SentinelCredentials> sentinelCredentials(Ref ref) async {
+Future<GetSentinelCredentialsResponse_Success> sentinelCredentials(
+  Ref ref,
+) async {
   final url = Uri.parse("${AppConfig.api.baseUrl}/auth/sentinel");
   final response = await http.get(url);
 
@@ -26,23 +26,20 @@ Future<SentinelCredentials> sentinelCredentials(Ref ref) async {
     );
   }
 
-  final protoResponse = GetSentinelCredentialsResponse.fromBuffer(
+  final data = GetSentinelCredentialsResponse.serializer.fromBytes(
     response.bodyBytes,
   );
 
-  if (protoResponse.hasError()) {
-    throw Exception(
-      "Failed to fetch sentinel credentials: ${protoResponse.error.message}",
-    );
-  }
-
-  if (!protoResponse.hasCredentials()) {
-    throw Exception(
-      "Failed to fetch sentinel credentials: No credentials returned",
-    );
-  }
-
-  return protoResponse.credentials;
+  return switch (data) {
+    GetSentinelCredentialsResponse_configurationErrorWrapper() =>
+      throw Exception("Configuration error"),
+    GetSentinelCredentialsResponse_invalidCredentialsWrapper() =>
+      throw Exception("Invalid credentials"),
+    GetSentinelCredentialsResponse_successWrapper(:final value) => value,
+    GetSentinelCredentialsResponse_unknown() => throw Exception(
+      "Unknown response",
+    ),
+  };
 }
 
 @Riverpod(keepAlive: true)
@@ -59,13 +56,11 @@ class Nats extends _$Nats {
         .watch(sentinelCredentialsProvider)
         .requireValue;
 
-    final client = Client()..acceptBadCert = _natsAcceptBadCert;
+    final client = Client();
 
     final url = AppConfig.nats.url;
 
-    debugPrint(
-      "nats: connecting to $url ${_natsAcceptBadCert ? "ignoring bad certificates" : ""}",
-    );
+    debugPrint("nats: connecting to $url");
 
     client
       ..seed = sentinelCredentials.seed
@@ -113,6 +108,7 @@ class NatsStatus extends _$NatsStatus {
 /// Extension on Client to add protobuf request/response methods
 extension ClientProtoExtension on Client {
   /// Send a protobuf request and receive a protobuf response
+  @Deprecated("migrate to skir")
   Future<TResponse> requestProto<
     TRequest extends GeneratedMessage,
     TResponse extends GeneratedMessage
@@ -131,6 +127,7 @@ extension ClientProtoExtension on Client {
 /// Extension on Ref to allow for listening to Nats topics while sending an initial request
 extension RefNatsExtension on Ref {
   /// Send a protobuf request and receive a protobuf response while listening to a topic
+  @Deprecated("migrate to skir")
   Stream<TResponse> requestProtoThenListen<
     TRequest extends GeneratedMessage,
     TResponse extends GeneratedMessage

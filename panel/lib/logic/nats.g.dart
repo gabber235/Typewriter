@@ -18,13 +18,13 @@ final sentinelCredentialsProvider = SentinelCredentialsProvider._();
 final class SentinelCredentialsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<SentinelCredentials>,
-          SentinelCredentials,
-          FutureOr<SentinelCredentials>
+          AsyncValue<GetSentinelCredentialsResponse_Success>,
+          GetSentinelCredentialsResponse_Success,
+          FutureOr<GetSentinelCredentialsResponse_Success>
         >
     with
-        $FutureModifier<SentinelCredentials>,
-        $FutureProvider<SentinelCredentials> {
+        $FutureModifier<GetSentinelCredentialsResponse_Success>,
+        $FutureProvider<GetSentinelCredentialsResponse_Success> {
   /// Fetches the sentinel credentials from the API.
   SentinelCredentialsProvider._()
     : super(
@@ -42,18 +42,18 @@ final class SentinelCredentialsProvider
 
   @$internal
   @override
-  $FutureProviderElement<SentinelCredentials> $createElement(
+  $FutureProviderElement<GetSentinelCredentialsResponse_Success> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<SentinelCredentials> create(Ref ref) {
+  FutureOr<GetSentinelCredentialsResponse_Success> create(Ref ref) {
     return sentinelCredentials(ref);
   }
 }
 
 String _$sentinelCredentialsHash() =>
-    r'7af6d56b5446a8f989d1b063756203ce7ae1229d';
+    r'0a4b52f5afd13a63f9b80d01adadeac9d3e64396';
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
@@ -86,7 +86,7 @@ final class NatsProvider extends $NotifierProvider<Nats, Client> {
   }
 }
 
-String _$natsHash() => r'998911dfdfe84fe65c9d0bafe0e25cbeb13b5860';
+String _$natsHash() => r'73b21231aa557b277ce2d8f84e6cca2d6c147748';
 
 abstract class _$Nats extends $Notifier<Client> {
   Client build();

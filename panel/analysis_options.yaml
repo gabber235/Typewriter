@@ -86,6 +86,7 @@ analyzer:
     - "**/*.pb.dart"
     - "**/*.pbenum.dart"
     - "**/*.pbjson.dart"
+    - "**/skirout/**/*.dart"
   errors:
     invalid_annotation_target: ignore
     always_use_package_imports: error

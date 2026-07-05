@@ -6,9 +6,8 @@ use crate::{
     authentik::{create_service_account, AuthentikError},
     typewriter::{
         api::v1::{
-            get_sentinel_credentials_response, issue_service_identity_response,
-            GetSentinelCredentialsResponse, IssueServiceIdentityRequest,
-            IssueServiceIdentityResponse, SentinelCredentials, ServiceCredentials,
+            issue_service_identity_response, IssueServiceIdentityRequest,
+            IssueServiceIdentityResponse, ServiceCredentials,
         },
         models::v1::ServiceType,
     },
@@ -49,7 +48,6 @@ pub enum HandlerError {
     DatabaseError(String),
     EncodeError(String),
     DecodeError(String),
-    ConfigError(String),
 }
 
 impl std::fmt::Display for HandlerError {
@@ -60,7 +58,6 @@ impl std::fmt::Display for HandlerError {
             HandlerError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
             HandlerError::EncodeError(msg) => write!(f, "Encode error: {}", msg),
             HandlerError::DecodeError(msg) => write!(f, "Decode error: {}", msg),
-            HandlerError::ConfigError(msg) => write!(f, "Config error: {}", msg),
         }
     }
 }
@@ -218,34 +215,6 @@ pub fn handle_register(body: &[u8]) -> Result<Vec<u8>, HandlerError> {
     };
 
     Ok(response.encode_to_vec())
-}
-
-pub fn handle_get_sentinel_credentials() -> Result<Vec<u8>, HandlerError> {
-    let creds = std::env::var("NATS_SENTINEL_CREDS")
-        .map_err(|_| HandlerError::ConfigError("NATS_SENTINEL_CREDS not found in environment".to_string()))?;
-
-    let jwt = extract_from_creds(&creds, "-----BEGIN NATS USER JWT-----", "------END NATS USER JWT------")
-        .ok_or_else(|| HandlerError::ConfigError("Failed to extract JWT from NATS credentials".to_string()))?;
-
-    let seed = extract_from_creds(&creds, "-----BEGIN USER NKEY SEED-----", "------END USER NKEY SEED------")
-        .ok_or_else(|| HandlerError::ConfigError("Failed to extract seed from NATS credentials".to_string()))?;
-
-    let credentials = SentinelCredentials { jwt, seed };
-
-    let response = GetSentinelCredentialsResponse {
-        result: Some(get_sentinel_credentials_response::Result::Credentials(
-            credentials,
-        )),
-    };
-
-    Ok(response.encode_to_vec())
-}
-
-fn extract_from_creds(creds: &str, begin_marker: &str, end_marker: &str) -> Option<String> {
-    let start = creds.find(begin_marker)? + begin_marker.len();
-    let end = creds.find(end_marker)?;
-    let content = &creds[start..end];
-    Some(content.trim().to_string())
 }
 
 #[cfg(test)]

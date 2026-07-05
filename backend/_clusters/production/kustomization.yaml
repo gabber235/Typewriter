@@ -2,4 +2,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ../../access/auth-callout/deploy/production
+  - ../../access/auth-sentinel/deploy/production
   - ../../access/auth-typewriter-permissions/deploy/production

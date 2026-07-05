@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auth-sentinel
+  namespace: typewriter
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - api.tw.seamlezz.net
+      secretName: tw-seamlezz-net-tls
+  rules:
+    - host: api.tw.seamlezz.net
+      http:
+        paths:
+          - path: /auth/sentinel
+            pathType: Exact
+            backend:
+              service:
+                name: auth-sentinel
+                port:
+                  number: 80
