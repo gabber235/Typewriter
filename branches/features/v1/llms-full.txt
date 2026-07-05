@@ -1,32 +1,78 @@
 <SYSTEM>This is the full developer documentation for Typewriter</SYSTEM>
 
-# Welcome to Starlight
+# Typewriter
 
-> Congrats on setting up a new Starlight project!
+> Build interactive quests, NPC dialogues, and cinematic sequences on your Paper Minecraft server — no coding required, endlessly extensible for developers.
 
-## Next steps
+# TYPEWRITER
 
-[Section titled “Next steps”](#next-steps)
+NEXT GEN PLAYER INTERACTIONS
 
-Update content
+[Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
 
-Edit `src/content/docs/index.mdx` to see this [page](/branches/features/v1/glossary/#page) change.
+### Interactive Dialogues & Quests
 
-Change page layout
+Create dialogues, branching storylines, and dynamic quests that respond to player choices.
 
-Delete `template: splash` in `src/content/docs/index.mdx` to display a sidebar on this page.
+![A Typewriter NPC dialogue with branching player choices](/branches/features/v1/media/chat-messages.gif)
 
-Add new content
+### Cinematic Sequences
 
-Add Markdown or MDX files to `src/content/docs` to create new pages.
+Build dynamic camera paths, animated NPC interactions, and immersive cutscenes that captivate your players.
 
-Configure your site
+### Intelligent NPCs & Entities
 
-Edit your `sidebar` and other config in `astro.config.mjs`.
+Custom activities, appearance changes, and player-specific entities that feel alive.
 
-Read the docs
+### Custom Commands
 
-Learn more in [the Starlight Docs](https://starlight.astro.build/).
+Create server commands that trigger your custom content — no coding required.
+
+### Visual Configuration
+
+Manage all your content using a visual web panel designed for ease of use.
+
+![The Typewriter web panel interface](/branches/features/v1/_astro/panel-demo.DdoPgBjz.png)
+
+### [Extensions System](https://github.com/Gabber235/typewriter)
+
+[Extend Typewriter with modular components that integrate custom plugins and unique in-game experiences.](https://github.com/Gabber235/typewriter)
+
+## Watch Typewriter in action
+
+A complete walkthrough of the web panel and the interactive experiences you can build with it.
+
+[![](/branches/features/v1/_astro/panel-demo.DdoPgBjz.png)](/branches/features/v1/_astro/tw-demo.CSsUtiQb.mp4)
+
+0:00 / 0:00
+
+For Admins
+
+### No coding required
+
+Configure complex interactions, NPCs, and quests through the visual web panel — even without prior coding knowledge. Need something specific? The extension system makes customization easy.
+
+[Read the docs](./01-typewiter)
+
+For Developers
+
+### Built to be extended
+
+Typewriter is built to be highly extensible. The extensions system lets you build modular, reusable components that seamlessly integrate with the plugin.
+
+[Explore the code](https://github.com/Gabber235/typewriter)
+
+[Join the Discord](https://discord.gg/HtbKyuDDBw)[Star on GitHub](https://github.com/Gabber235/typewriter)
+
+Thanks to our sponsors for supporting Typewriter's development.
+
+[![Myiume](https://github.com/myiume.png)](https://github.com/myiume)[![yellowhead](https://github.com/iamyellowhead.png)](https://github.com/iamyellowhead)[![GuavaDealer](https://github.com/GuavaDealer.png)](https://github.com/GuavaDealer)[![Wrecked](https://github.com/WreckedAP.png)](https://github.com/WreckedAP)[![BTC STUDIO](https://github.com/RenaudRl.png)](https://github.com/RenaudRl)[![Keeth](https://github.com/Keeth-Christy.png)](https://github.com/Keeth-Christy)[![ItsJustJar](https://github.com/ItsJustJar.png)](https://github.com/ItsJustJar)[![artie-mortus](https://github.com/artie-mortus.png)](https://github.com/artie-mortus)
+
+## Ready to bring your server to life?
+
+Join the beta and start building interactive experiences today.
+
+[Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
 
 # What is Typewriter
 
