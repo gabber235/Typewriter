@@ -1,87 +1,100 @@
 mod bindings {
+    use crate::Component;
+
     wit_bindgen::generate!({
         world: "component",
         path: "wit",
         generate_all,
     });
+    export!(Component);
 }
 
 use bindings::exports::wasi::http::handler::Guest as Handler;
 use bindings::wasi::http::types::{ErrorCode, Fields, Method, Request, Response};
+use otel_wasi::{ResultWithSlug, WithSlug};
+use tracing::instrument;
 use wasmcloud_utils::skir::base::access::v1::sentinel::{
-    GetSentinelCredentialsResponse, GetSentinelCredentialsResponse_ConfigurationError,
-    GetSentinelCredentialsResponse_InvalidCredentials, GetSentinelCredentialsResponse_Success,
+    GetSentinelCredentialsResponse, GetSentinelCredentialsResponse_Success,
 };
 use wit_bindgen::spawn_local;
 
 struct Component;
 
-#[derive(Debug, Clone, Copy)]
-enum SentinelError {
-    MissingConfig,
-    InvalidCredentials,
-}
-
 impl Handler for Component {
-    async fn handle(request: Request) -> Result<Response, ErrorCode> {
+    #[otel_wasi::wasi_instrument(
+        service = "auth_sentinel",
+        export,
+        attributes(
+            "http.route" = "/auth/sentinel",
+            "http.method" = "GET",
+        )
+    )]
+    async fn handle(request: Request) -> Result<Response, otel_wasi::Error<ErrorCode>> {
         let method = request.get_method();
         let path_with_query = request.get_path_with_query().unwrap_or_default();
         let path = path_with_query.split('?').next().unwrap_or_default();
 
-        otel_wasi::attribute!("http.route" = path.to_string());
+        otel_wasi::main_attribute!("http.route" = path.to_string());
 
         if path != "/auth/sentinel" {
-            otel_wasi::attribute!("http.response.status_code" = 404i64);
-            return plain_response(404, b"not found\n".to_vec());
+            otel_wasi::main_attribute!(
+                "http.response.status_code" = 404i64,
+                "auth.sentinel.outcome" = "not_found",
+            );
+            return plain_response(404, b"not found\n".to_vec())
+                .error_with_typed_slug("auth-sentinel-not-found");
         }
 
         if !matches!(method, Method::Get) {
-            otel_wasi::attribute!("http.response.status_code" = 405i64);
-            return plain_response(405, b"method not allowed\n".to_vec());
+            otel_wasi::main_attribute!(
+                "http.response.status_code" = 405i64,
+                "auth.sentinel.outcome" = "method_not_allowed",
+            );
+            return plain_response(405, b"method not allowed\n".to_vec())
+                .error_with_typed_slug("auth-sentinel-method-not-allowed");
         }
 
-        match sentinel_response_bytes() {
-            Ok(bytes) => {
-                otel_wasi::attribute!(
-                    "auth.sentinel.outcome" = "success",
-                    "http.response.status_code" = 200i64,
-                );
-                skir_response(200, bytes)
-            }
-            Err(SentinelError::MissingConfig) => {
-                otel_wasi::attribute!(
-                    "auth.sentinel.outcome" = "configuration_error",
-                    "http.response.status_code" = 500i64,
-                );
-                skir_response(500, configuration_error_bytes())
-            }
-            Err(SentinelError::InvalidCredentials) => {
-                otel_wasi::attribute!(
-                    "auth.sentinel.outcome" = "invalid_credentials",
-                    "http.response.status_code" = 500i64,
-                );
-                skir_response(500, invalid_credentials_bytes())
-            }
-        }
+        let bytes = sentinel_response_bytes()?;
+
+        otel_wasi::main_attribute!(
+            "auth.sentinel.outcome" = "success",
+            "http.response.status_code" = 200i64,
+        );
+        skir_response(200, bytes).error_with_typed_slug("auth-sentinel-response-build-failed")
     }
 }
 
-fn sentinel_response_bytes() -> Result<Vec<u8>, SentinelError> {
-    let creds = std::env::var("NATS_SENTINEL_CREDS").map_err(|_| SentinelError::MissingConfig)?;
+#[instrument]
+fn sentinel_response_bytes() -> Result<Vec<u8>, otel_wasi::Error<ErrorCode>> {
+    let creds = std::env::var("NATS_SENTINEL_CREDS").map_err(|_| {
+        ErrorCode::InternalError(Some("NATS_SENTINEL_CREDS not set".to_string()))
+            .with_typed_slug("auth-sentinel-missing-config")
+    })?;
 
     let jwt = extract_from_creds(
         &creds,
         "-----BEGIN NATS USER JWT-----",
         "------END NATS USER JWT------",
     )
-    .ok_or(SentinelError::InvalidCredentials)?;
+    .ok_or_else(|| {
+        ErrorCode::InternalError(Some("JWT missing from creds".to_string()))
+            .with_typed_slug("auth-sentinel-invalid-credentials")
+    })?;
 
     let seed = extract_from_creds(
         &creds,
         "-----BEGIN USER NKEY SEED-----",
         "------END USER NKEY SEED------",
     )
-    .ok_or(SentinelError::InvalidCredentials)?;
+    .ok_or_else(|| {
+        ErrorCode::InternalError(Some("seed missing from creds".to_string()))
+            .with_typed_slug("auth-sentinel-invalid-credentials")
+    })?;
+
+    otel_wasi::attribute!(
+        "auth.sentinel.creds.jwt.present" = true,
+        "auth.sentinel.creds.seed.present" = true,
+    );
 
     let response =
         GetSentinelCredentialsResponse::Success(Box::new(GetSentinelCredentialsResponse_Success {
@@ -93,24 +106,16 @@ fn sentinel_response_bytes() -> Result<Vec<u8>, SentinelError> {
     Ok(GetSentinelCredentialsResponse::serializer().to_bytes(&response))
 }
 
-fn configuration_error_bytes() -> Vec<u8> {
-    let response = GetSentinelCredentialsResponse::ConfigurationError(Box::new(
-        GetSentinelCredentialsResponse_ConfigurationError::default(),
-    ));
-    GetSentinelCredentialsResponse::serializer().to_bytes(&response)
-}
-
-fn invalid_credentials_bytes() -> Vec<u8> {
-    let response = GetSentinelCredentialsResponse::InvalidCredentials(Box::new(
-        GetSentinelCredentialsResponse_InvalidCredentials::default(),
-    ));
-    GetSentinelCredentialsResponse::serializer().to_bytes(&response)
-}
-
+#[instrument]
 fn extract_from_creds(creds: &str, begin_marker: &str, end_marker: &str) -> Option<String> {
     let start = creds.find(begin_marker)? + begin_marker.len();
     let end = creds[start..].find(end_marker)? + start;
-    Some(creds[start..end].trim().to_string())
+    let value = creds[start..end].trim().to_string();
+    otel_wasi::attribute!(
+        "auth.sentinel.creds.extract.marker" = begin_marker.to_string(),
+        "auth.sentinel.creds.extract.value.length" = value.len() as i64,
+    );
+    Some(value)
 }
 
 fn plain_response(status: u16, body_bytes: Vec<u8>) -> Result<Response, ErrorCode> {
@@ -169,8 +174,6 @@ fn response(
 fn internal_error(error: impl std::fmt::Display) -> ErrorCode {
     ErrorCode::InternalError(Some(error.to_string()))
 }
-
-bindings::export!(Component with_types_in bindings);
 
 #[cfg(test)]
 mod tests {

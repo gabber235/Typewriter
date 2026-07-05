@@ -1,4 +1,4 @@
-use otel_wasi::{ResultWithSlug, WithSlug, main_attribute, wasi_error};
+use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use wasmcloud_utils::skir::base::access::v1::permission::{EntityPermissionQualifier, Permissions};
 
 use crate::common::{AuthentikClaims, User, build_permissions};
@@ -153,7 +153,7 @@ async fn upsert_user(
     .bind("avatar_url", &avatar_url)
     .execute()
     .await
-    .map_err(|e| e.with_slug("user-db-upsert-failed"))?
+    .error_with_slug("user-db-upsert-failed")?
     .take::<Option<User>>(0)
     .error_with_slug("user-db-upsert-failed")?;
     Ok(())

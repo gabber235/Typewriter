@@ -6,7 +6,7 @@ wit_bindgen::generate!({
     generate_all,
 });
 
-use otel_wasi::{ResultWithSlug, WithSlug, main_attribute, wasi_error};
+use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use wasmcloud_utils::{
     skir::base::access::v1::permission::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
@@ -39,7 +39,10 @@ impl Guest for TypewriterPermissions {
             }
             Err(e) => {
                 main_attribute!("auth.outcome" = "failed");
-                return Err(e.with_slug("permissions-request-decode-failed"));
+                return Err(otel_wasi::Error::new(
+                    "permissions-request-decode-failed",
+                    e,
+                ));
             }
         };
 

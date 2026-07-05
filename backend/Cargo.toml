@@ -43,5 +43,8 @@ wit-bindgen = {
 
 [workspace.metadata.dylint]
 libraries = [
-  { git = "https://github.com/Seamlezz/otel-wasi", pattern = "otel-wasi-dylint" }
+  {
+    git = "https://github.com/Seamlezz/otel-wasi",
+    pattern = "otel-wasi-dylint"
+  }
 ]

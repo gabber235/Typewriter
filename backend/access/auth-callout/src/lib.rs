@@ -102,7 +102,10 @@ impl Guest for AuthCallout {
             Ok(data) => data,
             Err(e) => {
                 main_attribute!("auth.outcome" = "failed");
-                return Err(e.with_slug("auth-callout-response-encode-failed"));
+                return Err(otel_wasi::Error::new(
+                    "auth-callout-response-encode-failed",
+                    e,
+                ));
             }
         };
         main_attribute!("auth.response.encoded.size" = data.len() as i64);
@@ -242,7 +245,10 @@ fn validate_user_jwt<'a>(
                 "auth.jwt.validation.success" = false,
                 "auth.request.connect.user" = username.clone(),
             );
-            Err(e.with_slug("auth-callout-jwt-validation-failed"))
+            Err(otel_wasi::Error::new(
+                "auth-callout-jwt-validation-failed",
+                e,
+            ))
         }
     }
 }
