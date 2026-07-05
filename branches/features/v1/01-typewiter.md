@@ -9,6 +9,7 @@ sidebar:
   attrs: {}
 pagefind: true
 draft: false
+glossary: false
 ---
 
 Typewriter is a powerful Minecraft plugin that transforms how you create interactive experiences on your server. With Typewriter's intuitive web panel, you can build engaging content without writing a single line of code.

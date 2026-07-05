@@ -39,11 +39,11 @@ Typewriter is a powerful Minecraft plugin that transforms how you create interac
 [Section titled “Key Features”](#key-features)
 
 * **Interactive Dialogues & Quests:** Create dialogues, branching storylines, and dynamic quests that respond to player choices
-* **[Cinematic](/branches/features/v1/glossary/#cinematic) [Sequences](/branches/features/v1/glossary/#sequence):** Build dynamic camera paths, animated NPC [interactions](/branches/features/v1/glossary/#interaction), and immersive cutscenes that captivate your players
+* **Cinematic Sequences:** Build dynamic camera paths, animated NPC interactions, and immersive cutscenes that captivate your players
 * **Intelligent NPCs & Entities:** Custom activities, appearance changes and make player specific entities!
 * **Custom Commands:** Create server commands that trigger your custom content without any coding required
 * **Visual Configuration:** Manage all your content using a visual web panel specifically designed for ease of use
-* **[Extensions](/branches/features/v1/glossary/#extension) System:** Extend Typewriter’s functionality with modular components that integrate with custom plugins and create unique in-game experiences
+* **Extensions System:** Extend Typewriter’s functionality with modular components that integrate with custom plugins and create unique in-game experiences
 
 ## Why Choose Typewriter?
 
@@ -134,7 +134,7 @@ Hover any dotted term in the documentation to see its definition, or browse all 
 
 `cinematic``cinematics`
 
-A **cinematic** is a [page](/glossary/#page) type for building timed sequences of actions — camera paths, animations, and cutscenes made up of [segments](/glossary/#segment) arranged on a [track](/glossary/#track).
+A **cinematic** is a [page](/branches/features/v1/glossary/#page) type for building timed sequences of actions — camera paths, animations, and cutscenes made up of [segments](/branches/features/v1/glossary/#segment) arranged on a [track](/branches/features/v1/glossary/#track).
 
 ## Entry
 
@@ -167,25 +167,25 @@ An **interaction** is what a player actually experiences in game: a dialogue, qu
 
 `manifest``manifests`
 
-A **manifest** is a [page](/glossary/#page) type that holds the runtime calculated state of an interaction — values computed as the interaction progresses, rather than authored directly.
+A **manifest** is a [page](/branches/features/v1/glossary/#page) type that holds the runtime calculated state of an interaction — values computed as the interaction progresses, rather than authored directly.
 
 ## Page
 
 `page``pages`
 
-A **page** is a top-level container for entries in the web panel. Every page has a type — [Sequence](/glossary/#sequence), [Static](/glossary/#static), [Cinematic](/glossary/#cinematic), or [Manifest](/glossary/#manifest) — which determines what kind of entries it holds and how they connect.
+A **page** is a top-level container for entries in the web panel. Every page has a type — [Sequence](/branches/features/v1/glossary/#sequence), [Static](/branches/features/v1/glossary/#static), [Cinematic](/branches/features/v1/glossary/#cinematic), or [Manifest](/branches/features/v1/glossary/#manifest) — which determines what kind of entries it holds and how they connect.
 
 ## Segment
 
 `segment``segments`
 
-A **segment** is a block placed on a [cinematic](/glossary/#cinematic)’s [track](/glossary/#track). Segments can’t overlap each other, and each has its own show duration.
+A **segment** is a block placed on a [cinematic](/branches/features/v1/glossary/#cinematic)’s [track](/branches/features/v1/glossary/#track). Segments can’t overlap each other, and each has its own show duration.
 
 ## Sequence
 
 `sequence``sequences`
 
-A **sequence** is a [page](/glossary/#page) type whose entries play one after another as an interaction unfolds. Most dialogues and quests are built on sequence pages.
+A **sequence** is a [page](/branches/features/v1/glossary/#page) type whose entries play one after another as an interaction unfolds. Most dialogues and quests are built on sequence pages.
 
 ## Static
 
@@ -197,7 +197,7 @@ A **static** page holds entries that reference data which doesn’t change over 
 
 `track``tracks`
 
-The **track** is the timeline inside a [cinematic](/glossary/#cinematic) entry where [segments](/glossary/#segment) are placed and timed. Track duration is measured in Minecraft ticks — 20 ticks equal 1 second.
+The **track** is the timeline inside a [cinematic](/branches/features/v1/glossary/#cinematic) entry where [segments](/branches/features/v1/glossary/#segment) are placed and timed. Track duration is measured in Minecraft ticks — 20 ticks equal 1 second.
 
 # Asides
 
@@ -305,7 +305,7 @@ This tests the sidebar
 
 Warning
 
-If you are not sure you want an awesome docs site, think twice before using [Starlight](/).
+If you are not sure you want an awesome docs site, think twice before using [Starlight](/branches/features/v1/).
 
 Danger
 
@@ -313,7 +313,7 @@ Your users may be more productive and find your product easier to use thanks to 
 
 * Clear navigation
 * User-configurable colour theme
-* [i18n support](/guides/i18n/)
+* [i18n support](/branches/features/v1/guides/i18n/)
 
 # Cat Psychology Reference
 
