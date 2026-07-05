@@ -1,0 +1,24 @@
+---
+import { sponsors } from "./data";
+import { communityStyles as s } from "./styles";
+---
+
+<p class={s.sponsorsHeading}>
+  Thanks to our sponsors for supporting Typewriter's development.
+</p>
+<div class={s.sponsorsRow}>
+  {
+    sponsors.map((sponsor) => (
+      <a class={s.sponsorLink} href={sponsor.href}>
+        <img
+          class={s.sponsorAvatar}
+          src={sponsor.avatarUrl}
+          alt={sponsor.alt}
+          loading="lazy"
+          width={48}
+          height={48}
+        />
+      </a>
+    ))
+  }
+</div>

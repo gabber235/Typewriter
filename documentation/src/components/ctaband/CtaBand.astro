@@ -1,0 +1,23 @@
+---
+import { ctaBandStyles as s } from "./styles";
+import type { CtaBandProps } from "./types";
+
+interface Props extends CtaBandProps {}
+
+const { heading, body, primaryCta, secondaryCta } = Astro.props;
+---
+
+<div class={s.section}>
+  <h2 class={s.heading}>{heading}</h2>
+  {body && <p class={s.body}>{body}</p>}
+  <div class={s.ctaGroup}>
+    <a class={s.ctaPrimary} href={primaryCta.href}>{primaryCta.label}</a>
+    {
+      secondaryCta && (
+        <a class={s.ctaSecondary} href={secondaryCta.href}>
+          {secondaryCta.label}
+        </a>
+      )
+    }
+  </div>
+</div>

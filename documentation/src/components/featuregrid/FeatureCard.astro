@@ -1,0 +1,31 @@
+---
+import { Icon } from "@astrojs/starlight/components";
+import { featureGridStyles as s } from "./styles";
+import type { FeatureCardProps } from "./types";
+
+interface Props extends FeatureCardProps {}
+
+const { icon, title, description, media, href } = Astro.props;
+---
+
+{
+  href ? (
+    <a class={s.card} href={href}>
+      <Icon name={icon} class={s.icon} />
+      <h3 class={s.cardTitle}>{title}</h3>
+      <p class={s.cardDescription}>{description}</p>
+      {media && (
+        <img class={s.cardMedia} src={media.src} alt={media.alt} loading="lazy" />
+      )}
+    </a>
+  ) : (
+    <div class={s.card}>
+      <Icon name={icon} class={s.icon} />
+      <h3 class={s.cardTitle}>{title}</h3>
+      <p class={s.cardDescription}>{description}</p>
+      {media && (
+        <img class={s.cardMedia} src={media.src} alt={media.alt} loading="lazy" />
+      )}
+    </div>
+  )
+}

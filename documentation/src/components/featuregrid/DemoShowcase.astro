@@ -1,0 +1,14 @@
+---
+import { featureGridStyles as s } from "./styles";
+import type { DemoShowcaseProps } from "./types";
+
+interface Props extends DemoShowcaseProps {}
+
+const { title, description } = Astro.props;
+---
+
+<div class={s.showcase}>
+  <h2 class={s.showcaseHeading}>{title}</h2>
+  <p class={s.showcaseDescription}>{description}</p>
+  <slot />
+</div>

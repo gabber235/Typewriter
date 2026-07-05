@@ -11,6 +11,7 @@ const {
 	audio = false,
 	loop = !audio,
 	chapters = [],
+	preload = "auto",
 } = Astro.props;
 
 const videos = import.meta.glob<string>("/src/assets/**/*.{webm,mp4,ogg,mov}", {
@@ -38,7 +39,7 @@ const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
     loop={loop}
     muted={!audio}
     playsinline
-    preload="auto"></video>
+    preload={preload}></video>
 
   <!-- Center play/pause indicator -->
   <div class={s.centerIndicator} data-center-indicator>

@@ -1,0 +1,21 @@
+---
+const { entry } = Astro.locals.starlightRoute;
+---
+
+{
+	// Splash pages (the homepage) author their own heading inside the
+	// custom Hero — Starlight's default title only renders for normal docs.
+	entry.data.template !== "splash" && <h1 id="_top">{entry.data.title}</h1>
+}
+
+<style>
+	@layer starlight.core {
+		h1 {
+			margin-top: 1rem;
+			font-size: var(--sl-text-h1);
+			line-height: var(--sl-line-height-headings);
+			font-weight: 600;
+			color: var(--sl-color-white);
+		}
+	}
+</style>

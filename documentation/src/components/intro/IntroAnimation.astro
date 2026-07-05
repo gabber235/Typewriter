@@ -1,0 +1,635 @@
+---
+import blobBg from "@assets/home/blob-bg.png";
+import { BASE_PATH } from "../../base-path";
+import DiscordIcon from "./DiscordIcon.astro";
+import {
+	ARROW_COLS,
+	ARROW_GRID,
+	ARROW_ROWS,
+	gridToRects,
+	LOGO_COLS,
+	LOGO_GRID,
+	LOGO_PALETTE,
+	LOGO_ROWS,
+} from "./pixeldata";
+import {
+	LOGO_BOX,
+	LOGO_MOVE_MS,
+	LOGO_POP_MS,
+	SUB_DELAY_MS,
+	SUB_FADE_MS,
+	SUB_LEFT,
+	SUB_SIZE,
+	SUB_STAGGER_MS,
+	SUB_TOP,
+	TITLE_DELAY_MS,
+	TITLE_FADE_MS,
+	TITLE_LEFT,
+	TITLE_SIZE,
+	TITLE_STAGGER_MS,
+	TITLE_TOP,
+} from "./sprite";
+import type { IntroAnimationProps } from "./types";
+
+interface Props extends IntroAnimationProps {}
+
+const { primaryCta, secondaryCta } = Astro.props;
+
+const TITLE = "TYPEWRITER";
+const SUBTITLE = "NEXT GEN PLAYER INTERACTIONS";
+
+// tiny bleed so adjacent SVG rects never show hairline seams when scaled
+const BLEED = 0.05;
+
+// quoted: dev asset URLs can contain spaces, which break unquoted css url()
+const blobUrl = `background-image:url("${blobBg.src}")`;
+const fontDir = `${BASE_PATH}fonts`;
+
+interface Char {
+	ch: string;
+	delay: number | null;
+}
+
+// spaces render without animation; only visible glyphs consume a timing slot
+function chars(text: string, delayMs: number, staggerMs: number): Char[] {
+	let glyph = 0;
+	return [...text].map((ch) => {
+		if (ch === " ") return { ch, delay: null };
+		return { ch, delay: delayMs + glyph++ * staggerMs };
+	});
+}
+
+const titleChars = chars(TITLE, TITLE_DELAY_MS, TITLE_STAGGER_MS);
+const subChars = chars(SUBTITLE, SUB_DELAY_MS, SUB_STAGGER_MS);
+
+// the moment the subtitle's last letter finishes its reveal — reused as the
+// single "animation is done" mark for both the scroll-hint's own reveal and
+// the auto-reveal of the navbar, so nothing drifts out of sync with a
+// second hand-tuned number
+const subGlyphCount = subChars.filter((c) => c.delay !== null).length;
+const settleMs = Math.round(
+	SUB_DELAY_MS + (subGlyphCount - 1) * SUB_STAGGER_MS + SUB_FADE_MS,
+);
+
+const logoRects = gridToRects(LOGO_GRID, LOGO_PALETTE);
+const logoStyle = [
+	`left:${LOGO_BOX.left}px`,
+	`top:${LOGO_BOX.top}px`,
+	`width:${LOGO_BOX.w}px`,
+	`height:${LOGO_BOX.h}px`,
+].join(";");
+
+const arrowRects = gridToRects(ARROW_GRID);
+
+const logoPopDelay = LOGO_POP_MS.toFixed(1);
+const logoMoveDuration = LOGO_MOVE_MS.toFixed(1);
+
+// pixel-art down chevron for the scroll hint, same rect technique as the logo
+const chevronRects = [
+	{ x: 0, y: 0, w: 2 },
+	{ x: 6, y: 0, w: 2 },
+	{ x: 1, y: 1, w: 2 },
+	{ x: 5, y: 1, w: 2 },
+	{ x: 2, y: 2, w: 4 },
+	{ x: 3, y: 3, w: 2 },
+];
+
+// User-supplied font file (not bundled) in public/fonts/. Only the ttf is
+// referenced — listing a nonexistent woff2 would cost a 404 round-trip on
+// every load. Built server-side because css url() cannot read custom
+// properties and Astro does not interpolate inside <style> blocks.
+const fontUrl = `${fontDir}/minecraft-ten.ttf`;
+const fontFaceCss = `@font-face {
+	font-family: "Minecraft Ten";
+	src: url("${fontUrl}") format("truetype");
+	font-display: swap;
+}`;
+---
+
+<link
+  rel="preload"
+  href={fontUrl}
+  as="font"
+  type="font/ttf"
+  crossorigin
+/>
+<link rel="preload" href={blobBg.src} as="image" fetchpriority="high" />
+<style is:inline set:html={fontFaceCss}></style>
+
+<section
+  id="tw-intro"
+  data-blob={blobBg.src}
+  data-settle-ms={settleMs}
+  class="relative overflow-hidden">
+  <div class="absolute inset-0 flex" aria-hidden="true">
+    <div class="tw-intro-blob h-full w-1/2" style={blobUrl}></div>
+    <div
+      class="tw-intro-blob tw-intro-blob-flip h-full w-1/2"
+      style={blobUrl}>
+    </div>
+  </div>
+  <div class="tw-intro-stage">
+    <svg
+      class="tw-intro-logo"
+      style={logoStyle}
+      viewBox={`0 0 ${LOGO_COLS} ${LOGO_ROWS}`}
+      preserveAspectRatio="none"
+      shape-rendering="crispEdges"
+      role="img"
+      aria-label="Typewriter logo">
+      <title>Typewriter logo</title>
+      {
+        logoRects.map((r) => (
+          <rect
+            x={r.x}
+            y={r.y}
+            width={r.w + BLEED}
+            height={1 + BLEED}
+            fill={r.fill}
+          />
+        ))
+      }
+    </svg>
+    <h1 class="tw-intro-title" aria-label={TITLE}>
+      {
+        titleChars.map((c) => (
+          <span
+            class:list={[c.delay !== null && "tw-intro-ch"]}
+            style={
+              c.delay !== null
+                ? `animation-delay:${c.delay.toFixed(1)}ms;animation-duration:${TITLE_FADE_MS}ms`
+                : undefined
+            }>
+            {c.ch}
+          </span>
+        ))
+      }
+    </h1>
+    <p class="tw-intro-sub" aria-label={SUBTITLE}>
+      {
+        subChars.map((c) => (
+          <span
+            class:list={[
+              c.delay !== null && "tw-intro-ch",
+              c.delay !== null && "tw-intro-sub-ch",
+            ]}
+            style={
+              c.delay !== null
+                ? `animation-delay:${c.delay.toFixed(1)}ms;animation-duration:${SUB_FADE_MS}ms`
+                : undefined
+            }>
+            {c.ch}
+          </span>
+        ))
+      }
+    </p>
+    <div class="tw-intro-cta">
+      <a class="tw-intro-btn tw-intro-btn-primary" href={primaryCta.href}>
+        {
+          primaryCta.icon === "arrow" && (
+            <svg
+              class="tw-intro-btn-icon"
+              viewBox={`0 0 ${ARROW_COLS} ${ARROW_ROWS}`}
+              shape-rendering="crispEdges"
+              aria-hidden="true"
+            >
+              {arrowRects.map((r) => (
+                <rect
+                  x={r.x}
+                  y={r.y}
+                  width={r.w + BLEED}
+                  height={1 + BLEED}
+                  fill="currentColor"
+                />
+              ))}
+            </svg>
+          )
+        }
+        <span>{primaryCta.label}</span>
+      </a>
+      {
+        secondaryCta && (
+          <a class="tw-intro-btn tw-intro-btn-secondary" href={secondaryCta.href}>
+            {secondaryCta.icon === "discord" && (
+              <DiscordIcon class="tw-intro-btn-icon" />
+            )}
+            <span>{secondaryCta.label}</span>
+          </a>
+        )
+      }
+    </div>
+  </div>
+  <div class="tw-intro-scroll" aria-hidden="true">
+    <svg viewBox="0 0 8 4" shape-rendering="crispEdges">
+      {
+        chevronRects.map((r) => (
+          <rect x={r.x} y={r.y} width={r.w + BLEED} height={1 + BLEED} />
+        ))
+      }
+    </svg>
+  </div>
+</section>
+<noscript>
+  <style is:inline>
+    /* no JS: skip the animation, show the finished banner */
+    #tw-intro .tw-intro-logo,
+    #tw-intro .tw-intro-ch,
+    #tw-intro .tw-intro-scroll,
+    #tw-intro .tw-intro-cta {
+      opacity: 1 !important;
+      animation: none !important;
+    }
+  </style>
+</noscript>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const html = document.documentElement;
+    const root = document.getElementById("tw-intro");
+    if (!root) {
+      html.classList.remove("tw-scrolled", "tw-intro-settled");
+      return;
+    }
+    if (root.dataset.bound) return;
+    root.dataset.bound = "1";
+    // <html> persists across client-side navigation (unlike #tw-intro,
+    // which re-mounts fresh each visit) — clear any flags a previous visit
+    // to this page may have left so the animation always starts hidden.
+    html.classList.remove("tw-scrolled", "tw-intro-settled");
+
+    // navbar is hidden by default (plain CSS, see home.css) and reveals
+    // early if the user scrolls past the hero before the intro finishes;
+    // `tw-intro-settled` (below) reveals it permanently once the intro is
+    // done, whether or not anyone ever scrolls
+    const pane = document.querySelector(".content-pane");
+    if (pane) {
+      const syncScrolled = () =>
+        html.classList.toggle("tw-scrolled", pane.scrollTop >= 40);
+      syncScrolled();
+      pane.addEventListener("scroll", syncScrolled, { passive: true });
+    }
+
+    const settle = () => html.classList.add("tw-intro-settled");
+
+    const setScale = () => {
+      const box = root.getBoundingClientRect();
+      root.style.setProperty(
+        "--intro-scale",
+        String(Math.min(box.width / 1920, box.height / 1080)),
+      );
+    };
+    setScale();
+    new ResizeObserver(setScale).observe(root);
+
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      root.classList.add("tw-intro-still");
+      settle();
+      return;
+    }
+
+    // Start gates, in order: assets decoded -> page load event -> the frame
+    // rate is actually smooth. Extension content scripts and page-load work
+    // otherwise stutter the first frames of the bounce; an idle callback is
+    // not enough because it can fire mid-storm. Every gate has a cap so the
+    // intro always plays within a few seconds even on a dead network.
+    const whenLoaded = () =>
+      document.readyState === "complete"
+        ? Promise.resolve()
+        : Promise.race([
+            new Promise((r) => addEventListener("load", r, { once: true })),
+            new Promise((r) => setTimeout(r, 2500)),
+          ]);
+
+    // resolves after 6 consecutive rAF deltas under 35ms (smooth at both
+    // 60Hz and 30Hz displays); jank spikes reset the streak
+    const whenSmooth = () =>
+      new Promise((resolve) => {
+        const deadline = performance.now() + 2000;
+        let last = 0;
+        let streak = 0;
+        const tick = (now) => {
+          streak = last && now - last < 35 ? streak + 1 : 0;
+          last = now;
+          if (streak >= 6 || now > deadline) return resolve();
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+
+    const blob = new Image();
+    blob.src = root.dataset.blob;
+    const ready = [
+      blob.decode().catch(() => {}),
+      document.fonts.load('135px "Minecraft Ten"').catch(() => {}),
+    ];
+    Promise.race([
+      Promise.all(ready),
+      new Promise((r) => setTimeout(r, 2500)),
+    ])
+      .then(whenLoaded)
+      .then(whenSmooth)
+      .then(() => {
+        root.classList.add("tw-intro-play");
+        setTimeout(settle, Number(root.dataset.settleMs));
+      });
+  })();
+</script>
+
+<style
+  define:vars={{
+    logoPopDelay: `${logoPopDelay}ms`,
+    logoMoveDuration: `${logoMoveDuration}ms`,
+    settleMs: `${settleMs}ms`,
+  }}
+>
+  /* The finished animation IS the page header: an in-flow, full-viewport
+     banner. The custom ContentPanel override (src/components/contentpanel)
+     already skips its padding entirely on template:splash, so this runs
+     edge to edge with no compensating margin needed here. */
+  #tw-intro {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 24rem;
+  }
+
+  /* Background: the blob texture twice, right half mirrored, each stretched
+     to fill its half — exactly how the banner video composes it. */
+  .tw-intro-blob {
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+  }
+  .tw-intro-blob-flip {
+    transform: scaleX(-1);
+  }
+
+  /* 1920x1080 design-space stage, letterboxed into the banner box. */
+  .tw-intro-stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1920px;
+    height: 1080px;
+    transform: translate(-50%, -50%) scale(var(--intro-scale, 1));
+  }
+
+  /* #tw-intro prefix outranks global.css's `.sl-markdown-content :is(h1, ...)`
+     heading font override, which would otherwise beat this class selector */
+  #tw-intro .tw-intro-title,
+  #tw-intro .tw-intro-sub {
+    position: absolute;
+    margin: 0;
+    font-family: "Minecraft Ten", var(--font-mono);
+    line-height: 1;
+    white-space: nowrap;
+    font-weight: 400;
+  }
+  /* font-size = measured glyph height in stage px; nudge if the font's cap
+     height doesn't fill the em box */
+  .tw-intro-title {
+    left: 716px;
+    top: 470px;
+    font-size: 135.5px;
+    color: #ede9e8;
+  }
+  .tw-intro-sub {
+    left: 734px;
+    top: 620px;
+    font-size: 50.6px;
+    color: #1ab4ff;
+  }
+
+  /* CTAs: not part of the source banner, added below the subtitle to make
+     the recreation a working hero. Pixel-button look (hard edges, layered
+     inset box-shadow bevel) to match the rest of the scene rather than the
+     site's usual rounded pill buttons. */
+  .tw-intro-cta {
+    position: absolute;
+    left: 734px;
+    top: 730px;
+    display: flex;
+    gap: 28px;
+    opacity: 0;
+  }
+  .tw-intro-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-width: 380px;
+    font-family: "Minecraft Ten", var(--font-mono);
+    font-size: 28px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 20px 40px;
+    transition:
+      transform 80ms steps(1),
+      filter 120ms ease,
+      background-color 120ms ease;
+  }
+  /* display:block avoids the few px of baseline whitespace inline <svg>
+     normally carries, which throws off vertical centering next to text;
+     image-rendering keeps the Discord glyph's hard edges crisp when
+     scaled way down from its native 2048px viewBox. */
+  .tw-intro-btn-icon {
+    display: block;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+  .tw-intro-btn:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.1);
+  }
+  .tw-intro-btn:active {
+    transform: translateY(2px);
+    filter: brightness(0.95);
+  }
+  .tw-intro-btn-primary {
+    background: #1ab4ff;
+    color: #04121e;
+    box-shadow:
+      inset 4px 4px 0 0 rgba(255, 255, 255, 0.4),
+      inset -4px -4px 0 0 rgba(0, 0, 0, 0.35);
+  }
+  /* Discord's actual brand palette (blurple #5865f2, hover shade #4752c4)
+     rather than the site's generic accent — this button always links to
+     Discord in practice, so it's styled to be recognizably a Discord button
+     rather than a generic "secondary" one. The color-shift on hover is an
+     explicit background swap (Discord's own hover shade), not the generic
+     brightness() filter every other button uses, since brightness() would
+     lighten toward white instead of Discord's darker hover tone. */
+  .tw-intro-btn-secondary {
+    background: #5865f2;
+    color: #ffffff;
+    box-shadow:
+      inset 4px 4px 0 0 rgba(255, 255, 255, 0.35),
+      inset -4px -4px 0 0 rgba(0, 0, 0, 0.35);
+  }
+  .tw-intro-btn-secondary:hover {
+    background: #4752c4;
+    filter: none;
+  }
+
+  .tw-intro-logo,
+  .tw-intro-ch {
+    opacity: 0;
+  }
+  .tw-intro-logo {
+    position: absolute;
+    /* own compositor layer: the 1.1s transform animation never re-rasters */
+    will-change: transform;
+  }
+  .tw-intro-ch {
+    display: inline-block;
+  }
+
+  /* scroll hint: fades in once the typing has finished, floats gently */
+  .tw-intro-scroll {
+    position: absolute;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translateX(-50%);
+    width: 2rem;
+    opacity: 0;
+  }
+  .tw-intro-scroll svg {
+    display: block;
+    width: 100%;
+    fill: #ede9e8;
+    opacity: 0.75;
+    animation: tw-intro-float 1.8s ease-in-out infinite;
+  }
+  .tw-intro-play .tw-intro-scroll {
+    animation: tw-intro-pop 400ms linear var(--settleMs) forwards;
+  }
+  .tw-intro-play .tw-intro-cta {
+    animation: tw-intro-pop 400ms linear var(--settleMs) forwards;
+  }
+
+  @keyframes tw-intro-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+  }
+
+  /* reduced motion: skip straight to the finished banner */
+  .tw-intro-still .tw-intro-logo,
+  .tw-intro-still .tw-intro-ch,
+  .tw-intro-still .tw-intro-scroll,
+  .tw-intro-still .tw-intro-cta {
+    opacity: 1;
+  }
+  .tw-intro-still .tw-intro-scroll svg {
+    animation: none;
+  }
+
+  .tw-intro-play .tw-intro-logo {
+    animation:
+      tw-intro-pop 1ms linear var(--logoPopDelay) forwards,
+      tw-intro-slide var(--logoMoveDuration) linear var(--logoPopDelay)
+        forwards;
+  }
+  .tw-intro-play .tw-intro-ch {
+    animation-name: tw-intro-pop;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  /* subtitle letters reveal top-to-bottom in place (a clip wipe, verified
+     frame-by-frame against the source video — the glyph never moves, a
+     clip line sweeps down to uncover more of it) rather than fading as a
+     whole like the title does. Same specificity as the rule above (two
+     classes each) so source order below it is what makes this win on
+     .tw-intro-sub-ch elements. */
+  .tw-intro-play .tw-intro-sub-ch {
+    animation-name: tw-intro-wipe;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes tw-intro-pop {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes tw-intro-wipe {
+    from {
+      opacity: 1;
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      opacity: 1;
+      clip-path: inset(0 0 0% 0);
+    }
+  }
+
+  /* Logo path sampled per-frame from the source video: pops in ~10%
+     oversized, squashes to ~0.9x around its own center (impact bounce),
+     slides left while scaling back to 1x, overshoots ~10px, settles.
+     translateX is relative to the settled box. */
+  @keyframes tw-intro-slide {
+    0% {
+      transform: translateX(586.5px) scale(1.096);
+    }
+    5.9% {
+      transform: translateX(586.5px) scale(1.077);
+    }
+    11.8% {
+      transform: translateX(586.5px) scale(1.028);
+    }
+    17.6% {
+      transform: translateX(586.5px) scale(0.972);
+    }
+    23.5% {
+      transform: translateX(586.5px) scale(0.925);
+    }
+    29.4% {
+      transform: translateX(586.5px) scale(0.904);
+    }
+    32.4% {
+      transform: translateX(581px) scale(0.913);
+    }
+    35.3% {
+      transform: translateX(566px) scale(0.937);
+    }
+    41.2% {
+      transform: translateX(512px) scale(0.97);
+    }
+    47.1% {
+      transform: translateX(444px) scale(0.99);
+    }
+    52.9% {
+      transform: translateX(371px) scale(1);
+    }
+    58.8% {
+      transform: translateX(296px) scale(1);
+    }
+    64.7% {
+      transform: translateX(218px) scale(1);
+    }
+    70.6% {
+      transform: translateX(144px) scale(1);
+    }
+    76.5% {
+      transform: translateX(77px) scale(1);
+    }
+    82.4% {
+      transform: translateX(26px) scale(1);
+    }
+    88.2% {
+      transform: translateX(-5px) scale(1);
+    }
+    91.2% {
+      transform: translateX(-10px) scale(1);
+    }
+    100% {
+      transform: translateX(0) scale(1);
+    }
+  }
+</style>

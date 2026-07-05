@@ -1,40 +1,103 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
-hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
-  actions:
-    - text: Example Guide
-      link: guides/
-      icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+title: Typewriter
+description: Build interactive quests, NPC dialogues, and cinematic sequences on your Paper Minecraft server — no coding required, endlessly extensible for developers.
+template: splash
+tableOfContents: false
+editUrl: false
+lastUpdated: false
+prev: false
+next: false
+glossary: false
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { AudienceCard, AudienceSplit } from '@components/audiencesplit';
+import { CommunityBand } from '@components/community';
+import { CtaBand } from '@components/ctaband';
+import { DemoShowcase, FeatureCard, FeatureGrid } from '@components/featuregrid';
+import { Home } from '@components/home';
+import { IntroAnimation } from '@components/intro';
+import { VideoPlayer } from '@components/video';
+import panelDemo from '@assets/home/panel-demo.png';
+import { BASE_PATH } from '../../base-path';
 
-## Next steps
+<Home>
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
-</CardGrid>
+<IntroAnimation
+	primaryCta={{ label: 'Get Started', href: './01-typewiter', icon: 'arrow' }}
+	secondaryCta={{ label: 'Join Discord', href: 'https://discord.gg/HtbKyuDDBw', icon: 'discord' }}
+/>
+
+<FeatureGrid>
+	<FeatureCard
+		icon="comment-alt"
+		title="Interactive Dialogues & Quests"
+		description="Create dialogues, branching storylines, and dynamic quests that respond to player choices."
+		media={{ src: `${BASE_PATH}media/chat-messages.gif`, alt: 'A Typewriter NPC dialogue with branching player choices' }}
+	/>
+	<FeatureCard
+		icon="rocket"
+		title="Cinematic Sequences"
+		description="Build dynamic camera paths, animated NPC interactions, and immersive cutscenes that captivate your players."
+	/>
+	<FeatureCard
+		icon="random"
+		title="Intelligent NPCs & Entities"
+		description="Custom activities, appearance changes, and player-specific entities that feel alive."
+	/>
+	<FeatureCard
+		icon="forward-slash"
+		title="Custom Commands"
+		description="Create server commands that trigger your custom content — no coding required."
+	/>
+	<FeatureCard
+		icon="laptop"
+		title="Visual Configuration"
+		description="Manage all your content using a visual web panel designed for ease of use."
+		media={{ src: panelDemo.src, alt: 'The Typewriter web panel interface' }}
+	/>
+	<FeatureCard
+		icon="puzzle"
+		title="Extensions System"
+		description="Extend Typewriter with modular components that integrate custom plugins and unique in-game experiences."
+		href="https://github.com/Gabber235/typewriter"
+	/>
+</FeatureGrid>
+
+<DemoShowcase
+	title="Watch Typewriter in action"
+	description="A complete walkthrough of the web panel and the interactive experiences you can build with it."
+>
+	<VideoPlayer
+		src="@assets/videos/home/tw-demo.mp4"
+		poster={panelDemo.src}
+		preload="none"
+	/>
+</DemoShowcase>
+
+<AudienceSplit>
+	<AudienceCard
+		eyebrow="For Admins"
+		heading="No coding required"
+		body="Configure complex interactions, NPCs, and quests through the visual web panel — even without prior coding knowledge. Need something specific? The extension system makes customization easy."
+		accent="primary"
+		cta={{ label: 'Read the docs', href: './01-typewiter' }}
+	/>
+	<AudienceCard
+		eyebrow="For Developers"
+		heading="Built to be extended"
+		body="Typewriter is built to be highly extensible. The extensions system lets you build modular, reusable components that seamlessly integrate with the plugin."
+		accent="secondary"
+		cta={{ label: 'Explore the code', href: 'https://github.com/Gabber235/typewriter' }}
+	/>
+</AudienceSplit>
+
+<CommunityBand />
+
+<CtaBand
+	heading="Ready to bring your server to life?"
+	body="Join the beta and start building interactive experiences today."
+	primaryCta={{ label: 'Get Started', href: './01-typewiter' }}
+	secondaryCta={{ label: 'Join Discord', href: 'https://discord.gg/HtbKyuDDBw' }}
+/>
+
+</Home>

@@ -1,0 +1,36 @@
+---
+import logo from "@assets/logo.png";
+import HeroBackground from "./HeroBackground.astro";
+import { heroStyles as s } from "./styles";
+import type { HeroSectionProps } from "./types";
+
+interface Props extends HeroSectionProps {}
+
+const { title, tagline, backgroundSrc, primaryCta, secondaryCta } = Astro.props;
+---
+
+<section class={s.section}>
+  <HeroBackground src={backgroundSrc} />
+  <div class={s.overlay} />
+  <div class={s.content}>
+    <img
+      class={s.logo}
+      src={logo.src}
+      width={logo.width}
+      height={logo.height}
+      alt="Typewriter logo"
+    />
+    <h1 class={s.title}>{title}</h1>
+    <p class={s.tagline}>{tagline}</p>
+    <div class={s.ctaGroup}>
+      <a class={s.ctaPrimary} href={primaryCta.href}>{primaryCta.label}</a>
+      {
+        secondaryCta && (
+          <a class={s.ctaSecondary} href={secondaryCta.href}>
+            {secondaryCta.label}
+          </a>
+        )
+      }
+    </div>
+  </div>
+</section>

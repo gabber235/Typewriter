@@ -9,4 +9,5 @@ export interface VideoPlayerProps {
 	loop?: boolean;
 	audio?: boolean;
 	chapters?: Chapter[];
+	preload?: "auto" | "metadata" | "none";
 }

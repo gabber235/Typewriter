@@ -1,0 +1,25 @@
+---
+import { audienceSplitStyles as s } from "./styles";
+import type { AudienceCardProps } from "./types";
+
+interface Props extends AudienceCardProps {}
+
+const { eyebrow, heading, body, accent, cta } = Astro.props;
+const isPrimary = accent === "primary";
+---
+
+<div class:list={[s.card, isPrimary ? s.cardPrimary : s.cardSecondary]}>
+  <span
+    class:list={[s.eyebrow, isPrimary ? s.eyebrowPrimary : s.eyebrowSecondary]}
+  >
+    {eyebrow}
+  </span>
+  <h3 class={s.heading}>{heading}</h3>
+  <p class={s.body}>{body}</p>
+  <a
+    class:list={[s.cta, isPrimary ? s.ctaPrimary : s.ctaSecondary]}
+    href={cta.href}
+  >
+    {cta.label}
+  </a>
+</div>

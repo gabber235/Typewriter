@@ -34,7 +34,10 @@ const { hasSidebar } = Astro.locals.starlightRoute;
     )
   }
   <div
-    class="content-pane fixed top-14 right-0 bottom-0 left-0 md:left-80 md:rounded-tl-2xl z-40 bg-(--surface-container-lowest) overflow-y-auto">
+    class:list={[
+      "content-pane fixed top-14 right-0 bottom-0 left-0 z-40 bg-(--surface-container-lowest) overflow-y-auto",
+      hasSidebar && "md:left-80 md:rounded-tl-2xl",
+    ]}>
     <slot />
   </div>
 </div>

@@ -1,0 +1,35 @@
+/* The homepage opts out of the narrow `40vw` reading column that
+   `global.css` sets for prose docs at >=1152px — a full-bleed marketing
+   layout needs the full viewport width. Scoped to `.tw-home` (set by
+   `src/components/home/Home.astro`) so no other page is affected. */
+body:has(.tw-home) {
+	--sl-content-width: 100%;
+}
+
+/* Below-the-fold homepage sections skip layout/paint until scrolled near —
+   keeps the intro animation smooth on slow devices. The placeholder size
+   only reserves scrollbar space; real layout happens on approach. */
+.tw-home > :not(#tw-intro) {
+	content-visibility: auto;
+	contain-intrinsic-size: auto 40rem;
+}
+
+/* Full-screen hero: the scroll pane covers the whole viewport on the
+   homepage. The navbar starts hidden from the very first paint — a plain
+   CSS default, no JS required — so there is no flash of it appearing and
+   then sliding away. It reveals early if the user scrolls past the hero
+   (`tw-scrolled`) or permanently once the intro animation finishes on its
+   own (`tw-intro-settled`, added by a timer in IntroAnimation.astro) —
+   whichever comes first. Other pages never match the :has(.tw-home)
+   guard, so a lingering class is harmless there. */
+body:has(.tw-home) .content-pane {
+	top: 0;
+}
+body:has(.tw-home) header.fixed {
+	transform: translateY(-100%);
+	transition: transform 0.25s ease;
+}
+html.tw-scrolled body:has(.tw-home) header.fixed,
+html.tw-intro-settled body:has(.tw-home) header.fixed {
+	transform: translateY(0);
+}

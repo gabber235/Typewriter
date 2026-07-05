@@ -71,7 +71,7 @@ export default defineConfig({
 					href: "https://github.com/Gabber235/typewriter",
 				},
 			],
-			customCss: ["./src/styles/global.css"],
+			customCss: ["./src/styles/global.css", "./src/styles/home.css"],
 			tableOfContents: {
 				minHeadingLevel: 2,
 				maxHeadingLevel: 4,
@@ -85,6 +85,8 @@ export default defineConfig({
 				ThemeSelect: "./src/components/header/ThemeSelect.astro",
 				PageSidebar: "./src/components/pagesidebar/PageSidebar.astro",
 				Pagination: "./src/components/pagination/Pagination.astro",
+				PageTitle: "./src/components/pagetitle/PageTitle.astro",
+				ContentPanel: "./src/components/contentpanel/ContentPanel.astro",
 			},
 			plugins: [starlightLlmsTxt(), starlightDotMd()],
 		}),

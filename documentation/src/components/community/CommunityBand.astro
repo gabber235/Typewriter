@@ -1,0 +1,19 @@
+---
+import { Icon } from "@astrojs/starlight/components";
+import SponsorAvatars from "./SponsorAvatars.astro";
+import { communityStyles as s } from "./styles";
+---
+
+<div class={s.section}>
+  <div class={s.links}>
+    <a class={s.linkBase} href="https://discord.gg/HtbKyuDDBw">
+      <Icon name="discord" class={s.icon} />
+      Join the Discord
+    </a>
+    <a class={s.linkBase} href="https://github.com/Gabber235/typewriter">
+      <Icon name="github" class={s.icon} />
+      Star on GitHub
+    </a>
+  </div>
+  <SponsorAvatars />
+</div>

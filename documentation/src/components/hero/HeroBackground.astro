@@ -1,0 +1,34 @@
+---
+import { heroStyles as s } from "./styles";
+import type { HeroBackgroundProps } from "./types";
+
+interface Props extends HeroBackgroundProps {}
+
+const { src, poster } = Astro.props;
+---
+
+<video
+  class={s.background}
+  data-hero-bg
+  src={src}
+  poster={poster}
+  autoplay
+  muted
+  loop
+  playsinline
+  preload="auto"></video>
+
+<script>
+  function pauseIfReducedMotion() {
+    const prefersReducedMotion = matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (!prefersReducedMotion) return;
+    document
+      .querySelectorAll<HTMLVideoElement>("[data-hero-bg]")
+      .forEach((video) => video.pause());
+  }
+
+  document.addEventListener("astro:after-swap", pauseIfReducedMotion);
+  document.addEventListener("astro:page-load", pauseIfReducedMotion);
+</script>
