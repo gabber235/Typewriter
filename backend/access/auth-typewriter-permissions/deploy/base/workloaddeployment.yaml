@@ -31,10 +31,5 @@ spec:
           version: "0.2.0"
           interfaces:
             - call
-          config:
-            url: http://surrealdb.surrealdb.svc.cluster.local:8000
-            namespace: typewriter
-            database: production
-            username: root
           secretFrom:
-            - name: TODO
+            - name: surrealdb-credentials-auth-typewriter-permissions
