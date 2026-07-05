@@ -11,9 +11,9 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../test_utils.dart";
 
 BuildContext _graphActionsContext(WidgetTester tester) {
-  final actions = find
-      .descendant(of: find.byType(Graph), matching: find.byType(Actions))
-      .first;
+  final actions = find.byWidgetPredicate(
+    (w) => w is Actions && w.actions.containsKey(GraphMoveIntent),
+  );
   final descendants = find
       .descendant(of: actions, matching: find.byWidgetPredicate((w) => true))
       .evaluate()
@@ -22,7 +22,6 @@ BuildContext _graphActionsContext(WidgetTester tester) {
 }
 
 void main() {
-
   group("Graph move/resize intents", () {
     testWidgets("GraphMoveIntent moves selected single element", (
       tester,
