@@ -52,7 +52,8 @@ class AuthConfig {
 
   String get frontChannelLogoutUri => const String.fromEnvironment(
     "AUTH_FRONT_CHANNEL_LOGOUT_URI",
-    defaultValue: "https://panel.typewritermc.com/redirect.html",
+    defaultValue:
+        "https://panel.typewritermc.com/redirect.html?requestType=front-channel-logout",
   );
 
   String get discoveryDocumentUri => const String.fromEnvironment(
