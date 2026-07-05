@@ -9,6 +9,11 @@
       "name": "gitops",
       "source": "github.com/seamlezz/daggerverse/gitops@gitops/v0.5.0",
       "pin": "557b92234cd63469e3b04bbc3f649602b7ab984d"
+    },
+    {
+      "name": "wash",
+      "source": "github.com/seamlezz/daggerverse/wash@wash/v0.3.0",
+      "pin": "4757d973533ab5f5f2fa34a41e8115349d9ca805"
     }
   ],
   "source": ".dagger"
