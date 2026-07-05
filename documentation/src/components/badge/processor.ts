@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { BASE_PATH } from "../../base-path";
 import { getBadge } from "./styles";
 import type { Badge, BadgeVariant } from "./types";
 
@@ -36,8 +37,10 @@ export async function processSidebarBadges(
 	for (const entry of docsEntries) {
 		const badge = entry.data.badge as BadgeVariant | undefined;
 		if (badge) {
-			// Convert slug to href format (e.g., "guides/03-test/index" -> "/guides/03-test/")
-			const href = `/${entry.id.replace(/\/index$/, "").replace(/\.mdx?$/, "")}/`;
+			// Convert slug to href format (e.g., "guides/03-test/index" ->
+			// "/guides/03-test/", or "/branches/pr-123/guides/03-test/" under a
+			// non-root base) to match the sidebar entry's actual `href`.
+			const href = `${BASE_PATH}${entry.id.replace(/\/index$/, "").replace(/\.mdx?$/, "")}/`;
 			badgeMap.set(href, badge);
 		}
 	}
