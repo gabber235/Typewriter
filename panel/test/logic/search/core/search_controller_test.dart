@@ -21,7 +21,7 @@ void main() {
         final notifications = recordNotifications(controller);
         addTearDown(notifications.dispose);
 
-        controller.toggleSelected("a");
+        controller.toggleSelected("a", isMultiSelect: false);
         controller.toggleSection("section");
 
         expect(controller.isSelected("a"), isTrue);
@@ -57,8 +57,8 @@ void main() {
             ],
           ),
         );
-        controller.toggleSelected("a");
-        controller.toggleSelected("b");
+        controller.toggleSelected("a", isMultiSelect: false);
+        controller.toggleSelected("b", isMultiSelect: false);
 
         source.emitSnapshot(
           readySnapshot(
@@ -90,7 +90,7 @@ void main() {
           actions: {TestSingleAction: action},
         ),
       );
-      controller.toggleSelected("a");
+      controller.toggleSelected("a", isMultiSelect: false);
 
       expect(
         controller.executeAction(TestSingleAction),
@@ -134,7 +134,7 @@ void main() {
           actions: {TestSingleAction: action},
         ),
       );
-      controller.toggleSelected("a");
+      controller.toggleSelected("a", isMultiSelect: false);
 
       controller.executeAction(TestSingleAction);
       await Future<void>.delayed(Duration.zero);
@@ -181,7 +181,7 @@ void main() {
         );
         controller.updateQuery("current #tag");
         final firstContext = source.lastSearchContext;
-        controller.toggleSelected("a");
+        controller.toggleSelected("a", isMultiSelect: false);
 
         controller.executeAction(TestSingleAction);
         await Future<void>.delayed(Duration.zero);
@@ -209,7 +209,7 @@ void main() {
           actions: {TestSingleAction: action},
         ),
       );
-      controller.toggleSelected("a");
+      controller.toggleSelected("a", isMultiSelect: false);
 
       controller.executeAction(TestSingleAction);
       controller.updateQuery("user #wins");
