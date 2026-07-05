@@ -10,7 +10,7 @@
 
 Update content
 
-Edit `src/content/docs/index.mdx` to see this page change.
+Edit `src/content/docs/index.mdx` to see this [page](/branches/features/v1/glossary/#page) change.
 
 Change page layout
 
@@ -39,11 +39,11 @@ Typewriter is a powerful Minecraft plugin that transforms how you create interac
 [Section titled “Key Features”](#key-features)
 
 * **Interactive Dialogues & Quests:** Create dialogues, branching storylines, and dynamic quests that respond to player choices
-* **Cinematic Sequences:** Build dynamic camera paths, animated NPC interactions, and immersive cutscenes that captivate your players
+* **[Cinematic](/branches/features/v1/glossary/#cinematic) [Sequences](/branches/features/v1/glossary/#sequence):** Build dynamic camera paths, animated NPC [interactions](/branches/features/v1/glossary/#interaction), and immersive cutscenes that captivate your players
 * **Intelligent NPCs & Entities:** Custom activities, appearance changes and make player specific entities!
 * **Custom Commands:** Create server commands that trigger your custom content without any coding required
 * **Visual Configuration:** Manage all your content using a visual web panel specifically designed for ease of use
-* **Extensions System:** Extend Typewriter’s functionality with modular components that integrate with custom plugins and create unique in-game experiences
+* **[Extensions](/branches/features/v1/glossary/#extension) System:** Extend Typewriter’s functionality with modular components that integrate with custom plugins and create unique in-game experiences
 
 ## Why Choose Typewriter?
 
@@ -70,11 +70,140 @@ Typewriter is currently in beta. While stable for most uses, you may encounter o
 
 Ready to enhance your server with interactive experiences? Let’s get started with [installation](./..)!
 
+# Layout
+
+> explain the different layouts of the Typewriter Web panel.
+
+On this [page](/branches/features/v1/glossary/#page), you will learn how to use the Typewriter Web panel and create certain things.
+
+## Creating a page
+
+[Section titled “Creating a page”](#creating-a-page)
+
+To create a page, simply click the button `Add Page` then enter the name of the page. It can’t be a duplicate name of an already existing page. Select one of the four types:
+
+* **[Sequence](/branches/features/v1/glossary/#sequence)**: Create [interactions](/branches/features/v1/glossary/#interaction) that can be played after each other.
+* **[Static](/branches/features/v1/glossary/#static)** : Referencing to data that doesn’t change over the lifetime of the program.
+* **[Cinematic](/branches/features/v1/glossary/#cinematic)**: Timed sequences of actions.
+* **[Manifest](/branches/features/v1/glossary/#manifest)**: In the runtime calculated state of the interaction.
+
+Now that we have created a sequence page, I will explain how the different layouts works.
+
+## Base Layout
+
+[Section titled “Base Layout”](#base-layout)
+
+1. **Page list**: This is where you can see all the pages that you have created. You can also create new pages here.
+
+2. **Action bar**: There are multiple actions that you can perform by clicking on the buttons from left to right:
+
+   * **Staging Indicator**: orange indicates that changes are not active on the server, and green means they are. Just hover over it to reveal the “Publish” button, and click it if you want to publish your staged pages to the server.
+   * **Search bar**: Use this to search for [entries](https://docs.typewritermc.com/docs/getting-started/layout) or create new ones.
+   * **+ button**: Click here to create new entries.
+
+**[Inspector](/branches/features/v1/glossary/#inspector)**: This is where you can edit the properties of the selected entry.
+
+3. **Entry Information**: Here you can view all the information about an entry, such as the ID and name.
+4. **Fields**: Use this section to edit the properties of the entries.
+5. **Operations**: This section contains various actions that you can perform with the entry.
+
+## Sequence, static and manifest layout
+
+[Section titled “Sequence, static and manifest layout”](#sequence-static-and-manifest-layout)
+
+* In the center, all your entries are shown.
+* Use your mouse’s scroll wheel to zoom in or out.
+* Click on an entry to open it in the inspector.
+* When holding an entry for a few seconds, it makes it drag and drop so you can connect it with other entries.
+
+## Cinematic layout
+
+[Section titled “Cinematic layout”](#cinematic-layout)
+
+1. **[Segments](/branches/features/v1/glossary/#segment)**: Inside a cinematic entry, you can create segments, which are displayed on your [track](/branches/features/v1/glossary/#track). Segments can’t overlap each other.
+2. **Track**: This is where you can see all the segments that you have created and edit their show duration.
+3. **Track Duration**: Here, you can edit the duration of the track. The track duration is in Minecraft ticks, so 20 ticks equals 1 second.
+
+# Glossary
+
+> Definitions of terms used throughout the Typewriter documentation.
+
+Hover any dotted term in the documentation to see its definition, or browse all terms below.
+
+## Cinematic
+
+`cinematic``cinematics`
+
+A **cinematic** is a [page](/glossary/#page) type for building timed sequences of actions — camera paths, animations, and cutscenes made up of [segments](/glossary/#segment) arranged on a [track](/glossary/#track).
+
+## Entry
+
+`entry``entries`
+
+An **entry** is the smallest building block of Typewriter content. Pages are made up of entries: dialogues, actions, events, cinematics, and more, each provided by an extension.
+
+* **Static entries** define reusable data, like NPC definitions.
+* **Triggerable entries** run as part of an interaction.
+
+## Extension
+
+`extension``extensions`
+
+An **extension** is a modular add-on that provides new entries to Typewriter. Extensions are `.jar` files placed in the `plugins/Typewriter/extensions` folder. The `BasicExtension` ships the essential entries most servers need.
+
+## Inspector
+
+`inspector`
+
+The **inspector** is the web panel pane where you edit the selected entry: its information (ID and name), its fields, and the operations available on it.
+
+## Interaction
+
+`interaction``interactions`
+
+An **interaction** is what a player actually experiences in game: a dialogue, quest, or cinematic composed of connected entries. Interactions start when a trigger fires and follow the flow you build in the web panel.
+
+## Manifest
+
+`manifest``manifests`
+
+A **manifest** is a [page](/glossary/#page) type that holds the runtime calculated state of an interaction — values computed as the interaction progresses, rather than authored directly.
+
+## Page
+
+`page``pages`
+
+A **page** is a top-level container for entries in the web panel. Every page has a type — [Sequence](/glossary/#sequence), [Static](/glossary/#static), [Cinematic](/glossary/#cinematic), or [Manifest](/glossary/#manifest) — which determines what kind of entries it holds and how they connect.
+
+## Segment
+
+`segment``segments`
+
+A **segment** is a block placed on a [cinematic](/glossary/#cinematic)’s [track](/glossary/#track). Segments can’t overlap each other, and each has its own show duration.
+
+## Sequence
+
+`sequence``sequences`
+
+A **sequence** is a [page](/glossary/#page) type whose entries play one after another as an interaction unfolds. Most dialogues and quests are built on sequence pages.
+
+## Static
+
+`static`
+
+A **static** page holds entries that reference data which doesn’t change over the lifetime of the program, such as NPC definitions or item templates.
+
+## Track
+
+`track``tracks`
+
+The **track** is the timeline inside a [cinematic](/glossary/#cinematic) entry where [segments](/glossary/#segment) are placed and timed. Track duration is measured in Minecraft ticks — 20 ticks equal 1 second.
+
 # Asides
 
 > A preview of all aside types added.
 
-Have fun looking at these:
+Have fun looking at these [entries](https://docs.typewritermc.com/docs/getting-started/layout):
 
 ## Aside Examples
 
@@ -136,7 +265,7 @@ You can also provide a custom title.
 
 > A guide in my new Starlight docs site.
 
-Guides lead a user through a specific task they want to accomplish, often with a sequence of steps. Writing a good guide requires thinking about what your users are trying to do.
+Guides lead a user through a specific task they want to accomplish, often with a [sequence](/branches/features/v1/glossary/#sequence) of steps. Writing a good guide requires thinking about what your users are trying to do.
 
 ## Further reading
 
@@ -1906,7 +2035,7 @@ Happy brewing! May your potions be potent and your explosions be minor.
 
 2. Import the component where you need it.
 
-3. Add it to your page and configure the props.
+3. Add it to your [page](/branches/features/v1/glossary/#page) and configure the props.
 
 ## Steps With Rich Content
 
@@ -1922,7 +2051,7 @@ Happy brewing! May your potions be potent and your explosions be minor.
    };
    ```
 
-2. **Register your first entry.**
+2. **Register your first [entry](https://docs.typewritermc.com/docs/getting-started/layout).**
 
    Entries are the building blocks of a story.
 
@@ -1962,7 +2091,11 @@ Here you would place images, previews, or visual content.
 - **v1.1.0** — Video player improvements
 - **v1.0.0** — Initial release
 
-\| Version | Date | Status | |---------|------------|---------| | 1.2.0 | 2026-04-04 | Latest | | 1.1.0 | 2026-03-01 | Stable | | 1.0.0 | 2026-01-15 | Legacy |
+| Version | Date       | Status |
+| ------- | ---------- | ------ |
+| 1.2.0   | 2026-04-04 | Latest |
+| 1.1.0   | 2026-03-01 | Stable |
+| 1.0.0   | 2026-01-15 | Legacy |
 
 ## With Code Blocks
 

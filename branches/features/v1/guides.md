@@ -13,7 +13,7 @@ draft: false
 
 import Aside from '@components/aside/Aside.astro';
 
-Have fun looking at these:
+Have fun looking at these entries:
 
 ## Aside Examples
 
