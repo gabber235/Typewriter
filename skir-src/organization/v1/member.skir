@@ -1,0 +1,22 @@
+import { Color } from "kernel/v1/color.skir";
+
+struct OrganizationMember {
+  user_id: string;
+  name: string?;
+  email: string;
+  avatar_url: string?;
+  roles: [Role];
+  joined_at: timestamp;
+}
+
+struct Role {
+  role_id: string;
+  name: string;
+  color: Color;
+  // Whether this is the default role assigned to new members
+  default_role: bool;
+  // Whether this role can be assigned by administrators
+  assignable: bool;
+  // Whether this role can be deleted by administrators
+  deletable: bool;
+}

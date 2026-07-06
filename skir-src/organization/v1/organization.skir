@@ -1,0 +1,30 @@
+struct Organization {
+  organization_id: string;
+  name: string;
+  logo_url: string;
+}
+
+method WatchUserOrganizations(
+  struct {}
+): enum {
+  list: [Organization];
+  add: Organization;
+  remove: Organization;
+} = 246975;
+
+method CreateOrganization(
+  struct {
+    name: string;
+    logo_url: string?;
+  }
+): enum {
+  success: Organization;
+} = 336038;
+
+method DeleteOrganization(
+  struct {
+    organization_id: string;
+  }
+): enum {
+  success: struct {};
+} = 627251;

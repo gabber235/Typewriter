@@ -185,15 +185,15 @@ fn add_user_organizations_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
-    allow_publish.push(format!("cloud.out.user.{}.organization.list", user_id));
-    allow_subscribe.push(format!("cloud.in.user.{}.organization.list", user_id));
+    allow_publish.push(format!("cloud.out.user.{}.organization.watch", user_id));
+    allow_subscribe.push(format!("cloud.in.user.{}.organization.watch", user_id));
     allow_publish.push(format!("cloud.out.user.{}.organization.create", user_id));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.join_requests.list",
+        "cloud.out.user.{}.organization.join_requests.watch",
         user_id
     ));
     allow_subscribe.push(format!(
-        "cloud.in.user.{}.organization.join_requests.list",
+        "cloud.in.user.{}.organization.join_requests.watch",
         user_id
     ));
     allow_publish.push(format!(

@@ -1,0 +1,75 @@
+import { Role } from "organization/v1/member.skir";
+
+// JoinRequest represents a pending request from a user to join an organization.
+struct JoinRequest {
+  request_id: string;
+  user_id: string;
+  user_name: string?;
+  user_email: string?;
+  user_avatar_url: string?;
+  requested_at: timestamp;
+  expires_at: timestamp;
+}
+
+// UserJoinRequest represents a user's own pending request to join an organization.
+// This is from the user's perspective, showing which organizations they've requested to join.
+struct UserJoinRequest {
+  request_id: string;
+  organization_id: string;
+  organization_name: string;
+  organization_logo_url: string;
+  requested_at: timestamp;
+  expires_at: timestamp;
+}
+
+// JoinCode represents a code that can be used to request to join an organization.
+struct JoinCode {
+  code: string;
+  created_at: timestamp;
+  expires_at: timestamp?;
+  single_use: bool;
+  auto_accept: JoinCodeAutoAccept?;
+}
+
+// JoinCodeAutoAccept contains the configuration for auto-accepting users.
+struct JoinCodeAutoAccept {
+  // Role IDs to assign to auto-accepted users
+  role_ids: [string];
+}
+
+struct AutoAcceptedMember {
+  organization_id: string;
+  organization_name: string;
+  organization_logo_url: string?;
+  roles: [Role];
+}
+
+struct RequestToJoinResult {
+  request: UserJoinRequest;
+  member: AutoAcceptedMember;
+}
+
+// All pending join requests made by the user.
+method WatchUserJoinRequests(
+  struct {}
+): enum {
+  list: [UserJoinRequest];
+  add: UserJoinRequest;
+  remove: UserJoinRequest;
+} = 939197;
+
+method RequestToJoin(
+  struct {
+    code: string?;
+  }
+): enum {
+  success: RequestToJoinResult;
+} = 4962;
+
+method CancelJoinRequest(
+  struct {
+    request_id: string;
+  }
+): enum {
+  success: struct {};
+} = 387737;
