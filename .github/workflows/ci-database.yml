@@ -1,0 +1,53 @@
+name: CI Database
+
+on:
+  pull_request:
+    paths:
+      - "backend/database/**"
+      - "backend/surrealkit.toml"
+      - ".dagger/database.go"
+      - ".github/workflows/ci-database.yml"
+  push:
+    paths:
+      - "backend/database/**"
+      - "backend/surrealkit.toml"
+      - ".dagger/database.go"
+      - ".github/workflows/ci-database.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require rollout manifest for schema changes
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          schema_changes=$(git diff --name-only "$base"...HEAD -- 'backend/database/schema/**' | wc -l | tr -d ' ')
+          new_rollouts=$(git diff --name-only --diff-filter=A "$base"...HEAD -- 'backend/database/rollouts/*.toml' | wc -l | tr -d ' ')
+          if [ "$schema_changes" -gt 0 ] && [ "$new_rollouts" -eq 0 ]; then
+            echo "Schema files changed but no new backend/database/rollouts/*.toml manifest was added." >&2
+            exit 1
+          fi
+
+      # TODO: Add a CI step that runs `surrealkit rollout plan` against a sanitized
+      # production schema snapshot to catch compatibility issues that only surface
+      # against a database with existing schema. The snapshot files already exist at
+      # backend/database/snapshots/. The gap is running `plan` against them in CI
+      # rather than only testing against an empty in-memory SurrealDB.
+
+      - name: Build database artifact image through Dagger
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: 0.21.7
+          args: call database-image sync

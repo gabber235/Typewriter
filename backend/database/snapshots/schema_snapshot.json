@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "database/schema/kernel/color.surql",
+      "hash": "be63b037b1444daff06a49c76dd4e0b162b90173ed22c0a4318ca4a8b78a5035"
+    },
+    {
+      "path": "database/schema/kernel/id.surql",
+      "hash": "0d7e4c45257c221ee9e84117335177f3a19b7fdbbe1c05e79702db9968cd4405"
+    },
+    {
+      "path": "database/schema/kernel/url.surql",
+      "hash": "ebd6c5475861d75a89db86ac8a609ffc3188957f0bcaf253284fb7e7f31de95b"
+    },
+    {
+      "path": "database/schema/organization/functions.surql",
+      "hash": "9e54b331b4e6188a4edf498aef108d655ff3429f572c26a954f0b16ce2a47ebe"
+    },
+    {
+      "path": "database/schema/organization/member_of.surql",
+      "hash": "39f9a0b29293698286b7d58b6132813c88a84de28ca49a3cbd89d758f4b7f3ee"
+    },
+    {
+      "path": "database/schema/organization/organization.surql",
+      "hash": "827668ab1ba79e52eacd9b0d2e5cc4bc09529c630be32176b4fd39b4eced1397"
+    },
+    {
+      "path": "database/schema/organization/organization_join_code.surql",
+      "hash": "044b5fe53d7d054b5db1bd9d92b2251c3274451e6d70ec3ea70632512ea20ad4"
+    },
+    {
+      "path": "database/schema/organization/organization_role.surql",
+      "hash": "04777003d2f63f135227638fafb8a4cc2648695b8b7771253b28d14fd446d400"
+    },
+    {
+      "path": "database/schema/organization/request_to_join.surql",
+      "hash": "0c779390fbd5834647729a2c69daf985f9e55014c067b9b6d3e482bf328333c8"
+    },
+    {
+      "path": "database/schema/service/functions.surql",
+      "hash": "f7c1d2617b9befb381057e12fd187a74d2aed06871259df90e3736e16b39a047"
+    },
+    {
+      "path": "database/schema/service/service.surql",
+      "hash": "72d55b16ca3d0d68f3ba1cb0a049084599fc7f1c1a4cc097b88a7819deab8685"
+    },
+    {
+      "path": "database/schema/user.surql",
+      "hash": "e4f8a9f119f34a61480d01a8ee786afa8b394c07e8cd735dfaff261298879ed1"
+    }
+  ]
+}

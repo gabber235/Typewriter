@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: typewriter-db-rollout-start
+  namespace: typewriter
+  labels:
+    app.kubernetes.io/name: typewriter-db-rollout
+    app.kubernetes.io/component: schema-migration
+    app.kubernetes.io/part-of: typewriter
+    typewriter.seamlezz.com/db-rollout-action: start
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: typewriter-db-rollout
+        app.kubernetes.io/component: schema-migration
+        app.kubernetes.io/part-of: typewriter
+        typewriter.seamlezz.com/db-rollout-action: start
+    spec:
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 60
+      serviceAccountName: typewriter-db-migration
+      containers:
+        - name: surrealkit
+          image: ghcr.io/gabber235/typewriter-db:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SURREALDB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: surrealdb-credentials-typewriter-migration
+                  key: SURREAL_URL
+            - name: SURREALDB_NAMESPACE
+              valueFrom:
+                secretKeyRef:
+                  name: surrealdb-credentials-typewriter-migration
+                  key: SURREAL_NS
+            - name: SURREALDB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: surrealdb-credentials-typewriter-migration
+                  key: SURREAL_DB
+            - name: SURREALDB_AUTH_LEVEL
+              value: database
+            - name: SURREALDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: surrealdb-credentials-typewriter-migration
+                  key: SURREAL_USER
+            - name: SURREALDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: surrealdb-credentials-typewriter-migration
+                  key: SURREAL_PASS
+            - name: SURREALDB_FOLDER
+              value: /workspace/backend/database
+            - name: TYPEWRITER_DB_ROLLOUT_ID
+              value: 00000000000000__replace_me
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              if [ "$TYPEWRITER_DB_ROLLOUT_ID" = "00000000000000__replace_me" ]; then
+                echo "No TypeWriter SurrealDB rollout configured for start; skipping."
+                exit 0
+              fi
+              exec /usr/local/bin/surrealkit rollout start "$TYPEWRITER_DB_ROLLOUT_ID"

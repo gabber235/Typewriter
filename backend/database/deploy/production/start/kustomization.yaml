@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/start
+images:
+  - name: ghcr.io/gabber235/typewriter-db
+    newTag: dev
+patches:
+  - target:
+      kind: Job
+      name: typewriter-db-rollout-start
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: typewriter-db-rollout-start-00000000000000-replace-me
+      - op: add
+        path: /metadata/annotations
+        value:
+          typewriter.seamlezz.com/rollout-id: 00000000000000__replace_me
+          typewriter.seamlezz.com/environment: production
+      - op: replace
+        path: /spec/template/spec/containers/0/env/7/value
+        value: 00000000000000__replace_me
