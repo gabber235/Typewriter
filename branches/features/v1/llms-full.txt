@@ -8,13 +8,13 @@
 
 NEXT GEN PLAYER INTERACTIONS
 
-[Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
+[Get Started](./docs/01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
 
 # TYPEWRITER
 
 NEXT GEN PLAYER INTERACTIONS
 
-[Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
+[Get Started](./docs/01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
 
 ### Interactive Dialogues & Quests
 
@@ -58,7 +58,7 @@ For Admins
 
 Configure complex interactions, NPCs, and quests through the visual web panel — even without prior coding knowledge. Need something specific? The extension system makes customization easy.
 
-[Read the docs](./01-typewiter)
+[Read the docs](./docs/01-typewiter)
 
 For Developers
 
@@ -66,7 +66,7 @@ For Developers
 
 Typewriter is built to be highly extensible. The extensions system lets you build modular, reusable components that seamlessly integrate with the plugin.
 
-[Explore the code](https://github.com/Gabber235/typewriter)
+[Explore the develop docs](./develop/)
 
 [Join the Discord](https://discord.gg/HtbKyuDDBw)[Star on GitHub](https://github.com/Gabber235/typewriter)
 
@@ -78,7 +78,58 @@ Thanks to our sponsors for supporting Typewriter's development.
 
 Join the beta and start building interactive experiences today.
 
-[Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
+[Get Started](./docs/01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
+
+# Develop
+
+> Build extensions and integrate with Typewriter from code — developer documentation for the Typewriter platform.
+
+This section is for developers who want to extend Typewriter: building [extensions](/branches/features/v1/glossary/#extension), creating custom [entries](https://docs.typewritermc.com/docs/getting-started/layout), and integrating Typewriter with other plugins.
+
+## Where to start
+
+[Section titled “Where to start”](#where-to-start)
+
+* [Getting Started](./01-getting-started) — set up a development environment for building extensions.
+
+Looking for the user-facing documentation instead? Head over to the [Documentation](../docs/) section.
+
+# Getting Started
+
+> Set up a development environment for building Typewriter extensions.
+
+This guide walks you through setting up a development environment for building Typewriter [extensions](/branches/features/v1/glossary/#extension).
+
+## Prerequisites
+
+[Section titled “Prerequisites”](#prerequisites)
+
+* A Java development environment (JDK 21 or newer)
+* A Paper Minecraft server for testing
+* Familiarity with the [core concepts](/branches/features/v1/docs/01-typewiter) of Typewriter
+
+## Next steps
+
+[Section titled “Next steps”](#next-steps)
+
+More developer documentation is on its way. In the meantime, explore the [Typewriter repository](https://github.com/Gabber235/typewriter) to see how the built-in extensions are structured.
+
+# Overview
+
+> Learn how to set up Typewriter and build interactive quests, NPC dialogues, and cinematic sequences on your server.
+
+Welcome to the Typewriter documentation. This section covers everything you need to install Typewriter, configure it through the web panel, and build interactive experiences on your server.
+
+## Where to start
+
+[Section titled “Where to start”](#where-to-start)
+
+* [What is Typewriter?](./01-typewiter) — an introduction to the plugin and its core concepts.
+* [Layout](./02-layout) — how the web panel is organized.
+* [Guides](./guides/) — step-by-step walkthroughs for common tasks.
+* [Reference](./reference/) — detailed descriptions of individual features.
+
+Building [extensions](/branches/features/v1/glossary/#extension) or integrating with Typewriter from code? Head over to the [Develop](../develop/) section.
 
 # What is Typewriter
 
@@ -175,81 +226,6 @@ Now that we have created a sequence page, I will explain how the different layou
 1. **[Segments](/branches/features/v1/glossary/#segment)**: Inside a cinematic entry, you can create segments, which are displayed on your [track](/branches/features/v1/glossary/#track). Segments can’t overlap each other.
 2. **Track**: This is where you can see all the segments that you have created and edit their show duration.
 3. **Track Duration**: Here, you can edit the duration of the track. The track duration is in Minecraft ticks, so 20 ticks equals 1 second.
-
-# Glossary
-
-> Definitions of terms used throughout the Typewriter documentation.
-
-Hover any dotted term in the documentation to see its definition, or browse all terms below.
-
-## Cinematic
-
-`cinematic``cinematics`
-
-A **cinematic** is a [page](/branches/features/v1/glossary/#page) type for building timed sequences of actions — camera paths, animations, and cutscenes made up of [segments](/branches/features/v1/glossary/#segment) arranged on a [track](/branches/features/v1/glossary/#track).
-
-## Entry
-
-`entry``entries`
-
-An **entry** is the smallest building block of Typewriter content. Pages are made up of entries: dialogues, actions, events, cinematics, and more, each provided by an extension.
-
-* **Static entries** define reusable data, like NPC definitions.
-* **Triggerable entries** run as part of an interaction.
-
-## Extension
-
-`extension``extensions`
-
-An **extension** is a modular add-on that provides new entries to Typewriter. Extensions are `.jar` files placed in the `plugins/Typewriter/extensions` folder. The `BasicExtension` ships the essential entries most servers need.
-
-## Inspector
-
-`inspector`
-
-The **inspector** is the web panel pane where you edit the selected entry: its information (ID and name), its fields, and the operations available on it.
-
-## Interaction
-
-`interaction``interactions`
-
-An **interaction** is what a player actually experiences in game: a dialogue, quest, or cinematic composed of connected entries. Interactions start when a trigger fires and follow the flow you build in the web panel.
-
-## Manifest
-
-`manifest``manifests`
-
-A **manifest** is a [page](/branches/features/v1/glossary/#page) type that holds the runtime calculated state of an interaction — values computed as the interaction progresses, rather than authored directly.
-
-## Page
-
-`page``pages`
-
-A **page** is a top-level container for entries in the web panel. Every page has a type — [Sequence](/branches/features/v1/glossary/#sequence), [Static](/branches/features/v1/glossary/#static), [Cinematic](/branches/features/v1/glossary/#cinematic), or [Manifest](/branches/features/v1/glossary/#manifest) — which determines what kind of entries it holds and how they connect.
-
-## Segment
-
-`segment``segments`
-
-A **segment** is a block placed on a [cinematic](/branches/features/v1/glossary/#cinematic)’s [track](/branches/features/v1/glossary/#track). Segments can’t overlap each other, and each has its own show duration.
-
-## Sequence
-
-`sequence``sequences`
-
-A **sequence** is a [page](/branches/features/v1/glossary/#page) type whose entries play one after another as an interaction unfolds. Most dialogues and quests are built on sequence pages.
-
-## Static
-
-`static`
-
-A **static** page holds entries that reference data which doesn’t change over the lifetime of the program, such as NPC definitions or item templates.
-
-## Track
-
-`track``tracks`
-
-The **track** is the timeline inside a [cinematic](/branches/features/v1/glossary/#cinematic) entry where [segments](/branches/features/v1/glossary/#segment) are placed and timed. Track duration is measured in Minecraft ticks — 20 ticks equal 1 second.
 
 # Asides
 
@@ -3317,3 +3293,78 @@ Congratulations! You now know more about underwater basket weaving than 99.9% of
 [](/branches/features/v1/_astro/world-specific.BacefuuM.webm)
 
 0:00 / 0:00
+
+# Glossary
+
+> Definitions of terms used throughout the Typewriter documentation.
+
+Hover any dotted term in the documentation to see its definition, or browse all terms below.
+
+## Cinematic
+
+`cinematic``cinematics`
+
+A **cinematic** is a [page](/branches/features/v1/glossary/#page) type for building timed sequences of actions — camera paths, animations, and cutscenes made up of [segments](/branches/features/v1/glossary/#segment) arranged on a [track](/branches/features/v1/glossary/#track).
+
+## Entry
+
+`entry``entries`
+
+An **entry** is the smallest building block of Typewriter content. Pages are made up of entries: dialogues, actions, events, cinematics, and more, each provided by an extension.
+
+* **Static entries** define reusable data, like NPC definitions.
+* **Triggerable entries** run as part of an interaction.
+
+## Extension
+
+`extension``extensions`
+
+An **extension** is a modular add-on that provides new entries to Typewriter. Extensions are `.jar` files placed in the `plugins/Typewriter/extensions` folder. The `BasicExtension` ships the essential entries most servers need.
+
+## Inspector
+
+`inspector`
+
+The **inspector** is the web panel pane where you edit the selected entry: its information (ID and name), its fields, and the operations available on it.
+
+## Interaction
+
+`interaction``interactions`
+
+An **interaction** is what a player actually experiences in game: a dialogue, quest, or cinematic composed of connected entries. Interactions start when a trigger fires and follow the flow you build in the web panel.
+
+## Manifest
+
+`manifest``manifests`
+
+A **manifest** is a [page](/branches/features/v1/glossary/#page) type that holds the runtime calculated state of an interaction — values computed as the interaction progresses, rather than authored directly.
+
+## Page
+
+`page``pages`
+
+A **page** is a top-level container for entries in the web panel. Every page has a type — [Sequence](/branches/features/v1/glossary/#sequence), [Static](/branches/features/v1/glossary/#static), [Cinematic](/branches/features/v1/glossary/#cinematic), or [Manifest](/branches/features/v1/glossary/#manifest) — which determines what kind of entries it holds and how they connect.
+
+## Segment
+
+`segment``segments`
+
+A **segment** is a block placed on a [cinematic](/branches/features/v1/glossary/#cinematic)’s [track](/branches/features/v1/glossary/#track). Segments can’t overlap each other, and each has its own show duration.
+
+## Sequence
+
+`sequence``sequences`
+
+A **sequence** is a [page](/branches/features/v1/glossary/#page) type whose entries play one after another as an interaction unfolds. Most dialogues and quests are built on sequence pages.
+
+## Static
+
+`static`
+
+A **static** page holds entries that reference data which doesn’t change over the lifetime of the program, such as NPC definitions or item templates.
+
+## Track
+
+`track``tracks`
+
+The **track** is the timeline inside a [cinematic](/branches/features/v1/glossary/#cinematic) entry where [segments](/branches/features/v1/glossary/#segment) are placed and timed. Track duration is measured in Minecraft ticks — 20 ticks equal 1 second.
