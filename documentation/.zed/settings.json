@@ -30,10 +30,12 @@
 			}
 		},
 		"Astro": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true,
-				"source.organizeImports.biome": true
+			"language_servers": ["astro-language-server", "!biome", "..."],
+			"formatter": {
+				"external": {
+					"command": "node_modules/.bin/biome.exe",
+					"arguments": ["check", "--stdin-file-path={buffer_path}", "--write"]
+				}
 			}
 		},
 		"CSS": {

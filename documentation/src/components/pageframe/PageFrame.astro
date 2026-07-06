@@ -1,5 +1,12 @@
 ---
-const { hasSidebar } = Astro.locals.starlightRoute;
+import { sectionForRoute } from "../../sections";
+
+const { hasSidebar, id } = Astro.locals.starlightRoute;
+
+// Section-scoped so persistence breaks when crossing sections and the fresh
+// sidebar swaps in. Set as the raw data attribute because transition:persist
+// stringifies expression values instead of evaluating them.
+const sidebarPersistName = `sidebar-${sectionForRoute(id).id}`;
 ---
 
 <div class="flex flex-col min-h-screen bg-(--surface)">
@@ -11,7 +18,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
   {
     hasSidebar && (
       <nav
-        transition:persist="sidebar"
+        data-astro-transition-persist={sidebarPersistName}
         class="print:hidden"
         aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
         {/* Backdrop overlay for mobile drawer */}

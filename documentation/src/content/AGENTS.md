@@ -16,8 +16,12 @@ badge: new              # optional: new | experimental | deprecated
 
 ## File Organization
 
-- Files in `src/content/docs/` with hierarchical numeric prefixes: `01-filename.md`
-- Folders create categories: `guides/`, `reference/`, `training/`
+- Two top-level sections under `src/content/docs/`, each with its own sidebar (scoped by `src/route-middleware.ts`, configured in `src/sections.ts`):
+  - `docs/` — Documentation (user-facing), served at `/docs/...`
+  - `develop/` — Develop (developer-facing), served at `/develop/...`
+- Every new page goes inside a section folder; only `index.mdx` (splash home) and `glossary.mdx` stay at the collection root
+- Files use hierarchical numeric prefixes: `01-filename.md`
+- Folders inside a section create sidebar categories: `guides/`, `reference/`, `training/`
 - `index.md` or `index.mdx` for folder landing pages
 - Use `.mdx` only when importing components, `.md` otherwise
 

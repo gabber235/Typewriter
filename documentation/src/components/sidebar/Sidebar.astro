@@ -1,5 +1,6 @@
 ---
 import { processSidebarBadges } from "../badge";
+import SectionNav from "../header/SectionNav.astro";
 import SidebarList from "./SidebarList.astro";
 
 const { sidebar } = Astro.locals.starlightRoute;
@@ -9,6 +10,9 @@ const sidebarWithBadges = await processSidebarBadges(
 ---
 
 <nav class="py-2" aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
+  <div class="min-[50rem]:hidden px-2 pb-2">
+    <SectionNav />
+  </div>
   <SidebarList sublist={sidebarWithBadges} />
 </nav>
 

@@ -76,6 +76,7 @@ export default defineConfig({
 				minHeadingLevel: 2,
 				maxHeadingLevel: 4,
 			},
+			routeMiddleware: "./src/route-middleware.ts",
 			components: {
 				Head: "./src/components/Head.astro",
 				Sidebar: "./src/components/sidebar/Sidebar.astro",

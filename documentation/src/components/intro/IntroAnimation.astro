@@ -63,9 +63,8 @@ const titleChars = chars(TITLE, TITLE_DELAY_MS, TITLE_STAGGER_MS);
 const subChars = chars(SUBTITLE, SUB_DELAY_MS, SUB_STAGGER_MS);
 
 // the moment the subtitle's last letter finishes its reveal — reused as the
-// single "animation is done" mark for both the scroll-hint's own reveal and
-// the auto-reveal of the navbar, so nothing drifts out of sync with a
-// second hand-tuned number
+// delay for the scroll-hint/CTA reveal below, so nothing drifts out of sync
+// with a second hand-tuned number
 const subGlyphCount = subChars.filter((c) => c.delay !== null).length;
 const settleMs = Math.round(
 	SUB_DELAY_MS + (subGlyphCount - 1) * SUB_STAGGER_MS + SUB_FADE_MS,
@@ -149,7 +148,6 @@ const modeCss = `
 <section
   id="tw-intro"
   data-blob={blobBg.src}
-  data-settle-ms={settleMs}
   data-animated-mq={ANIMATED_MQ}
   class="relative overflow-hidden">
   <div class="absolute inset-0 flex" aria-hidden="true">
@@ -338,42 +336,15 @@ const modeCss = `
       opacity: 1 !important;
       animation: none !important;
     }
-    /* no JS also means the tw-scrolled/tw-intro-settled classes that
-       reveal the navbar (home.css) never get added — show it outright */
-    body:has(.tw-home) header.fixed {
-      transform: none !important;
-    }
   </style>
 </noscript>
 
 <script is:inline data-astro-rerun>
   (() => {
-    const html = document.documentElement;
     const root = document.getElementById("tw-intro");
-    if (!root) {
-      html.classList.remove("tw-scrolled", "tw-intro-settled");
-      return;
-    }
+    if (!root) return;
     if (root.dataset.bound) return;
     root.dataset.bound = "1";
-    // <html> persists across client-side navigation (unlike #tw-intro,
-    // which re-mounts fresh each visit) — clear any flags a previous visit
-    // to this page may have left so the animation always starts hidden.
-    html.classList.remove("tw-scrolled", "tw-intro-settled");
-
-    // navbar is hidden by default (plain CSS, see home.css) and reveals
-    // early if the user scrolls past the hero before the intro finishes;
-    // `tw-intro-settled` (below) reveals it permanently once the intro is
-    // done, whether or not anyone ever scrolls
-    const pane = document.querySelector(".content-pane");
-    if (pane) {
-      const syncScrolled = () =>
-        html.classList.toggle("tw-scrolled", pane.scrollTop >= 40);
-      syncScrolled();
-      pane.addEventListener("scroll", syncScrolled, { passive: true });
-    }
-
-    const settle = () => html.classList.add("tw-intro-settled");
 
     const setScale = () => {
       const box = root.getBoundingClientRect();
@@ -396,24 +367,19 @@ const modeCss = `
     animatedMq.addEventListener("change", () => {
       if (animatedMq.matches && !root.classList.contains("tw-intro-play")) {
         root.classList.add("tw-intro-still");
-        settle();
       }
     });
 
     // static hero (phones, tablets, narrow windows, reduced motion): the
     // CSS already shows everything with no animation, so skip all the
     // animation work below — no image decode, no font preloading, no
-    // frame-rate probing — and reveal the navbar immediately
-    if (!animatedMq.matches) {
-      settle();
-      return;
-    }
+    // frame-rate probing
+    if (!animatedMq.matches) return;
 
     // unreachable while ANIMATED_MQ includes prefers-reduced-motion; kept
     // as a safety net in case that clause is ever edited out of the query
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       root.classList.add("tw-intro-still");
-      settle();
       return;
     }
 
@@ -460,7 +426,6 @@ const modeCss = `
       .then(whenSmooth)
       .then(() => {
         root.classList.add("tw-intro-play");
-        setTimeout(settle, Number(root.dataset.settleMs));
       });
   })();
 </script>
@@ -470,6 +435,12 @@ const modeCss = `
     logoPopDelay: `${logoPopDelay}ms`,
     logoMoveDuration: `${logoMoveDuration}ms`,
     settleMs: `${settleMs}ms`,
+    titleLeft: `${TITLE_LEFT}px`,
+    titleTop: `${TITLE_TOP}px`,
+    titleSize: `${TITLE_SIZE}px`,
+    subLeft: `${SUB_LEFT}px`,
+    subTop: `${SUB_TOP}px`,
+    subSize: `${SUB_SIZE}px`,
   }}
 >
   /* The finished animation IS the page header: an in-flow, full-viewport
@@ -513,18 +484,21 @@ const modeCss = `
     white-space: nowrap;
     font-weight: 400;
   }
-  /* font-size = measured glyph height in stage px; nudge if the font's cap
-     height doesn't fill the em box */
+  /* position/size come from sprite.ts's measured constants (via
+     define:vars above), not hardcoded here — keeps this in sync if the
+     source video is ever re-measured. font-size = measured glyph height
+     in stage px; nudge sprite.ts if the font's cap height doesn't fill
+     the em box. */
   .tw-intro-title {
-    left: 716px;
-    top: 470px;
-    font-size: 135.5px;
+    left: var(--titleLeft);
+    top: var(--titleTop);
+    font-size: var(--titleSize);
     color: #ede9e8;
   }
   .tw-intro-sub {
-    left: 734px;
-    top: 620px;
-    font-size: 50.6px;
+    left: var(--subLeft);
+    top: var(--subTop);
+    font-size: var(--subSize);
     color: #1ab4ff;
   }
 
@@ -646,8 +620,13 @@ const modeCss = `
   }
   .tw-intro-logo {
     position: absolute;
-    /* own compositor layer: the 1.1s transform animation never re-rasters */
-    will-change: transform;
+    /* own compositor layer: the 1.1s transform animation never re-rasters.
+       opacity is hinted too (not just transform) because the logo runs a
+       separate opacity animation (tw-intro-pop) on the same element at the
+       same delay — without this, some engines composite the two properties
+       via different code paths that can commit on different frames, which
+       is what caused the pop-in flicker below. */
+    will-change: transform, opacity;
   }
   .tw-intro-ch {
     display: inline-block;
@@ -698,10 +677,19 @@ const modeCss = `
   }
 
   .tw-intro-play .tw-intro-logo {
+    /* `both`, not `forwards`: forces the delay window itself (before either
+       animation's active phase starts) to explicitly hold each animation's
+       0% keyframe — opacity 0, transform pre-slide-offset — instead of
+       falling back to whatever the non-animated cascade resolves to. That
+       fallback is where the flicker came from: for one frame at the delay
+       boundary, opacity could commit before transform did (or vice versa),
+       flashing the logo at rest before it snapped to its actual pop
+       position. `both` removes that ambiguity without changing anything
+       about the animation once it's actually running or after it ends
+       (forwards' hold-the-last-frame behavior is preserved by `both` too). */
     animation:
-      tw-intro-pop 1ms linear var(--logoPopDelay) forwards,
-      tw-intro-slide var(--logoMoveDuration) linear var(--logoPopDelay)
-        forwards;
+      tw-intro-pop 1ms linear var(--logoPopDelay) both,
+      tw-intro-slide var(--logoMoveDuration) linear var(--logoPopDelay) both;
   }
   .tw-intro-play .tw-intro-ch {
     animation-name: tw-intro-pop;
@@ -721,6 +709,14 @@ const modeCss = `
   }
 
   @keyframes tw-intro-pop {
+    /* explicit 0%, not just an implicit "to" — removes reliance on the
+       engine inferring the start value from the non-animated cascade,
+       the same ambiguity the logo's `both` fill-mode above closes off.
+       Harmless for this keyframe's other consumers (chars, cta, scroll
+       hint): they all start from opacity:0 already. */
+    from {
+      opacity: 0;
+    }
     to {
       opacity: 1;
     }
