@@ -412,31 +412,68 @@ const fontFaceCss = `@font-face {
   }
   .tw-intro-btn {
     display: inline-flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
     gap: 16px;
     min-width: 380px;
     font-family: "Minecraft Ten", var(--font-mono);
     font-size: 28px;
+    line-height: 1;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
-    padding: 20px 40px;
+    /* bottom padding is +5.2px vs top: under align-items:baseline, an SVG
+       icon with no real baseline synthesizes one at its own bottom edge,
+       so its whole box counts as "ascent" (space above the shared
+       baseline) and none as "descent". The icon's margin-top:5.2px below
+       (needed to align it with the text glyph) adds to that ascent with
+       nothing to balance it in descent, which skews the flex line's own
+       height asymmetrically toward the top — content then reads as
+       sitting low once the button's padding wraps around that lopsided
+       line. This adds matching room at the bottom to rebalance it. */
+    padding: 20px 40px 25.2px;
     transition:
       transform 80ms steps(1),
       filter 120ms ease,
       background-color 120ms ease;
   }
   /* display:block avoids the few px of baseline whitespace inline <svg>
-     normally carries, which throws off vertical centering next to text;
-     image-rendering keeps the Discord glyph's hard edges crisp when
-     scaled way down from its native 2048px viewBox. */
+     normally carries; image-rendering keeps the Discord glyph's hard
+     edges crisp when scaled way down from its native 2048px viewBox.
+     translateY corrects a real mismatch, this time derived from facts that
+     don't depend on guessing which font-metrics table the browser honors
+     (a previous attempt used hhea ascent/descent and got the direction
+     wrong — this font's hhea and OS/2-win tables disagree with each other,
+     so that path was never reliable). align-items:baseline instead aligns
+     by two spec-guaranteed reference points: text sits at its real
+     baseline, and a plain <svg> with no inherent baseline aligns by its
+     own bottom margin edge. So under baseline alignment, the icon's 30px
+     box spans from 0 (bottom, AT the baseline) to 30px above it — center
+     15px above baseline. The glyph's actual ink (checked "G": yMin 0,
+     yMax 700 of 1000 units/em) spans 0 to 0.7em above baseline — center
+     0.35em, which is 9.8px at this button's 28px font-size. 15 - 9.8 =
+     5.2px: the icon's default baseline-aligned center sits 5.2px above
+     the glyph's real center, so shifting it down by that amount lines the
+     two up. Re-derive from public/fonts/minecraft-ten.ttf's glyf table
+     (not hhea/OS2) if the font file, icon height, or font-size changes.
+     margin-top, not transform: transform is purely visual and runs after
+     layout, so the button's own height/padding math (what centers the
+     whole content block vertically in the button) never saw the shift —
+     it kept sizing around the icon's pre-shift position, desyncing the
+     button's centering from what actually rendered. margin-top instead
+     participates in layout, so the flex line (and the button's auto
+     height built from it) grows to truly contain the icon where it ends
+     up, keeping the button's symmetric padding centered on the real
+     content. */
   .tw-intro-btn-icon {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
+    top: 0;
+    scale: 1.5;
+    position: relative;
     image-rendering: pixelated;
   }
   .tw-intro-btn:hover {
