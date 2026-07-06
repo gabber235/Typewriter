@@ -33,3 +33,10 @@ html.tw-scrolled body:has(.tw-home) header.fixed,
 html.tw-intro-settled body:has(.tw-home) header.fixed {
 	transform: translateY(0);
 }
+
+/* Reduced motion: the navbar reveal must appear, not slide in. */
+@media (prefers-reduced-motion: reduce) {
+	body:has(.tw-home) header.fixed {
+		transition: none;
+	}
+}

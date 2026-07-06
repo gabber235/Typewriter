@@ -104,6 +104,35 @@ const fontFaceCss = `@font-face {
 	src: url("${fontUrl}") format("truetype");
 	font-display: swap;
 }`;
+
+// The animated 1920x1080 stage only renders on motion-friendly desktops: a
+// fine pointer (mouse/trackpad) rules out phones and tablets, the width bound
+// rules out windows where the scaled-down stage's text turns unreadably
+// small, and OS-level reduced-motion opts out entirely. Everyone else gets
+// the static hero — the same scene, but a normal-flow fluid column that is
+// fully visible at first paint with nothing animated and nothing gated on
+// JS. One string drives both switches (the CSS media block below and the JS
+// gate via data-animated-mq) so they can never disagree.
+const ANIMATED_MQ =
+	"(min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference)";
+
+// Mode switching lives in a plain inline <style> (not the scoped block)
+// because Astro can't interpolate ANIMATED_MQ into a scoped style. Written
+// mobile-first: the defaults describe the static hero; the media block
+// restores exactly the values the scoped <style> gives the animated stage —
+// keep the two in sync. Being pure CSS, the switch works with JS disabled
+// and reacts instantly to window resizes and OS setting changes.
+const modeCss = `
+#tw-intro { height: auto; min-height: 100vh; min-height: 100svh; }
+#tw-intro .tw-intro-stage { display: none; }
+#tw-intro .tw-intro-scroll { opacity: 1; }
+@media ${ANIMATED_MQ} {
+	#tw-intro { height: 100vh; height: 100dvh; min-height: 24rem; }
+	#tw-intro .tw-intro-stage { display: block; }
+	#tw-intro .tw-intro-static { display: none; }
+	#tw-intro .tw-intro-scroll { opacity: 0; }
+	#tw-intro.tw-intro-still .tw-intro-scroll { opacity: 1; }
+}`;
 ---
 
 <link
@@ -115,11 +144,13 @@ const fontFaceCss = `@font-face {
 />
 <link rel="preload" href={blobBg.src} as="image" fetchpriority="high" />
 <style is:inline set:html={fontFaceCss}></style>
+<style is:inline set:html={modeCss}></style>
 
 <section
   id="tw-intro"
   data-blob={blobBg.src}
   data-settle-ms={settleMs}
+  data-animated-mq={ANIMATED_MQ}
   class="relative overflow-hidden">
   <div class="absolute inset-0 flex" aria-hidden="true">
     <div class="tw-intro-blob h-full w-1/2" style={blobUrl}></div>
@@ -219,6 +250,74 @@ const fontFaceCss = `@font-face {
       }
     </div>
   </div>
+  {/* Static hero: what phones, tablets, narrow windows and reduced-motion
+      users see instead of the animated stage (the inline modeCss block
+      decides which of the two renders — they are never shown together, so
+      the duplicated heading/CTAs expose only one copy to screen readers
+      and the tab order). Everything here is plain flow content, visible
+      at first paint with no animation and no JS dependency. */}
+  <div class="tw-intro-static">
+    <svg
+      class="tw-intro-static-logo"
+      viewBox={`0 0 ${LOGO_COLS} ${LOGO_ROWS}`}
+      preserveAspectRatio="none"
+      shape-rendering="crispEdges"
+      role="img"
+      aria-label="Typewriter logo">
+      <title>Typewriter logo</title>
+      {
+        logoRects.map((r) => (
+          <rect
+            x={r.x}
+            y={r.y}
+            width={r.w + BLEED}
+            height={1 + BLEED}
+            fill={r.fill}
+          />
+        ))
+      }
+    </svg>
+    <h1 class="tw-intro-static-title">{TITLE}</h1>
+    <p class="tw-intro-static-sub">{SUBTITLE}</p>
+    <div class="tw-intro-static-cta">
+      <a class="tw-intro-btn tw-intro-btn-primary" href={primaryCta.href}>
+        {
+          primaryCta.icon === "arrow" && (
+            <svg
+              class="tw-intro-btn-icon"
+              viewBox={`0 0 ${ARROW_COLS} ${ARROW_ROWS}`}
+              shape-rendering="crispEdges"
+              aria-hidden="true"
+            >
+              {arrowRects.map((r) => (
+                <rect
+                  x={r.x}
+                  y={r.y}
+                  width={r.w + BLEED}
+                  height={1 + BLEED}
+                  fill="currentColor"
+                />
+              ))}
+            </svg>
+          )
+        }
+        <span>{primaryCta.label}</span>
+      </a>
+      {
+        secondaryCta && (
+          <a
+            class="tw-intro-btn tw-intro-btn-secondary"
+            href={secondaryCta.href}
+          >
+            {secondaryCta.icon === "discord" && (
+              <DiscordIcon class="tw-intro-btn-icon" />
+            )}
+            <span>{secondaryCta.label}</span>
+          </a>
+        )
+      }
+    </div>
+  </div>
   <div class="tw-intro-scroll" aria-hidden="true">
     <svg viewBox="0 0 8 4" shape-rendering="crispEdges">
       {
@@ -238,6 +337,11 @@ const fontFaceCss = `@font-face {
     #tw-intro .tw-intro-cta {
       opacity: 1 !important;
       animation: none !important;
+    }
+    /* no JS also means the tw-scrolled/tw-intro-settled classes that
+       reveal the navbar (home.css) never get added — show it outright */
+    body:has(.tw-home) header.fixed {
+      transform: none !important;
     }
   </style>
 </noscript>
@@ -281,6 +385,32 @@ const fontFaceCss = `@font-face {
     setScale();
     new ResizeObserver(setScale).observe(root);
 
+    // the same media query that flips the CSS between the animated stage
+    // and the static hero (single source of truth via data-animated-mq)
+    const animatedMq = matchMedia(root.dataset.animatedMq);
+
+    // if the environment flips mid-session (window resized across the
+    // breakpoint, OS motion setting toggled), never replay the intro —
+    // jump straight to the finished banner so the stage isn't left with
+    // its elements stuck at opacity 0
+    animatedMq.addEventListener("change", () => {
+      if (animatedMq.matches && !root.classList.contains("tw-intro-play")) {
+        root.classList.add("tw-intro-still");
+        settle();
+      }
+    });
+
+    // static hero (phones, tablets, narrow windows, reduced motion): the
+    // CSS already shows everything with no animation, so skip all the
+    // animation work below — no image decode, no font preloading, no
+    // frame-rate probing — and reveal the navbar immediately
+    if (!animatedMq.matches) {
+      settle();
+      return;
+    }
+
+    // unreachable while ANIMATED_MQ includes prefers-reduced-motion; kept
+    // as a safety net in case that clause is ever edited out of the query
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       root.classList.add("tw-intro-still");
       settle();
@@ -667,6 +797,101 @@ const fontFaceCss = `@font-face {
     }
     100% {
       transform: translateX(0) scale(1);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Static hero: served to phones, tablets, narrow windows and
+     reduced-motion users (the inline modeCss block in the frontmatter
+     owns the switch). Same scene — blob background, pixel logo,
+     wordmark, subtitle, CTAs — but a normal-flow fluid column, fully
+     visible at first paint: nothing waits on JS, gating or network
+     beyond the ~7.6KB background and ~7KB font. A separate layout
+     rather than a shrunken stage because the stage's absolute 1920px
+     coordinates scale down to unreadable text on small screens. */
+  .tw-intro-static {
+    /* positioned so it paints above the absolutely-positioned blob halves */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* small-viewport units: no reflow jump when mobile URL bars collapse */
+    min-height: 100svh;
+    /* top clears the navbar (revealed immediately in static mode, and it
+       overlays the pane); bottom clears the scroll chevron */
+    padding: 4.5rem 1.5rem 7rem;
+    text-align: center;
+  }
+  .tw-intro-static-logo {
+    width: clamp(7rem, 28vw, 11rem);
+    /* the grid's own pixel aspect; CSS resolves the height from it */
+    aspect-ratio: 32 / 29;
+  }
+  /* #tw-intro prefix for the same specificity reason as .tw-intro-title */
+  #tw-intro .tw-intro-static-title,
+  #tw-intro .tw-intro-static-sub {
+    margin: 0;
+    font-family: "Minecraft Ten", var(--font-mono);
+    font-weight: 400;
+  }
+  #tw-intro .tw-intro-static-title {
+    margin-top: 2rem;
+    font-size: clamp(2.1rem, 9.5vw, 4rem);
+    line-height: 1;
+    color: #ede9e8;
+  }
+  #tw-intro .tw-intro-static-sub {
+    margin-top: 0.9rem;
+    font-size: clamp(0.95rem, 4vw, 1.5rem);
+    line-height: 1.35;
+    color: #1ab4ff;
+    text-wrap: balance;
+  }
+  .tw-intro-static-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    margin-top: 2.5rem;
+  }
+  /* the stage buttons' tuned metrics (28px font / 20px icon box / 20-40-
+     25.2px padding), all rescaled by the same 17/28 factor so the
+     baseline-alignment math carries over to this size unchanged */
+  #tw-intro .tw-intro-static .tw-intro-btn {
+    min-width: 0;
+    width: min(100%, 20rem);
+    font-size: 17px;
+    gap: 10px;
+    padding: 12px 24px 15.3px;
+  }
+  #tw-intro .tw-intro-static .tw-intro-btn-icon {
+    width: 12px;
+    height: 12px;
+  }
+  @media (min-width: 44rem) {
+    .tw-intro-static-cta {
+      flex-direction: row;
+      justify-content: center;
+    }
+    #tw-intro .tw-intro-static .tw-intro-btn {
+      width: auto;
+      min-width: 15rem;
+    }
+  }
+
+  /* Reduced motion, enforced in CSS itself rather than only via the JS
+     branch: the chevron stops floating and buttons stop nudging on
+     hover/press. Color/brightness feedback stays — that's not motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .tw-intro-scroll svg {
+      animation: none;
+    }
+    .tw-intro-btn:hover,
+    .tw-intro-btn:active {
+      transform: none;
     }
   }
 </style>
