@@ -1,13 +1,13 @@
 use crate::config::IssuerConfig;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use jose::{
+    Jwt, UntypedAdditionalProperties,
     format::{Compact, DecodeFormat},
     header::HeaderValue,
     jwk::JwkVerifier,
     jws::Unverified,
     jwt::Claims,
     policy::{Checkable, StandardPolicy},
-    Jwt, UntypedAdditionalProperties,
 };
 use otel_wasi::{attribute, main_attribute};
 use serde::{Deserialize, Serialize};

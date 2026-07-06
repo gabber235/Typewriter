@@ -36,10 +36,7 @@ pub struct User {
 }
 
 /// Build skir Permissions directly from allow vectors.
-pub fn build_permissions(
-    allow_publish: Vec<String>,
-    allow_subscribe: Vec<String>,
-) -> Permissions {
+pub fn build_permissions(allow_publish: Vec<String>, allow_subscribe: Vec<String>) -> Permissions {
     Permissions {
         publish: Permission {
             allow: allow_publish,

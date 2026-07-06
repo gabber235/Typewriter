@@ -45,7 +45,6 @@ impl Guest for TypewriterPermissions {
                 ));
             }
         };
-
         wstd::runtime::block_on(async {
             let (permissions, tags) = match msg.subject.as_str() {
                 PANEL_SUBJECT => handle_panel_subject(request).await,
