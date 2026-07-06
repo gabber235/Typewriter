@@ -10,6 +10,12 @@ NEXT GEN PLAYER INTERACTIONS
 
 [Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
 
+# TYPEWRITER
+
+NEXT GEN PLAYER INTERACTIONS
+
+[Get Started](./01-typewiter)[Join Discord](https://discord.gg/HtbKyuDDBw)
+
 ### Interactive Dialogues & Quests
 
 Create dialogues, branching storylines, and dynamic quests that respond to player choices.
