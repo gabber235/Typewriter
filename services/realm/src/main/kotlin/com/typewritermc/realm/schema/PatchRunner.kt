@@ -45,6 +45,12 @@ class PatchRunner(
     private fun applyPatch(patch: Patch, parentSpan: Span) = tracer.withSpan("realm.patch.apply_single") { s ->
         s.setAttribute("patch.id", patch.id)
 
+        // TODO: Add checksum validation for already-applied patches.
+        // Store a SHA-256 hash of each patch file in the _patch table at apply time.
+        // On startup, compare stored checksums against current file contents.
+        // If a previously-applied patch was modified, fail with a clear error.
+        // This prevents silent drift when patch files are edited after deployment.
+
         require(patch.id.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
             "Invalid patch id format: ${patch.id}"
         }
