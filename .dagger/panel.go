@@ -27,7 +27,7 @@ func (m *Typewriter) buildRunner(
 		WithMountedCache("/root/.pub-cache", dag.CacheVolume("pub-cache")).
 		WithExec([]string{"flutter", "pub", "get"}).
 		WithMountedCache("/workspace/.dart_tool", dag.CacheVolume("dart-tool")).
-		WithExec([]string{"dart", "run", "build_runner", "build", "--delete-conflicting-outputs"}).
+		WithExec([]string{"dart", "run", "build_runner", "build"}).
 		Directory("/workspace")
 
 	return generated.Changes(dirSource)
