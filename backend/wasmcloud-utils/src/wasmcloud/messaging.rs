@@ -27,13 +27,12 @@ pub use crate::bindings::wasmcloud::messaging::*;
 /// // If the template doesn't match, an error is returned:
 /// let m2 = parse_subject("test.<id>.something.<type>.*.<action>.>",
 ///                         "test.abc.whatever.foo.bar.baz.qux");
-/// assert_eq!(m2, Err("Subject 'test.abc.whatever.foo.bar.baz.qux' doesn't match template 'test.<id>.something.<type>.*.<action>.>', expected 'something' but got 'whatever'".to_string()));
-///
+/// assert!(m2.is_err());
 ///
 /// // If the subject is too short, an error is returned:
 /// let m3 = parse_subject("test.<id>.something.<type>.*.<action>.>",
 ///                         "test.123.something");
-/// assert_eq!(m3, Err("Subject 'test.123.something' doesn't match template 'test.<id>.something.<type>.*.<action>.>', missing part '<type>.*.<action>.>'".to_string()));
+/// assert!(m3.is_err());
 ///
 /// // When a placeholder is the last template part, it captures all remaining segments:
 /// let m4 = parse_subject("user.<user_id>.organization.<action>",
@@ -55,7 +54,7 @@ pub use crate::bindings::wasmcloud::messaging::*;
 pub fn parse_subject(
     template: &str,
     subject: &str,
-) -> Result<HashMap<String, String>, String> {
+) -> Result<HashMap<String, String>, otel_wasi::Error> {
     let expanded_templates = expand_optional_segments(template);
 
     let mut last_error = String::new();
@@ -66,7 +65,7 @@ pub fn parse_subject(
         }
     }
 
-    Err(last_error)
+    Err(otel_wasi::Error::new("subject-parse-failed", last_error))
 }
 
 fn expand_optional_segments(template: &str) -> Vec<String> {
@@ -116,10 +115,7 @@ fn expand_optional_segments(template: &str) -> Vec<String> {
     results
 }
 
-fn parse_subject_inner(
-    template: &str,
-    subject: &str,
-) -> Result<HashMap<String, String>, String> {
+fn parse_subject_inner(template: &str, subject: &str) -> Result<HashMap<String, String>, String> {
     let mut map = HashMap::new();
     let template_parts = template.split(".").collect::<Vec<&str>>();
     let subject_parts = subject.split(".").collect::<Vec<&str>>();
@@ -176,15 +172,19 @@ fn parse_subject_inner(
 pub fn reply(
     reply_to: types::BrokerMessage,
     data: impl Into<Vec<u8>>,
-) -> Result<(), String> {
+) -> Result<(), otel_wasi::Error> {
     if let Some(reply_to) = reply_to.reply_to {
         consumer::publish(&types::BrokerMessage {
             subject: reply_to,
             reply_to: None,
             body: data.into(),
         })
+        .map_err(|e| otel_wasi::Error::new("message-reply-failed", e))
     } else {
-        Err("No reply_to field in message, ignoring message".to_string())
+        Err(otel_wasi::Error::new(
+            "message-no-reply-to",
+            "No reply_to field in message",
+        ))
     }
 }
 
@@ -193,90 +193,48 @@ pub fn send(
     subject: String,
     reply_to: String,
     data: impl Into<Vec<u8>>,
-) -> Result<(), String> {
+) -> Result<(), otel_wasi::Error> {
     consumer::publish(&types::BrokerMessage {
         subject,
         reply_to: Some(reply_to),
         body: data.into(),
     })
+    .map_err(|e| otel_wasi::Error::new("message-send-failed", e))
 }
 
-/// Dispatch a message to one of multiple action handlers based on the <action> value in the subject.
+/// Reply to a message with the result of a handler that returns `Result<R, R>`.
 ///
-/// This function parses the subject using the provided template (which must include an <action> placeholder),
-/// extracts the action value, and dispatches to the corresponding handler function.
-///
-/// Each action can optionally have an error handler. When an error occurs and an error handler
-/// is provided for that action, it will call the error handler to generate error response bytes
-/// and send them as a reply to the original message.
-///
-/// # Arguments
-/// * `msg` - The incoming broker message
-/// * `subject_template` - Subject template that includes `<action>` (e.g., "user.<user_id>.organization.<action>")
-/// * `actions` - A slice of tuples containing (action_name, handler_function, optional_error_handler)
-///
-/// # Returns
-/// Returns `Ok(())` if the action was handled successfully, or an error if:
-/// - The subject doesn't match the template
-/// - The action is not found in the provided actions list
-/// - The handler function returns an error
-pub fn dispatch_action(
+/// Both `Ok(response)` and `Err(response)` are serialized and replied.
+/// The function returns `Ok(())` if the response is a success variant,
+/// or `Err(otel_wasi::Error)` with the variant's slug and message if it is an error variant.
+pub fn reply_result_response<R>(
     msg: types::BrokerMessage,
-    subject_template: &str,
-    actions: &[(
-        &str,
-        fn(
-            types::BrokerMessage,
-            std::collections::HashMap<String, String>,
-        ) -> Result<(), String>,
-        Option<fn() -> Vec<u8>>,
-    )],
-) -> Result<(), String> {
-    if !subject_template.contains("<action>") {
-        return Err(format!(
-            "Subject template '{}' must contain '<action>' placeholder",
-            subject_template
-        ));
-    }
-
-    let params = parse_subject(subject_template, &msg.subject)?;
-
-    let action = params.get("action").ok_or_else(|| {
-        format!(
-            "Failed to extract action from subject '{}' using template '{}'",
-            msg.subject, subject_template
-        )
-    })?;
-
-    let Some((_, handler, error_handler)) =
-        actions.iter().find(|(name, _, _)| *name == action)
-    else {
-        let valid_actions: Vec<&str> = actions.iter().map(|(name, _, _)| *name).collect();
-        return Err(format!(
-            "Unknown action '{}' for subject '{}'. Valid actions are: {}",
-            action,
-            msg.subject,
-            valid_actions.join(", ")
-        ));
+    result: Result<R, R>,
+) -> Result<(), otel_wasi::Error>
+where
+    R: crate::SkirResponse,
+{
+    let response = match result {
+        Ok(response) => response,
+        Err(response) => response,
     };
 
-    let error_handler = *error_handler;
-    let result = handler(msg.clone(), params);
+    let is_success = response.is_success();
+    let slug = response.variant_slug();
+    let message = response.variant_message();
 
-    if let Err(_) = result {
-        if let Some(err_fn) = error_handler {
-            let error_response = err_fn();
-            if let Some(ref reply_to) = msg.reply_to {
-                let _ = consumer::publish(&types::BrokerMessage {
-                    subject: reply_to.clone(),
-                    reply_to: None,
-                    body: error_response,
-                });
-            }
-        }
+    otel_wasi::main_attribute!(
+        "messaging.response.variant" = slug,
+        "messaging.response.success" = is_success,
+    );
+
+    reply(msg, response.to_skir_bytes())?;
+
+    if is_success {
+        Ok(())
+    } else {
+        Err(otel_wasi::Error::new(slug, message))
     }
-
-    result
 }
 
 pub fn expand_template_pattern(pattern: &str, templates: &[(&str, &str)]) -> String {
@@ -286,50 +244,6 @@ pub fn expand_template_pattern(pattern: &str, templates: &[(&str, &str)]) -> Str
         result = result.replace(&placeholder, template_value);
     }
     result
-}
-
-pub fn dispatch_action_with_templates(
-    msg: types::BrokerMessage,
-    templates: &[(&str, &str)],
-    actions: &[(
-        &str,
-        fn(types::BrokerMessage, std::collections::HashMap<String, String>) -> Result<(), String>,
-        Option<fn() -> Vec<u8>>,
-    )],
-) -> Result<(), String> {
-    for (pattern, handler, error_handler) in actions {
-        let expanded = expand_template_pattern(pattern, templates);
-
-        let Ok(params) = parse_subject(&expanded, &msg.subject) else {
-            continue;
-        };
-
-        let error_handler = *error_handler;
-        let result = handler(msg.clone(), params);
-
-        let Err(_) = result else {
-            return result;
-        };
-
-        let Some(err_fn) = error_handler else {
-            return result;
-        };
-
-        let error_response = err_fn();
-        let Some(ref reply_to) = msg.reply_to else {
-            return result;
-        };
-
-        let _ = consumer::publish(&types::BrokerMessage {
-            subject: reply_to.clone(),
-            reply_to: None,
-            body: error_response,
-        });
-
-        return result;
-    }
-
-    Err(format!("No matching action for subject '{}'", msg.subject))
 }
 
 #[cfg(test)]

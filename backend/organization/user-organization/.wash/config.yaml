@@ -1,0 +1,7 @@
+version: 2.5.1
+build:
+  command: cargo build --target wasm32-wasip2 --release
+  component_path: ../../target/wasm32-wasip2/release/user_organization.wasm
+wit:
+  wit_dir: wit
+  skip_fetch: true

@@ -230,6 +230,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
+name = "convert_case"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2436,6 +2445,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
+name = "unicode-segmentation"
+version = "1.13.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
+
+[[package]]
 name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2467,6 +2482,26 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+]
+
+[[package]]
+name = "user-organization"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "jose",
+ "nats-jwt-rs",
+ "opentelemetry 0.32.0",
+ "otel-wasi",
+ "serde",
+ "serde_json",
+ "surrealdb-component-sdk",
+ "tracing",
+ "tracing-opentelemetry 0.33.0",
+ "wasmcloud-utils",
+ "wit-bindgen 0.58.0",
+ "wstd",
 ]
 
 [[package]]
@@ -2692,7 +2727,18 @@ dependencies = [
  "skir-client",
  "tracing",
  "tracing-opentelemetry 0.33.0",
+ "wasmcloud-utils-macros",
  "wit-bindgen 0.58.0",
+]
+
+[[package]]
+name = "wasmcloud-utils-macros"
+version = "0.0.1"
+dependencies = [
+ "convert_case",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

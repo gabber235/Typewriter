@@ -1,0 +1,35 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: user-organization
+  namespace: typewriter
+spec:
+  replicas: 1
+  template:
+    spec:
+      environment: wasmcloud
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: user-organization
+      hostInterfaces:
+        - namespace: wasi
+          package: otel
+          version: "0.2.0-rc.2"
+          interfaces:
+            - tracing
+        - namespace: wasmcloud
+          package: messaging
+          version: "0.2.0"
+          interfaces:
+            - handler
+            - consumer
+          config:
+            subscriptions: typewriter.in.user.*.organization.*,typewriter.in.user.*.organization.join_requests.*
+        - namespace: seamlezz
+          package: surrealdb
+          version: "0.2.0"
+          interfaces:
+            - call
+          secretFrom:
+            - name: surrealdb-credentials-user-organization

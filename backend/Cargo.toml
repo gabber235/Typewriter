@@ -4,7 +4,9 @@ members = [
   "access/auth-callout",
   "access/auth-sentinel",
   "access/auth-typewriter-permissions",
-  "wasmcloud-utils"
+  "organization/user-organization",
+  "wasmcloud-utils",
+  "wasmcloud-utils-macros"
 ]
 
 [workspace.package]
@@ -40,6 +42,11 @@ wit-bindgen = {
   version = "0.58",
   features = ["async-spawn", "inter-task-wakeup"]
 }
+
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
+convert_case = "0.6"
 
 [workspace.metadata.dylint]
 libraries = [
