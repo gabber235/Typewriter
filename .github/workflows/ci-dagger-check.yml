@@ -1,0 +1,41 @@
+name: CI Dagger Check
+
+on:
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "documentation/**"
+      - "readme/**"
+      - "design/**"
+      - "CODE_OF_CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+  push:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "documentation/**"
+      - "readme/**"
+      - "design/**"
+      - "CODE_OF_CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Dagger checks
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: 0.21.7
+          args: check
