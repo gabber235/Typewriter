@@ -1,0 +1,200 @@
+name = "organization"
+tags = ["organization", "invariants"]
+
+[[fixtures]]
+name = "organization_seed"
+actor = "root"
+file = "../fixtures/organization_seed.surql"
+
+[[cases]]
+name = "organization_setup_event_created_roles_and_membership"
+kind = "sql_expect"
+actor = "root"
+sql = """
+RETURN array::len(SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'founder' AND deletable = false AND assignable = false) = 1
+    AND array::len(SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'writer' AND deletable = false AND assignable = true AND default_role = true) = 1
+    AND fn::organization::member(user:alice, organization:acme)
+    AND fn::organization::founder_member(user:alice, organization:acme)
+    AND !fn::organization::founder_member(user:bob, organization:acme);
+"""
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "organization_name_must_be_slug"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE organization:bad_name SET name = 'Bad Name', founder = user:alice;"
+allow = false
+error_contains = "name"
+
+[[cases]]
+name = "organization_logo_must_be_http_url"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE organization:bad_logo SET name = 'bad_logo', logo_url = 'ftp://example.com/logo.png', founder = user:alice;"
+allow = false
+error_contains = "logo_url"
+
+[[cases]]
+name = "membership_requires_at_least_one_role"
+kind = "sql_expect"
+actor = "root"
+sql = "RELATE user:dave->member_of->organization:acme SET roles = [];"
+allow = false
+error_contains = "At least one role"
+
+[[cases]]
+name = "membership_roles_must_belong_to_target_organization"
+kind = "sql_expect"
+actor = "root"
+sql = "LET $beta_writer = (SELECT VALUE id FROM organization_role WHERE organization = organization:beta AND name = 'writer')[0]; RELATE user:dave->member_of->organization:acme SET roles = [$beta_writer];"
+allow = false
+error_contains = "target organization"
+
+[[cases]]
+name = "founder_membership_cannot_be_deleted_while_organization_exists"
+kind = "sql_expect"
+actor = "root"
+sql = "DELETE member_of WHERE in = user:alice AND out = organization:acme;"
+allow = false
+error_contains = "founder"
+
+[[cases]]
+name = "last_founder_role_holder_cannot_be_removed_by_role_update"
+kind = "sql_expect"
+actor = "root"
+sql = "LET $writer = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'writer')[0]; UPDATE member_of SET roles = [$writer] WHERE in = user:alice AND out = organization:acme;"
+allow = false
+error_contains = "founder role holder"
+
+[[cases]]
+name = "assigned_role_cannot_be_deleted"
+kind = "sql_expect"
+actor = "root"
+sql = "DELETE organization_role:acme_member;"
+allow = false
+error_contains = "assigned"
+
+[[cases]]
+name = "organization_can_have_only_one_default_role"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE organization_role:second_default SET name = 'second_default', organization = organization:acme, default_role = true;"
+allow = false
+error_contains = "one default role"
+
+[[cases]]
+name = "join_code_defaults_are_strict"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN organization_join_code:manual_acme.single_use = true AND organization_join_code:manual_acme.created_by = user:alice AND organization_join_code:manual_acme.expires_at != NONE AND array::len(organization_join_code:manual_acme.auto_accept_roles) = 0;"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "join_code_auto_accept_roles_must_be_assignable_same_org"
+kind = "sql_expect"
+actor = "root"
+sql = "LET $founder = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'founder')[0]; CREATE organization_join_code:bad_auto SET organization = organization:acme, auto_accept_roles = [$founder];"
+allow = false
+error_contains = "Auto-accept roles"
+
+[[cases]]
+name = "request_to_join_is_unique_per_user_and_organization"
+kind = "sql_expect"
+actor = "root"
+sql = "RELATE user:dave->request_to_join->organization:acme; RELATE user:dave->request_to_join->organization:acme;"
+allow = false
+error_contains = "request_to_join_unique"
+
+[[cases]]
+name = "organization_delete_cascades_dependents_and_unbinds_services"
+kind = "sql_expect"
+actor = "root"
+sql = """
+RETURN {
+    CREATE user:delete_owner SET email = 'delete_owner@example.com';
+    CREATE organization:delete_org SET name = 'delete_org', founder = user:delete_owner;
+    CREATE organization_join_code:delete_code SET organization = organization:delete_org;
+    CREATE service:delete_realm SET name = 'delete_realm', service_types = ['realm'], organization = organization:delete_org;
+    DELETE organization:delete_org;
+
+    RETURN (SELECT VALUE id FROM ONLY organization:delete_org) == NONE
+        AND array::len(SELECT VALUE id FROM organization_role WHERE organization = organization:delete_org) = 0
+        AND array::len(SELECT VALUE id FROM member_of WHERE out = organization:delete_org) = 0
+        AND (SELECT VALUE organization FROM ONLY service:delete_realm) == NONE;
+};
+"""
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "custom_role_defaults_are_flexible"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE organization_role:flex_role SET name = 'flex_role', organization = organization:acme; RETURN organization_role:flex_role.deletable = true AND organization_role:flex_role.assignable = true AND organization_role:flex_role.default_role = false AND organization_role:flex_role.priority = 1; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "role_color_must_be_valid"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE organization_role:bad_color SET name = 'bad_color', organization = organization:acme, color = 4294967296;"
+allow = false
+error_contains = "color"
+
+[[cases]]
+name = "role_name_unique_per_organization"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE organization_role:duplicate_member SET name = 'member', organization = organization:acme;"
+allow = false
+error_contains = "organization_role_unique"
+
+[[cases]]
+name = "unassigned_deletable_role_can_be_deleted"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE organization_role:temporary_role SET name = 'temporary_role', organization = organization:acme; DELETE organization_role:temporary_role; RETURN (SELECT VALUE id FROM ONLY organization_role:temporary_role) == NONE; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "join_code_accepts_assignable_same_org_auto_roles"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE organization_join_code:auto_member SET organization = organization:acme, auto_accept_roles = [organization_role:acme_member]; RETURN organization_join_code:auto_member.auto_accept_roles = [organization_role:acme_member]; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "request_to_join_defaults_are_populated"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { RELATE user:dave->request_to_join->organization:beta; RETURN (SELECT VALUE requested_at FROM request_to_join WHERE in = user:dave AND out = organization:beta)[0] != NONE AND (SELECT VALUE expires_at FROM request_to_join WHERE in = user:dave AND out = organization:beta)[0] > time::now(); };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "organization_name_is_unique"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE organization:duplicate_acme SET name = 'acme', founder = user:dave;"
+allow = false
+error_contains = "organization_name_unique"

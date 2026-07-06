@@ -1,0 +1,155 @@
+name = "service"
+tags = ["service", "invariants"]
+
+[[fixtures]]
+name = "organization_seed"
+actor = "root"
+file = "../fixtures/organization_seed.surql"
+
+[[cases]]
+name = "fixture_services_have_valid_runs_in_lifecycle"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN service:engine_acme.runs_in = service:realm_acme AND service:engine_unbound.runs_in = service:realm_unbound;"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "service_types_cannot_be_empty"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:no_types SET name = 'no_types', service_types = [];"
+allow = false
+error_contains = "service_types"
+
+[[cases]]
+name = "service_types_cannot_be_duplicate"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:dup_types SET name = 'dup_types', service_types = ['engine', 'engine'];"
+allow = false
+error_contains = "service_types"
+
+[[cases]]
+name = "service_types_are_limited_to_known_values"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:bad_type SET name = 'bad_type', service_types = ['database'];"
+allow = false
+error_contains = "service_types"
+
+[[cases]]
+name = "registration_token_must_match_format"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:bad_token SET name = 'bad_token', service_types = ['engine'], registration = { token: 'bad-token', expires_at: time::now() + 1h };"
+allow = false
+error_contains = "token"
+
+[[cases]]
+name = "service_cannot_have_registration_and_organization"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:bound_and_registration SET name = 'bound_and_registration', service_types = ['engine'], organization = organization:acme, registration = { token: 'ABCDEF1234', expires_at: time::now() + 1h };"
+allow = false
+error_contains = "organization and registration"
+
+[[cases]]
+name = "only_engines_can_have_runs_in"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:realm_with_runs_in SET name = 'realm_with_runs_in', service_types = ['realm'], runs_in = service:realm_unbound;"
+allow = false
+error_contains = "engine type"
+
+[[cases]]
+name = "runs_in_target_must_be_realm"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:engine_target SET name = 'engine_target', service_types = ['engine']; CREATE service:engine_bad_runs_in SET name = 'engine_bad_runs_in', service_types = ['engine'], runs_in = service:engine_target;"
+allow = false
+error_contains = "realm type"
+
+[[cases]]
+name = "runs_in_rejects_different_organizations"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:realm_beta SET name = 'realm_beta', service_types = ['realm'], organization = organization:beta; CREATE service:engine_cross_org SET name = 'engine_cross_org', service_types = ['engine'], organization = organization:acme, runs_in = service:realm_beta;"
+allow = false
+error_contains = "same organization"
+
+[[cases]]
+name = "runs_in_rejects_mixed_bound_unbound_lifecycle"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:engine_mixed SET name = 'engine_mixed', service_types = ['engine'], organization = organization:acme, runs_in = service:realm_unbound;"
+allow = false
+error_contains = "unbound or bound"
+
+[[cases]]
+name = "deleting_realm_unsets_engine_runs_in"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service:realm_to_delete SET name = 'realm_to_delete', service_types = ['realm']; CREATE service:engine_to_unset SET name = 'engine_to_unset', service_types = ['engine'], runs_in = service:realm_to_delete; DELETE service:realm_to_delete; RETURN service:engine_to_unset.runs_in == NONE; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "deleting_organization_unbinds_services"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE user:service_delete_owner SET email = 'service_delete_owner@example.com'; CREATE organization:service_delete_org SET name = 'service_delete_org', founder = user:service_delete_owner; CREATE service:service_delete_realm SET name = 'service_delete_realm', service_types = ['realm'], organization = organization:service_delete_org; DELETE organization:service_delete_org; RETURN service:service_delete_realm.organization == NONE; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "service_state_accepts_known_status_values"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { UPDATE service:engine_acme SET state = { status: 'ONLINE', last_seen: time::now() }; RETURN service:engine_acme.state.status = 'ONLINE' AND service:engine_acme.state.last_seen != NONE; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "service_state_rejects_unknown_status"
+kind = "sql_expect"
+actor = "root"
+sql = "UPDATE service:engine_acme SET state = { status: 'MAYBE', last_seen: time::now() };"
+allow = false
+error_contains = "state.status"
+
+[[cases]]
+name = "binding_engine_without_its_realm_is_blocked"
+kind = "sql_expect"
+actor = "root"
+sql = "UPDATE service:engine_unbound SET organization = organization:acme;"
+allow = false
+error_contains = "unbound or bound"
+
+[[cases]]
+name = "same_organization_bound_engine_and_realm_can_keep_runs_in"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service:realm_pair SET name = 'realm_pair', service_types = ['realm'], organization = organization:acme; CREATE service:engine_pair SET name = 'engine_pair', service_types = ['engine'], organization = organization:acme, runs_in = service:realm_pair; RETURN service:engine_pair.runs_in = service:realm_pair; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "deleting_organization_with_bound_engine_realm_clears_contextual_runs_in"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE user:pair_owner SET email = 'pair_owner@example.com'; CREATE organization:pair_org SET name = 'pair_org', founder = user:pair_owner; CREATE service:pair_realm SET name = 'pair_realm', service_types = ['realm'], organization = organization:pair_org; CREATE service:pair_engine SET name = 'pair_engine', service_types = ['engine'], organization = organization:pair_org, runs_in = service:pair_realm; DELETE organization:pair_org; RETURN service:pair_engine.organization == NONE AND service:pair_realm.organization == NONE AND service:pair_engine.runs_in == NONE; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true

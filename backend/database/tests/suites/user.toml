@@ -1,0 +1,36 @@
+name = "user"
+tags = ["user", "schema"]
+
+[[cases]]
+name = "user_email_is_optional"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE user:optional_email SET name = 'Optional'; RETURN user:optional_email.email == NONE; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "user_email_must_be_valid_when_present"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE user:bad_email SET email = 'not-email';"
+allow = false
+error_contains = "email"
+
+[[cases]]
+name = "user_email_is_unique_when_present"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE user:dup_email_a SET email = 'dup@example.com'; CREATE user:dup_email_b SET email = 'dup@example.com';"
+allow = false
+error_contains = "user_email_unique"
+
+[[cases]]
+name = "avatar_url_must_be_http_url"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE user:bad_avatar SET avatar_url = 'ftp://example.com/avatar.png';"
+allow = false
+error_contains = "avatar_url"

@@ -1,0 +1,18 @@
+# Template variables for use in .surql schema and seed files.
+# Values here have the lowest priority:
+#   --var KEY=VALUE  >  SURREALKIT_VAR_KEY env vars  >  this file
+#
+# [variables]
+# schema_prefix = "myapp"
+# environment   = "development"
+
+# Generate TypeScript types from your schema (surrealdb JS SDK v2).
+# When `typescript` is set, `surrealkit typegen` and `sync --watch` write an
+# index.ts of typed table interfaces into this directory.
+#
+# Optionally run your formatter on the generated file so it matches your house
+# style (the file path is appended to the command). Failures are non-fatal.
+#
+# [typegen]
+# typescript = "../src/types"
+# format     = "biome check --write"   # or "prettier --write", "eslint --fix"

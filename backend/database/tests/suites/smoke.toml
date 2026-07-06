@@ -1,0 +1,26 @@
+name = "smoke"
+tags = ["smoke", "schema"]
+
+[[cases]]
+name = "rollout_table_visible"
+kind = "schema_metadata"
+actor = "root"
+sql = "INFO FOR TABLE __rollout;"
+contains = ["__rollout"]
+
+[[cases]]
+name = "canonical_database_objects_visible"
+kind = "schema_metadata"
+actor = "root"
+sql = "INFO FOR DB;"
+contains = [
+  "organization",
+  "organization_role",
+  "member_of",
+  "request_to_join",
+  "organization_join_code",
+  "service",
+  "fn::organization::member",
+  "fn::organization::founder_member",
+  "fn::service::valid_runs_in",
+]

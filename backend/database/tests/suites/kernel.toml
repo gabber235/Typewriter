@@ -1,0 +1,40 @@
+name = "kernel"
+tags = ["kernel", "schema"]
+
+[[cases]]
+name = "id_helper_accepts_expected_slugs"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN fn::is_id('acme_123') AND fn::is_id('a1b') AND !fn::is_id('Acme') AND !fn::is_id('a') AND !fn::is_id('bad-name');"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "http_url_helper_is_strict"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN fn::is_http_url('https://example.com/a.png') AND fn::is_http_url('http://example.com') AND !fn::is_http_url('ftp://example.com') AND !fn::is_http_url('not-a-url');"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "color_helper_parses_rgb_and_argb"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN fn::color('#9E9E9E') = 4288585374 AND fn::color('FF9E9E9E') = 4288585374 AND fn::is_color(fn::color('#53AAD0'));"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "color_helper_rejects_invalid_hex"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN fn::color('#GGGGGG');"
+allow = false
+error_contains = "Invalid hex character"

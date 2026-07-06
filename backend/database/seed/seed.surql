@@ -1,0 +1,1 @@
+-- Project seed entrypoint. Domain seed files live alongside this file.
