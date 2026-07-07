@@ -12,8 +12,8 @@
     },
     {
       "name": "wash",
-      "source": "github.com/seamlezz/daggerverse/wash@wash/v0.4.0",
-      "pin": "b4f20e8c2d47cc84cbdd6f479742c39dced66361"
+      "source": "github.com/seamlezz/daggerverse/wash@wash/v0.4.1",
+      "pin": "560ff7421882609df449a0eea261271434d9c75e"
     }
   ],
   "dependencies": [
