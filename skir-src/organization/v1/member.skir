@@ -4,13 +4,13 @@ import { RecordId } from "kernel/v1/record_id.skir";
 struct OrganizationMember {
   user_id: RecordId;
   name: string?;
-  email: string;
+  email: string?;
   avatar_url: string?;
-  roles: [Role];
+  roles: [OrganizationRole];
   joined_at: timestamp;
 }
 
-struct Role {
+struct OrganizationRole {
   role_id: RecordId;
   name: string;
   color: Color;
@@ -21,3 +21,40 @@ struct Role {
   // Whether this role can be deleted by administrators
   deletable: bool;
 }
+
+method WatchOrganizationMembers(
+  struct {}
+): enum {
+  list: [OrganizationMember];
+  add: OrganizationMember;
+  remove: RecordId;
+  internal_error: struct {};
+} = 638484;
+
+method UpdateOrganizationMemberRoles(
+  struct {
+    user_id: RecordId;
+    role_ids: [RecordId];
+  }
+): enum {
+  success: OrganizationMember;
+  user_not_found_error: struct {
+    user_id: RecordId;
+  };
+  roles_not_found_error: struct {
+    role_ids: [RecordId];
+  };
+  internal_error: struct {};
+} = 813953;
+
+method RemoveOrganizationMember(
+  struct {
+    user_id: RecordId;
+  }
+): enum {
+  success: struct {};
+  user_not_member_error: struct {
+    user_id: RecordId;
+  };
+  internal_error: struct {};
+} = 291414;

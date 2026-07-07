@@ -1,10 +1,8 @@
 use otel_wasi::WasiError;
 use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::{RecordId, RecordIdKey},
-    organization::v1::join_request::{
-        RequestToJoinResponse, RequestToJoinResponse_CodeNotFoundError,
-    },
-    service::v1::status::GetServiceStatusResponse,
+    organization::v1::user::*,
+    service::v1::status::*,
 };
 use wasmcloud_utils::{SkirDomainResult, SkirDomainResultExt, skir_domain_result};
 
@@ -45,7 +43,7 @@ fn macro_override_constructs_payloadful_domain_error() {
         .expect("known override slug should return response");
 
     match response {
-        RequestToJoinResponse::CodeNotFoundError(payload) => {
+        SubmitUserJoinRequestResponse::CodeNotFoundError(payload) => {
             assert_eq!(payload.code, code);
         }
         other => panic!("unexpected response: {other:?}"),
@@ -55,12 +53,14 @@ fn macro_override_constructs_payloadful_domain_error() {
 fn code_not_found_response(
     parsed: Result<(), String>,
     code: RecordId,
-) -> Result<RequestToJoinResponse, otel_wasi::Error> {
+) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     skir_domain_result!(
-        RequestToJoinResponse,
+        SubmitUserJoinRequestResponse,
         parsed,
         "code-not-found-error" => { code: code.clone() },
     );
 
-    Ok(RequestToJoinResponse::InternalError(Default::default()))
+    Ok(SubmitUserJoinRequestResponse::InternalError(
+        Default::default(),
+    ))
 }

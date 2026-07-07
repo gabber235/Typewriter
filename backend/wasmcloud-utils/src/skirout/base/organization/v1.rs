@@ -15,3 +15,5 @@
 pub mod organization;
 pub mod member;
 pub mod join_request;
+pub mod user;
+pub mod join_codes;

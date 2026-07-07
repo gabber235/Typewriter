@@ -5,22 +5,13 @@
 // The conventional `InternalError` variant is generated automatically by
 // skir_response! and must exist on every response enum declared here.
 
-use crate::skir::base::access::v1::sentinel::{
-    GetSentinelCredentialsResponse, GetSentinelCredentialsResponse_InternalError,
-};
-use crate::skir::base::organization::v1::join_request::{
-    CancelJoinRequestResponse, CancelJoinRequestResponse_InternalError, RequestToJoinResponse,
-    RequestToJoinResponse_InternalError, WatchUserJoinRequestsResponse,
-    WatchUserJoinRequestsResponse_InternalError,
-};
-use crate::skir::base::organization::v1::organization::{
-    CreateOrganizationResponse, CreateOrganizationResponse_InternalError,
-    DeleteOrganizationResponse, DeleteOrganizationResponse_InternalError,
-    WatchUserOrganizationsResponse, WatchUserOrganizationsResponse_InternalError,
-};
-use crate::skir::base::service::v1::status::{
-    GetServiceStatusResponse, GetServiceStatusResponse_InternalError,
-};
+use crate::skir::base::access::v1::sentinel::*;
+use crate::skir::base::organization::v1::join_codes::*;
+use crate::skir::base::organization::v1::join_request::*;
+use crate::skir::base::organization::v1::member::*;
+use crate::skir::base::organization::v1::organization::*;
+use crate::skir::base::organization::v1::user::*;
+use crate::skir::base::service::v1::status::*;
 
 wasmcloud_utils_macros::skir_response! {
     GetSentinelCredentialsResponse {
@@ -70,7 +61,7 @@ wasmcloud_utils_macros::skir_response! {
 }
 
 wasmcloud_utils_macros::skir_response! {
-    RequestToJoinResponse {
+    SubmitUserJoinRequestResponse {
         success: [RequestMade, AutoAccepted],
         errors {
             CodeNotFoundError(e) => format!("Could not find code: '{}'", e.code.key.to_string()),
@@ -83,10 +74,85 @@ wasmcloud_utils_macros::skir_response! {
 }
 
 wasmcloud_utils_macros::skir_response! {
-    CancelJoinRequestResponse {
+    CancelUserJoinRequestResponse {
         success: Success,
         errors {
             RequestNotFoundError(e) => format!("Join request not found: '{}'", e.request_id),
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationJoinCodesResponse {
+        success: [List, Add, Remove],
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    GenerateOrganizationJoinCodeResponse {
+        success: Success,
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    RevokeOrganizationJoinCodeResponse {
+        success: Success,
+        errors {
+            CodeNotFoundError(e) => format!("Join code not found: '{}'", e.code_id),
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationJoinRequestsResponse {
+        success: [List, Add, Remove],
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    ApproveOrganizationJoinRequestResponse {
+        success: Success,
+        errors {
+            RequestNotFoundError(e) => format!("Join request not found: '{}'", e.request_id),
+            RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    DeclineOrganizationJoinRequestResponse {
+        success: Success,
+        errors {
+            RequestNotFoundError(e) => format!("Join request not found: '{}'", e.request_id),
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationMembersResponse {
+        success: [List, Add, Remove],
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    UpdateOrganizationMemberRolesResponse {
+        success: Success,
+        errors {
+            UserNotFoundError(e) => format!("User not found: '{}'", e.user_id),
+            RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    RemoveOrganizationMemberResponse {
+        success: Success,
+        errors {
+            UserNotMemberError(e) => format!("User is not a member: '{}'", e.user_id),
         }
     }
 }

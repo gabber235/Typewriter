@@ -1,0 +1,50 @@
+import { Duration } from "kernel/v1/duration.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+// JoinCode represents a code that can be used to request to join an organization.
+struct JoinCode {
+  code: RecordId;
+  created_at: timestamp;
+  expires_at: timestamp?;
+  single_use: bool;
+  auto_accept: struct {
+    role_ids: [RecordId];
+  };
+}
+
+method WatchOrganizationJoinCodes(
+  struct {}
+): enum {
+  list: [JoinCode];
+  add: JoinCode;
+  remove: RecordId;
+  internal_error: struct {};
+} = 690316;
+
+method GenerateOrganizationJoinCode(
+  struct {
+    single_use: bool;
+    expiration: enum {
+      never;
+      duration: Duration;
+    };
+    auto_accept: struct {
+      role_ids: [RecordId];
+    };
+  }
+): enum {
+  success: JoinCode;
+  internal_error: struct {};
+} = 804958;
+
+method RevokeOrganizationJoinCode(
+  struct {
+    code_id: RecordId;
+  }
+): enum {
+  success: struct {};
+  code_not_found_error: struct {
+    code_id: RecordId;
+  };
+  internal_error: struct {};
+} = 510187;

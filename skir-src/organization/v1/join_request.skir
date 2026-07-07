@@ -1,8 +1,11 @@
 import { RecordId } from "kernel/v1/record_id.skir";
-import { Role } from "organization/v1/member.skir";
+import {
+  OrganizationMember,
+  OrganizationRole,
+} from "organization/v1/member.skir";
 
-// JoinRequest represents a pending request from a user to join an organization.
-struct JoinRequest {
+// OrganizationJoinRequest represents a pending request from a user to join an organization.
+struct OrganizationJoinRequest {
   request_id: RecordId;
   user_id: RecordId;
   user_name: string?;
@@ -23,56 +26,39 @@ struct UserJoinRequest {
   expires_at: timestamp;
 }
 
-// JoinCode represents a code that can be used to request to join an organization.
-struct JoinCode {
-  code: RecordId;
-  created_at: timestamp;
-  expires_at: timestamp?;
-  single_use: bool;
-  auto_accept: JoinCodeAutoAccept?;
-}
-
-// JoinCodeAutoAccept contains the configuration for auto-accepting users.
-struct JoinCodeAutoAccept {
-  // Role IDs to assign to auto-accepted users
-  role_ids: [RecordId];
-}
-
 struct AutoAcceptedMember {
   organization_id: RecordId;
   organization_name: string;
   organization_logo_url: string?;
-  roles: [Role];
+  roles: [OrganizationRole];
 }
 
-// All pending join requests made by the user.
-method WatchUserJoinRequests(
+method WatchOrganizationJoinRequests(
   struct {}
 ): enum {
-  list: [UserJoinRequest];
-  add: UserJoinRequest;
-  remove: UserJoinRequest;
+  list: [OrganizationJoinRequest];
+  add: OrganizationJoinRequest;
+  remove: RecordId;
   internal_error: struct {};
-} = 939197;
+} = 399821;
 
-method RequestToJoin(
+method ApproveOrganizationJoinRequest(
   struct {
-    code: RecordId;
+    request_id: RecordId;
+    role_ids: [RecordId];
   }
 ): enum {
-  request_made: UserJoinRequest;
-  auto_accepted: AutoAcceptedMember;
-  code_not_found_error: struct {
-    code: RecordId;
+  success: OrganizationMember;
+  request_not_found_error: struct {
+    request_id: RecordId;
   };
-  already_member_error: struct {};
-  no_assignable_roles_error: struct {};
-  max_pending_requests_error: struct {};
-  pending_request_exists_error: struct {};
+  roles_not_found_error: struct {
+    role_ids: [RecordId];
+  };
   internal_error: struct {};
-} = 4962;
+} = 167357;
 
-method CancelJoinRequest(
+method DeclineOrganizationJoinRequest(
   struct {
     request_id: RecordId;
   }
@@ -82,4 +68,4 @@ method CancelJoinRequest(
     request_id: RecordId;
   };
   internal_error: struct {};
-} = 387737;
+} = 329306;

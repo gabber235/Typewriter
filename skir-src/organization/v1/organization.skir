@@ -6,15 +6,6 @@ struct Organization {
   logo_url: string;
 }
 
-method WatchUserOrganizations(
-  struct {}
-): enum {
-  list: [Organization];
-  add: Organization;
-  remove: Organization;
-  internal_error: struct {};
-} = 246975;
-
 method CreateOrganization(
   struct {
     name: string;
