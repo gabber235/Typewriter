@@ -4,8 +4,8 @@ import config from "virtual:starlight/user-config";
 import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
 import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
+import CategoryNav from "./CategoryNav.astro";
 import Search from "./Search.astro";
-import SectionNav from "./SectionNav.astro";
 import SiteTitle from "./SiteTitle.astro";
 import ThemeSelect from "./ThemeSelect.astro";
 
@@ -24,7 +24,7 @@ const shouldRenderSearch =
     </div>
     <SiteTitle />
     <div class="hidden min-[50rem]:block">
-      <SectionNav />
+      <CategoryNav />
     </div>
   </div>
   <div class="hidden min-[50rem]:flex items-center justify-center print:hidden">

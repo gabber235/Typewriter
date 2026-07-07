@@ -21,7 +21,7 @@ src/components/sidebar/
 
 ### Sidebar.astro
 
-Main sidebar container that receives data from Starlight's `Astro.locals.starlightRoute.sidebar`. The tree is scoped to the current section (Documentation or Develop) by the route middleware in `src/route-middleware.ts` before it reaches this component. Contains all client-side JavaScript (a bundled module script that initializes once). Also mounts the `SectionNav` switcher (from `src/components/header/`) at the top on mobile viewports.
+Main sidebar container that receives data from Starlight's `Astro.locals.starlightRoute.sidebar`. The tree is scoped to the current category (Documentation or Develop) by the route middleware in `src/route-middleware.ts` before it reaches this component. Contains all client-side JavaScript (a bundled module script that initializes once). Also mounts the `CategoryNav` switcher (from `src/components/header/`) at the top on mobile viewports.
 
 **JavaScript Responsibilities:**
 - State persistence (localStorage), applied once on first load
@@ -95,7 +95,7 @@ The inline script uses these classes to identify elements:
 
 ## Persistence & View Transitions
 
-The site runs with Astro's `<ClientRouter />` (enabled in `src/components/Head.astro`), and the sidebar `<nav>` is marked `transition:persist` in `PageFrame.astro` with a section-scoped name (`sidebar-docs`, `sidebar-develop` — see `src/sections.ts`). Within a section the sidebar DOM — including open/closed groups, scroll position, and event listeners — survives navigation untouched, so there is no per-navigation flicker or re-initialization. Navigating across sections intentionally breaks persistence so the fresh server-rendered sidebar (already scoped to the new section by `src/route-middleware.ts`) replaces the old tree; the `astro:page-load` orchestration re-initializes it the same way it does when arriving from the splash page.
+The site runs with Astro's `<ClientRouter />` (enabled in `src/components/Head.astro`), and the sidebar `<nav>` is marked `transition:persist` in `PageFrame.astro` with a category-scoped name (`sidebar-docs`, `sidebar-develop` — see `src/categories.ts`). Within a category the sidebar DOM — including open/closed groups, scroll position, and event listeners — survives navigation untouched, so there is no per-navigation flicker or re-initialization. Navigating across categories intentionally breaks persistence so the fresh server-rendered sidebar (already scoped to the new category by `src/route-middleware.ts`) replaces the old tree; the `astro:page-load` orchestration re-initializes it the same way it does when arriving from the splash page.
 
 Because the persisted DOM is not re-rendered by the server on navigation, the active link/group highlight is updated by JavaScript on each `astro:page-load` (see `updateActiveState`), which also auto-expands the current page's parent groups and scrolls the active link into view.
 

@@ -1,0 +1,44 @@
+---
+import { CATEGORIES, categoryForRoute } from "../../categories";
+
+const current = categoryForRoute(Astro.locals.starlightRoute.id);
+const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
+---
+
+<nav class="flex items-center gap-1" aria-label="Documentation categories" data-category-nav>
+  {
+    CATEGORIES.map((category) => (
+      <a
+        href={`${base}/${category.id}/`}
+        data-astro-prefetch="hover"
+        data-category={category.id}
+        aria-current={category.id === current.id ? "true" : undefined}
+        class="px-3 py-1.5 text-sm rounded-md no-underline whitespace-nowrap text-(--sl-color-text) transition-colors duration-200 hover:text-primary  aria-current:text-primary aria-current:font-medium">
+        {category.label}
+      </a>
+    ))
+  }
+</nav>
+
+<script>
+  import { CATEGORIES } from "../../categories";
+
+  // The header is transition:persist'ed, so the server-rendered active state
+  // goes stale on client-side navigation — recompute it from the URL.
+  function updateActiveCategory() {
+    const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
+    const path = location.pathname.slice(base.length);
+    const head = path.split("/").filter(Boolean)[0];
+    const active = CATEGORIES.find((category) => category.id === head)?.id;
+    const links = document.querySelectorAll("[data-category-nav] a");
+    for (const link of links) {
+      if (link.getAttribute("data-category") === active) {
+        link.setAttribute("aria-current", "true");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    }
+  }
+
+  document.addEventListener("astro:page-load", updateActiveCategory);
+</script>
