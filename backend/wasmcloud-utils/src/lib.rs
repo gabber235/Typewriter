@@ -20,19 +20,22 @@ pub use otel_wasi;
 pub use skir_client;
 
 // Re-export proc macros
-pub use wasmcloud_utils_macros::{dispatch_actions, skir_response};
+pub use wasmcloud_utils_macros::{dispatch_actions, skir_domain_result, skir_response};
 
-// SkirResponse trait
+// SkirResponse trait and domain-result helpers
 mod skir_response_trait;
-pub use skir_response_trait::SkirResponse;
+pub use skir_response_trait::{
+    SkirDomainResult, SkirDomainResultExt, SkirResponse, SkirResponseOutcome,
+};
 
 // Central skir response declarations
 mod skir_responses;
 
+pub mod skir_utils;
+
 /// Macro to extract a single parameter from the subject params HashMap.
 ///
-/// Returns a `Result<&str, otel_wasi::Error>` — the caller must handle the error,
-/// typically by mapping it to a typed response variant.
+/// Returns a `Result<&str, otel_wasi::Error>`.
 ///
 /// # Example
 /// ```rust,no_run
@@ -64,7 +67,7 @@ macro_rules! extract_param {
 
 /// Macro to extract multiple parameters from the subject params HashMap at once.
 ///
-/// Returns a `Result<(&str, ...), otel_wasi::Error>` — the caller must handle the error.
+/// Returns a `Result<(&str, ...), otel_wasi::Error>`.
 ///
 /// # Example
 /// ```rust,no_run
@@ -93,7 +96,7 @@ macro_rules! extract_params {
 
 /// Decode a skir message from bytes, dropping unrecognized fields.
 ///
-/// Returns a `Result<T, otel_wasi::Error>` — the caller must handle the error.
+/// Returns a `Result<T, otel_wasi::Error>`.
 ///
 /// # Example
 /// ```rust,ignore

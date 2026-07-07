@@ -202,38 +202,58 @@ pub fn send(
     .map_err(|e| otel_wasi::Error::new("message-send-failed", e))
 }
 
-/// Reply to a message with the result of a handler that returns `Result<R, R>`.
+/// Reply to a message with the result of a handler that returns `Result<R, otel_wasi::Error>`.
 ///
-/// Both `Ok(response)` and `Err(response)` are serialized and replied.
-/// The function returns `Ok(())` if the response is a success variant,
-/// or `Err(otel_wasi::Error)` with the variant's slug and message if it is an error variant.
-pub fn reply_result_response<R>(
+/// `Ok(response)` is serialized and replied as the selected success or domain outcome.
+/// `Err(error)` is converted to the response enum's generic `InternalError` variant,
+/// replied, and then the original error is returned for logging/tracing.
+pub fn reply_handler_result<R>(
     msg: types::BrokerMessage,
-    result: Result<R, R>,
+    result: Result<R, otel_wasi::Error>,
 ) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {
-    let response = match result {
-        Ok(response) => response,
-        Err(response) => response,
-    };
+    match result {
+        Ok(response) => reply_response(msg, response),
+        Err(error) => {
+            let response = R::internal_error();
 
-    let is_success = response.is_success();
+            otel_wasi::main_attribute!(
+                "messaging.response.variant" = response.variant_slug(),
+                "messaging.response.outcome" = crate::SkirResponseOutcome::InternalError.as_str(),
+                "messaging.response.success" = false,
+            );
+
+            reply(msg, response.to_skir_bytes())?;
+            Err(error)
+        }
+    }
+}
+
+fn reply_response<R>(msg: types::BrokerMessage, response: R) -> Result<(), otel_wasi::Error>
+where
+    R: crate::SkirResponse,
+{
+    let outcome = response.outcome();
     let slug = response.variant_slug();
     let message = response.variant_message();
 
     otel_wasi::main_attribute!(
         "messaging.response.variant" = slug,
-        "messaging.response.success" = is_success,
+        "messaging.response.outcome" = outcome.as_str(),
+        "messaging.response.success" = outcome == crate::SkirResponseOutcome::Success,
     );
+
+    if outcome == crate::SkirResponseOutcome::DomainError {
+        otel_wasi::main_attribute!("messaging.response.message" = message.clone(),);
+    }
 
     reply(msg, response.to_skir_bytes())?;
 
-    if is_success {
-        Ok(())
-    } else {
-        Err(otel_wasi::Error::new(slug, message))
+    match outcome {
+        crate::SkirResponseOutcome::Success | crate::SkirResponseOutcome::DomainError => Ok(()),
+        crate::SkirResponseOutcome::InternalError => Err(otel_wasi::Error::new(slug, message)),
     }
 }
 

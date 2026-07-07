@@ -25,28 +25,28 @@ serde_json = "1"
 url = "2"
 
 skir-client = "0.1"
-surrealdb-component-sdk = "0.6"
+surrealdb-component-sdk = "0.7"
 wasmcloud-component = "0.2.0"
 wstd = "0.6"
 
-opentelemetry = "0.32"
+opentelemetry = "0.31"
 otel-wasi = {
   package = "otel-wasi",
   git = "https://github.com/Seamlezz/otel-wasi",
   branch = "main"
 }
 tracing = "0.1"
-tracing-opentelemetry = "0.33"
+tracing-opentelemetry = "0.32"
 
 wit-bindgen = {
   version = "0.58",
   features = ["async-spawn", "inter-task-wakeup"]
 }
 
+convert_case = "0.6"
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
-convert_case = "0.6"
 
 [workspace.metadata.dylint]
 libraries = [
