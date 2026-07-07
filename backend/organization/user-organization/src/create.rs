@@ -1,22 +1,51 @@
 use std::collections::HashMap;
 
+use otel_wasi::ResultWithSlug;
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
-    decode_skir,
+    decode_skir, extract_param,
     skir::base::organization::v1::organization::{
-        CreateOrganizationRequest, CreateOrganizationResponse,
+        CreateOrganizationRequest, CreateOrganizationResponse, Organization,
     },
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-pub fn handle_create(
+use crate::OrganizationRecord;
+
+pub async fn handle_create(
     msg: BrokerMessage,
     params: HashMap<String, String>,
-) -> Result<CreateOrganizationResponse, CreateOrganizationResponse> {
-    let _user_id = wasmcloud_utils::extract_param!(params, user_id)
-        .map_err(|_| CreateOrganizationResponse::Unknown(None))?;
-    let _request = decode_skir!(CreateOrganizationRequest, &msg.body)
-        .map_err(|_| CreateOrganizationResponse::Unknown(None))?;
+) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
+    let user_id = extract_param!(params, user_id)?;
+    let request = decode_skir!(CreateOrganizationRequest, &msg.body)?;
 
-    // TODO: Implement organization creation
-    Err(CreateOrganizationResponse::Unknown(None))
+    let name = request.name;
+    let logo_url = request.logo_url;
+
+    let organization: Organization = query(
+        r#"
+        BEGIN TRANSACTION;
+
+        LET $org = CREATE ONLY organization SET
+            name = $name,
+            logo_url = $logo_url,
+            founder = type::thing('user', $user_id)
+            ;
+
+        RETURN $org;
+
+        COMMIT TRANSACTION;
+        "#,
+    )
+    .bind("name", &name)
+    .bind("logo_url", &logo_url)
+    .bind("user_id", user_id)
+    .execute()
+    .await
+    .error_with_slug("slug")?
+    .parse::<OrganizationRecord>(0)
+    .error_with_slug("slug")?
+    .into();
+
+    Ok(CreateOrganizationResponse::Success(organization.into()))
 }

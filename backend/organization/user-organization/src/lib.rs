@@ -8,27 +8,47 @@ wit_bindgen::generate!({
 
 mod create;
 mod join_requests;
-mod list;
+mod watch;
 
-use otel_wasi::main_attribute;
-use wasmcloud_utils::wasmcloud::messaging::{handler::Guest, types};
+use serde::{Deserialize, Serialize};
+use wasmcloud_utils::{
+    dispatch_actions,
+    skir::base::organization::v1::organization::Organization,
+    wasmcloud::messaging::{handler::Guest, types},
+};
 
 struct Component;
 wasmcloud_utils::export!(Component);
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OrganizationRecord {
+    id: surrealdb_component_sdk::RecordId,
+    name: String,
+    logo_url: String,
+}
+
+impl From<OrganizationRecord> for Organization {
+    fn from(value: OrganizationRecord) -> Self {
+        Organization {
+            organization_id: value.id.into(),
+            name: value.name,
+            logo_url: value.logo_url,
+            _unrecognized: None,
+        }
+    }
+}
+
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "user_organization", export)]
     fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-        main_attribute!("messaging.destination.name" = msg.subject.clone());
-
-        wasmcloud_utils::dispatch_actions!(
+        dispatch_actions!(
             msg,
             "typewriter.in.user.<user_id>.organization.<action>",
-            "create" => create::handle_create,
-            "list" => list::handle_list,
-            "join_requests.list" => join_requests::handle_list,
-            "join_requests.request" => join_requests::handle_request,
-            "join_requests.cancel" => join_requests::handle_cancel,
+            "create" => async create::handle_create,
+            "watch" => async watch::handle_watch,
+            "join_requests.watch" => async join_requests::handle_watch,
+            "join_requests.request" => async join_requests::handle_request,
+            "join_requests.cancel" => async join_requests::handle_cancel,
         )
     }
 }
