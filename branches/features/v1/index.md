@@ -26,7 +26,7 @@ import { Home } from '@components/home';
 import { IntroAnimation } from '@components/intro';
 import { VideoPlayer } from '@components/video';
 import panelDemo from '@assets/home/panel-demo.png';
-import { BASE_PATH } from '../../base-path';
+import { BASE_PATH } from '@lib/base-path';
 
 <Home>
 
