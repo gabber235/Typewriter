@@ -1,0 +1,32 @@
+struct RecordId {
+  table: string;
+  key: RecordIdKey;
+}
+
+enum RecordIdKey {
+  number: int64;
+  string: string;
+  uuid: string;
+  array: [RecordIdValue];
+  object: [ObjectRecordIdKey|key];
+}
+
+struct ObjectRecordIdKey {
+  key: string;
+  value: RecordIdValue;
+}
+
+enum RecordIdValue {
+  null;
+  boolean: bool;
+  number: int64;
+  float: float64;
+  string: string;
+  array: [RecordIdValue];
+  object: [ObjectRecordIdValue|key];
+}
+
+struct ObjectRecordIdValue {
+  key: string;
+  value: RecordIdValue;
+}

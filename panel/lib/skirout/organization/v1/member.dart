@@ -14,15 +14,16 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
+import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 // -----------------------------------------------------------------------------
 // struct OrganizationMember
 // -----------------------------------------------------------------------------
 
 sealed class OrganizationMember_orMutable {
-  _core.String get userId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get userId;
   _core.String? get name;
-  _core.String? get email;
+  _core.String get email;
   _core.String? get avatarUrl;
   _core.Iterable<Role_orMutable> get roles;
   _core.DateTime get joinedAt;
@@ -33,11 +34,11 @@ sealed class OrganizationMember_orMutable {
 /// Deeply immutable.
 final class OrganizationMember implements OrganizationMember_orMutable {
   @_core.override
-  final _core.String userId;
+  final _lib_kernel_v1_record_id.RecordId userId;
   @_core.override
   final _core.String? name;
   @_core.override
-  final _core.String? email;
+  final _core.String email;
   @_core.override
   final _core.String? avatarUrl;
   @_core.override
@@ -47,14 +48,14 @@ final class OrganizationMember implements OrganizationMember_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory OrganizationMember({
-    required _core.String userId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
     required _core.String? name,
-    required _core.String? email,
+    required _core.String email,
     required _core.String? avatarUrl,
     required _core.Iterable<Role_orMutable> roles,
     required _core.DateTime joinedAt,
   }) => OrganizationMember._(
-    userId,
+    userId.toFrozen(),
     name,
     email,
     avatarUrl,
@@ -73,9 +74,9 @@ final class OrganizationMember implements OrganizationMember_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OrganizationMember._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    null,
     "",
-    null,
-    null,
     null,
     _skir.KeyedIterable.empty,
     _skir.unixEpoch,
@@ -84,9 +85,9 @@ final class OrganizationMember implements OrganizationMember_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static OrganizationMember_mutable mutable() => OrganizationMember_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    null,
     "",
-    null,
-    null,
     null,
     _skir.KeyedIterable.empty,
     _skir.unixEpoch,
@@ -136,7 +137,7 @@ final class OrganizationMember implements OrganizationMember_orMutable {
         "user_id",
         "userId",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.userId,
         (it, v) => it.userId = v,
@@ -156,9 +157,7 @@ final class OrganizationMember implements OrganizationMember_orMutable {
         "email",
         "email",
         2,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.string,
         "",
         (it) => it.email,
         (it, v) => it.email = v,
@@ -212,9 +211,9 @@ final class OrganizationMember implements OrganizationMember_orMutable {
 
 /// Mutable version of [OrganizationMember].
 final class OrganizationMember_mutable implements OrganizationMember_orMutable {
-  _core.String userId;
+  _lib_kernel_v1_record_id.RecordId_orMutable userId;
   _core.String? name;
-  _core.String? email;
+  _core.String email;
   _core.String? avatarUrl;
   _core.Iterable<Role_orMutable> roles;
   _core.DateTime joinedAt;
@@ -228,6 +227,17 @@ final class OrganizationMember_mutable implements OrganizationMember_orMutable {
     this.roles,
     this.joinedAt,
   );
+
+  /// If the value of [userId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableUserId {
+    final value = this.userId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.userId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// If the value of [roles] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
@@ -257,7 +267,7 @@ final class OrganizationMember_mutable implements OrganizationMember_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class Role_orMutable {
-  _core.String get roleId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get roleId;
   _core.String get name;
   _lib_kernel_v1_color.Color_orMutable get color;
   _core.bool get defaultRole;
@@ -270,7 +280,7 @@ sealed class Role_orMutable {
 /// Deeply immutable.
 final class Role implements Role_orMutable {
   @_core.override
-  final _core.String roleId;
+  final _lib_kernel_v1_record_id.RecordId roleId;
   @_core.override
   final _core.String name;
   @_core.override
@@ -284,14 +294,14 @@ final class Role implements Role_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory Role({
-    required _core.String roleId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable roleId,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
     required _core.bool defaultRole,
     required _core.bool assignable,
     required _core.bool deletable,
   }) => Role._(
-    roleId,
+    roleId.toFrozen(),
     name,
     color.toFrozen(),
     defaultRole,
@@ -310,7 +320,7 @@ final class Role implements Role_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = Role._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     _lib_kernel_v1_color.Color.defaultInstance,
     false,
@@ -321,7 +331,7 @@ final class Role implements Role_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static Role_mutable mutable() => Role_mutable._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     _lib_kernel_v1_color.Color.defaultInstance,
     false,
@@ -373,7 +383,7 @@ final class Role implements Role_orMutable {
         "role_id",
         "roleId",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.roleId,
         (it, v) => it.roleId = v,
@@ -441,7 +451,7 @@ final class Role implements Role_orMutable {
 
 /// Mutable version of [Role].
 final class Role_mutable implements Role_orMutable {
-  _core.String roleId;
+  _lib_kernel_v1_record_id.RecordId_orMutable roleId;
   _core.String name;
   _lib_kernel_v1_color.Color_orMutable color;
   _core.bool defaultRole;
@@ -457,6 +467,17 @@ final class Role_mutable implements Role_orMutable {
     this.assignable,
     this.deletable,
   );
+
+  /// If the value of [roleId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [roleId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRoleId {
+    final value = this.roleId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.roleId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// If the value of [color] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.

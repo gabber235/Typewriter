@@ -1,7 +1,8 @@
 import { Color } from "kernel/v1/color.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
 
 struct OrganizationMember {
-  user_id: string;
+  user_id: RecordId;
   name: string?;
   email: string;
   avatar_url: string?;
@@ -10,7 +11,7 @@ struct OrganizationMember {
 }
 
 struct Role {
-  role_id: string;
+  role_id: RecordId;
   name: string;
   color: Color;
   // Whether this is the default role assigned to new members

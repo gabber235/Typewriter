@@ -19,9 +19,9 @@
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct OrganizationMember {
-    pub user_id: String,
+    pub user_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub name: Option<String>,
-    pub email: Option<String>,
+    pub email: String,
     pub avatar_url: Option<String>,
     pub roles: Vec<Role>,
     pub joined_at: std::time::SystemTime,
@@ -39,9 +39,9 @@ impl OrganizationMember {
 impl Default for OrganizationMember {
     fn default() -> Self {
         OrganizationMember {
-            user_id: String::new(),
+            user_id: crate::skirout::base::kernel::v1::record_id::RecordId::default(),
             name: None,
-            email: None,
+            email: String::new(),
             avatar_url: None,
             roles: Vec::default(),
             joined_at: ::std::time::SystemTime::UNIX_EPOCH,
@@ -76,7 +76,7 @@ impl OrganizationMember {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Role {
-    pub role_id: String,
+    pub role_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub name: String,
     pub color: crate::skirout::base::kernel::v1::color::Color,
     pub default_role: bool,
@@ -122,9 +122,9 @@ fn initialize_module_serializers() {
         std::sync::LazyLock::new(|| {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<OrganizationMember> = OrganizationMember::_adapter() as *const _ as *mut _;
-                (*a).add_field("user_id", 0, crate::skir_client::Serializer::string(), "", |x: &OrganizationMember| &x.user_id, |x: &mut OrganizationMember, v| x.user_id = v);
+                (*a).add_field("user_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &OrganizationMember| &x.user_id, |x: &mut OrganizationMember, v| x.user_id = v);
                 (*a).add_field("name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &OrganizationMember| &x.name, |x: &mut OrganizationMember, v| x.name = v);
-                (*a).add_field("email", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &OrganizationMember| &x.email, |x: &mut OrganizationMember, v| x.email = v);
+                (*a).add_field("email", 2, crate::skir_client::Serializer::string(), "", |x: &OrganizationMember| &x.email, |x: &mut OrganizationMember, v| x.email = v);
                 (*a).add_field("avatar_url", 3, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &OrganizationMember| &x.avatar_url, |x: &mut OrganizationMember, v| x.avatar_url = v);
                 (*a).add_field("roles", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(Role::_adapter())), "", |x: &OrganizationMember| &x.roles, |x: &mut OrganizationMember, v| x.roles = v);
                 (*a).add_field("joined_at", 5, crate::skir_client::Serializer::timestamp(), "", |x: &OrganizationMember| &x.joined_at, |x: &mut OrganizationMember, v| x.joined_at = v);
@@ -132,7 +132,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<Role> = Role::_adapter() as *const _ as *mut _;
-                (*a).add_field("role_id", 0, crate::skir_client::Serializer::string(), "", |x: &Role| &x.role_id, |x: &mut Role, v| x.role_id = v);
+                (*a).add_field("role_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Role| &x.role_id, |x: &mut Role, v| x.role_id = v);
                 (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &Role| &x.name, |x: &mut Role, v| x.name = v);
                 (*a).add_field("color", 2, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &Role| &x.color, |x: &mut Role, v| x.color = v);
                 (*a).add_field("default_role", 3, crate::skir_client::Serializer::bool(), "", |x: &Role| &x.default_role, |x: &mut Role, v| x.default_role = v);

@@ -13,6 +13,7 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
+import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 import "./member.dart" as _lib_organization_v1_member;
 
 // -----------------------------------------------------------------------------
@@ -20,8 +21,8 @@ import "./member.dart" as _lib_organization_v1_member;
 // -----------------------------------------------------------------------------
 
 sealed class JoinRequest_orMutable {
-  _core.String get requestId;
-  _core.String get userId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get requestId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get userId;
   _core.String? get userName;
   _core.String? get userEmail;
   _core.String? get userAvatarUrl;
@@ -34,9 +35,9 @@ sealed class JoinRequest_orMutable {
 /// Deeply immutable.
 final class JoinRequest implements JoinRequest_orMutable {
   @_core.override
-  final _core.String requestId;
+  final _lib_kernel_v1_record_id.RecordId requestId;
   @_core.override
-  final _core.String userId;
+  final _lib_kernel_v1_record_id.RecordId userId;
   @_core.override
   final _core.String? userName;
   @_core.override
@@ -50,16 +51,16 @@ final class JoinRequest implements JoinRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory JoinRequest({
-    required _core.String requestId,
-    required _core.String userId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
     required _core.String? userName,
     required _core.String? userEmail,
     required _core.String? userAvatarUrl,
     required _core.DateTime requestedAt,
     required _core.DateTime expiresAt,
   }) => JoinRequest._(
-    requestId,
-    userId,
+    requestId.toFrozen(),
+    userId.toFrozen(),
     userName,
     userEmail,
     userAvatarUrl,
@@ -79,8 +80,8 @@ final class JoinRequest implements JoinRequest_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = JoinRequest._(
-    "",
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     null,
     null,
     null,
@@ -91,8 +92,8 @@ final class JoinRequest implements JoinRequest_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static JoinRequest_mutable mutable() => JoinRequest_mutable._(
-    "",
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     null,
     null,
     null,
@@ -146,7 +147,7 @@ final class JoinRequest implements JoinRequest_orMutable {
         "request_id",
         "requestId",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.requestId,
         (it, v) => it.requestId = v,
@@ -155,7 +156,7 @@ final class JoinRequest implements JoinRequest_orMutable {
         "user_id",
         "userId",
         1,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.userId,
         (it, v) => it.userId = v,
@@ -229,8 +230,8 @@ final class JoinRequest implements JoinRequest_orMutable {
 
 /// Mutable version of [JoinRequest].
 final class JoinRequest_mutable implements JoinRequest_orMutable {
-  _core.String requestId;
-  _core.String userId;
+  _lib_kernel_v1_record_id.RecordId_orMutable requestId;
+  _lib_kernel_v1_record_id.RecordId_orMutable userId;
   _core.String? userName;
   _core.String? userEmail;
   _core.String? userAvatarUrl;
@@ -247,6 +248,28 @@ final class JoinRequest_mutable implements JoinRequest_orMutable {
     this.requestedAt,
     this.expiresAt,
   );
+
+  /// If the value of [requestId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRequestId {
+    final value = this.requestId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.requestId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [userId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableUserId {
+    final value = this.userId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.userId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -266,10 +289,10 @@ final class JoinRequest_mutable implements JoinRequest_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class UserJoinRequest_orMutable {
-  _core.String get requestId;
-  _core.String get organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get requestId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get organizationId;
   _core.String get organizationName;
-  _core.String get organizationIconUrl;
+  _core.String get organizationLogoUrl;
   _core.DateTime get requestedAt;
   _core.DateTime get expiresAt;
 
@@ -279,13 +302,13 @@ sealed class UserJoinRequest_orMutable {
 /// Deeply immutable.
 final class UserJoinRequest implements UserJoinRequest_orMutable {
   @_core.override
-  final _core.String requestId;
+  final _lib_kernel_v1_record_id.RecordId requestId;
   @_core.override
-  final _core.String organizationId;
+  final _lib_kernel_v1_record_id.RecordId organizationId;
   @_core.override
   final _core.String organizationName;
   @_core.override
-  final _core.String organizationIconUrl;
+  final _core.String organizationLogoUrl;
   @_core.override
   final _core.DateTime requestedAt;
   @_core.override
@@ -293,17 +316,17 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory UserJoinRequest({
-    required _core.String requestId,
-    required _core.String organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
     required _core.String organizationName,
-    required _core.String organizationIconUrl,
+    required _core.String organizationLogoUrl,
     required _core.DateTime requestedAt,
     required _core.DateTime expiresAt,
   }) => UserJoinRequest._(
-    requestId,
-    organizationId,
+    requestId.toFrozen(),
+    organizationId.toFrozen(),
     organizationName,
-    organizationIconUrl,
+    organizationLogoUrl,
     requestedAt.toUtc(),
     expiresAt.toUtc(),
   );
@@ -312,15 +335,15 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
     this.requestId,
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.requestedAt,
     this.expiresAt,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UserJoinRequest._(
-    "",
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     "",
     _skir.unixEpoch,
@@ -330,8 +353,8 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static UserJoinRequest_mutable mutable() => UserJoinRequest_mutable._(
-    "",
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     "",
     _skir.unixEpoch,
@@ -348,7 +371,7 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
     this.requestId,
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.requestedAt,
     this.expiresAt,
   );
@@ -367,7 +390,7 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
     this.requestId,
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.requestedAt,
     this.expiresAt,
   ];
@@ -382,7 +405,7 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
         "request_id",
         "requestId",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.requestId,
         (it, v) => it.requestId = v,
@@ -391,7 +414,7 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
         "organization_id",
         "organizationId",
         1,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.organizationId,
         (it, v) => it.organizationId = v,
@@ -406,13 +429,13 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
         (it, v) => it.organizationName = v,
       );
       _serializerBuilder.addField(
-        "organization_icon_url",
-        "organizationIconUrl",
+        "organization_logo_url",
+        "organizationLogoUrl",
         3,
         _skir.Serializers.string,
         "",
-        (it) => it.organizationIconUrl,
-        (it, v) => it.organizationIconUrl = v,
+        (it) => it.organizationLogoUrl,
+        (it, v) => it.organizationLogoUrl = v,
       );
       _serializerBuilder.addField(
         "requested_at",
@@ -450,10 +473,10 @@ final class UserJoinRequest implements UserJoinRequest_orMutable {
 
 /// Mutable version of [UserJoinRequest].
 final class UserJoinRequest_mutable implements UserJoinRequest_orMutable {
-  _core.String requestId;
-  _core.String organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable requestId;
+  _lib_kernel_v1_record_id.RecordId_orMutable organizationId;
   _core.String organizationName;
-  _core.String organizationIconUrl;
+  _core.String organizationLogoUrl;
   _core.DateTime requestedAt;
   _core.DateTime expiresAt;
   _skir.internal__UnrecognizedFields? _u;
@@ -462,10 +485,32 @@ final class UserJoinRequest_mutable implements UserJoinRequest_orMutable {
     this.requestId,
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.requestedAt,
     this.expiresAt,
   );
+
+  /// If the value of [requestId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRequestId {
+    final value = this.requestId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.requestId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [organizationId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [organizationId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableOrganizationId {
+    final value = this.organizationId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.organizationId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -473,7 +518,7 @@ final class UserJoinRequest_mutable implements UserJoinRequest_orMutable {
     requestId: this.requestId,
     organizationId: this.organizationId,
     organizationName: this.organizationName,
-    organizationIconUrl: this.organizationIconUrl,
+    organizationLogoUrl: this.organizationLogoUrl,
     requestedAt: this.requestedAt,
     expiresAt: this.expiresAt,
   ).._u = this._u;
@@ -484,7 +529,7 @@ final class UserJoinRequest_mutable implements UserJoinRequest_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class JoinCode_orMutable {
-  _core.String get code;
+  _lib_kernel_v1_record_id.RecordId_orMutable get code;
   _core.DateTime get createdAt;
   _core.DateTime? get expiresAt;
   _core.bool get singleUse;
@@ -496,7 +541,7 @@ sealed class JoinCode_orMutable {
 /// Deeply immutable.
 final class JoinCode implements JoinCode_orMutable {
   @_core.override
-  final _core.String code;
+  final _lib_kernel_v1_record_id.RecordId code;
   @_core.override
   final _core.DateTime createdAt;
   @_core.override
@@ -508,13 +553,13 @@ final class JoinCode implements JoinCode_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory JoinCode({
-    required _core.String code,
+    required _lib_kernel_v1_record_id.RecordId_orMutable code,
     required _core.DateTime createdAt,
     required _core.DateTime? expiresAt,
     required _core.bool singleUse,
     required JoinCodeAutoAccept_orMutable? autoAccept,
   }) => JoinCode._(
-    code,
+    code.toFrozen(),
     createdAt.toUtc(),
     (expiresAt != null) ? expiresAt.toUtc() : null,
     singleUse,
@@ -531,7 +576,7 @@ final class JoinCode implements JoinCode_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = JoinCode._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     _skir.unixEpoch,
     null,
     false,
@@ -541,7 +586,7 @@ final class JoinCode implements JoinCode_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static JoinCode_mutable mutable() => JoinCode_mutable._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     _skir.unixEpoch,
     null,
     false,
@@ -590,7 +635,7 @@ final class JoinCode implements JoinCode_orMutable {
         "code",
         "code",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.code,
         (it, v) => it.code = v,
@@ -653,7 +698,7 @@ final class JoinCode implements JoinCode_orMutable {
 
 /// Mutable version of [JoinCode].
 final class JoinCode_mutable implements JoinCode_orMutable {
-  _core.String code;
+  _lib_kernel_v1_record_id.RecordId_orMutable code;
   _core.DateTime createdAt;
   _core.DateTime? expiresAt;
   _core.bool singleUse;
@@ -667,6 +712,17 @@ final class JoinCode_mutable implements JoinCode_orMutable {
     this.singleUse,
     this.autoAccept,
   );
+
+  /// If the value of [code] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableCode {
+    final value = this.code;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.code = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -684,7 +740,7 @@ final class JoinCode_mutable implements JoinCode_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class JoinCodeAutoAccept_orMutable {
-  _core.Iterable<_core.String> get roleIds;
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
 
   JoinCodeAutoAccept toFrozen();
 }
@@ -692,13 +748,13 @@ sealed class JoinCodeAutoAccept_orMutable {
 /// Deeply immutable.
 final class JoinCodeAutoAccept implements JoinCodeAutoAccept_orMutable {
   @_core.override
-  final _core.Iterable<_core.String> roleIds;
+  final _core.Iterable<_lib_kernel_v1_record_id.RecordId> roleIds;
   _skir.internal__UnrecognizedFields? _u;
 
   factory JoinCodeAutoAccept({
-    required _core.Iterable<_core.String> roleIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
   }) => JoinCodeAutoAccept._(
-    _skir.internal__frozenCopy(roleIds),
+    _skir.internal__frozenMappedCopy(roleIds, (it) => it.toFrozen()),
   );
 
   JoinCodeAutoAccept._(
@@ -751,7 +807,7 @@ final class JoinCodeAutoAccept implements JoinCodeAutoAccept_orMutable {
         "roleIds",
         0,
         _skir.Serializers.iterable(
-          _skir.Serializers.string,
+          _lib_kernel_v1_record_id.RecordId.serializer,
         ),
         "",
         (it) => it.roleIds,
@@ -775,7 +831,7 @@ final class JoinCodeAutoAccept implements JoinCodeAutoAccept_orMutable {
 
 /// Mutable version of [JoinCodeAutoAccept].
 final class JoinCodeAutoAccept_mutable implements JoinCodeAutoAccept_orMutable {
-  _core.Iterable<_core.String> roleIds;
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds;
   _skir.internal__UnrecognizedFields? _u;
 
   JoinCodeAutoAccept_mutable._(
@@ -784,9 +840,9 @@ final class JoinCodeAutoAccept_mutable implements JoinCodeAutoAccept_orMutable {
 
   /// If the value of [roleIds] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
-  _core.List<_core.String> get mutableRoleIds {
+  _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
     final value = this.roleIds;
-    if (value is _skir.internal__MutableList<_core.String>) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.roleIds = _skir.internal__MutableList([...value]);
@@ -805,9 +861,9 @@ final class JoinCodeAutoAccept_mutable implements JoinCodeAutoAccept_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class AutoAcceptedMember_orMutable {
-  _core.String get organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get organizationId;
   _core.String get organizationName;
-  _core.String? get organizationIconUrl;
+  _core.String? get organizationLogoUrl;
   _core.Iterable<_lib_organization_v1_member.Role_orMutable> get roles;
 
   AutoAcceptedMember toFrozen();
@@ -816,37 +872,37 @@ sealed class AutoAcceptedMember_orMutable {
 /// Deeply immutable.
 final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
   @_core.override
-  final _core.String organizationId;
+  final _lib_kernel_v1_record_id.RecordId organizationId;
   @_core.override
   final _core.String organizationName;
   @_core.override
-  final _core.String? organizationIconUrl;
+  final _core.String? organizationLogoUrl;
   @_core.override
   final _core.Iterable<_lib_organization_v1_member.Role> roles;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AutoAcceptedMember({
-    required _core.String organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
     required _core.String organizationName,
-    required _core.String? organizationIconUrl,
+    required _core.String? organizationLogoUrl,
     required _core.Iterable<_lib_organization_v1_member.Role_orMutable> roles,
   }) => AutoAcceptedMember._(
-    organizationId,
+    organizationId.toFrozen(),
     organizationName,
-    organizationIconUrl,
+    organizationLogoUrl,
     _skir.internal__frozenMappedCopy(roles, (it) => it.toFrozen()),
   );
 
   AutoAcceptedMember._(
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.roles,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AutoAcceptedMember._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     null,
     _skir.KeyedIterable.empty,
@@ -855,7 +911,7 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static AutoAcceptedMember_mutable mutable() => AutoAcceptedMember_mutable._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     null,
     _skir.KeyedIterable.empty,
@@ -870,7 +926,7 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
   AutoAcceptedMember_mutable toMutable() => AutoAcceptedMember_mutable._(
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.roles,
   );
 
@@ -887,7 +943,7 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
   _core.List get _equality_proxy => [
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.roles,
   ];
 
@@ -901,7 +957,7 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
         "organization_id",
         "organizationId",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.organizationId,
         (it, v) => it.organizationId = v,
@@ -916,15 +972,15 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
         (it, v) => it.organizationName = v,
       );
       _serializerBuilder.addField(
-        "organization_icon_url",
-        "organizationIconUrl",
+        "organization_logo_url",
+        "organizationLogoUrl",
         2,
         _skir.Serializers.optional(
           _skir.Serializers.string,
         ),
         "",
-        (it) => it.organizationIconUrl,
-        (it, v) => it.organizationIconUrl = v,
+        (it) => it.organizationLogoUrl,
+        (it, v) => it.organizationLogoUrl = v,
       );
       _serializerBuilder.addField(
         "roles",
@@ -955,18 +1011,29 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
 
 /// Mutable version of [AutoAcceptedMember].
 final class AutoAcceptedMember_mutable implements AutoAcceptedMember_orMutable {
-  _core.String organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable organizationId;
   _core.String organizationName;
-  _core.String? organizationIconUrl;
+  _core.String? organizationLogoUrl;
   _core.Iterable<_lib_organization_v1_member.Role_orMutable> roles;
   _skir.internal__UnrecognizedFields? _u;
 
   AutoAcceptedMember_mutable._(
     this.organizationId,
     this.organizationName,
-    this.organizationIconUrl,
+    this.organizationLogoUrl,
     this.roles,
   );
+
+  /// If the value of [organizationId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [organizationId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableOrganizationId {
+    final value = this.organizationId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.organizationId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// If the value of [roles] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
@@ -984,160 +1051,8 @@ final class AutoAcceptedMember_mutable implements AutoAcceptedMember_orMutable {
   AutoAcceptedMember toFrozen() => AutoAcceptedMember(
     organizationId: this.organizationId,
     organizationName: this.organizationName,
-    organizationIconUrl: this.organizationIconUrl,
+    organizationLogoUrl: this.organizationLogoUrl,
     roles: this.roles,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct RequestToJoinResult
-// -----------------------------------------------------------------------------
-
-sealed class RequestToJoinResult_orMutable {
-  UserJoinRequest_orMutable get request;
-  AutoAcceptedMember_orMutable get member;
-
-  RequestToJoinResult toFrozen();
-}
-
-/// Deeply immutable.
-final class RequestToJoinResult implements RequestToJoinResult_orMutable {
-  @_core.override
-  final UserJoinRequest request;
-  @_core.override
-  final AutoAcceptedMember member;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory RequestToJoinResult({
-    required UserJoinRequest_orMutable request,
-    required AutoAcceptedMember_orMutable member,
-  }) => RequestToJoinResult._(
-    request.toFrozen(),
-    member.toFrozen(),
-  );
-
-  RequestToJoinResult._(
-    this.request,
-    this.member,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = RequestToJoinResult._(
-    UserJoinRequest.defaultInstance,
-    AutoAcceptedMember.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static RequestToJoinResult_mutable mutable() => RequestToJoinResult_mutable._(
-    UserJoinRequest.defaultInstance,
-    AutoAcceptedMember.defaultInstance,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  RequestToJoinResult toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  RequestToJoinResult_mutable toMutable() => RequestToJoinResult_mutable._(
-    this.request,
-    this.member,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! RequestToJoinResult) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.request,
-    this.member,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `RequestToJoinResult` instances.
-  static _skir.StructSerializer<RequestToJoinResult, RequestToJoinResult_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "request",
-        "request",
-        0,
-        UserJoinRequest.serializer,
-        "",
-        (it) => it.request,
-        (it, v) => it.request = v,
-      );
-      _serializerBuilder.addField(
-        "member",
-        "member",
-        1,
-        AutoAcceptedMember.serializer,
-        "",
-        (it) => it.member,
-        (it, v) => it.member = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "organization/v1/join_request.skir:RequestToJoinResult",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (RequestToJoinResult_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [RequestToJoinResult].
-final class RequestToJoinResult_mutable implements RequestToJoinResult_orMutable {
-  UserJoinRequest_orMutable request;
-  AutoAcceptedMember_orMutable member;
-  _skir.internal__UnrecognizedFields? _u;
-
-  RequestToJoinResult_mutable._(
-    this.request,
-    this.member,
-  );
-
-  /// If the value of [request] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [request] and returns it.
-  UserJoinRequest_mutable get mutableRequest {
-    final value = this.request;
-    if (value is UserJoinRequest_mutable) {
-      return value;
-    } else {
-      return this.request = (value as UserJoinRequest).toMutable();
-    }
-  }
-
-  /// If the value of [member] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [member] and returns it.
-  AutoAcceptedMember_mutable get mutableMember {
-    final value = this.member;
-    if (value is AutoAcceptedMember_mutable) {
-      return value;
-    } else {
-      return this.member = (value as AutoAcceptedMember).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  RequestToJoinResult toFrozen() => RequestToJoinResult(
-    request: this.request,
-    member: this.member,
   ).._u = this._u;
 }
 
@@ -1218,6 +1133,82 @@ final class WatchUserJoinRequestsRequest_mutable implements WatchUserJoinRequest
 }
 
 // -----------------------------------------------------------------------------
+// struct WatchUserJoinRequestsResponse.InternalError
+// -----------------------------------------------------------------------------
+
+sealed class WatchUserJoinRequestsResponse_InternalError_orMutable {
+  WatchUserJoinRequestsResponse_InternalError toFrozen();
+}
+
+/// Deeply immutable.
+final class WatchUserJoinRequestsResponse_InternalError implements WatchUserJoinRequestsResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory WatchUserJoinRequestsResponse_InternalError() => WatchUserJoinRequestsResponse_InternalError._();
+
+  WatchUserJoinRequestsResponse_InternalError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = WatchUserJoinRequestsResponse_InternalError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static WatchUserJoinRequestsResponse_InternalError_mutable mutable() => WatchUserJoinRequestsResponse_InternalError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  WatchUserJoinRequestsResponse_InternalError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  WatchUserJoinRequestsResponse_InternalError_mutable toMutable() => WatchUserJoinRequestsResponse_InternalError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! WatchUserJoinRequestsResponse_InternalError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `WatchUserJoinRequestsResponse_InternalError` instances.
+  static _skir.StructSerializer<WatchUserJoinRequestsResponse_InternalError, WatchUserJoinRequestsResponse_InternalError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:WatchUserJoinRequestsResponse.InternalError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (WatchUserJoinRequestsResponse_InternalError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [WatchUserJoinRequestsResponse_InternalError].
+final class WatchUserJoinRequestsResponse_InternalError_mutable implements WatchUserJoinRequestsResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  WatchUserJoinRequestsResponse_InternalError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  WatchUserJoinRequestsResponse_InternalError toFrozen() => WatchUserJoinRequestsResponse_InternalError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum WatchUserJoinRequestsResponse
 // -----------------------------------------------------------------------------
 
@@ -1228,6 +1219,7 @@ final class WatchUserJoinRequestsRequest_mutable implements WatchUserJoinRequest
 ///     case WatchUserJoinRequestsResponse_list(:var value): { ... }
 ///     case WatchUserJoinRequestsResponse_add(:var value): { ... }
 ///     case WatchUserJoinRequestsResponse_remove(:var value): { ... }
+///     case WatchUserJoinRequestsResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1249,10 +1241,10 @@ sealed class WatchUserJoinRequestsResponse {
 
   /// Same as `wrapAdd(UserJoinRequest(...))`.
   factory WatchUserJoinRequestsResponse.createAdd({
-    required _core.String requestId,
-    required _core.String organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
     required _core.String organizationName,
-    required _core.String organizationIconUrl,
+    required _core.String organizationLogoUrl,
     required _core.DateTime requestedAt,
     required _core.DateTime expiresAt,
   }) => WatchUserJoinRequestsResponse.wrapAdd(
@@ -1260,7 +1252,7 @@ sealed class WatchUserJoinRequestsResponse {
       requestId: requestId,
       organizationId: organizationId,
       organizationName: organizationName,
-      organizationIconUrl: organizationIconUrl,
+      organizationLogoUrl: organizationLogoUrl,
       requestedAt: requestedAt,
       expiresAt: expiresAt,
     )
@@ -1273,10 +1265,10 @@ sealed class WatchUserJoinRequestsResponse {
 
   /// Same as `wrapRemove(UserJoinRequest(...))`.
   factory WatchUserJoinRequestsResponse.createRemove({
-    required _core.String requestId,
-    required _core.String organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
     required _core.String organizationName,
-    required _core.String organizationIconUrl,
+    required _core.String organizationLogoUrl,
     required _core.DateTime requestedAt,
     required _core.DateTime expiresAt,
   }) => WatchUserJoinRequestsResponse.wrapRemove(
@@ -1284,10 +1276,20 @@ sealed class WatchUserJoinRequestsResponse {
       requestId: requestId,
       organizationId: organizationId,
       organizationName: organizationName,
-      organizationIconUrl: organizationIconUrl,
+      organizationLogoUrl: organizationLogoUrl,
       requestedAt: requestedAt,
       expiresAt: expiresAt,
     )
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory WatchUserJoinRequestsResponse.wrapInternalError(
+    WatchUserJoinRequestsResponse_InternalError value
+  ) => WatchUserJoinRequestsResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(WatchUserJoinRequestsResponse_InternalError(...))`.
+  factory WatchUserJoinRequestsResponse.createInternalError() => WatchUserJoinRequestsResponse.wrapInternalError(
+    WatchUserJoinRequestsResponse_InternalError()
   );
 
   /// Returns the kind of variant held by this WatchUserJoinRequestsResponse.
@@ -1328,6 +1330,16 @@ sealed class WatchUserJoinRequestsResponse {
         (it) => it.value,
         ordinal: WatchUserJoinRequestsResponse_kind.removeWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "internal_error",
+        "wrapInternalError",
+        WatchUserJoinRequestsResponse_InternalError.serializer,
+        "",
+        WatchUserJoinRequestsResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: WatchUserJoinRequestsResponse_kind.internalErrorWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1349,7 +1361,8 @@ enum WatchUserJoinRequestsResponse_kind {
   unknown(0),
   listWrapper(1),
   addWrapper(2),
-  removeWrapper(3);
+  removeWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -1417,12 +1430,21 @@ final class WatchUserJoinRequestsResponse_removeWrapper extends _WatchUserJoinRe
   WatchUserJoinRequestsResponse_kind get kind => WatchUserJoinRequestsResponse_kind.removeWrapper;
 }
 
+final class WatchUserJoinRequestsResponse_internalErrorWrapper extends _WatchUserJoinRequestsResponse_wrapper {
+  final WatchUserJoinRequestsResponse_InternalError value;
+
+  WatchUserJoinRequestsResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  WatchUserJoinRequestsResponse_kind get kind => WatchUserJoinRequestsResponse_kind.internalErrorWrapper;
+}
+
 // -----------------------------------------------------------------------------
 // struct RequestToJoinRequest
 // -----------------------------------------------------------------------------
 
 sealed class RequestToJoinRequest_orMutable {
-  _core.String? get code;
+  _lib_kernel_v1_record_id.RecordId_orMutable get code;
 
   RequestToJoinRequest toFrozen();
 }
@@ -1430,13 +1452,13 @@ sealed class RequestToJoinRequest_orMutable {
 /// Deeply immutable.
 final class RequestToJoinRequest implements RequestToJoinRequest_orMutable {
   @_core.override
-  final _core.String? code;
+  final _lib_kernel_v1_record_id.RecordId code;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RequestToJoinRequest({
-    required _core.String? code,
+    required _lib_kernel_v1_record_id.RecordId_orMutable code,
   }) => RequestToJoinRequest._(
-    code,
+    code.toFrozen(),
   );
 
   RequestToJoinRequest._(
@@ -1445,13 +1467,13 @@ final class RequestToJoinRequest implements RequestToJoinRequest_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RequestToJoinRequest._(
-    null,
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RequestToJoinRequest_mutable mutable() => RequestToJoinRequest_mutable._(
-    null,
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -1488,9 +1510,7 @@ final class RequestToJoinRequest implements RequestToJoinRequest_orMutable {
         "code",
         "code",
         0,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.code,
         (it, v) => it.code = v,
@@ -1513,18 +1533,528 @@ final class RequestToJoinRequest implements RequestToJoinRequest_orMutable {
 
 /// Mutable version of [RequestToJoinRequest].
 final class RequestToJoinRequest_mutable implements RequestToJoinRequest_orMutable {
-  _core.String? code;
+  _lib_kernel_v1_record_id.RecordId_orMutable code;
   _skir.internal__UnrecognizedFields? _u;
 
   RequestToJoinRequest_mutable._(
     this.code,
   );
 
+  /// If the value of [code] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableCode {
+    final value = this.code;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.code = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   RequestToJoinRequest toFrozen() => RequestToJoinRequest(
     code: this.code,
   ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RequestToJoinResponse.CodeNotFoundError
+// -----------------------------------------------------------------------------
+
+sealed class RequestToJoinResponse_CodeNotFoundError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get code;
+
+  RequestToJoinResponse_CodeNotFoundError toFrozen();
+}
+
+/// Deeply immutable.
+final class RequestToJoinResponse_CodeNotFoundError implements RequestToJoinResponse_CodeNotFoundError_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId code;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequestToJoinResponse_CodeNotFoundError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable code,
+  }) => RequestToJoinResponse_CodeNotFoundError._(
+    code.toFrozen(),
+  );
+
+  RequestToJoinResponse_CodeNotFoundError._(
+    this.code,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequestToJoinResponse_CodeNotFoundError._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequestToJoinResponse_CodeNotFoundError_mutable mutable() => RequestToJoinResponse_CodeNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequestToJoinResponse_CodeNotFoundError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequestToJoinResponse_CodeNotFoundError_mutable toMutable() => RequestToJoinResponse_CodeNotFoundError_mutable._(
+    this.code,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequestToJoinResponse_CodeNotFoundError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.code,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequestToJoinResponse_CodeNotFoundError` instances.
+  static _skir.StructSerializer<RequestToJoinResponse_CodeNotFoundError, RequestToJoinResponse_CodeNotFoundError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "code",
+        "code",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.code,
+        (it, v) => it.code = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:RequestToJoinResponse.CodeNotFoundError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequestToJoinResponse_CodeNotFoundError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequestToJoinResponse_CodeNotFoundError].
+final class RequestToJoinResponse_CodeNotFoundError_mutable implements RequestToJoinResponse_CodeNotFoundError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable code;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequestToJoinResponse_CodeNotFoundError_mutable._(
+    this.code,
+  );
+
+  /// If the value of [code] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableCode {
+    final value = this.code;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.code = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequestToJoinResponse_CodeNotFoundError toFrozen() => RequestToJoinResponse_CodeNotFoundError(
+    code: this.code,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RequestToJoinResponse.AlreadyMemberError
+// -----------------------------------------------------------------------------
+
+sealed class RequestToJoinResponse_AlreadyMemberError_orMutable {
+  RequestToJoinResponse_AlreadyMemberError toFrozen();
+}
+
+/// Deeply immutable.
+final class RequestToJoinResponse_AlreadyMemberError implements RequestToJoinResponse_AlreadyMemberError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequestToJoinResponse_AlreadyMemberError() => RequestToJoinResponse_AlreadyMemberError._();
+
+  RequestToJoinResponse_AlreadyMemberError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequestToJoinResponse_AlreadyMemberError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequestToJoinResponse_AlreadyMemberError_mutable mutable() => RequestToJoinResponse_AlreadyMemberError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequestToJoinResponse_AlreadyMemberError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequestToJoinResponse_AlreadyMemberError_mutable toMutable() => RequestToJoinResponse_AlreadyMemberError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequestToJoinResponse_AlreadyMemberError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequestToJoinResponse_AlreadyMemberError` instances.
+  static _skir.StructSerializer<RequestToJoinResponse_AlreadyMemberError, RequestToJoinResponse_AlreadyMemberError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:RequestToJoinResponse.AlreadyMemberError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequestToJoinResponse_AlreadyMemberError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequestToJoinResponse_AlreadyMemberError].
+final class RequestToJoinResponse_AlreadyMemberError_mutable implements RequestToJoinResponse_AlreadyMemberError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequestToJoinResponse_AlreadyMemberError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequestToJoinResponse_AlreadyMemberError toFrozen() => RequestToJoinResponse_AlreadyMemberError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RequestToJoinResponse.NoAssignableRolesError
+// -----------------------------------------------------------------------------
+
+sealed class RequestToJoinResponse_NoAssignableRolesError_orMutable {
+  RequestToJoinResponse_NoAssignableRolesError toFrozen();
+}
+
+/// Deeply immutable.
+final class RequestToJoinResponse_NoAssignableRolesError implements RequestToJoinResponse_NoAssignableRolesError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequestToJoinResponse_NoAssignableRolesError() => RequestToJoinResponse_NoAssignableRolesError._();
+
+  RequestToJoinResponse_NoAssignableRolesError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequestToJoinResponse_NoAssignableRolesError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequestToJoinResponse_NoAssignableRolesError_mutable mutable() => RequestToJoinResponse_NoAssignableRolesError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequestToJoinResponse_NoAssignableRolesError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequestToJoinResponse_NoAssignableRolesError_mutable toMutable() => RequestToJoinResponse_NoAssignableRolesError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequestToJoinResponse_NoAssignableRolesError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequestToJoinResponse_NoAssignableRolesError` instances.
+  static _skir.StructSerializer<RequestToJoinResponse_NoAssignableRolesError, RequestToJoinResponse_NoAssignableRolesError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:RequestToJoinResponse.NoAssignableRolesError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequestToJoinResponse_NoAssignableRolesError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequestToJoinResponse_NoAssignableRolesError].
+final class RequestToJoinResponse_NoAssignableRolesError_mutable implements RequestToJoinResponse_NoAssignableRolesError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequestToJoinResponse_NoAssignableRolesError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequestToJoinResponse_NoAssignableRolesError toFrozen() => RequestToJoinResponse_NoAssignableRolesError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RequestToJoinResponse.MaxPendingRequestsError
+// -----------------------------------------------------------------------------
+
+sealed class RequestToJoinResponse_MaxPendingRequestsError_orMutable {
+  RequestToJoinResponse_MaxPendingRequestsError toFrozen();
+}
+
+/// Deeply immutable.
+final class RequestToJoinResponse_MaxPendingRequestsError implements RequestToJoinResponse_MaxPendingRequestsError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequestToJoinResponse_MaxPendingRequestsError() => RequestToJoinResponse_MaxPendingRequestsError._();
+
+  RequestToJoinResponse_MaxPendingRequestsError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequestToJoinResponse_MaxPendingRequestsError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequestToJoinResponse_MaxPendingRequestsError_mutable mutable() => RequestToJoinResponse_MaxPendingRequestsError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequestToJoinResponse_MaxPendingRequestsError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequestToJoinResponse_MaxPendingRequestsError_mutable toMutable() => RequestToJoinResponse_MaxPendingRequestsError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequestToJoinResponse_MaxPendingRequestsError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequestToJoinResponse_MaxPendingRequestsError` instances.
+  static _skir.StructSerializer<RequestToJoinResponse_MaxPendingRequestsError, RequestToJoinResponse_MaxPendingRequestsError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:RequestToJoinResponse.MaxPendingRequestsError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequestToJoinResponse_MaxPendingRequestsError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequestToJoinResponse_MaxPendingRequestsError].
+final class RequestToJoinResponse_MaxPendingRequestsError_mutable implements RequestToJoinResponse_MaxPendingRequestsError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequestToJoinResponse_MaxPendingRequestsError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequestToJoinResponse_MaxPendingRequestsError toFrozen() => RequestToJoinResponse_MaxPendingRequestsError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RequestToJoinResponse.PendingRequestExistsError
+// -----------------------------------------------------------------------------
+
+sealed class RequestToJoinResponse_PendingRequestExistsError_orMutable {
+  RequestToJoinResponse_PendingRequestExistsError toFrozen();
+}
+
+/// Deeply immutable.
+final class RequestToJoinResponse_PendingRequestExistsError implements RequestToJoinResponse_PendingRequestExistsError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequestToJoinResponse_PendingRequestExistsError() => RequestToJoinResponse_PendingRequestExistsError._();
+
+  RequestToJoinResponse_PendingRequestExistsError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequestToJoinResponse_PendingRequestExistsError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequestToJoinResponse_PendingRequestExistsError_mutable mutable() => RequestToJoinResponse_PendingRequestExistsError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequestToJoinResponse_PendingRequestExistsError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequestToJoinResponse_PendingRequestExistsError_mutable toMutable() => RequestToJoinResponse_PendingRequestExistsError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequestToJoinResponse_PendingRequestExistsError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequestToJoinResponse_PendingRequestExistsError` instances.
+  static _skir.StructSerializer<RequestToJoinResponse_PendingRequestExistsError, RequestToJoinResponse_PendingRequestExistsError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:RequestToJoinResponse.PendingRequestExistsError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequestToJoinResponse_PendingRequestExistsError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequestToJoinResponse_PendingRequestExistsError].
+final class RequestToJoinResponse_PendingRequestExistsError_mutable implements RequestToJoinResponse_PendingRequestExistsError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequestToJoinResponse_PendingRequestExistsError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequestToJoinResponse_PendingRequestExistsError toFrozen() => RequestToJoinResponse_PendingRequestExistsError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RequestToJoinResponse.InternalError
+// -----------------------------------------------------------------------------
+
+sealed class RequestToJoinResponse_InternalError_orMutable {
+  RequestToJoinResponse_InternalError toFrozen();
+}
+
+/// Deeply immutable.
+final class RequestToJoinResponse_InternalError implements RequestToJoinResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequestToJoinResponse_InternalError() => RequestToJoinResponse_InternalError._();
+
+  RequestToJoinResponse_InternalError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequestToJoinResponse_InternalError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequestToJoinResponse_InternalError_mutable mutable() => RequestToJoinResponse_InternalError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequestToJoinResponse_InternalError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequestToJoinResponse_InternalError_mutable toMutable() => RequestToJoinResponse_InternalError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequestToJoinResponse_InternalError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequestToJoinResponse_InternalError` instances.
+  static _skir.StructSerializer<RequestToJoinResponse_InternalError, RequestToJoinResponse_InternalError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:RequestToJoinResponse.InternalError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequestToJoinResponse_InternalError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequestToJoinResponse_InternalError].
+final class RequestToJoinResponse_InternalError_mutable implements RequestToJoinResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequestToJoinResponse_InternalError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequestToJoinResponse_InternalError toFrozen() => RequestToJoinResponse_InternalError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1535,7 +2065,14 @@ final class RequestToJoinRequest_mutable implements RequestToJoinRequest_orMutab
 ///   ```
 ///   switch (e) {
 ///     case RequestToJoinResponse_unknown(): { ... }
-///     case RequestToJoinResponse_success(:var value): { ... }
+///     case RequestToJoinResponse_requestMade(:var value): { ... }
+///     case RequestToJoinResponse_autoAccepted(:var value): { ... }
+///     case RequestToJoinResponse_codeNotFoundError(:var value): { ... }
+///     case RequestToJoinResponse_alreadyMemberError(:var value): { ... }
+///     case RequestToJoinResponse_noAssignableRolesError(:var value): { ... }
+///     case RequestToJoinResponse_maxPendingRequestsError(:var value): { ... }
+///     case RequestToJoinResponse_pendingRequestExistsError(:var value): { ... }
+///     case RequestToJoinResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1545,20 +2082,112 @@ sealed class RequestToJoinResponse {
   /// Default value for fields of type `RequestToJoinResponse`.
   static const RequestToJoinResponse unknown = RequestToJoinResponse_unknown._instance;
 
-  /// Create a 'success' variant wrapping around the given value.
-  factory RequestToJoinResponse.wrapSuccess(
-    RequestToJoinResult value
-  ) => RequestToJoinResponse_successWrapper._(value);
+  /// Create a 'request_made' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapRequestMade(
+    UserJoinRequest value
+  ) => RequestToJoinResponse_requestMadeWrapper._(value);
 
-  /// Same as `wrapSuccess(RequestToJoinResult(...))`.
-  factory RequestToJoinResponse.createSuccess({
-    required UserJoinRequest_orMutable request,
-    required AutoAcceptedMember_orMutable member,
-  }) => RequestToJoinResponse.wrapSuccess(
-    RequestToJoinResult(
-      request: request,
-      member: member,
+  /// Same as `wrapRequestMade(UserJoinRequest(...))`.
+  factory RequestToJoinResponse.createRequestMade({
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
+    required _core.String organizationName,
+    required _core.String organizationLogoUrl,
+    required _core.DateTime requestedAt,
+    required _core.DateTime expiresAt,
+  }) => RequestToJoinResponse.wrapRequestMade(
+    UserJoinRequest(
+      requestId: requestId,
+      organizationId: organizationId,
+      organizationName: organizationName,
+      organizationLogoUrl: organizationLogoUrl,
+      requestedAt: requestedAt,
+      expiresAt: expiresAt,
     )
+  );
+
+  /// Create a 'auto_accepted' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapAutoAccepted(
+    AutoAcceptedMember value
+  ) => RequestToJoinResponse_autoAcceptedWrapper._(value);
+
+  /// Same as `wrapAutoAccepted(AutoAcceptedMember(...))`.
+  factory RequestToJoinResponse.createAutoAccepted({
+    required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
+    required _core.String organizationName,
+    required _core.String? organizationLogoUrl,
+    required _core.Iterable<_lib_organization_v1_member.Role_orMutable> roles,
+  }) => RequestToJoinResponse.wrapAutoAccepted(
+    AutoAcceptedMember(
+      organizationId: organizationId,
+      organizationName: organizationName,
+      organizationLogoUrl: organizationLogoUrl,
+      roles: roles,
+    )
+  );
+
+  /// Create a 'code_not_found_error' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapCodeNotFoundError(
+    RequestToJoinResponse_CodeNotFoundError value
+  ) => RequestToJoinResponse_codeNotFoundErrorWrapper._(value);
+
+  /// Same as `wrapCodeNotFoundError(RequestToJoinResponse_CodeNotFoundError(...))`.
+  factory RequestToJoinResponse.createCodeNotFoundError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable code,
+  }) => RequestToJoinResponse.wrapCodeNotFoundError(
+    RequestToJoinResponse_CodeNotFoundError(
+      code: code,
+    )
+  );
+
+  /// Create a 'already_member_error' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapAlreadyMemberError(
+    RequestToJoinResponse_AlreadyMemberError value
+  ) => RequestToJoinResponse_alreadyMemberErrorWrapper._(value);
+
+  /// Same as `wrapAlreadyMemberError(RequestToJoinResponse_AlreadyMemberError(...))`.
+  factory RequestToJoinResponse.createAlreadyMemberError() => RequestToJoinResponse.wrapAlreadyMemberError(
+    RequestToJoinResponse_AlreadyMemberError()
+  );
+
+  /// Create a 'no_assignable_roles_error' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapNoAssignableRolesError(
+    RequestToJoinResponse_NoAssignableRolesError value
+  ) => RequestToJoinResponse_noAssignableRolesErrorWrapper._(value);
+
+  /// Same as `wrapNoAssignableRolesError(RequestToJoinResponse_NoAssignableRolesError(...))`.
+  factory RequestToJoinResponse.createNoAssignableRolesError() => RequestToJoinResponse.wrapNoAssignableRolesError(
+    RequestToJoinResponse_NoAssignableRolesError()
+  );
+
+  /// Create a 'max_pending_requests_error' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapMaxPendingRequestsError(
+    RequestToJoinResponse_MaxPendingRequestsError value
+  ) => RequestToJoinResponse_maxPendingRequestsErrorWrapper._(value);
+
+  /// Same as `wrapMaxPendingRequestsError(RequestToJoinResponse_MaxPendingRequestsError(...))`.
+  factory RequestToJoinResponse.createMaxPendingRequestsError() => RequestToJoinResponse.wrapMaxPendingRequestsError(
+    RequestToJoinResponse_MaxPendingRequestsError()
+  );
+
+  /// Create a 'pending_request_exists_error' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapPendingRequestExistsError(
+    RequestToJoinResponse_PendingRequestExistsError value
+  ) => RequestToJoinResponse_pendingRequestExistsErrorWrapper._(value);
+
+  /// Same as `wrapPendingRequestExistsError(RequestToJoinResponse_PendingRequestExistsError(...))`.
+  factory RequestToJoinResponse.createPendingRequestExistsError() => RequestToJoinResponse.wrapPendingRequestExistsError(
+    RequestToJoinResponse_PendingRequestExistsError()
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory RequestToJoinResponse.wrapInternalError(
+    RequestToJoinResponse_InternalError value
+  ) => RequestToJoinResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(RequestToJoinResponse_InternalError(...))`.
+  factory RequestToJoinResponse.createInternalError() => RequestToJoinResponse.wrapInternalError(
+    RequestToJoinResponse_InternalError()
   );
 
   /// Returns the kind of variant held by this RequestToJoinResponse.
@@ -1569,13 +2198,83 @@ sealed class RequestToJoinResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "success",
-        "wrapSuccess",
-        RequestToJoinResult.serializer,
+        "request_made",
+        "wrapRequestMade",
+        UserJoinRequest.serializer,
         "",
-        RequestToJoinResponse_successWrapper._,
+        RequestToJoinResponse_requestMadeWrapper._,
         (it) => it.value,
-        ordinal: RequestToJoinResponse_kind.successWrapper._ordinal,
+        ordinal: RequestToJoinResponse_kind.requestMadeWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "auto_accepted",
+        "wrapAutoAccepted",
+        AutoAcceptedMember.serializer,
+        "",
+        RequestToJoinResponse_autoAcceptedWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.autoAcceptedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "code_not_found_error",
+        "wrapCodeNotFoundError",
+        RequestToJoinResponse_CodeNotFoundError.serializer,
+        "",
+        RequestToJoinResponse_codeNotFoundErrorWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.codeNotFoundErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "already_member_error",
+        "wrapAlreadyMemberError",
+        RequestToJoinResponse_AlreadyMemberError.serializer,
+        "",
+        RequestToJoinResponse_alreadyMemberErrorWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.alreadyMemberErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "no_assignable_roles_error",
+        "wrapNoAssignableRolesError",
+        RequestToJoinResponse_NoAssignableRolesError.serializer,
+        "",
+        RequestToJoinResponse_noAssignableRolesErrorWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.noAssignableRolesErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "max_pending_requests_error",
+        "wrapMaxPendingRequestsError",
+        RequestToJoinResponse_MaxPendingRequestsError.serializer,
+        "",
+        RequestToJoinResponse_maxPendingRequestsErrorWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.maxPendingRequestsErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
+        "pending_request_exists_error",
+        "wrapPendingRequestExistsError",
+        RequestToJoinResponse_PendingRequestExistsError.serializer,
+        "",
+        RequestToJoinResponse_pendingRequestExistsErrorWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.pendingRequestExistsErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        8,
+        "internal_error",
+        "wrapInternalError",
+        RequestToJoinResponse_InternalError.serializer,
+        "",
+        RequestToJoinResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: RequestToJoinResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -1596,7 +2295,14 @@ sealed class RequestToJoinResponse {
 /// The kind of variant held by a `RequestToJoinResponse`.
 enum RequestToJoinResponse_kind {
   unknown(0),
-  successWrapper(1);
+  requestMadeWrapper(1),
+  autoAcceptedWrapper(2),
+  codeNotFoundErrorWrapper(3),
+  alreadyMemberErrorWrapper(4),
+  noAssignableRolesErrorWrapper(5),
+  maxPendingRequestsErrorWrapper(6),
+  pendingRequestExistsErrorWrapper(7),
+  internalErrorWrapper(8);
 
   final _core.int _ordinal;
 
@@ -1637,13 +2343,76 @@ sealed class _RequestToJoinResponse_wrapper implements RequestToJoinResponse {
   _core.String toString() => _skir.internal__stringify(this, RequestToJoinResponse.serializer);
 }
 
-final class RequestToJoinResponse_successWrapper extends _RequestToJoinResponse_wrapper {
-  final RequestToJoinResult value;
+final class RequestToJoinResponse_requestMadeWrapper extends _RequestToJoinResponse_wrapper {
+  final UserJoinRequest value;
 
-  RequestToJoinResponse_successWrapper._(this.value);
+  RequestToJoinResponse_requestMadeWrapper._(this.value);
 
   @_core.override
-  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.successWrapper;
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.requestMadeWrapper;
+}
+
+final class RequestToJoinResponse_autoAcceptedWrapper extends _RequestToJoinResponse_wrapper {
+  final AutoAcceptedMember value;
+
+  RequestToJoinResponse_autoAcceptedWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.autoAcceptedWrapper;
+}
+
+final class RequestToJoinResponse_codeNotFoundErrorWrapper extends _RequestToJoinResponse_wrapper {
+  final RequestToJoinResponse_CodeNotFoundError value;
+
+  RequestToJoinResponse_codeNotFoundErrorWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.codeNotFoundErrorWrapper;
+}
+
+final class RequestToJoinResponse_alreadyMemberErrorWrapper extends _RequestToJoinResponse_wrapper {
+  final RequestToJoinResponse_AlreadyMemberError value;
+
+  RequestToJoinResponse_alreadyMemberErrorWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.alreadyMemberErrorWrapper;
+}
+
+final class RequestToJoinResponse_noAssignableRolesErrorWrapper extends _RequestToJoinResponse_wrapper {
+  final RequestToJoinResponse_NoAssignableRolesError value;
+
+  RequestToJoinResponse_noAssignableRolesErrorWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.noAssignableRolesErrorWrapper;
+}
+
+final class RequestToJoinResponse_maxPendingRequestsErrorWrapper extends _RequestToJoinResponse_wrapper {
+  final RequestToJoinResponse_MaxPendingRequestsError value;
+
+  RequestToJoinResponse_maxPendingRequestsErrorWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.maxPendingRequestsErrorWrapper;
+}
+
+final class RequestToJoinResponse_pendingRequestExistsErrorWrapper extends _RequestToJoinResponse_wrapper {
+  final RequestToJoinResponse_PendingRequestExistsError value;
+
+  RequestToJoinResponse_pendingRequestExistsErrorWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.pendingRequestExistsErrorWrapper;
+}
+
+final class RequestToJoinResponse_internalErrorWrapper extends _RequestToJoinResponse_wrapper {
+  final RequestToJoinResponse_InternalError value;
+
+  RequestToJoinResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  RequestToJoinResponse_kind get kind => RequestToJoinResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1651,7 +2420,7 @@ final class RequestToJoinResponse_successWrapper extends _RequestToJoinResponse_
 // -----------------------------------------------------------------------------
 
 sealed class CancelJoinRequestRequest_orMutable {
-  _core.String get requestId;
+  _lib_kernel_v1_record_id.RecordId_orMutable get requestId;
 
   CancelJoinRequestRequest toFrozen();
 }
@@ -1659,13 +2428,13 @@ sealed class CancelJoinRequestRequest_orMutable {
 /// Deeply immutable.
 final class CancelJoinRequestRequest implements CancelJoinRequestRequest_orMutable {
   @_core.override
-  final _core.String requestId;
+  final _lib_kernel_v1_record_id.RecordId requestId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CancelJoinRequestRequest({
-    required _core.String requestId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
   }) => CancelJoinRequestRequest._(
-    requestId,
+    requestId.toFrozen(),
   );
 
   CancelJoinRequestRequest._(
@@ -1674,13 +2443,13 @@ final class CancelJoinRequestRequest implements CancelJoinRequestRequest_orMutab
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CancelJoinRequestRequest._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CancelJoinRequestRequest_mutable mutable() => CancelJoinRequestRequest_mutable._(
-    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -1717,7 +2486,7 @@ final class CancelJoinRequestRequest implements CancelJoinRequestRequest_orMutab
         "request_id",
         "requestId",
         0,
-        _skir.Serializers.string,
+        _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.requestId,
         (it, v) => it.requestId = v,
@@ -1740,12 +2509,23 @@ final class CancelJoinRequestRequest implements CancelJoinRequestRequest_orMutab
 
 /// Mutable version of [CancelJoinRequestRequest].
 final class CancelJoinRequestRequest_mutable implements CancelJoinRequestRequest_orMutable {
-  _core.String requestId;
+  _lib_kernel_v1_record_id.RecordId_orMutable requestId;
   _skir.internal__UnrecognizedFields? _u;
 
   CancelJoinRequestRequest_mutable._(
     this.requestId,
   );
+
+  /// If the value of [requestId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRequestId {
+    final value = this.requestId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.requestId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -1831,6 +2611,201 @@ final class CancelJoinRequestResponse_Success_mutable implements CancelJoinReque
 }
 
 // -----------------------------------------------------------------------------
+// struct CancelJoinRequestResponse.RequestNotFoundError
+// -----------------------------------------------------------------------------
+
+sealed class CancelJoinRequestResponse_RequestNotFoundError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get requestId;
+
+  CancelJoinRequestResponse_RequestNotFoundError toFrozen();
+}
+
+/// Deeply immutable.
+final class CancelJoinRequestResponse_RequestNotFoundError implements CancelJoinRequestResponse_RequestNotFoundError_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId requestId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CancelJoinRequestResponse_RequestNotFoundError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+  }) => CancelJoinRequestResponse_RequestNotFoundError._(
+    requestId.toFrozen(),
+  );
+
+  CancelJoinRequestResponse_RequestNotFoundError._(
+    this.requestId,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CancelJoinRequestResponse_RequestNotFoundError._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CancelJoinRequestResponse_RequestNotFoundError_mutable mutable() => CancelJoinRequestResponse_RequestNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CancelJoinRequestResponse_RequestNotFoundError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CancelJoinRequestResponse_RequestNotFoundError_mutable toMutable() => CancelJoinRequestResponse_RequestNotFoundError_mutable._(
+    this.requestId,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CancelJoinRequestResponse_RequestNotFoundError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.requestId,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CancelJoinRequestResponse_RequestNotFoundError` instances.
+  static _skir.StructSerializer<CancelJoinRequestResponse_RequestNotFoundError, CancelJoinRequestResponse_RequestNotFoundError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "request_id",
+        "requestId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.requestId,
+        (it, v) => it.requestId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:CancelJoinRequestResponse.RequestNotFoundError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CancelJoinRequestResponse_RequestNotFoundError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CancelJoinRequestResponse_RequestNotFoundError].
+final class CancelJoinRequestResponse_RequestNotFoundError_mutable implements CancelJoinRequestResponse_RequestNotFoundError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable requestId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CancelJoinRequestResponse_RequestNotFoundError_mutable._(
+    this.requestId,
+  );
+
+  /// If the value of [requestId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRequestId {
+    final value = this.requestId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.requestId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CancelJoinRequestResponse_RequestNotFoundError toFrozen() => CancelJoinRequestResponse_RequestNotFoundError(
+    requestId: this.requestId,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CancelJoinRequestResponse.InternalError
+// -----------------------------------------------------------------------------
+
+sealed class CancelJoinRequestResponse_InternalError_orMutable {
+  CancelJoinRequestResponse_InternalError toFrozen();
+}
+
+/// Deeply immutable.
+final class CancelJoinRequestResponse_InternalError implements CancelJoinRequestResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CancelJoinRequestResponse_InternalError() => CancelJoinRequestResponse_InternalError._();
+
+  CancelJoinRequestResponse_InternalError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CancelJoinRequestResponse_InternalError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CancelJoinRequestResponse_InternalError_mutable mutable() => CancelJoinRequestResponse_InternalError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CancelJoinRequestResponse_InternalError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CancelJoinRequestResponse_InternalError_mutable toMutable() => CancelJoinRequestResponse_InternalError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CancelJoinRequestResponse_InternalError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CancelJoinRequestResponse_InternalError` instances.
+  static _skir.StructSerializer<CancelJoinRequestResponse_InternalError, CancelJoinRequestResponse_InternalError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:CancelJoinRequestResponse.InternalError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CancelJoinRequestResponse_InternalError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CancelJoinRequestResponse_InternalError].
+final class CancelJoinRequestResponse_InternalError_mutable implements CancelJoinRequestResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  CancelJoinRequestResponse_InternalError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CancelJoinRequestResponse_InternalError toFrozen() => CancelJoinRequestResponse_InternalError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum CancelJoinRequestResponse
 // -----------------------------------------------------------------------------
 
@@ -1839,6 +2814,8 @@ final class CancelJoinRequestResponse_Success_mutable implements CancelJoinReque
 ///   switch (e) {
 ///     case CancelJoinRequestResponse_unknown(): { ... }
 ///     case CancelJoinRequestResponse_success(:var value): { ... }
+///     case CancelJoinRequestResponse_requestNotFoundError(:var value): { ... }
+///     case CancelJoinRequestResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1858,6 +2835,30 @@ sealed class CancelJoinRequestResponse {
     CancelJoinRequestResponse_Success()
   );
 
+  /// Create a 'request_not_found_error' variant wrapping around the given value.
+  factory CancelJoinRequestResponse.wrapRequestNotFoundError(
+    CancelJoinRequestResponse_RequestNotFoundError value
+  ) => CancelJoinRequestResponse_requestNotFoundErrorWrapper._(value);
+
+  /// Same as `wrapRequestNotFoundError(CancelJoinRequestResponse_RequestNotFoundError(...))`.
+  factory CancelJoinRequestResponse.createRequestNotFoundError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable requestId,
+  }) => CancelJoinRequestResponse.wrapRequestNotFoundError(
+    CancelJoinRequestResponse_RequestNotFoundError(
+      requestId: requestId,
+    )
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory CancelJoinRequestResponse.wrapInternalError(
+    CancelJoinRequestResponse_InternalError value
+  ) => CancelJoinRequestResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(CancelJoinRequestResponse_InternalError(...))`.
+  factory CancelJoinRequestResponse.createInternalError() => CancelJoinRequestResponse.wrapInternalError(
+    CancelJoinRequestResponse_InternalError()
+  );
+
   /// Returns the kind of variant held by this CancelJoinRequestResponse.
   CancelJoinRequestResponse_kind get kind;
 
@@ -1873,6 +2874,26 @@ sealed class CancelJoinRequestResponse {
         CancelJoinRequestResponse_successWrapper._,
         (it) => it.value,
         ordinal: CancelJoinRequestResponse_kind.successWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "request_not_found_error",
+        "wrapRequestNotFoundError",
+        CancelJoinRequestResponse_RequestNotFoundError.serializer,
+        "",
+        CancelJoinRequestResponse_requestNotFoundErrorWrapper._,
+        (it) => it.value,
+        ordinal: CancelJoinRequestResponse_kind.requestNotFoundErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "internal_error",
+        "wrapInternalError",
+        CancelJoinRequestResponse_InternalError.serializer,
+        "",
+        CancelJoinRequestResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: CancelJoinRequestResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -1893,7 +2914,9 @@ sealed class CancelJoinRequestResponse {
 /// The kind of variant held by a `CancelJoinRequestResponse`.
 enum CancelJoinRequestResponse_kind {
   unknown(0),
-  successWrapper(1);
+  successWrapper(1),
+  requestNotFoundErrorWrapper(2),
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -1941,6 +2964,24 @@ final class CancelJoinRequestResponse_successWrapper extends _CancelJoinRequestR
 
   @_core.override
   CancelJoinRequestResponse_kind get kind => CancelJoinRequestResponse_kind.successWrapper;
+}
+
+final class CancelJoinRequestResponse_requestNotFoundErrorWrapper extends _CancelJoinRequestResponse_wrapper {
+  final CancelJoinRequestResponse_RequestNotFoundError value;
+
+  CancelJoinRequestResponse_requestNotFoundErrorWrapper._(this.value);
+
+  @_core.override
+  CancelJoinRequestResponse_kind get kind => CancelJoinRequestResponse_kind.requestNotFoundErrorWrapper;
+}
+
+final class CancelJoinRequestResponse_internalErrorWrapper extends _CancelJoinRequestResponse_wrapper {
+  final CancelJoinRequestResponse_InternalError value;
+
+  CancelJoinRequestResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  CancelJoinRequestResponse_kind get kind => CancelJoinRequestResponse_kind.internalErrorWrapper;
 }
 
 final _skir.Method<

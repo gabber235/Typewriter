@@ -1,9 +1,10 @@
 import { Duration } from "kernel/v1/duration.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
 
 // Who is asking for permission?
 enum EntityPermissionQualifier {
   user: struct {
-    organization_id: string?;
+    organization_id: RecordId?;
   };
   service: struct {};
 }

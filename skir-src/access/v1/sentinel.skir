@@ -9,4 +9,5 @@ method GetSentinelCredentials(
   };
   configuration_error: struct {};
   invalid_credentials: struct {};
+  internal_error: struct {};
 } = 403062;

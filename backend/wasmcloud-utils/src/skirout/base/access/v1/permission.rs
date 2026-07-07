@@ -19,7 +19,7 @@
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EntityPermissionQualifier_User {
-    pub organization_id: Option<String>,
+    pub organization_id: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EntityPermissionQualifier_User>>,
 }
@@ -335,7 +335,7 @@ fn initialize_module_serializers() {
         std::sync::LazyLock::new(|| {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_User> = EntityPermissionQualifier_User::_adapter() as *const _ as *mut _;
-                (*a).add_field("organization_id", 0, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &EntityPermissionQualifier_User| &x.organization_id, |x: &mut EntityPermissionQualifier_User, v| x.organization_id = v);
+                (*a).add_field("organization_id", 0, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &EntityPermissionQualifier_User| &x.organization_id, |x: &mut EntityPermissionQualifier_User, v| x.organization_id = v);
                 (*a).finalize();
             }
             unsafe {

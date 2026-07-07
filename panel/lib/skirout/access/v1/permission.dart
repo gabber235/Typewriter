@@ -14,13 +14,14 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
+import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 // -----------------------------------------------------------------------------
 // struct EntityPermissionQualifier.User
 // -----------------------------------------------------------------------------
 
 sealed class EntityPermissionQualifier_User_orMutable {
-  _core.String? get organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable? get organizationId;
 
   EntityPermissionQualifier_User toFrozen();
 }
@@ -28,13 +29,13 @@ sealed class EntityPermissionQualifier_User_orMutable {
 /// Deeply immutable.
 final class EntityPermissionQualifier_User implements EntityPermissionQualifier_User_orMutable {
   @_core.override
-  final _core.String? organizationId;
+  final _lib_kernel_v1_record_id.RecordId? organizationId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EntityPermissionQualifier_User({
-    required _core.String? organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? organizationId,
   }) => EntityPermissionQualifier_User._(
-    organizationId,
+    (organizationId != null) ? organizationId.toFrozen() : null,
   );
 
   EntityPermissionQualifier_User._(
@@ -87,7 +88,7 @@ final class EntityPermissionQualifier_User implements EntityPermissionQualifier_
         "organizationId",
         0,
         _skir.Serializers.optional(
-          _skir.Serializers.string,
+          _lib_kernel_v1_record_id.RecordId.serializer,
         ),
         "",
         (it) => it.organizationId,
@@ -111,7 +112,7 @@ final class EntityPermissionQualifier_User implements EntityPermissionQualifier_
 
 /// Mutable version of [EntityPermissionQualifier_User].
 final class EntityPermissionQualifier_User_mutable implements EntityPermissionQualifier_User_orMutable {
-  _core.String? organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable? organizationId;
   _skir.internal__UnrecognizedFields? _u;
 
   EntityPermissionQualifier_User_mutable._(
@@ -227,7 +228,7 @@ sealed class EntityPermissionQualifier {
 
   /// Same as `wrapUser(EntityPermissionQualifier_User(...))`.
   factory EntityPermissionQualifier.createUser({
-    required _core.String? organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? organizationId,
   }) => EntityPermissionQualifier.wrapUser(
     EntityPermissionQualifier_User(
       organizationId: organizationId,

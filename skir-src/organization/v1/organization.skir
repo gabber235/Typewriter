@@ -1,5 +1,7 @@
+import { RecordId } from "kernel/v1/record_id.skir";
+
 struct Organization {
-  organization_id: string;
+  organization_id: RecordId;
   name: string;
   logo_url: string;
 }
@@ -10,6 +12,7 @@ method WatchUserOrganizations(
   list: [Organization];
   add: Organization;
   remove: Organization;
+  internal_error: struct {};
 } = 246975;
 
 method CreateOrganization(
@@ -19,12 +22,14 @@ method CreateOrganization(
   }
 ): enum {
   success: Organization;
+  internal_error: struct {};
 } = 336038;
 
 method DeleteOrganization(
   struct {
-    organization_id: string;
+    organization_id: RecordId;
   }
 ): enum {
   success: struct {};
+  internal_error: struct {};
 } = 627251;

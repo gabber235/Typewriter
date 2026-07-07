@@ -164,6 +164,43 @@ impl GetSentinelCredentialsResponse_InvalidCredentials {
 }
 
 // ==============================================================================
+// struct GetSentinelCredentialsResponse.InternalError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GetSentinelCredentialsResponse_InternalError {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetSentinelCredentialsResponse_InternalError>>,
+}
+
+impl GetSentinelCredentialsResponse_InternalError {
+    pub fn default_ref() -> &'static GetSentinelCredentialsResponse_InternalError {
+        static D: std::sync::LazyLock<GetSentinelCredentialsResponse_InternalError> = std::sync::LazyLock::new(GetSentinelCredentialsResponse_InternalError::default);
+        &D
+    }
+}
+
+impl GetSentinelCredentialsResponse_InternalError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetSentinelCredentialsResponse_InternalError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetSentinelCredentialsResponse_InternalError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "access/v1/sentinel.skir",
+                    "GetSentinelCredentialsResponse.InternalError",
+                    "",
+                    |x: &GetSentinelCredentialsResponse_InternalError| &x._unrecognized,
+                    |x: &mut GetSentinelCredentialsResponse_InternalError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GetSentinelCredentialsResponse_InternalError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(GetSentinelCredentialsResponse_InternalError::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum GetSentinelCredentialsResponse
 // ==============================================================================
 
@@ -173,6 +210,7 @@ pub enum GetSentinelCredentialsResponse {
     Success(Box<GetSentinelCredentialsResponse_Success>),
     ConfigurationError(Box<GetSentinelCredentialsResponse_ConfigurationError>),
     InvalidCredentials(Box<GetSentinelCredentialsResponse_InvalidCredentials>),
+    InternalError(Box<GetSentinelCredentialsResponse_InternalError>),
 }
 
 impl Default for GetSentinelCredentialsResponse {
@@ -191,6 +229,7 @@ impl GetSentinelCredentialsResponse {
                         GetSentinelCredentialsResponse::Success(_) => 1,
                         GetSentinelCredentialsResponse::ConfigurationError(_) => 2,
                         GetSentinelCredentialsResponse::InvalidCredentials(_) => 3,
+                        GetSentinelCredentialsResponse::InternalError(_) => 4,
                     },
                     |u| GetSentinelCredentialsResponse::Unknown(Some(u)),
                     |x: &GetSentinelCredentialsResponse| match x { GetSentinelCredentialsResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -233,10 +272,15 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GetSentinelCredentialsResponse_InternalError> = GetSentinelCredentialsResponse_InternalError::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<GetSentinelCredentialsResponse> = GetSentinelCredentialsResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(GetSentinelCredentialsResponse_Success::_adapter()), "", |v| GetSentinelCredentialsResponse::Success(Box::new(v)), |x| match x { GetSentinelCredentialsResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("configuration_error", 2, 2, crate::skir_client::internal::struct_serializer_from_static(GetSentinelCredentialsResponse_ConfigurationError::_adapter()), "", |v| GetSentinelCredentialsResponse::ConfigurationError(Box::new(v)), |x| match x { GetSentinelCredentialsResponse::ConfigurationError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalid_credentials", 3, 3, crate::skir_client::internal::struct_serializer_from_static(GetSentinelCredentialsResponse_InvalidCredentials::_adapter()), "", |v| GetSentinelCredentialsResponse::InvalidCredentials(Box::new(v)), |x| match x { GetSentinelCredentialsResponse::InvalidCredentials(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(GetSentinelCredentialsResponse_InternalError::_adapter()), "", |v| GetSentinelCredentialsResponse::InternalError(Box::new(v)), |x| match x { GetSentinelCredentialsResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });
