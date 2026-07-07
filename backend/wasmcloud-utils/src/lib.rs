@@ -20,7 +20,9 @@ pub use otel_wasi;
 pub use skir_client;
 
 // Re-export proc macros
-pub use wasmcloud_utils_macros::{dispatch_actions, skir_domain_result, skir_response};
+pub use wasmcloud_utils_macros::{
+    dispatch_actions, skir_domain_result, skir_response, skir_variant,
+};
 
 // SkirResponse trait and domain-result helpers
 mod skir_response_trait;
@@ -30,6 +32,10 @@ pub use skir_response_trait::{
 
 // Central skir response declarations
 mod skir_responses;
+
+mod skir_subject;
+pub use skir_subject::SkirSubject;
+pub mod skir_subjects;
 
 pub mod skir_utils;
 

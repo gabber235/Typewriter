@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use otel_wasi::ResultWithSlug;
+
 pub use crate::bindings::exports::wasmcloud::messaging::*;
 pub use crate::bindings::wasmcloud::messaging::*;
 
@@ -200,6 +202,16 @@ pub fn send(
         body: data.into(),
     })
     .map_err(|e| otel_wasi::Error::new("message-send-failed", e))
+}
+
+/// Publish a message without a reply_to.
+pub fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_wasi::Error> {
+    consumer::publish(&types::BrokerMessage {
+        subject,
+        reply_to: None,
+        body: data.into(),
+    })
+    .error_with_slug("message-publish-failed")
 }
 
 /// Reply to a message with the result of a handler that returns `Result<R, otel_wasi::Error>`.

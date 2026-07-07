@@ -106,7 +106,7 @@ fn override_arms(input: &SkirDomainResultInput) -> syn::Result<Vec<TokenStream>>
 fn override_arm(response_ty: &Path, entry: &OverrideEntry) -> syn::Result<TokenStream> {
     let slug_value = entry.slug.value();
     let variant_ident = Ident::new(&slug_value.to_case(Case::Pascal), entry.slug.span());
-    let payload_ty = payload_ty(response_ty, &variant_ident)?;
+    let payload_ty = crate::paths::payload_ty(response_ty, &variant_ident, "skir_domain_result!")?;
     let field_names = entry.fields.iter().map(|field| &field.name);
     let field_values = entry.fields.iter().map(|field| &field.value);
     let slug = &entry.slug;
@@ -120,29 +120,4 @@ fn override_arm(response_ty: &Path, entry: &OverrideEntry) -> syn::Result<TokenS
             ::std::option::Option::Some(#response_ty::#variant_ident(::std::boxed::Box::new(payload)))
         }
     })
-}
-
-fn payload_ty(response_ty: &Path, variant_ident: &Ident) -> syn::Result<Path> {
-    let mut payload_ty = response_ty.clone();
-    let Some(last_segment) = payload_ty.segments.last_mut() else {
-        return Err(syn::Error::new_spanned(
-            response_ty,
-            "expected response type path",
-        ));
-    };
-
-    if !last_segment.arguments.is_empty() {
-        return Err(syn::Error::new_spanned(
-            &last_segment.arguments,
-            "skir_domain_result! response type must not have generic arguments",
-        ));
-    }
-
-    let payload_ident = Ident::new(
-        &format!("{}_{}", last_segment.ident, variant_ident),
-        last_segment.ident.span(),
-    );
-    last_segment.ident = payload_ident;
-
-    Ok(payload_ty)
 }

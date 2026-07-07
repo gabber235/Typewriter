@@ -248,6 +248,12 @@ impl fmt::Display for RecordId {
     }
 }
 
+impl From<RecordId> for Value {
+    fn from(value: RecordId) -> Self {
+        (&value).into()
+    }
+}
+
 impl From<&RecordId> for Value {
     fn from(value: &RecordId) -> Self {
         value.to_string().into()
