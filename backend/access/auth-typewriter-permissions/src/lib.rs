@@ -74,7 +74,7 @@ impl Guest for TypewriterPermissions {
                 "auth.permissions.subscribe.deny.count" =
                     response.permissions.subscribe.deny.len() as i64,
             );
-            reply(msg, body).error_with_slug("message-reply-failed")
+            reply(msg, body)
         })
     }
 }

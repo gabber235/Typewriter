@@ -1,5 +1,8 @@
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
-use wasmcloud_utils::skir::base::access::v1::permission::{EntityPermissionQualifier, Permissions};
+use wasmcloud_utils::skir::base::{
+    access::v1::permission::{EntityPermissionQualifier, Permissions},
+    kernel::v1::record_id::RecordId,
+};
 
 use crate::common::{AuthentikClaims, User, build_permissions};
 
@@ -28,7 +31,7 @@ pub async fn handle_panel_user(
         "auth.entity.name" = name.clone(),
     );
     if let Some(ref org_id) = organization_id {
-        main_attribute!("auth.entity.organization_id" = org_id.clone());
+        main_attribute!("auth.entity.organization_id" = org_id);
     }
     if let Some(ref discord) = additional.discord {
         main_attribute!("auth.entity.discord_id" = discord.id.clone());
@@ -51,6 +54,7 @@ pub async fn handle_panel_user(
             let is_member = is_member_of_organization(&user_id, org_id).await?;
             if is_member {
                 main_attribute!("auth.permissions.organization_access" = "allowed");
+                let org_id = &org_id.key.to_string();
                 add_organization_roles_permissions(
                     &user_id,
                     org_id,
@@ -161,7 +165,10 @@ async fn upsert_user(
 
 /// Checks if the user is a member of the organization.
 #[tracing::instrument]
-async fn is_member_of_organization(user_id: &str, org_id: &str) -> Result<bool, otel_wasi::Error> {
+async fn is_member_of_organization(
+    user_id: &str,
+    org_id: &RecordId,
+) -> Result<bool, otel_wasi::Error> {
     surrealdb_component_sdk::query(
         "
         RETURN count(
@@ -171,7 +178,7 @@ async fn is_member_of_organization(user_id: &str, org_id: &str) -> Result<bool, 
         ",
     )
     .bind("user_id", &user_id)
-    .bind("org_id", org_id)
+    .bind("org_id", surrealdb_component_sdk::RecordId::from(org_id.clone()))
     .execute()
     .await
     .error_with_slug("organization-permissions-failed")?

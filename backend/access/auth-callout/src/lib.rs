@@ -102,17 +102,14 @@ impl Guest for AuthCallout {
             Ok(data) => data,
             Err(e) => {
                 main_attribute!("auth.outcome" = "failed");
-                return Err(otel_wasi::Error::new(
-                    "auth-callout-response-encode-failed",
-                    e,
-                ));
+                return Err(e.with_slug("auth-callout-response-encode-failed"));
             }
         };
         main_attribute!("auth.response.encoded.size" = data.len() as i64);
 
         if let Err(e) = reply(msg, data) {
             main_attribute!("auth.outcome" = "failed");
-            return Err(e.with_slug("auth-callout-reply-failed"));
+            return Err(e);
         }
         main_attribute!("auth.reply.sent" = true);
         Ok(())
