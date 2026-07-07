@@ -15,7 +15,7 @@ const (
 	kubectlImage           = "bitnami/kubectl:latest"
 	fluxCliImage           = "ghcr.io/fluxcd/flux-cli:v2.6.4"
 	defaultKubernetesAPI   = "https://host.docker.internal:6550"
-	defaultLocalSurrealURL = "https://surrealdb.local.seamlezz.net"
+	defaultLocalSurrealURL = "wss://surrealdb.local.seamlezz.net"
 )
 
 func (m *Typewriter) surrealkitContainer() *dagger.Container {
@@ -133,13 +133,13 @@ func (m *Typewriter) DatabaseRolloutLint(
 }
 
 func (m *Typewriter) localKubectlContainer(
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	kubernetes *dagger.Service,
 ) *dagger.Container {
 	container := dag.Container().
 		From(kubectlImage).
 		WithUser("0").
-		WithFile("/root/.kube/config", kubeconfig, dagger.ContainerWithFileOpts{Permissions: 0o600, Owner: "0:0"}).
+		WithMountedSecret("/root/.kube/config", kubeconfig, dagger.ContainerWithMountedSecretOpts{Mode: 0o600, Owner: "0:0"}).
 		WithEnvVariable("KUBECONFIG", "/root/.kube/config")
 
 	if kubernetes != nil {
@@ -188,7 +188,7 @@ func secretValue(ctx context.Context, kubectl *dagger.Container, key string, kub
 func (m *Typewriter) localClusterSurrealkit(
 	ctx context.Context,
 	source *dagger.Workspace,
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	// +optional
 	kubernetes *dagger.Service,
 	// +optional
@@ -212,12 +212,19 @@ func (m *Typewriter) localClusterSurrealkit(
 		return nil, err
 	}
 
+	backend := source.Directory("/backend", dagger.WorkspaceDirectoryOpts{
+		Gitignore: true,
+		Include: []string{
+			"database/**",
+			"surrealkit.toml",
+		},
+	})
+
 	container := m.surrealkitContainer().
-		WithDirectory("/workspace/backend/database", source.Directory("/backend/database", dagger.WorkspaceDirectoryOpts{Gitignore: true})).
-		WithFile("/workspace/backend/surrealkit.toml", source.File("/backend/surrealkit.toml")).
+		WithDirectory("/workspace/backend", backend).
 		WithWorkdir("/workspace/backend")
 	if surrealdb != nil {
-		container = container.WithServiceBinding("host.docker.internal", surrealdb)
+		container = container.WithServiceBinding("surrealdb.local.seamlezz.net", surrealdb)
 	}
 	return container.
 		WithEnvVariable("SURREALDB_HOST", endpoint).
@@ -228,30 +235,10 @@ func (m *Typewriter) localClusterSurrealkit(
 		WithSecretVariable("SURREALDB_PASSWORD", dag.SetSecret("local-surrealdb-root-password", pass)), nil
 }
 
-func (m *Typewriter) DatabaseLocalDoctor(
-	ctx context.Context,
-	source *dagger.Workspace,
-	kubeconfig *dagger.File,
-	// +optional
-	kubernetes *dagger.Service,
-	// +optional
-	surrealdb *dagger.Service,
-	// +optional
-	endpoint string,
-	// +optional
-	kubernetesAPI string,
-) (*dagger.Container, error) {
-	container, err := m.localClusterSurrealkit(ctx, source, kubeconfig, kubernetes, surrealdb, endpoint, kubernetesAPI)
-	if err != nil {
-		return nil, err
-	}
-	return container.WithExec([]string{"surrealkit", "rollout", "status"}), nil
-}
-
 func (m *Typewriter) DatabaseLocalSync(
 	ctx context.Context,
 	source *dagger.Workspace,
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	// +optional
 	kubernetes *dagger.Service,
 	// +optional
@@ -278,7 +265,7 @@ func (m *Typewriter) DatabaseLocalSync(
 func (m *Typewriter) DatabaseLocalSeed(
 	ctx context.Context,
 	source *dagger.Workspace,
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	// +optional
 	kubernetes *dagger.Service,
 	// +optional
@@ -298,7 +285,7 @@ func (m *Typewriter) DatabaseLocalSeed(
 func (m *Typewriter) DatabaseLocalTest(
 	ctx context.Context,
 	source *dagger.Workspace,
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	// +optional
 	kubernetes *dagger.Service,
 	// +optional
@@ -318,7 +305,7 @@ func (m *Typewriter) DatabaseLocalTest(
 func (m *Typewriter) DatabaseLocalStatus(
 	ctx context.Context,
 	source *dagger.Workspace,
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	// +optional
 	kubernetes *dagger.Service,
 	// +optional
@@ -335,11 +322,11 @@ func (m *Typewriter) DatabaseLocalStatus(
 	return container.WithExec([]string{"surrealkit", "rollout", "status"}), nil
 }
 
-func fluxContainer(kubeconfig *dagger.File, kubernetes *dagger.Service) *dagger.Container {
+func fluxContainer(kubeconfig *dagger.Secret, kubernetes *dagger.Service) *dagger.Container {
 	container := dag.Container().
 		From(fluxCliImage).
 		WithUser("0").
-		WithFile("/root/.kube/config", kubeconfig, dagger.ContainerWithFileOpts{Permissions: 0o600, Owner: "0:0"}).
+		WithMountedSecret("/root/.kube/config", kubeconfig, dagger.ContainerWithMountedSecretOpts{Mode: 0o600, Owner: "0:0"}).
 		WithEnvVariable("KUBECONFIG", "/root/.kube/config")
 
 	if kubernetes != nil {
@@ -357,7 +344,7 @@ func fluxAction(container *dagger.Container, name string) *dagger.Container {
 }
 
 func (m *Typewriter) DatabaseProdStatus(
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	// +optional
 	kubernetes *dagger.Service,
 ) *dagger.Container {
@@ -366,7 +353,7 @@ func (m *Typewriter) DatabaseProdStatus(
 }
 
 func (m *Typewriter) DatabaseProdComplete(
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	rolloutID string,
 	// +optional
 	kubernetes *dagger.Service,
@@ -378,7 +365,7 @@ func (m *Typewriter) DatabaseProdComplete(
 }
 
 func (m *Typewriter) DatabaseProdRollback(
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	rolloutID string,
 	// +optional
 	kubernetes *dagger.Service,
@@ -390,7 +377,7 @@ func (m *Typewriter) DatabaseProdRollback(
 }
 
 func (m *Typewriter) DatabaseProdRepair(
-	kubeconfig *dagger.File,
+	kubeconfig *dagger.Secret,
 	rolloutID string,
 	// +optional
 	kubernetes *dagger.Service,
