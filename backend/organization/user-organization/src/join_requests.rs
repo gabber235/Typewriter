@@ -7,33 +7,40 @@ use wasmcloud_utils::{
     decode_skir, extract_param,
     skir::base::{
         kernel::v1::record_id::RecordId,
-        organization::v1::{
-            join_request::{
-                AutoAcceptedMember, CancelJoinRequestRequest, CancelJoinRequestResponse,
-                CancelJoinRequestResponse_RequestNotFoundError, CancelJoinRequestResponse_Success,
-                RequestToJoinRequest, RequestToJoinResponse,
-                RequestToJoinResponse_CodeNotFoundError, UserJoinRequest,
-                WatchUserJoinRequestsRequest, WatchUserJoinRequestsResponse,
-            },
-            member::Role,
-        },
+        organization::v1::{join_codes::*, join_request::*, member::*, user::*},
     },
-    skir_domain_result,
+    skir_domain_result, skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
 use crate::OrganizationRecord;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UserJoinRequestRecord {
+pub struct JoinRequestRecord {
     id: surrealdb_component_sdk::RecordId,
+    user: UserRecord,
     organization: OrganizationRecord,
     requested_at: Datetime,
     expires_at: Datetime,
 }
 
-impl From<UserJoinRequestRecord> for UserJoinRequest {
-    fn from(value: UserJoinRequestRecord) -> Self {
+impl From<JoinRequestRecord> for OrganizationJoinRequest {
+    fn from(value: JoinRequestRecord) -> Self {
+        OrganizationJoinRequest {
+            request_id: value.id.into(),
+            user_id: value.user.id.into(),
+            user_name: value.user.name,
+            user_email: value.user.email,
+            user_avatar_url: value.user.avatar_url,
+            requested_at: value.requested_at.into(),
+            expires_at: value.expires_at.into(),
+            _unrecognized: None,
+        }
+    }
+}
+
+impl From<JoinRequestRecord> for UserJoinRequest {
+    fn from(value: JoinRequestRecord) -> Self {
         UserJoinRequest {
             request_id: value.id.into(),
             organization_id: value.organization.id.into(),
@@ -47,19 +54,46 @@ impl From<UserJoinRequestRecord> for UserJoinRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct JoinRequestCodeData {
+pub struct UserRecord {
+    pub id: surrealdb_component_sdk::RecordId,
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub avatar_url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct JoinRequestCodeRecord {
     organization: OrganizationRecord,
     single_use: bool,
     auto_accept_roles: Vec<surrealdb_component_sdk::RecordId>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct MemberRolesResult {
-    roles: Vec<RoleRecord>,
+struct OrganizationMemberRecord {
+    user_id: surrealdb_component_sdk::RecordId,
+    name: Option<String>,
+    email: Option<String>,
+    avatar_url: Option<String>,
+    roles: Vec<OrganizationRoleRecord>,
+    joined_at: surrealdb_component_sdk::Datetime,
+}
+
+impl From<OrganizationMemberRecord> for OrganizationMember {
+    fn from(value: OrganizationMemberRecord) -> Self {
+        OrganizationMember {
+            user_id: value.user_id.into(),
+            name: value.name,
+            email: value.email,
+            avatar_url: value.avatar_url,
+            roles: value.roles.into_iter().map(Into::into).collect(),
+            joined_at: value.joined_at.into(),
+            _unrecognized: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RoleRecord {
+pub struct OrganizationRoleRecord {
     id: surrealdb_component_sdk::RecordId,
     name: String,
     color: i64,
@@ -68,9 +102,9 @@ pub struct RoleRecord {
     deletable: bool,
 }
 
-impl From<RoleRecord> for Role {
-    fn from(value: RoleRecord) -> Self {
-        Role {
+impl From<OrganizationRoleRecord> for OrganizationRole {
+    fn from(value: OrganizationRoleRecord) -> Self {
+        OrganizationRole {
             role_id: value.id.into(),
             name: value.name,
             color: value.color.into(),
@@ -93,6 +127,7 @@ pub async fn handle_watch(
         r#"
         SELECT
             id,
+            in.* as user,
             out.* as organization,
             requested_at,
             expires_at
@@ -105,7 +140,7 @@ pub async fn handle_watch(
     .execute()
     .await
     .error_with_slug("join-request-watch-query-failed")?
-    .take::<Vec<UserJoinRequestRecord>>(0)
+    .take::<Vec<JoinRequestRecord>>(0)
     .error_with_slug("join-request-watch-result-parse-failed")?
     .into_iter()
     .map(UserJoinRequest::from)
@@ -117,19 +152,16 @@ pub async fn handle_watch(
 pub async fn handle_request(
     msg: BrokerMessage,
     params: HashMap<String, String>,
-) -> Result<RequestToJoinResponse, otel_wasi::Error> {
+) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
-    let request = decode_skir!(RequestToJoinRequest, &msg.body)?;
+    let request = decode_skir!(SubmitUserJoinRequestRequest, &msg.body)?;
 
     let code = request.code;
 
     let Some(join_code) = fetch_join_code(&code).await? else {
-        return Ok(RequestToJoinResponse::CodeNotFoundError(Box::new(
-            RequestToJoinResponse_CodeNotFoundError {
-                code,
-                _unrecognized: None,
-            },
-        )));
+        return Ok(skir_variant!(
+            SubmitUserJoinRequestResponse::CodeNotFoundError { code }
+        ));
     };
 
     let org = join_code.organization;
@@ -143,7 +175,9 @@ pub async fn handle_request(
     }
 }
 
-async fn fetch_join_code(code: &RecordId) -> Result<Option<JoinRequestCodeData>, otel_wasi::Error> {
+async fn fetch_join_code(
+    code: &RecordId,
+) -> Result<Option<JoinRequestCodeRecord>, otel_wasi::Error> {
     query(
         r#"
         SELECT
@@ -171,7 +205,7 @@ async fn handle_auto_accept(
     code: &RecordId,
     single_use: bool,
     auto_accept_roles: &[surrealdb_component_sdk::RecordId],
-) -> Result<RequestToJoinResponse, otel_wasi::Error> {
+) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let result = query(
         r#"
         BEGIN TRANSACTION;
@@ -205,7 +239,12 @@ async fn handle_auto_accept(
             roles = $roles;
 
         RETURN SELECT
-            roles.* AS roles
+            in.id AS user_id,
+            in.name AS name,
+            in.email AS email,
+            in.avatar_url AS avatar_url,
+            roles.* AS roles,
+            joined_at
         FROM ONLY $member
         FETCH roles;
 
@@ -223,15 +262,32 @@ async fn handle_auto_accept(
     .execute()
     .await
     .error_with_slug("join-request-auto-accept-query-failed")?
-    .parse_result::<MemberRolesResult>(0)
+    .parse_result::<OrganizationMemberRecord>(0)
     .error_with_slug("join-request-auto-accept-result-parse-failed")?;
 
-    let member_roles = skir_domain_result!(RequestToJoinResponse, result).roles;
-    let roles = member_roles.into_iter().map(Role::from).collect::<Vec<_>>();
+    let member = skir_domain_result!(SubmitUserJoinRequestResponse, result);
+    let roles = member
+        .roles
+        .clone()
+        .into_iter()
+        .map(OrganizationRole::from)
+        .collect::<Vec<_>>();
 
-    // TODO: Send refreshment updates for member list, join codes, and user's organization list.
+    wasmcloud_utils::skir_subjects::user_organizations(user_id).publish(
+        WatchUserOrganizationsResponse::Add(Box::new(org.clone().into())),
+    )?;
 
-    Ok(RequestToJoinResponse::AutoAccepted(Box::new(
+    wasmcloud_utils::skir_subjects::organization_members(org.id.key.to_string()).publish(
+        WatchOrganizationMembersResponse::Add(Box::new(member.into())),
+    )?;
+
+    if single_use {
+        wasmcloud_utils::skir_subjects::organization_join_codes(org.id.key.to_string()).publish(
+            WatchOrganizationJoinCodesResponse::Remove(code.clone().into()),
+        )?;
+    }
+
+    Ok(SubmitUserJoinRequestResponse::AutoAccepted(Box::new(
         AutoAcceptedMember {
             organization_id: org.id.clone().into(),
             organization_name: org.name.clone(),
@@ -247,7 +303,7 @@ async fn handle_manual_accept(
     org_id: &surrealdb_component_sdk::RecordId,
     code: &RecordId,
     single_use: bool,
-) -> Result<RequestToJoinResponse, otel_wasi::Error> {
+) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let result = query(
         r#"
         BEGIN TRANSACTION;
@@ -280,6 +336,7 @@ async fn handle_manual_accept(
 
         RETURN SELECT
             id,
+            in.* as user,
             out.* as organization,
             requested_at,
             expires_at
@@ -298,14 +355,26 @@ async fn handle_manual_accept(
     .execute()
     .await
     .error_with_slug("join-request-create-query-failed")?
-    .parse_result::<UserJoinRequestRecord>(0)
+    .parse_result::<JoinRequestRecord>(0)
     .error_with_slug("join-request-create-result-parse-failed")?;
 
-    let request_record = skir_domain_result!(RequestToJoinResponse, result);
+    let request_record = skir_domain_result!(SubmitUserJoinRequestResponse, result);
 
-    // TODO: Send refreshment updates for member list, join requests list, join codes, and user's join requests list and user's organization list.
+    wasmcloud_utils::skir_subjects::user_join_requests(user_id).publish(
+        WatchUserJoinRequestsResponse::Add(Box::new(request_record.clone().into())),
+    )?;
 
-    Ok(RequestToJoinResponse::RequestMade(Box::new(
+    wasmcloud_utils::skir_subjects::organization_join_requests(org_id.key.to_string()).publish(
+        WatchOrganizationJoinRequestsResponse::Add(Box::new(request_record.clone().into())),
+    )?;
+
+    if single_use {
+        wasmcloud_utils::skir_subjects::organization_join_codes(org_id.key.to_string()).publish(
+            WatchOrganizationJoinCodesResponse::Remove(code.clone().into()),
+        )?;
+    }
+
+    Ok(SubmitUserJoinRequestResponse::RequestMade(Box::new(
         request_record.into(),
     )))
 }
@@ -313,9 +382,9 @@ async fn handle_manual_accept(
 pub async fn handle_cancel(
     msg: BrokerMessage,
     params: HashMap<String, String>,
-) -> Result<CancelJoinRequestResponse, otel_wasi::Error> {
+) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
-    let request = decode_skir!(CancelJoinRequestRequest, &msg.body)?;
+    let request = decode_skir!(CancelUserJoinRequestRequest, &msg.body)?;
 
     let request_id = request.request_id;
 
@@ -323,7 +392,7 @@ pub async fn handle_cancel(
         r#"
             BEGIN TRANSACTION;
 
-            LET $request = SELECT id, out.* as organization, requested_at, expires_at FROM $request
+            LET $request = SELECT id, in.* as user, out.* as organization, requested_at, expires_at FROM $request
             WHERE in = type::thing('user', $user_id);
 
             DELETE $request.id;
@@ -340,23 +409,25 @@ pub async fn handle_cancel(
     .execute()
     .await
     .error_with_slug("join-request-cancel-query-failed")?
-    .take::<Option<UserJoinRequestRecord>>(0)
+    .take::<Option<JoinRequestRecord>>(0)
     .error_with_slug("join-request-cancel-result-parse-failed")?;
 
-    let Some(_join_request) = join_request else {
-        return Ok(CancelJoinRequestResponse::RequestNotFoundError(Box::new(
-            CancelJoinRequestResponse_RequestNotFoundError {
-                request_id,
-                _unrecognized: None,
-            },
-        )));
+    let Some(join_request) = join_request else {
+        return Ok(skir_variant!(
+            CancelUserJoinRequestResponse::RequestNotFoundError { request_id }
+        ));
     };
 
-    // TODO: refresh members join quests list, users's join requests list
+    wasmcloud_utils::skir_subjects::user_join_requests(user_id).publish(
+        WatchUserJoinRequestsResponse::Remove(Box::new(join_request.id.clone().into())),
+    )?;
 
-    Ok(CancelJoinRequestResponse::Success(Box::new(
-        CancelJoinRequestResponse_Success {
-            _unrecognized: None,
-        },
-    )))
+    wasmcloud_utils::skir_subjects::organization_join_requests(
+        join_request.organization.id.key.to_string(),
+    )
+    .publish(WatchOrganizationJoinRequestsResponse::Remove(Box::new(
+        join_request.id.into(),
+    )))?;
+
+    Ok(skir_variant!(CancelUserJoinRequestResponse::Success))
 }

@@ -298,9 +298,7 @@ fn create_user_claims(
         EntityPermissionQualifier::User(organization_id) => {
             main_attribute!("auth.user_claims.qualifier.type" = "user");
             if let Some(organization_id) = &organization_id.organization_id {
-                main_attribute!(
-                    "auth.user_claims.qualifier.organization_id" = organization_id.clone()
-                );
+                main_attribute!("auth.user_claims.qualifier.organization_id" = organization_id);
             }
         }
         EntityPermissionQualifier::Service(_) => {

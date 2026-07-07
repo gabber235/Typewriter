@@ -4,8 +4,9 @@ use otel_wasi::ResultWithSlug;
 use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
     decode_skir, extract_param,
-    skir::base::organization::v1::organization::{
-        Organization, WatchUserOrganizationsRequest, WatchUserOrganizationsResponse,
+    skir::base::organization::v1::{
+        organization::Organization,
+        user::{WatchUserOrganizationsRequest, WatchUserOrganizationsResponse},
     },
     wasmcloud::messaging::types::BrokerMessage,
 };

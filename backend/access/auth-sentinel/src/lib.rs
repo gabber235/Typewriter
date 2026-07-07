@@ -16,6 +16,7 @@ use tracing::instrument;
 use wasmcloud_utils::skir::base::access::v1::sentinel::{
     GetSentinelCredentialsResponse, GetSentinelCredentialsResponse_Success,
 };
+use wasmcloud_utils::skir_variant;
 use wit_bindgen::spawn_local;
 
 struct Component;
@@ -96,12 +97,7 @@ fn sentinel_response_bytes() -> Result<Vec<u8>, otel_wasi::Error<ErrorCode>> {
         "auth.sentinel.creds.seed.present" = true,
     );
 
-    let response =
-        GetSentinelCredentialsResponse::Success(Box::new(GetSentinelCredentialsResponse_Success {
-            jwt,
-            seed,
-            ..Default::default()
-        }));
+    let response = skir_variant!(GetSentinelCredentialsResponse::Success { jwt, seed });
 
     Ok(GetSentinelCredentialsResponse::serializer().to_bytes(&response))
 }

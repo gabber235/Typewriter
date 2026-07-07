@@ -4,9 +4,7 @@ use otel_wasi::ResultWithSlug;
 use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
     decode_skir, extract_param,
-    skir::base::organization::v1::organization::{
-        CreateOrganizationRequest, CreateOrganizationResponse, Organization,
-    },
+    skir::base::organization::v1::{organization::*, user::*},
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -46,6 +44,10 @@ pub async fn handle_create(
     .parse::<OrganizationRecord>(0)
     .error_with_slug("slug")?
     .into();
+
+    wasmcloud_utils::skir_subjects::user_organizations(user_id).publish(
+        WatchUserOrganizationsResponse::Add(Box::new(organization.clone())),
+    )?;
 
     Ok(CreateOrganizationResponse::Success(organization.into()))
 }

@@ -9,8 +9,6 @@ DEFINE FIELD OVERWRITE email ON user TYPE option<string>
 
 DEFINE FIELD OVERWRITE name ON user TYPE option<string>;
 
-DEFINE FIELD OVERWRITE avatar ON user TYPE option<string>;
-
 DEFINE FIELD OVERWRITE avatar_url ON user TYPE option<string>
     ASSERT $value == NONE OR fn::is_http_url($value);
 
