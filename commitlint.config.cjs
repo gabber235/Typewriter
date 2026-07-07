@@ -2,41 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = __dirname;
-
-const TOP_LEVEL_SCOPES = [
-    "backend",
-    "panel",
-    "engine",
-    "extensions",
-    "services",
-    "proto",
-    "documentation",
-    "module-plugin",
-    "marketplace",
-    "discord_bot",
-    "code_generator",
-];
-
-const PATH_SCOPE_ROOTS = ["backend", "services", "extensions"];
-const STATIC_SCOPES = ["repo", "ci", "deps"];
-
-const EXCLUDED_DIRECTORIES = new Set([
-    ".git",
-    ".idea",
-    ".vscode",
-    "node_modules",
-    "build",
-    "dist",
-    "target",
-    ".dart_tool",
-    ".gradle",
-    "out",
-    "tmp",
-    "temp",
-    "coverage",
-]);
-
-const REQUIRED_SCOPE_TYPES = new Set(["feat", "fix", "refactor", "perf"]);
+const SCOPE_CONFIG_PATH = path.join(ROOT, "commit-scopes.json");
 
 const ALLOWED_TYPES = [
     "feat",
@@ -52,44 +18,34 @@ const ALLOWED_TYPES = [
     "revert",
 ];
 
+function readScopeConfig() {
+    const rawConfig = fs.readFileSync(SCOPE_CONFIG_PATH, "utf8");
+    const config = JSON.parse(rawConfig);
+
+    if (!Array.isArray(config.scopes)) {
+        throw new Error("commit-scopes.json must contain a scopes array");
+    }
+
+    if (!Array.isArray(config.scopeRequiredForTypes)) {
+        throw new Error("commit-scopes.json must contain a scopeRequiredForTypes array");
+    }
+
+    return config;
+}
+
 function normalizeScopeName(value) {
     return value.trim().toLowerCase().replace(/\s+/g, "-");
 }
 
-function isAllowedDirectoryEntry(entry) {
-    return entry.isDirectory() && !entry.name.startsWith(".") && !EXCLUDED_DIRECTORIES.has(entry.name);
-}
+function normalizeConfigList(values, fieldName) {
+    const normalized = values.map((value) => normalizeScopeName(String(value))).filter(Boolean);
+    const duplicates = normalized.filter((value, index) => normalized.indexOf(value) !== index);
 
-function readChildDirectories(relativeDirectory) {
-    const absoluteDirectory = path.join(ROOT, relativeDirectory);
-    if (!fs.existsSync(absoluteDirectory)) {
-        return [];
-    }
-    return fs
-        .readdirSync(absoluteDirectory, { withFileTypes: true })
-        .filter(isAllowedDirectoryEntry)
-        .map((entry) => entry.name);
-}
-
-function discoverScopes() {
-    const discovered = new Set(STATIC_SCOPES.map(normalizeScopeName));
-
-    for (const scope of TOP_LEVEL_SCOPES) {
-        const normalizedScope = normalizeScopeName(scope);
-        if (fs.existsSync(path.join(ROOT, scope))) {
-            discovered.add(normalizedScope);
-        }
+    if (duplicates.length > 0) {
+        throw new Error(`${fieldName} contains duplicate value(s): ${Array.from(new Set(duplicates)).join(", ")}`);
     }
 
-    for (const root of PATH_SCOPE_ROOTS) {
-        const normalizedRoot = normalizeScopeName(root);
-        for (const child of readChildDirectories(root)) {
-            const normalizedChild = normalizeScopeName(child);
-            discovered.add(`${normalizedRoot}/${normalizedChild}`);
-        }
-    }
-
-    return Array.from(discovered).sort();
+    return normalized;
 }
 
 function parseScopes(scopeText) {
@@ -103,8 +59,10 @@ function parseScopes(scopeText) {
         .filter(Boolean);
 }
 
-const allowedScopes = discoverScopes();
+const scopeConfig = readScopeConfig();
+const allowedScopes = normalizeConfigList(scopeConfig.scopes, "scopes").sort();
 const allowedScopeSet = new Set(allowedScopes);
+const requiredScopeTypes = new Set(normalizeConfigList(scopeConfig.scopeRequiredForTypes, "scopeRequiredForTypes"));
 
 module.exports = {
     plugins: [
@@ -127,7 +85,7 @@ module.exports = {
                     ];
                 },
                 "scope-required-for-type": (parsed) => {
-                    if (!parsed.type || !REQUIRED_SCOPE_TYPES.has(parsed.type)) {
+                    if (!parsed.type || !requiredScopeTypes.has(parsed.type)) {
                         return [true];
                     }
 
