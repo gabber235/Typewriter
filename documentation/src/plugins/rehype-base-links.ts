@@ -1,7 +1,7 @@
 import type { Root } from "hast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { BASE_PATH } from "../base-path";
+import { BASE_PATH } from "../lib/base-path";
 
 /**
  * Astro only base-prefixes hrefs *it* generates (sidebar, pagination,

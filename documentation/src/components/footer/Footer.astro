@@ -1,0 +1,152 @@
+---
+import Pagination from "../pagination/Pagination.astro";
+import { avatarUrl, type Editor, getEditors } from "./git-editors";
+import { pencilIcon } from "./icons";
+import { footerStyles as s } from "./styles";
+
+const { editUrl, entry, lang, lastUpdated } = Astro.locals.starlightRoute;
+
+// Splash pages (the homepage) and virtual routes carry no page authorship.
+const isSplash = entry.data.template === "splash";
+const editors = isSplash || !entry.filePath ? [] : getEditors(entry.filePath);
+
+// getEditors ranks by commit count; the byline wants recency instead.
+const lastEditor = editors.reduce<Editor | undefined>(
+	(latest, editor) =>
+		!latest || editor.lastTimestamp > latest.lastTimestamp ? editor : latest,
+	undefined,
+);
+
+// Everyone but the byline author; skipped entirely when the last editor is
+// the only editor.
+const others = editors.filter((editor) => editor !== lastEditor);
+const MAX_AVATARS = 10;
+const shownOthers = others.slice(0, MAX_AVATARS);
+const overflow = others.length - shownOthers.length;
+
+const formattedDate = lastUpdated
+	? new Intl.DateTimeFormat(lang, { dateStyle: "long" }).format(lastUpdated)
+	: undefined;
+
+const showByline = lastUpdated !== undefined && lastEditor !== undefined;
+const showMeta = !isSplash && (editUrl !== undefined || showByline);
+
+// Transparent stand-in so the browser never contacts GitHub's CDN on page
+// load — the real avatar URL sits in data-avatar-src until the footer
+// scrolls near the viewport (see the script below).
+const AVATAR_PLACEHOLDER =
+	"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'/%3E";
+---
+
+<footer class={s.container}>
+	<Pagination />
+	{
+		showMeta && (
+			<div class={s.meta}>
+				{editUrl && (
+					<a href={editUrl} class={s.editLink}>
+						<span class={s.editIcon} set:html={pencilIcon} />
+						Edit this page
+					</a>
+				)}
+				{showByline && lastUpdated && lastEditor && (
+					<div class={s.byline}>
+						<p class={s.updated}>
+							Last updated{" "}
+							<time datetime={lastUpdated.toISOString()}>{formattedDate}</time>
+							{" by "}
+							{lastEditor.login ? (
+								<a
+									href={`https://github.com/${lastEditor.login}`}
+									class={s.author}>
+									<img
+										src={AVATAR_PLACEHOLDER}
+										data-avatar-src={avatarUrl(lastEditor.login)}
+										alt=""
+										width="24"
+										height="24"
+										class={s.authorAvatar}
+									/>
+									{lastEditor.name}
+								</a>
+							) : (
+								<span class={s.author}>
+									<span class={s.fallback}>
+										{lastEditor.name.charAt(0).toUpperCase()}
+									</span>
+									{lastEditor.name}
+								</span>
+							)}
+						</p>
+						{others.length > 0 && (
+							<div class={s.others}>
+								<span class={s.othersLabel}>Other editors:</span>
+								<ul class={s.avatars}>
+									{shownOthers.map((editor) => (
+										<li class={s.avatarItem}>
+											{editor.login ? (
+												<a
+													href={`https://github.com/${editor.login}`}
+													title={editor.name}
+													class={s.avatarLink}>
+													<img
+														src={AVATAR_PLACEHOLDER}
+														data-avatar-src={avatarUrl(editor.login)}
+														alt={editor.name}
+														width="24"
+														height="24"
+														class={s.avatar}
+													/>
+												</a>
+											) : (
+												<span title={editor.name} class={s.fallback}>
+													{editor.name.charAt(0).toUpperCase()}
+												</span>
+											)}
+										</li>
+									))}
+									{overflow > 0 && (
+										<li class={s.avatarItem}>
+											<span class={s.fallback}>+{overflow}</span>
+										</li>
+									)}
+								</ul>
+							</div>
+						)}
+					</div>
+				)}
+			</div>
+		)
+	}
+</footer>
+
+<script>
+	// Swap in the real GitHub avatar only when the footer approaches the
+	// viewport; most visits never scroll this far and skip the CDN requests
+	// entirely.
+	function setup() {
+		const images = document.querySelectorAll<HTMLImageElement>(
+			"img[data-avatar-src]",
+		);
+		if (images.length === 0) return;
+		const observer = new IntersectionObserver(
+			(entries, observer) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					const img = entry.target as HTMLImageElement;
+					if (img.dataset.avatarSrc) {
+						img.src = img.dataset.avatarSrc;
+						delete img.dataset.avatarSrc;
+					}
+					observer.unobserve(img);
+				}
+			},
+			{ rootMargin: "200px" },
+		);
+		for (const img of images) observer.observe(img);
+	}
+
+	// Fires on the initial load and after every ClientRouter navigation; a
+	// previous page's observer dies with its swapped-out DOM.
+	document.addEventListener("astro:page-load", setup);
+</script>

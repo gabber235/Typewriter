@@ -1,5 +1,5 @@
 import { getCollection } from "astro:content";
-import { BASE_PATH } from "../../base-path";
+import { BASE_PATH } from "@lib/base-path";
 import { getBadge } from "./styles";
 import type { Badge, BadgeVariant } from "./types";
 

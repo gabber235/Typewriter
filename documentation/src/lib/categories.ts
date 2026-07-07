@@ -1,7 +1,7 @@
 // The two top-level documentation categories. Each maps a directory under
 // src/content/docs/ to a URL prefix and its own scoped sidebar (see
-// src/route-middleware.ts). Importable from config, middleware, and
-// components, mirroring src/base-path.ts.
+// src/lib/route-middleware.ts). Importable from config, middleware, and
+// components, mirroring src/lib/base-path.ts.
 export interface Category {
 	id: string;
 	label: string;

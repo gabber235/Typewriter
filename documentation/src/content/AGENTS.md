@@ -16,7 +16,7 @@ badge: new              # optional: new | experimental | deprecated
 
 ## File Organization
 
-- Two top-level categories under `src/content/docs/`, each with its own sidebar (scoped by `src/route-middleware.ts`, configured in `src/categories.ts`):
+- Two top-level categories under `src/content/docs/`, each with its own sidebar (scoped by `src/lib/route-middleware.ts`, configured in `src/lib/categories.ts`):
   - `docs/` — Documentation (user-facing), served at `/docs/...`
   - `develop/` — Develop (developer-facing), served at `/develop/...`
 - Every new page goes inside a category folder; only `index.mdx` (splash home) and `glossary.mdx` stay at the collection root

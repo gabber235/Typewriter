@@ -1,5 +1,5 @@
 ---
-import { CATEGORIES, categoryForRoute } from "../../categories";
+import { CATEGORIES, categoryForRoute } from "@lib/categories";
 
 const current = categoryForRoute(Astro.locals.starlightRoute.id);
 const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
@@ -21,7 +21,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
 </nav>
 
 <script>
-  import { CATEGORIES } from "../../categories";
+  import { CATEGORIES } from "@lib/categories";
 
   // The header is transition:persist'ed, so the server-rendered active state
   // goes stale on client-side navigation — recompute it from the URL.

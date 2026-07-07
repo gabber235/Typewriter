@@ -7,9 +7,10 @@ import { defineConfig } from "astro/config";
 import remarkDirective from "remark-directive";
 import starlightDotMd from "starlight-dot-md";
 import starlightLlmsTxt from "starlight-llms-txt";
-import { BASE_PATH } from "./src/base-path";
 import { remarkAside } from "./src/components/aside/remark-aside";
 import { rehypeGlossary } from "./src/components/glossary/rehype-glossary";
+import { BASE_PATH } from "./src/lib/base-path";
+import { EDIT_BASE_URL } from "./src/lib/edit-url";
 import { rehypeBaseLinks } from "./src/plugins/rehype-base-links";
 
 // https://astro.build/config
@@ -76,7 +77,13 @@ export default defineConfig({
 				minHeadingLevel: 2,
 				maxHeadingLevel: 4,
 			},
-			routeMiddleware: "./src/route-middleware.ts",
+			// Git-derived; the deploy workflow checks out with fetch-depth: 0 so
+			// the full history is available in CI.
+			lastUpdated: true,
+			editLink: {
+				baseUrl: EDIT_BASE_URL,
+			},
+			routeMiddleware: "./src/lib/route-middleware.ts",
 			components: {
 				Head: "./src/components/Head.astro",
 				Sidebar: "./src/components/sidebar/Sidebar.astro",
@@ -88,6 +95,7 @@ export default defineConfig({
 				Pagination: "./src/components/pagination/Pagination.astro",
 				PageTitle: "./src/components/pagetitle/PageTitle.astro",
 				ContentPanel: "./src/components/contentpanel/ContentPanel.astro",
+				Footer: "./src/components/footer/Footer.astro",
 			},
 			plugins: [starlightLlmsTxt(), starlightDotMd()],
 		}),

@@ -6,6 +6,12 @@
 			"runtimeExecutable": "bun",
 			"runtimeArgs": ["run", "dev", "--", "--port", "4329"],
 			"port": 4329
+		},
+		{
+			"name": "docs-preview",
+			"runtimeExecutable": "bun",
+			"runtimeArgs": ["run", "preview", "--", "--port", "4331"],
+			"port": 4331
 		}
 	]
 }

@@ -1,7 +1,7 @@
 import type { Root } from "hast";
 import { h } from "hastscript";
 import type { Plugin } from "unified";
-import { BASE_PATH } from "../../base-path";
+import { BASE_PATH } from "../../lib/base-path";
 import { glossaryStyles } from "./styles";
 import { loadTermIndex } from "./term-index";
 import type { GlossaryMode, RehypeGlossaryOptions, TermIndex } from "./types";
