@@ -101,16 +101,16 @@ Valid commit types:
 
 `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 
-Scopes are auto discovered from the repository structure.
+Scopes are defined in [`commit-scopes.json`](commit-scopes.json). When adding a new accepted scope, update that file in the same pull request.
 
 - Top level product scopes like `backend`, `panel`, `engine`, `extensions`, `services`, `proto`, `documentation`, `module-plugin`, `marketplace`, `discord_bot`, `code_generator`
-- Path scopes for selected domains, for example `backend/tests`, `backend/auth`, `services/realm`
+- Path scopes for selected domains, for example `backend/tests`, `backend/access`, `services/realm`
 - Operational scopes: `repo`, `ci`, `deps`
 
 Multiple scopes are supported with commas.
 
 ```text
-feat(backend/auth,backend/tests): add auth endpoint coverage
+feat(backend/access,backend/tests): add auth endpoint coverage
 ```
 
 Scope requirement policy:
