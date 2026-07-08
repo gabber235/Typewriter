@@ -1,7 +1,7 @@
 apiVersion: runtime.wasmcloud.dev/v1alpha1
 kind: WorkloadDeployment
 metadata:
-  name: user-organization
+  name: organization-user-organization
   namespace: typewriter
 spec:
   replicas: 1

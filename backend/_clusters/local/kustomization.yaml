@@ -4,3 +4,4 @@ resources:
   - ../../access/auth-callout/deploy/local
   - ../../access/auth-sentinel/deploy/local
   - ../../access/auth-typewriter-permissions/deploy/local
+  - ../../organization/user-organization/deploy/local

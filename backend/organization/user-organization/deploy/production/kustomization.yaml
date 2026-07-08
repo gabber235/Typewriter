@@ -6,4 +6,4 @@ patches:
   - path: workloaddeployment-patch.yaml
     target:
       kind: WorkloadDeployment
-      name: auth-auth-typewriter-permissions
+      name: organization-user-organization
