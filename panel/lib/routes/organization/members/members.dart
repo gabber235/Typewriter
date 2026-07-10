@@ -7,7 +7,7 @@ class _MembersTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final membersAsync = ref.watch(organizationMembersProvider);
-    final selectedIds = useState<Set<String>>({});
+    final selectedIds = useState<Set<skir.RecordId>>({});
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,14 +85,14 @@ class _BulkMemberActions extends HookConsumerWidget {
   });
 
   final int selectedCount;
-  final Set<String> selectedIds;
+  final Set<skir.RecordId> selectedIds;
   final VoidCallback onRemove;
   final VoidCallback onClearSelection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final bulkRoles = useState<List<MemberRole>>([]);
+    final bulkRoles = useState<List<OrganizationRole>>([]);
 
     final roleDropdown = _RoleMultiselectDropdown(
       selectedRoles: bulkRoles.value,
@@ -195,7 +195,7 @@ class _MemberRowActions extends HookConsumerWidget {
         isRemoving.value = true;
         await ref
             .read(organizationMembersProvider.notifier)
-            .removeMember(member.id);
+            .removeMember(member.userId);
       },
     );
   }
@@ -205,7 +205,7 @@ class _MembersTabletList extends HookConsumerWidget {
   const _MembersTabletList({required this.members, required this.selectedIds});
 
   final List<OrganizationMember> members;
-  final ValueNotifier<Set<String>> selectedIds;
+  final ValueNotifier<Set<skir.RecordId>> selectedIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -229,7 +229,7 @@ class _MembersTabletList extends HookConsumerWidget {
       if (allSelected || someSelected) {
         selectedIds.value = {};
       } else {
-        selectedIds.value = members.map((m) => m.id).toSet();
+        selectedIds.value = members.map((m) => m.userId).toSet();
       }
     }
 
@@ -264,16 +264,16 @@ class _MembersTabletList extends HookConsumerWidget {
           final index = entry.key;
           final member = entry.value;
           return _MemberTabletCard(
-            key: ValueKey(member.id),
+            key: ValueKey(member.userId),
             member: member,
             index: index,
-            isSelected: selectedIds.value.contains(member.id),
+            isSelected: selectedIds.value.contains(member.userId),
             onSelectionChanged: (selected) {
               if (selected) {
-                selectedIds.value = {...selectedIds.value, member.id};
+                selectedIds.value = {...selectedIds.value, member.userId};
               } else {
                 selectedIds.value = selectedIds.value
-                    .where((id) => id != member.id)
+                    .where((id) => id != member.userId)
                     .toSet();
               }
             },
@@ -334,8 +334,8 @@ class _MemberTabletCard extends HookConsumerWidget {
                                   onTap: () => onSelectionChanged(!isSelected),
                                   child: _SelectableAvatar(
                                     avatarUrl:
-                                        member.avatarUrl.nullIfEmpty ??
-                                        "$userIconUrl&seed=${member.id}",
+                                        member.avatarUrl?.nullIfEmpty ??
+                                        "$userIconUrl&seed=${member.userId}",
                                     isSelected: isSelected,
                                     radius: 20,
                                   ),
@@ -345,25 +345,27 @@ class _MemberTabletCard extends HookConsumerWidget {
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
+                                    spacing: 2,
                                     children: [
-                                      Text(
-                                        member.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
+                                      if (member.name != null)
+                                        Text(
+                                          member.name!,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        member.email,
-                                        style: TextStyle(
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                          fontSize: 13,
+                                      if (member.email != null)
+                                        Text(
+                                          member.email!,
+                                          style: TextStyle(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                            fontSize: 13,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -420,7 +422,7 @@ class _MemberTabletCard extends HookConsumerWidget {
                                                               .notifier,
                                                         )
                                                         .updateMemberRoles(
-                                                          member.id,
+                                                          member.userId,
                                                           newRoles,
                                                         )
                                                         .catchApiExceptionsAndDisplay(
@@ -499,7 +501,7 @@ class _MemberTabletCard extends HookConsumerWidget {
         onSelectionChanged(false);
         await ref
             .read(organizationMembersProvider.notifier)
-            .removeMember(member.id);
+            .removeMember(member.userId);
       },
     );
   }

@@ -7,7 +7,7 @@ import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/rive.dart";
 
-const _funnyErrorTitles = [
+const funnyErrorTitles = [
   "The plot thickened too much",
   "This quest has no walkthrough",
   "A dialogue option is missing",
@@ -102,7 +102,7 @@ class ErrorScreen extends HookWidget {
             spacing: 8,
             children: [
               Text(
-                    title.isEmpty ? _funnyErrorTitles.randomElement() : title,
+                    title.isEmpty ? funnyErrorTitles.randomElement() : title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: context.responsive(
@@ -206,7 +206,7 @@ class SmallErrorScreen extends ErrorScreen {
             ),
           ),
         Text(
-              title.isEmpty ? _funnyErrorTitles.randomElement() : title,
+              title.isEmpty ? funnyErrorTitles.randomElement() : title,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: context.responsive(

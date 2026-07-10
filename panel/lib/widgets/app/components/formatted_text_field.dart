@@ -50,7 +50,7 @@ class FormattedTextField extends HookWidget {
       readOnly: readOnly,
       inputFormatters: [
         if (singleLine) FilteringTextInputFormatter.singleLineFormatter,
-        if (inputFormatters != null) ...inputFormatters!,
+        ...?inputFormatters,
       ],
       decoration: InputDecoration(
         prefixIcon: icon != null

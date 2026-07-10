@@ -8,7 +8,7 @@ class _JoinCodesTab extends HookConsumerWidget {
     final theme = Theme.of(context);
     final codesAsync = ref.watch(organizationJoinCodesProvider);
     final rolesAsync = ref.watch(organizationRolesProvider);
-    final selectedCodes = useState<Set<String>>({});
+    final selectedCodes = useState<Set<skir.RecordId>>({});
     final joinCodeOptions = useState(const JoinCodeOptions());
 
     return Column(
@@ -29,7 +29,7 @@ class _JoinCodesTab extends HookConsumerWidget {
                   prefix: "https://panel.typewritermc.com/join/",
                   onGenerate: () => ref
                       .read(organizationProvider.notifier)
-                      .generateInviteLink(options: joinCodeOptions.value),
+                      .generateJoinCode(options: joinCodeOptions.value),
                   generateButtonText: "Generate Link",
                   regenerateButtonText: "New Link",
                   copyButtonText: "Copy Link",
@@ -101,7 +101,7 @@ class _BulkJoinCodeActions extends HookConsumerWidget {
   });
 
   final int selectedCount;
-  final Set<String> selectedCodes;
+  final Set<skir.RecordId> selectedCodes;
   final VoidCallback onClearSelection;
 
   @override
@@ -154,8 +154,8 @@ class _BulkJoinCodeActions extends HookConsumerWidget {
 class _JoinCodesTable extends HookConsumerWidget {
   const _JoinCodesTable({required this.codes, required this.selectedCodes});
 
-  final List<JoinCode> codes;
-  final ValueNotifier<Set<String>> selectedCodes;
+  final List<OrganizationJoinCode> codes;
+  final ValueNotifier<Set<skir.RecordId>> selectedCodes;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -284,7 +284,7 @@ class _JoinCodesTable extends HookConsumerWidget {
   TableRow _buildCodeRow(
     BuildContext context,
     WidgetRef ref,
-    JoinCode code,
+    OrganizationJoinCode code,
     int index,
     bool isSelected,
     ValueNotifier<int> focusedRowIndex,
@@ -386,7 +386,7 @@ class _JoinCodesTable extends HookConsumerWidget {
 class _JoinCodeTypeBadges extends StatelessWidget {
   const _JoinCodeTypeBadges({required this.code});
 
-  final JoinCode code;
+  final OrganizationJoinCode code;
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +409,7 @@ class _JoinCodeTypeBadges extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
             backgroundColor: Surface.colorOf(context),
           ),
-        if (code.autoAccept != null)
+        if (code.autoAccept.roleIds.isNotEmpty)
           _TypeBadge(
             icon: Icons.flash_on_rounded,
             label: "Auto-accept",
@@ -464,7 +464,7 @@ class _TypeBadge extends StatelessWidget {
 class _JoinCodeRowActions extends HookConsumerWidget {
   const _JoinCodeRowActions({required this.code});
 
-  final JoinCode code;
+  final OrganizationJoinCode code;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -510,8 +510,8 @@ class _JoinCodeRowActions extends HookConsumerWidget {
 class _JoinCodesCardList extends HookConsumerWidget {
   const _JoinCodesCardList({required this.codes, required this.selectedCodes});
 
-  final List<JoinCode> codes;
-  final ValueNotifier<Set<String>> selectedCodes;
+  final List<OrganizationJoinCode> codes;
+  final ValueNotifier<Set<skir.RecordId>> selectedCodes;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -599,7 +599,7 @@ class _JoinCodeCard extends HookConsumerWidget {
     super.key,
   });
 
-  final JoinCode code;
+  final OrganizationJoinCode code;
   final int index;
   final bool isSelected;
   final ValueChanged<bool> onSelectionChanged;
@@ -827,7 +827,7 @@ class _JoinCodeSettings extends HookConsumerWidget {
 
   final ValueChanged<JoinCodeOptions> onOptionsChanged;
   final JoinCodeOptions initialOptions;
-  final List<MemberRole> availableRoles;
+  final List<OrganizationRole> availableRoles;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -968,33 +968,35 @@ class _JoinCodeSettings extends HookConsumerWidget {
                         description:
                             "Automatically accept users without approval",
                         trailing: Switch(
-                          value: options.value.autoAcceptRoleIds != null,
+                          value: options.value.autoAcceptRoleIds.isNotEmpty,
                           onChanged: (enabled) {
                             if (enabled) {
                               // Default to default roles
                               final defaultRoleIds = availableRoles
                                   .where((r) => r.defaultRole)
-                                  .map((r) => r.id)
+                                  .map((r) => r.roleId)
                                   .toList();
+
+                              assert(
+                                defaultRoleIds.isNotEmpty,
+                                "Database should have never allowed to not have any default roles",
+                              );
+
                               updateOptions(
                                 options.value.copyWith(
-                                  autoAcceptRoleIds: defaultRoleIds.isEmpty
-                                      ? (availableRoles.isNotEmpty
-                                            ? [availableRoles.first.id]
-                                            : [])
-                                      : defaultRoleIds,
+                                  autoAcceptRoleIds: defaultRoleIds,
                                 ),
                               );
                             } else {
                               updateOptions(
-                                options.value.copyWith(autoAcceptRoleIds: null),
+                                options.value.copyWith(autoAcceptRoleIds: []),
                               );
                             }
                           },
                         ),
                       ),
 
-                      if (options.value.autoAcceptRoleIds != null) ...[
+                      if (options.value.autoAcceptRoleIds.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Text(
                           "Roles to assign:",
@@ -1007,15 +1009,15 @@ class _JoinCodeSettings extends HookConsumerWidget {
                           availableRoles: availableRoles,
                           selectedRoles: availableRoles
                               .where(
-                                (role) => options.value.autoAcceptRoleIds!
-                                    .contains(role.id),
+                                (role) => options.value.autoAcceptRoleIds
+                                    .contains(role.roleId),
                               )
                               .toList(),
                           onRolesChanged: (newRoles) {
                             updateOptions(
                               options.value.copyWith(
                                 autoAcceptRoleIds: newRoles
-                                    .map((role) => role.id)
+                                    .map((role) => role.roleId)
                                     .toList(),
                               ),
                             );
@@ -1034,7 +1036,7 @@ class _JoinCodeSettings extends HookConsumerWidget {
   bool _hasNonDefaultOptions(JoinCodeOptions options) {
     return !options.singleUse ||
         !_isDuration(options.expiration, 7.days) ||
-        options.autoAcceptRoleIds != null;
+        options.autoAcceptRoleIds.isNotEmpty;
   }
 
   bool _isNeverExpires(JoinCodeExpiration expiration) {

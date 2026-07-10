@@ -7,10 +7,10 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/app_router.dart";
-import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 import "package:typewriter_panel/utils/string.dart";
@@ -159,7 +159,10 @@ class _OrganizationsSelector extends HookConsumerWidget {
                               onTap: () {
                                 context.pushRoute(
                                   OrganizationRoute(
-                                    organizationId: organization.organizationId,
+                                    organizationId: organization
+                                        .organizationId
+                                        .key
+                                        .toString(),
                                   ),
                                   onFailure: (error) {
                                     debugPrint(
@@ -170,8 +173,8 @@ class _OrganizationsSelector extends HookConsumerWidget {
                               },
                               borderRadius: BorderRadius.circular(8),
                               child: ListTile(
-                                leading: OrganizationIcon(
-                                  iconUrl: organization.iconUrl,
+                                leading: OrganizationLogo(
+                                  logoUrl: organization.logoUrl,
                                   size: 40,
                                 ),
                                 title: Text(organization.name.formatted),
@@ -256,7 +259,7 @@ class _JoinOrganization extends HookConsumerWidget {
       onConfirm: () async {
         await ref
             .read(userJoinRequestsProvider.notifier)
-            .cancelRequest(request.id);
+            .cancelRequest(request.requestId);
       },
     );
 
@@ -431,8 +434,8 @@ class _PendingJoinRequestTile extends StatelessWidget {
       color: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: ListTile(
-        leading: OrganizationIcon(
-          iconUrl: request.organizationIconUrl,
+        leading: OrganizationLogo(
+          logoUrl: request.organizationLogoUrl,
           size: 40,
         ),
         title: Text(request.organizationName.formatted),
@@ -509,19 +512,20 @@ class _CreateOrganization extends HookConsumerWidget {
       return;
     }
 
-    final iconUrl = _buildIconUrl(nameController.text, seed);
+    final logoUrl = _buildIconUrl(nameController.text, seed);
     final navigator = ref.read(appRouterProvider);
-    final organizationId = await ref
-        .read(organizationsProvider.notifier)
-        .createOrganization(name: nameController.text, iconUrl: iconUrl);
+    try {
+      final organizationId = await ref
+          .read(organizationsProvider.notifier)
+          .createOrganization(name: nameController.text, logoUrl: logoUrl);
 
-    if (organizationId == null) {
+      await navigator.push(
+        OrganizationRoute(organizationId: organizationId.id),
+      );
+    } on Exception catch (e) {
       if (!context.mounted) return;
-      showErrorSnackBar(context, "Failed to create organization");
-      return;
+      showErrorSnackBar(context, "$e");
     }
-
-    await navigator.push(OrganizationRoute(organizationId: organizationId));
   }
 
   @override
@@ -581,7 +585,7 @@ class _CreateOrganization extends HookConsumerWidget {
                     padding: EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        OrganizationIcon(iconUrl: iconUrl, size: 64),
+                        OrganizationLogo(logoUrl: iconUrl, size: 64),
                         SizedBox(width: 16),
                         Expanded(
                           child: Column(

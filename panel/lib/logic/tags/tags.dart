@@ -3,9 +3,9 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/generated/api/tag.pb.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/generated/models/common.pb.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 

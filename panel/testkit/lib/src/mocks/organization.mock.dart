@@ -5,20 +5,24 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
-import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 OrganizationData generateRandomOrganization() {
-  return OrganizationData()
-    ..organizationId = faker.guid.guid()
-    ..name = faker.lorem
+  return OrganizationData(
+    organizationId: skir.RecordId(
+      table: "organization",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    ),
+    name: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")
-        .snakeCase()
-    ..iconUrl = generateOrganizationIconUrl(faker.guid.guid());
+        .snakeCase(),
+    logoUrl: generateOrganizationIconUrl(faker.guid.guid()),
+  );
 }
 
 class OrganizationsMock extends Organizations {
@@ -32,12 +36,15 @@ class OrganizationsMock extends Organizations {
   }
 
   @override
-  Future<String?> createOrganization({
+  Future<skir.RecordId> createOrganization({
     required String name,
-    required String iconUrl,
+    required String logoUrl,
   }) async {
     await Future.delayed(Duration(milliseconds: 100));
-    return null;
+    return skir.RecordId(
+      table: "organization",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    );
   }
 }
 
@@ -51,7 +58,7 @@ class OrganizationProviderMock extends Organization {
   }
 
   @override
-  Future<SecretFieldRevealed> generateInviteLink({
+  Future<SecretFieldRevealed> generateJoinCode({
     JoinCodeOptions options = const JoinCodeOptions(),
   }) async {
     await Future<void>.delayed(2500.ms);
@@ -112,12 +119,15 @@ const _roleNames = [
   "Guest",
 ];
 
-List<MemberRole> presetRoles() {
+List<OrganizationRole> presetRoles() {
   final presetRoles = List.generate(_roleNames.length, (i) {
     final isFirst = i == 0;
     final isLast = i == _roleNames.length - 1;
-    return MemberRole(
-      id: faker.guid.guid(),
+    return OrganizationRole(
+      roleId: skir.RecordId(
+        table: "organization_role",
+        key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+      ),
       name: _roleNames[i],
       color: _roleColors[i],
       deletable: !isFirst && !isLast,
@@ -133,7 +143,9 @@ List<MemberRole> presetRoles() {
 // Organization Member Mocks
 // ============================================================================
 
-OrganizationMember generateRandomMember({List<MemberRole>? availableRoles}) {
+OrganizationMember generateRandomMember({
+  List<OrganizationRole>? availableRoles,
+}) {
   final roles = availableRoles != null
       ? (availableRoles.toList()..shuffle())
             .take(faker.randomGenerator.integer(3, min: 1))
@@ -141,7 +153,10 @@ OrganizationMember generateRandomMember({List<MemberRole>? availableRoles}) {
       : presetRoles();
 
   return OrganizationMember(
-    id: faker.guid.guid(),
+    userId: skir.RecordId(
+      table: "user",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    ),
     name: faker.person.name(),
     email: faker.internet.email(),
     avatarUrl:
@@ -154,10 +169,10 @@ OrganizationMember generateRandomMember({List<MemberRole>? availableRoles}) {
 class OrganizationRolesMock extends OrganizationRoles {
   OrganizationRolesMock({required this.roles});
 
-  final List<MemberRole> roles;
+  final List<OrganizationRole> roles;
 
   @override
-  Stream<List<MemberRole>> build() async* {
+  Stream<List<OrganizationRole>> build() async* {
     yield roles;
   }
 }
@@ -177,14 +192,14 @@ class OrganizationMembersMock extends OrganizationMembers {
 
   @override
   Future<void> updateMemberRoles(
-    String memberId,
-    List<MemberRole> requestedRoles,
+    skir.RecordId memberId,
+    List<OrganizationRole> requestedRoles,
   ) async {
     final members = await future;
 
     state = AsyncData(
       members.map((member) {
-        if (member.id == memberId) {
+        if (member.userId == memberId) {
           return member.copyWith(roles: requestedRoles);
         }
         return member;
@@ -193,10 +208,10 @@ class OrganizationMembersMock extends OrganizationMembers {
   }
 
   @override
-  Future<void> removeMember(String memberId) async {
+  Future<void> removeMember(skir.RecordId memberId) async {
     final members = await future;
 
-    state = AsyncData(members.where((m) => m.id != memberId).toList());
+    state = AsyncData(members.where((m) => m.userId != memberId).toList());
   }
 }
 
@@ -204,13 +219,19 @@ class OrganizationMembersMock extends OrganizationMembers {
 // Join Request Mocks
 // ============================================================================
 
-JoinRequest generateRandomJoinRequest() {
+OrganizationJoinRequest generateRandomJoinRequest() {
   final expiresAt = DateTime.now().add(
     Duration(minutes: faker.randomGenerator.integer(60, min: 5)),
   );
-  return JoinRequest(
-    id: faker.guid.guid(),
-    userId: faker.guid.guid(),
+  return OrganizationJoinRequest(
+    requestId: skir.RecordId(
+      table: "request_to_join",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    ),
+    userId: skir.RecordId(
+      table: "user",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    ),
     userName: faker.person.name(),
     userEmail: faker.internet.email(),
     userAvatarUrl:
@@ -224,31 +245,37 @@ class OrganizationJoinRequestsMock extends OrganizationJoinRequests {
   OrganizationJoinRequestsMock({required this.displayState, this.onApprove});
 
   final DisplayState displayState;
-  final void Function(JoinRequest request, List<MemberRole> roles)? onApprove;
+  final void Function(
+    OrganizationJoinRequest request,
+    List<OrganizationRole> roles,
+  )? onApprove;
 
   @override
-  Stream<List<JoinRequest>> build() async* {
+  Stream<List<OrganizationJoinRequest>> build() async* {
     yield await displayState.generate(generateRandomJoinRequest);
   }
 
   @override
-  Future<void> approveRequest(String requestId, List<MemberRole> roles) async {
+  Future<void> approveRequest(
+    skir.RecordId requestId,
+    List<OrganizationRole> roles,
+  ) async {
     await Future.delayed(300.ms);
     final requests = await future;
 
-    final request = requests.firstWhere((r) => r.id == requestId);
-    final updated = requests.where((r) => r.id != requestId).toList();
+    final request = requests.firstWhere((r) => r.requestId == requestId);
+    final updated = requests.where((r) => r.requestId != requestId).toList();
     state = AsyncData(updated);
 
     onApprove?.call(request, roles);
   }
 
   @override
-  Future<void> declineRequest(String requestId) async {
+  Future<void> declineRequest(skir.RecordId requestId) async {
     await Future.delayed(300.ms);
     final requests = await future;
 
-    final updated = requests.where((r) => r.id != requestId).toList();
+    final updated = requests.where((r) => r.requestId != requestId).toList();
     state = AsyncData(updated);
   }
 }
@@ -283,7 +310,9 @@ List<Override> organizationJoinRequestsProviderOverrides({
 // Join Code Mocks
 // ============================================================================
 
-JoinCode generateRandomJoinCode({List<MemberRole>? availableRoles}) {
+OrganizationJoinCode generateRandomJoinCode({
+  List<OrganizationRole>? availableRoles,
+}) {
   final random = faker.randomGenerator;
 
   // Randomly decide if this code expires or never expires (30% chance never expires)
@@ -301,13 +330,16 @@ JoinCode generateRandomJoinCode({List<MemberRole>? availableRoles}) {
       ? JoinCodeAutoAccept(
           roleIds: (availableRoles.toList()..shuffle())
               .take(random.integer(3, min: 1))
-              .map((r) => r.id)
+              .map((r) => r.roleId)
               .toList(),
         )
-      : null;
+      : JoinCodeAutoAccept();
 
-  return JoinCode(
-    code: generateCode(20),
+  return OrganizationJoinCode(
+    code: skir.RecordId(
+      table: "organization_join_codes",
+      key: skir.RecordIdKey.wrapString(generateCode(20)),
+    ),
     createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
     singleUse: singleUse,
@@ -321,7 +353,7 @@ class OrganizationJoinCodesMock extends OrganizationJoinCodes {
   final DisplayState displayState;
 
   @override
-  Stream<List<JoinCode>> build() async* {
+  Stream<List<OrganizationJoinCode>> build() async* {
     final availableRoles = await ref.watch(organizationRolesProvider.future);
     yield await displayState.generate(
       () => generateRandomJoinCode(availableRoles: availableRoles),
@@ -329,7 +361,7 @@ class OrganizationJoinCodesMock extends OrganizationJoinCodes {
   }
 
   @override
-  Future<void> revokeCode(String codeId) async {
+  Future<void> revokeCode(skir.RecordId codeId) async {
     await Future.delayed(300.ms);
     final codes = await future;
 
@@ -355,13 +387,19 @@ UserJoinRequest generateRandomUserJoinRequest() {
     Duration(minutes: faker.randomGenerator.integer(60, min: 1)),
   );
   return UserJoinRequest(
-    id: faker.guid.guid(),
-    organizationId: faker.guid.guid(),
+    requestId: skir.RecordId(
+      table: "request_to_join",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    ),
+    organizationId: skir.RecordId(
+      table: "organization",
+      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
+    ),
     organizationName: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")
         .snakeCase(),
-    organizationIconUrl: generateOrganizationIconUrl(faker.guid.guid()),
+    organizationLogoUrl: generateOrganizationIconUrl(faker.guid.guid()),
     requestedAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
   );
@@ -386,10 +424,12 @@ class UserJoinRequestsMock extends UserJoinRequests {
   }
 
   @override
-  Future<void> cancelRequest(String requestId) async {
+  Future<void> cancelRequest(skir.RecordId requestId) async {
     await Future.delayed(300.ms);
     final currentRequests = await future;
-    state = AsyncData(currentRequests.where((r) => r.id != requestId).toList());
+    state = AsyncData(
+      currentRequests.where((r) => r.requestId != requestId).toList(),
+    );
   }
 }
 

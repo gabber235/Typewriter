@@ -32,11 +32,11 @@ class _JoinRequestsTab extends HookConsumerWidget {
 class _JoinRequestsList extends HookConsumerWidget {
   const _JoinRequestsList({required this.requests});
 
-  final List<JoinRequest> requests;
+  final List<OrganizationJoinRequest> requests;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedIds = useState<Set<String>>({});
+    final selectedIds = useState<Set<skir.RecordId>>({});
     final theme = Theme.of(context);
 
     if (requests.isEmpty) {
@@ -57,7 +57,7 @@ class _JoinRequestsList extends HookConsumerWidget {
       if (allSelected || someSelected) {
         selectedIds.value = {};
       } else {
-        selectedIds.value = requests.map((r) => r.id).toSet();
+        selectedIds.value = requests.map((r) => r.requestId).toSet();
       }
     }
 
@@ -104,16 +104,16 @@ class _JoinRequestsList extends HookConsumerWidget {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _JoinRequestCard(
-              key: ValueKey(request.id),
+              key: ValueKey(request.requestId),
               request: request,
               index: index,
-              isSelected: selectedIds.value.contains(request.id),
+              isSelected: selectedIds.value.contains(request.requestId),
               onSelectionChanged: (selected) {
                 if (selected) {
-                  selectedIds.value = {...selectedIds.value, request.id};
+                  selectedIds.value = {...selectedIds.value, request.requestId};
                 } else {
                   selectedIds.value = selectedIds.value
-                      .where((id) => id != request.id)
+                      .where((id) => id != request.requestId)
                       .toSet();
                 }
               },
@@ -133,13 +133,13 @@ class _BulkJoinRequestActions extends HookConsumerWidget {
   });
 
   final int selectedCount;
-  final Set<String> selectedIds;
+  final Set<skir.RecordId> selectedIds;
   final VoidCallback onClearSelection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final bulkRoles = useState<List<MemberRole>>([]);
+    final bulkRoles = useState<List<OrganizationRole>>([]);
 
     final roleDropdown = _RoleMultiselectDropdown(
       selectedRoles: bulkRoles.value,
@@ -222,7 +222,7 @@ class _JoinRequestCard extends HookConsumerWidget {
     super.key,
   });
 
-  final JoinRequest request;
+  final OrganizationJoinRequest request;
   final int index;
   final bool isSelected;
   final ValueChanged<bool> onSelectionChanged;
@@ -231,7 +231,7 @@ class _JoinRequestCard extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final rolesAsync = ref.watch(organizationRolesProvider);
-    final selectedRoles = useState<List<MemberRole>>([]);
+    final selectedRoles = useState<List<OrganizationRole>>([]);
     final isExpanded = useState(false);
     final isRemoving = useState(request.isExpired);
     final isDesktop = context.isDesktop;
@@ -293,7 +293,7 @@ class _JoinRequestCard extends HookConsumerWidget {
     return ManagedActionSet(
       shortcuts: [
         ActionShortcut.intent(
-          id: "decline_${request.id}",
+          id: "decline_${request.requestId}",
           label: "Decline",
           description: "Decline this join request",
           intent: DeleteIntent,
@@ -303,7 +303,7 @@ class _JoinRequestCard extends HookConsumerWidget {
           },
         ),
         ActionShortcut(
-          id: "accept_${request.id}",
+          id: "accept_${request.requestId}",
           label: "Accept",
           description: "Accept this join request",
           activators: const [
@@ -353,15 +353,15 @@ class _JoinRequestCard extends HookConsumerWidget {
     ValueNotifier<bool> isExpanded,
     Color backgroundColor,
     ValueNotifier<bool> isRemoving,
-    ValueNotifier<List<MemberRole>> selectedRoles,
-    AsyncValue<List<MemberRole>> rolesAsync,
+    ValueNotifier<List<OrganizationRole>> selectedRoles,
+    AsyncValue<List<OrganizationRole>> rolesAsync,
   ) {
     Future<void> confirmAddMember() async {
       isRemoving.value = true;
       onSelectionChanged(false);
       await ref
           .read(organizationJoinRequestsProvider.notifier)
-          .approveRequest(request.id, selectedRoles.value);
+          .approveRequest(request.requestId, selectedRoles.value);
     }
 
     return AnimatedSize(
@@ -376,7 +376,7 @@ class _JoinRequestCard extends HookConsumerWidget {
                 shortcuts: [
                   if (selectedRoles.value.isNotEmpty)
                     ActionShortcut(
-                      id: "confirm_${request.id}",
+                      id: "confirm_${request.requestId}",
                       label: "Confirm",
                       description: "Confirm adding member",
                       activators: const [
@@ -458,7 +458,7 @@ class _JoinRequestCard extends HookConsumerWidget {
       children: [
         _SelectableAvatar(
           avatarUrl:
-              request.userAvatarUrl.nullIfEmpty ??
+              request.userAvatarUrl?.nullIfEmpty ??
               "$userIconUrl&seed=${request.userId}",
           isSelected: isSelected,
           radius: 24,
@@ -467,22 +467,24 @@ class _JoinRequestCard extends HookConsumerWidget {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 2,
             children: [
-              Text(
-                request.userName,
-                style: const TextStyle(
-                  fontVariations: [.weight(600)],
-                  fontSize: 16,
+              if (request.userName != null)
+                Text(
+                  request.userName!,
+                  style: const TextStyle(
+                    fontVariations: [.weight(600)],
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                request.userEmail,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 14,
+              if (request.userEmail != null)
+                Text(
+                  request.userEmail!,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -531,7 +533,7 @@ class _JoinRequestCard extends HookConsumerWidget {
           children: [
             _SelectableAvatar(
               avatarUrl:
-                  request.userAvatarUrl.nullIfEmpty ??
+                  request.userAvatarUrl?.nullIfEmpty ??
                   "$userIconUrl&seed=${request.userId}",
               isSelected: isSelected,
               radius: 20,
@@ -540,23 +542,25 @@ class _JoinRequestCard extends HookConsumerWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 2,
                 children: [
-                  Text(
-                    request.userName,
-                    style: const TextStyle(
-                      fontVariations: [.weight(600)],
-                      fontSize: 15,
+                  if (request.userName != null)
+                    Text(
+                      request.userName!,
+                      style: const TextStyle(
+                        fontVariations: [.weight(600)],
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    request.userEmail,
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 13,
+                  if (request.userEmail != null)
+                    Text(
+                      request.userEmail!,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
             ),
@@ -618,7 +622,7 @@ class _JoinRequestCard extends HookConsumerWidget {
         onSelectionChanged(false);
         await ref
             .read(organizationJoinRequestsProvider.notifier)
-            .declineRequest(request.id);
+            .declineRequest(request.requestId);
       },
     );
   }

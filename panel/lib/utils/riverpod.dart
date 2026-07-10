@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
@@ -29,7 +28,7 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
           : () => LoadingIndicator(message: "Loading $name...", shrink: shrink),
       error: (e, stackTrace) {
         final title = "";
-        final message = e is ApiException ? e.toUserMessage() : e.toString();
+        final message = e.toString();
         if (error != null) {
           return error(title, message);
         }

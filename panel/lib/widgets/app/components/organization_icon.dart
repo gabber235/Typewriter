@@ -1,27 +1,27 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
 
-class OrganizationIcon extends StatelessWidget {
-  const OrganizationIcon({
+class OrganizationLogo extends StatelessWidget {
+  const OrganizationLogo({
     super.key,
-    this.iconUrl,
+    this.logoUrl,
     this.size = 40,
     this.borderRadius = 8,
   });
-  final String? iconUrl;
+  final String? logoUrl;
   final double size;
   final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    if (iconUrl == null) {
+    if (logoUrl == null) {
       return _buildPlaceholder(context);
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: Image.network(
-        iconUrl!,
+        logoUrl!,
         width: size,
         height: size,
         fit: BoxFit.cover,

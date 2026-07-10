@@ -18,13 +18,13 @@ class RoleMultiselectChips extends StatelessWidget {
   });
 
   /// All available roles to select from.
-  final List<MemberRole> availableRoles;
+  final List<OrganizationRole> availableRoles;
 
   /// Currently selected roles.
-  final List<MemberRole> selectedRoles;
+  final List<OrganizationRole> selectedRoles;
 
   /// Called when the selection changes.
-  final ValueChanged<List<MemberRole>> onRolesChanged;
+  final ValueChanged<List<OrganizationRole>> onRolesChanged;
 
   /// Horizontal spacing between chips.
   final double spacing;
@@ -45,7 +45,7 @@ class RoleMultiselectChips extends StatelessWidget {
           onSelected: (selected) {
             final newRoles = selected
                 ? [...selectedRoles, role]
-                : selectedRoles.where((r) => r.id != role.id).toList();
+                : selectedRoles.where((r) => r.roleId != role.roleId).toList();
             onRolesChanged(newRoles);
           },
         );
@@ -61,7 +61,7 @@ class _RoleFilterChip extends StatelessWidget {
     required this.onSelected,
   });
 
-  final MemberRole role;
+  final OrganizationRole role;
   final bool isSelected;
   final ValueChanged<bool> onSelected;
 

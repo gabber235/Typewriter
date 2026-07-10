@@ -1,33 +1,49 @@
 import "package:flutter/foundation.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/generated/api/user/organization.pb.dart"
-    as api;
-import "package:typewriter_panel/generated/models/organization/member.pb.dart"
-    as models;
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
 
+part "user_join_requests.freezed.dart";
 part "user_join_requests.g.dart";
 
-@immutable
-class UserJoinRequest {
-  const UserJoinRequest({
-    required this.id,
-    required this.organizationId,
-    required this.organizationName,
-    required this.organizationIconUrl,
-    required this.requestedAt,
-    required this.expiresAt,
-  });
+@freezed
+abstract class UserJoinRequest with _$UserJoinRequest {
+  const factory UserJoinRequest({
+    required skir.RecordId requestId,
+    required skir.RecordId organizationId,
+    required String organizationName,
+    required String organizationLogoUrl,
+    required DateTime requestedAt,
+    required DateTime expiresAt,
+  }) = _UserJoinRequest;
 
-  final String id;
-  final String organizationId;
-  final String organizationName;
-  final String organizationIconUrl;
-  final DateTime requestedAt;
-  final DateTime expiresAt;
+  const UserJoinRequest._();
+
+  factory UserJoinRequest.fromSkir(skir.UserJoinRequest request) {
+    return UserJoinRequest(
+      requestId: request.requestId,
+      organizationId: request.organizationId,
+      organizationName: request.organizationName,
+      organizationLogoUrl: request.organizationLogoUrl,
+      requestedAt: request.requestedAt,
+      expiresAt: request.expiresAt,
+    );
+  }
+
+  skir.UserJoinRequest toSkir() {
+    return skir.UserJoinRequest(
+      requestId: requestId,
+      organizationId: organizationId,
+      organizationName: organizationName,
+      organizationLogoUrl: organizationLogoUrl,
+      requestedAt: requestedAt,
+      expiresAt: expiresAt,
+    );
+  }
 
   Duration get remainingDuration {
     final remaining = expiresAt.difference(DateTime.now());
@@ -35,18 +51,6 @@ class UserJoinRequest {
   }
 
   bool get isExpired => remainingDuration == Duration.zero;
-}
-
-/// Converts a proto UserJoinRequest to a dart UserJoinRequest.
-UserJoinRequest _protoToUserJoinRequest(models.UserJoinRequest proto) {
-  return UserJoinRequest(
-    id: proto.joinRequestId,
-    organizationId: proto.organizationId,
-    organizationName: proto.organizationName,
-    organizationIconUrl: proto.organizationIconUrl,
-    requestedAt: proto.requestedAt.toDateTime(),
-    expiresAt: proto.expiresAt.toDateTime(),
-  );
 }
 
 @riverpod
@@ -59,21 +63,29 @@ class UserJoinRequests extends _$UserJoinRequests {
       return;
     }
 
-    final request = api.ListUserJoinRequestsRequest();
-    final stream = ref.requestProtoThenListen(
-      subject: "cloud.out.user.$userId.organization.join_requests.list",
-      listenSubject: "cloud.in.user.$userId.organization.join_requests.list",
-      request: request,
-      responseBuilder: api.ListUserJoinRequestsResponse.new,
+    final request = skir.WatchUserJoinRequestsRequest();
+    yield* ref.watchRequest(
+      subject: "cloud.out.user.$userId.organization.join_requests.watch",
+      listenSubject: "cloud.in.user.$userId.organization.join_requests.watch",
+      requestBytes: skir.WatchUserJoinRequestsRequest.serializer.toBytes(
+        request,
+      ),
+      serializer: skir.WatchUserJoinRequestsResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchUserJoinRequestsResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchUserJoinRequestsResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchUserJoinRequestsResponse_listWrapper(:final value):
+            return value.map(UserJoinRequest.fromSkir).toList();
+          case skir.WatchUserJoinRequestsResponse_addWrapper(:final value):
+            return [...?previous, UserJoinRequest.fromSkir(value)];
+          case skir.WatchUserJoinRequestsResponse_removeWrapper(:final value):
+            return previous?.where((r) => r.requestId != value).toList() ?? [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.requests.requests.map(_protoToUserJoinRequest).toList();
-    }
   }
 
   /// Requests to join an organization using a join code or URL.
@@ -87,34 +99,54 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     state.ensureReady();
     final code = _extractCode(urlOrCode);
+    final codeId = skir.RecordId(
+      table: "organization_join_codes",
+      key: skir.RecordIdKey.wrapString(code),
+    );
 
-    final request = api.RequestToJoinRequest()..code = code;
+    final request = skir.SubmitUserJoinRequestRequest(code: codeId);
 
     final response = await ref
         .read(natsProvider)
-        .requestProto(
+        .requestSkir(
           "cloud.out.user.$userId.organization.join_requests.request",
-          request,
-          api.RequestToJoinResponse.new,
+          skir.SubmitUserJoinRequestRequest.serializer.toBytes(request),
+          skir.SubmitUserJoinRequestResponse.serializer,
         );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
-    }
-
-    if (response.hasSuccess()) {
-      final result = response.success;
-      if (result.hasRequest()) {
-        final newRequest = _protoToUserJoinRequest(result.request);
-        state = AsyncValue.data([...state.requireValue, newRequest]);
-      }
-      // If it's an auto-accepted member, we don't add to join requests
-      // The user is already a member of the organization
+    switch (response) {
+      case skir.SubmitUserJoinRequestResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+      case skir.SubmitUserJoinRequestResponse_codeNotFoundErrorWrapper():
+        throw ApiException.notFound("Join code not found or expired");
+      case skir.SubmitUserJoinRequestResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.SubmitUserJoinRequestResponse_alreadyMemberErrorWrapper():
+        throw ApiException.conflict(
+          "You are already a member of this organization",
+        );
+      case skir.SubmitUserJoinRequestResponse_noAssignableRolesErrorWrapper():
+        throw ApiException.badRequest(
+          "No assignable roles available for this organization",
+        );
+      case skir.SubmitUserJoinRequestResponse_maxPendingRequestsErrorWrapper():
+        throw ApiException.badRequest("Maximum pending join requests reached");
+      case skir.SubmitUserJoinRequestResponse_pendingRequestExistsErrorWrapper():
+        throw ApiException.conflict(
+          "You already have a pending join request for this organization",
+        );
+      case skir.SubmitUserJoinRequestResponse_requestMadeWrapper(:final value):
+        state = AsyncValue.data([
+          ...state.requireValue,
+          UserJoinRequest.fromSkir(value),
+        ]);
+      case skir.SubmitUserJoinRequestResponse_autoAcceptedWrapper():
+        debugPrint("User was auto-accepted as a member");
     }
   }
 
   /// Cancels a pending join request.
-  Future<void> cancelRequest(String requestId) async {
+  Future<void> cancelRequest(skir.RecordId requestId) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
       throw ApiException.notAuthenticated();
@@ -124,24 +156,29 @@ class UserJoinRequests extends _$UserJoinRequests {
     final previousState = state;
 
     state = AsyncValue.data(
-      state.requireValue.where((r) => r.id != requestId).toList(),
+      state.requireValue.where((r) => r.requestId != requestId).toList(),
     );
 
     try {
-      final request = api.CancelJoinRequestRequest()..requestId = requestId;
+      final request = skir.CancelUserJoinRequestRequest(requestId: requestId);
 
       final response = await ref
           .read(natsProvider)
-          .requestProto(
+          .requestSkir(
             "cloud.out.user.$userId.organization.join_requests.cancel",
-            request,
-            api.CancelJoinRequestResponse.new,
+            skir.CancelUserJoinRequestRequest.serializer.toBytes(request),
+            skir.CancelUserJoinRequestResponse.serializer,
           );
 
-      if (response.hasError()) {
-        state = previousState;
-        ref.invalidateSelf();
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.CancelUserJoinRequestResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.CancelUserJoinRequestResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.CancelUserJoinRequestResponse_requestNotFoundErrorWrapper():
+          throw ApiException.notFound("Join request not found");
+        case skir.CancelUserJoinRequestResponse_successWrapper():
+          debugPrint("Join request $requestId cancelled successfully");
       }
     } catch (e) {
       state = previousState;

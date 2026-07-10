@@ -3,12 +3,15 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/logic/services.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 
 part "realm.g.dart";
 
 @riverpod
-String? realmId(Ref ref) {
-  return ref.watch(routeParamProvider("realmId"));
+skir.RecordId? realmId(Ref ref) {
+  final id = ref.watch(routeParamProvider("realmId"));
+  if (id == null) return null;
+  return skir.RecordId(table: "service", key: skir.RecordIdKey.wrapString(id));
 }
 
 @riverpod

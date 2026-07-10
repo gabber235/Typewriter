@@ -4,9 +4,9 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/book.pb.dart";
 import "package:typewriter_panel/generated/models/book.pb.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
@@ -14,6 +14,7 @@ import "package:typewriter_panel/logic/selectable/dynamic_data.dart";
 import "package:typewriter_panel/logic/selectable/selectable.dart";
 import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/tags/tags.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/book.dart";
@@ -251,8 +252,10 @@ Future<List<Book>> filteredBooks(Ref ref, String query) async {
 }
 
 @riverpod
-String? bookId(Ref ref) {
-  return ref.watch(routeParamProvider("bookId"));
+skir.RecordId? bookId(Ref ref) {
+  final id = ref.watch(routeParamProvider("bookId"));
+  if (id == null) return null;
+  return skir.RecordId(table: "book", key: skir.RecordIdKey.wrapString(id));
 }
 
 @riverpod

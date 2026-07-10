@@ -13,8 +13,8 @@ part of 'realm.dart';
 final realmIdProvider = RealmIdProvider._();
 
 final class RealmIdProvider
-    extends $FunctionalProvider<String?, String?, String?>
-    with $Provider<String?> {
+    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
+    with $Provider<skir.RecordId?> {
   RealmIdProvider._()
     : super(
         from: null,
@@ -31,24 +31,24 @@ final class RealmIdProvider
 
   @$internal
   @override
-  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  String? create(Ref ref) {
+  skir.RecordId? create(Ref ref) {
     return realmId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String? value) {
+  Override overrideWithValue(skir.RecordId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
+      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
     );
   }
 }
 
-String _$realmIdHash() => r'ee46801e3cec3a492b4f6f9f7f980b73682fde01';
+String _$realmIdHash() => r'dba0be59184ba5983107e36d75e0a39c486b2d0f';
 
 @ProviderFor(selectedRealm)
 final selectedRealmProvider = SelectedRealmProvider._();

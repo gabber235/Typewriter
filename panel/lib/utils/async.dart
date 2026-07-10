@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/utils/snackbar.dart";
 
 extension FutureExt<T> on Future<T> {

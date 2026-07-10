@@ -15,7 +15,7 @@ final organizationRolesProvider = OrganizationRolesProvider._();
 
 /// Provider for the list of available roles in the current organization.
 final class OrganizationRolesProvider
-    extends $StreamNotifierProvider<OrganizationRoles, List<MemberRole>> {
+    extends $StreamNotifierProvider<OrganizationRoles, List<OrganizationRole>> {
   /// Provider for the list of available roles in the current organization.
   OrganizationRolesProvider._()
     : super(
@@ -36,22 +36,27 @@ final class OrganizationRolesProvider
   OrganizationRoles create() => OrganizationRoles();
 }
 
-String _$organizationRolesHash() => r'6b4da6ed48c8eded6b8316d6e2a8e74fd50adcb7';
+String _$organizationRolesHash() => r'9f54743a71574521e4c15acba15c3116952c1ab0';
 
 /// Provider for the list of available roles in the current organization.
 
-abstract class _$OrganizationRoles extends $StreamNotifier<List<MemberRole>> {
-  Stream<List<MemberRole>> build();
+abstract class _$OrganizationRoles
+    extends $StreamNotifier<List<OrganizationRole>> {
+  Stream<List<OrganizationRole>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final ref =
-        this.ref as $Ref<AsyncValue<List<MemberRole>>, List<MemberRole>>;
+        this.ref
+            as $Ref<AsyncValue<List<OrganizationRole>>, List<OrganizationRole>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<MemberRole>>, List<MemberRole>>,
-              AsyncValue<List<MemberRole>>,
+              AnyNotifier<
+                AsyncValue<List<OrganizationRole>>,
+                List<OrganizationRole>
+              >,
+              AsyncValue<List<OrganizationRole>>,
               Object?,
               Object?
             >;
@@ -89,7 +94,7 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'78758820859ab5274a6a937b90d76fa8309c09e3';
+    r'9f335fedd4747ac4055489be9edf392be2c33232';
 
 /// Provider for the list of members in the current organization.
 
@@ -128,7 +133,10 @@ final organizationJoinRequestsProvider = OrganizationJoinRequestsProvider._();
 /// Provider for the list of pending join requests to the current organization.
 final class OrganizationJoinRequestsProvider
     extends
-        $StreamNotifierProvider<OrganizationJoinRequests, List<JoinRequest>> {
+        $StreamNotifierProvider<
+          OrganizationJoinRequests,
+          List<OrganizationJoinRequest>
+        > {
   /// Provider for the list of pending join requests to the current organization.
   OrganizationJoinRequestsProvider._()
     : super(
@@ -150,23 +158,30 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'aba28201a19b91a353b282e9f951a654129278c9';
+    r'4abf47097f1d6dbc8d41f9b9b6d8e1fe01bc2184';
 
 /// Provider for the list of pending join requests to the current organization.
 
 abstract class _$OrganizationJoinRequests
-    extends $StreamNotifier<List<JoinRequest>> {
-  Stream<List<JoinRequest>> build();
+    extends $StreamNotifier<List<OrganizationJoinRequest>> {
+  Stream<List<OrganizationJoinRequest>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final ref =
-        this.ref as $Ref<AsyncValue<List<JoinRequest>>, List<JoinRequest>>;
+        this.ref
+            as $Ref<
+              AsyncValue<List<OrganizationJoinRequest>>,
+              List<OrganizationJoinRequest>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<JoinRequest>>, List<JoinRequest>>,
-              AsyncValue<List<JoinRequest>>,
+              AnyNotifier<
+                AsyncValue<List<OrganizationJoinRequest>>,
+                List<OrganizationJoinRequest>
+              >,
+              AsyncValue<List<OrganizationJoinRequest>>,
               Object?,
               Object?
             >;
@@ -226,7 +241,11 @@ final organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
 
 /// Provider for the list of active join codes in the current organization.
 final class OrganizationJoinCodesProvider
-    extends $StreamNotifierProvider<OrganizationJoinCodes, List<JoinCode>> {
+    extends
+        $StreamNotifierProvider<
+          OrganizationJoinCodes,
+          List<OrganizationJoinCode>
+        > {
   /// Provider for the list of active join codes in the current organization.
   OrganizationJoinCodesProvider._()
     : super(
@@ -248,21 +267,30 @@ final class OrganizationJoinCodesProvider
 }
 
 String _$organizationJoinCodesHash() =>
-    r'b241545cd1aafc3709dbd8a7af45128cee04b474';
+    r'f7709b13da90b4a9ead50fc887756cb777b3d195';
 
 /// Provider for the list of active join codes in the current organization.
 
-abstract class _$OrganizationJoinCodes extends $StreamNotifier<List<JoinCode>> {
-  Stream<List<JoinCode>> build();
+abstract class _$OrganizationJoinCodes
+    extends $StreamNotifier<List<OrganizationJoinCode>> {
+  Stream<List<OrganizationJoinCode>> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<JoinCode>>, List<JoinCode>>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<OrganizationJoinCode>>,
+              List<OrganizationJoinCode>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<JoinCode>>, List<JoinCode>>,
-              AsyncValue<List<JoinCode>>,
+              AnyNotifier<
+                AsyncValue<List<OrganizationJoinCode>>,
+                List<OrganizationJoinCode>
+              >,
+              AsyncValue<List<OrganizationJoinCode>>,
               Object?,
               Object?
             >;

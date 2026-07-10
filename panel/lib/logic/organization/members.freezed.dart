@@ -12,40 +12,40 @@ part of 'members.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$MemberRole {
+mixin _$OrganizationRole {
 
- String get id; String get name; Color get color; bool get defaultRole; bool get assignable; bool get deletable;
-/// Create a copy of MemberRole
+ skir.RecordId get roleId; String get name; Color get color; bool get defaultRole; bool get assignable; bool get deletable;
+/// Create a copy of OrganizationRole
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$MemberRoleCopyWith<MemberRole> get copyWith => _$MemberRoleCopyWithImpl<MemberRole>(this as MemberRole, _$identity);
+$OrganizationRoleCopyWith<OrganizationRole> get copyWith => _$OrganizationRoleCopyWithImpl<OrganizationRole>(this as OrganizationRole, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemberRole&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.defaultRole, defaultRole) || other.defaultRole == defaultRole)&&(identical(other.assignable, assignable) || other.assignable == assignable)&&(identical(other.deletable, deletable) || other.deletable == deletable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrganizationRole&&(identical(other.roleId, roleId) || other.roleId == roleId)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.defaultRole, defaultRole) || other.defaultRole == defaultRole)&&(identical(other.assignable, assignable) || other.assignable == assignable)&&(identical(other.deletable, deletable) || other.deletable == deletable));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,color,defaultRole,assignable,deletable);
+int get hashCode => Object.hash(runtimeType,roleId,name,color,defaultRole,assignable,deletable);
 
 @override
 String toString() {
-  return 'MemberRole(id: $id, name: $name, color: $color, defaultRole: $defaultRole, assignable: $assignable, deletable: $deletable)';
+  return 'OrganizationRole(roleId: $roleId, name: $name, color: $color, defaultRole: $defaultRole, assignable: $assignable, deletable: $deletable)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $MemberRoleCopyWith<$Res>  {
-  factory $MemberRoleCopyWith(MemberRole value, $Res Function(MemberRole) _then) = _$MemberRoleCopyWithImpl;
+abstract mixin class $OrganizationRoleCopyWith<$Res>  {
+  factory $OrganizationRoleCopyWith(OrganizationRole value, $Res Function(OrganizationRole) _then) = _$OrganizationRoleCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, Color color, bool defaultRole, bool assignable, bool deletable
+ skir.RecordId roleId, String name, Color color, bool defaultRole, bool assignable, bool deletable
 });
 
 
@@ -53,19 +53,19 @@ $Res call({
 
 }
 /// @nodoc
-class _$MemberRoleCopyWithImpl<$Res>
-    implements $MemberRoleCopyWith<$Res> {
-  _$MemberRoleCopyWithImpl(this._self, this._then);
+class _$OrganizationRoleCopyWithImpl<$Res>
+    implements $OrganizationRoleCopyWith<$Res> {
+  _$OrganizationRoleCopyWithImpl(this._self, this._then);
 
-  final MemberRole _self;
-  final $Res Function(MemberRole) _then;
+  final OrganizationRole _self;
+  final $Res Function(OrganizationRole) _then;
 
-/// Create a copy of MemberRole
+/// Create a copy of OrganizationRole
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? color = null,Object? defaultRole = null,Object? assignable = null,Object? deletable = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? roleId = null,Object? name = null,Object? color = null,Object? defaultRole = null,Object? assignable = null,Object? deletable = null,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+roleId: null == roleId ? _self.roleId : roleId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,defaultRole: null == defaultRole ? _self.defaultRole : defaultRole // ignore: cast_nullable_to_non_nullable
 as bool,assignable: null == assignable ? _self.assignable : assignable // ignore: cast_nullable_to_non_nullable
@@ -77,8 +77,8 @@ as bool,
 }
 
 
-/// Adds pattern-matching-related methods to [MemberRole].
-extension MemberRolePatterns on MemberRole {
+/// Adds pattern-matching-related methods to [OrganizationRole].
+extension OrganizationRolePatterns on OrganizationRole {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -91,10 +91,10 @@ extension MemberRolePatterns on MemberRole {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _MemberRole value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OrganizationRole value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _MemberRole() when $default != null:
+case _OrganizationRole() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -113,10 +113,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _MemberRole value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OrganizationRole value)  $default,){
 final _that = this;
 switch (_that) {
-case _MemberRole():
+case _OrganizationRole():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -134,10 +134,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _MemberRole value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OrganizationRole value)?  $default,){
 final _that = this;
 switch (_that) {
-case _MemberRole() when $default != null:
+case _OrganizationRole() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -155,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  Color color,  bool defaultRole,  bool assignable,  bool deletable)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId roleId,  String name,  Color color,  bool defaultRole,  bool assignable,  bool deletable)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _MemberRole() when $default != null:
-return $default(_that.id,_that.name,_that.color,_that.defaultRole,_that.assignable,_that.deletable);case _:
+case _OrganizationRole() when $default != null:
+return $default(_that.roleId,_that.name,_that.color,_that.defaultRole,_that.assignable,_that.deletable);case _:
   return orElse();
 
 }
@@ -176,10 +176,10 @@ return $default(_that.id,_that.name,_that.color,_that.defaultRole,_that.assignab
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  Color color,  bool defaultRole,  bool assignable,  bool deletable)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId roleId,  String name,  Color color,  bool defaultRole,  bool assignable,  bool deletable)  $default,) {final _that = this;
 switch (_that) {
-case _MemberRole():
-return $default(_that.id,_that.name,_that.color,_that.defaultRole,_that.assignable,_that.deletable);case _:
+case _OrganizationRole():
+return $default(_that.roleId,_that.name,_that.color,_that.defaultRole,_that.assignable,_that.deletable);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +196,10 @@ return $default(_that.id,_that.name,_that.color,_that.defaultRole,_that.assignab
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  Color color,  bool defaultRole,  bool assignable,  bool deletable)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId roleId,  String name,  Color color,  bool defaultRole,  bool assignable,  bool deletable)?  $default,) {final _that = this;
 switch (_that) {
-case _MemberRole() when $default != null:
-return $default(_that.id,_that.name,_that.color,_that.defaultRole,_that.assignable,_that.deletable);case _:
+case _OrganizationRole() when $default != null:
+return $default(_that.roleId,_that.name,_that.color,_that.defaultRole,_that.assignable,_that.deletable);case _:
   return null;
 
 }
@@ -210,48 +210,48 @@ return $default(_that.id,_that.name,_that.color,_that.defaultRole,_that.assignab
 /// @nodoc
 
 
-class _MemberRole implements MemberRole {
-  const _MemberRole({required this.id, required this.name, required this.color, this.defaultRole = false, this.assignable = false, this.deletable = false});
+class _OrganizationRole extends OrganizationRole {
+  const _OrganizationRole({required this.roleId, required this.name, required this.color, this.defaultRole = false, this.assignable = false, this.deletable = false}): super._();
   
 
-@override final  String id;
+@override final  skir.RecordId roleId;
 @override final  String name;
 @override final  Color color;
 @override@JsonKey() final  bool defaultRole;
 @override@JsonKey() final  bool assignable;
 @override@JsonKey() final  bool deletable;
 
-/// Create a copy of MemberRole
+/// Create a copy of OrganizationRole
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$MemberRoleCopyWith<_MemberRole> get copyWith => __$MemberRoleCopyWithImpl<_MemberRole>(this, _$identity);
+_$OrganizationRoleCopyWith<_OrganizationRole> get copyWith => __$OrganizationRoleCopyWithImpl<_OrganizationRole>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemberRole&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.defaultRole, defaultRole) || other.defaultRole == defaultRole)&&(identical(other.assignable, assignable) || other.assignable == assignable)&&(identical(other.deletable, deletable) || other.deletable == deletable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrganizationRole&&(identical(other.roleId, roleId) || other.roleId == roleId)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.defaultRole, defaultRole) || other.defaultRole == defaultRole)&&(identical(other.assignable, assignable) || other.assignable == assignable)&&(identical(other.deletable, deletable) || other.deletable == deletable));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,color,defaultRole,assignable,deletable);
+int get hashCode => Object.hash(runtimeType,roleId,name,color,defaultRole,assignable,deletable);
 
 @override
 String toString() {
-  return 'MemberRole(id: $id, name: $name, color: $color, defaultRole: $defaultRole, assignable: $assignable, deletable: $deletable)';
+  return 'OrganizationRole(roleId: $roleId, name: $name, color: $color, defaultRole: $defaultRole, assignable: $assignable, deletable: $deletable)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$MemberRoleCopyWith<$Res> implements $MemberRoleCopyWith<$Res> {
-  factory _$MemberRoleCopyWith(_MemberRole value, $Res Function(_MemberRole) _then) = __$MemberRoleCopyWithImpl;
+abstract mixin class _$OrganizationRoleCopyWith<$Res> implements $OrganizationRoleCopyWith<$Res> {
+  factory _$OrganizationRoleCopyWith(_OrganizationRole value, $Res Function(_OrganizationRole) _then) = __$OrganizationRoleCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, Color color, bool defaultRole, bool assignable, bool deletable
+ skir.RecordId roleId, String name, Color color, bool defaultRole, bool assignable, bool deletable
 });
 
 
@@ -259,19 +259,19 @@ $Res call({
 
 }
 /// @nodoc
-class __$MemberRoleCopyWithImpl<$Res>
-    implements _$MemberRoleCopyWith<$Res> {
-  __$MemberRoleCopyWithImpl(this._self, this._then);
+class __$OrganizationRoleCopyWithImpl<$Res>
+    implements _$OrganizationRoleCopyWith<$Res> {
+  __$OrganizationRoleCopyWithImpl(this._self, this._then);
 
-  final _MemberRole _self;
-  final $Res Function(_MemberRole) _then;
+  final _OrganizationRole _self;
+  final $Res Function(_OrganizationRole) _then;
 
-/// Create a copy of MemberRole
+/// Create a copy of OrganizationRole
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? color = null,Object? defaultRole = null,Object? assignable = null,Object? deletable = null,}) {
-  return _then(_MemberRole(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+@override @pragma('vm:prefer-inline') $Res call({Object? roleId = null,Object? name = null,Object? color = null,Object? defaultRole = null,Object? assignable = null,Object? deletable = null,}) {
+  return _then(_OrganizationRole(
+roleId: null == roleId ? _self.roleId : roleId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,defaultRole: null == defaultRole ? _self.defaultRole : defaultRole // ignore: cast_nullable_to_non_nullable
 as bool,assignable: null == assignable ? _self.assignable : assignable // ignore: cast_nullable_to_non_nullable
@@ -286,7 +286,7 @@ as bool,
 /// @nodoc
 mixin _$OrganizationMember {
 
- String get id; String get name; String get email; String get avatarUrl; List<MemberRole> get roles; DateTime get joinedAt;
+ skir.RecordId get userId; List<OrganizationRole> get roles; DateTime get joinedAt; String? get name; String? get email; String? get avatarUrl;
 /// Create a copy of OrganizationMember
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -297,16 +297,16 @@ $OrganizationMemberCopyWith<OrganizationMember> get copyWith => _$OrganizationMe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrganizationMember&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrganizationMember&&(identical(other.userId, userId) || other.userId == userId)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,avatarUrl,const DeepCollectionEquality().hash(roles),joinedAt);
+int get hashCode => Object.hash(runtimeType,userId,const DeepCollectionEquality().hash(roles),joinedAt,name,email,avatarUrl);
 
 @override
 String toString() {
-  return 'OrganizationMember(id: $id, name: $name, email: $email, avatarUrl: $avatarUrl, roles: $roles, joinedAt: $joinedAt)';
+  return 'OrganizationMember(userId: $userId, roles: $roles, joinedAt: $joinedAt, name: $name, email: $email, avatarUrl: $avatarUrl)';
 }
 
 
@@ -317,7 +317,7 @@ abstract mixin class $OrganizationMemberCopyWith<$Res>  {
   factory $OrganizationMemberCopyWith(OrganizationMember value, $Res Function(OrganizationMember) _then) = _$OrganizationMemberCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String avatarUrl, List<MemberRole> roles, DateTime joinedAt
+ skir.RecordId userId, List<OrganizationRole> roles, DateTime joinedAt, String? name, String? email, String? avatarUrl
 });
 
 
@@ -334,15 +334,15 @@ class _$OrganizationMemberCopyWithImpl<$Res>
 
 /// Create a copy of OrganizationMember
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? avatarUrl = null,Object? roles = null,Object? joinedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? roles = null,Object? joinedAt = null,Object? name = freezed,Object? email = freezed,Object? avatarUrl = freezed,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,avatarUrl: null == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
-as String,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
-as List<MemberRole>,joinedAt: null == joinedAt ? _self.joinedAt : joinedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
+as List<OrganizationRole>,joinedAt: null == joinedAt ? _self.joinedAt : joinedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -427,10 +427,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String avatarUrl,  List<MemberRole> roles,  DateTime joinedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId userId,  List<OrganizationRole> roles,  DateTime joinedAt,  String? name,  String? email,  String? avatarUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OrganizationMember() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.roles,_that.joinedAt);case _:
+return $default(_that.userId,_that.roles,_that.joinedAt,_that.name,_that.email,_that.avatarUrl);case _:
   return orElse();
 
 }
@@ -448,10 +448,10 @@ return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.roles,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String avatarUrl,  List<MemberRole> roles,  DateTime joinedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId userId,  List<OrganizationRole> roles,  DateTime joinedAt,  String? name,  String? email,  String? avatarUrl)  $default,) {final _that = this;
 switch (_that) {
 case _OrganizationMember():
-return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.roles,_that.joinedAt);case _:
+return $default(_that.userId,_that.roles,_that.joinedAt,_that.name,_that.email,_that.avatarUrl);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -468,10 +468,10 @@ return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.roles,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String avatarUrl,  List<MemberRole> roles,  DateTime joinedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId userId,  List<OrganizationRole> roles,  DateTime joinedAt,  String? name,  String? email,  String? avatarUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _OrganizationMember() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.roles,_that.joinedAt);case _:
+return $default(_that.userId,_that.roles,_that.joinedAt,_that.name,_that.email,_that.avatarUrl);case _:
   return null;
 
 }
@@ -482,22 +482,22 @@ return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.roles,_tha
 /// @nodoc
 
 
-class _OrganizationMember implements OrganizationMember {
-  const _OrganizationMember({required this.id, required this.name, required this.email, required this.avatarUrl, required final  List<MemberRole> roles, required this.joinedAt}): _roles = roles;
+class _OrganizationMember extends OrganizationMember {
+  const _OrganizationMember({required this.userId, required final  List<OrganizationRole> roles, required this.joinedAt, this.name, this.email, this.avatarUrl}): _roles = roles,super._();
   
 
-@override final  String id;
-@override final  String name;
-@override final  String email;
-@override final  String avatarUrl;
- final  List<MemberRole> _roles;
-@override List<MemberRole> get roles {
+@override final  skir.RecordId userId;
+ final  List<OrganizationRole> _roles;
+@override List<OrganizationRole> get roles {
   if (_roles is EqualUnmodifiableListView) return _roles;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_roles);
 }
 
 @override final  DateTime joinedAt;
+@override final  String? name;
+@override final  String? email;
+@override final  String? avatarUrl;
 
 /// Create a copy of OrganizationMember
 /// with the given fields replaced by the non-null parameter values.
@@ -509,16 +509,16 @@ _$OrganizationMemberCopyWith<_OrganizationMember> get copyWith => __$Organizatio
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrganizationMember&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrganizationMember&&(identical(other.userId, userId) || other.userId == userId)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,avatarUrl,const DeepCollectionEquality().hash(_roles),joinedAt);
+int get hashCode => Object.hash(runtimeType,userId,const DeepCollectionEquality().hash(_roles),joinedAt,name,email,avatarUrl);
 
 @override
 String toString() {
-  return 'OrganizationMember(id: $id, name: $name, email: $email, avatarUrl: $avatarUrl, roles: $roles, joinedAt: $joinedAt)';
+  return 'OrganizationMember(userId: $userId, roles: $roles, joinedAt: $joinedAt, name: $name, email: $email, avatarUrl: $avatarUrl)';
 }
 
 
@@ -529,7 +529,7 @@ abstract mixin class _$OrganizationMemberCopyWith<$Res> implements $Organization
   factory _$OrganizationMemberCopyWith(_OrganizationMember value, $Res Function(_OrganizationMember) _then) = __$OrganizationMemberCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String avatarUrl, List<MemberRole> roles, DateTime joinedAt
+ skir.RecordId userId, List<OrganizationRole> roles, DateTime joinedAt, String? name, String? email, String? avatarUrl
 });
 
 
@@ -546,15 +546,15 @@ class __$OrganizationMemberCopyWithImpl<$Res>
 
 /// Create a copy of OrganizationMember
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? avatarUrl = null,Object? roles = null,Object? joinedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? roles = null,Object? joinedAt = null,Object? name = freezed,Object? email = freezed,Object? avatarUrl = freezed,}) {
   return _then(_OrganizationMember(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,avatarUrl: null == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
-as String,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
-as List<MemberRole>,joinedAt: null == joinedAt ? _self.joinedAt : joinedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
+as List<OrganizationRole>,joinedAt: null == joinedAt ? _self.joinedAt : joinedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -562,40 +562,40 @@ as DateTime,
 }
 
 /// @nodoc
-mixin _$JoinRequest {
+mixin _$OrganizationJoinRequest {
 
- String get id; String get userId; String get userName; String get userEmail; String get userAvatarUrl; DateTime get requestedAt; DateTime get expiresAt;
-/// Create a copy of JoinRequest
+ skir.RecordId get requestId; skir.RecordId get userId; DateTime get requestedAt; DateTime get expiresAt; String? get userName; String? get userEmail; String? get userAvatarUrl;
+/// Create a copy of OrganizationJoinRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$JoinRequestCopyWith<JoinRequest> get copyWith => _$JoinRequestCopyWithImpl<JoinRequest>(this as JoinRequest, _$identity);
+$OrganizationJoinRequestCopyWith<OrganizationJoinRequest> get copyWith => _$OrganizationJoinRequestCopyWithImpl<OrganizationJoinRequest>(this as OrganizationJoinRequest, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JoinRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.userName, userName) || other.userName == userName)&&(identical(other.userEmail, userEmail) || other.userEmail == userEmail)&&(identical(other.userAvatarUrl, userAvatarUrl) || other.userAvatarUrl == userAvatarUrl)&&(identical(other.requestedAt, requestedAt) || other.requestedAt == requestedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrganizationJoinRequest&&(identical(other.requestId, requestId) || other.requestId == requestId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.requestedAt, requestedAt) || other.requestedAt == requestedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.userName, userName) || other.userName == userName)&&(identical(other.userEmail, userEmail) || other.userEmail == userEmail)&&(identical(other.userAvatarUrl, userAvatarUrl) || other.userAvatarUrl == userAvatarUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,userName,userEmail,userAvatarUrl,requestedAt,expiresAt);
+int get hashCode => Object.hash(runtimeType,requestId,userId,requestedAt,expiresAt,userName,userEmail,userAvatarUrl);
 
 @override
 String toString() {
-  return 'JoinRequest(id: $id, userId: $userId, userName: $userName, userEmail: $userEmail, userAvatarUrl: $userAvatarUrl, requestedAt: $requestedAt, expiresAt: $expiresAt)';
+  return 'OrganizationJoinRequest(requestId: $requestId, userId: $userId, requestedAt: $requestedAt, expiresAt: $expiresAt, userName: $userName, userEmail: $userEmail, userAvatarUrl: $userAvatarUrl)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $JoinRequestCopyWith<$Res>  {
-  factory $JoinRequestCopyWith(JoinRequest value, $Res Function(JoinRequest) _then) = _$JoinRequestCopyWithImpl;
+abstract mixin class $OrganizationJoinRequestCopyWith<$Res>  {
+  factory $OrganizationJoinRequestCopyWith(OrganizationJoinRequest value, $Res Function(OrganizationJoinRequest) _then) = _$OrganizationJoinRequestCopyWithImpl;
 @useResult
 $Res call({
- String id, String userId, String userName, String userEmail, String userAvatarUrl, DateTime requestedAt, DateTime expiresAt
+ skir.RecordId requestId, skir.RecordId userId, DateTime requestedAt, DateTime expiresAt, String? userName, String? userEmail, String? userAvatarUrl
 });
 
 
@@ -603,33 +603,33 @@ $Res call({
 
 }
 /// @nodoc
-class _$JoinRequestCopyWithImpl<$Res>
-    implements $JoinRequestCopyWith<$Res> {
-  _$JoinRequestCopyWithImpl(this._self, this._then);
+class _$OrganizationJoinRequestCopyWithImpl<$Res>
+    implements $OrganizationJoinRequestCopyWith<$Res> {
+  _$OrganizationJoinRequestCopyWithImpl(this._self, this._then);
 
-  final JoinRequest _self;
-  final $Res Function(JoinRequest) _then;
+  final OrganizationJoinRequest _self;
+  final $Res Function(OrganizationJoinRequest) _then;
 
-/// Create a copy of JoinRequest
+/// Create a copy of OrganizationJoinRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? userName = null,Object? userEmail = null,Object? userAvatarUrl = null,Object? requestedAt = null,Object? expiresAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? requestId = null,Object? userId = null,Object? requestedAt = null,Object? expiresAt = null,Object? userName = freezed,Object? userEmail = freezed,Object? userAvatarUrl = freezed,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,userName: null == userName ? _self.userName : userName // ignore: cast_nullable_to_non_nullable
-as String,userEmail: null == userEmail ? _self.userEmail : userEmail // ignore: cast_nullable_to_non_nullable
-as String,userAvatarUrl: null == userAvatarUrl ? _self.userAvatarUrl : userAvatarUrl // ignore: cast_nullable_to_non_nullable
-as String,requestedAt: null == requestedAt ? _self.requestedAt : requestedAt // ignore: cast_nullable_to_non_nullable
+requestId: null == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,requestedAt: null == requestedAt ? _self.requestedAt : requestedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,userName: freezed == userName ? _self.userName : userName // ignore: cast_nullable_to_non_nullable
+as String?,userEmail: freezed == userEmail ? _self.userEmail : userEmail // ignore: cast_nullable_to_non_nullable
+as String?,userAvatarUrl: freezed == userAvatarUrl ? _self.userAvatarUrl : userAvatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
 }
 
 
-/// Adds pattern-matching-related methods to [JoinRequest].
-extension JoinRequestPatterns on JoinRequest {
+/// Adds pattern-matching-related methods to [OrganizationJoinRequest].
+extension OrganizationJoinRequestPatterns on OrganizationJoinRequest {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -642,10 +642,10 @@ extension JoinRequestPatterns on JoinRequest {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _JoinRequest value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OrganizationJoinRequest value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _JoinRequest() when $default != null:
+case _OrganizationJoinRequest() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -664,10 +664,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _JoinRequest value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OrganizationJoinRequest value)  $default,){
 final _that = this;
 switch (_that) {
-case _JoinRequest():
+case _OrganizationJoinRequest():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -685,10 +685,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _JoinRequest value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OrganizationJoinRequest value)?  $default,){
 final _that = this;
 switch (_that) {
-case _JoinRequest() when $default != null:
+case _OrganizationJoinRequest() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -706,10 +706,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String userName,  String userEmail,  String userAvatarUrl,  DateTime requestedAt,  DateTime expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId requestId,  skir.RecordId userId,  DateTime requestedAt,  DateTime expiresAt,  String? userName,  String? userEmail,  String? userAvatarUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _JoinRequest() when $default != null:
-return $default(_that.id,_that.userId,_that.userName,_that.userEmail,_that.userAvatarUrl,_that.requestedAt,_that.expiresAt);case _:
+case _OrganizationJoinRequest() when $default != null:
+return $default(_that.requestId,_that.userId,_that.requestedAt,_that.expiresAt,_that.userName,_that.userEmail,_that.userAvatarUrl);case _:
   return orElse();
 
 }
@@ -727,10 +727,10 @@ return $default(_that.id,_that.userId,_that.userName,_that.userEmail,_that.userA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String userName,  String userEmail,  String userAvatarUrl,  DateTime requestedAt,  DateTime expiresAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId requestId,  skir.RecordId userId,  DateTime requestedAt,  DateTime expiresAt,  String? userName,  String? userEmail,  String? userAvatarUrl)  $default,) {final _that = this;
 switch (_that) {
-case _JoinRequest():
-return $default(_that.id,_that.userId,_that.userName,_that.userEmail,_that.userAvatarUrl,_that.requestedAt,_that.expiresAt);case _:
+case _OrganizationJoinRequest():
+return $default(_that.requestId,_that.userId,_that.requestedAt,_that.expiresAt,_that.userName,_that.userEmail,_that.userAvatarUrl);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -747,10 +747,10 @@ return $default(_that.id,_that.userId,_that.userName,_that.userEmail,_that.userA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String userName,  String userEmail,  String userAvatarUrl,  DateTime requestedAt,  DateTime expiresAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId requestId,  skir.RecordId userId,  DateTime requestedAt,  DateTime expiresAt,  String? userName,  String? userEmail,  String? userAvatarUrl)?  $default,) {final _that = this;
 switch (_that) {
-case _JoinRequest() when $default != null:
-return $default(_that.id,_that.userId,_that.userName,_that.userEmail,_that.userAvatarUrl,_that.requestedAt,_that.expiresAt);case _:
+case _OrganizationJoinRequest() when $default != null:
+return $default(_that.requestId,_that.userId,_that.requestedAt,_that.expiresAt,_that.userName,_that.userEmail,_that.userAvatarUrl);case _:
   return null;
 
 }
@@ -761,49 +761,49 @@ return $default(_that.id,_that.userId,_that.userName,_that.userEmail,_that.userA
 /// @nodoc
 
 
-class _JoinRequest extends JoinRequest {
-  const _JoinRequest({required this.id, required this.userId, required this.userName, required this.userEmail, required this.userAvatarUrl, required this.requestedAt, required this.expiresAt}): super._();
+class _OrganizationJoinRequest extends OrganizationJoinRequest {
+  const _OrganizationJoinRequest({required this.requestId, required this.userId, required this.requestedAt, required this.expiresAt, this.userName, this.userEmail, this.userAvatarUrl}): super._();
   
 
-@override final  String id;
-@override final  String userId;
-@override final  String userName;
-@override final  String userEmail;
-@override final  String userAvatarUrl;
+@override final  skir.RecordId requestId;
+@override final  skir.RecordId userId;
 @override final  DateTime requestedAt;
 @override final  DateTime expiresAt;
+@override final  String? userName;
+@override final  String? userEmail;
+@override final  String? userAvatarUrl;
 
-/// Create a copy of JoinRequest
+/// Create a copy of OrganizationJoinRequest
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$JoinRequestCopyWith<_JoinRequest> get copyWith => __$JoinRequestCopyWithImpl<_JoinRequest>(this, _$identity);
+_$OrganizationJoinRequestCopyWith<_OrganizationJoinRequest> get copyWith => __$OrganizationJoinRequestCopyWithImpl<_OrganizationJoinRequest>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _JoinRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.userName, userName) || other.userName == userName)&&(identical(other.userEmail, userEmail) || other.userEmail == userEmail)&&(identical(other.userAvatarUrl, userAvatarUrl) || other.userAvatarUrl == userAvatarUrl)&&(identical(other.requestedAt, requestedAt) || other.requestedAt == requestedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrganizationJoinRequest&&(identical(other.requestId, requestId) || other.requestId == requestId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.requestedAt, requestedAt) || other.requestedAt == requestedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.userName, userName) || other.userName == userName)&&(identical(other.userEmail, userEmail) || other.userEmail == userEmail)&&(identical(other.userAvatarUrl, userAvatarUrl) || other.userAvatarUrl == userAvatarUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,userName,userEmail,userAvatarUrl,requestedAt,expiresAt);
+int get hashCode => Object.hash(runtimeType,requestId,userId,requestedAt,expiresAt,userName,userEmail,userAvatarUrl);
 
 @override
 String toString() {
-  return 'JoinRequest(id: $id, userId: $userId, userName: $userName, userEmail: $userEmail, userAvatarUrl: $userAvatarUrl, requestedAt: $requestedAt, expiresAt: $expiresAt)';
+  return 'OrganizationJoinRequest(requestId: $requestId, userId: $userId, requestedAt: $requestedAt, expiresAt: $expiresAt, userName: $userName, userEmail: $userEmail, userAvatarUrl: $userAvatarUrl)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$JoinRequestCopyWith<$Res> implements $JoinRequestCopyWith<$Res> {
-  factory _$JoinRequestCopyWith(_JoinRequest value, $Res Function(_JoinRequest) _then) = __$JoinRequestCopyWithImpl;
+abstract mixin class _$OrganizationJoinRequestCopyWith<$Res> implements $OrganizationJoinRequestCopyWith<$Res> {
+  factory _$OrganizationJoinRequestCopyWith(_OrganizationJoinRequest value, $Res Function(_OrganizationJoinRequest) _then) = __$OrganizationJoinRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userId, String userName, String userEmail, String userAvatarUrl, DateTime requestedAt, DateTime expiresAt
+ skir.RecordId requestId, skir.RecordId userId, DateTime requestedAt, DateTime expiresAt, String? userName, String? userEmail, String? userAvatarUrl
 });
 
 
@@ -811,25 +811,25 @@ $Res call({
 
 }
 /// @nodoc
-class __$JoinRequestCopyWithImpl<$Res>
-    implements _$JoinRequestCopyWith<$Res> {
-  __$JoinRequestCopyWithImpl(this._self, this._then);
+class __$OrganizationJoinRequestCopyWithImpl<$Res>
+    implements _$OrganizationJoinRequestCopyWith<$Res> {
+  __$OrganizationJoinRequestCopyWithImpl(this._self, this._then);
 
-  final _JoinRequest _self;
-  final $Res Function(_JoinRequest) _then;
+  final _OrganizationJoinRequest _self;
+  final $Res Function(_OrganizationJoinRequest) _then;
 
-/// Create a copy of JoinRequest
+/// Create a copy of OrganizationJoinRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? userName = null,Object? userEmail = null,Object? userAvatarUrl = null,Object? requestedAt = null,Object? expiresAt = null,}) {
-  return _then(_JoinRequest(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,userName: null == userName ? _self.userName : userName // ignore: cast_nullable_to_non_nullable
-as String,userEmail: null == userEmail ? _self.userEmail : userEmail // ignore: cast_nullable_to_non_nullable
-as String,userAvatarUrl: null == userAvatarUrl ? _self.userAvatarUrl : userAvatarUrl // ignore: cast_nullable_to_non_nullable
-as String,requestedAt: null == requestedAt ? _self.requestedAt : requestedAt // ignore: cast_nullable_to_non_nullable
+@override @pragma('vm:prefer-inline') $Res call({Object? requestId = null,Object? userId = null,Object? requestedAt = null,Object? expiresAt = null,Object? userName = freezed,Object? userEmail = freezed,Object? userAvatarUrl = freezed,}) {
+  return _then(_OrganizationJoinRequest(
+requestId: null == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,requestedAt: null == requestedAt ? _self.requestedAt : requestedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,userName: freezed == userName ? _self.userName : userName // ignore: cast_nullable_to_non_nullable
+as String?,userEmail: freezed == userEmail ? _self.userEmail : userEmail // ignore: cast_nullable_to_non_nullable
+as String?,userAvatarUrl: freezed == userAvatarUrl ? _self.userAvatarUrl : userAvatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -837,20 +837,20 @@ as DateTime,
 }
 
 /// @nodoc
-mixin _$JoinCode {
+mixin _$OrganizationJoinCode {
 
- String get code; DateTime get createdAt; DateTime? get expiresAt; bool get singleUse; JoinCodeAutoAccept? get autoAccept;
-/// Create a copy of JoinCode
+ skir.RecordId get code; DateTime get createdAt; DateTime? get expiresAt; bool get singleUse; JoinCodeAutoAccept get autoAccept;
+/// Create a copy of OrganizationJoinCode
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$JoinCodeCopyWith<JoinCode> get copyWith => _$JoinCodeCopyWithImpl<JoinCode>(this as JoinCode, _$identity);
+$OrganizationJoinCodeCopyWith<OrganizationJoinCode> get copyWith => _$OrganizationJoinCodeCopyWithImpl<OrganizationJoinCode>(this as OrganizationJoinCode, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JoinCode&&(identical(other.code, code) || other.code == code)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.singleUse, singleUse) || other.singleUse == singleUse)&&(identical(other.autoAccept, autoAccept) || other.autoAccept == autoAccept));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrganizationJoinCode&&(identical(other.code, code) || other.code == code)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.singleUse, singleUse) || other.singleUse == singleUse)&&(identical(other.autoAccept, autoAccept) || other.autoAccept == autoAccept));
 }
 
 
@@ -859,62 +859,59 @@ int get hashCode => Object.hash(runtimeType,code,createdAt,expiresAt,singleUse,a
 
 @override
 String toString() {
-  return 'JoinCode(code: $code, createdAt: $createdAt, expiresAt: $expiresAt, singleUse: $singleUse, autoAccept: $autoAccept)';
+  return 'OrganizationJoinCode(code: $code, createdAt: $createdAt, expiresAt: $expiresAt, singleUse: $singleUse, autoAccept: $autoAccept)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $JoinCodeCopyWith<$Res>  {
-  factory $JoinCodeCopyWith(JoinCode value, $Res Function(JoinCode) _then) = _$JoinCodeCopyWithImpl;
+abstract mixin class $OrganizationJoinCodeCopyWith<$Res>  {
+  factory $OrganizationJoinCodeCopyWith(OrganizationJoinCode value, $Res Function(OrganizationJoinCode) _then) = _$OrganizationJoinCodeCopyWithImpl;
 @useResult
 $Res call({
- String code, DateTime createdAt, DateTime? expiresAt, bool singleUse, JoinCodeAutoAccept? autoAccept
+ skir.RecordId code, DateTime createdAt, DateTime? expiresAt, bool singleUse, JoinCodeAutoAccept autoAccept
 });
 
 
-$JoinCodeAutoAcceptCopyWith<$Res>? get autoAccept;
+$JoinCodeAutoAcceptCopyWith<$Res> get autoAccept;
 
 }
 /// @nodoc
-class _$JoinCodeCopyWithImpl<$Res>
-    implements $JoinCodeCopyWith<$Res> {
-  _$JoinCodeCopyWithImpl(this._self, this._then);
+class _$OrganizationJoinCodeCopyWithImpl<$Res>
+    implements $OrganizationJoinCodeCopyWith<$Res> {
+  _$OrganizationJoinCodeCopyWithImpl(this._self, this._then);
 
-  final JoinCode _self;
-  final $Res Function(JoinCode) _then;
+  final OrganizationJoinCode _self;
+  final $Res Function(OrganizationJoinCode) _then;
 
-/// Create a copy of JoinCode
+/// Create a copy of OrganizationJoinCode
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? createdAt = null,Object? expiresAt = freezed,Object? singleUse = null,Object? autoAccept = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? createdAt = null,Object? expiresAt = freezed,Object? singleUse = null,Object? autoAccept = null,}) {
   return _then(_self.copyWith(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,singleUse: null == singleUse ? _self.singleUse : singleUse // ignore: cast_nullable_to_non_nullable
-as bool,autoAccept: freezed == autoAccept ? _self.autoAccept : autoAccept // ignore: cast_nullable_to_non_nullable
-as JoinCodeAutoAccept?,
+as bool,autoAccept: null == autoAccept ? _self.autoAccept : autoAccept // ignore: cast_nullable_to_non_nullable
+as JoinCodeAutoAccept,
   ));
 }
-/// Create a copy of JoinCode
+/// Create a copy of OrganizationJoinCode
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$JoinCodeAutoAcceptCopyWith<$Res>? get autoAccept {
-    if (_self.autoAccept == null) {
-    return null;
-  }
-
-  return $JoinCodeAutoAcceptCopyWith<$Res>(_self.autoAccept!, (value) {
+$JoinCodeAutoAcceptCopyWith<$Res> get autoAccept {
+  
+  return $JoinCodeAutoAcceptCopyWith<$Res>(_self.autoAccept, (value) {
     return _then(_self.copyWith(autoAccept: value));
   });
 }
 }
 
 
-/// Adds pattern-matching-related methods to [JoinCode].
-extension JoinCodePatterns on JoinCode {
+/// Adds pattern-matching-related methods to [OrganizationJoinCode].
+extension OrganizationJoinCodePatterns on OrganizationJoinCode {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -927,10 +924,10 @@ extension JoinCodePatterns on JoinCode {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _JoinCode value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OrganizationJoinCode value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _JoinCode() when $default != null:
+case _OrganizationJoinCode() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -949,10 +946,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _JoinCode value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OrganizationJoinCode value)  $default,){
 final _that = this;
 switch (_that) {
-case _JoinCode():
+case _OrganizationJoinCode():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -970,10 +967,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _JoinCode value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OrganizationJoinCode value)?  $default,){
 final _that = this;
 switch (_that) {
-case _JoinCode() when $default != null:
+case _OrganizationJoinCode() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -991,9 +988,9 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  DateTime createdAt,  DateTime? expiresAt,  bool singleUse,  JoinCodeAutoAccept? autoAccept)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId code,  DateTime createdAt,  DateTime? expiresAt,  bool singleUse,  JoinCodeAutoAccept autoAccept)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _JoinCode() when $default != null:
+case _OrganizationJoinCode() when $default != null:
 return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that.autoAccept);case _:
   return orElse();
 
@@ -1012,9 +1009,9 @@ return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  DateTime createdAt,  DateTime? expiresAt,  bool singleUse,  JoinCodeAutoAccept? autoAccept)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId code,  DateTime createdAt,  DateTime? expiresAt,  bool singleUse,  JoinCodeAutoAccept autoAccept)  $default,) {final _that = this;
 switch (_that) {
-case _JoinCode():
+case _OrganizationJoinCode():
 return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that.autoAccept);case _:
   throw StateError('Unexpected subclass');
 
@@ -1032,9 +1029,9 @@ return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  DateTime createdAt,  DateTime? expiresAt,  bool singleUse,  JoinCodeAutoAccept? autoAccept)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId code,  DateTime createdAt,  DateTime? expiresAt,  bool singleUse,  JoinCodeAutoAccept autoAccept)?  $default,) {final _that = this;
 switch (_that) {
-case _JoinCode() when $default != null:
+case _OrganizationJoinCode() when $default != null:
 return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that.autoAccept);case _:
   return null;
 
@@ -1046,27 +1043,27 @@ return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that
 /// @nodoc
 
 
-class _JoinCode extends JoinCode {
-  const _JoinCode({required this.code, required this.createdAt, this.expiresAt, this.singleUse = true, this.autoAccept}): super._();
+class _OrganizationJoinCode extends OrganizationJoinCode {
+  const _OrganizationJoinCode({required this.code, required this.createdAt, this.expiresAt, this.singleUse = true, this.autoAccept = const JoinCodeAutoAccept()}): super._();
   
 
-@override final  String code;
+@override final  skir.RecordId code;
 @override final  DateTime createdAt;
 @override final  DateTime? expiresAt;
 @override@JsonKey() final  bool singleUse;
-@override final  JoinCodeAutoAccept? autoAccept;
+@override@JsonKey() final  JoinCodeAutoAccept autoAccept;
 
-/// Create a copy of JoinCode
+/// Create a copy of OrganizationJoinCode
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$JoinCodeCopyWith<_JoinCode> get copyWith => __$JoinCodeCopyWithImpl<_JoinCode>(this, _$identity);
+_$OrganizationJoinCodeCopyWith<_OrganizationJoinCode> get copyWith => __$OrganizationJoinCodeCopyWithImpl<_OrganizationJoinCode>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _JoinCode&&(identical(other.code, code) || other.code == code)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.singleUse, singleUse) || other.singleUse == singleUse)&&(identical(other.autoAccept, autoAccept) || other.autoAccept == autoAccept));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrganizationJoinCode&&(identical(other.code, code) || other.code == code)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.singleUse, singleUse) || other.singleUse == singleUse)&&(identical(other.autoAccept, autoAccept) || other.autoAccept == autoAccept));
 }
 
 
@@ -1075,55 +1072,52 @@ int get hashCode => Object.hash(runtimeType,code,createdAt,expiresAt,singleUse,a
 
 @override
 String toString() {
-  return 'JoinCode(code: $code, createdAt: $createdAt, expiresAt: $expiresAt, singleUse: $singleUse, autoAccept: $autoAccept)';
+  return 'OrganizationJoinCode(code: $code, createdAt: $createdAt, expiresAt: $expiresAt, singleUse: $singleUse, autoAccept: $autoAccept)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$JoinCodeCopyWith<$Res> implements $JoinCodeCopyWith<$Res> {
-  factory _$JoinCodeCopyWith(_JoinCode value, $Res Function(_JoinCode) _then) = __$JoinCodeCopyWithImpl;
+abstract mixin class _$OrganizationJoinCodeCopyWith<$Res> implements $OrganizationJoinCodeCopyWith<$Res> {
+  factory _$OrganizationJoinCodeCopyWith(_OrganizationJoinCode value, $Res Function(_OrganizationJoinCode) _then) = __$OrganizationJoinCodeCopyWithImpl;
 @override @useResult
 $Res call({
- String code, DateTime createdAt, DateTime? expiresAt, bool singleUse, JoinCodeAutoAccept? autoAccept
+ skir.RecordId code, DateTime createdAt, DateTime? expiresAt, bool singleUse, JoinCodeAutoAccept autoAccept
 });
 
 
-@override $JoinCodeAutoAcceptCopyWith<$Res>? get autoAccept;
+@override $JoinCodeAutoAcceptCopyWith<$Res> get autoAccept;
 
 }
 /// @nodoc
-class __$JoinCodeCopyWithImpl<$Res>
-    implements _$JoinCodeCopyWith<$Res> {
-  __$JoinCodeCopyWithImpl(this._self, this._then);
+class __$OrganizationJoinCodeCopyWithImpl<$Res>
+    implements _$OrganizationJoinCodeCopyWith<$Res> {
+  __$OrganizationJoinCodeCopyWithImpl(this._self, this._then);
 
-  final _JoinCode _self;
-  final $Res Function(_JoinCode) _then;
+  final _OrganizationJoinCode _self;
+  final $Res Function(_OrganizationJoinCode) _then;
 
-/// Create a copy of JoinCode
+/// Create a copy of OrganizationJoinCode
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? createdAt = null,Object? expiresAt = freezed,Object? singleUse = null,Object? autoAccept = freezed,}) {
-  return _then(_JoinCode(
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? createdAt = null,Object? expiresAt = freezed,Object? singleUse = null,Object? autoAccept = null,}) {
+  return _then(_OrganizationJoinCode(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,singleUse: null == singleUse ? _self.singleUse : singleUse // ignore: cast_nullable_to_non_nullable
-as bool,autoAccept: freezed == autoAccept ? _self.autoAccept : autoAccept // ignore: cast_nullable_to_non_nullable
-as JoinCodeAutoAccept?,
+as bool,autoAccept: null == autoAccept ? _self.autoAccept : autoAccept // ignore: cast_nullable_to_non_nullable
+as JoinCodeAutoAccept,
   ));
 }
 
-/// Create a copy of JoinCode
+/// Create a copy of OrganizationJoinCode
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$JoinCodeAutoAcceptCopyWith<$Res>? get autoAccept {
-    if (_self.autoAccept == null) {
-    return null;
-  }
-
-  return $JoinCodeAutoAcceptCopyWith<$Res>(_self.autoAccept!, (value) {
+$JoinCodeAutoAcceptCopyWith<$Res> get autoAccept {
+  
+  return $JoinCodeAutoAcceptCopyWith<$Res>(_self.autoAccept, (value) {
     return _then(_self.copyWith(autoAccept: value));
   });
 }
@@ -1132,7 +1126,7 @@ $JoinCodeAutoAcceptCopyWith<$Res>? get autoAccept {
 /// @nodoc
 mixin _$JoinCodeAutoAccept {
 
- List<String> get roleIds;
+ List<skir.RecordId> get roleIds;
 /// Create a copy of JoinCodeAutoAccept
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1163,7 +1157,7 @@ abstract mixin class $JoinCodeAutoAcceptCopyWith<$Res>  {
   factory $JoinCodeAutoAcceptCopyWith(JoinCodeAutoAccept value, $Res Function(JoinCodeAutoAccept) _then) = _$JoinCodeAutoAcceptCopyWithImpl;
 @useResult
 $Res call({
- List<String> roleIds
+ List<skir.RecordId> roleIds
 });
 
 
@@ -1183,7 +1177,7 @@ class _$JoinCodeAutoAcceptCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? roleIds = null,}) {
   return _then(_self.copyWith(
 roleIds: null == roleIds ? _self.roleIds : roleIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<skir.RecordId>,
   ));
 }
 
@@ -1268,7 +1262,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> roleIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<skir.RecordId> roleIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _JoinCodeAutoAccept() when $default != null:
 return $default(_that.roleIds);case _:
@@ -1289,7 +1283,7 @@ return $default(_that.roleIds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> roleIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<skir.RecordId> roleIds)  $default,) {final _that = this;
 switch (_that) {
 case _JoinCodeAutoAccept():
 return $default(_that.roleIds);case _:
@@ -1309,7 +1303,7 @@ return $default(_that.roleIds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> roleIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<skir.RecordId> roleIds)?  $default,) {final _that = this;
 switch (_that) {
 case _JoinCodeAutoAccept() when $default != null:
 return $default(_that.roleIds);case _:
@@ -1323,12 +1317,12 @@ return $default(_that.roleIds);case _:
 /// @nodoc
 
 
-class _JoinCodeAutoAccept implements JoinCodeAutoAccept {
-  const _JoinCodeAutoAccept({required final  List<String> roleIds}): _roleIds = roleIds;
+class _JoinCodeAutoAccept extends JoinCodeAutoAccept {
+  const _JoinCodeAutoAccept({final  List<skir.RecordId> roleIds = const []}): _roleIds = roleIds,super._();
   
 
- final  List<String> _roleIds;
-@override List<String> get roleIds {
+ final  List<skir.RecordId> _roleIds;
+@override@JsonKey() List<skir.RecordId> get roleIds {
   if (_roleIds is EqualUnmodifiableListView) return _roleIds;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_roleIds);
@@ -1365,7 +1359,7 @@ abstract mixin class _$JoinCodeAutoAcceptCopyWith<$Res> implements $JoinCodeAuto
   factory _$JoinCodeAutoAcceptCopyWith(_JoinCodeAutoAccept value, $Res Function(_JoinCodeAutoAccept) _then) = __$JoinCodeAutoAcceptCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> roleIds
+ List<skir.RecordId> roleIds
 });
 
 
@@ -1385,7 +1379,7 @@ class __$JoinCodeAutoAcceptCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? roleIds = null,}) {
   return _then(_JoinCodeAutoAccept(
 roleIds: null == roleIds ? _self._roleIds : roleIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<skir.RecordId>,
   ));
 }
 
@@ -1653,7 +1647,7 @@ as Duration,
 /// @nodoc
 mixin _$JoinCodeOptions {
 
- bool get singleUse; JoinCodeExpiration get expiration; List<String>? get autoAcceptRoleIds;
+ bool get singleUse; JoinCodeExpiration get expiration; List<skir.RecordId> get autoAcceptRoleIds;
 /// Create a copy of JoinCodeOptions
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1684,7 +1678,7 @@ abstract mixin class $JoinCodeOptionsCopyWith<$Res>  {
   factory $JoinCodeOptionsCopyWith(JoinCodeOptions value, $Res Function(JoinCodeOptions) _then) = _$JoinCodeOptionsCopyWithImpl;
 @useResult
 $Res call({
- bool singleUse, JoinCodeExpiration expiration, List<String>? autoAcceptRoleIds
+ bool singleUse, JoinCodeExpiration expiration, List<skir.RecordId> autoAcceptRoleIds
 });
 
 
@@ -1701,12 +1695,12 @@ class _$JoinCodeOptionsCopyWithImpl<$Res>
 
 /// Create a copy of JoinCodeOptions
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? singleUse = null,Object? expiration = null,Object? autoAcceptRoleIds = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? singleUse = null,Object? expiration = null,Object? autoAcceptRoleIds = null,}) {
   return _then(_self.copyWith(
 singleUse: null == singleUse ? _self.singleUse : singleUse // ignore: cast_nullable_to_non_nullable
 as bool,expiration: null == expiration ? _self.expiration : expiration // ignore: cast_nullable_to_non_nullable
-as JoinCodeExpiration,autoAcceptRoleIds: freezed == autoAcceptRoleIds ? _self.autoAcceptRoleIds : autoAcceptRoleIds // ignore: cast_nullable_to_non_nullable
-as List<String>?,
+as JoinCodeExpiration,autoAcceptRoleIds: null == autoAcceptRoleIds ? _self.autoAcceptRoleIds : autoAcceptRoleIds // ignore: cast_nullable_to_non_nullable
+as List<skir.RecordId>,
   ));
 }
 /// Create a copy of JoinCodeOptions
@@ -1800,7 +1794,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool singleUse,  JoinCodeExpiration expiration,  List<String>? autoAcceptRoleIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool singleUse,  JoinCodeExpiration expiration,  List<skir.RecordId> autoAcceptRoleIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _JoinCodeOptions() when $default != null:
 return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _:
@@ -1821,7 +1815,7 @@ return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool singleUse,  JoinCodeExpiration expiration,  List<String>? autoAcceptRoleIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool singleUse,  JoinCodeExpiration expiration,  List<skir.RecordId> autoAcceptRoleIds)  $default,) {final _that = this;
 switch (_that) {
 case _JoinCodeOptions():
 return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _:
@@ -1841,7 +1835,7 @@ return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool singleUse,  JoinCodeExpiration expiration,  List<String>? autoAcceptRoleIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool singleUse,  JoinCodeExpiration expiration,  List<skir.RecordId> autoAcceptRoleIds)?  $default,) {final _that = this;
 switch (_that) {
 case _JoinCodeOptions() when $default != null:
 return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _:
@@ -1856,18 +1850,16 @@ return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _
 
 
 class _JoinCodeOptions implements JoinCodeOptions {
-  const _JoinCodeOptions({this.singleUse = true, this.expiration = const JoinCodeExpiration.duration(Duration(days: 7)), final  List<String>? autoAcceptRoleIds}): _autoAcceptRoleIds = autoAcceptRoleIds;
+  const _JoinCodeOptions({this.singleUse = true, this.expiration = const JoinCodeExpiration.duration(Duration(days: 7)), final  List<skir.RecordId> autoAcceptRoleIds = const []}): _autoAcceptRoleIds = autoAcceptRoleIds;
   
 
 @override@JsonKey() final  bool singleUse;
 @override@JsonKey() final  JoinCodeExpiration expiration;
- final  List<String>? _autoAcceptRoleIds;
-@override List<String>? get autoAcceptRoleIds {
-  final value = _autoAcceptRoleIds;
-  if (value == null) return null;
+ final  List<skir.RecordId> _autoAcceptRoleIds;
+@override@JsonKey() List<skir.RecordId> get autoAcceptRoleIds {
   if (_autoAcceptRoleIds is EqualUnmodifiableListView) return _autoAcceptRoleIds;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(value);
+  return EqualUnmodifiableListView(_autoAcceptRoleIds);
 }
 
 
@@ -1901,7 +1893,7 @@ abstract mixin class _$JoinCodeOptionsCopyWith<$Res> implements $JoinCodeOptions
   factory _$JoinCodeOptionsCopyWith(_JoinCodeOptions value, $Res Function(_JoinCodeOptions) _then) = __$JoinCodeOptionsCopyWithImpl;
 @override @useResult
 $Res call({
- bool singleUse, JoinCodeExpiration expiration, List<String>? autoAcceptRoleIds
+ bool singleUse, JoinCodeExpiration expiration, List<skir.RecordId> autoAcceptRoleIds
 });
 
 
@@ -1918,12 +1910,12 @@ class __$JoinCodeOptionsCopyWithImpl<$Res>
 
 /// Create a copy of JoinCodeOptions
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? singleUse = null,Object? expiration = null,Object? autoAcceptRoleIds = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? singleUse = null,Object? expiration = null,Object? autoAcceptRoleIds = null,}) {
   return _then(_JoinCodeOptions(
 singleUse: null == singleUse ? _self.singleUse : singleUse // ignore: cast_nullable_to_non_nullable
 as bool,expiration: null == expiration ? _self.expiration : expiration // ignore: cast_nullable_to_non_nullable
-as JoinCodeExpiration,autoAcceptRoleIds: freezed == autoAcceptRoleIds ? _self._autoAcceptRoleIds : autoAcceptRoleIds // ignore: cast_nullable_to_non_nullable
-as List<String>?,
+as JoinCodeExpiration,autoAcceptRoleIds: null == autoAcceptRoleIds ? _self._autoAcceptRoleIds : autoAcceptRoleIds // ignore: cast_nullable_to_non_nullable
+as List<skir.RecordId>,
   ));
 }
 

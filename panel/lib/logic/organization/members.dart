@@ -2,61 +2,118 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/generated/api/organization/member.pb.dart"
-    as member_api;
-import "package:typewriter_panel/generated/api/organization/role.pb.dart"
-    as role_api;
-import "package:typewriter_panel/generated/models/organization/member.pb.dart"
-    as member_models;
-import "package:typewriter_panel/generated/models/organization/role.pb.dart"
-    as role_models;
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/organization.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
-import "package:typewriter_panel/logic/proto/extensions.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 
 part "members.freezed.dart";
 part "members.g.dart";
 
 @freezed
-abstract class MemberRole with _$MemberRole {
-  const factory MemberRole({
-    required String id,
+abstract class OrganizationRole with _$OrganizationRole {
+  const factory OrganizationRole({
+    required skir.RecordId roleId,
     required String name,
     required Color color,
     @Default(false) bool defaultRole,
     @Default(false) bool assignable,
     @Default(false) bool deletable,
-  }) = _MemberRole;
+  }) = _OrganizationRole;
+
+  const OrganizationRole._();
+
+  factory OrganizationRole.fromSkir(skir.OrganizationRole role) =>
+      OrganizationRole(
+        roleId: role.roleId,
+        name: role.name,
+        color: role.color.toFlutterColor(),
+        defaultRole: role.defaultRole,
+        assignable: role.assignable,
+        deletable: role.deletable,
+      );
+
+  skir.OrganizationRole toSkir() => skir.OrganizationRole(
+    roleId: roleId,
+    name: name,
+    color: color.toSkirColor(),
+    defaultRole: defaultRole,
+    assignable: assignable,
+    deletable: deletable,
+  );
 }
 
 @freezed
 abstract class OrganizationMember with _$OrganizationMember {
   const factory OrganizationMember({
-    required String id,
-    required String name,
-    required String email,
-    required String avatarUrl,
-    required List<MemberRole> roles,
+    required skir.RecordId userId,
+    required List<OrganizationRole> roles,
     required DateTime joinedAt,
+    String? name,
+    String? email,
+    String? avatarUrl,
   }) = _OrganizationMember;
+
+  const OrganizationMember._();
+
+  factory OrganizationMember.fromSkir(skir.OrganizationMember member) =>
+      OrganizationMember(
+        userId: member.userId,
+        name: member.name,
+        email: member.email,
+        avatarUrl: member.avatarUrl,
+        roles: member.roles.map(OrganizationRole.fromSkir).toList(),
+        joinedAt: member.joinedAt,
+      );
+
+  skir.OrganizationMember toSkir() => skir.OrganizationMember(
+    userId: this.userId,
+    name: name,
+    email: email,
+    avatarUrl: avatarUrl,
+    roles: roles.map((r) => r.toSkir()),
+    joinedAt: joinedAt,
+  );
 }
 
 @freezed
-abstract class JoinRequest with _$JoinRequest {
-  const factory JoinRequest({
-    required String id,
-    required String userId,
-    required String userName,
-    required String userEmail,
-    required String userAvatarUrl,
+abstract class OrganizationJoinRequest with _$OrganizationJoinRequest {
+  const factory OrganizationJoinRequest({
+    required skir.RecordId requestId,
+    required skir.RecordId userId,
     required DateTime requestedAt,
     required DateTime expiresAt,
-  }) = _JoinRequest;
+    String? userName,
+    String? userEmail,
+    String? userAvatarUrl,
+  }) = _OrganizationJoinRequest;
 
-  const JoinRequest._();
+  const OrganizationJoinRequest._();
+
+  factory OrganizationJoinRequest.fromSkir(
+    skir.OrganizationJoinRequest request,
+  ) => OrganizationJoinRequest(
+    requestId: request.requestId,
+    userId: request.userId,
+    requestedAt: request.requestedAt,
+    expiresAt: request.expiresAt,
+    userName: request.userName,
+    userEmail: request.userEmail,
+    userAvatarUrl: request.userAvatarUrl,
+  );
+
+  skir.OrganizationJoinRequest toSkir() => skir.OrganizationJoinRequest(
+    requestId: requestId,
+    userId: this.userId,
+    requestedAt: requestedAt,
+    expiresAt: expiresAt,
+    userName: userName,
+    userEmail: userEmail,
+    userAvatarUrl: userAvatarUrl,
+  );
 
   Duration get remainingDuration {
     final remaining = expiresAt.difference(DateTime.now());
@@ -67,16 +124,33 @@ abstract class JoinRequest with _$JoinRequest {
 }
 
 @freezed
-abstract class JoinCode with _$JoinCode {
-  const factory JoinCode({
-    required String code,
+abstract class OrganizationJoinCode with _$OrganizationJoinCode {
+  const factory OrganizationJoinCode({
+    required skir.RecordId code,
     required DateTime createdAt,
     DateTime? expiresAt,
     @Default(true) bool singleUse,
-    JoinCodeAutoAccept? autoAccept,
-  }) = _JoinCode;
+    @Default(JoinCodeAutoAccept()) JoinCodeAutoAccept autoAccept,
+  }) = _OrganizationJoinCode;
 
-  const JoinCode._();
+  const OrganizationJoinCode._();
+
+  factory OrganizationJoinCode.fromSkir(skir.JoinCode request) =>
+      OrganizationJoinCode(
+        code: request.code,
+        createdAt: request.createdAt,
+        expiresAt: request.expiresAt,
+        singleUse: request.singleUse,
+        autoAccept: JoinCodeAutoAccept.fromSkir(request.autoAccept),
+      );
+
+  skir.JoinCode toSkir() => skir.JoinCode(
+    code: code,
+    createdAt: createdAt,
+    expiresAt: expiresAt,
+    singleUse: singleUse,
+    autoAccept: autoAccept.toSkir(),
+  );
 
   Duration? get remainingDuration {
     if (expiresAt == null) return null;
@@ -95,8 +169,16 @@ abstract class JoinCode with _$JoinCode {
 /// Auto-accept configuration for a join code.
 @freezed
 abstract class JoinCodeAutoAccept with _$JoinCodeAutoAccept {
-  const factory JoinCodeAutoAccept({required List<String> roleIds}) =
+  const factory JoinCodeAutoAccept({@Default([]) List<skir.RecordId> roleIds}) =
       _JoinCodeAutoAccept;
+
+  const JoinCodeAutoAccept._();
+
+  factory JoinCodeAutoAccept.fromSkir(skir.JoinCode_AutoAccept request) =>
+      JoinCodeAutoAccept(roleIds: request.roleIds.toList());
+
+  skir.JoinCode_AutoAccept toSkir() =>
+      skir.JoinCode_AutoAccept(roleIds: roleIds);
 }
 
 /// Expiration configuration for generating a join code.
@@ -114,67 +196,15 @@ abstract class JoinCodeOptions with _$JoinCodeOptions {
     @Default(true) bool singleUse,
     @Default(JoinCodeExpiration.duration(Duration(days: 7)))
     JoinCodeExpiration expiration,
-    List<String>? autoAcceptRoleIds,
+    @Default([]) List<skir.RecordId> autoAcceptRoleIds,
   }) = _JoinCodeOptions;
-}
-
-/// Converts a proto Role to a dart MemberRole.
-MemberRole _protoToMemberRole(role_models.Role proto) {
-  return MemberRole(
-    id: proto.roleId,
-    name: proto.name,
-    color: proto.color.toFlutterColor(),
-    defaultRole: proto.defaultRole,
-    assignable: proto.assignable,
-    deletable: proto.deletable,
-  );
-}
-
-/// Converts a proto OrganizationMember to a dart OrganizationMember.
-OrganizationMember _protoToOrganizationMember(
-  member_models.OrganizationMember proto,
-) {
-  return OrganizationMember(
-    id: proto.userId,
-    name: proto.name,
-    email: proto.email,
-    avatarUrl: proto.avatarUrl,
-    roles: proto.roles.map(_protoToMemberRole).toList(),
-    joinedAt: proto.joinedAt.toDateTime(),
-  );
-}
-
-/// Converts a proto JoinRequest to a dart JoinRequest.
-JoinRequest _protoToJoinRequest(member_models.JoinRequest proto) {
-  return JoinRequest(
-    id: proto.joinRequestId,
-    userId: proto.userId,
-    userName: proto.userName,
-    userEmail: proto.userEmail,
-    userAvatarUrl: proto.userAvatarUrl,
-    requestedAt: proto.requestedAt.toDateTime(),
-    expiresAt: proto.expiresAt.toDateTime(),
-  );
-}
-
-/// Converts a proto JoinCode to a dart JoinCode.
-JoinCode _protoToJoinCode(member_models.JoinCode proto) {
-  return JoinCode(
-    code: proto.code,
-    createdAt: proto.createdAt.toDateTime(),
-    expiresAt: proto.hasExpiresAt() ? proto.expiresAt.toDateTime() : null,
-    singleUse: proto.singleUse,
-    autoAccept: proto.hasAutoAccept()
-        ? JoinCodeAutoAccept(roleIds: proto.autoAccept.roleIds.toList())
-        : null,
-  );
 }
 
 /// Provider for the list of available roles in the current organization.
 @riverpod
 class OrganizationRoles extends _$OrganizationRoles {
   @override
-  Stream<List<MemberRole>> build() async* {
+  Stream<List<OrganizationRole>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (userId == null) {
       yield [];
@@ -186,21 +216,32 @@ class OrganizationRoles extends _$OrganizationRoles {
       return;
     }
 
-    final request = role_api.ListRolesRequest();
-    final stream = ref.requestProtoThenListen(
-      subject: "cloud.out.user.$userId.organization.$organizationId.roles.list",
-      listenSubject: "cloud.in.organization.$organizationId.roles.list",
-      request: request,
-      responseBuilder: role_api.ListRolesResponse.new,
+    final request = skir.WatchOrganizationRolesRequest();
+
+    yield* ref.watchRequest(
+      subject:
+          "cloud.out.user.$userId.organization.${organizationId.key}.roles.watch",
+      listenSubject: "cloud.in.organization.${organizationId.key}.roles.watch",
+      requestBytes: skir.WatchOrganizationRolesRequest.serializer.toBytes(
+        request,
+      ),
+      serializer: skir.WatchOrganizationRolesResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchOrganizationRolesResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchOrganizationRolesResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchOrganizationRolesResponse_listWrapper(:final value):
+            return value.map(OrganizationRole.fromSkir).toList();
+          case skir.WatchOrganizationRolesResponse_addWrapper(:final value):
+            return [...?previous, OrganizationRole.fromSkir(value)];
+          case skir.WatchOrganizationRolesResponse_removeWrapper(:final value):
+            return previous?.where((role) => role.roleId != value).toList() ??
+                [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.roles.roles.map(_protoToMemberRole).toList();
-    }
   }
 }
 
@@ -220,30 +261,46 @@ class OrganizationMembers extends _$OrganizationMembers {
       return;
     }
 
-    final request = member_api.ListMembersRequest();
-    final stream = ref.requestProtoThenListen(
+    final request = skir.WatchOrganizationMembersRequest();
+    yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.$organizationId.members.list",
-      listenSubject: "cloud.in.organization.$organizationId.members.list",
-      request: request,
-      responseBuilder: member_api.ListMembersResponse.new,
+          "cloud.out.user.$userId.organization.${organizationId.key}.members.watch",
+      listenSubject:
+          "cloud.in.organization.${organizationId.key}.members.watch",
+      requestBytes: skir.WatchOrganizationMembersRequest.serializer.toBytes(
+        request,
+      ),
+      serializer: skir.WatchOrganizationMembersResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchOrganizationMembersResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchOrganizationMembersResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchOrganizationMembersResponse_listWrapper(:final value):
+            return value.map(OrganizationMember.fromSkir).toList();
+          case skir.WatchOrganizationMembersResponse_addWrapper(:final value):
+            return [...?previous, OrganizationMember.fromSkir(value)];
+          case skir.WatchOrganizationMembersResponse_removeWrapper(
+            :final value,
+          ):
+            return previous
+                    ?.where((member) => member.userId != value)
+                    .toList() ??
+                [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.members.members.map(_protoToOrganizationMember).toList();
-    }
   }
 
-  Future<List<MemberRole>> _actualRoles(
-    String memberId,
-    List<MemberRole> newRoles,
+  Future<List<OrganizationRole>> _actualRoles(
+    skir.RecordId memberId,
+    List<OrganizationRole> newRoles,
   ) async {
     final oldRoles =
-        state.requireValue.firstWhereOrNull((m) => m.id == memberId)?.roles ??
+        state.requireValue
+            .firstWhereOrNull((m) => m.userId == memberId)
+            ?.roles ??
         [];
 
     final roles = {
@@ -264,8 +321,8 @@ class OrganizationMembers extends _$OrganizationMembers {
 
   /// Updates the roles for a member.
   Future<void> updateMemberRoles(
-    String memberId,
-    List<MemberRole> requestedRoles,
+    skir.RecordId memberId,
+    List<OrganizationRole> requestedRoles,
   ) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
@@ -284,37 +341,47 @@ class OrganizationMembers extends _$OrganizationMembers {
     // Optimistically update the member's roles
     state = AsyncValue.data(
       state.requireValue
-          .map((m) => m.id == memberId ? m.copyWith(roles: roles) : m)
+          .map((m) => m.userId == memberId ? m.copyWith(roles: roles) : m)
           .toList(),
     );
 
     try {
-      final request = member_api.UpdateMemberRolesRequest()
-        ..userId = memberId
-        ..roleIds.addAll(roles.map((r) => r.id));
+      final request = skir.UpdateOrganizationMemberRolesRequest(
+        userId: memberId,
+        roleIds: roles.map((r) => r.roleId),
+      );
 
       final response = await ref
           .read(natsProvider)
-          .requestProto(
-            "cloud.out.user.$userId.organization.$organizationId.members.update",
-            request,
-            member_api.UpdateMemberRolesResponse.new,
+          .requestSkir(
+            "cloud.out.user.$userId.organization.${organizationId.key}.members.update",
+            skir.UpdateOrganizationMemberRolesRequest.serializer.toBytes(
+              request,
+            ),
+            skir.UpdateOrganizationMemberRolesResponse.serializer,
           );
 
-      if (response.hasError()) {
-        state = previousState;
-        ref.invalidateSelf();
-        throw ApiException.fromProto(response.error);
-      }
-
-      // Use response data to update the member (in case server made changes)
-      if (response.hasMember()) {
-        final updatedMember = _protoToOrganizationMember(response.member);
-        state = AsyncValue.data(
-          state.requireValue
-              .map((m) => m.id == memberId ? updatedMember : m)
-              .toList(),
-        );
+      switch (response) {
+        case skir.UpdateOrganizationMemberRolesResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.UpdateOrganizationMemberRolesResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.UpdateOrganizationMemberRolesResponse_userNotFoundErrorWrapper():
+          throw ApiException.notFound("User");
+        case skir.UpdateOrganizationMemberRolesResponse_rolesNotFoundErrorWrapper():
+          throw ApiException.notFound("Roles");
+        case skir.UpdateOrganizationMemberRolesResponse_successWrapper(
+          :final value,
+        ):
+          state = AsyncValue.data(
+            state.requireValue
+                .map(
+                  (m) => m.userId == memberId
+                      ? OrganizationMember.fromSkir(value)
+                      : m,
+                )
+                .toList(),
+          );
       }
     } catch (e) {
       state = previousState;
@@ -324,7 +391,7 @@ class OrganizationMembers extends _$OrganizationMembers {
   }
 
   /// Removes a member from the organization.
-  Future<void> removeMember(String memberId) async {
+  Future<void> removeMember(skir.RecordId memberId) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
       throw ApiException.notAuthenticated();
@@ -339,24 +406,29 @@ class OrganizationMembers extends _$OrganizationMembers {
 
     // Optimistically remove the member
     state = AsyncValue.data(
-      state.requireValue.where((m) => m.id != memberId).toList(),
+      state.requireValue.where((m) => m.userId != memberId).toList(),
     );
 
     try {
-      final request = member_api.RemoveMemberRequest()..userId = memberId;
+      final request = skir.RemoveOrganizationMemberRequest(userId: memberId);
 
       final response = await ref
           .read(natsProvider)
-          .requestProto(
-            "cloud.out.user.$userId.organization.$organizationId.members.remove",
-            request,
-            member_api.RemoveMemberResponse.new,
+          .requestSkir(
+            "cloud.out.user.$userId.organization.${organizationId.key}.members.remove",
+            skir.RemoveOrganizationMemberRequest.serializer.toBytes(request),
+            skir.RemoveOrganizationMemberResponse.serializer,
           );
 
-      if (response.hasError()) {
-        state = previousState;
-        ref.invalidateSelf();
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.RemoveOrganizationMemberResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.RemoveOrganizationMemberResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.RemoveOrganizationMemberResponse_userNotMemberErrorWrapper():
+          throw ApiException.userNotMemberError();
+        case skir.RemoveOrganizationMemberResponse_successWrapper():
+          debugPrint("removed $memberId from $organizationId");
       }
     } catch (e) {
       state = previousState;
@@ -376,7 +448,7 @@ class OrganizationMembers extends _$OrganizationMembers {
 @riverpod
 class OrganizationJoinRequests extends _$OrganizationJoinRequests {
   @override
-  Stream<List<JoinRequest>> build() async* {
+  Stream<List<OrganizationJoinRequest>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (userId == null) {
       yield [];
@@ -388,27 +460,43 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       return;
     }
 
-    final request = member_api.ListJoinRequestsRequest();
-    final stream = ref.requestProtoThenListen(
+    final request = skir.WatchOrganizationJoinRequestsRequest();
+    yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.$organizationId.members.join_requests.list",
+          "cloud.out.user.$userId.organization.${organizationId.key}.members.join_requests.watch",
       listenSubject:
-          "cloud.in.organization.$organizationId.members.join_requests.list",
-      request: request,
-      responseBuilder: member_api.ListJoinRequestsResponse.new,
+          "cloud.in.organization.${organizationId.key}.members.join_requests.watch",
+      requestBytes: skir.WatchOrganizationJoinRequestsRequest.serializer
+          .toBytes(request),
+      serializer: skir.WatchOrganizationJoinRequestsResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchOrganizationJoinRequestsResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchOrganizationJoinRequestsResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchOrganizationJoinRequestsResponse_listWrapper(
+            :final value,
+          ):
+            return value.map(OrganizationJoinRequest.fromSkir).toList();
+          case skir.WatchOrganizationJoinRequestsResponse_addWrapper(
+            :final value,
+          ):
+            return [...?previous, OrganizationJoinRequest.fromSkir(value)];
+          case skir.WatchOrganizationJoinRequestsResponse_removeWrapper(
+            :final value,
+          ):
+            return previous?.where((e) => e.requestId != value).toList() ?? [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.requests.requests.map(_protoToJoinRequest).toList();
-    }
   }
 
   /// Approves a join request and assigns roles to the new member.
-  Future<void> approveRequest(String requestId, List<MemberRole> roles) async {
+  Future<void> approveRequest(
+    skir.RecordId requestId,
+    List<OrganizationRole> roles,
+  ) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
       throw ApiException.notAuthenticated();
@@ -423,34 +511,50 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
 
     // Optimistically remove the request from join requests
     state = AsyncValue.data(
-      state.value!.where((r) => r.id != requestId).toList(),
+      state.value!.where((r) => r.requestId != requestId).toList(),
     );
 
     try {
-      final request = member_api.ApproveJoinRequestRequest()
-        ..requestId = requestId
-        ..roleIds.addAll(roles.map((r) => r.id));
+      final request = skir.ApproveOrganizationJoinRequestRequest(
+        requestId: requestId,
+        roleIds: roles.map((r) => r.roleId),
+      );
 
       final response = await ref
           .read(natsProvider)
-          .requestProto(
+          .requestSkir(
             "cloud.out.user.$userId.organization.$organizationId.members.join_requests.approve",
-            request,
-            member_api.ApproveJoinRequestResponse.new,
+            skir.ApproveOrganizationJoinRequestRequest.serializer.toBytes(
+              request,
+            ),
+            skir.ApproveOrganizationJoinRequestResponse.serializer,
           );
 
-      if (response.hasError()) {
-        state = previousState;
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.ApproveOrganizationJoinRequestResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.ApproveOrganizationJoinRequestResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.ApproveOrganizationJoinRequestResponse_requestNotFoundErrorWrapper():
+          throw ApiException.notFound("Request");
+        case skir.ApproveOrganizationJoinRequestResponse_rolesNotFoundErrorWrapper():
+          throw ApiException.notFound("Roles");
+        case skir.ApproveOrganizationJoinRequestResponse_successWrapper(
+          :final value,
+        ):
+          debugPrint(
+            "Successfully approved join request $requestId for ${value.name ?? value.email ?? value.userId}",
+          );
       }
     } catch (e) {
       state = previousState;
+      ref.invalidateSelf();
       rethrow;
     }
   }
 
   /// Declines a join request.
-  Future<void> declineRequest(String requestId) async {
+  Future<void> declineRequest(skir.RecordId requestId) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
       throw ApiException.notAuthenticated();
@@ -465,25 +569,33 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
 
     // Optimistically remove the request
     state = AsyncValue.data(
-      state.value!.where((r) => r.id != requestId).toList(),
+      state.value!.where((r) => r.requestId != requestId).toList(),
     );
 
     try {
-      final request = member_api.DeclineJoinRequestRequest()
-        ..requestId = requestId;
+      final request = skir.DeclineOrganizationJoinRequestRequest(
+        requestId: requestId,
+      );
 
       final response = await ref
           .read(natsProvider)
-          .requestProto(
+          .requestSkir(
             "cloud.out.user.$userId.organization.$organizationId.members.join_requests.decline",
-            request,
-            member_api.DeclineJoinRequestResponse.new,
+            skir.DeclineOrganizationJoinRequestRequest.serializer.toBytes(
+              request,
+            ),
+            skir.DeclineOrganizationJoinRequestResponse.serializer,
           );
 
-      if (response.hasError()) {
-        state = previousState; // Rollback on API error
-        ref.invalidateSelf();
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.DeclineOrganizationJoinRequestResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.DeclineOrganizationJoinRequestResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.DeclineOrganizationJoinRequestResponse_requestNotFoundErrorWrapper():
+          throw ApiException.notFound("Request");
+        case skir.DeclineOrganizationJoinRequestResponse_successWrapper():
+          debugPrint("Request $requestId declined successfully");
       }
     } catch (e) {
       state = previousState; // Rollback on any exception
@@ -507,7 +619,7 @@ int joinRequestCount(Ref ref) {
 @riverpod
 class OrganizationJoinCodes extends _$OrganizationJoinCodes {
   @override
-  Stream<List<JoinCode>> build() async* {
+  Stream<List<OrganizationJoinCode>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (userId == null) {
       yield [];
@@ -519,27 +631,39 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
       return;
     }
 
-    final request = member_api.ListJoinCodesRequest();
-    final stream = ref.requestProtoThenListen(
+    final request = skir.WatchOrganizationJoinCodesRequest();
+    yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.list",
+          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.watch",
       listenSubject:
-          "cloud.in.organization.$organizationId.members.join_codes.list",
-      request: request,
-      responseBuilder: member_api.ListJoinCodesResponse.new,
+          "cloud.in.organization.$organizationId.members.join_codes.watch",
+      requestBytes: skir.WatchOrganizationJoinCodesRequest.serializer.toBytes(
+        request,
+      ),
+      serializer: skir.WatchOrganizationJoinCodesResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchOrganizationJoinCodesResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchOrganizationJoinCodesResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchOrganizationJoinCodesResponse_listWrapper(
+            :final value,
+          ):
+            return value.map(OrganizationJoinCode.fromSkir).toList();
+          case skir.WatchOrganizationJoinCodesResponse_addWrapper(:final value):
+            return [...?previous, OrganizationJoinCode.fromSkir(value)];
+          case skir.WatchOrganizationJoinCodesResponse_removeWrapper(
+            :final value,
+          ):
+            return previous?.where((code) => code.code != value).toList() ?? [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.joinCodes.joinCodes.map(_protoToJoinCode).toList();
-    }
   }
 
   /// Revokes a join code.
-  Future<void> revokeCode(String codeId) async {
+  Future<void> revokeCode(skir.RecordId codeId) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) {
       throw ApiException.notAuthenticated();
@@ -558,20 +682,25 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     );
 
     try {
-      final request = member_api.RevokeJoinCodeRequest()..codeId = codeId;
+      final request = skir.RevokeOrganizationJoinCodeRequest(codeId: codeId);
 
       final response = await ref
           .read(natsProvider)
-          .requestProto(
+          .requestSkir(
             "cloud.out.user.$userId.organization.$organizationId.members.join_codes.revoke",
-            request,
-            member_api.RevokeJoinCodeResponse.new,
+            skir.RevokeOrganizationJoinCodeRequest.serializer.toBytes(request),
+            skir.RevokeOrganizationJoinCodeResponse.serializer,
           );
 
-      if (response.hasError()) {
-        state = previousState;
-        ref.invalidateSelf();
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.RevokeOrganizationJoinCodeResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.RevokeOrganizationJoinCodeResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper():
+          throw ApiException.notFound("Join Code");
+        case skir.RevokeOrganizationJoinCodeResponse_successWrapper():
+          debugPrint("Join code $codeId revoked successfully");
       }
     } catch (e) {
       state = previousState;

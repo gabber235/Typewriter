@@ -1,12 +1,12 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/logic/organization/organization.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: "Default", type: OrganizationIcon)
-Widget organizationIconUseCase(BuildContext context) {
+@widgetbook.UseCase(name: "Default", type: OrganizationLogo)
+Widget organizationLogoUseCase(BuildContext context) {
   final size = context.knobs.double.slider(
     label: "Size",
     initialValue: 40,
@@ -23,8 +23,8 @@ Widget organizationIconUseCase(BuildContext context) {
 
   return FakeApp(
     child: Center(
-      child: OrganizationIcon(
-        iconUrl: generateOrganizationIconUrl(seed),
+      child: OrganizationLogo(
+        logoUrl: generateOrganizationIconUrl(seed),
         size: size,
         borderRadius: borderRadius,
       ),
@@ -32,8 +32,8 @@ Widget organizationIconUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Placeholder", type: OrganizationIcon)
-Widget organizationIconPlaceholderUseCase(BuildContext context) {
+@widgetbook.UseCase(name: "Placeholder", type: OrganizationLogo)
+Widget organizationLogoPlaceholderUseCase(BuildContext context) {
   final size = context.knobs.double.slider(
     label: "Size",
     initialValue: 40,
@@ -49,7 +49,7 @@ Widget organizationIconPlaceholderUseCase(BuildContext context) {
 
   return FakeApp(
     child: Center(
-      child: OrganizationIcon(size: size, borderRadius: borderRadius),
+      child: OrganizationLogo(size: size, borderRadius: borderRadius),
     ),
   );
 }

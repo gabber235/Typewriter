@@ -137,7 +137,7 @@ class DecoratedTextField extends HookWidget {
         keyboardType: maxLines == 1 ? keyboardType : TextInputType.multiline,
         readOnly: readOnly,
         selectAllOnFocus: false,
-        inputFormatters: [if (inputFormatters != null) ...inputFormatters!],
+        inputFormatters: [...?inputFormatters],
         decoration: decoration,
       ),
     );

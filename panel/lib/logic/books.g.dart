@@ -130,8 +130,8 @@ final class FilteredBooksFamily extends $Family
 final bookIdProvider = BookIdProvider._();
 
 final class BookIdProvider
-    extends $FunctionalProvider<String?, String?, String?>
-    with $Provider<String?> {
+    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
+    with $Provider<skir.RecordId?> {
   BookIdProvider._()
     : super(
         from: null,
@@ -148,24 +148,24 @@ final class BookIdProvider
 
   @$internal
   @override
-  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  String? create(Ref ref) {
+  skir.RecordId? create(Ref ref) {
     return bookId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String? value) {
+  Override overrideWithValue(skir.RecordId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
+      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
     );
   }
 }
 
-String _$bookIdHash() => r'd84a340bc2c2d1d02b27b5a7d4b8ea2abdb05918';
+String _$bookIdHash() => r'fc8685e5f09e741786d6546574e56496f42b2432';
 
 @ProviderFor(book)
 final bookProvider = BookFamily._();

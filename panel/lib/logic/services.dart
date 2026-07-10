@@ -5,10 +5,10 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/api/service/registration.pb.dart"
     hide ServiceStatus;
 import "package:typewriter_panel/generated/models/service.pb.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/organization.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/selectable/data_blueprint.dart";
 import "package:typewriter_panel/logic/selectable/dynamic_data.dart";

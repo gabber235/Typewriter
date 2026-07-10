@@ -1,44 +1,45 @@
 import "dart:async";
+import "dart:convert";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
 import "package:protobuf/protobuf.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:skir_client/skir_client.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
-import "package:typewriter_panel/skirout/access/v1/sentinel.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/app_config.dart";
 
 part "nats.g.dart";
 
 /// Fetches the sentinel credentials from the API.
 @Riverpod(keepAlive: true)
-Future<GetSentinelCredentialsResponse_Success> sentinelCredentials(
+Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
   Ref ref,
 ) async {
   final url = Uri.parse("${AppConfig.api.baseUrl}/auth/sentinel");
   final response = await http.get(url);
 
   if (response.statusCode != 200) {
-    throw Exception(
-      "Failed to fetch sentinel credentials: ${response.statusCode}",
+    throw ApiException(
+      code: response.statusCode,
+      message: "Failed to fetch sentinel credentials",
     );
   }
 
-  final data = GetSentinelCredentialsResponse.serializer.fromBytes(
+  final data = skir.GetSentinelCredentialsResponse.serializer.fromBytes(
     response.bodyBytes,
   );
 
   return switch (data) {
-    GetSentinelCredentialsResponse_configurationErrorWrapper() =>
-      throw Exception("Configuration error"),
-    GetSentinelCredentialsResponse_invalidCredentialsWrapper() =>
-      throw Exception("Invalid credentials"),
-    GetSentinelCredentialsResponse_successWrapper(:final value) => value,
-    GetSentinelCredentialsResponse_unknown() => throw Exception(
-      "Unknown response",
-    ),
+    skir.GetSentinelCredentialsResponse_unknown() =>
+      throw ApiException.unknownResponseMessage(),
+    skir.GetSentinelCredentialsResponse_internalErrorWrapper() =>
+      throw ApiException.internalServerError(),
+    skir.GetSentinelCredentialsResponse_successWrapper(:final value) => value,
   };
 }
 
@@ -66,6 +67,10 @@ class Nats extends _$Nats {
       ..seed = sentinelCredentials.seed
       ..inboxPrefix = "_INBOX.${user.sub}";
 
+    final qualifier = skir.EntityPermissionQualifier.createUser(
+      organizationId: ref.watch(organizationIdProvider),
+    );
+
     unawaited(
       client
           .connect(
@@ -75,7 +80,9 @@ class Nats extends _$Nats {
               user: user.username ?? user.name ?? user.sub,
               pass: token,
               // ignore: only_use_keep_alive_inside_keep_alive
-              nkey: ref.watch(organizationIdProvider),
+              nkey: base64.encode(
+                skir.EntityPermissionQualifier.serializer.toBytes(qualifier),
+              ),
             ),
           )
           .onError((error, stackTrace) {
@@ -107,6 +114,15 @@ class NatsStatus extends _$NatsStatus {
 
 /// Extension on Client to add protobuf request/response methods
 extension ClientProtoExtension on Client {
+  Future<TResponse> requestSkir<TResponse>(
+    String subject,
+    Uint8List requestBytes,
+    Serializer<TResponse> serializer,
+  ) async {
+    final response = await request(subject, requestBytes);
+    return serializer.fromBytes(response.data);
+  }
+
   /// Send a protobuf request and receive a protobuf response
   @Deprecated("migrate to skir")
   Future<TResponse> requestProto<
@@ -126,6 +142,33 @@ extension ClientProtoExtension on Client {
 
 /// Extension on Ref to allow for listening to Nats topics while sending an initial request
 extension RefNatsExtension on Ref {
+  Stream<TData> watchRequest<TData, TResponse>({
+    required String subject,
+    required String listenSubject,
+    required Uint8List requestBytes,
+    required Serializer<TResponse> serializer,
+    required TData Function(TData?, TResponse) transformer,
+  }) async* {
+    final status = watch(natsStatusProvider);
+    if (status != Status.connected) {
+      throw Exception("NATS is not connected");
+    }
+    final client = watch(natsProvider);
+    final sub = client.sub(listenSubject);
+    onDispose(() => client.unSub(sub));
+
+    debugPrint("requesting: $subject");
+    await client.pub(subject, requestBytes, replyTo: listenSubject);
+
+    TData? lastData;
+
+    await for (final msg in sub.stream) {
+      final response = transformer(lastData, serializer.fromBytes(msg.data));
+      yield response;
+      lastData = response;
+    }
+  }
+
   /// Send a protobuf request and receive a protobuf response while listening to a topic
   @Deprecated("migrate to skir")
   Stream<TResponse> requestProtoThenListen<

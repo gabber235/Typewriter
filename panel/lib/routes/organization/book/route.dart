@@ -29,6 +29,7 @@ import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/utils/snake_case_input_formatter.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/utils/tree_view/tree_view.dart";
@@ -166,7 +167,7 @@ Future<List<Page>> _viewingPages(Ref ref) async {
 
   await ref.debounce(300.ms);
 
-  return await ref.watch(bookPagesProvider(bookId, search).future);
+  return await ref.watch(bookPagesProvider(bookId.id, search).future);
 }
 
 class BookSidebarContent extends HookConsumerWidget {
@@ -346,7 +347,7 @@ class _TreeCategory extends HookConsumerWidget {
     }
     await ref
         .read(booksProvider.notifier)
-        .changePagesChapters(bookId, chapter, newChapter);
+        .changePagesChapters(bookId.id, chapter, newChapter);
   }
 
   @override
@@ -1050,7 +1051,7 @@ class AddPageDialogue extends HookConsumerWidget {
     }
     final pageId = await ref
         .read(booksProvider.notifier)
-        .createPage(bookId, name, type, chapter, priority);
+        .createPage(bookId.id, name, type, chapter, priority);
 
     if (!autoNavigate) return pageId;
     unawaited(router.push(RouteRoute(pageId: pageId)));
@@ -1458,13 +1459,15 @@ Future<bool> showPageDeletionDialogue(
       final bookId = ref.read(bookIdProvider);
       final realmId = ref.read(realmIdProvider);
       if (bookId != null && realmId != null) {
-        unawaited(router.push(BookRoute(realmId: realmId, bookId: bookId)));
+        unawaited(
+          router.push(BookRoute(realmId: realmId.id, bookId: bookId.id)),
+        );
       }
 
       final organizationId = ref.read(organizationIdProvider);
       if (organizationId != null) {
         unawaited(
-          router.push(OrganizationRoute(organizationId: organizationId)),
+          router.push(OrganizationRoute(organizationId: organizationId.id)),
         );
       }
 

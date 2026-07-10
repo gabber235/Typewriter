@@ -8,6 +8,7 @@ import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/logic/proto/extensions.dart";
 import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/logic/services.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 Service generateRandomService() {
@@ -94,7 +95,14 @@ List<Override> realmProviderOverrides() => [
   realmIdProvider.overrideWith(
     (ref) => ref
         .watch(realmsProvider)
-        .whenData((realms) => realms.firstOrNull?.serviceId)
+        .whenData((realms) {
+          final serviceId = realms.firstOrNull?.serviceId;
+          if (serviceId == null) return null;
+          return skir.RecordId(
+            table: "service",
+            key: skir.RecordIdKey.wrapString(serviceId),
+          );
+        })
         .value,
   ),
   selectedRealmProvider.overrideWith((ref) async {

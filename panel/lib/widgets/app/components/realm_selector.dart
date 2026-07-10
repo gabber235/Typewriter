@@ -8,6 +8,7 @@ import "package:typewriter_panel/logic/organization/organization.dart";
 import "package:typewriter_panel/logic/realm.dart";
 import "package:typewriter_panel/logic/services.dart";
 import "package:typewriter_panel/utils/color.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/widgets/app/components/selector_popup.dart";
 import "package:typewriter_panel/widgets/generic/components/status_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/surface.dart";
@@ -134,7 +135,7 @@ class _RealmMenuContent extends HookConsumerWidget {
                         if (orgId == null) return;
                         context.router.navigate(
                           OrganizationRoute(
-                            organizationId: orgId,
+                            organizationId: orgId.id,
                             children: [RealmRoute(realmId: realm.serviceId)],
                           ),
                         );

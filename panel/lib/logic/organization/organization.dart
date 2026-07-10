@@ -1,20 +1,46 @@
 import "package:collection/collection.dart";
-import "package:fixnum/fixnum.dart";
 import "package:flutter/foundation.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app_router.dart";
-import "package:typewriter_panel/generated/api/organization/member.pb.dart"
-    as member_api;
-import "package:typewriter_panel/generated/api/user/organization.pb.dart";
-import "package:typewriter_panel/generated/models/organization.pb.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/members.dart";
-import "package:typewriter_panel/logic/proto/api_exception.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
 
+part "organization.freezed.dart";
 part "organization.g.dart";
+
+@freezed
+abstract class OrganizationData with _$OrganizationData {
+  const factory OrganizationData({
+    required skir.RecordId organizationId,
+    required String name,
+    required String logoUrl,
+  }) = _OrganizationData;
+
+  const OrganizationData._();
+
+  factory OrganizationData.fromSkir(skir.Organization org) {
+    return OrganizationData(
+      organizationId: org.organizationId,
+      name: org.name,
+      logoUrl: org.logoUrl,
+    );
+  }
+
+  skir.Organization toSkir() {
+    return skir.Organization(
+      organizationId: this.organizationId,
+      name: name,
+      logoUrl: logoUrl,
+    );
+  }
+}
 
 @riverpod
 class Organizations extends _$Organizations {
@@ -26,32 +52,42 @@ class Organizations extends _$Organizations {
       return;
     }
 
-    final request = ListOrganizationsRequest();
-    final stream = ref.requestProtoThenListen(
-      subject: "cloud.out.user.$userId.organization.list",
-      listenSubject: "cloud.in.user.$userId.organization.list",
-      request: request,
-      responseBuilder: ListOrganizationsResponse.new,
+    yield* ref.watchRequest(
+      subject: "cloud.out.user.$userId.organization.watch",
+      listenSubject: "cloud.in.user.$userId.organization.watch",
+      requestBytes: skir.WatchUserOrganizationsRequest.serializer.toBytes(
+        skir.WatchUserOrganizationsRequest(),
+      ),
+      serializer: skir.WatchUserOrganizationsResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchUserOrganizationsResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchUserOrganizationsResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchUserOrganizationsResponse_listWrapper(:final value):
+            return value.map(OrganizationData.fromSkir).toList();
+          case skir.WatchUserOrganizationsResponse_addWrapper(:final value):
+            return [...?previous, OrganizationData.fromSkir(value)];
+          case skir.WatchUserOrganizationsResponse_removeWrapper(:final value):
+            return previous
+                    ?.where((org) => org.organizationId != value)
+                    .toList() ??
+                [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.organizations.organizations.toList();
-    }
   }
 
   /// Creates a new organization and returns its ID
   ///
   /// [name] The name of the organization
-  /// [iconUrl] The URL of the organization's icon
+  /// [logoUrl] The URL of the organization's logo
   ///
   /// Returns the ID of the created organization
-  Future<String?> createOrganization({
+  Future<skir.RecordId> createOrganization({
     required String name,
-    required String iconUrl,
+    required String logoUrl,
   }) async {
     state.ensureReady();
 
@@ -60,43 +96,46 @@ class Organizations extends _$Organizations {
       throw ApiException.notAuthenticated();
     }
 
-    final request = CreateOrganizationRequest()
-      ..name = name
-      ..iconUrl = iconUrl;
-
-    debugPrint("Creating organization with name: $name and iconUrl: $iconUrl");
-
-    final response = await ref
-        .read(natsProvider)
-        .requestProto(
-          "cloud.out.user.$userId.organization.create",
-          request,
-          CreateOrganizationResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
-    }
-
-    assert(
-      response.hasOrganization(),
-      "When creating an organization, we didn't have an error but also didn't receive an organization",
+    final request = skir.CreateOrganizationRequest(
+      name: name,
+      logoUrl: logoUrl,
     );
 
     debugPrint(
-      "Organization created with ID: ${response.organization.organizationId}",
+      "Creating organization with name: '$name' and logoUrl: '$logoUrl'",
     );
 
-    final newOrganization = response.organization;
-    state = AsyncValue.data([...state.requireValue, newOrganization]);
+    final response = await ref
+        .read(natsProvider)
+        .requestSkir(
+          "cloud.out.user.$userId.organization.create",
+          skir.CreateOrganizationRequest.serializer.toBytes(request),
+          skir.CreateOrganizationResponse.serializer,
+        );
 
-    return newOrganization.organizationId;
+    switch (response) {
+      case skir.CreateOrganizationResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+      case skir.CreateOrganizationResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.CreateOrganizationResponse_successWrapper(:final value):
+        state = AsyncValue.data([
+          ...state.requireValue,
+          OrganizationData.fromSkir(value),
+        ]);
+        return value.organizationId;
+    }
   }
 }
 
 @riverpod
-String? organizationId(Ref ref) {
-  return ref.watch(routeParamProvider("organizationId"));
+skir.RecordId? organizationId(Ref ref) {
+  final id = ref.watch(routeParamProvider("organizationId"));
+  if (id == null) return null;
+  return skir.RecordId(
+    table: "organization",
+    key: skir.RecordIdKey.wrapString(id),
+  );
 }
 
 @riverpod
@@ -112,7 +151,7 @@ class Organization extends _$Organization {
   }
 
   /// Generates an invite link (join code) for the current organization.
-  Future<SecretFieldRevealed> generateInviteLink({
+  Future<SecretFieldRevealed> generateJoinCode({
     JoinCodeOptions options = const JoinCodeOptions(),
   }) async {
     final organizationId = ref.read(organizationIdProvider);
@@ -125,44 +164,42 @@ class Organization extends _$Organization {
       throw ApiException.notAuthenticated();
     }
 
-    final request = member_api.GenerateJoinCodeRequest()
-      ..singleUse = options.singleUse;
-
-    final expiration = member_api.JoinCodeExpiration();
-    switch (options.expiration) {
-      case JoinCodeExpirationNever():
-        expiration.never = true;
-      case JoinCodeExpirationDuration(:final duration):
-        expiration.durationSeconds = Int64(duration.inSeconds);
-    }
-    request.expiration = expiration;
-
-    if (options.autoAcceptRoleIds != null &&
-        options.autoAcceptRoleIds!.isNotEmpty) {
-      final autoAccept = member_api.JoinCodeAutoAcceptConfig()
-        ..roleIds.addAll(options.autoAcceptRoleIds!);
-      request.autoAccept = autoAccept;
-    }
+    final request = skir.GenerateOrganizationJoinCodeRequest(
+      singleUse: options.singleUse,
+      expiration: switch (options.expiration) {
+        JoinCodeExpirationNever() =>
+          skir.GenerateOrganizationJoinCodeRequest_Expiration.never,
+        JoinCodeExpirationDuration(:final duration) =>
+          skir.GenerateOrganizationJoinCodeRequest_Expiration.createDuration(
+            milliseconds: duration.inMilliseconds,
+          ),
+      },
+      autoAccept: skir.GenerateOrganizationJoinCodeRequest_AutoAccept(
+        roleIds: options.autoAcceptRoleIds,
+      ),
+    );
 
     final response = await ref
         .read(natsProvider)
-        .requestProto(
+        .requestSkir(
           "cloud.out.user.$userId.organization.$organizationId.members.join_codes.generate",
-          request,
-          member_api.GenerateJoinCodeResponse.new,
+          skir.GenerateOrganizationJoinCodeRequest.serializer.toBytes(request),
+          skir.GenerateOrganizationJoinCodeResponse.serializer,
         );
 
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
+    switch (response) {
+      case skir.GenerateOrganizationJoinCodeResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+      case skir.GenerateOrganizationJoinCodeResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.GenerateOrganizationJoinCodeResponse_successWrapper(
+        :final value,
+      ):
+        return SecretFieldRevealed(
+          value: value.code.id,
+          expiresAt: value.expiresAt,
+        );
     }
-
-    final joinCode = response.joinCode;
-    return SecretFieldRevealed(
-      value: joinCode.code,
-      expiresAt: joinCode.hasExpiresAt()
-          ? joinCode.expiresAt.toDateTime()
-          : null,
-    );
   }
 }
 

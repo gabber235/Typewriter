@@ -6,7 +6,9 @@ import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/logic/realm.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/context.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/widgets/app/components/action_shortcuts.dart";
 import "package:typewriter_panel/widgets/app/components/custom_appbar.dart";
 import "package:typewriter_panel/widgets/app/components/interaction_mode/mode_display.dart";
@@ -80,14 +82,14 @@ class OrganizationScaffold extends HookConsumerWidget {
 class OrganizationSidebarContent extends HookConsumerWidget {
   const OrganizationSidebarContent({super.key});
 
-  static List<Widget> organizationLinks(String organizationId) {
+  static List<Widget> organizationLinks(skir.RecordId organizationId) {
     return [
       const SidebarHeader(text: "Organization"),
       SidebarLink(
         icon: Icones(MaterialSymbols.dns),
         text: "Services",
         route: OrganizationRoute(
-          organizationId: organizationId,
+          organizationId: organizationId.id,
           children: [ServicesRoute()],
         ),
       ),
@@ -95,23 +97,26 @@ class OrganizationSidebarContent extends HookConsumerWidget {
         icon: Icones(MaterialSymbols.groups_rounded),
         text: "Members",
         route: OrganizationRoute(
-          organizationId: organizationId,
+          organizationId: organizationId.id,
           children: [MembersRoute()],
         ),
       ),
     ];
   }
 
-  static List<Widget> realmLinks(String organizationId, String realmId) {
+  static List<Widget> realmLinks(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) {
     return [
       const SidebarHeader(text: "Realm"),
       SidebarLink(
         icon: Icones(MaterialSymbols.library_books),
         text: "Library",
         route: OrganizationRoute(
-          organizationId: organizationId,
+          organizationId: organizationId.id,
           children: [
-            RealmRoute(realmId: realmId, children: [LibraryRoute()]),
+            RealmRoute(realmId: realmId.id, children: [LibraryRoute()]),
           ],
         ),
       ),
@@ -119,9 +124,9 @@ class OrganizationSidebarContent extends HookConsumerWidget {
         icon: Icones(MaterialSymbols.label),
         text: "Tags",
         route: OrganizationRoute(
-          organizationId: organizationId,
+          organizationId: organizationId.id,
           children: [
-            RealmRoute(realmId: realmId, children: [TagsRoute()]),
+            RealmRoute(realmId: realmId.id, children: [TagsRoute()]),
           ],
         ),
       ),

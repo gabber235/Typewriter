@@ -18,13 +18,13 @@ final sentinelCredentialsProvider = SentinelCredentialsProvider._();
 final class SentinelCredentialsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<GetSentinelCredentialsResponse_Success>,
-          GetSentinelCredentialsResponse_Success,
-          FutureOr<GetSentinelCredentialsResponse_Success>
+          AsyncValue<skir.GetSentinelCredentialsResponse_Success>,
+          skir.GetSentinelCredentialsResponse_Success,
+          FutureOr<skir.GetSentinelCredentialsResponse_Success>
         >
     with
-        $FutureModifier<GetSentinelCredentialsResponse_Success>,
-        $FutureProvider<GetSentinelCredentialsResponse_Success> {
+        $FutureModifier<skir.GetSentinelCredentialsResponse_Success>,
+        $FutureProvider<skir.GetSentinelCredentialsResponse_Success> {
   /// Fetches the sentinel credentials from the API.
   SentinelCredentialsProvider._()
     : super(
@@ -42,18 +42,17 @@ final class SentinelCredentialsProvider
 
   @$internal
   @override
-  $FutureProviderElement<GetSentinelCredentialsResponse_Success> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<skir.GetSentinelCredentialsResponse_Success>
+  $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<GetSentinelCredentialsResponse_Success> create(Ref ref) {
+  FutureOr<skir.GetSentinelCredentialsResponse_Success> create(Ref ref) {
     return sentinelCredentials(ref);
   }
 }
 
 String _$sentinelCredentialsHash() =>
-    r'0a4b52f5afd13a63f9b80d01adadeac9d3e64396';
+    r'ada8fb3ca054796ffdf14f0da85c68de770eb0f3';
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
@@ -86,7 +85,7 @@ final class NatsProvider extends $NotifierProvider<Nats, Client> {
   }
 }
 
-String _$natsHash() => r'73b21231aa557b277ce2d8f84e6cca2d6c147748';
+String _$natsHash() => r'a9bd99853a183cfa59a85f73fd3e8266e7c3814b';
 
 abstract class _$Nats extends $Notifier<Client> {
   Client build();

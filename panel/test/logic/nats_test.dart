@@ -3,12 +3,12 @@ import "dart:typed_data";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/generated/api/auth.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
-  group("ClientProtoExtension.requestProto", () {
+  group("ClientProtoExtension.requestSkir", () {
     late MockNatsClient mockClient;
 
     setUp(() {
@@ -20,62 +20,75 @@ void main() {
     });
 
     test("returns deserialized response on successful request", () async {
-      final expectedCredentials = SentinelCredentials()
-        ..jwt = "test-jwt"
-        ..seed = "test-seed";
-
-      final responseProto = GetSentinelCredentialsResponse(
-        credentials: expectedCredentials,
+      final responseProto = skir.GetSentinelCredentialsResponse.createSuccess(
+        jwt: "test-jwt",
+        seed: "test-seed",
       );
 
       mockClient.registerHandler(
         "test.subject",
-        (requestData) => responseProto.writeToBuffer(),
+        (requestData) =>
+            skir.GetSentinelCredentialsResponse.serializer.toBytes(
+          responseProto,
+        ),
       );
 
-      final response = await mockClient.requestProto(
+      final response = await mockClient.requestSkir(
         "test.subject",
-        SentinelCredentials(), // dummy request
-        GetSentinelCredentialsResponse.new,
+        skir.GetSentinelCredentialsRequest.serializer.toBytes(
+          skir.GetSentinelCredentialsRequest(),
+        ),
+        skir.GetSentinelCredentialsResponse.serializer,
       );
 
-      expect(response.hasCredentials(), isTrue);
-      expect(response.credentials.jwt, equals("test-jwt"));
-      expect(response.credentials.seed, equals("test-seed"));
+      expect(
+        response,
+        isA<skir.GetSentinelCredentialsResponse_successWrapper>(),
+      );
+      final success =
+          (response as skir.GetSentinelCredentialsResponse_successWrapper)
+              .value;
+      expect(success.jwt, equals("test-jwt"));
+      expect(success.seed, equals("test-seed"));
     });
 
     test("sends request bytes correctly", () async {
-      final request = SentinelCredentials()
-        ..jwt = "request-jwt"
-        ..seed = "request-seed";
+      final request = skir.GetSentinelCredentialsRequest();
 
       Uint8List? capturedRequestData;
       mockClient.registerHandler("test.subject", (requestData) {
         capturedRequestData = Uint8List.fromList(requestData);
-        return GetSentinelCredentialsResponse().writeToBuffer();
+        return skir.GetSentinelCredentialsResponse.serializer.toBytes(
+          skir.GetSentinelCredentialsResponse.createSuccess(
+            jwt: "",
+            seed: "",
+          ),
+        );
       });
 
-      await mockClient.requestProto(
+      await mockClient.requestSkir(
         "test.subject",
-        request,
-        GetSentinelCredentialsResponse.new,
+        skir.GetSentinelCredentialsRequest.serializer.toBytes(request),
+        skir.GetSentinelCredentialsResponse.serializer,
       );
 
       expect(capturedRequestData, isNotNull);
 
-      final decodedRequest = SentinelCredentials.fromBuffer(
+      final decodedRequest =
+          skir.GetSentinelCredentialsRequest.serializer.fromBytes(
         capturedRequestData!,
       );
-      expect(decodedRequest.jwt, equals("request-jwt"));
-      expect(decodedRequest.seed, equals("request-seed"));
+      expect(decodedRequest, isA<skir.GetSentinelCredentialsRequest>());
     });
 
     test("throws timeout when no handler registered", () async {
       expect(
-        () => mockClient.requestProto(
+        () => mockClient.requestSkir(
           "unregistered.subject",
-          SentinelCredentials(),
-          GetSentinelCredentialsResponse.new,
+          skir.GetSentinelCredentialsRequest.serializer.toBytes(
+            skir.GetSentinelCredentialsRequest(),
+          ),
+          skir.GetSentinelCredentialsResponse.serializer,
         ),
         throwsA(isA<TimeoutException>()),
       );
@@ -85,26 +98,35 @@ void main() {
       mockClient.setStatus(Status.disconnected);
 
       expect(
-        () => mockClient.requestProto(
+        () => mockClient.requestSkir(
           "test.subject",
-          SentinelCredentials(),
-          GetSentinelCredentialsResponse.new,
+          skir.GetSentinelCredentialsRequest.serializer.toBytes(
+            skir.GetSentinelCredentialsRequest(),
+          ),
+          skir.GetSentinelCredentialsResponse.serializer,
         ),
         throwsA(isA<NatsException>()),
       );
     });
 
     test("handles empty response data", () async {
-      mockClient.registerHandler("test.subject", (requestData) => Uint8List(0));
-
-      final response = await mockClient.requestProto(
+      mockClient.registerHandler(
         "test.subject",
-        SentinelCredentials(),
-        GetSentinelCredentialsResponse.new,
+        (requestData) => Uint8List(0),
       );
 
-      expect(response.hasCredentials(), isFalse);
-      expect(response.hasError(), isFalse);
+      final response = await mockClient.requestSkir(
+        "test.subject",
+        skir.GetSentinelCredentialsRequest.serializer.toBytes(
+          skir.GetSentinelCredentialsRequest(),
+        ),
+        skir.GetSentinelCredentialsResponse.serializer,
+      );
+
+      expect(
+        response,
+        isA<skir.GetSentinelCredentialsResponse_unknown>(),
+      );
     });
   });
 

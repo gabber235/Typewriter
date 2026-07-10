@@ -12,6 +12,7 @@ import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/async.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -231,7 +232,7 @@ class _MembersTable extends HookConsumerWidget {
   const _MembersTable({required this.members, required this.selectedIds});
 
   final List<OrganizationMember> members;
-  final ValueNotifier<Set<String>> selectedIds;
+  final ValueNotifier<Set<skir.RecordId>> selectedIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -287,7 +288,9 @@ class _MembersTable extends HookConsumerWidget {
                         if (allSelected || someSelected) {
                           selectedIds.value = {};
                         } else {
-                          selectedIds.value = members.map((m) => m.id).toSet();
+                          selectedIds.value = members
+                              .map((m) => m.userId)
+                              .toSet();
                         }
                       },
                     ),
@@ -334,7 +337,7 @@ class _MembersTable extends HookConsumerWidget {
                 ref,
                 member,
                 index,
-                selectedIds.value.contains(member.id),
+                selectedIds.value.contains(member.userId),
                 focusedRowIndex,
                 theme,
               ),
@@ -355,7 +358,7 @@ class _MembersTable extends HookConsumerWidget {
   ) {
     final isFocused = focusedRowIndex.value == index;
     return TableRow(
-      key: ValueKey(member.id),
+      key: ValueKey(member.userId),
       decoration: BoxDecoration(
         color: isSelected
             ? theme.colorScheme.primaryContainer.withValues(
@@ -381,16 +384,16 @@ class _MembersTable extends HookConsumerWidget {
                 onTap: () {
                   if (isSelected) {
                     selectedIds.value = selectedIds.value
-                        .where((id) => id != member.id)
+                        .where((id) => id != member.userId)
                         .toSet();
                   } else {
-                    selectedIds.value = {...selectedIds.value, member.id};
+                    selectedIds.value = {...selectedIds.value, member.userId};
                   }
                 },
                 child: _SelectableAvatar(
                   avatarUrl:
-                      member.avatarUrl.nullIfEmpty ??
-                      "$userIconUrl&seed=${member.id}",
+                      member.avatarUrl?.nullIfEmpty ??
+                      "$userIconUrl&seed=${member.userId}",
                   isSelected: isSelected,
                   radius: 16,
                 ),
@@ -410,10 +413,10 @@ class _MembersTable extends HookConsumerWidget {
               onTap: () {
                 if (isSelected) {
                   selectedIds.value = selectedIds.value
-                      .where((id) => id != member.id)
+                      .where((id) => id != member.userId)
                       .toSet();
                 } else {
-                  selectedIds.value = {...selectedIds.value, member.id};
+                  selectedIds.value = {...selectedIds.value, member.userId};
                 }
               },
               child: Padding(
@@ -424,22 +427,24 @@ class _MembersTable extends HookConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      member.name,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    BlurReveal(
-                      blurSigma: 3,
-                      child: Text(
-                        member.email,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
+                    if (member.name != null)
+                      Text(
+                        member.name!,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
+                    if (member.email != null)
+                      BlurReveal(
+                        blurSigma: 3,
+                        child: Text(
+                          member.email!,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -454,7 +459,7 @@ class _MembersTable extends HookConsumerWidget {
               onRolesChanged: (newRoles) {
                 ref
                     .read(organizationMembersProvider.notifier)
-                    .updateMemberRoles(member.id, newRoles)
+                    .updateMemberRoles(member.userId, newRoles)
                     .catchApiExceptionsAndDisplay(context);
               },
               placeholder: "Select roles",
@@ -474,8 +479,8 @@ class _RoleMultiselectDropdown extends HookConsumerWidget {
     required this.placeholder,
   });
 
-  final List<MemberRole> selectedRoles;
-  final ValueChanged<List<MemberRole>> onRolesChanged;
+  final List<OrganizationRole> selectedRoles;
+  final ValueChanged<List<OrganizationRole>> onRolesChanged;
   final String? placeholder;
 
   @override
@@ -485,7 +490,7 @@ class _RoleMultiselectDropdown extends HookConsumerWidget {
     return rolesAsync(
       name: "Roles",
       builder: (availableRoles) {
-        return MultiselectDropdown<MemberRole>(
+        return MultiselectDropdown<OrganizationRole>(
           focusNode: focusNode,
           dropdownMenuEntries: [
             for (final role in availableRoles)
@@ -505,7 +510,9 @@ class _RoleMultiselectDropdown extends HookConsumerWidget {
             onDelete: role.assignable
                 ? () {
                     onRolesChanged(
-                      selectedRoles.where((r) => r.id != role.id).toList(),
+                      selectedRoles
+                          .where((r) => r.roleId != role.roleId)
+                          .toList(),
                     );
                   }
                 : null,
@@ -517,7 +524,7 @@ class _RoleMultiselectDropdown extends HookConsumerWidget {
     );
   }
 
-  Widget _roleMenuEntry(BuildContext context, MemberRole role) {
+  Widget _roleMenuEntry(BuildContext context, OrganizationRole role) {
     final isSelected = selectedRoles.contains(role);
     final theme = Theme.of(context);
     return Row(

@@ -21,15 +21,15 @@ Future<Map<String, FocusNode>> _pumpTraversalScene(
   TraversalEdgeBehavior directionalTraversalEdgeBehavior =
       TraversalEdgeBehavior.stop,
 }) async {
-  final Map<String, FocusNode> nodes = {
+  final nodes = <String, FocusNode>{
     for (final placement in placements)
       placement.id: FocusNode(debugLabel: placement.id),
   };
-  final FocusScopeNode scopeNode = FocusScopeNode(
+  final scopeNode = FocusScopeNode(
     directionalTraversalEdgeBehavior: directionalTraversalEdgeBehavior,
   );
   addTearDown(() {
-    for (final FocusNode node in nodes.values) {
+    for (final node in nodes.values) {
       node.dispose();
     }
     scopeNode.dispose();
@@ -90,7 +90,7 @@ void _expectPrimary(Map<String, FocusNode> nodes, String id) {
 }
 
 void _expectNoPrimary(Map<String, FocusNode> nodes) {
-  for (final FocusNode node in nodes.values) {
+  for (final node in nodes.values) {
     expect(node.hasPrimaryFocus, isFalse);
   }
 }

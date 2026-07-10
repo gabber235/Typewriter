@@ -1,22 +1,27 @@
 import "package:typewriter_panel/generated/models/common.pb.dart" as proto;
+import "package:typewriter_panel/utils/collection.dart";
+import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
 
 /// Exception thrown when an API call returns an error response.
 ///
 /// This exception wraps the proto Error message and provides
 /// convenient access to error details.
 class ApiException implements Exception {
-  const ApiException({
-    required this.code,
-    required this.message,
-    this.details = const [],
-  });
+  const ApiException({required this.code, required this.message});
 
   /// Creates an ApiException from a proto Error message.
   factory ApiException.fromProto(proto.Error error) {
+    return ApiException(code: error.code, message: error.message);
+  }
+
+  factory ApiException.internalServerError() {
+    return ApiException(code: 500, message: funnyErrorTitles.randomElement());
+  }
+
+  factory ApiException.unknownResponseMessage() {
     return ApiException(
-      code: error.code,
-      message: error.message,
-      details: error.details.toList(),
+      code: 422,
+      message: "Invalid response, please try to update or refresh your browser",
     );
   }
 
@@ -29,8 +34,23 @@ class ApiException implements Exception {
     return const ApiException(code: 400, message: "No organization selected");
   }
 
+  factory ApiException.badRequest(String message) {
+    return ApiException(code: 400, message: message);
+  }
+
+  factory ApiException.userNotMemberError() {
+    return const ApiException(
+      code: 403,
+      message: "User is not a member of this organization",
+    );
+  }
+
   factory ApiException.notFound(String resource) {
     return ApiException(code: 404, message: "$resource not found");
+  }
+
+  factory ApiException.conflict(String message) {
+    return ApiException(code: 409, message: message);
   }
 
   /// The error code
@@ -38,9 +58,6 @@ class ApiException implements Exception {
 
   /// Human-readable error message.
   final String message;
-
-  /// Additional error details.
-  final List<String> details;
 
   /// Returns true if this is a client error (4xx).
   bool get isClientError {
@@ -63,18 +80,6 @@ class ApiException implements Exception {
 
   @override
   String toString() {
-    if (details.isEmpty) {
-      return message;
-    }
-    return "$message\nDetails: ${details.join(", ")}";
-  }
-
-  /// Returns a user-friendly message suitable for display.
-  String toUserMessage() {
-    // For 500 errors, provide a generic message
-    if (isServerError) {
-      return "Something went wrong. Please try again later.";
-    }
-    return message;
+    return "$code: $message";
   }
 }

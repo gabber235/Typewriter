@@ -33,7 +33,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'695aa57856e5466c30e02f83392cebbee0704f78';
+String _$organizationsHash() => r'b7a4969b5dac94c0ec561713b5c0a426b07d7f10';
 
 abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
   Stream<List<OrganizationData>> build();
@@ -62,8 +62,8 @@ abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
 final organizationIdProvider = OrganizationIdProvider._();
 
 final class OrganizationIdProvider
-    extends $FunctionalProvider<String?, String?, String?>
-    with $Provider<String?> {
+    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
+    with $Provider<skir.RecordId?> {
   OrganizationIdProvider._()
     : super(
         from: null,
@@ -80,24 +80,24 @@ final class OrganizationIdProvider
 
   @$internal
   @override
-  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  String? create(Ref ref) {
+  skir.RecordId? create(Ref ref) {
     return organizationId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String? value) {
+  Override overrideWithValue(skir.RecordId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
+      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
     );
   }
 }
 
-String _$organizationIdHash() => r'f6f5c4b016f460787d6e45f57e4728b708016496';
+String _$organizationIdHash() => r'beb72fd1ea7bd0ac994e386364ac0b137ea7894c';
 
 @ProviderFor(Organization)
 final organizationProvider = OrganizationProvider._();
@@ -123,7 +123,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'51da4d3467d6f731373e0d8cabc5de68057a369f';
+String _$organizationHash() => r'dfe22b8d23d08b288893031da09f417d6c587435';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

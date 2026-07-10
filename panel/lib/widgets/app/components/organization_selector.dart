@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app_router.dart";
-import "package:typewriter_panel/generated/models/organization.pb.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/organization_icon.dart";
 import "package:typewriter_panel/widgets/app/components/selector_popup.dart";
@@ -26,7 +26,7 @@ class OrganizationSelector extends HookConsumerWidget {
           if (selected != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: OrganizationIcon(iconUrl: selected.iconUrl, size: 24),
+              child: OrganizationLogo(logoUrl: selected.logoUrl, size: 24),
             ),
           Text(
             selected?.name.formatted ?? "Select Organization",
@@ -84,7 +84,9 @@ class _OrganizationMenuContent extends HookConsumerWidget {
                     ref
                         .read(appRouterProvider)
                         .navigate(
-                          OrganizationRoute(organizationId: org.organizationId),
+                          OrganizationRoute(
+                            organizationId: org.organizationId.id,
+                          ),
                         );
                     onDismiss(org);
                   },
@@ -134,7 +136,7 @@ class _OrganizationsList extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: ListTile(
                     dense: true,
-                    leading: OrganizationIcon(iconUrl: org.iconUrl, size: 32),
+                    leading: OrganizationLogo(logoUrl: org.logoUrl, size: 32),
                     title: Text(
                       org.name.formatted,
                       style: Theme.of(
@@ -177,7 +179,7 @@ class _OrganizationActions extends HookConsumerWidget {
                 .read(appRouterProvider)
                 .navigate(
                   OrganizationRoute(
-                    organizationId: organization.organizationId,
+                    organizationId: organization.organizationId.id,
                     children: [MembersRoute()],
                   ),
                 );
