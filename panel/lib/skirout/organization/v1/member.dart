@@ -13,8 +13,8 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
-import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
+import "./role.dart" as _lib_organization_v1_role;
 
 // -----------------------------------------------------------------------------
 // struct OrganizationMember
@@ -25,7 +25,7 @@ sealed class OrganizationMember_orMutable {
   _core.String? get name;
   _core.String? get email;
   _core.String? get avatarUrl;
-  _core.Iterable<OrganizationRole_orMutable> get roles;
+  _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> get roles;
   _core.DateTime get joinedAt;
 
   OrganizationMember toFrozen();
@@ -42,7 +42,7 @@ final class OrganizationMember implements OrganizationMember_orMutable {
   @_core.override
   final _core.String? avatarUrl;
   @_core.override
-  final _core.Iterable<OrganizationRole> roles;
+  final _core.Iterable<_lib_organization_v1_role.OrganizationRole> roles;
   @_core.override
   final _core.DateTime joinedAt;
   _skir.internal__UnrecognizedFields? _u;
@@ -52,7 +52,7 @@ final class OrganizationMember implements OrganizationMember_orMutable {
     required _core.String? name,
     required _core.String? email,
     required _core.String? avatarUrl,
-    required _core.Iterable<OrganizationRole_orMutable> roles,
+    required _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles,
     required _core.DateTime joinedAt,
   }) => OrganizationMember._(
     userId.toFrozen(),
@@ -180,7 +180,7 @@ final class OrganizationMember implements OrganizationMember_orMutable {
         "roles",
         4,
         _skir.Serializers.iterable(
-          OrganizationRole.serializer,
+          _lib_organization_v1_role.OrganizationRole.serializer,
         ),
         "",
         (it) => it.roles,
@@ -217,7 +217,7 @@ final class OrganizationMember_mutable implements OrganizationMember_orMutable {
   _core.String? name;
   _core.String? email;
   _core.String? avatarUrl;
-  _core.Iterable<OrganizationRole_orMutable> roles;
+  _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles;
   _core.DateTime joinedAt;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -243,9 +243,9 @@ final class OrganizationMember_mutable implements OrganizationMember_orMutable {
 
   /// If the value of [roles] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
-  _core.List<OrganizationRole_orMutable> get mutableRoles {
+  _core.List<_lib_organization_v1_role.OrganizationRole_orMutable> get mutableRoles {
     final value = this.roles;
-    if (value is _skir.internal__MutableList<OrganizationRole_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_organization_v1_role.OrganizationRole_orMutable>) {
       return value;
     } else {
       return this.roles = _skir.internal__MutableList([...value]);
@@ -261,246 +261,6 @@ final class OrganizationMember_mutable implements OrganizationMember_orMutable {
     avatarUrl: this.avatarUrl,
     roles: this.roles,
     joinedAt: this.joinedAt,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct OrganizationRole
-// -----------------------------------------------------------------------------
-
-sealed class OrganizationRole_orMutable {
-  _lib_kernel_v1_record_id.RecordId_orMutable get roleId;
-  _core.String get name;
-  _lib_kernel_v1_color.Color_orMutable get color;
-  _core.bool get defaultRole;
-  _core.bool get assignable;
-  _core.bool get deletable;
-
-  OrganizationRole toFrozen();
-}
-
-/// Deeply immutable.
-final class OrganizationRole implements OrganizationRole_orMutable {
-  @_core.override
-  final _lib_kernel_v1_record_id.RecordId roleId;
-  @_core.override
-  final _core.String name;
-  @_core.override
-  final _lib_kernel_v1_color.Color color;
-  @_core.override
-  final _core.bool defaultRole;
-  @_core.override
-  final _core.bool assignable;
-  @_core.override
-  final _core.bool deletable;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory OrganizationRole({
-    required _lib_kernel_v1_record_id.RecordId_orMutable roleId,
-    required _core.String name,
-    required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.bool defaultRole,
-    required _core.bool assignable,
-    required _core.bool deletable,
-  }) => OrganizationRole._(
-    roleId.toFrozen(),
-    name,
-    color.toFrozen(),
-    defaultRole,
-    assignable,
-    deletable,
-  );
-
-  OrganizationRole._(
-    this.roleId,
-    this.name,
-    this.color,
-    this.defaultRole,
-    this.assignable,
-    this.deletable,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = OrganizationRole._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    "",
-    _lib_kernel_v1_color.Color.defaultInstance,
-    false,
-    false,
-    false,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static OrganizationRole_mutable mutable() => OrganizationRole_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    "",
-    _lib_kernel_v1_color.Color.defaultInstance,
-    false,
-    false,
-    false,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  OrganizationRole toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  OrganizationRole_mutable toMutable() => OrganizationRole_mutable._(
-    this.roleId,
-    this.name,
-    this.color,
-    this.defaultRole,
-    this.assignable,
-    this.deletable,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! OrganizationRole) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.roleId,
-    this.name,
-    this.color,
-    this.defaultRole,
-    this.assignable,
-    this.deletable,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `OrganizationRole` instances.
-  static _skir.StructSerializer<OrganizationRole, OrganizationRole_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "role_id",
-        "roleId",
-        0,
-        _lib_kernel_v1_record_id.RecordId.serializer,
-        "",
-        (it) => it.roleId,
-        (it, v) => it.roleId = v,
-      );
-      _serializerBuilder.addField(
-        "name",
-        "name",
-        1,
-        _skir.Serializers.string,
-        "",
-        (it) => it.name,
-        (it, v) => it.name = v,
-      );
-      _serializerBuilder.addField(
-        "color",
-        "color",
-        2,
-        _lib_kernel_v1_color.Color.serializer,
-        "",
-        (it) => it.color,
-        (it, v) => it.color = v,
-      );
-      _serializerBuilder.addField(
-        "default_role",
-        "defaultRole",
-        3,
-        _skir.Serializers.bool,
-        "",
-        (it) => it.defaultRole,
-        (it, v) => it.defaultRole = v,
-      );
-      _serializerBuilder.addField(
-        "assignable",
-        "assignable",
-        4,
-        _skir.Serializers.bool,
-        "",
-        (it) => it.assignable,
-        (it, v) => it.assignable = v,
-      );
-      _serializerBuilder.addField(
-        "deletable",
-        "deletable",
-        5,
-        _skir.Serializers.bool,
-        "",
-        (it) => it.deletable,
-        (it, v) => it.deletable = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "organization/v1/member.skir:OrganizationRole",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (OrganizationRole_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [OrganizationRole].
-final class OrganizationRole_mutable implements OrganizationRole_orMutable {
-  _lib_kernel_v1_record_id.RecordId_orMutable roleId;
-  _core.String name;
-  _lib_kernel_v1_color.Color_orMutable color;
-  _core.bool defaultRole;
-  _core.bool assignable;
-  _core.bool deletable;
-  _skir.internal__UnrecognizedFields? _u;
-
-  OrganizationRole_mutable._(
-    this.roleId,
-    this.name,
-    this.color,
-    this.defaultRole,
-    this.assignable,
-    this.deletable,
-  );
-
-  /// If the value of [roleId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [roleId] and returns it.
-  _lib_kernel_v1_record_id.RecordId_mutable get mutableRoleId {
-    final value = this.roleId;
-    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
-      return value;
-    } else {
-      return this.roleId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
-    }
-  }
-
-  /// If the value of [color] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
-  _lib_kernel_v1_color.Color_mutable get mutableColor {
-    final value = this.color;
-    if (value is _lib_kernel_v1_color.Color_mutable) {
-      return value;
-    } else {
-      return this.color = (value as _lib_kernel_v1_color.Color).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  OrganizationRole toFrozen() => OrganizationRole(
-    roleId: this.roleId,
-    name: this.name,
-    color: this.color,
-    defaultRole: this.defaultRole,
-    assignable: this.assignable,
-    deletable: this.deletable,
   ).._u = this._u;
 }
 
@@ -693,7 +453,7 @@ sealed class WatchOrganizationMembersResponse {
     required _core.String? name,
     required _core.String? email,
     required _core.String? avatarUrl,
-    required _core.Iterable<OrganizationRole_orMutable> roles,
+    required _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles,
     required _core.DateTime joinedAt,
   }) => WatchOrganizationMembersResponse.wrapAdd(
     OrganizationMember(
@@ -1381,7 +1141,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
     required _core.String? name,
     required _core.String? email,
     required _core.String? avatarUrl,
-    required _core.Iterable<OrganizationRole_orMutable> roles,
+    required _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles,
     required _core.DateTime joinedAt,
   }) => UpdateOrganizationMemberRolesResponse.wrapSuccess(
     OrganizationMember(

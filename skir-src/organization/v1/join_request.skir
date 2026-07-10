@@ -1,8 +1,6 @@
 import { RecordId } from "kernel/v1/record_id.skir";
-import {
-  OrganizationMember,
-  OrganizationRole,
-} from "organization/v1/member.skir";
+import { OrganizationMember } from "organization/v1/member.skir";
+import { OrganizationRole } from "organization/v1/role.skir";
 
 // OrganizationJoinRequest represents a pending request from a user to join an organization.
 struct OrganizationJoinRequest {

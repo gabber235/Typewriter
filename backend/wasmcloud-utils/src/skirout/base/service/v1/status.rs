@@ -27,23 +27,25 @@ pub struct ServiceBinding_Bound {
 
 impl ServiceBinding_Bound {
     pub fn default_ref() -> &'static ServiceBinding_Bound {
-        static D: std::sync::LazyLock<ServiceBinding_Bound> = std::sync::LazyLock::new(ServiceBinding_Bound::default);
+        static D: std::sync::LazyLock<ServiceBinding_Bound> =
+            std::sync::LazyLock::new(ServiceBinding_Bound::default);
         &D
     }
 }
 
 impl ServiceBinding_Bound {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceBinding_Bound> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceBinding_Bound>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "ServiceBinding.Bound",
-                    "",
-                    |x: &ServiceBinding_Bound| &x._unrecognized,
-                    |x: &mut ServiceBinding_Bound, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceBinding_Bound>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/status.skir",
+                "ServiceBinding.Bound",
+                "",
+                |x: &ServiceBinding_Bound| &x._unrecognized,
+                |x: &mut ServiceBinding_Bound, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceBinding_Bound> {
@@ -65,28 +67,32 @@ pub struct ServiceBinding_Unbound {
 
 impl ServiceBinding_Unbound {
     pub fn default_ref() -> &'static ServiceBinding_Unbound {
-        static D: std::sync::LazyLock<ServiceBinding_Unbound> = std::sync::LazyLock::new(ServiceBinding_Unbound::default);
+        static D: std::sync::LazyLock<ServiceBinding_Unbound> =
+            std::sync::LazyLock::new(ServiceBinding_Unbound::default);
         &D
     }
 }
 
 impl ServiceBinding_Unbound {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceBinding_Unbound> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceBinding_Unbound>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "ServiceBinding.Unbound",
-                    "",
-                    |x: &ServiceBinding_Unbound| &x._unrecognized,
-                    |x: &mut ServiceBinding_Unbound, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceBinding_Unbound>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/status.skir",
+                "ServiceBinding.Unbound",
+                "",
+                |x: &ServiceBinding_Unbound| &x._unrecognized,
+                |x: &mut ServiceBinding_Unbound, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceBinding_Unbound> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ServiceBinding_Unbound::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ServiceBinding_Unbound::_adapter(),
+        )
     }
 }
 
@@ -109,21 +115,25 @@ impl Default for ServiceBinding {
 
 impl ServiceBinding {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ServiceBinding> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ServiceBinding>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ServiceBinding| match x {
-                        ServiceBinding::Unknown(_) => 0,
-                        ServiceBinding::Bound(_) => 1,
-                        ServiceBinding::Unbound(_) => 2,
-                    },
-                    |u| ServiceBinding::Unknown(Some(u)),
-                    |x: &ServiceBinding| match x { ServiceBinding::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/status.skir",
-                    "ServiceBinding",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ServiceBinding>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ServiceBinding| match x {
+                    ServiceBinding::Unknown(_) => 0,
+                    ServiceBinding::Bound(_) => 1,
+                    ServiceBinding::Unbound(_) => 2,
+                },
+                |u| ServiceBinding::Unknown(Some(u)),
+                |x: &ServiceBinding| match x {
+                    ServiceBinding::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/status.skir",
+                "ServiceBinding",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceBinding> {
@@ -144,28 +154,32 @@ pub struct GetServiceStatusRequest {
 
 impl GetServiceStatusRequest {
     pub fn default_ref() -> &'static GetServiceStatusRequest {
-        static D: std::sync::LazyLock<GetServiceStatusRequest> = std::sync::LazyLock::new(GetServiceStatusRequest::default);
+        static D: std::sync::LazyLock<GetServiceStatusRequest> =
+            std::sync::LazyLock::new(GetServiceStatusRequest::default);
         &D
     }
 }
 
 impl GetServiceStatusRequest {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceStatusRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "GetServiceStatusRequest",
-                    "",
-                    |x: &GetServiceStatusRequest| &x._unrecognized,
-                    |x: &mut GetServiceStatusRequest, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetServiceStatusRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/status.skir",
+                "GetServiceStatusRequest",
+                "",
+                |x: &GetServiceStatusRequest| &x._unrecognized,
+                |x: &mut GetServiceStatusRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetServiceStatusRequest::_adapter(),
+        )
     }
 }
 
@@ -177,33 +191,39 @@ impl GetServiceStatusRequest {
 pub struct GetServiceStatusResponse_Status {
     pub binding: ServiceBinding,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_Status>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_Status>>,
 }
 
 impl GetServiceStatusResponse_Status {
     pub fn default_ref() -> &'static GetServiceStatusResponse_Status {
-        static D: std::sync::LazyLock<GetServiceStatusResponse_Status> = std::sync::LazyLock::new(GetServiceStatusResponse_Status::default);
+        static D: std::sync::LazyLock<GetServiceStatusResponse_Status> =
+            std::sync::LazyLock::new(GetServiceStatusResponse_Status::default);
         &D
     }
 }
 
 impl GetServiceStatusResponse_Status {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_Status> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_Status>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "GetServiceStatusResponse.Status",
-                    "",
-                    |x: &GetServiceStatusResponse_Status| &x._unrecognized,
-                    |x: &mut GetServiceStatusResponse_Status, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_Status> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_Status>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/status.skir",
+                "GetServiceStatusResponse.Status",
+                "",
+                |x: &GetServiceStatusResponse_Status| &x._unrecognized,
+                |x: &mut GetServiceStatusResponse_Status, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusResponse_Status> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_Status::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetServiceStatusResponse_Status::_adapter(),
+        )
     }
 }
 
@@ -214,33 +234,41 @@ impl GetServiceStatusResponse_Status {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GetServiceStatusResponse_ServiceNotFound {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_ServiceNotFound>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_ServiceNotFound>>,
 }
 
 impl GetServiceStatusResponse_ServiceNotFound {
     pub fn default_ref() -> &'static GetServiceStatusResponse_ServiceNotFound {
-        static D: std::sync::LazyLock<GetServiceStatusResponse_ServiceNotFound> = std::sync::LazyLock::new(GetServiceStatusResponse_ServiceNotFound::default);
+        static D: std::sync::LazyLock<GetServiceStatusResponse_ServiceNotFound> =
+            std::sync::LazyLock::new(GetServiceStatusResponse_ServiceNotFound::default);
         &D
     }
 }
 
 impl GetServiceStatusResponse_ServiceNotFound {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_ServiceNotFound> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_ServiceNotFound>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "GetServiceStatusResponse.ServiceNotFound",
-                    "",
-                    |x: &GetServiceStatusResponse_ServiceNotFound| &x._unrecognized,
-                    |x: &mut GetServiceStatusResponse_ServiceNotFound, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        GetServiceStatusResponse_ServiceNotFound,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_ServiceNotFound>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/status.skir",
+                "GetServiceStatusResponse.ServiceNotFound",
+                "",
+                |x: &GetServiceStatusResponse_ServiceNotFound| &x._unrecognized,
+                |x: &mut GetServiceStatusResponse_ServiceNotFound, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusResponse_ServiceNotFound> {
+    pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusResponse_ServiceNotFound>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_ServiceNotFound::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetServiceStatusResponse_ServiceNotFound::_adapter(),
+        )
     }
 }
 
@@ -251,33 +279,40 @@ impl GetServiceStatusResponse_ServiceNotFound {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GetServiceStatusResponse_InternalError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_InternalError>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_InternalError>>,
 }
 
 impl GetServiceStatusResponse_InternalError {
     pub fn default_ref() -> &'static GetServiceStatusResponse_InternalError {
-        static D: std::sync::LazyLock<GetServiceStatusResponse_InternalError> = std::sync::LazyLock::new(GetServiceStatusResponse_InternalError::default);
+        static D: std::sync::LazyLock<GetServiceStatusResponse_InternalError> =
+            std::sync::LazyLock::new(GetServiceStatusResponse_InternalError::default);
         &D
     }
 }
 
 impl GetServiceStatusResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "GetServiceStatusResponse.InternalError",
-                    "",
-                    |x: &GetServiceStatusResponse_InternalError| &x._unrecognized,
-                    |x: &mut GetServiceStatusResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/status.skir",
+                "GetServiceStatusResponse.InternalError",
+                "",
+                |x: &GetServiceStatusResponse_InternalError| &x._unrecognized,
+                |x: &mut GetServiceStatusResponse_InternalError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusResponse_InternalError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_InternalError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetServiceStatusResponse_InternalError::_adapter(),
+        )
     }
 }
 
@@ -301,27 +336,33 @@ impl Default for GetServiceStatusResponse {
 
 impl GetServiceStatusResponse {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GetServiceStatusResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<GetServiceStatusResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &GetServiceStatusResponse| match x {
-                        GetServiceStatusResponse::Unknown(_) => 0,
-                        GetServiceStatusResponse::Status(_) => 1,
-                        GetServiceStatusResponse::ServiceNotFound(_) => 2,
-                        GetServiceStatusResponse::InternalError(_) => 3,
-                    },
-                    |u| GetServiceStatusResponse::Unknown(Some(u)),
-                    |x: &GetServiceStatusResponse| match x { GetServiceStatusResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/status.skir",
-                    "GetServiceStatusResponse",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<GetServiceStatusResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &GetServiceStatusResponse| match x {
+                    GetServiceStatusResponse::Unknown(_) => 0,
+                    GetServiceStatusResponse::Status(_) => 1,
+                    GetServiceStatusResponse::ServiceNotFound(_) => 2,
+                    GetServiceStatusResponse::InternalError(_) => 3,
+                },
+                |u| GetServiceStatusResponse::Unknown(Some(u)),
+                |x: &GetServiceStatusResponse| match x {
+                    GetServiceStatusResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/status.skir",
+                "GetServiceStatusResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(GetServiceStatusResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            GetServiceStatusResponse::_adapter(),
+        )
     }
 }
 
@@ -330,50 +371,155 @@ impl GetServiceStatusResponse {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceBinding_Bound> = ServiceBinding_Bound::_adapter() as *const _ as *mut _;
-                (*a).add_field("organization_id", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceBinding_Bound| &x.organization_id, |x: &mut ServiceBinding_Bound, v| x.organization_id = v);
-                (*a).add_field("organization_name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &ServiceBinding_Bound| &x.organization_name, |x: &mut ServiceBinding_Bound, v| x.organization_name = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceBinding_Unbound> = ServiceBinding_Unbound::_adapter() as *const _ as *mut _;
-                (*a).add_field("registration_token", 0, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &ServiceBinding_Unbound| &x.registration_token, |x: &mut ServiceBinding_Unbound, v| x.registration_token = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ServiceBinding> = ServiceBinding::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("bound", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceBinding_Bound::_adapter()), "", |v| ServiceBinding::Bound(Box::new(v)), |x| match x { ServiceBinding::Bound(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unbound", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ServiceBinding_Unbound::_adapter()), "", |v| ServiceBinding::Unbound(Box::new(v)), |x| match x { ServiceBinding::Unbound(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusRequest> = GetServiceStatusRequest::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_Status> = GetServiceStatusResponse_Status::_adapter() as *const _ as *mut _;
-                (*a).add_field("binding", 0, crate::skir_client::internal::enum_serializer_from_static(ServiceBinding::_adapter()), "", |x: &GetServiceStatusResponse_Status| &x.binding, |x: &mut GetServiceStatusResponse_Status, v| x.binding = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_ServiceNotFound> = GetServiceStatusResponse_ServiceNotFound::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError> = GetServiceStatusResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<GetServiceStatusResponse> = GetServiceStatusResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("status", 1, 1, crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_Status::_adapter()), "", |v| GetServiceStatusResponse::Status(Box::new(v)), |x| match x { GetServiceStatusResponse::Status(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("service_not_found", 2, 2, crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_ServiceNotFound::_adapter()), "", |v| GetServiceStatusResponse::ServiceNotFound(Box::new(v)), |x| match x { GetServiceStatusResponse::ServiceNotFound(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_InternalError::_adapter()), "", |v| GetServiceStatusResponse::InternalError(Box::new(v)), |x| match x { GetServiceStatusResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceBinding_Bound> =
+                ServiceBinding_Bound::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "organization_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceBinding_Bound| &x.organization_id,
+                |x: &mut ServiceBinding_Bound, v| x.organization_id = v,
+            );
+            (*a).add_field(
+                "organization_name",
+                1,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
+                "",
+                |x: &ServiceBinding_Bound| &x.organization_name,
+                |x: &mut ServiceBinding_Bound, v| x.organization_name = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceBinding_Unbound> =
+                ServiceBinding_Unbound::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "registration_token",
+                0,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
+                "",
+                |x: &ServiceBinding_Unbound| &x.registration_token,
+                |x: &mut ServiceBinding_Unbound, v| x.registration_token = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ServiceBinding> =
+                ServiceBinding::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "bound",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServiceBinding_Bound::_adapter(),
+                ),
+                "",
+                |v| ServiceBinding::Bound(Box::new(v)),
+                |x| match x {
+                    ServiceBinding::Bound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unbound",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServiceBinding_Unbound::_adapter(),
+                ),
+                "",
+                |v| ServiceBinding::Unbound(Box::new(v)),
+                |x| match x {
+                    ServiceBinding::Unbound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusRequest> =
+                GetServiceStatusRequest::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GetServiceStatusResponse_Status,
+            > = GetServiceStatusResponse_Status::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "binding",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ServiceBinding::_adapter(),
+                ),
+                "",
+                |x: &GetServiceStatusResponse_Status| &x.binding,
+                |x: &mut GetServiceStatusResponse_Status, v| x.binding = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GetServiceStatusResponse_ServiceNotFound,
+            > = GetServiceStatusResponse_ServiceNotFound::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GetServiceStatusResponse_InternalError,
+            > = GetServiceStatusResponse_InternalError::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<GetServiceStatusResponse> =
+                GetServiceStatusResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "status",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GetServiceStatusResponse_Status::_adapter(),
+                ),
+                "",
+                |v| GetServiceStatusResponse::Status(Box::new(v)),
+                |x| match x {
+                    GetServiceStatusResponse::Status(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "service_not_found",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GetServiceStatusResponse_ServiceNotFound::_adapter(),
+                ),
+                "",
+                |v| GetServiceStatusResponse::ServiceNotFound(Box::new(v)),
+                |x| match x {
+                    GetServiceStatusResponse::ServiceNotFound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GetServiceStatusResponse_InternalError::_adapter(),
+                ),
+                "",
+                |v| GetServiceStatusResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    GetServiceStatusResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -381,15 +527,16 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn get_service_status_method() -> &'static crate::skir_client::Method<GetServiceStatusRequest, GetServiceStatusResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<GetServiceStatusRequest, GetServiceStatusResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "GetServiceStatus".to_string(),
-            number: 955610_i64,
-            request_serializer: GetServiceStatusRequest::serializer(),
-            response_serializer: GetServiceStatusResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn get_service_status_method()
+-> &'static crate::skir_client::Method<GetServiceStatusRequest, GetServiceStatusResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<GetServiceStatusRequest, GetServiceStatusResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "GetServiceStatus".to_string(),
+        number: 955610_i64,
+        request_serializer: GetServiceStatusRequest::serializer(),
+        response_serializer: GetServiceStatusResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

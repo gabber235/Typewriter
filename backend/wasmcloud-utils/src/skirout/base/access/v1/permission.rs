@@ -21,33 +21,39 @@
 pub struct EntityPermissionQualifier_User {
     pub organization_id: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EntityPermissionQualifier_User>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<EntityPermissionQualifier_User>>,
 }
 
 impl EntityPermissionQualifier_User {
     pub fn default_ref() -> &'static EntityPermissionQualifier_User {
-        static D: std::sync::LazyLock<EntityPermissionQualifier_User> = std::sync::LazyLock::new(EntityPermissionQualifier_User::default);
+        static D: std::sync::LazyLock<EntityPermissionQualifier_User> =
+            std::sync::LazyLock::new(EntityPermissionQualifier_User::default);
         &D
     }
 }
 
 impl EntityPermissionQualifier_User {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_User> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_User>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "EntityPermissionQualifier.User",
-                    "",
-                    |x: &EntityPermissionQualifier_User| &x._unrecognized,
-                    |x: &mut EntityPermissionQualifier_User, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_User> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_User>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "EntityPermissionQualifier.User",
+                "",
+                |x: &EntityPermissionQualifier_User| &x._unrecognized,
+                |x: &mut EntityPermissionQualifier_User, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EntityPermissionQualifier_User> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EntityPermissionQualifier_User::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EntityPermissionQualifier_User::_adapter(),
+        )
     }
 }
 
@@ -58,33 +64,39 @@ impl EntityPermissionQualifier_User {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EntityPermissionQualifier_Service {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EntityPermissionQualifier_Service>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<EntityPermissionQualifier_Service>>,
 }
 
 impl EntityPermissionQualifier_Service {
     pub fn default_ref() -> &'static EntityPermissionQualifier_Service {
-        static D: std::sync::LazyLock<EntityPermissionQualifier_Service> = std::sync::LazyLock::new(EntityPermissionQualifier_Service::default);
+        static D: std::sync::LazyLock<EntityPermissionQualifier_Service> =
+            std::sync::LazyLock::new(EntityPermissionQualifier_Service::default);
         &D
     }
 }
 
 impl EntityPermissionQualifier_Service {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_Service> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_Service>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "EntityPermissionQualifier.Service",
-                    "",
-                    |x: &EntityPermissionQualifier_Service| &x._unrecognized,
-                    |x: &mut EntityPermissionQualifier_Service, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_Service> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_Service>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "EntityPermissionQualifier.Service",
+                "",
+                |x: &EntityPermissionQualifier_Service| &x._unrecognized,
+                |x: &mut EntityPermissionQualifier_Service, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EntityPermissionQualifier_Service> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EntityPermissionQualifier_Service::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EntityPermissionQualifier_Service::_adapter(),
+        )
     }
 }
 
@@ -107,26 +119,32 @@ impl Default for EntityPermissionQualifier {
 
 impl EntityPermissionQualifier {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<EntityPermissionQualifier> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<EntityPermissionQualifier>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &EntityPermissionQualifier| match x {
-                        EntityPermissionQualifier::Unknown(_) => 0,
-                        EntityPermissionQualifier::User(_) => 1,
-                        EntityPermissionQualifier::Service(_) => 2,
-                    },
-                    |u| EntityPermissionQualifier::Unknown(Some(u)),
-                    |x: &EntityPermissionQualifier| match x { EntityPermissionQualifier::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "access/v1/permission.skir",
-                    "EntityPermissionQualifier",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<EntityPermissionQualifier>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &EntityPermissionQualifier| match x {
+                    EntityPermissionQualifier::Unknown(_) => 0,
+                    EntityPermissionQualifier::User(_) => 1,
+                    EntityPermissionQualifier::Service(_) => 2,
+                },
+                |u| EntityPermissionQualifier::Unknown(Some(u)),
+                |x: &EntityPermissionQualifier| match x {
+                    EntityPermissionQualifier::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "access/v1/permission.skir",
+                "EntityPermissionQualifier",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EntityPermissionQualifier> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(EntityPermissionQualifier::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            EntityPermissionQualifier::_adapter(),
+        )
     }
 }
 
@@ -151,16 +169,17 @@ impl Permission {
 
 impl Permission {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<Permission> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<Permission>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "Permission",
-                    "",
-                    |x: &Permission| &x._unrecognized,
-                    |x: &mut Permission, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<Permission>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "Permission",
+                "",
+                |x: &Permission| &x._unrecognized,
+                |x: &mut Permission, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<Permission> {
@@ -183,23 +202,25 @@ pub struct ResponsePermission {
 
 impl ResponsePermission {
     pub fn default_ref() -> &'static ResponsePermission {
-        static D: std::sync::LazyLock<ResponsePermission> = std::sync::LazyLock::new(ResponsePermission::default);
+        static D: std::sync::LazyLock<ResponsePermission> =
+            std::sync::LazyLock::new(ResponsePermission::default);
         &D
     }
 }
 
 impl ResponsePermission {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResponsePermission> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ResponsePermission>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "ResponsePermission",
-                    "",
-                    |x: &ResponsePermission| &x._unrecognized,
-                    |x: &mut ResponsePermission, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResponsePermission>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "ResponsePermission",
+                "",
+                |x: &ResponsePermission| &x._unrecognized,
+                |x: &mut ResponsePermission, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ResponsePermission> {
@@ -230,16 +251,17 @@ impl Permissions {
 
 impl Permissions {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<Permissions> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<Permissions>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "Permissions",
-                    "",
-                    |x: &Permissions| &x._unrecognized,
-                    |x: &mut Permissions, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<Permissions>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "Permissions",
+                "",
+                |x: &Permissions| &x._unrecognized,
+                |x: &mut Permissions, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<Permissions> {
@@ -262,28 +284,33 @@ pub struct GetEntityPermissionRequest {
 
 impl GetEntityPermissionRequest {
     pub fn default_ref() -> &'static GetEntityPermissionRequest {
-        static D: std::sync::LazyLock<GetEntityPermissionRequest> = std::sync::LazyLock::new(GetEntityPermissionRequest::default);
+        static D: std::sync::LazyLock<GetEntityPermissionRequest> =
+            std::sync::LazyLock::new(GetEntityPermissionRequest::default);
         &D
     }
 }
 
 impl GetEntityPermissionRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "GetEntityPermissionRequest",
-                    "",
-                    |x: &GetEntityPermissionRequest| &x._unrecognized,
-                    |x: &mut GetEntityPermissionRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "GetEntityPermissionRequest",
+                "",
+                |x: &GetEntityPermissionRequest| &x._unrecognized,
+                |x: &mut GetEntityPermissionRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetEntityPermissionRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetEntityPermissionRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetEntityPermissionRequest::_adapter(),
+        )
     }
 }
 
@@ -301,28 +328,33 @@ pub struct GetEntityPermissionResponse {
 
 impl GetEntityPermissionResponse {
     pub fn default_ref() -> &'static GetEntityPermissionResponse {
-        static D: std::sync::LazyLock<GetEntityPermissionResponse> = std::sync::LazyLock::new(GetEntityPermissionResponse::default);
+        static D: std::sync::LazyLock<GetEntityPermissionResponse> =
+            std::sync::LazyLock::new(GetEntityPermissionResponse::default);
         &D
     }
 }
 
 impl GetEntityPermissionResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "access/v1/permission.skir",
-                    "GetEntityPermissionResponse",
-                    "",
-                    |x: &GetEntityPermissionResponse| &x._unrecognized,
-                    |x: &mut GetEntityPermissionResponse, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "GetEntityPermissionResponse",
+                "",
+                |x: &GetEntityPermissionResponse| &x._unrecognized,
+                |x: &mut GetEntityPermissionResponse, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetEntityPermissionResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetEntityPermissionResponse::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetEntityPermissionResponse::_adapter(),
+        )
     }
 }
 
@@ -331,55 +363,177 @@ impl GetEntityPermissionResponse {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_User> = EntityPermissionQualifier_User::_adapter() as *const _ as *mut _;
-                (*a).add_field("organization_id", 0, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &EntityPermissionQualifier_User| &x.organization_id, |x: &mut EntityPermissionQualifier_User, v| x.organization_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EntityPermissionQualifier_Service> = EntityPermissionQualifier_Service::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<EntityPermissionQualifier> = EntityPermissionQualifier::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("user", 1, 1, crate::skir_client::internal::struct_serializer_from_static(EntityPermissionQualifier_User::_adapter()), "", |v| EntityPermissionQualifier::User(Box::new(v)), |x| match x { EntityPermissionQualifier::User(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("service", 2, 2, crate::skir_client::internal::struct_serializer_from_static(EntityPermissionQualifier_Service::_adapter()), "", |v| EntityPermissionQualifier::Service(Box::new(v)), |x| match x { EntityPermissionQualifier::Service(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<Permission> = Permission::_adapter() as *const _ as *mut _;
-                (*a).add_field("allow", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &Permission| &x.allow, |x: &mut Permission, v| x.allow = v);
-                (*a).add_field("deny", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &Permission| &x.deny, |x: &mut Permission, v| x.deny = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ResponsePermission> = ResponsePermission::_adapter() as *const _ as *mut _;
-                (*a).add_field("max_messages", 0, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &ResponsePermission| &x.max_messages, |x: &mut ResponsePermission, v| x.max_messages = v);
-                (*a).add_field("ttl", 1, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::duration::Duration::serializer()), "", |x: &ResponsePermission| &x.ttl, |x: &mut ResponsePermission, v| x.ttl = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<Permissions> = Permissions::_adapter() as *const _ as *mut _;
-                (*a).add_field("publish", 0, crate::skir_client::internal::struct_serializer_from_static(Permission::_adapter()), "", |x: &Permissions| &x.publish, |x: &mut Permissions, v| x.publish = v);
-                (*a).add_field("subscribe", 1, crate::skir_client::internal::struct_serializer_from_static(Permission::_adapter()), "", |x: &Permissions| &x.subscribe, |x: &mut Permissions, v| x.subscribe = v);
-                (*a).add_field("response", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ResponsePermission::_adapter())), "", |x: &Permissions| &x.response, |x: &mut Permissions, v| x.response = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest> = GetEntityPermissionRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("qualifier", 0, crate::skir_client::internal::enum_serializer_from_static(EntityPermissionQualifier::_adapter()), "", |x: &GetEntityPermissionRequest| &x.qualifier, |x: &mut GetEntityPermissionRequest, v| x.qualifier = v);
-                (*a).add_field("jwt_claims", 1, crate::skir_client::Serializer::bytes(), "", |x: &GetEntityPermissionRequest| &x.jwt_claims, |x: &mut GetEntityPermissionRequest, v| x.jwt_claims = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse> = GetEntityPermissionResponse::_adapter() as *const _ as *mut _;
-                (*a).add_field("permissions", 0, crate::skir_client::internal::struct_serializer_from_static(Permissions::_adapter()), "", |x: &GetEntityPermissionResponse| &x.permissions, |x: &mut GetEntityPermissionResponse, v| x.permissions = v);
-                (*a).add_field("tags", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &GetEntityPermissionResponse| &x.tags, |x: &mut GetEntityPermissionResponse, v| x.tags = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                EntityPermissionQualifier_User,
+            > = EntityPermissionQualifier_User::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "organization_id",
+                0,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &EntityPermissionQualifier_User| &x.organization_id,
+                |x: &mut EntityPermissionQualifier_User, v| x.organization_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                EntityPermissionQualifier_Service,
+            > = EntityPermissionQualifier_Service::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<EntityPermissionQualifier> =
+                EntityPermissionQualifier::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "user",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EntityPermissionQualifier_User::_adapter(),
+                ),
+                "",
+                |v| EntityPermissionQualifier::User(Box::new(v)),
+                |x| match x {
+                    EntityPermissionQualifier::User(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "service",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EntityPermissionQualifier_Service::_adapter(),
+                ),
+                "",
+                |v| EntityPermissionQualifier::Service(Box::new(v)),
+                |x| match x {
+                    EntityPermissionQualifier::Service(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<Permission> =
+                Permission::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "allow",
+                0,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &Permission| &x.allow,
+                |x: &mut Permission, v| x.allow = v,
+            );
+            (*a).add_field(
+                "deny",
+                1,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &Permission| &x.deny,
+                |x: &mut Permission, v| x.deny = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResponsePermission> =
+                ResponsePermission::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "max_messages",
+                0,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()),
+                "",
+                |x: &ResponsePermission| &x.max_messages,
+                |x: &mut ResponsePermission, v| x.max_messages = v,
+            );
+            (*a).add_field(
+                "ttl",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::kernel::v1::duration::Duration::serializer(),
+                ),
+                "",
+                |x: &ResponsePermission| &x.ttl,
+                |x: &mut ResponsePermission, v| x.ttl = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<Permissions> =
+                Permissions::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "publish",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(Permission::_adapter()),
+                "",
+                |x: &Permissions| &x.publish,
+                |x: &mut Permissions, v| x.publish = v,
+            );
+            (*a).add_field(
+                "subscribe",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(Permission::_adapter()),
+                "",
+                |x: &Permissions| &x.subscribe,
+                |x: &mut Permissions, v| x.subscribe = v,
+            );
+            (*a).add_field(
+                "response",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ResponsePermission::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &Permissions| &x.response,
+                |x: &mut Permissions, v| x.response = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest> =
+                GetEntityPermissionRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "qualifier",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    EntityPermissionQualifier::_adapter(),
+                ),
+                "",
+                |x: &GetEntityPermissionRequest| &x.qualifier,
+                |x: &mut GetEntityPermissionRequest, v| x.qualifier = v,
+            );
+            (*a).add_field(
+                "jwt_claims",
+                1,
+                crate::skir_client::Serializer::bytes(),
+                "",
+                |x: &GetEntityPermissionRequest| &x.jwt_claims,
+                |x: &mut GetEntityPermissionRequest, v| x.jwt_claims = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse> =
+                GetEntityPermissionResponse::_adapter() as *const _ as *mut _;
+            (*a).add_field("permissions", 0, crate::skir_client::internal::struct_serializer_from_static(Permissions::_adapter()), "", |x: &GetEntityPermissionResponse| &x.permissions, |x: &mut GetEntityPermissionResponse, v| x.permissions = v);
+            (*a).add_field(
+                "tags",
+                1,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &GetEntityPermissionResponse| &x.tags,
+                |x: &mut GetEntityPermissionResponse, v| x.tags = v,
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -387,15 +541,16 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn get_entity_permission_method() -> &'static crate::skir_client::Method<GetEntityPermissionRequest, GetEntityPermissionResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<GetEntityPermissionRequest, GetEntityPermissionResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "GetEntityPermission".to_string(),
-            number: 209684_i64,
-            request_serializer: GetEntityPermissionRequest::serializer(),
-            response_serializer: GetEntityPermissionResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn get_entity_permission_method()
+-> &'static crate::skir_client::Method<GetEntityPermissionRequest, GetEntityPermissionResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<GetEntityPermissionRequest, GetEntityPermissionResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "GetEntityPermission".to_string(),
+        number: 209684_i64,
+        request_serializer: GetEntityPermissionRequest::serializer(),
+        response_serializer: GetEntityPermissionResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

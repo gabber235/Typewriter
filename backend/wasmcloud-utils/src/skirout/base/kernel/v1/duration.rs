@@ -56,13 +56,18 @@ impl Duration {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<Duration> = Duration::_adapter() as *const _ as *mut _;
-                (*a).add_field("milliseconds", 0, crate::skir_client::Serializer::int64(), "", |x: &Duration| &x.milliseconds, |x: &mut Duration, v| x.milliseconds = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::StructAdapter<Duration> =
+            Duration::_adapter() as *const _ as *mut _;
+        (*a).add_field(
+            "milliseconds",
+            0,
+            crate::skir_client::Serializer::int64(),
+            "",
+            |x: &Duration| &x.milliseconds,
+            |x: &mut Duration, v| x.milliseconds = v,
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

@@ -1,0 +1,23 @@
+import { Color } from "kernel/v1/color.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct OrganizationRole {
+  role_id: RecordId;
+  name: string;
+  color: Color;
+  // Whether this is the default role assigned to new members
+  default_role: bool;
+  // Whether this role can be assigned by administrators
+  assignable: bool;
+  // Whether this role can be deleted by administrators
+  deletable: bool;
+}
+
+method WatchOrganizationRoles(
+  struct {}
+): enum {
+  list: [OrganizationRole];
+  add: OrganizationRole;
+  remove: RecordId;
+  internal_error: struct {};
+} = 49267;

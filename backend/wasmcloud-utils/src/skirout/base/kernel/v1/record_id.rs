@@ -74,24 +74,28 @@ impl Default for RecordIdKey {
 
 impl RecordIdKey {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RecordIdKey> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RecordIdKey>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RecordIdKey| match x {
-                        RecordIdKey::Unknown(_) => 0,
-                        RecordIdKey::Number(_) => 1,
-                        RecordIdKey::String(_) => 2,
-                        RecordIdKey::Uuid(_) => 3,
-                        RecordIdKey::Array(_) => 4,
-                        RecordIdKey::Object(_) => 5,
-                    },
-                    |u| RecordIdKey::Unknown(Some(u)),
-                    |x: &RecordIdKey| match x { RecordIdKey::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "kernel/v1/record_id.skir",
-                    "RecordIdKey",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RecordIdKey>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RecordIdKey| match x {
+                    RecordIdKey::Unknown(_) => 0,
+                    RecordIdKey::Number(_) => 1,
+                    RecordIdKey::String(_) => 2,
+                    RecordIdKey::Uuid(_) => 3,
+                    RecordIdKey::Array(_) => 4,
+                    RecordIdKey::Object(_) => 5,
+                },
+                |u| RecordIdKey::Unknown(Some(u)),
+                |x: &RecordIdKey| match x {
+                    RecordIdKey::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "kernel/v1/record_id.skir",
+                "RecordIdKey",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RecordIdKey> {
@@ -114,7 +118,8 @@ pub struct ObjectRecordIdKey {
 
 impl ObjectRecordIdKey {
     pub fn default_ref() -> &'static ObjectRecordIdKey {
-        static D: std::sync::LazyLock<ObjectRecordIdKey> = std::sync::LazyLock::new(ObjectRecordIdKey::default);
+        static D: std::sync::LazyLock<ObjectRecordIdKey> =
+            std::sync::LazyLock::new(ObjectRecordIdKey::default);
         &D
     }
 }
@@ -138,16 +143,17 @@ impl crate::skir_client::KeyedVecSpec for ObjectRecordIdKey_byKey {
 
 impl ObjectRecordIdKey {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ObjectRecordIdKey> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ObjectRecordIdKey>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "kernel/v1/record_id.skir",
-                    "ObjectRecordIdKey",
-                    "",
-                    |x: &ObjectRecordIdKey| &x._unrecognized,
-                    |x: &mut ObjectRecordIdKey, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ObjectRecordIdKey>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "kernel/v1/record_id.skir",
+                "ObjectRecordIdKey",
+                "",
+                |x: &ObjectRecordIdKey| &x._unrecognized,
+                |x: &mut ObjectRecordIdKey, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ObjectRecordIdKey> {
@@ -180,26 +186,30 @@ impl Default for RecordIdValue {
 
 impl RecordIdValue {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RecordIdValue> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RecordIdValue>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RecordIdValue| match x {
-                        RecordIdValue::Unknown(_) => 0,
-                        RecordIdValue::Null => 1,
-                        RecordIdValue::Boolean(_) => 2,
-                        RecordIdValue::Number(_) => 3,
-                        RecordIdValue::Float(_) => 4,
-                        RecordIdValue::String(_) => 5,
-                        RecordIdValue::Array(_) => 6,
-                        RecordIdValue::Object(_) => 7,
-                    },
-                    |u| RecordIdValue::Unknown(Some(u)),
-                    |x: &RecordIdValue| match x { RecordIdValue::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "kernel/v1/record_id.skir",
-                    "RecordIdValue",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RecordIdValue>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RecordIdValue| match x {
+                    RecordIdValue::Unknown(_) => 0,
+                    RecordIdValue::Null => 1,
+                    RecordIdValue::Boolean(_) => 2,
+                    RecordIdValue::Number(_) => 3,
+                    RecordIdValue::Float(_) => 4,
+                    RecordIdValue::String(_) => 5,
+                    RecordIdValue::Array(_) => 6,
+                    RecordIdValue::Object(_) => 7,
+                },
+                |u| RecordIdValue::Unknown(Some(u)),
+                |x: &RecordIdValue| match x {
+                    RecordIdValue::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "kernel/v1/record_id.skir",
+                "RecordIdValue",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RecordIdValue> {
@@ -222,7 +232,8 @@ pub struct ObjectRecordIdValue {
 
 impl ObjectRecordIdValue {
     pub fn default_ref() -> &'static ObjectRecordIdValue {
-        static D: std::sync::LazyLock<ObjectRecordIdValue> = std::sync::LazyLock::new(ObjectRecordIdValue::default);
+        static D: std::sync::LazyLock<ObjectRecordIdValue> =
+            std::sync::LazyLock::new(ObjectRecordIdValue::default);
         &D
     }
 }
@@ -246,16 +257,17 @@ impl crate::skir_client::KeyedVecSpec for ObjectRecordIdValue_byKey {
 
 impl ObjectRecordIdValue {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ObjectRecordIdValue> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ObjectRecordIdValue>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "kernel/v1/record_id.skir",
-                    "ObjectRecordIdValue",
-                    "",
-                    |x: &ObjectRecordIdValue| &x._unrecognized,
-                    |x: &mut ObjectRecordIdValue, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ObjectRecordIdValue>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "kernel/v1/record_id.skir",
+                "ObjectRecordIdValue",
+                "",
+                |x: &ObjectRecordIdValue| &x._unrecognized,
+                |x: &mut ObjectRecordIdValue, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ObjectRecordIdValue> {
@@ -269,46 +281,219 @@ impl ObjectRecordIdValue {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RecordId> = RecordId::_adapter() as *const _ as *mut _;
-                (*a).add_field("table", 0, crate::skir_client::Serializer::string(), "", |x: &RecordId| &x.table, |x: &mut RecordId, v| x.table = v);
-                (*a).add_field("key", 1, crate::skir_client::internal::enum_serializer_from_static(RecordIdKey::_adapter()), "", |x: &RecordId| &x.key, |x: &mut RecordId, v| x.key = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RecordIdKey> = RecordIdKey::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("number", 1, 1, crate::skir_client::Serializer::int64(), "", |v| RecordIdKey::Number(v), |x| match x { RecordIdKey::Number(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("string", 2, 2, crate::skir_client::Serializer::string(), "", |v| RecordIdKey::String(v), |x| match x { RecordIdKey::String(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("uuid", 3, 3, crate::skir_client::Serializer::string(), "", |v| RecordIdKey::Uuid(v), |x| match x { RecordIdKey::Uuid(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("array", 4, 4, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(RecordIdValue::_adapter())), "", |v| RecordIdKey::Array(v), |x| match x { RecordIdKey::Array(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("object", 5, 5, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<ObjectRecordIdKey_byKey>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(ObjectRecordIdKey::_adapter())), "", |v| RecordIdKey::Object(v), |x| match x { RecordIdKey::Object(v) => v, _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ObjectRecordIdKey> = ObjectRecordIdKey::_adapter() as *const _ as *mut _;
-                (*a).add_field("key", 0, crate::skir_client::Serializer::string(), "", |x: &ObjectRecordIdKey| &x.key, |x: &mut ObjectRecordIdKey, v| x.key = v);
-                (*a).add_field("value", 1, crate::skir_client::internal::enum_serializer_from_static(RecordIdValue::_adapter()), "", |x: &ObjectRecordIdKey| &x.value, |x: &mut ObjectRecordIdKey, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RecordIdValue> = RecordIdValue::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("null", 1, 1, "", RecordIdValue::Null);
-                (*a).add_wrapper_variant("boolean", 2, 2, crate::skir_client::Serializer::bool(), "", |v| RecordIdValue::Boolean(v), |x| match x { RecordIdValue::Boolean(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("number", 3, 3, crate::skir_client::Serializer::int64(), "", |v| RecordIdValue::Number(v), |x| match x { RecordIdValue::Number(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("float", 4, 4, crate::skir_client::Serializer::float64(), "", |v| RecordIdValue::Float(v), |x| match x { RecordIdValue::Float(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("string", 5, 5, crate::skir_client::Serializer::string(), "", |v| RecordIdValue::String(v), |x| match x { RecordIdValue::String(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("array", 6, 6, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(RecordIdValue::_adapter())), "", |v| RecordIdValue::Array(v), |x| match x { RecordIdValue::Array(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("object", 7, 7, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<ObjectRecordIdValue_byKey>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(ObjectRecordIdValue::_adapter())), "", |v| RecordIdValue::Object(v), |x| match x { RecordIdValue::Object(v) => v, _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ObjectRecordIdValue> = ObjectRecordIdValue::_adapter() as *const _ as *mut _;
-                (*a).add_field("key", 0, crate::skir_client::Serializer::string(), "", |x: &ObjectRecordIdValue| &x.key, |x: &mut ObjectRecordIdValue, v| x.key = v);
-                (*a).add_field("value", 1, crate::skir_client::internal::enum_serializer_from_static(RecordIdValue::_adapter()), "", |x: &ObjectRecordIdValue| &x.value, |x: &mut ObjectRecordIdValue, v| x.value = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RecordId> =
+                RecordId::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "table",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RecordId| &x.table,
+                |x: &mut RecordId, v| x.table = v,
+            );
+            (*a).add_field(
+                "key",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(RecordIdKey::_adapter()),
+                "",
+                |x: &RecordId| &x.key,
+                |x: &mut RecordId, v| x.key = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RecordIdKey> =
+                RecordIdKey::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "number",
+                1,
+                1,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |v| RecordIdKey::Number(v),
+                |x| match x {
+                    RecordIdKey::Number(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "string",
+                2,
+                2,
+                crate::skir_client::Serializer::string(),
+                "",
+                |v| RecordIdKey::String(v),
+                |x| match x {
+                    RecordIdKey::String(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "uuid",
+                3,
+                3,
+                crate::skir_client::Serializer::string(),
+                "",
+                |v| RecordIdKey::Uuid(v),
+                |x| match x {
+                    RecordIdKey::Uuid(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "array",
+                4,
+                4,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        RecordIdValue::_adapter(),
+                    ),
+                ),
+                "",
+                |v| RecordIdKey::Array(v),
+                |x| match x {
+                    RecordIdKey::Array(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "object",
+                5,
+                5,
+                crate::skir_client::Serializer::<
+                    crate::skir_client::KeyedVec<ObjectRecordIdKey_byKey>,
+                >::keyed_array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ObjectRecordIdKey::_adapter(),
+                    ),
+                ),
+                "",
+                |v| RecordIdKey::Object(v),
+                |x| match x {
+                    RecordIdKey::Object(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ObjectRecordIdKey> =
+                ObjectRecordIdKey::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "key",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ObjectRecordIdKey| &x.key,
+                |x: &mut ObjectRecordIdKey, v| x.key = v,
+            );
+            (*a).add_field("value", 1, crate::skir_client::internal::enum_serializer_from_static(RecordIdValue::_adapter()), "", |x: &ObjectRecordIdKey| &x.value, |x: &mut ObjectRecordIdKey, v| x.value = v);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RecordIdValue> =
+                RecordIdValue::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("null", 1, 1, "", RecordIdValue::Null);
+            (*a).add_wrapper_variant(
+                "boolean",
+                2,
+                2,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |v| RecordIdValue::Boolean(v),
+                |x| match x {
+                    RecordIdValue::Boolean(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "number",
+                3,
+                3,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |v| RecordIdValue::Number(v),
+                |x| match x {
+                    RecordIdValue::Number(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "float",
+                4,
+                4,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |v| RecordIdValue::Float(v),
+                |x| match x {
+                    RecordIdValue::Float(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "string",
+                5,
+                5,
+                crate::skir_client::Serializer::string(),
+                "",
+                |v| RecordIdValue::String(v),
+                |x| match x {
+                    RecordIdValue::String(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "array",
+                6,
+                6,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        RecordIdValue::_adapter(),
+                    ),
+                ),
+                "",
+                |v| RecordIdValue::Array(v),
+                |x| match x {
+                    RecordIdValue::Array(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "object",
+                7,
+                7,
+                crate::skir_client::Serializer::<
+                    crate::skir_client::KeyedVec<ObjectRecordIdValue_byKey>,
+                >::keyed_array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ObjectRecordIdValue::_adapter(),
+                    ),
+                ),
+                "",
+                |v| RecordIdValue::Object(v),
+                |x| match x {
+                    RecordIdValue::Object(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ObjectRecordIdValue> =
+                ObjectRecordIdValue::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "key",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ObjectRecordIdValue| &x.key,
+                |x: &mut ObjectRecordIdValue, v| x.key = v,
+            );
+            (*a).add_field("value", 1, crate::skir_client::internal::enum_serializer_from_static(RecordIdValue::_adapter()), "", |x: &ObjectRecordIdValue| &x.value, |x: &mut ObjectRecordIdValue, v| x.value = v);
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

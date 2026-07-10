@@ -15,6 +15,7 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 import "./member.dart" as _lib_organization_v1_member;
+import "./role.dart" as _lib_organization_v1_role;
 
 // -----------------------------------------------------------------------------
 // struct OrganizationJoinRequest
@@ -532,7 +533,7 @@ sealed class AutoAcceptedMember_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get organizationId;
   _core.String get organizationName;
   _core.String? get organizationLogoUrl;
-  _core.Iterable<_lib_organization_v1_member.OrganizationRole_orMutable> get roles;
+  _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> get roles;
 
   AutoAcceptedMember toFrozen();
 }
@@ -546,14 +547,14 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
   @_core.override
   final _core.String? organizationLogoUrl;
   @_core.override
-  final _core.Iterable<_lib_organization_v1_member.OrganizationRole> roles;
+  final _core.Iterable<_lib_organization_v1_role.OrganizationRole> roles;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AutoAcceptedMember({
     required _lib_kernel_v1_record_id.RecordId_orMutable organizationId,
     required _core.String organizationName,
     required _core.String? organizationLogoUrl,
-    required _core.Iterable<_lib_organization_v1_member.OrganizationRole_orMutable> roles,
+    required _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles,
   }) => AutoAcceptedMember._(
     organizationId.toFrozen(),
     organizationName,
@@ -655,7 +656,7 @@ final class AutoAcceptedMember implements AutoAcceptedMember_orMutable {
         "roles",
         3,
         _skir.Serializers.iterable(
-          _lib_organization_v1_member.OrganizationRole.serializer,
+          _lib_organization_v1_role.OrganizationRole.serializer,
         ),
         "",
         (it) => it.roles,
@@ -682,7 +683,7 @@ final class AutoAcceptedMember_mutable implements AutoAcceptedMember_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable organizationId;
   _core.String organizationName;
   _core.String? organizationLogoUrl;
-  _core.Iterable<_lib_organization_v1_member.OrganizationRole_orMutable> roles;
+  _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles;
   _skir.internal__UnrecognizedFields? _u;
 
   AutoAcceptedMember_mutable._(
@@ -705,9 +706,9 @@ final class AutoAcceptedMember_mutable implements AutoAcceptedMember_orMutable {
 
   /// If the value of [roles] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
-  _core.List<_lib_organization_v1_member.OrganizationRole_orMutable> get mutableRoles {
+  _core.List<_lib_organization_v1_role.OrganizationRole_orMutable> get mutableRoles {
     final value = this.roles;
-    if (value is _skir.internal__MutableList<_lib_organization_v1_member.OrganizationRole_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_organization_v1_role.OrganizationRole_orMutable>) {
       return value;
     } else {
       return this.roles = _skir.internal__MutableList([...value]);
@@ -1603,7 +1604,7 @@ sealed class ApproveOrganizationJoinRequestResponse {
     required _core.String? name,
     required _core.String? email,
     required _core.String? avatarUrl,
-    required _core.Iterable<_lib_organization_v1_member.OrganizationRole_orMutable> roles,
+    required _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles,
     required _core.DateTime joinedAt,
   }) => ApproveOrganizationJoinRequestResponse.wrapSuccess(
     _lib_organization_v1_member.OrganizationMember(

@@ -1,5 +1,5 @@
-import { Color } from "kernel/v1/color.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
+import { OrganizationRole } from "organization/v1/role.skir";
 
 struct OrganizationMember {
   user_id: RecordId;
@@ -8,18 +8,6 @@ struct OrganizationMember {
   avatar_url: string?;
   roles: [OrganizationRole];
   joined_at: timestamp;
-}
-
-struct OrganizationRole {
-  role_id: RecordId;
-  name: string;
-  color: Color;
-  // Whether this is the default role assigned to new members
-  default_role: bool;
-  // Whether this role can be assigned by administrators
-  assignable: bool;
-  // Whether this role can be deleted by administrators
-  deletable: bool;
 }
 
 method WatchOrganizationMembers(
