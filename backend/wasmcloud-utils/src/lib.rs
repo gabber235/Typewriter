@@ -1,6 +1,9 @@
 mod bindings {
     wit_bindgen::generate!({
         pub_export_macro: true,
+        async: [
+            "export:wasmcloud:messaging/handler@0.2.0#handle-message",
+        ],
         generate_all,
     });
 }

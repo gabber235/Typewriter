@@ -24,8 +24,8 @@ impl<R> SkirSubject<R>
 where
     R: SkirResponse,
 {
-    pub fn publish(&self, response: R) -> Result<(), otel_wasi::Error> {
-        messaging::publish(self.subject.clone(), response.to_skir_bytes())
+    pub async fn publish(&self, response: R) -> Result<(), otel_wasi::Error> {
+        messaging::publish(self.subject.clone(), response.to_skir_bytes()).await
     }
 }
 

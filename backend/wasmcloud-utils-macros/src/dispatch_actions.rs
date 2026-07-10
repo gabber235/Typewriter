@@ -332,7 +332,7 @@ fn simple_action_arms(input: &DispatchInput, utils_path: &syn::Path) -> Vec<Toke
             quote! {
                 #pattern => {
                     let result = #handler_call;
-                    #utils_path::wasmcloud::messaging::reply_handler_result(msg.clone(), result)
+                    #utils_path::wasmcloud::messaging::reply_handler_result(msg.clone(), result).await
                 }
             }
         })
@@ -343,7 +343,7 @@ fn handler_call(action: &ActionEntry, msg: TokenStream, params: TokenStream) -> 
     let handler = &action.handler;
 
     if action.is_async {
-        return quote! { ::wstd::runtime::block_on(#handler(#msg, #params)) };
+        return quote! { #handler(#msg, #params).await };
     }
 
     quote! { #handler(#msg, #params) }
@@ -404,7 +404,7 @@ fn named_template_pattern_check(
             &msg.subject,
         ) {
             let result = #handler_call;
-            return #utils_path::wasmcloud::messaging::reply_handler_result(msg.clone(), result);
+            return #utils_path::wasmcloud::messaging::reply_handler_result(msg.clone(), result).await;
         }
     }
 }

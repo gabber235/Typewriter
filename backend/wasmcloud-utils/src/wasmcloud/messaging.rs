@@ -171,7 +171,7 @@ fn parse_subject_inner(template: &str, subject: &str) -> Result<HashMap<String, 
 }
 
 /// Send a message to the reply_to field of the message
-pub fn reply(
+pub async fn reply(
     reply_to: types::BrokerMessage,
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
@@ -191,7 +191,7 @@ pub fn reply(
 }
 
 /// Send a message with a specific reply_to
-pub fn send(
+pub async fn send(
     subject: String,
     reply_to: String,
     data: impl Into<Vec<u8>>,
@@ -201,11 +201,11 @@ pub fn send(
         reply_to: Some(reply_to),
         body: data.into(),
     })
-    .map_err(|e| otel_wasi::Error::new("message-send-failed", e))
+    .error_with_slug("message-send-failed")
 }
 
 /// Publish a message without a reply_to.
-pub fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_wasi::Error> {
+pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_wasi::Error> {
     consumer::publish(&types::BrokerMessage {
         subject,
         reply_to: None,
@@ -214,12 +214,20 @@ pub fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_was
     .error_with_slug("message-publish-failed")
 }
 
+/// Request a reply to a message.
+pub async fn request(
+    subject: String,
+    data: impl Into<Vec<u8>>,
+) -> Result<types::BrokerMessage, otel_wasi::Error> {
+    consumer::request(&subject, &data.into(), 5000).error_with_slug("message-request-failed")
+}
+
 /// Reply to a message with the result of a handler that returns `Result<R, otel_wasi::Error>`.
 ///
 /// `Ok(response)` is serialized and replied as the selected success or domain outcome.
 /// `Err(error)` is converted to the response enum's generic `InternalError` variant,
 /// replied, and then the original error is returned for logging/tracing.
-pub fn reply_handler_result<R>(
+pub async fn reply_handler_result<R>(
     msg: types::BrokerMessage,
     result: Result<R, otel_wasi::Error>,
 ) -> Result<(), otel_wasi::Error>
@@ -227,7 +235,7 @@ where
     R: crate::SkirResponse,
 {
     match result {
-        Ok(response) => reply_response(msg, response),
+        Ok(response) => reply_response(msg, response).await,
         Err(error) => {
             let response = R::internal_error();
 
@@ -237,13 +245,13 @@ where
                 "messaging.response.success" = false,
             );
 
-            reply(msg, response.to_skir_bytes())?;
+            reply(msg, response.to_skir_bytes()).await?;
             Err(error)
         }
     }
 }
 
-fn reply_response<R>(msg: types::BrokerMessage, response: R) -> Result<(), otel_wasi::Error>
+async fn reply_response<R>(msg: types::BrokerMessage, response: R) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {
@@ -261,7 +269,7 @@ where
         otel_wasi::main_attribute!("messaging.response.message" = message.clone(),);
     }
 
-    reply(msg, response.to_skir_bytes())?;
+    reply(msg, response.to_skir_bytes()).await?;
 
     match outcome {
         crate::SkirResponseOutcome::Success | crate::SkirResponseOutcome::DomainError => Ok(()),

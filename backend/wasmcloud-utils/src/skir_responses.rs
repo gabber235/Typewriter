@@ -16,10 +16,7 @@ use crate::skir::base::service::v1::status::*;
 wasmcloud_utils_macros::skir_response! {
     GetSentinelCredentialsResponse {
         success: Success,
-        errors {
-            ConfigurationError => "Sentinel credentials are not configured correctly",
-            InvalidCredentials => "Sentinel credentials are invalid",
-        }
+        errors {}
     }
 }
 
