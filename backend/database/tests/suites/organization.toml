@@ -79,12 +79,19 @@ allow = false
 error_contains = "assigned"
 
 [[cases]]
-name = "organization_can_have_only_one_default_role"
+name = "organization_can_have_multiple_default_roles"
 kind = "sql_expect"
 actor = "root"
 sql = "CREATE organization_role:second_default SET name = 'second_default', organization = organization:acme, default_role = true;"
+allow = true
+
+[[cases]]
+name = "last_default_role_cannot_be_removed"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { DELETE organization_role:second_default; LET $writer = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'writer')[0]; UPDATE $writer SET default_role = false; };"
 allow = false
-error_contains = "one default role"
+error_contains = "at least one default role"
 
 [[cases]]
 name = "join_code_defaults_are_strict"

@@ -59,12 +59,19 @@ func (m *Typewriter) DatabaseImage(
 func (m *Typewriter) DatabasePublish(
 	ctx context.Context,
 	source *dagger.Workspace,
+	registry *dagger.Service,
 	ref string,
+	username string,
+	password *dagger.Secret,
 ) (string, error) {
 	if strings.TrimSpace(ref) == "" {
 		return "", fmt.Errorf("ref is required")
 	}
-	return m.DatabaseImage(source).Publish(ctx, ref)
+	return m.DatabaseImage(source).
+		WithRegistryAuth(ref, username, password).
+		Publish(ctx, ref, dagger.ContainerPublishOpts{
+			RegistryService: registry,
+		})
 }
 
 // +check

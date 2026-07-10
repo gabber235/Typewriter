@@ -31,10 +31,9 @@ DEFINE EVENT OVERWRITE guard_default_role_count ON organization_role WHEN $event
     IF (SELECT VALUE id FROM ONLY $org) == NONE { RETURN NONE };
 
     LET $defaults = (SELECT VALUE id FROM organization_role WHERE organization = $org AND default_role = true);
-    IF array::len($defaults) > 1 { THROW "Organization can only have one default role" };
 
     IF $event IN ["UPDATE", "DELETE"] AND $before.default_role = true AND array::len($defaults) = 0 {
-        THROW "Organization needs one default role"
+        THROW "Organization needs at least one default role"
     };
 };
 
