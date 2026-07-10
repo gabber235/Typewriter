@@ -8,11 +8,11 @@ wit_bindgen::generate!({
 
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use wasmcloud_utils::{
+    decode_skir,
     skir::base::access::v1::permission::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
         Permissions,
     },
-    skir_client::UnrecognizedValues::Drop,
     wasmcloud::messaging::{handler::Guest, reply, types},
 };
 
@@ -28,55 +28,51 @@ const SERVICES_SUBJECT: &str = "auth.permissions.typewriter-services";
 
 impl Guest for TypewriterPermissions {
     #[otel_wasi::wasi_instrument(service = "auth_typewriter_permissions", export)]
-    fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-        main_attribute!("messaging.destination.name" = msg.subject.clone());
-
-        let request = match GetEntityPermissionRequest::serializer().from_bytes(&msg.body[..], Drop)
-        {
-            Ok(req) => {
-                main_attribute!("auth.request.decode.success" = true);
-                req
-            }
-            Err(e) => {
-                main_attribute!("auth.outcome" = "failed");
-                return Err(otel_wasi::Error::new(
-                    "permissions-request-decode-failed",
-                    e,
-                ));
-            }
-        };
-        wstd::runtime::block_on(async {
-            let (permissions, tags) = match msg.subject.as_str() {
-                PANEL_SUBJECT => handle_panel_subject(request).await,
-                SERVICES_SUBJECT => handle_services_subject(request).await,
-                other => Err(wasi_error!(
-                    "permissions-unknown-subject",
-                    "Unknown subject: {}",
-                    other
-                )),
-            }
-            .map_err(|e| {
-                main_attribute!("auth.outcome" = "failed");
-                e
-            })?;
-
-            let response = GetEntityPermissionResponse {
-                permissions,
-                tags,
-                ..Default::default()
-            };
-            let body = GetEntityPermissionResponse::serializer().to_bytes(&response);
-            main_attribute!(
-                "auth.outcome" = "authorized",
-                "auth.response.permissions.tags.count" = response.tags.len() as i64,
-                "auth.permissions.publish.deny.count" =
-                    response.permissions.publish.deny.len() as i64,
-                "auth.permissions.subscribe.deny.count" =
-                    response.permissions.subscribe.deny.len() as i64,
-            );
-            reply(msg, body)
-        })
+    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+        handle_message_async(msg).await
     }
+}
+
+async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+    main_attribute!("messaging.destination.name" = msg.subject.clone());
+
+    let request = match decode_skir!(GetEntityPermissionRequest, &msg.body) {
+        Ok(req) => {
+            main_attribute!("auth.request.decode.success" = true);
+            req
+        }
+        Err(e) => {
+            main_attribute!("auth.outcome" = "failed");
+            return Err(e);
+        }
+    };
+    let (permissions, tags) = match msg.subject.as_str() {
+        PANEL_SUBJECT => handle_panel_subject(request).await,
+        SERVICES_SUBJECT => handle_services_subject(request).await,
+        other => Err(wasi_error!(
+            "permissions-unknown-subject",
+            "Unknown subject: {}",
+            other
+        )),
+    }
+    .map_err(|e| {
+        main_attribute!("auth.outcome" = "failed");
+        e
+    })?;
+
+    let response = GetEntityPermissionResponse {
+        permissions,
+        tags,
+        ..Default::default()
+    };
+    let body = GetEntityPermissionResponse::serializer().to_bytes(&response);
+    main_attribute!(
+        "auth.outcome" = "authorized",
+        "auth.response.permissions.tags.count" = response.tags.len() as i64,
+        "auth.permissions.publish.deny.count" = response.permissions.publish.deny.len() as i64,
+        "auth.permissions.subscribe.deny.count" = response.permissions.subscribe.deny.len() as i64,
+    );
+    reply(msg, body).await
 }
 
 #[tracing::instrument(skip(request))]

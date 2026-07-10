@@ -1,12 +1,12 @@
-use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
+use otel_wasi::{main_attribute, wasi_error};
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
+    decode_skir,
     skir::base::{
         access::v1::permission::Permissions,
         service::v1::status::{GetServiceStatusRequest, GetServiceStatusResponse, ServiceBinding},
     },
-    skir_client::UnrecognizedValues::Drop,
-    wasmcloud::messaging::consumer,
+    wasmcloud::messaging::request,
 };
 
 use crate::common::build_permissions;
@@ -100,16 +100,13 @@ async fn query_service_status(
 
     let data = GetServiceStatusRequest::default();
 
-    let response = consumer::request(
-        &subject,
-        &GetServiceStatusRequest::serializer().to_bytes(&data),
-        5000,
+    let response = request(
+        subject,
+        GetServiceStatusRequest::serializer().to_bytes(&data),
     )
-    .error_with_slug("permissions-service-status-request-failed")?;
+    .await?;
 
-    GetServiceStatusResponse::serializer()
-        .from_bytes(&response.body[..], Drop)
-        .error_with_slug("permissions-service-status-decode-failed")
+    decode_skir!(GetServiceStatusResponse, &response.body)
 }
 
 fn handle_service_status(

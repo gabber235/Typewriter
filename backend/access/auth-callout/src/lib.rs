@@ -21,12 +21,13 @@ use nkeys::KeyPair;
 use otel_wasi::{ResultWithSlug, WithSlug, attribute, main_attribute, wasi_error};
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
+    decode_skir,
     skir::base::access::v1::permission::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
         Permissions,
     },
-    skir_client::UnrecognizedValues::{self, Drop},
-    wasmcloud::messaging::{consumer, handler::Guest, reply, types},
+    skir_client::UnrecognizedValues::Drop,
+    wasmcloud::messaging::{handler::Guest, reply, types},
 };
 
 pub mod config;
@@ -35,85 +36,88 @@ pub mod jwt;
 struct AuthCallout;
 wasmcloud_utils::export!(AuthCallout);
 
-const PERMISSIONS_REQUEST_TIMEOUT_MS: u32 = 1000;
 const EXPECTED_AUDIENCE: &str = "nats-authorization-request";
 
 impl Guest for AuthCallout {
     #[otel_wasi::wasi_instrument(service = "auth_callout", export)]
-    fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-        main_attribute!(
-            "messaging.destination.name" = msg.subject.clone(),
-            "messaging.reply_to.present" = msg.reply_to.is_some(),
-        );
+    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+        handle_message_async(msg).await
+    }
+}
 
-        let keypair = get_nats_issuer_keypair()?;
-        main_attribute!("auth.nats_issuer_keypair.loaded" = true);
+async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+    main_attribute!(
+        "messaging.destination.name" = msg.subject.clone(),
+        "messaging.reply_to.present" = msg.reply_to.is_some(),
+    );
 
-        let request = match decode_auth_request(&msg.body) {
-            Ok(req) => {
-                main_attribute!(
-                    "auth.request.decode.success" = true,
-                    "auth.request.user_nkey" = req.payload().user_nkey.clone(),
-                    "auth.request.server.id" = req.payload().server.id.clone(),
-                    "auth.request.issuer" = req.iss.clone(),
-                    "auth.request.connect.user.present" = req.payload().connect_opts.user.is_some(),
-                    "auth.request.qualifier.present" = req.payload().connect_opts.nkey.is_some(),
-                );
-                if let Some(audience) = &req.aud {
-                    main_attribute!("auth.request.audience" = audience.clone());
-                }
-                req
+    let keypair = get_nats_issuer_keypair()?;
+    main_attribute!("auth.nats_issuer_keypair.loaded" = true);
+
+    let request = match decode_auth_request(&msg.body) {
+        Ok(req) => {
+            main_attribute!(
+                "auth.request.decode.success" = true,
+                "auth.request.user_nkey" = req.payload().user_nkey.clone(),
+                "auth.request.server.id" = req.payload().server.id.clone(),
+                "auth.request.issuer" = req.iss.clone(),
+                "auth.request.connect.user.present" = req.payload().connect_opts.user.is_some(),
+                "auth.request.qualifier.present" = req.payload().connect_opts.nkey.is_some(),
+            );
+            if let Some(audience) = &req.aud {
+                main_attribute!("auth.request.audience" = audience.clone());
             }
-            Err(e) => {
-                main_attribute!("auth.request.decode.success" = false);
-                return Err(e);
-            }
-        };
-
-        let user_nkey = request.payload().user_nkey.clone();
-        let server_id = request.payload().server.id.clone();
-
-        let mut response = create_auth_response(user_nkey.clone(), server_id.clone());
-        main_attribute!(
-            "auth.response.created" = true,
-            "auth.response.user_nkey" = user_nkey,
-            "auth.response.server.id" = server_id,
-        );
-
-        match process_user_jwt(&request)? {
-            Some(jwt) => {
-                main_attribute!(
-                    "auth.outcome" = "authorized",
-                    "auth.response.jwt.present" = true,
-                );
-                response.payload_mut().jwt = jwt;
-            }
-            None => {
-                main_attribute!(
-                    "auth.outcome" = "denied",
-                    "auth.response.jwt.present" = false,
-                    "auth.response.error" = "user not authorized",
-                );
-                response.payload_mut().error = "user not authorized".to_string();
-            }
-        };
-
-        let data = match response.encode(&keypair) {
-            Ok(data) => data,
-            Err(e) => {
-                main_attribute!("auth.outcome" = "failed");
-                return Err(e.with_slug("auth-callout-response-encode-failed"));
-            }
-        };
-        main_attribute!("auth.response.encoded.size" = data.len() as i64);
-
-        if let Err(e) = reply(msg, data) {
-            main_attribute!("auth.outcome" = "failed");
+            req
+        }
+        Err(e) => {
+            main_attribute!("auth.request.decode.success" = false);
             return Err(e);
         }
-        main_attribute!("auth.reply.sent" = true);
-        Ok(())
+    };
+
+    let user_nkey = request.payload().user_nkey.clone();
+    let server_id = request.payload().server.id.clone();
+
+    let mut response = create_auth_response(user_nkey.clone(), server_id.clone());
+    main_attribute!(
+        "auth.response.created" = true,
+        "auth.response.user_nkey" = user_nkey,
+        "auth.response.server.id" = server_id,
+    );
+
+    match process_user_jwt(&request).await? {
+        Some(jwt) => {
+            main_attribute!(
+                "auth.outcome" = "authorized",
+                "auth.response.jwt.present" = true,
+            );
+            response.payload_mut().jwt = jwt;
+        }
+        None => {
+            main_attribute!(
+                "auth.outcome" = "denied",
+                "auth.response.jwt.present" = false,
+                "auth.response.error" = "user not authorized",
+            );
+            response.payload_mut().error = "user not authorized".to_string();
+        }
+    };
+
+    let data = match response.encode(&keypair) {
+        Ok(data) => data,
+        Err(e) => {
+            main_attribute!("auth.outcome" = "failed");
+            return Err(e.with_slug("auth-callout-response-encode-failed"));
+        }
+    };
+    main_attribute!("auth.response.encoded.size" = data.len() as i64);
+
+    if let Err(e) = reply(msg, data).await {
+        main_attribute!("auth.outcome" = "failed");
+        return Err(e);
     }
+    main_attribute!("auth.reply.sent" = true);
+    Ok(())
 }
 
 #[tracing::instrument]
@@ -136,7 +140,9 @@ fn create_auth_response(user_nkey: String, server_id: String) -> Claims<AuthResp
 }
 
 #[tracing::instrument]
-fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, otel_wasi::Error> {
+async fn process_user_jwt(
+    request: &Claims<AuthRequest>,
+) -> Result<Option<String>, otel_wasi::Error> {
     let Some(raw_jwt) = request.payload().connect_opts.pass.clone() else {
         main_attribute!("auth.jwt.present" = false, "auth.outcome" = "denied",);
         return Ok(None);
@@ -147,15 +153,15 @@ fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, ote
     let configs = load_issuer_configs()?;
     main_attribute!("auth.issuer_config.count" = configs.len() as i64);
 
-    let (jwt, issuer) = match validate_user_jwt(&raw_jwt, &configs, request) {
-        Ok(result) => {
+    let (jwt, issuer) = match validate_user_jwt(&raw_jwt, &configs, request)? {
+        Some(result) => {
             main_attribute!(
                 "auth.jwt.validation.success" = true,
                 "auth.jwt.issuer_config.id" = result.1.id.clone(),
             );
             result
         }
-        Err(_) => {
+        None => {
             main_attribute!(
                 "auth.jwt.validation.success" = false,
                 "auth.outcome" = "denied",
@@ -185,7 +191,7 @@ fn process_user_jwt(request: &Claims<AuthRequest>) -> Result<Option<String>, ote
         .from_bytes(&qualifier, Drop)
         .error_with_slug("auth-callout-connect-opts-nkey-invalid")?;
 
-    let claims = create_user_claims(&jwt, &request.payload().user_nkey, &issuer, qualifier)?;
+    let claims = create_user_claims(&jwt, &request.payload().user_nkey, &issuer, qualifier).await?;
     main_attribute!("auth.user_claims.created" = true);
 
     let encoded = claims
@@ -219,10 +225,10 @@ fn validate_user_jwt<'a>(
     configs: &'a Vec<IssuerConfig>,
     request: &Claims<AuthRequest>,
 ) -> Result<
-    (
+    Option<(
         jose::jwt::Claims<UntypedAdditionalProperties>,
         &'a IssuerConfig,
-    ),
+    )>,
     otel_wasi::Error,
 > {
     attribute!(
@@ -230,8 +236,8 @@ fn validate_user_jwt<'a>(
         "auth.jwt.issuer_config.candidate.count" = configs.len() as i64,
     );
     match jwt::validate_jwt(raw_jwt, configs) {
-        Ok(result) => Ok(result),
-        Err(e) => {
+        Ok(Some(result)) => Ok(Some(result)),
+        Ok(None) => {
             let username = request
                 .payload()
                 .connect_opts
@@ -242,11 +248,9 @@ fn validate_user_jwt<'a>(
                 "auth.jwt.validation.success" = false,
                 "auth.request.connect.user" = username.clone(),
             );
-            Err(otel_wasi::Error::new(
-                "auth-callout-jwt-validation-failed",
-                e,
-            ))
+            Ok(None)
         }
+        Err(e) => Err(e),
     }
 }
 
@@ -271,7 +275,7 @@ fn get_signing_keypair(issuer_id: &str) -> Result<KeyPair, otel_wasi::Error> {
 }
 
 #[tracing::instrument(skip(jwt, qualifier))]
-fn create_user_claims(
+async fn create_user_claims(
     jwt: &jose::jwt::Claims<UntypedAdditionalProperties>,
     user_nkey: &str,
     issuer: &IssuerConfig,
@@ -306,7 +310,7 @@ fn create_user_claims(
         }
     }
 
-    let response = request_permissions(jwt, issuer.id.as_str(), qualifier)?;
+    let response = request_permissions(jwt, issuer.id.as_str(), qualifier).await?;
     main_attribute!(
         "auth.permissions.tags.count" = response.tags.len() as i64,
         "auth.permissions.publish.allow.count" = response.permissions.publish.allow.len() as i64,
@@ -347,7 +351,7 @@ fn create_user_claims(
 }
 
 #[tracing::instrument(skip(jwt, qualifier))]
-fn request_permissions(
+async fn request_permissions(
     jwt: &jose::jwt::Claims<UntypedAdditionalProperties>,
     issuer_id: &str,
     qualifier: EntityPermissionQualifier,
@@ -365,15 +369,11 @@ fn request_permissions(
     };
 
     let body = GetEntityPermissionRequest::serializer().to_bytes(&request);
-    attribute!("auth.permissions.request.timeout_ms" = PERMISSIONS_REQUEST_TIMEOUT_MS as i64,);
     main_attribute!("auth.permissions.subject" = subject.clone(),);
 
-    let response = consumer::request(subject.as_str(), &body, PERMISSIONS_REQUEST_TIMEOUT_MS)
-        .error_with_slug("auth-callout-permissions-request-failed")?;
+    let response = wasmcloud_utils::wasmcloud::messaging::request(subject, body).await?;
 
-    let permission_response = GetEntityPermissionResponse::serializer()
-        .from_bytes(&response.body[..], UnrecognizedValues::Drop)
-        .error_with_slug("auth-callout-permissions-decode-failed")?;
+    let permission_response = decode_skir!(GetEntityPermissionResponse, &response.body)?;
     main_attribute!("auth.permissions.response.decode.success" = true);
 
     Ok(permission_response)

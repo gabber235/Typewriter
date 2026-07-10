@@ -4,3 +4,7 @@
 - op: add
   path: /spec/template/spec/components/0/imagePullPolicy
   value: Always
+- op: add
+  path: /spec/template/spec/components/0/localResources/allowedHosts
+  value:
+    - "auth.tw.seamlezz.net"

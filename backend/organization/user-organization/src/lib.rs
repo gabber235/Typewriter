@@ -41,14 +41,18 @@ impl From<OrganizationRecord> for Organization {
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "user_organization", export)]
     fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-        dispatch_actions!(
-            msg,
-            "typewriter.in.user.<user_id>.organization.<action>",
-            "create" => async create::handle_create,
-            "watch" => async watch::handle_watch,
-            "join_requests.watch" => async join_requests::handle_watch,
-            "join_requests.request" => async join_requests::handle_request,
-            "join_requests.cancel" => async join_requests::handle_cancel,
-        )
+        wit_bindgen::block_on(handle_message_async(msg))
     }
+}
+
+async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+    dispatch_actions!(
+        msg,
+        "typewriter.in.user.<user_id>.organization.<action>",
+        "create" => async create::handle_create,
+        "watch" => async watch::handle_watch,
+        "join_requests.watch" => async join_requests::handle_watch,
+        "join_requests.request" => async join_requests::handle_request,
+        "join_requests.cancel" => async join_requests::handle_cancel,
+    )
 }

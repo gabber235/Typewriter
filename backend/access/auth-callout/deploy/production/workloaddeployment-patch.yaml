@@ -1,3 +1,7 @@
 - op: add
   path: /spec/template/spec/components/0/image
   value: oci.seamlezz.com/typewriter/auth-callout:0.1.0
+- op: add
+  path: /spec/template/spec/components/0/localResources/allowedHosts
+  value:
+    - "auth.typewritermc.com"

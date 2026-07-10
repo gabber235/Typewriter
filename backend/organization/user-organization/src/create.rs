@@ -45,9 +45,11 @@ pub async fn handle_create(
     .error_with_slug("slug")?
     .into();
 
-    wasmcloud_utils::skir_subjects::user_organizations(user_id).publish(
-        WatchUserOrganizationsResponse::Add(Box::new(organization.clone())),
-    )?;
+    wasmcloud_utils::skir_subjects::user_organizations(user_id)
+        .publish(WatchUserOrganizationsResponse::Add(Box::new(
+            organization.clone(),
+        )))
+        .await?;
 
     Ok(CreateOrganizationResponse::Success(organization.into()))
 }

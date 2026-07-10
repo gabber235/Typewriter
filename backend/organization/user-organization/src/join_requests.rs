@@ -7,7 +7,9 @@ use wasmcloud_utils::{
     decode_skir, extract_param,
     skir::base::{
         kernel::v1::record_id::RecordId,
-        organization::v1::{join_codes::*, join_request::*, member::*, user::*},
+        organization::v1::{
+            join_codes::*, join_request::*, member::*, role::OrganizationRole, user::*,
+        },
     },
     skir_domain_result, skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
@@ -273,18 +275,24 @@ async fn handle_auto_accept(
         .map(OrganizationRole::from)
         .collect::<Vec<_>>();
 
-    wasmcloud_utils::skir_subjects::user_organizations(user_id).publish(
-        WatchUserOrganizationsResponse::Add(Box::new(org.clone().into())),
-    )?;
+    wasmcloud_utils::skir_subjects::user_organizations(user_id)
+        .publish(WatchUserOrganizationsResponse::Add(Box::new(
+            org.clone().into(),
+        )))
+        .await?;
 
-    wasmcloud_utils::skir_subjects::organization_members(org.id.key.to_string()).publish(
-        WatchOrganizationMembersResponse::Add(Box::new(member.into())),
-    )?;
+    wasmcloud_utils::skir_subjects::organization_members(org.id.key.to_string())
+        .publish(WatchOrganizationMembersResponse::Add(Box::new(
+            member.into(),
+        )))
+        .await?;
 
     if single_use {
-        wasmcloud_utils::skir_subjects::organization_join_codes(org.id.key.to_string()).publish(
-            WatchOrganizationJoinCodesResponse::Remove(code.clone().into()),
-        )?;
+        wasmcloud_utils::skir_subjects::organization_join_codes(org.id.key.to_string())
+            .publish(WatchOrganizationJoinCodesResponse::Remove(
+                code.clone().into(),
+            ))
+            .await?;
     }
 
     Ok(SubmitUserJoinRequestResponse::AutoAccepted(Box::new(
@@ -360,18 +368,24 @@ async fn handle_manual_accept(
 
     let request_record = skir_domain_result!(SubmitUserJoinRequestResponse, result);
 
-    wasmcloud_utils::skir_subjects::user_join_requests(user_id).publish(
-        WatchUserJoinRequestsResponse::Add(Box::new(request_record.clone().into())),
-    )?;
+    wasmcloud_utils::skir_subjects::user_join_requests(user_id)
+        .publish(WatchUserJoinRequestsResponse::Add(Box::new(
+            request_record.clone().into(),
+        )))
+        .await?;
 
-    wasmcloud_utils::skir_subjects::organization_join_requests(org_id.key.to_string()).publish(
-        WatchOrganizationJoinRequestsResponse::Add(Box::new(request_record.clone().into())),
-    )?;
+    wasmcloud_utils::skir_subjects::organization_join_requests(org_id.key.to_string())
+        .publish(WatchOrganizationJoinRequestsResponse::Add(Box::new(
+            request_record.clone().into(),
+        )))
+        .await?;
 
     if single_use {
-        wasmcloud_utils::skir_subjects::organization_join_codes(org_id.key.to_string()).publish(
-            WatchOrganizationJoinCodesResponse::Remove(code.clone().into()),
-        )?;
+        wasmcloud_utils::skir_subjects::organization_join_codes(org_id.key.to_string())
+            .publish(WatchOrganizationJoinCodesResponse::Remove(
+                code.clone().into(),
+            ))
+            .await?;
     }
 
     Ok(SubmitUserJoinRequestResponse::RequestMade(Box::new(
@@ -418,16 +432,19 @@ pub async fn handle_cancel(
         ));
     };
 
-    wasmcloud_utils::skir_subjects::user_join_requests(user_id).publish(
-        WatchUserJoinRequestsResponse::Remove(Box::new(join_request.id.clone().into())),
-    )?;
+    wasmcloud_utils::skir_subjects::user_join_requests(user_id)
+        .publish(WatchUserJoinRequestsResponse::Remove(Box::new(
+            join_request.id.clone().into(),
+        )))
+        .await?;
 
     wasmcloud_utils::skir_subjects::organization_join_requests(
         join_request.organization.id.key.to_string(),
     )
     .publish(WatchOrganizationJoinRequestsResponse::Remove(Box::new(
         join_request.id.into(),
-    )))?;
+    )))
+    .await?;
 
     Ok(skir_variant!(CancelUserJoinRequestResponse::Success))
 }

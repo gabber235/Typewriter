@@ -25,6 +25,7 @@ spec:
           version: "0.2.0-rc.2"
           interfaces:
             - tracing
+            - metrics
         - namespace: wasi
           package: http
           interfaces:

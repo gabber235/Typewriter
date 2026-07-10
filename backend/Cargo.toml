@@ -15,7 +15,6 @@ rust-version = "1.95.0"
 repository = "https://github.com/gabber235/Typewriter"
 
 [workspace.dependencies]
-anyhow = "1"
 base64 = "0.22"
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
 nats-jwt-rs = "0.1"
