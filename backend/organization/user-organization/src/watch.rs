@@ -13,11 +13,13 @@ use wasmcloud_utils::{
 
 use crate::OrganizationRecord;
 
+#[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
     msg: BrokerMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchUserOrganizationsResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
+    otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let _request = decode_skir!(WatchUserOrganizationsRequest, &msg.body)?;
 
     let organizations = query(
@@ -33,5 +35,9 @@ pub async fn handle_watch(
     .map(Organization::from)
     .collect::<Vec<_>>();
 
+    otel_wasi::main_attribute!(
+        "organization.result_count" = organizations.len() as i64,
+        "organization.outcome" = "listed",
+    );
     Ok(WatchUserOrganizationsResponse::List(organizations))
 }

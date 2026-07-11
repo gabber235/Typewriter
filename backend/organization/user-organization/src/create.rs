@@ -10,11 +10,13 @@ use wasmcloud_utils::{
 
 use crate::OrganizationRecord;
 
+#[tracing::instrument(skip(msg, params))]
 pub async fn handle_create(
     msg: BrokerMessage,
     params: HashMap<String, String>,
 ) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
+    otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let request = decode_skir!(CreateOrganizationRequest, &msg.body)?;
 
     let name = request.name;
@@ -40,16 +42,18 @@ pub async fn handle_create(
     .bind("user_id", user_id)
     .execute()
     .await
-    .error_with_slug("slug")?
+    .error_with_slug("organization-create-query-failed")?
     .parse::<OrganizationRecord>(0)
-    .error_with_slug("slug")?
+    .error_with_slug("organization-create-result-parse-failed")?
     .into();
 
+    otel_wasi::main_attribute!("organization.id" = organization.organization_id.to_string());
     wasmcloud_utils::skir_subjects::user_organizations(user_id)
         .publish(WatchUserOrganizationsResponse::Add(Box::new(
             organization.clone(),
         )))
         .await?;
 
+    otel_wasi::main_attribute!("organization.outcome" = "created");
     Ok(CreateOrganizationResponse::Success(organization.into()))
 }

@@ -118,11 +118,13 @@ impl From<OrganizationRoleRecord> for OrganizationRole {
     }
 }
 
+#[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
     msg: BrokerMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchUserJoinRequestsResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
+    otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let _request = decode_skir!(WatchUserJoinRequestsRequest, &msg.body)?;
 
     let join_requests = query(
@@ -148,19 +150,26 @@ pub async fn handle_watch(
     .map(UserJoinRequest::from)
     .collect::<Vec<_>>();
 
+    otel_wasi::main_attribute!(
+        "join_request.result_count" = join_requests.len() as i64,
+        "join_request.outcome" = "listed"
+    );
     Ok(WatchUserJoinRequestsResponse::List(join_requests))
 }
 
+#[tracing::instrument(skip(msg, params))]
 pub async fn handle_request(
     msg: BrokerMessage,
     params: HashMap<String, String>,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
+    otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let request = decode_skir!(SubmitUserJoinRequestRequest, &msg.body)?;
 
     let code = request.code;
 
     let Some(join_code) = fetch_join_code(&code).await? else {
+        otel_wasi::main_attribute!("join_request.outcome" = "code_not_found");
         return Ok(skir_variant!(
             SubmitUserJoinRequestResponse::CodeNotFoundError { code }
         ));
@@ -169,6 +178,16 @@ pub async fn handle_request(
     let org = join_code.organization;
     let single_use = join_code.single_use;
     let auto_accept_roles = join_code.auto_accept_roles;
+    otel_wasi::main_attribute!(
+        "organization.id" = org.id.key.to_string(),
+        "join_request.single_use" = single_use,
+        "join_request.acceptance_mode" = if auto_accept_roles.is_empty() {
+            "manual"
+        } else {
+            "automatic"
+        },
+        "join_request.auto_accept_role_count" = auto_accept_roles.len() as i64
+    );
 
     if !auto_accept_roles.is_empty() {
         handle_auto_accept(&user_id, &org, &code, single_use, &auto_accept_roles).await
@@ -177,6 +196,7 @@ pub async fn handle_request(
     }
 }
 
+#[tracing::instrument(skip(code))]
 async fn fetch_join_code(
     code: &RecordId,
 ) -> Result<Option<JoinRequestCodeRecord>, otel_wasi::Error> {
@@ -201,6 +221,7 @@ async fn fetch_join_code(
     .error_with_slug("join-request-code-result-parse-failed")
 }
 
+#[tracing::instrument(skip(user_id, org, code, auto_accept_roles))]
 async fn handle_auto_accept(
     user_id: &str,
     org: &OrganizationRecord,
@@ -295,6 +316,7 @@ async fn handle_auto_accept(
             .await?;
     }
 
+    otel_wasi::main_attribute!("join_request.outcome" = "auto_accepted");
     Ok(SubmitUserJoinRequestResponse::AutoAccepted(Box::new(
         AutoAcceptedMember {
             organization_id: org.id.clone().into(),
@@ -306,6 +328,7 @@ async fn handle_auto_accept(
     )))
 }
 
+#[tracing::instrument(skip(user_id, org_id, code))]
 async fn handle_manual_accept(
     user_id: &str,
     org_id: &surrealdb_component_sdk::RecordId,
@@ -388,16 +411,19 @@ async fn handle_manual_accept(
             .await?;
     }
 
+    otel_wasi::main_attribute!("join_request.outcome" = "request_made");
     Ok(SubmitUserJoinRequestResponse::RequestMade(Box::new(
         request_record.into(),
     )))
 }
 
+#[tracing::instrument(skip(msg, params))]
 pub async fn handle_cancel(
     msg: BrokerMessage,
     params: HashMap<String, String>,
 ) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
+    otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let request = decode_skir!(CancelUserJoinRequestRequest, &msg.body)?;
 
     let request_id = request.request_id;
@@ -427,6 +453,7 @@ pub async fn handle_cancel(
     .error_with_slug("join-request-cancel-result-parse-failed")?;
 
     let Some(join_request) = join_request else {
+        otel_wasi::main_attribute!("join_request.outcome" = "request_not_found");
         return Ok(skir_variant!(
             CancelUserJoinRequestResponse::RequestNotFoundError { request_id }
         ));
@@ -446,5 +473,9 @@ pub async fn handle_cancel(
     )))
     .await?;
 
+    otel_wasi::main_attribute!(
+        "organization.id" = join_request.organization.id.key.to_string(),
+        "join_request.outcome" = "cancelled"
+    );
     Ok(skir_variant!(CancelUserJoinRequestResponse::Success))
 }
