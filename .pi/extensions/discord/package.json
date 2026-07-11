@@ -1,0 +1,11 @@
+{
+	"name": "pi-discord-extension",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "node --test --experimental-strip-types *.test.ts"
+	},
+	"dependencies": {
+		"typebox": "^1.0.14"
+	}
+}
