@@ -38,7 +38,7 @@ dependencies {
 
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("me.tofaa2:spigot:3.2.0-SNAPSHOT")
+    api("me.tofaa2:spigot:3.3.4-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 
@@ -55,8 +55,8 @@ dependencies {
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.11.1")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.11.1")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.13.0")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.13.0")
 
     compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnlyApi("org.geysermc.geyser:api:2.9.5-SNAPSHOT")

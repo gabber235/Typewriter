@@ -105,7 +105,7 @@ jobs:
           loaders: |
             paper
           game-versions: |
-            [1.21.3, 26.1.2]
+            [1.21.3, 26.2]
           dependencies: |
             packetevents(required)
             placeholderapi(recommended)

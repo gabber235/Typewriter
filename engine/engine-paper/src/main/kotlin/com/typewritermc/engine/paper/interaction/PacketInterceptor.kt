@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.event.PacketListenerAbstract
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.event.PacketSendEvent
 import com.github.retrooper.packetevents.event.ProtocolPacketEvent
+import com.github.retrooper.packetevents.protocol.ConnectionState
 import com.github.retrooper.packetevents.protocol.packettype.ClientBoundPacket
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.protocol.packettype.ServerBoundPacket
@@ -21,15 +22,15 @@ class PacketInterceptor : PacketListenerAbstract() {
     }
 
     override fun onPacketReceive(event: PacketReceiveEvent?) {
-        if (event == null) return
-        val player = event.getPlayer<Player?>() ?: return
+        if (event == null || event.connectionState != ConnectionState.PLAY) return
+        val player = event.getPlayer<Player>()
         val interceptor = blockers[player.uniqueId] ?: return
         interceptor.trigger(event)
     }
 
     override fun onPacketSend(event: PacketSendEvent?) {
-        if (event == null) return
-        val player = event.getPlayer<Player?>() ?: return
+        if (event == null || event.connectionState != ConnectionState.PLAY) return
+        val player = event.getPlayer<Player>()
         val interceptor = blockers[player.uniqueId] ?: return
         interceptor.trigger(event)
     }
