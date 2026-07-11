@@ -28,8 +28,8 @@ const SERVICES_SUBJECT: &str = "auth.permissions.typewriter-services";
 
 impl Guest for TypewriterPermissions {
     #[otel_wasi::wasi_instrument(service = "auth_typewriter_permissions", export)]
-    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-        handle_message_async(msg).await
+    fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+        wit_bindgen::block_on(handle_message_async(msg))
     }
 }
 
