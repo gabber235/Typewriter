@@ -1,17 +1,14 @@
 package com.typewritermc.basic.entries.variables
 
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Min
-import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.VariableData
 import com.typewritermc.core.interaction.randomSeed
 import com.typewritermc.core.utils.Generic
-import com.typewritermc.engine.paper.entry.entries.ConstVar
-import com.typewritermc.engine.paper.entry.entries.Var
-import com.typewritermc.engine.paper.entry.entries.VarContext
-import com.typewritermc.engine.paper.entry.entries.VariableEntry
-import com.typewritermc.engine.paper.entry.entries.getData
+import com.typewritermc.engine.paper.entry.entries.*
+import java.util.*
 import java.util.Collections.emptyList
 import kotlin.random.Random
 
@@ -34,14 +31,17 @@ class WeightedRandomVariableEntry(
     val values: List<WeightedValue> = emptyList(),
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        val dataValues = context.getData<WeightedRandomVariableData>()?.values ?: emptyList()
+        val data = context.getData<WeightedRandomVariableData>()
+        val dataValues = data?.values ?: emptyList()
         val allValues = (values + dataValues).filter { it.weight > 0 }
 
         require(allValues.isNotEmpty()) {
             "Weighted random variable '$id' has no values with a positive weight"
         }
+        val interactionSeed = context.interactionContext.randomSeed()
+        val seed = Objects.hash(interactionSeed, data?.hashCode() ?: hashCode())
 
-        val selected = allValues.weightedRandom(Random(context.interactionContext.randomSeed()))
+        val selected = allValues.weightedRandom(Random(seed))
         val selectedValue = selected.value.get(context.player, context.interactionContext)
         val value = selectedValue.get(context.klass)
             ?: throw IllegalStateException(

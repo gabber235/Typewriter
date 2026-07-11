@@ -8,6 +8,7 @@ import com.typewritermc.core.utils.Generic
 import com.typewritermc.engine.paper.entry.entries.VarContext
 import com.typewritermc.engine.paper.entry.entries.VariableEntry
 import com.typewritermc.engine.paper.entry.entries.getData
+import java.util.*
 import kotlin.random.Random
 
 @Entry(
@@ -23,8 +24,10 @@ class RandomVariableEntry(
     val values: List<Generic> = emptyList(),
 ) : VariableEntry {
     override fun <T : Any> get(context: VarContext<T>): T {
-        val dataValues = context.getData<RandomVariableData>()?.values ?: emptyList()
-        val seed = context.interactionContext.randomSeed()
+        val data = context.getData<RandomVariableData>()
+        val dataValues = data?.values ?: emptyList()
+        val interactionSeed = context.interactionContext.randomSeed()
+        val seed = Objects.hash(interactionSeed, data?.hashCode() ?: hashCode())
         val randomIndex = Random(seed).nextInt(values.size + dataValues.size)
         val genericValue = if (randomIndex < values.size) {
             values[randomIndex]
