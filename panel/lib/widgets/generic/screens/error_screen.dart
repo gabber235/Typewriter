@@ -1,8 +1,5 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:rive/rive.dart";
-import "package:typewriter_panel/hooks/rive.dart";
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/context.dart";
 import "package:typewriter_panel/utils/rive.dart";
@@ -55,7 +52,7 @@ const funnyErrorTitles = [
   "The red pen ran out of judgment",
 ];
 
-class ErrorScreen extends HookWidget {
+class ErrorScreen extends StatelessWidget {
   const ErrorScreen({
     this.title = "",
     this.message = "",
@@ -78,7 +75,6 @@ class ErrorScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final fileLoader = useRiveFileLoader.fromAsset("assets/robot_island.riv");
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -88,10 +84,9 @@ class ErrorScreen extends HookWidget {
           flex: 6,
           child: MouseRegion(
             cursor: SystemMouseCursors.zoomIn,
-            child: RiveWidgetBuilder(
-              fileLoader: fileLoader,
-              stateMachineSelector: StateMachineSelector.byName("Motion"),
-              builder: (context, state) => state(),
+            child: const RiveAsset(
+              asset: "assets/robot_island.riv",
+              stateMachineName: "Motion",
             ),
           ),
         ),
@@ -176,10 +171,6 @@ class SmallErrorScreen extends ErrorScreen {
 
   @override
   Widget build(BuildContext context) {
-    final fileLoader = withIcon
-        ? useRiveFileLoader.fromAsset("assets/robot_island.riv")
-        : null;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -196,10 +187,9 @@ class SmallErrorScreen extends ErrorScreen {
                 return SizedBox(
                   width: size,
                   height: size,
-                  child: RiveWidgetBuilder(
-                    fileLoader: fileLoader!,
-                    stateMachineSelector: StateMachineSelector.byName("Motion"),
-                    builder: (context, state) => state(),
+                  child: const RiveAsset(
+                    asset: "assets/robot_island.riv",
+                    stateMachineName: "Motion",
                   ),
                 );
               },

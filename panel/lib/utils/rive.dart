@@ -1,7 +1,57 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:rive/rive.dart";
+import "package:typewriter_panel/hooks/rive.dart";
+import "package:typewriter_panel/utils/test_environment.dart";
 import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
+
+class RiveAsset extends StatelessWidget {
+  const RiveAsset({
+    required this.asset,
+    required this.stateMachineName,
+    this.placeholder = const SizedBox.shrink(),
+    this.builder,
+    super.key,
+  });
+
+  final String asset;
+  final String stateMachineName;
+  final Widget placeholder;
+  final Widget Function(BuildContext, RiveState)? builder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isFlutterTest) return placeholder;
+
+    return _LoadedRiveAsset(
+      asset: asset,
+      stateMachineName: stateMachineName,
+      builder: builder,
+    );
+  }
+}
+
+class _LoadedRiveAsset extends HookWidget {
+  const _LoadedRiveAsset({
+    required this.asset,
+    required this.stateMachineName,
+    this.builder,
+  });
+
+  final String asset;
+  final String stateMachineName;
+  final Widget Function(BuildContext, RiveState)? builder;
+
+  @override
+  Widget build(BuildContext context) {
+    final fileLoader = useRiveFileLoader.fromAsset(asset);
+    return RiveWidgetBuilder(
+      fileLoader: fileLoader,
+      stateMachineSelector: StateMachineSelector.byName(stateMachineName),
+      builder: builder ?? (context, state) => state(),
+    );
+  }
+}
 
 /// Extension on [RiveState] for convenient widget building with loading and error states.
 extension RiveStateExtension on RiveState {

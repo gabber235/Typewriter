@@ -1,7 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:rive/rive.dart";
-import "package:typewriter_panel/hooks/rive.dart";
 import "package:typewriter_panel/logic/search/search.dart";
 import "package:typewriter_panel/main.dart";
 import "package:typewriter_panel/utils/rive.dart";
@@ -83,7 +80,7 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class _GuidanceOrEmptyState extends HookWidget {
+class _GuidanceOrEmptyState extends StatelessWidget {
   const _GuidanceOrEmptyState({required this.snapshot});
 
   final SearchSourceSnapshot snapshot;
@@ -112,8 +109,6 @@ class _GuidanceOrEmptyState extends HookWidget {
       );
     }
 
-    final fileLoader = useRiveFileLoader.fromAsset("assets/cute_robot.riv");
-
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: Column(
@@ -121,10 +116,9 @@ class _GuidanceOrEmptyState extends HookWidget {
         children: [
           Expanded(
             flex: 5,
-            child: RiveWidgetBuilder(
-              fileLoader: fileLoader,
-              stateMachineSelector: StateMachineSelector.byName("Motion"),
-              builder: (context, state) => state(),
+            child: const RiveAsset(
+              asset: "assets/cute_robot.riv",
+              stateMachineName: "Motion",
             ),
           ),
           ConstrainedBox(
