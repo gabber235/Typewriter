@@ -12,92 +12,183 @@ import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+const _testUserId = "user1";
+final _testOrganizationId = recordId("organization:org1");
+final _testMemberId = recordId("user:m1");
+final _testTimestamp = DateTime.utc(2025, 1, 1, 12);
+
+String get _memberUpdateSubject =>
+    "cloud.out.user.$_testUserId.organization.org1.members.update";
+String get _memberRemoveSubject =>
+    "cloud.out.user.$_testUserId.organization.org1.members.remove";
+String get _approveRequestSubject =>
+    "cloud.out.user.$_testUserId.organization.$_testOrganizationId.members.join_requests.approve";
+
+OrganizationRole _role({
+  String id = "r1",
+  String name = "Role",
+  Color color = Colors.grey,
+  bool defaultRole = false,
+  bool assignable = true,
+  bool deletable = false,
+}) => OrganizationRole(
+  roleId: recordId("organization_role:$id"),
+  name: name,
+  color: color,
+  defaultRole: defaultRole,
+  assignable: assignable,
+  deletable: deletable,
+);
+
+OrganizationMember _member({
+  List<OrganizationRole> roles = const [],
+  String name = "Test",
+  String email = "test@test.com",
+  String avatarUrl = "",
+  DateTime? joinedAt,
+}) => OrganizationMember(
+  userId: _testMemberId,
+  name: name,
+  email: email,
+  avatarUrl: avatarUrl,
+  roles: roles,
+  joinedAt: joinedAt ?? _testTimestamp,
+);
+
+/// Reads the first value emitted by an async provider and releases it.
+///
+/// The subscription callback keeps this helper independent of Riverpod's
+/// internal provider types while still handling already-ready providers.
+Future<T> _readAsyncData<T>(
+  ProviderSubscription<AsyncValue<T>> Function(
+    void Function(AsyncValue<T>? previous, AsyncValue<T> next) listener,
+  )
+  subscribe,
+) async {
+  final result = Completer<T>();
+  late final ProviderSubscription<AsyncValue<T>> subscription;
+  subscription = subscribe((previous, next) {
+    if (result.isCompleted) return;
+    switch (next) {
+      case AsyncData<T>(:final value):
+        result.complete(value);
+      case AsyncError<T>(:final error, :final stackTrace):
+        result.completeError(error, stackTrace);
+      default:
+    }
+  });
+  try {
+    return await result.future;
+  } finally {
+    subscription.close();
+  }
+}
+
+/// Retains an auto-dispose provider between readiness and command handling.
+///
+/// A one-shot `.future` read allows disposal before a command runs or while
+/// command invalidation rebuilds the provider. Callers must close the returned
+/// subscription, normally with `addTearDown`.
+Future<ProviderSubscription<AsyncValue<T>>> _retainUntilReady<T>(
+  ProviderSubscription<AsyncValue<T>> Function(
+    void Function(AsyncValue<T>? previous, AsyncValue<T> next) listener,
+  )
+  subscribe,
+) async {
+  final ready = Completer<void>();
+  late final ProviderSubscription<AsyncValue<T>> subscription;
+  subscription = subscribe((previous, next) {
+    if (ready.isCompleted) return;
+    switch (next) {
+      case AsyncData<T>():
+        ready.complete();
+      case AsyncError<T>(:final error, :final stackTrace):
+        ready.completeError(error, stackTrace);
+      default:
+    }
+  });
+  try {
+    await ready.future;
+    return subscription;
+  } catch (_) {
+    subscription.close();
+    rethrow;
+  }
+}
+
+Future<T> _readProviderValue<T>(
+  ProviderSubscription<T> Function(void Function(T? previous, T next))
+  subscribe,
+) async {
+  final result = Completer<T>();
+  final subscription = subscribe((previous, next) {
+    if (!result.isCompleted) result.complete(next);
+  });
+  try {
+    return await result.future;
+  } finally {
+    subscription.close();
+  }
+}
+
+Future<List<OrganizationJoinRequest>> _readJoinRequests(
+  ProviderContainer container,
+) => _readAsyncData(
+  (listener) => container.listen(
+    organizationJoinRequestsProvider,
+    listener,
+    fireImmediately: true,
+  ),
+);
+
+Future<List<OrganizationJoinCode>> _readJoinCodes(
+  ProviderContainer container,
+) => _readAsyncData(
+  (listener) => container.listen(
+    organizationJoinCodesProvider,
+    listener,
+    fireImmediately: true,
+  ),
+);
+
+Future<List<OrganizationMember>> _readMembers(ProviderContainer container) =>
+    _readAsyncData(
+      (listener) => container.listen(
+        organizationMembersProvider,
+        listener,
+        fireImmediately: true,
+      ),
+    );
+
+Future<List<OrganizationRole>> _readRoles(ProviderContainer container) =>
+    _readAsyncData(
+      (listener) => container.listen(
+        organizationRolesProvider,
+        listener,
+        fireImmediately: true,
+      ),
+    );
+
 void main() {
-  Future<int> getJoinRequestCount(ProviderContainer container) async {
-    final completer = Completer<int>();
-    final sub = container.listen(joinRequestCountProvider, (previous, next) {
-      if (!completer.isCompleted) {
-        completer.complete(next);
-      }
-    }, fireImmediately: true);
-    try {
-      return await completer.future;
-    } finally {
-      sub.close();
-    }
-  }
+  Future<int> getJoinRequestCount(ProviderContainer container) =>
+      _readProviderValue(
+        (listener) => container.listen(
+          joinRequestCountProvider,
+          listener,
+          fireImmediately: true,
+        ),
+      );
 
-  Future<int> getJoinCodeCount(ProviderContainer container) async {
-    final completer = Completer<int>();
-    final sub = container.listen(joinCodeCountProvider, (previous, next) {
-      if (!completer.isCompleted) {
-        completer.complete(next);
-      }
-    }, fireImmediately: true);
-    try {
-      return await completer.future;
-    } finally {
-      sub.close();
-    }
-  }
+  Future<int> getJoinCodeCount(ProviderContainer container) =>
+      _readProviderValue(
+        (listener) => container.listen(
+          joinCodeCountProvider,
+          listener,
+          fireImmediately: true,
+        ),
+      );
 
-  Future<List<OrganizationJoinRequest>> waitForJoinRequests(
-    ProviderContainer container,
-  ) async {
-    final completer = Completer<List<OrganizationJoinRequest>>();
-    final sub = container.listen(organizationJoinRequestsProvider, (
-      previous,
-      next,
-    ) {
-      if (next is AsyncData<List<OrganizationJoinRequest>>) {
-        if (!completer.isCompleted) {
-          completer.complete(next.value);
-        }
-      } else if (next is AsyncError) {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            next.error ?? StateError("Unknown error"),
-            next.stackTrace,
-          );
-        }
-      }
-    }, fireImmediately: true);
-    try {
-      return await completer.future;
-    } finally {
-      sub.close();
-    }
-  }
-
-  Future<List<OrganizationJoinCode>> waitForJoinCodes(
-    ProviderContainer container,
-  ) async {
-    final completer = Completer<List<OrganizationJoinCode>>();
-    final sub = container.listen(organizationJoinCodesProvider, (
-      previous,
-      next,
-    ) {
-      if (next is AsyncData<List<OrganizationJoinCode>>) {
-        if (!completer.isCompleted) {
-          completer.complete(next.value);
-        }
-      } else if (next is AsyncError) {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            next.error ?? StateError("Unknown error"),
-            next.stackTrace,
-          );
-        }
-      }
-    }, fireImmediately: true);
-    try {
-      return await completer.future;
-    } finally {
-      sub.close();
-    }
-  }
-
-  group("joinRequestCount", () {
+  group("join request count", () {
     OrganizationJoinRequest createRequest({required bool expired}) {
       final now = DateTime.now();
       return OrganizationJoinRequest(
@@ -141,14 +232,18 @@ void main() {
         previous,
         next,
       ) {
-        if (next is AsyncError && !completer.isCompleted) {
+        if (next.hasError && !completer.isCompleted) {
           completer.complete();
         }
       }, fireImmediately: true);
 
       try {
-        await completer.future.timeout(const Duration(seconds: 2));
-      } on TimeoutException catch (_) {
+        await completer.future.timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw TestFailure(
+            "organizationJoinRequestsProvider did not emit AsyncError",
+          ),
+        );
       } finally {
         sub.close();
       }
@@ -165,7 +260,7 @@ void main() {
         ],
       );
 
-      await waitForJoinRequests(container);
+      await _readJoinRequests(container);
       expect(await getJoinRequestCount(container), 0);
     });
 
@@ -183,7 +278,7 @@ void main() {
         ],
       );
 
-      await waitForJoinRequests(container);
+      await _readJoinRequests(container);
       expect(await getJoinRequestCount(container), 0);
     });
 
@@ -202,7 +297,7 @@ void main() {
         ],
       );
 
-      await waitForJoinRequests(container);
+      await _readJoinRequests(container);
       expect(await getJoinRequestCount(container), 3);
     });
 
@@ -222,12 +317,12 @@ void main() {
         ],
       );
 
-      await waitForJoinRequests(container);
+      await _readJoinRequests(container);
       expect(await getJoinRequestCount(container), 2);
     });
   });
 
-  group("joinCodeCount", () {
+  group("join code count", () {
     var codeCounter = 0;
 
     OrganizationJoinCode createCode({
@@ -270,7 +365,7 @@ void main() {
         ],
       );
 
-      await waitForJoinCodes(container);
+      await _readJoinCodes(container);
       expect(await getJoinCodeCount(container), 0);
     });
 
@@ -288,7 +383,7 @@ void main() {
         ],
       );
 
-      await waitForJoinCodes(container);
+      await _readJoinCodes(container);
       expect(await getJoinCodeCount(container), 0);
     });
 
@@ -303,7 +398,7 @@ void main() {
         ],
       );
 
-      await waitForJoinCodes(container);
+      await _readJoinCodes(container);
       expect(await getJoinCodeCount(container), 1);
     });
 
@@ -322,7 +417,7 @@ void main() {
         ],
       );
 
-      await waitForJoinCodes(container);
+      await _readJoinCodes(container);
       expect(await getJoinCodeCount(container), 2);
     });
 
@@ -342,12 +437,12 @@ void main() {
         ],
       );
 
-      await waitForJoinCodes(container);
+      await _readJoinCodes(container);
       expect(await getJoinCodeCount(container), 4);
     });
   });
 
-  group("JoinRequest", () {
+  group("OrganizationJoinRequest", () {
     test("isExpired returns true when expiresAt is in the past", () {
       final request = OrganizationJoinRequest(
         requestId: recordId("request_to_join:req-1"),
@@ -379,7 +474,7 @@ void main() {
     });
   });
 
-  group("JoinCode", () {
+  group("OrganizationJoinCode", () {
     test("isExpired returns true when expiresAt is in the past", () {
       final code = OrganizationJoinCode(
         code: recordId("organization_join_codes:ABC123"),
@@ -417,7 +512,7 @@ void main() {
     });
   });
 
-  group("MemberRole", () {
+  group("OrganizationRole", () {
     test("creates role with all properties", () {
       final role = OrganizationRole(
         roleId: recordId("organization_role:role-1"),
@@ -515,7 +610,7 @@ void main() {
     });
   });
 
-  group("Auth Guards", () {
+  group("OrganizationMembers authentication", () {
     late MockNatsClient mockNats;
 
     setUp(() {
@@ -526,51 +621,19 @@ void main() {
       mockNats.dispose();
     });
 
-    Future<List<OrganizationMember>> waitForMembers(
-      ProviderContainer container,
-    ) async {
-      final completer = Completer<List<OrganizationMember>>();
-      final sub = container.listen(organizationMembersProvider, (
-        previous,
-        next,
-      ) {
-        if (next is AsyncData<List<OrganizationMember>>) {
-          if (!completer.isCompleted) {
-            completer.complete(next.value);
-          }
-        }
-      }, fireImmediately: true);
-      try {
-        return await completer.future;
-      } finally {
-        sub.close();
-      }
-    }
-
     test("updateMemberRoles throws when userId is null", () async {
       final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
-            () => _MockMembersNotifier([
-              OrganizationMember(
-                userId: recordId("user:m1"),
-                name: "Test",
-                email: "test@test.com",
-                avatarUrl: "",
-                roles: [],
-                joinedAt: DateTime.now(),
-              ),
-            ]),
+            () => _MockMembersNotifier([_member()]),
           ),
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       expect(
         () => container
@@ -583,25 +646,16 @@ void main() {
     test("updateMemberRoles throws when organizationId is null", () async {
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
+          userIdProvider.overrideWith((ref) async => _testUserId),
           organizationIdProvider.overrideWith((ref) => null),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
-            () => _MockMembersNotifier([
-              OrganizationMember(
-                userId: recordId("user:m1"),
-                name: "Test",
-                email: "test@test.com",
-                avatarUrl: "",
-                roles: [],
-                joinedAt: DateTime.now(),
-              ),
-            ]),
+            () => _MockMembersNotifier([_member()]),
           ),
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       expect(
         () => container
@@ -615,26 +669,15 @@ void main() {
       final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
-            () => _MockMembersNotifier([
-              OrganizationMember(
-                userId: recordId("user:m1"),
-                name: "Test",
-                email: "test@test.com",
-                avatarUrl: "",
-                roles: [],
-                joinedAt: DateTime.now(),
-              ),
-            ]),
+            () => _MockMembersNotifier([_member()]),
           ),
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       expect(
         () => container
@@ -647,25 +690,16 @@ void main() {
     test("removeMember throws when organizationId is null", () async {
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
+          userIdProvider.overrideWith((ref) async => _testUserId),
           organizationIdProvider.overrideWith((ref) => null),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
-            () => _MockMembersNotifier([
-              OrganizationMember(
-                userId: recordId("user:m1"),
-                name: "Test",
-                email: "test@test.com",
-                avatarUrl: "",
-                roles: [],
-                joinedAt: DateTime.now(),
-              ),
-            ]),
+            () => _MockMembersNotifier([_member()]),
           ),
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       expect(
         () => container
@@ -676,7 +710,7 @@ void main() {
     });
   });
 
-  group("Optimistic Updates", () {
+  group("OrganizationMembers command state", () {
     late MockNatsClient mockNats;
 
     setUp(() {
@@ -687,45 +721,15 @@ void main() {
       mockNats.dispose();
     });
 
-    Future<List<OrganizationMember>> waitForMembers(
-      ProviderContainer container,
-    ) async {
-      final completer = Completer<List<OrganizationMember>>();
-      final sub = container.listen(organizationMembersProvider, (
-        previous,
-        next,
-      ) {
-        if (next is AsyncData<List<OrganizationMember>>) {
-          if (!completer.isCompleted) {
-            completer.complete(next.value);
-          }
-        }
-      }, fireImmediately: true);
-      try {
-        return await completer.future;
-      } finally {
-        sub.close();
-      }
-    }
-
     test(
       "removeMember optimistically removes then restores on error",
       () async {
-        final member = OrganizationMember(
-          userId: recordId("user:m1"),
-          name: "Test",
-          email: "test@test.com",
-          avatarUrl: "",
-          roles: [],
-          joinedAt: DateTime.now(),
-        );
+        final member = _member();
 
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user1"),
-            organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org1"),
-            ),
+            userIdProvider.overrideWith((ref) async => _testUserId),
+            organizationIdProvider.overrideWith((ref) => _testOrganizationId),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
               () => _MockMembersNotifier([member]),
@@ -733,20 +737,18 @@ void main() {
           ],
         );
 
-        await waitForMembers(container);
+        await _readMembers(container);
 
-        mockNats.registerHandler(
-          "cloud.out.user.user1.organization.org1.members.remove",
-          (data) {
-            throw TimeoutException("Connection error");
-          },
-        );
+        mockNats.registerHandler(_memberRemoveSubject, (data) {
+          throw TimeoutException("Connection error");
+        });
 
-        try {
-          await container
+        await expectLater(
+          container
               .read(organizationMembersProvider.notifier)
-              .removeMember(recordId("user:m1"));
-        } on Exception catch (_) {}
+              .removeMember(_testMemberId),
+          throwsA(isA<TimeoutException>()),
+        );
 
         final currentState = container.read(organizationMembersProvider);
         expect(currentState.value, isNotNull);
@@ -756,21 +758,12 @@ void main() {
     );
 
     test("removeMember succeeds when server confirms", () async {
-      final member = OrganizationMember(
-        userId: recordId("user:m1"),
-        name: "Test",
-        email: "test@test.com",
-        avatarUrl: "",
-        roles: [],
-        joinedAt: DateTime.now(),
-      );
+      final member = _member();
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
@@ -778,10 +771,10 @@ void main() {
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.remove",
+        _memberRemoveSubject,
         (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
           skir.RemoveOrganizationMemberResponse.createSuccess(),
         ),
@@ -799,34 +792,25 @@ void main() {
     test(
       "updateMemberRoles optimistically updates then restores on error",
       () async {
-        final oldRole = OrganizationRole(
-          roleId: recordId("organization_role:r1"),
+        final oldRole = _role(
+          id: "r1",
           name: "Member",
           color: Colors.grey,
           assignable: true,
         );
-        final newRole = OrganizationRole(
-          roleId: recordId("organization_role:r2"),
+        final newRole = _role(
+          id: "r2",
           name: "Admin",
           color: Colors.red,
           assignable: true,
         );
 
-        final member = OrganizationMember(
-          userId: recordId("user:m1"),
-          name: "Test",
-          email: "test@test.com",
-          avatarUrl: "",
-          roles: [oldRole],
-          joinedAt: DateTime.now(),
-        );
+        final member = _member(roles: [oldRole]);
 
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user1"),
-            organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org1"),
-            ),
+            userIdProvider.overrideWith((ref) async => _testUserId),
+            organizationIdProvider.overrideWith((ref) => _testOrganizationId),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
               () => _MockMembersNotifier([member]),
@@ -837,20 +821,18 @@ void main() {
           ],
         );
 
-        await waitForMembers(container);
+        await _readMembers(container);
 
-        mockNats.registerHandler(
-          "cloud.out.user.user1.organization.org1.members.update",
-          (data) {
-            throw TimeoutException("Connection error");
-          },
-        );
+        mockNats.registerHandler(_memberUpdateSubject, (data) {
+          throw TimeoutException("Connection error");
+        });
 
-        try {
-          await container
+        await expectLater(
+          container
               .read(organizationMembersProvider.notifier)
-              .updateMemberRoles(recordId("user:m1"), [newRole]);
-        } on Exception catch (_) {}
+              .updateMemberRoles(_testMemberId, [newRole]),
+          throwsA(isA<TimeoutException>()),
+        );
 
         final currentState = container.read(organizationMembersProvider);
         expect(currentState.value, isNotNull);
@@ -863,34 +845,25 @@ void main() {
     );
 
     test("updateMemberRoles succeeds when server confirms", () async {
-      final oldRole = OrganizationRole(
-        roleId: recordId("organization_role:r1"),
+      final oldRole = _role(
+        id: "r1",
         name: "Member",
         color: Colors.grey,
         assignable: true,
       );
-      final newRole = OrganizationRole(
-        roleId: recordId("organization_role:r2"),
+      final newRole = _role(
+        id: "r2",
         name: "Admin",
         color: Colors.red,
         assignable: true,
       );
 
-      final member = OrganizationMember(
-        userId: recordId("user:m1"),
-        name: "Test",
-        email: "test@test.com",
-        avatarUrl: "",
-        roles: [oldRole],
-        joinedAt: DateTime.now(),
-      );
+      final member = _member(roles: [oldRole]);
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
@@ -901,18 +874,18 @@ void main() {
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.update",
+        _memberUpdateSubject,
         (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createSuccess(
             userId: recordId("user:m1"),
             name: "Test",
             email: "test@test.com",
             avatarUrl: "",
-            roles: [],
-            joinedAt: DateTime.now(),
+            roles: [newRole.toSkir()],
+            joinedAt: _testTimestamp,
           ),
         ),
       );
@@ -931,7 +904,7 @@ void main() {
     });
   });
 
-  group("Command Outcomes", () {
+  group("Organization command errors", () {
     late MockNatsClient mockNats;
 
     setUp(() => mockNats = MockNatsClient());
@@ -941,48 +914,44 @@ void main() {
         .having((error) => error.code, "code", code)
         .having((error) => error.message, "message", message);
 
-    Future<void> waitUntilReady(ProviderContainer container, provider) async {
-      await container.read(provider.future);
-    }
-
     OrganizationMember memberWithRole(OrganizationRole role) =>
-        OrganizationMember(
-          userId: recordId("user:m1"),
-          name: "Test",
-          roles: [role],
-          joinedAt: DateTime.now(),
-        );
+        _member(roles: [role], email: "", avatarUrl: "");
 
     test(
       "updateMemberRoles maps unassignable roles and restores state",
       () async {
-        final oldRole = OrganizationRole(
-          roleId: recordId("organization_role:old"),
+        final oldRole = _role(
+          id: "old",
           name: "Member",
           color: Colors.grey,
           assignable: true,
         );
-        final newRole = OrganizationRole(
-          roleId: recordId("organization_role:new"),
+        final newRole = _role(
+          id: "new",
           name: "Admin",
           color: Colors.red,
           assignable: true,
         );
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user1"),
-            organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org1"),
-            ),
+            userIdProvider.overrideWith((ref) async => _testUserId),
+            organizationIdProvider.overrideWith((ref) => _testOrganizationId),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
               () => _MockMembersNotifier([memberWithRole(oldRole)]),
             ),
           ],
         );
-        await waitUntilReady(container, organizationMembersProvider);
+        final subscription = await _retainUntilReady<List<OrganizationMember>>(
+          (listener) => container.listen(
+            organizationMembersProvider,
+            listener,
+            fireImmediately: true,
+          ),
+        );
+        addTearDown(subscription.close);
         mockNats.registerHandler(
-          "cloud.out.user.user1.organization.org1.members.update",
+          _memberUpdateSubject,
           (
             data,
           ) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
@@ -1006,27 +975,32 @@ void main() {
     );
 
     test("updateMemberRoles maps founder role requirement to conflict", () async {
-      final role = OrganizationRole(
-        roleId: recordId("organization_role:founder"),
+      final role = _role(
+        id: "founder",
         name: "Founder",
         color: Colors.red,
         assignable: true,
       );
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([memberWithRole(role)]),
           ),
         ],
       );
-      await waitUntilReady(container, organizationMembersProvider);
+      final subscription = await _retainUntilReady<List<OrganizationMember>>(
+        (listener) => container.listen(
+          organizationMembersProvider,
+          listener,
+          fireImmediately: true,
+        ),
+      );
+      addTearDown(subscription.close);
       mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.update",
+        _memberUpdateSubject,
         (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createFounderRoleRequiredError(),
         ),
@@ -1054,19 +1028,24 @@ void main() {
         final member = memberWithRole(role);
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user1"),
-            organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org1"),
-            ),
+            userIdProvider.overrideWith((ref) async => _testUserId),
+            organizationIdProvider.overrideWith((ref) => _testOrganizationId),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
               () => _MockMembersNotifier([member]),
             ),
           ],
         );
-        await waitUntilReady(container, organizationMembersProvider);
+        final subscription = await _retainUntilReady<List<OrganizationMember>>(
+          (listener) => container.listen(
+            organizationMembersProvider,
+            listener,
+            fireImmediately: true,
+          ),
+        );
+        addTearDown(subscription.close);
         mockNats.registerHandler(
-          "cloud.out.user.user1.organization.org1.members.remove",
+          _memberRemoveSubject,
           (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
             skir.RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
               userId: member.userId,
@@ -1086,59 +1065,77 @@ void main() {
       },
     );
 
-    for (final outcome in [
-      (
-        "roles required",
-        skir.ApproveOrganizationJoinRequestResponse.createRolesRequiredError(),
-        400,
-        "At least one role is required",
-      ),
-      (
-        "user already member",
-        skir.ApproveOrganizationJoinRequestResponse.createUserAlreadyMemberError(
-          userId: recordId("user:m1"),
-        ),
-        409,
-        "User is already an organization member",
-      ),
-    ]) {
-      test("approveRequest maps ${outcome.$1}", () async {
+    final approveRequestErrors =
+        <
+          ({
+            String name,
+            skir.ApproveOrganizationJoinRequestResponse response,
+            int code,
+            String message,
+          })
+        >[
+          (
+            name: "roles required",
+            response: skir
+                .ApproveOrganizationJoinRequestResponse.createRolesRequiredError(),
+            code: 400,
+            message: "At least one role is required",
+          ),
+          (
+            name: "user already member",
+            response:
+                skir.ApproveOrganizationJoinRequestResponse.createUserAlreadyMemberError(
+                  userId: _testMemberId,
+                ),
+            code: 409,
+            message: "User is already an organization member",
+          ),
+        ];
+
+    for (final outcome in approveRequestErrors) {
+      test("approveRequest maps ${outcome.name}", () async {
         final request = OrganizationJoinRequest(
           requestId: recordId("request_to_join:req-1"),
           userId: recordId("user:m1"),
-          requestedAt: DateTime.now(),
-          expiresAt: DateTime.now().add(const Duration(days: 1)),
+          requestedAt: _testTimestamp,
+          expiresAt: _testTimestamp.add(const Duration(days: 1)),
         );
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user1"),
-            organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org1"),
-            ),
+            userIdProvider.overrideWith((ref) async => _testUserId),
+            organizationIdProvider.overrideWith((ref) => _testOrganizationId),
             natsProvider.overrideWithValue(mockNats),
             organizationJoinRequestsProvider.overrideWith(
               () => _MockJoinRequestsNotifier([request]),
             ),
           ],
         );
-        await waitUntilReady(container, organizationJoinRequestsProvider);
+        final subscription =
+            await _retainUntilReady<List<OrganizationJoinRequest>>(
+              (listener) => container.listen(
+                organizationJoinRequestsProvider,
+                listener,
+                fireImmediately: true,
+              ),
+            );
+        addTearDown(subscription.close);
         mockNats.registerHandler(
-          "cloud.out.user.user1.organization.org1.members.join_requests.approve",
+          _approveRequestSubject,
           (data) => skir.ApproveOrganizationJoinRequestResponse.serializer
-              .toBytes(outcome.$2),
+              .toBytes(outcome.response),
         );
 
         await expectLater(
           container
               .read(organizationJoinRequestsProvider.notifier)
               .approveRequest(request.requestId, []),
-          throwsA(apiException(outcome.$3, outcome.$4)),
+          throwsA(apiException(outcome.code, outcome.message)),
         );
       });
     }
   });
 
-  group("Role Merging Logic", () {
+  group("OrganizationMembers.updateMemberRoles role merging", () {
     late MockNatsClient mockNats;
 
     setUp(() {
@@ -1149,42 +1146,21 @@ void main() {
       mockNats.dispose();
     });
 
-    Future<List<OrganizationMember>> waitForMembers(
-      ProviderContainer container,
-    ) async {
-      final completer = Completer<List<OrganizationMember>>();
-      final sub = container.listen(organizationMembersProvider, (
-        previous,
-        next,
-      ) {
-        if (next is AsyncData<List<OrganizationMember>>) {
-          if (!completer.isCompleted) {
-            completer.complete(next.value);
-          }
-        }
-      }, fireImmediately: true);
-      try {
-        return await completer.future;
-      } finally {
-        sub.close();
-      }
-    }
-
     test("preserves non-assignable roles from current member", () async {
-      final nonAssignableRole = OrganizationRole(
-        roleId: recordId("organization_role:owner"),
+      final nonAssignableRole = _role(
+        id: "owner",
         name: "Owner",
         color: Colors.purple,
         assignable: false,
       );
-      final assignableRole = OrganizationRole(
-        roleId: recordId("organization_role:editor"),
+      final assignableRole = _role(
+        id: "editor",
         name: "Editor",
         color: Colors.blue,
         assignable: true,
       );
-      final newRole = OrganizationRole(
-        roleId: recordId("organization_role:viewer"),
+      final newRole = _role(
+        id: "viewer",
         name: "Viewer",
         color: Colors.green,
         assignable: true,
@@ -1196,15 +1172,13 @@ void main() {
         email: "test@test.com",
         avatarUrl: "",
         roles: [nonAssignableRole, assignableRole],
-        joinedAt: DateTime.now(),
+        joinedAt: _testTimestamp,
       );
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
@@ -1219,27 +1193,24 @@ void main() {
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       List<skir.RecordId>? capturedRoleIds;
-      mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.update",
-        (data) {
-          final request = skir.UpdateOrganizationMemberRolesRequest.serializer
-              .fromBytes(data);
-          capturedRoleIds = request.roleIds.toList();
-          return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
-            skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-              userId: recordId("user:m1"),
-              name: "Test",
-              email: "test@test.com",
-              avatarUrl: "",
-              roles: [],
-              joinedAt: DateTime.now(),
-            ),
-          );
-        },
-      );
+      mockNats.registerHandler(_memberUpdateSubject, (data) {
+        final request = skir.UpdateOrganizationMemberRolesRequest.serializer
+            .fromBytes(data);
+        capturedRoleIds = request.roleIds.toList();
+        return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
+          skir.UpdateOrganizationMemberRolesResponse.createSuccess(
+            userId: recordId("user:m1"),
+            name: "Test",
+            email: "test@test.com",
+            avatarUrl: "",
+            roles: [],
+            joinedAt: _testTimestamp,
+          ),
+        );
+      });
 
       await container
           .read(organizationMembersProvider.notifier)
@@ -1261,34 +1232,25 @@ void main() {
     });
 
     test("only includes assignable roles from requested roles", () async {
-      final assignableRole = OrganizationRole(
-        roleId: recordId("organization_role:member"),
+      final assignableRole = _role(
+        id: "member",
         name: "Member",
         color: Colors.grey,
         assignable: true,
       );
-      final nonAssignableRequested = OrganizationRole(
-        roleId: recordId("organization_role:admin"),
+      final nonAssignableRequested = _role(
+        id: "admin",
         name: "Admin",
         color: Colors.red,
         assignable: false,
       );
 
-      final member = OrganizationMember(
-        userId: recordId("user:m1"),
-        name: "Test",
-        email: "test@test.com",
-        avatarUrl: "",
-        roles: [assignableRole],
-        joinedAt: DateTime.now(),
-      );
+      final member = _member(roles: [assignableRole]);
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
@@ -1299,27 +1261,24 @@ void main() {
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       List<skir.RecordId>? capturedRoleIds;
-      mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.update",
-        (data) {
-          final request = skir.UpdateOrganizationMemberRolesRequest.serializer
-              .fromBytes(data);
-          capturedRoleIds = request.roleIds.toList();
-          return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
-            skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-              userId: recordId("user:m1"),
-              name: "Test",
-              email: "test@test.com",
-              avatarUrl: "",
-              roles: [],
-              joinedAt: DateTime.now(),
-            ),
-          );
-        },
-      );
+      mockNats.registerHandler(_memberUpdateSubject, (data) {
+        final request = skir.UpdateOrganizationMemberRolesRequest.serializer
+            .fromBytes(data);
+        capturedRoleIds = request.roleIds.toList();
+        return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
+          skir.UpdateOrganizationMemberRolesResponse.createSuccess(
+            userId: recordId("user:m1"),
+            name: "Test",
+            email: "test@test.com",
+            avatarUrl: "",
+            roles: [],
+            joinedAt: _testTimestamp,
+          ),
+        );
+      });
 
       await container
           .read(organizationMembersProvider.notifier)
@@ -1347,49 +1306,19 @@ void main() {
         defaultRole: true,
         assignable: true,
       );
-      final currentRole = OrganizationRole(
-        roleId: recordId("organization_role:member"),
+      final currentRole = _role(
+        id: "member",
         name: "Member",
         color: Colors.blue,
         assignable: true,
       );
 
-      final member = OrganizationMember(
-        userId: recordId("user:m1"),
-        name: "Test",
-        email: "test@test.com",
-        avatarUrl: "",
-        roles: [currentRole],
-        joinedAt: DateTime.now(),
-      );
-
-      Future<List<OrganizationRole>> waitForRoles(
-        ProviderContainer container,
-      ) async {
-        final completer = Completer<List<OrganizationRole>>();
-        final sub = container.listen(organizationRolesProvider, (
-          previous,
-          next,
-        ) {
-          if (next is AsyncData<List<OrganizationRole>>) {
-            if (!completer.isCompleted) {
-              completer.complete(next.value);
-            }
-          }
-        }, fireImmediately: true);
-        try {
-          return await completer.future;
-        } finally {
-          sub.close();
-        }
-      }
+      final member = _member(roles: [currentRole]);
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
@@ -1400,28 +1329,25 @@ void main() {
         ],
       );
 
-      await waitForMembers(container);
-      await waitForRoles(container);
+      await _readMembers(container);
+      await _readRoles(container);
 
       List<skir.RecordId>? capturedRoleIds;
-      mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.update",
-        (data) {
-          final request = skir.UpdateOrganizationMemberRolesRequest.serializer
-              .fromBytes(data);
-          capturedRoleIds = request.roleIds.toList();
-          return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
-            skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-              userId: recordId("user:m1"),
-              name: "Test",
-              email: "test@test.com",
-              avatarUrl: "",
-              roles: [],
-              joinedAt: DateTime.now(),
-            ),
-          );
-        },
-      );
+      mockNats.registerHandler(_memberUpdateSubject, (data) {
+        final request = skir.UpdateOrganizationMemberRolesRequest.serializer
+            .fromBytes(data);
+        capturedRoleIds = request.roleIds.toList();
+        return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
+          skir.UpdateOrganizationMemberRolesResponse.createSuccess(
+            userId: recordId("user:m1"),
+            name: "Test",
+            email: "test@test.com",
+            avatarUrl: "",
+            roles: [],
+            joinedAt: _testTimestamp,
+          ),
+        );
+      });
 
       await container
           .read(organizationMembersProvider.notifier)
@@ -1436,8 +1362,8 @@ void main() {
     });
 
     test("uses server response to update member", () async {
-      final role = OrganizationRole(
-        roleId: recordId("organization_role:member"),
+      final role = _role(
+        id: "member",
         name: "Member",
         color: Colors.grey,
         assignable: true,
@@ -1449,15 +1375,13 @@ void main() {
         email: "test@test.com",
         avatarUrl: "",
         roles: [role],
-        joinedAt: DateTime.now(),
+        joinedAt: _testTimestamp,
       );
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user1"),
-          organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org1"),
-          ),
+          userIdProvider.overrideWith((ref) async => _testUserId),
+          organizationIdProvider.overrideWith((ref) => _testOrganizationId),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
@@ -1468,10 +1392,10 @@ void main() {
         ],
       );
 
-      await waitForMembers(container);
+      await _readMembers(container);
 
       mockNats.registerHandler(
-        "cloud.out.user.user1.organization.org1.members.update",
+        _memberUpdateSubject,
         (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createSuccess(
             userId: recordId("user:m1"),
@@ -1479,7 +1403,7 @@ void main() {
             email: "test@test.com",
             avatarUrl: "",
             roles: [],
-            joinedAt: DateTime.now(),
+            joinedAt: _testTimestamp,
           ),
         ),
       );
@@ -1498,15 +1422,14 @@ void main() {
 class _LoadingJoinRequestsNotifier extends OrganizationJoinRequests {
   @override
   Stream<List<OrganizationJoinRequest>> build() async* {
-    await Future<void>.delayed(const Duration(hours: 1));
+    await Completer<void>().future;
   }
 }
 
 class _ErrorJoinRequestsNotifier extends OrganizationJoinRequests {
   @override
-  Stream<List<OrganizationJoinRequest>> build() async* {
-    throw Exception("Test error");
-  }
+  Stream<List<OrganizationJoinRequest>> build() =>
+      Stream.error(Exception("Test error"));
 }
 
 class _MockJoinRequestsNotifier extends OrganizationJoinRequests {
@@ -1522,7 +1445,7 @@ class _MockJoinRequestsNotifier extends OrganizationJoinRequests {
 class _LoadingJoinCodesNotifier extends OrganizationJoinCodes {
   @override
   Stream<List<OrganizationJoinCode>> build() async* {
-    await Future<void>.delayed(const Duration(hours: 1));
+    await Completer<void>().future;
   }
 }
 
