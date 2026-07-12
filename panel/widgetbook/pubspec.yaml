@@ -19,7 +19,7 @@ dependencies:
   flutter_animate:
   faker:
   flutter_hooks:
-  iconify_flutter_plus: ^1.0.4
+  iconify_flutter_plus:
   pub_semver:
 
 dev_dependencies:

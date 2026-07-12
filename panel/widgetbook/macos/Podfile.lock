@@ -2,26 +2,20 @@ PODS:
   - FlutterMacOS (1.0.0)
   - oidc_macos (0.0.1):
     - FlutterMacOS
-  - window_to_front (0.0.1):
-    - FlutterMacOS
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
   - oidc_macos (from `Flutter/ephemeral/.symlinks/plugins/oidc_macos/macos`)
-  - window_to_front (from `Flutter/ephemeral/.symlinks/plugins/window_to_front/macos`)
 
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
   oidc_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/oidc_macos/macos
-  window_to_front:
-    :path: Flutter/ephemeral/.symlinks/plugins/window_to_front/macos
 
 SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   oidc_macos: 972700560d342ffc6ac9306495c1d8fe53c7a9cb
-  window_to_front: 4cdc24ddd8461ad1a55fa06286d6a79d8b29e8d8
 
 PODFILE CHECKSUM: 3fca807e9e804a619eedcb22f744797e03054a3c
 
