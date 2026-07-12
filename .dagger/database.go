@@ -82,7 +82,9 @@ func (m *Typewriter) DatabaseTest(
 	return m.surrealkitContainer().
 		WithDirectory("/backend/database", source.Directory("/backend/database", dagger.WorkspaceDirectoryOpts{
 			Gitignore: true,
-		})).
+		}), dagger.ContainerWithDirectoryOpts{
+			Owner: "65532",
+		}).
 		WithWorkdir("/backend").
 		WithServiceBinding("surrealdb", m.surrealdbService()).
 		WithEnvVariable("SURREALDB_FOLDER", "database").
