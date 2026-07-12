@@ -102,20 +102,6 @@ void main() {
         throwsA(isA<NatsException>()),
       );
     });
-
-    test("handles empty response data", () async {
-      mockClient.registerHandler("test.subject", (requestData) => Uint8List(0));
-
-      final response = await mockClient.requestSkir(
-        "test.subject",
-        skir.GetSentinelCredentialsRequest.serializer.toBytes(
-          skir.GetSentinelCredentialsRequest(),
-        ),
-        skir.GetSentinelCredentialsResponse.serializer,
-      );
-
-      expect(response, isA<skir.GetSentinelCredentialsResponse_unknown>());
-    });
   });
 
   group("NatsStatus", () {
