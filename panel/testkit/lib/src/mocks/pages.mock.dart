@@ -156,7 +156,7 @@ class EntryMock extends Entry {
     final currentPageId = ref.read(pageIdProvider);
 
     final pageElements = await ref.read(
-      pageElementsProvider(currentPageId ?? "").future,
+      pageElementsProvider(currentPageId?.id ?? "").future,
     );
 
     final pageElement = pageElements.firstWhereOrNull(
@@ -214,9 +214,13 @@ List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
 ];
 
 List<Override> pageIdProviderOverrides({String? pageId}) => [
-  pageIdProvider.overrideWith((ref) => recordId("page:${pageId ?? ""}")),
+  pageIdProvider.overrideWith(
+    (ref) => pageId != null ? recordId("page:$pageId") : null,
+  ),
 ];
 
 List<Override> bookIdProviderOverrides({String? bookId}) => [
-  bookIdProvider.overrideWith((ref) => recordId("book:${bookId ?? ""}")),
+  bookIdProvider.overrideWith(
+    (ref) => bookId != null ? recordId("book:$bookId") : null,
+  ),
 ];
