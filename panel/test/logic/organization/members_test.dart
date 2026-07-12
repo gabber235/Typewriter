@@ -104,7 +104,7 @@ void main() {
         requestId: recordId(
           "request_to_join:req-${now.millisecondsSinceEpoch}-${expired ? "exp" : "active"}",
         ),
-        userId: recordId("user:user-1"),
+        userId: recordId("user:user1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -351,7 +351,7 @@ void main() {
     test("isExpired returns true when expiresAt is in the past", () {
       final request = OrganizationJoinRequest(
         requestId: recordId("request_to_join:req-1"),
-        userId: recordId("user:user-1"),
+        userId: recordId("user:user1"),
         userName: "Test",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -366,7 +366,7 @@ void main() {
     test("isExpired returns false when expiresAt is in the future", () {
       final request = OrganizationJoinRequest(
         requestId: recordId("request_to_join:req-1"),
-        userId: recordId("user:user-1"),
+        userId: recordId("user:user1"),
         userName: "Test",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -552,7 +552,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -583,7 +583,7 @@ void main() {
     test("updateMemberRoles throws when organizationId is null", () async {
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => null),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -616,7 +616,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -647,7 +647,7 @@ void main() {
     test("removeMember throws when organizationId is null", () async {
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => null),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -722,9 +722,9 @@ void main() {
 
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user-1"),
+            userIdProvider.overrideWith((ref) async => "user1"),
             organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org-1"),
+              (ref) => recordId("organization:org1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
@@ -736,7 +736,7 @@ void main() {
         await waitForMembers(container);
 
         mockNats.registerHandler(
-          "cloud.out.user.user-1.organization.org-1.members.remove",
+          "cloud.out.user.user1.organization.org1.members.remove",
           (data) {
             throw TimeoutException("Connection error");
           },
@@ -767,9 +767,9 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -781,7 +781,7 @@ void main() {
       await waitForMembers(container);
 
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.remove",
+        "cloud.out.user.user1.organization.org1.members.remove",
         (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
           skir.RemoveOrganizationMemberResponse.createSuccess(),
         ),
@@ -823,9 +823,9 @@ void main() {
 
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user-1"),
+            userIdProvider.overrideWith((ref) async => "user1"),
             organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org-1"),
+              (ref) => recordId("organization:org1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
@@ -840,7 +840,7 @@ void main() {
         await waitForMembers(container);
 
         mockNats.registerHandler(
-          "cloud.out.user.user-1.organization.org-1.members.update",
+          "cloud.out.user.user1.organization.org1.members.update",
           (data) {
             throw TimeoutException("Connection error");
           },
@@ -887,9 +887,9 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -904,7 +904,7 @@ void main() {
       await waitForMembers(container);
 
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.update",
+        "cloud.out.user.user1.organization.org1.members.update",
         (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createSuccess(
             userId: recordId("user:m1"),
@@ -970,9 +970,9 @@ void main() {
         );
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user-1"),
+            userIdProvider.overrideWith((ref) async => "user1"),
             organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org-1"),
+              (ref) => recordId("organization:org1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
@@ -982,7 +982,7 @@ void main() {
         );
         await waitUntilReady(container, organizationMembersProvider);
         mockNats.registerHandler(
-          "cloud.out.user.user-1.organization.org-1.members.update",
+          "cloud.out.user.user1.organization.org1.members.update",
           (
             data,
           ) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
@@ -1014,9 +1014,9 @@ void main() {
       );
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1026,7 +1026,7 @@ void main() {
       );
       await waitUntilReady(container, organizationMembersProvider);
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.update",
+        "cloud.out.user.user1.organization.org1.members.update",
         (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createFounderRoleRequiredError(),
         ),
@@ -1054,9 +1054,9 @@ void main() {
         final member = memberWithRole(role);
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user-1"),
+            userIdProvider.overrideWith((ref) async => "user1"),
             organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org-1"),
+              (ref) => recordId("organization:org1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
@@ -1066,7 +1066,7 @@ void main() {
         );
         await waitUntilReady(container, organizationMembersProvider);
         mockNats.registerHandler(
-          "cloud.out.user.user-1.organization.org-1.members.remove",
+          "cloud.out.user.user1.organization.org1.members.remove",
           (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
             skir.RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
               userId: member.userId,
@@ -1111,9 +1111,9 @@ void main() {
         );
         final container = ProviderContainer.test(
           overrides: [
-            userIdProvider.overrideWith((ref) async => "user-1"),
+            userIdProvider.overrideWith((ref) async => "user1"),
             organizationIdProvider.overrideWith(
-              (ref) => recordId("organization:org-1"),
+              (ref) => recordId("organization:org1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationJoinRequestsProvider.overrideWith(
@@ -1123,7 +1123,7 @@ void main() {
         );
         await waitUntilReady(container, organizationJoinRequestsProvider);
         mockNats.registerHandler(
-          "cloud.out.user.user-1.organization.org-1.members.join_requests.approve",
+          "cloud.out.user.user1.organization.org1.members.join_requests.approve",
           (data) => skir.ApproveOrganizationJoinRequestResponse.serializer
               .toBytes(outcome.$2),
         );
@@ -1201,9 +1201,9 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1223,7 +1223,7 @@ void main() {
 
       List<skir.RecordId>? capturedRoleIds;
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.update",
+        "cloud.out.user.user1.organization.org1.members.update",
         (data) {
           final request = skir.UpdateOrganizationMemberRolesRequest.serializer
               .fromBytes(data);
@@ -1285,9 +1285,9 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1303,7 +1303,7 @@ void main() {
 
       List<skir.RecordId>? capturedRoleIds;
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.update",
+        "cloud.out.user.user1.organization.org1.members.update",
         (data) {
           final request = skir.UpdateOrganizationMemberRolesRequest.serializer
               .fromBytes(data);
@@ -1386,9 +1386,9 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1405,7 +1405,7 @@ void main() {
 
       List<skir.RecordId>? capturedRoleIds;
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.update",
+        "cloud.out.user.user1.organization.org1.members.update",
         (data) {
           final request = skir.UpdateOrganizationMemberRolesRequest.serializer
               .fromBytes(data);
@@ -1454,9 +1454,9 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
-          userIdProvider.overrideWith((ref) async => "user-1"),
+          userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith(
-            (ref) => recordId("organization:org-1"),
+            (ref) => recordId("organization:org1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1471,7 +1471,7 @@ void main() {
       await waitForMembers(container);
 
       mockNats.registerHandler(
-        "cloud.out.user.user-1.organization.org-1.members.update",
+        "cloud.out.user.user1.organization.org1.members.update",
         (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createSuccess(
             userId: recordId("user:m1"),

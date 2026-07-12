@@ -221,8 +221,8 @@ class OrganizationRoles extends _$OrganizationRoles {
 
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.${organizationId.key}.roles.watch",
-      listenSubject: "cloud.in.organization.${organizationId.key}.roles.watch",
+          "cloud.out.user.$userId.organization.${organizationId.id}.roles.watch",
+      listenSubject: "cloud.in.organization.${organizationId.id}.roles.watch",
       requestBytes: skir.WatchOrganizationRolesRequest.serializer.toBytes(
         request,
       ),
@@ -265,9 +265,8 @@ class OrganizationMembers extends _$OrganizationMembers {
     final request = skir.WatchOrganizationMembersRequest();
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.${organizationId.key}.members.watch",
-      listenSubject:
-          "cloud.in.organization.${organizationId.key}.members.watch",
+          "cloud.out.user.$userId.organization.${organizationId.id}.members.watch",
+      listenSubject: "cloud.in.organization.${organizationId.id}.members.watch",
       requestBytes: skir.WatchOrganizationMembersRequest.serializer.toBytes(
         request,
       ),
@@ -362,7 +361,7 @@ class OrganizationMembers extends _$OrganizationMembers {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.${organizationId.key}.members.update",
+            "cloud.out.user.$userId.organization.${organizationId.id}.members.update",
             skir.UpdateOrganizationMemberRolesRequest.serializer.toBytes(
               request,
             ),
@@ -431,7 +430,7 @@ class OrganizationMembers extends _$OrganizationMembers {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.${organizationId.key}.members.remove",
+            "cloud.out.user.$userId.organization.${organizationId.id}.members.remove",
             skir.RemoveOrganizationMemberRequest.serializer.toBytes(request),
             skir.RemoveOrganizationMemberResponse.serializer,
           );
@@ -481,9 +480,9 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
     final request = skir.WatchOrganizationJoinRequestsRequest();
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.${organizationId.key}.members.join_requests.watch",
+          "cloud.out.user.$userId.organization.${organizationId.id}.members.join_requests.watch",
       listenSubject:
-          "cloud.in.organization.${organizationId.key}.members.join_requests.watch",
+          "cloud.in.organization.${organizationId.id}.members.join_requests.watch",
       requestBytes: skir.WatchOrganizationJoinRequestsRequest.serializer
           .toBytes(request),
       serializer: skir.WatchOrganizationJoinRequestsResponse.serializer,
