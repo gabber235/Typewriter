@@ -435,19 +435,19 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
-                name: 'OrganizationIcon',
+                name: 'OrganizationLogo',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
                     name: 'Default',
                     builder:
                         _widgetbook_workspace_stories_app_components_organization_icon_stories
-                            .organizationIconUseCase,
+                            .organizationLogoUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Placeholder',
                     builder:
                         _widgetbook_workspace_stories_app_components_organization_icon_stories
-                            .organizationIconPlaceholderUseCase,
+                            .organizationLogoPlaceholderUseCase,
                   ),
                 ],
               ),
