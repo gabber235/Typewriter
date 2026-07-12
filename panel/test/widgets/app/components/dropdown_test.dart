@@ -148,10 +148,6 @@ void main() {
 
         expect(selected, "B");
 
-        final context = tester.element(find.byType(DropdownMenu<String>));
-        Actions.invoke(context, const DismissIntent());
-        await tester.pump();
-
         expect(controller.text, "Beta");
         expect(innerFocus.hasPrimaryFocus, isFalse);
         expect(
