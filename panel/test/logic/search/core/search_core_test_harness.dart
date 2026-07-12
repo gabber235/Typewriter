@@ -90,6 +90,21 @@ final class FakeSearchSource implements SearchSource {
     _snapshots.add(snapshot);
   }
 
+  /// Emits a snapshot and pumps both the rebuild and deferred row setup.
+  ///
+  /// Search result rows use a non-autoplay `flutter_animate` shake effect,
+  /// which still schedules a zero-duration initialization timer when mounted.
+  /// The second pump consumes that timer so it does not remain pending after
+  /// the test completes.
+  Future<void> emitSnapshotAndPump(
+    WidgetTester tester,
+    SearchSourceSnapshot snapshot,
+  ) async {
+    emitSnapshot(snapshot);
+    await tester.pump();
+    await tester.pump(Duration.zero);
+  }
+
   void emitSelectors(List<QuerySelectorDefinition> selectors) {
     _selectors.add(selectors);
   }
@@ -113,6 +128,18 @@ final class FakeSearchSource implements SearchSource {
     disposeCount++;
     unawaited(_snapshots.close());
     unawaited(_selectors.close());
+  }
+}
+
+extension SearchWidgetTesterX on WidgetTester {
+  /// Pumps newly mounted search rows and their deferred animation setup.
+  ///
+  /// Use this after operations such as scrolling that lazily mount result
+  /// rows. Their non-autoplay `flutter_animate` shake effect creates a
+  /// zero-duration initialization timer that requires one additional pump.
+  Future<void> pumpSearchRows() async {
+    await pump();
+    await pump(Duration.zero);
   }
 }
 

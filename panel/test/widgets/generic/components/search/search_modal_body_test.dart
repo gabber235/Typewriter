@@ -26,8 +26,10 @@ void main() {
         ),
       );
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
       expect(find.text("Rendered alpha"), findsOneWidget);
     });
@@ -40,8 +42,10 @@ void main() {
         child: _TestSearchBody(source: source),
       );
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
       expect(find.text("Missing renderer test-row"), findsOneWidget);
     });
@@ -62,8 +66,10 @@ void main() {
         ),
       );
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
       expect(find.text("Selected false"), findsOneWidget);
 
@@ -95,12 +101,12 @@ void main() {
         ),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [for (var i = 1; i <= 10; i++) resultNode("item$i")],
         ),
       );
-      await tester.pump();
 
       expect(contexts["item1"]!.shortcutActivator, isNotNull);
       expect(contexts["item10"]!.shortcutActivator, isNull);

@@ -4,6 +4,7 @@ import "package:typewriter_panel/logic/search/search.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_result_renderers.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_root.dart";
 import "package:typewriter_panel/widgets/generic/components/search/search_tree_results.dart";
+import "package:typewriter_panel/widgets/generic/components/shimmer.dart";
 
 import "../../../../logic/search/core/search_core_test_harness.dart";
 import "../../../../test_utils.dart";
@@ -20,7 +21,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -31,7 +33,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       expect(find.text("Books"), findsOneWidget);
       expect(find.text("Result alpha"), findsOneWidget);
@@ -50,7 +51,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -61,7 +63,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       expect(find.text("Result alpha"), findsOneWidget);
     });
@@ -76,7 +77,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -87,7 +89,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Books"));
       await tester.pump();
@@ -111,7 +112,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -122,7 +124,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Books"));
       await tester.pump();
@@ -140,7 +141,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -157,7 +159,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Chapters"));
       await tester.pump();
@@ -176,7 +177,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -193,7 +195,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Chapters"));
       await tester.pump();
@@ -214,12 +215,12 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [SearchNode.section(id: "books", title: "Books")],
         ),
       );
-      await tester.pump();
 
       expect(find.byType(AnimatedRotation), findsOneWidget);
     });
@@ -232,8 +233,10 @@ void main() {
         child: _TestSearchTree(source: source),
       );
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
       expect(find.text("Missing renderer test-row"), findsOneWidget);
     });
@@ -257,12 +260,12 @@ void main() {
         ),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [for (var i = 1; i <= 10; i++) resultNode("item$i")],
         ),
       );
-      await tester.pump();
 
       expect(contexts["item1"]!.shortcutActivator, isNotNull);
       expect(contexts["item10"]!.shortcutActivator, isNull);
@@ -276,8 +279,10 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
       expect(find.byType(CustomScrollView), findsOneWidget);
     });
@@ -290,7 +295,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(id: "books", title: "Books"),
@@ -298,7 +304,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       expect(find.byType(SearchTreeSectionSliver), findsNWidgets(2));
     });
@@ -311,12 +316,12 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [SearchNode.section(id: "books", title: "Books")],
         ),
       );
-      await tester.pump();
 
       expect(
         find.ancestor(
@@ -335,7 +340,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -346,7 +352,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       expect(
         find.ancestor(
@@ -367,7 +372,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -378,10 +384,9 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
-      await tester.pump();
+      await tester.pumpSearchRows();
 
       expect(find.text("Books").hitTestable(), findsOneWidget);
     });
@@ -394,7 +399,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -405,7 +411,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Books"));
       await tester.pump();
@@ -420,9 +425,7 @@ void main() {
       expect(find.text("Result alpha"), findsOneWidget);
     });
 
-    testWidgets("loading snapshot with no rows shows searching", (
-      tester,
-    ) async {
+    testWidgets("loading snapshot with no rows shows shimmer", (tester) async {
       final source = FakeSearchSource();
 
       await tester.pumpTestApp(
@@ -430,10 +433,10 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(SearchSourceSnapshot.loading());
-      await tester.pump();
+      await source.emitSnapshotAndPump(tester, SearchSourceSnapshot.loading());
 
-      expect(find.text("Searching"), findsOneWidget);
+      expect(find.byType(ShimmerBox), findsWidgets);
+      expect(find.text("No results found"), findsNothing);
     });
 
     testWidgets("ready snapshot with no rows shows empty state", (
@@ -446,8 +449,10 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(SearchSourceSnapshot.ready(nodes: const []));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        SearchSourceSnapshot.ready(nodes: const []),
+      );
 
       expect(find.text("No results found"), findsOneWidget);
     });
@@ -462,7 +467,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         SearchSourceSnapshot.idle(
           guidance: const [
             SearchGuidance(
@@ -473,7 +479,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       expect(find.text("Start typing"), findsOneWidget);
     });
@@ -486,7 +491,8 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         SearchSourceSnapshot.error(
           errorSummaries: const [
             SearchErrorSummary(
@@ -498,7 +504,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       expect(find.text("Search source failed"), findsOneWidget);
       expect(find.text("Test source"), findsOneWidget);
@@ -512,8 +517,10 @@ void main() {
         child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
       );
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
       expect(find.text("No results found"), findsNothing);
       expect(find.text("Result alpha"), findsOneWidget);

@@ -16,13 +16,15 @@ void main() {
       final source = FakeSearchSource();
       await _pumpTree(tester, source);
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(nodes: [resultNode("alpha"), resultNode("beta")]),
       );
-      await tester.pump();
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("beta")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("beta")]),
+      );
 
       expect(find.text("Result alpha"), findsOneWidget);
     });
@@ -33,14 +35,17 @@ void main() {
       final source = FakeSearchSource();
       await _pumpTree(tester, source);
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(nodes: [resultNode("alpha"), resultNode("beta")]),
       );
-      await tester.pump();
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("beta")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("beta")]),
+      );
       await tester.pump(const Duration(milliseconds: 800));
+      await tester.pump(Duration.zero);
 
       expect(find.text("Result alpha"), findsNothing);
     });
@@ -49,13 +54,15 @@ void main() {
       final source = FakeSearchSource();
       await _pumpTree(tester, source);
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+      await source.emitSnapshotAndPump(
+        tester,
+        readySnapshot(nodes: [resultNode("alpha")]),
+      );
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(nodes: [resultNode("alpha"), resultNode("beta")]),
       );
-      await tester.pump();
 
       expect(find.text("Result beta"), findsOneWidget);
     });
@@ -66,7 +73,8 @@ void main() {
       final source = FakeSearchSource();
       await _pumpTree(tester, source);
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -77,7 +85,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Books"));
       await tester.pump();
@@ -91,7 +98,8 @@ void main() {
       final source = FakeSearchSource();
       await _pumpTree(tester, source);
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [
             SearchNode.section(
@@ -102,7 +110,6 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
 
       await tester.tap(find.text("Books"));
       await tester.pump();
@@ -122,19 +129,19 @@ void main() {
       final source = FakeSearchSource();
       await _pumpTree(tester, source);
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [resultNode("alpha"), resultNode("beta"), resultNode("gamma")],
         ),
       );
-      await tester.pump();
 
-      source.emitSnapshot(
+      await source.emitSnapshotAndPump(
+        tester,
         readySnapshot(
           nodes: [resultNode("gamma"), resultNode("beta"), resultNode("delta")],
         ),
       );
-      await tester.pump();
 
       expect(tester.takeException(), isNull);
     });
