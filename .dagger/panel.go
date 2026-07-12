@@ -6,7 +6,6 @@ import (
 
 var defaultWorkspaceOpts = dagger.WorkspaceDirectoryOpts{
 	Exclude:   []string{".git", "target", "node_modules", "build", "dist"},
-	Include:   []string{".dart_tool"},
 	Gitignore: true,
 }
 
@@ -23,11 +22,9 @@ func (m *Typewriter) buildRunner(
 	dirSource := source.Directory("/panel", defaultWorkspaceOpts)
 	generated := m.dartContainer().
 		WithDirectory("/workspace", dirSource).
-		WithWorkdir(dir).
 		WithMountedCache("/root/.pub-cache", dag.CacheVolume("pub-cache")).
+		WithWorkdir(dir).
 		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"cd", "widgetbook", "flutter", "pub", "get"}).
-		WithExec([]string{"cd", "testkit", "flutter", "pub", "get"}).
 		WithMountedCache("/workspace/.dart_tool", dag.CacheVolume("dart-tool")).
 		WithExec([]string{"dart", "run", "build_runner", "build"}).
 		Directory("/workspace")
@@ -62,7 +59,18 @@ func (m *Typewriter) PanelAnalysis(
 ) *dagger.Container {
 	return m.dartContainer().
 		WithDirectory("/workspace", source.Directory("/panel", defaultWorkspaceOpts)).
+		WithMountedCache("/root/.pub-cache", dag.CacheVolume("pub-cache")).
+		WithMountedCache("/workspace/.dart_tool", dag.CacheVolume("dart-tool")).
+		WithMountedCache("/workspace/testkit/.dart_tool", dag.CacheVolume("dart-tool-testkit")).
+		WithMountedCache("/workspace/widgetbook/.dart_tool", dag.CacheVolume("dart-tool-widgetbook")).
+		WithWorkdir("/workspace/testkit").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"flutter", "analyze"}).
+		WithWorkdir("/workspace/widgetbook").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"flutter", "analyze"}).
 		WithWorkdir("/workspace").
+		WithExec([]string{"flutter", "pub", "get"}).
 		WithExec([]string{"flutter", "analyze"})
 }
 
