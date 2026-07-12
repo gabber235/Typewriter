@@ -7,8 +7,8 @@
   "toolchains": [
     {
       "name": "gitops",
-      "source": "github.com/seamlezz/daggerverse/gitops@gitops/v0.5.1",
-      "pin": "f9f2bbd0984a530e8c3c835434705e17545a3834"
+      "source": "github.com/seamlezz/daggerverse/gitops@gitops/v0.6.0",
+      "pin": "9fded93840cc7f3efdcbd9366fbb8f70f5dbccc2"
     },
     {
       "name": "wash",
