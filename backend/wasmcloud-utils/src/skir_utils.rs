@@ -60,6 +60,29 @@ impl From<RecordId> for surrealdb_component_sdk::RecordId {
     }
 }
 
+impl From<&RecordId> for surrealdb_component_sdk::RecordId {
+    fn from(value: &RecordId) -> Self {
+        value.clone().into()
+    }
+}
+
+/// Converts Skir record ID collections into SurrealDB record IDs.
+pub trait IntoSurrealRecordIds {
+    fn into_surreal_record_ids(self) -> Vec<surrealdb_component_sdk::RecordId>;
+}
+
+impl IntoSurrealRecordIds for Vec<RecordId> {
+    fn into_surreal_record_ids(self) -> Vec<surrealdb_component_sdk::RecordId> {
+        self.into_iter().map(Into::into).collect()
+    }
+}
+
+impl IntoSurrealRecordIds for &[RecordId] {
+    fn into_surreal_record_ids(self) -> Vec<surrealdb_component_sdk::RecordId> {
+        self.iter().map(Into::into).collect()
+    }
+}
+
 impl From<RecordIdKey> for surrealdb_component_sdk::RecordIdKey {
     fn from(value: RecordIdKey) -> Self {
         match value {
@@ -115,6 +138,29 @@ impl From<surrealdb_component_sdk::RecordId> for RecordId {
             key: value.key.into(),
             _unrecognized: None,
         }
+    }
+}
+
+impl From<&surrealdb_component_sdk::RecordId> for RecordId {
+    fn from(value: &surrealdb_component_sdk::RecordId) -> Self {
+        value.clone().into()
+    }
+}
+
+/// Converts SurrealDB record ID collections into Skir record IDs.
+pub trait IntoSkirRecordIds {
+    fn into_skir_record_ids(self) -> Vec<RecordId>;
+}
+
+impl IntoSkirRecordIds for Vec<surrealdb_component_sdk::RecordId> {
+    fn into_skir_record_ids(self) -> Vec<RecordId> {
+        self.into_iter().map(Into::into).collect()
+    }
+}
+
+impl IntoSkirRecordIds for &[surrealdb_component_sdk::RecordId] {
+    fn into_skir_record_ids(self) -> Vec<RecordId> {
+        self.iter().map(Into::into).collect()
     }
 }
 

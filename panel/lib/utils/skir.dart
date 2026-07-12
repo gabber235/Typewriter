@@ -16,3 +16,12 @@ extension FlutterColorExtension on Color {
 extension RecordIdExtension on skir.RecordId {
   String get id => key.toString();
 }
+
+skir.RecordId recordId(String id) {
+  final parts = id.split(":");
+  assert(parts.length == 2, "id must be of format `<table>:<id>`");
+  return skir.RecordId(
+    table: parts[0],
+    key: skir.RecordIdKey.wrapString(parts[1]),
+  );
+}

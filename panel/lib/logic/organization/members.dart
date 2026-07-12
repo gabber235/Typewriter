@@ -7,6 +7,7 @@ import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/organization.dart";
 import "package:typewriter_panel/skir.dart" as skir;
+import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/skir.dart";
 
@@ -281,6 +282,13 @@ class OrganizationMembers extends _$OrganizationMembers {
             return value.map(OrganizationMember.fromSkir).toList();
           case skir.WatchOrganizationMembersResponse_addWrapper(:final value):
             return [...?previous, OrganizationMember.fromSkir(value)];
+          case skir.WatchOrganizationMembersResponse_updateWrapper(
+            :final value,
+          ):
+            return previous.updateByKey(
+              (member) => member.userId,
+              OrganizationMember.fromSkir(value),
+            );
           case skir.WatchOrganizationMembersResponse_removeWrapper(
             :final value,
           ):
@@ -370,6 +378,14 @@ class OrganizationMembers extends _$OrganizationMembers {
           throw ApiException.notFound("User");
         case skir.UpdateOrganizationMemberRolesResponse_rolesNotFoundErrorWrapper():
           throw ApiException.notFound("Roles");
+        case skir.UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper():
+          throw ApiException.badRequest("One or more roles cannot be assigned");
+        case skir.UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper():
+          throw ApiException.badRequest("At least one role is required");
+        case skir.UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper():
+          throw ApiException.conflict(
+            "Organization must retain at least one founder",
+          );
         case skir.UpdateOrganizationMemberRolesResponse_successWrapper(
           :final value,
         ):
@@ -426,7 +442,9 @@ class OrganizationMembers extends _$OrganizationMembers {
         case skir.RemoveOrganizationMemberResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
         case skir.RemoveOrganizationMemberResponse_userNotMemberErrorWrapper():
-          throw ApiException.userNotMemberError();
+          throw ApiException.notFound("Organization member");
+        case skir.RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper():
+          throw ApiException.conflict("Organization founder cannot be removed");
         case skir.RemoveOrganizationMemberResponse_successWrapper():
           debugPrint("removed $memberId from $organizationId");
       }
@@ -539,6 +557,12 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
           throw ApiException.notFound("Request");
         case skir.ApproveOrganizationJoinRequestResponse_rolesNotFoundErrorWrapper():
           throw ApiException.notFound("Roles");
+        case skir.ApproveOrganizationJoinRequestResponse_rolesNotAssignableErrorWrapper():
+          throw ApiException.badRequest("One or more roles cannot be assigned");
+        case skir.ApproveOrganizationJoinRequestResponse_rolesRequiredErrorWrapper():
+          throw ApiException.badRequest("At least one role is required");
+        case skir.ApproveOrganizationJoinRequestResponse_userAlreadyMemberErrorWrapper():
+          throw ApiException.conflict("User is already an organization member");
         case skir.ApproveOrganizationJoinRequestResponse_successWrapper(
           :final value,
         ):

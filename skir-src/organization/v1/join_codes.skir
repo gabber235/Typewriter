@@ -34,6 +34,15 @@ method GenerateOrganizationJoinCode(
   }
 ): enum {
   success: JoinCode;
+  roles_not_found_error: struct {
+    role_ids: [RecordId];
+  };
+  roles_not_assignable_error: struct {
+    role_ids: [RecordId];
+  };
+  invalid_expiration_error: struct {
+    duration: Duration;
+  };
   internal_error: struct {};
 } = 804958;
 

@@ -94,7 +94,7 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'9f335fedd4747ac4055489be9edf392be2c33232';
+    r'b874d5df7ae66608d78f11ae0afe86742559d7a0';
 
 /// Provider for the list of members in the current organization.
 
@@ -158,7 +158,7 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'4abf47097f1d6dbc8d41f9b9b6d8e1fe01bc2184';
+    r'68dfd75bdd31a52609f658ba24f1efd1ae7ca579';
 
 /// Provider for the list of pending join requests to the current organization.
 

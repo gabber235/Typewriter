@@ -191,8 +191,8 @@ abstract class _$Pages extends $AsyncNotifier<Page> {
 final pageIdProvider = PageIdProvider._();
 
 final class PageIdProvider
-    extends $FunctionalProvider<String?, String?, String?>
-    with $Provider<String?> {
+    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
+    with $Provider<skir.RecordId?> {
   PageIdProvider._()
     : super(
         from: null,
@@ -209,21 +209,21 @@ final class PageIdProvider
 
   @$internal
   @override
-  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  String? create(Ref ref) {
+  skir.RecordId? create(Ref ref) {
     return pageId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String? value) {
+  Override overrideWithValue(skir.RecordId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
+      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
     );
   }
 }
 
-String _$pageIdHash() => r'9d2817f77c652614ac44fa6b2727dd7d17faae87';
+String _$pageIdHash() => r'c6a6919ff7d2ea216f8f7a1a8e3eefdded387f18';

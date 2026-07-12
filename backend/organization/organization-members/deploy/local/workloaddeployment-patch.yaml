@@ -1,0 +1,6 @@
+- op: add
+  path: /spec/template/spec/components/0/image
+  value: oci.local.seamlezz.net/typewriter/organization-members:latest
+- op: add
+  path: /spec/template/spec/components/0/imagePullPolicy
+  value: Always

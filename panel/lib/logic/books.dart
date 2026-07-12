@@ -16,6 +16,7 @@ import "package:typewriter_panel/logic/selectable/selection.dart";
 import "package:typewriter_panel/logic/tags/tags.dart";
 import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/app/components/book.dart";
 import "package:typewriter_panel/widgets/app/components/inspector/operations.dart";
@@ -255,7 +256,7 @@ Future<List<Book>> filteredBooks(Ref ref, String query) async {
 skir.RecordId? bookId(Ref ref) {
   final id = ref.watch(routeParamProvider("bookId"));
   if (id == null) return null;
-  return skir.RecordId(table: "book", key: skir.RecordIdKey.wrapString(id));
+  return recordId("book:$id");
 }
 
 @riverpod

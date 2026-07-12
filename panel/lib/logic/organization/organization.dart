@@ -132,10 +132,7 @@ class Organizations extends _$Organizations {
 skir.RecordId? organizationId(Ref ref) {
   final id = ref.watch(routeParamProvider("organizationId"));
   if (id == null) return null;
-  return skir.RecordId(
-    table: "organization",
-    key: skir.RecordIdKey.wrapString(id),
-  );
+  return recordId("organization:$id");
 }
 
 @riverpod
@@ -192,6 +189,12 @@ class Organization extends _$Organization {
         throw ApiException.unknownResponseMessage();
       case skir.GenerateOrganizationJoinCodeResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
+      case skir.GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper():
+        throw ApiException.notFound("Roles");
+      case skir.GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper():
+        throw ApiException.badRequest("One or more roles cannot be assigned");
+      case skir.GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper():
+        throw ApiException.badRequest("Expiration duration must be positive");
       case skir.GenerateOrganizationJoinCodeResponse_successWrapper(
         :final value,
       ):

@@ -1,5 +1,5 @@
 [package]
-name = "auth-typewriter-permissions"
+name = "organization-members"
 version = "0.1.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
@@ -9,21 +9,11 @@ repository = { workspace = true }
 crate-type = ["cdylib"]
 
 [dependencies]
-base64 = { workspace = true }
-jose = { workspace = true }
-nats-jwt-rs = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
-wstd = { workspace = true }
-
 surrealdb-component-sdk = { workspace = true }
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 wit-bindgen = { workspace = true }
-
 opentelemetry = { workspace = true }
 otel-wasi = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-
-[dev-dependencies]
-rstest = { workspace = true }

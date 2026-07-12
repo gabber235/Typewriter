@@ -4,6 +4,7 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/generated/models/service.pb.dart";
 import "package:typewriter_panel/logic/services.dart";
 import "package:typewriter_panel/skir.dart" as skir;
+import "package:typewriter_panel/utils/skir.dart";
 
 part "realm.g.dart";
 
@@ -11,7 +12,7 @@ part "realm.g.dart";
 skir.RecordId? realmId(Ref ref) {
   final id = ref.watch(routeParamProvider("realmId"));
   if (id == null) return null;
-  return skir.RecordId(table: "service", key: skir.RecordIdKey.wrapString(id));
+  return recordId("service:$id");
 }
 
 @riverpod

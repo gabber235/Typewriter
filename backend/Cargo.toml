@@ -4,6 +4,7 @@ members = [
   "access/auth-callout",
   "access/auth-sentinel",
   "access/auth-typewriter-permissions",
+  "organization/organization-members",
   "organization/user-organization",
   "wasmcloud-utils",
   "wasmcloud-utils-macros"
@@ -45,6 +46,7 @@ wit-bindgen = {
 convert_case = "0.6"
 proc-macro2 = "1"
 quote = "1"
+rstest = "0.26.1"
 syn = { version = "2", features = ["full"] }
 
 [workspace.metadata.dylint]

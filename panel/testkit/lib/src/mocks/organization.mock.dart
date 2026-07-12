@@ -7,16 +7,14 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/skir.dart" as skir;
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 OrganizationData generateRandomOrganization() {
   return OrganizationData(
-    organizationId: skir.RecordId(
-      table: "organization",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    ),
+    organizationId: recordId("organization:${faker.guid.guid()}"),
     name: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")
@@ -41,10 +39,7 @@ class OrganizationsMock extends Organizations {
     required String logoUrl,
   }) async {
     await Future.delayed(Duration(milliseconds: 100));
-    return skir.RecordId(
-      table: "organization",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    );
+    return recordId("organization:${faker.guid.guid()}");
   }
 }
 
@@ -124,10 +119,7 @@ List<OrganizationRole> presetRoles() {
     final isFirst = i == 0;
     final isLast = i == _roleNames.length - 1;
     return OrganizationRole(
-      roleId: skir.RecordId(
-        table: "organization_role",
-        key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-      ),
+      roleId: recordId("organization_role:${faker.guid.guid()}"),
       name: _roleNames[i],
       color: _roleColors[i],
       deletable: !isFirst && !isLast,
@@ -153,10 +145,7 @@ OrganizationMember generateRandomMember({
       : presetRoles();
 
   return OrganizationMember(
-    userId: skir.RecordId(
-      table: "user",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    ),
+    userId: recordId("user:${faker.guid.guid()}"),
     name: faker.person.name(),
     email: faker.internet.email(),
     avatarUrl:
@@ -224,14 +213,8 @@ OrganizationJoinRequest generateRandomJoinRequest() {
     Duration(minutes: faker.randomGenerator.integer(60, min: 5)),
   );
   return OrganizationJoinRequest(
-    requestId: skir.RecordId(
-      table: "request_to_join",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    ),
-    userId: skir.RecordId(
-      table: "user",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    ),
+    requestId: recordId("request_to_join:${faker.guid.guid()}"),
+    userId: recordId("user:${faker.guid.guid()}"),
     userName: faker.person.name(),
     userEmail: faker.internet.email(),
     userAvatarUrl:
@@ -248,7 +231,8 @@ class OrganizationJoinRequestsMock extends OrganizationJoinRequests {
   final void Function(
     OrganizationJoinRequest request,
     List<OrganizationRole> roles,
-  )? onApprove;
+  )?
+  onApprove;
 
   @override
   Stream<List<OrganizationJoinRequest>> build() async* {
@@ -336,10 +320,7 @@ OrganizationJoinCode generateRandomJoinCode({
       : JoinCodeAutoAccept();
 
   return OrganizationJoinCode(
-    code: skir.RecordId(
-      table: "organization_join_codes",
-      key: skir.RecordIdKey.wrapString(generateCode(20)),
-    ),
+    code: recordId("organization_join_codes:${generateCode(20)}"),
     createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
     singleUse: singleUse,
@@ -387,14 +368,8 @@ UserJoinRequest generateRandomUserJoinRequest() {
     Duration(minutes: faker.randomGenerator.integer(60, min: 1)),
   );
   return UserJoinRequest(
-    requestId: skir.RecordId(
-      table: "request_to_join",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    ),
-    organizationId: skir.RecordId(
-      table: "organization",
-      key: skir.RecordIdKey.wrapString(faker.guid.guid()),
-    ),
+    requestId: recordId("request_to_join:${faker.guid.guid()}"),
+    organizationId: recordId("organization:${faker.guid.guid()}"),
     organizationName: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")

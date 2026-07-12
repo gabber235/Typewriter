@@ -9,10 +9,8 @@ import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/members.dart";
 import "package:typewriter_panel/logic/organization/organization.dart";
 import "package:typewriter_panel/skir.dart" as skir;
+import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-
-skir.RecordId _rid(String table, String key) =>
-    skir.RecordId(table: table, key: skir.RecordIdKey.wrapString(key));
 
 void main() {
   Future<int> getJoinRequestCount(ProviderContainer container) async {
@@ -103,11 +101,10 @@ void main() {
     OrganizationJoinRequest createRequest({required bool expired}) {
       final now = DateTime.now();
       return OrganizationJoinRequest(
-        requestId: _rid(
-          "request_to_join",
-          "req-${now.millisecondsSinceEpoch}-${expired ? "exp" : "active"}",
+        requestId: recordId(
+          "request_to_join:req-${now.millisecondsSinceEpoch}-${expired ? "exp" : "active"}",
         ),
-        userId: _rid("user", "user-1"),
+        userId: recordId("user:user-1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -246,7 +243,7 @@ void main() {
             : now.add(const Duration(days: 7));
       }
       return OrganizationJoinCode(
-        code: _rid("organization_join_codes", "CODE-$codeCounter"),
+        code: recordId("organization_join_codes:CODE-$codeCounter"),
         createdAt: now.subtract(const Duration(days: 1)),
         expiresAt: expiresAt,
       );
@@ -353,8 +350,8 @@ void main() {
   group("JoinRequest", () {
     test("isExpired returns true when expiresAt is in the past", () {
       final request = OrganizationJoinRequest(
-        requestId: _rid("request_to_join", "req-1"),
-        userId: _rid("user", "user-1"),
+        requestId: recordId("request_to_join:req-1"),
+        userId: recordId("user:user-1"),
         userName: "Test",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -368,8 +365,8 @@ void main() {
 
     test("isExpired returns false when expiresAt is in the future", () {
       final request = OrganizationJoinRequest(
-        requestId: _rid("request_to_join", "req-1"),
-        userId: _rid("user", "user-1"),
+        requestId: recordId("request_to_join:req-1"),
+        userId: recordId("user:user-1"),
         userName: "Test",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -385,7 +382,7 @@ void main() {
   group("JoinCode", () {
     test("isExpired returns true when expiresAt is in the past", () {
       final code = OrganizationJoinCode(
-        code: _rid("organization_join_codes", "ABC123"),
+        code: recordId("organization_join_codes:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
       );
@@ -397,7 +394,7 @@ void main() {
 
     test("isExpired returns false when expiresAt is in the future", () {
       final code = OrganizationJoinCode(
-        code: _rid("organization_join_codes", "ABC123"),
+        code: recordId("organization_join_codes:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
       );
@@ -409,7 +406,7 @@ void main() {
 
     test("neverExpires returns true when expiresAt is null", () {
       final code = OrganizationJoinCode(
-        code: _rid("organization_join_codes", "ABC123"),
+        code: recordId("organization_join_codes:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );
@@ -423,7 +420,7 @@ void main() {
   group("MemberRole", () {
     test("creates role with all properties", () {
       final role = OrganizationRole(
-        roleId: _rid("organization_role", "role-1"),
+        roleId: recordId("organization_role:role-1"),
         name: "Admin",
         color: Colors.blue,
         defaultRole: true,
@@ -431,7 +428,7 @@ void main() {
         deletable: false,
       );
 
-      expect(role.roleId, _rid("organization_role", "role-1"));
+      expect(role.roleId, recordId("organization_role:role-1"));
       expect(role.name, "Admin");
       expect(role.color, Colors.blue);
       expect(role.defaultRole, true);
@@ -441,7 +438,7 @@ void main() {
 
     test("uses defaults for optional properties", () {
       final role = OrganizationRole(
-        roleId: _rid("organization_role", "role-1"),
+        roleId: recordId("organization_role:role-1"),
         name: "Member",
         color: Colors.grey,
       );
@@ -456,13 +453,13 @@ void main() {
     test("creates member with all properties", () {
       final now = DateTime.now();
       final member = OrganizationMember(
-        userId: _rid("user", "member-1"),
+        userId: recordId("user:member-1"),
         name: "John Doe",
         email: "john@example.com",
         avatarUrl: "https://example.com/avatar.png",
         roles: [
           OrganizationRole(
-            roleId: _rid("organization_role", "r1"),
+            roleId: recordId("organization_role:r1"),
             name: "Admin",
             color: Colors.red,
           ),
@@ -470,7 +467,7 @@ void main() {
         joinedAt: now,
       );
 
-      expect(member.userId, _rid("user", "member-1"));
+      expect(member.userId, recordId("user:member-1"));
       expect(member.name, "John Doe");
       expect(member.email, "john@example.com");
       expect(member.avatarUrl, "https://example.com/avatar.png");
@@ -482,14 +479,16 @@ void main() {
 
   group("JoinCodeAutoAccept", () {
     test("creates auto-accept config with role ids", () {
-      final autoAccept = JoinCodeAutoAccept(roleIds: [
-        _rid("organization_role", "r1"),
-        _rid("organization_role", "r2"),
-      ]);
+      final autoAccept = JoinCodeAutoAccept(
+        roleIds: [
+          recordId("organization_role:r1"),
+          recordId("organization_role:r2"),
+        ],
+      );
 
       expect(autoAccept.roleIds, [
-        _rid("organization_role", "r1"),
-        _rid("organization_role", "r2"),
+        recordId("organization_role:r1"),
+        recordId("organization_role:r2"),
       ]);
     });
   });
@@ -507,12 +506,12 @@ void main() {
       final options = JoinCodeOptions(
         singleUse: false,
         expiration: JoinCodeExpiration.never(),
-        autoAcceptRoleIds: [_rid("organization_role", "r1")],
+        autoAcceptRoleIds: [recordId("organization_role:r1")],
       );
 
       expect(options.singleUse, false);
       expect(options.expiration, isA<JoinCodeExpirationNever>());
-      expect(options.autoAcceptRoleIds, [_rid("organization_role", "r1")]);
+      expect(options.autoAcceptRoleIds, [recordId("organization_role:r1")]);
     });
   });
 
@@ -553,13 +552,13 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([
               OrganizationMember(
-                userId: _rid("user", "m1"),
+                userId: recordId("user:m1"),
                 name: "Test",
                 email: "test@test.com",
                 avatarUrl: "",
@@ -576,7 +575,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles(_rid("user", "m1"), []),
+            .updateMemberRoles(recordId("user:m1"), []),
         throwsA(isA<ApiException>()),
       );
     });
@@ -590,7 +589,7 @@ void main() {
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([
               OrganizationMember(
-                userId: _rid("user", "m1"),
+                userId: recordId("user:m1"),
                 name: "Test",
                 email: "test@test.com",
                 avatarUrl: "",
@@ -607,7 +606,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles(_rid("user", "m1"), []),
+            .updateMemberRoles(recordId("user:m1"), []),
         throwsA(isA<ApiException>()),
       );
     });
@@ -617,13 +616,13 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => null),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([
               OrganizationMember(
-                userId: _rid("user", "m1"),
+                userId: recordId("user:m1"),
                 name: "Test",
                 email: "test@test.com",
                 avatarUrl: "",
@@ -640,7 +639,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .removeMember(_rid("user", "m1")),
+            .removeMember(recordId("user:m1")),
         throwsA(isA<ApiException>()),
       );
     });
@@ -654,7 +653,7 @@ void main() {
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([
               OrganizationMember(
-                userId: _rid("user", "m1"),
+                userId: recordId("user:m1"),
                 name: "Test",
                 email: "test@test.com",
                 avatarUrl: "",
@@ -671,7 +670,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .removeMember(_rid("user", "m1")),
+            .removeMember(recordId("user:m1")),
         throwsA(isA<ApiException>()),
       );
     });
@@ -713,7 +712,7 @@ void main() {
       "removeMember optimistically removes then restores on error",
       () async {
         final member = OrganizationMember(
-          userId: _rid("user", "m1"),
+          userId: recordId("user:m1"),
           name: "Test",
           email: "test@test.com",
           avatarUrl: "",
@@ -725,7 +724,7 @@ void main() {
           overrides: [
             userIdProvider.overrideWith((ref) async => "user-1"),
             organizationIdProvider.overrideWith(
-              (ref) => _rid("organization", "org-1"),
+              (ref) => recordId("organization:org-1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
@@ -746,19 +745,19 @@ void main() {
         try {
           await container
               .read(organizationMembersProvider.notifier)
-              .removeMember(_rid("user", "m1"));
+              .removeMember(recordId("user:m1"));
         } on Exception catch (_) {}
 
         final currentState = container.read(organizationMembersProvider);
         expect(currentState.value, isNotNull);
         expect(currentState.value!.length, 1);
-        expect(currentState.value!.first.userId, _rid("user", "m1"));
+        expect(currentState.value!.first.userId, recordId("user:m1"));
       },
     );
 
     test("removeMember succeeds when server confirms", () async {
       final member = OrganizationMember(
-        userId: _rid("user", "m1"),
+        userId: recordId("user:m1"),
         name: "Test",
         email: "test@test.com",
         avatarUrl: "",
@@ -770,7 +769,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -790,7 +789,7 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .removeMember(_rid("user", "m1"));
+          .removeMember(recordId("user:m1"));
 
       final currentState = container.read(organizationMembersProvider);
       expect(currentState.value, isNotNull);
@@ -801,20 +800,20 @@ void main() {
       "updateMemberRoles optimistically updates then restores on error",
       () async {
         final oldRole = OrganizationRole(
-          roleId: _rid("organization_role", "r1"),
+          roleId: recordId("organization_role:r1"),
           name: "Member",
           color: Colors.grey,
           assignable: true,
         );
         final newRole = OrganizationRole(
-          roleId: _rid("organization_role", "r2"),
+          roleId: recordId("organization_role:r2"),
           name: "Admin",
           color: Colors.red,
           assignable: true,
         );
 
         final member = OrganizationMember(
-          userId: _rid("user", "m1"),
+          userId: recordId("user:m1"),
           name: "Test",
           email: "test@test.com",
           avatarUrl: "",
@@ -826,7 +825,7 @@ void main() {
           overrides: [
             userIdProvider.overrideWith((ref) async => "user-1"),
             organizationIdProvider.overrideWith(
-              (ref) => _rid("organization", "org-1"),
+              (ref) => recordId("organization:org-1"),
             ),
             natsProvider.overrideWithValue(mockNats),
             organizationMembersProvider.overrideWith(
@@ -850,7 +849,7 @@ void main() {
         try {
           await container
               .read(organizationMembersProvider.notifier)
-              .updateMemberRoles(_rid("user", "m1"), [newRole]);
+              .updateMemberRoles(recordId("user:m1"), [newRole]);
         } on Exception catch (_) {}
 
         final currentState = container.read(organizationMembersProvider);
@@ -858,27 +857,27 @@ void main() {
         expect(currentState.value!.first.roles.length, 1);
         expect(
           currentState.value!.first.roles.first.roleId,
-          _rid("organization_role", "r1"),
+          recordId("organization_role:r1"),
         );
       },
     );
 
     test("updateMemberRoles succeeds when server confirms", () async {
       final oldRole = OrganizationRole(
-        roleId: _rid("organization_role", "r1"),
+        roleId: recordId("organization_role:r1"),
         name: "Member",
         color: Colors.grey,
         assignable: true,
       );
       final newRole = OrganizationRole(
-        roleId: _rid("organization_role", "r2"),
+        roleId: recordId("organization_role:r2"),
         name: "Admin",
         color: Colors.red,
         assignable: true,
       );
 
       final member = OrganizationMember(
-        userId: _rid("user", "m1"),
+        userId: recordId("user:m1"),
         name: "Test",
         email: "test@test.com",
         avatarUrl: "",
@@ -890,7 +889,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -906,10 +905,9 @@ void main() {
 
       mockNats.registerHandler(
         "cloud.out.user.user-1.organization.org-1.members.update",
-        (data) => skir.UpdateOrganizationMemberRolesResponse.serializer
-            .toBytes(
+        (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-            userId: _rid("user", "m1"),
+            userId: recordId("user:m1"),
             name: "Test",
             email: "test@test.com",
             avatarUrl: "",
@@ -921,16 +919,223 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles(_rid("user", "m1"), [newRole]);
+          .updateMemberRoles(recordId("user:m1"), [newRole]);
 
       final currentState = container.read(organizationMembersProvider);
       expect(currentState.value, isNotNull);
       expect(currentState.value!.first.roles.length, 1);
       expect(
         currentState.value!.first.roles.first.roleId,
-        _rid("organization_role", "r2"),
+        recordId("organization_role:r2"),
       );
     });
+  });
+
+  group("Command Outcomes", () {
+    late MockNatsClient mockNats;
+
+    setUp(() => mockNats = MockNatsClient());
+    tearDown(() => mockNats.dispose());
+
+    Matcher apiException(int code, String message) => isA<ApiException>()
+        .having((error) => error.code, "code", code)
+        .having((error) => error.message, "message", message);
+
+    Future<void> waitUntilReady(ProviderContainer container, provider) async {
+      await container.read(provider.future);
+    }
+
+    OrganizationMember memberWithRole(OrganizationRole role) =>
+        OrganizationMember(
+          userId: recordId("user:m1"),
+          name: "Test",
+          roles: [role],
+          joinedAt: DateTime.now(),
+        );
+
+    test(
+      "updateMemberRoles maps unassignable roles and restores state",
+      () async {
+        final oldRole = OrganizationRole(
+          roleId: recordId("organization_role:old"),
+          name: "Member",
+          color: Colors.grey,
+          assignable: true,
+        );
+        final newRole = OrganizationRole(
+          roleId: recordId("organization_role:new"),
+          name: "Admin",
+          color: Colors.red,
+          assignable: true,
+        );
+        final container = ProviderContainer.test(
+          overrides: [
+            userIdProvider.overrideWith((ref) async => "user-1"),
+            organizationIdProvider.overrideWith(
+              (ref) => recordId("organization:org-1"),
+            ),
+            natsProvider.overrideWithValue(mockNats),
+            organizationMembersProvider.overrideWith(
+              () => _MockMembersNotifier([memberWithRole(oldRole)]),
+            ),
+          ],
+        );
+        await waitUntilReady(container, organizationMembersProvider);
+        mockNats.registerHandler(
+          "cloud.out.user.user-1.organization.org-1.members.update",
+          (
+            data,
+          ) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
+            skir.UpdateOrganizationMemberRolesResponse.createRolesNotAssignableError(
+              roleIds: [newRole.roleId],
+            ),
+          ),
+        );
+
+        await expectLater(
+          container
+              .read(organizationMembersProvider.notifier)
+              .updateMemberRoles(recordId("user:m1"), [newRole]),
+          throwsA(apiException(400, "One or more roles cannot be assigned")),
+        );
+        expect(
+          container.read(organizationMembersProvider).requireValue.single.roles,
+          [oldRole],
+        );
+      },
+    );
+
+    test("updateMemberRoles maps founder role requirement to conflict", () async {
+      final role = OrganizationRole(
+        roleId: recordId("organization_role:founder"),
+        name: "Founder",
+        color: Colors.red,
+        assignable: true,
+      );
+      final container = ProviderContainer.test(
+        overrides: [
+          userIdProvider.overrideWith((ref) async => "user-1"),
+          organizationIdProvider.overrideWith(
+            (ref) => recordId("organization:org-1"),
+          ),
+          natsProvider.overrideWithValue(mockNats),
+          organizationMembersProvider.overrideWith(
+            () => _MockMembersNotifier([memberWithRole(role)]),
+          ),
+        ],
+      );
+      await waitUntilReady(container, organizationMembersProvider);
+      mockNats.registerHandler(
+        "cloud.out.user.user-1.organization.org-1.members.update",
+        (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
+          skir.UpdateOrganizationMemberRolesResponse.createFounderRoleRequiredError(),
+        ),
+      );
+
+      await expectLater(
+        container.read(organizationMembersProvider.notifier).updateMemberRoles(
+          recordId("user:m1"),
+          [role],
+        ),
+        throwsA(
+          apiException(409, "Organization must retain at least one founder"),
+        ),
+      );
+    });
+
+    test(
+      "removeMember maps founder removal conflict and restores state",
+      () async {
+        final role = OrganizationRole(
+          roleId: recordId("organization_role:founder"),
+          name: "Founder",
+          color: Colors.red,
+        );
+        final member = memberWithRole(role);
+        final container = ProviderContainer.test(
+          overrides: [
+            userIdProvider.overrideWith((ref) async => "user-1"),
+            organizationIdProvider.overrideWith(
+              (ref) => recordId("organization:org-1"),
+            ),
+            natsProvider.overrideWithValue(mockNats),
+            organizationMembersProvider.overrideWith(
+              () => _MockMembersNotifier([member]),
+            ),
+          ],
+        );
+        await waitUntilReady(container, organizationMembersProvider);
+        mockNats.registerHandler(
+          "cloud.out.user.user-1.organization.org-1.members.remove",
+          (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
+            skir.RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
+              userId: member.userId,
+            ),
+          ),
+        );
+
+        await expectLater(
+          container
+              .read(organizationMembersProvider.notifier)
+              .removeMember(member.userId),
+          throwsA(apiException(409, "Organization founder cannot be removed")),
+        );
+        expect(container.read(organizationMembersProvider).requireValue, [
+          member,
+        ]);
+      },
+    );
+
+    for (final outcome in [
+      (
+        "roles required",
+        skir.ApproveOrganizationJoinRequestResponse.createRolesRequiredError(),
+        400,
+        "At least one role is required",
+      ),
+      (
+        "user already member",
+        skir.ApproveOrganizationJoinRequestResponse.createUserAlreadyMemberError(
+          userId: recordId("user:m1"),
+        ),
+        409,
+        "User is already an organization member",
+      ),
+    ]) {
+      test("approveRequest maps ${outcome.$1}", () async {
+        final request = OrganizationJoinRequest(
+          requestId: recordId("request_to_join:req-1"),
+          userId: recordId("user:m1"),
+          requestedAt: DateTime.now(),
+          expiresAt: DateTime.now().add(const Duration(days: 1)),
+        );
+        final container = ProviderContainer.test(
+          overrides: [
+            userIdProvider.overrideWith((ref) async => "user-1"),
+            organizationIdProvider.overrideWith(
+              (ref) => recordId("organization:org-1"),
+            ),
+            natsProvider.overrideWithValue(mockNats),
+            organizationJoinRequestsProvider.overrideWith(
+              () => _MockJoinRequestsNotifier([request]),
+            ),
+          ],
+        );
+        await waitUntilReady(container, organizationJoinRequestsProvider);
+        mockNats.registerHandler(
+          "cloud.out.user.user-1.organization.org-1.members.join_requests.approve",
+          (data) => skir.ApproveOrganizationJoinRequestResponse.serializer
+              .toBytes(outcome.$2),
+        );
+
+        await expectLater(
+          container
+              .read(organizationJoinRequestsProvider.notifier)
+              .approveRequest(request.requestId, []),
+          throwsA(apiException(outcome.$3, outcome.$4)),
+        );
+      });
+    }
   });
 
   group("Role Merging Logic", () {
@@ -967,26 +1172,26 @@ void main() {
 
     test("preserves non-assignable roles from current member", () async {
       final nonAssignableRole = OrganizationRole(
-        roleId: _rid("organization_role", "owner"),
+        roleId: recordId("organization_role:owner"),
         name: "Owner",
         color: Colors.purple,
         assignable: false,
       );
       final assignableRole = OrganizationRole(
-        roleId: _rid("organization_role", "editor"),
+        roleId: recordId("organization_role:editor"),
         name: "Editor",
         color: Colors.blue,
         assignable: true,
       );
       final newRole = OrganizationRole(
-        roleId: _rid("organization_role", "viewer"),
+        roleId: recordId("organization_role:viewer"),
         name: "Viewer",
         color: Colors.green,
         assignable: true,
       );
 
       final member = OrganizationMember(
-        userId: _rid("user", "m1"),
+        userId: recordId("user:m1"),
         name: "Test",
         email: "test@test.com",
         avatarUrl: "",
@@ -998,7 +1203,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1020,15 +1225,12 @@ void main() {
       mockNats.registerHandler(
         "cloud.out.user.user-1.organization.org-1.members.update",
         (data) {
-          final request =
-              skir.UpdateOrganizationMemberRolesRequest.serializer.fromBytes(
-            data,
-          );
+          final request = skir.UpdateOrganizationMemberRolesRequest.serializer
+              .fromBytes(data);
           capturedRoleIds = request.roleIds.toList();
-          return skir.UpdateOrganizationMemberRolesResponse.serializer
-              .toBytes(
+          return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
             skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-              userId: _rid("user", "m1"),
+              userId: recordId("user:m1"),
               name: "Test",
               email: "test@test.com",
               avatarUrl: "",
@@ -1041,39 +1243,39 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles(_rid("user", "m1"), [newRole]);
+          .updateMemberRoles(recordId("user:m1"), [newRole]);
 
       expect(capturedRoleIds, isNotNull);
       expect(
-        capturedRoleIds!.contains(_rid("organization_role", "owner")),
+        capturedRoleIds!.contains(recordId("organization_role:owner")),
         true,
       );
       expect(
-        capturedRoleIds!.contains(_rid("organization_role", "viewer")),
+        capturedRoleIds!.contains(recordId("organization_role:viewer")),
         true,
       );
       expect(
-        capturedRoleIds!.contains(_rid("organization_role", "editor")),
+        capturedRoleIds!.contains(recordId("organization_role:editor")),
         false,
       );
     });
 
     test("only includes assignable roles from requested roles", () async {
       final assignableRole = OrganizationRole(
-        roleId: _rid("organization_role", "member"),
+        roleId: recordId("organization_role:member"),
         name: "Member",
         color: Colors.grey,
         assignable: true,
       );
       final nonAssignableRequested = OrganizationRole(
-        roleId: _rid("organization_role", "admin"),
+        roleId: recordId("organization_role:admin"),
         name: "Admin",
         color: Colors.red,
         assignable: false,
       );
 
       final member = OrganizationMember(
-        userId: _rid("user", "m1"),
+        userId: recordId("user:m1"),
         name: "Test",
         email: "test@test.com",
         avatarUrl: "",
@@ -1085,15 +1287,14 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
             () => _MockMembersNotifier([member]),
           ),
           organizationRolesProvider.overrideWith(
-            () =>
-                _MockRolesNotifier([assignableRole, nonAssignableRequested]),
+            () => _MockRolesNotifier([assignableRole, nonAssignableRequested]),
           ),
         ],
       );
@@ -1104,15 +1305,12 @@ void main() {
       mockNats.registerHandler(
         "cloud.out.user.user-1.organization.org-1.members.update",
         (data) {
-          final request =
-              skir.UpdateOrganizationMemberRolesRequest.serializer.fromBytes(
-            data,
-          );
+          final request = skir.UpdateOrganizationMemberRolesRequest.serializer
+              .fromBytes(data);
           capturedRoleIds = request.roleIds.toList();
-          return skir.UpdateOrganizationMemberRolesResponse.serializer
-              .toBytes(
+          return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
             skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-              userId: _rid("user", "m1"),
+              userId: recordId("user:m1"),
               name: "Test",
               email: "test@test.com",
               avatarUrl: "",
@@ -1125,39 +1323,39 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles(_rid("user", "m1"), [
-        assignableRole,
-        nonAssignableRequested,
-      ]);
+          .updateMemberRoles(recordId("user:m1"), [
+            assignableRole,
+            nonAssignableRequested,
+          ]);
 
       expect(capturedRoleIds, isNotNull);
       expect(
-        capturedRoleIds!.contains(_rid("organization_role", "member")),
+        capturedRoleIds!.contains(recordId("organization_role:member")),
         true,
       );
       expect(
-        capturedRoleIds!.contains(_rid("organization_role", "admin")),
+        capturedRoleIds!.contains(recordId("organization_role:admin")),
         false,
       );
     });
 
     test("falls back to default roles when result is empty", () async {
       final defaultRole = OrganizationRole(
-        roleId: _rid("organization_role", "default"),
+        roleId: recordId("organization_role:default"),
         name: "Default",
         color: Colors.grey,
         defaultRole: true,
         assignable: true,
       );
       final currentRole = OrganizationRole(
-        roleId: _rid("organization_role", "member"),
+        roleId: recordId("organization_role:member"),
         name: "Member",
         color: Colors.blue,
         assignable: true,
       );
 
       final member = OrganizationMember(
-        userId: _rid("user", "m1"),
+        userId: recordId("user:m1"),
         name: "Test",
         email: "test@test.com",
         avatarUrl: "",
@@ -1190,7 +1388,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1209,15 +1407,12 @@ void main() {
       mockNats.registerHandler(
         "cloud.out.user.user-1.organization.org-1.members.update",
         (data) {
-          final request =
-              skir.UpdateOrganizationMemberRolesRequest.serializer.fromBytes(
-            data,
-          );
+          final request = skir.UpdateOrganizationMemberRolesRequest.serializer
+              .fromBytes(data);
           capturedRoleIds = request.roleIds.toList();
-          return skir.UpdateOrganizationMemberRolesResponse.serializer
-              .toBytes(
+          return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
             skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-              userId: _rid("user", "m1"),
+              userId: recordId("user:m1"),
               name: "Test",
               email: "test@test.com",
               avatarUrl: "",
@@ -1230,11 +1425,11 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles(_rid("user", "m1"), []);
+          .updateMemberRoles(recordId("user:m1"), []);
 
       expect(capturedRoleIds, isNotNull);
       expect(
-        capturedRoleIds!.contains(_rid("organization_role", "default")),
+        capturedRoleIds!.contains(recordId("organization_role:default")),
         true,
       );
       expect(capturedRoleIds!.length, 1);
@@ -1242,14 +1437,14 @@ void main() {
 
     test("uses server response to update member", () async {
       final role = OrganizationRole(
-        roleId: _rid("organization_role", "member"),
+        roleId: recordId("organization_role:member"),
         name: "Member",
         color: Colors.grey,
         assignable: true,
       );
 
       final member = OrganizationMember(
-        userId: _rid("user", "m1"),
+        userId: recordId("user:m1"),
         name: "Original Name",
         email: "test@test.com",
         avatarUrl: "",
@@ -1261,7 +1456,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user-1"),
           organizationIdProvider.overrideWith(
-            (ref) => _rid("organization", "org-1"),
+            (ref) => recordId("organization:org-1"),
           ),
           natsProvider.overrideWithValue(mockNats),
           organizationMembersProvider.overrideWith(
@@ -1277,10 +1472,9 @@ void main() {
 
       mockNats.registerHandler(
         "cloud.out.user.user-1.organization.org-1.members.update",
-        (data) => skir.UpdateOrganizationMemberRolesResponse.serializer
-            .toBytes(
+        (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           skir.UpdateOrganizationMemberRolesResponse.createSuccess(
-            userId: _rid("user", "m1"),
+            userId: recordId("user:m1"),
             name: "Updated Name",
             email: "test@test.com",
             avatarUrl: "",
@@ -1292,7 +1486,7 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles(_rid("user", "m1"), [role]);
+          .updateMemberRoles(recordId("user:m1"), [role]);
 
       final currentState = container.read(organizationMembersProvider);
       expect(currentState.value, isNotNull);

@@ -17,6 +17,7 @@ method WatchOrganizationMembers(
   add: OrganizationMember;
   remove: RecordId;
   internal_error: struct {};
+  update: OrganizationMember;
 } = 638484;
 
 method UpdateOrganizationMemberRoles(
@@ -32,6 +33,11 @@ method UpdateOrganizationMemberRoles(
   roles_not_found_error: struct {
     role_ids: [RecordId];
   };
+  roles_not_assignable_error: struct {
+    role_ids: [RecordId];
+  };
+  roles_required_error: struct {};
+  founder_role_required_error: struct {};
   internal_error: struct {};
 } = 813953;
 
@@ -42,6 +48,9 @@ method RemoveOrganizationMember(
 ): enum {
   success: struct {};
   user_not_member_error: struct {
+    user_id: RecordId;
+  };
+  founder_cannot_be_removed_error: struct {
     user_id: RecordId;
   };
   internal_error: struct {};

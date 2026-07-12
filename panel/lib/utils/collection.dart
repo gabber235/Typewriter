@@ -56,6 +56,25 @@ extension ListX<T> on List<T> {
   }
 }
 
+extension NullableListX<T> on List<T>? {
+  List<T> updateByKey<TKey>(TKey Function(T) keySelector, T updated) {
+    if (this == null) return [updated];
+
+    final updatedId = keySelector(updated);
+
+    final matchingIndex = this!.indexWhere(
+      (value) => keySelector(value) == updatedId,
+    );
+    if (matchingIndex == -1) return [...this!, updated];
+
+    return [
+      ...this!.take(matchingIndex),
+      updated,
+      ...this!.skip(matchingIndex + 1),
+    ];
+  }
+}
+
 extension IterableX<T> on Iterable<T> {
   T? minByOrNull<S>(S Function(T) orderBy, {int Function(S, S)? compare}) =>
       minBy(this, orderBy, compare: compare);

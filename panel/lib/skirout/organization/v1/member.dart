@@ -428,6 +428,7 @@ final class WatchOrganizationMembersResponse_InternalError_mutable implements Wa
 ///     case WatchOrganizationMembersResponse_add(:var value): { ... }
 ///     case WatchOrganizationMembersResponse_remove(:var value): { ... }
 ///     case WatchOrganizationMembersResponse_internalError(:var value): { ... }
+///     case WatchOrganizationMembersResponse_update(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -492,6 +493,30 @@ sealed class WatchOrganizationMembersResponse {
     WatchOrganizationMembersResponse_InternalError()
   );
 
+  /// Create a 'update' variant wrapping around the given value.
+  factory WatchOrganizationMembersResponse.wrapUpdate(
+    OrganizationMember value
+  ) => WatchOrganizationMembersResponse_updateWrapper._(value);
+
+  /// Same as `wrapUpdate(OrganizationMember(...))`.
+  factory WatchOrganizationMembersResponse.createUpdate({
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
+    required _core.String? name,
+    required _core.String? email,
+    required _core.String? avatarUrl,
+    required _core.Iterable<_lib_organization_v1_role.OrganizationRole_orMutable> roles,
+    required _core.DateTime joinedAt,
+  }) => WatchOrganizationMembersResponse.wrapUpdate(
+    OrganizationMember(
+      userId: userId,
+      name: name,
+      email: email,
+      avatarUrl: avatarUrl,
+      roles: roles,
+      joinedAt: joinedAt,
+    )
+  );
+
   /// Returns the kind of variant held by this WatchOrganizationMembersResponse.
   WatchOrganizationMembersResponse_kind get kind;
 
@@ -540,6 +565,16 @@ sealed class WatchOrganizationMembersResponse {
         (it) => it.value,
         ordinal: WatchOrganizationMembersResponse_kind.internalErrorWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "update",
+        "wrapUpdate",
+        OrganizationMember.serializer,
+        "",
+        WatchOrganizationMembersResponse_updateWrapper._,
+        (it) => it.value,
+        ordinal: WatchOrganizationMembersResponse_kind.updateWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -562,7 +597,8 @@ enum WatchOrganizationMembersResponse_kind {
   listWrapper(1),
   addWrapper(2),
   removeWrapper(3),
-  internalErrorWrapper(4);
+  internalErrorWrapper(4),
+  updateWrapper(5);
 
   final _core.int _ordinal;
 
@@ -637,6 +673,15 @@ final class WatchOrganizationMembersResponse_internalErrorWrapper extends _Watch
 
   @_core.override
   WatchOrganizationMembersResponse_kind get kind => WatchOrganizationMembersResponse_kind.internalErrorWrapper;
+}
+
+final class WatchOrganizationMembersResponse_updateWrapper extends _WatchOrganizationMembersResponse_wrapper {
+  final OrganizationMember value;
+
+  WatchOrganizationMembersResponse_updateWrapper._(this.value);
+
+  @_core.override
+  WatchOrganizationMembersResponse_kind get kind => WatchOrganizationMembersResponse_kind.updateWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1110,6 +1155,279 @@ final class UpdateOrganizationMemberRolesResponse_InternalError_mutable implemen
 }
 
 // -----------------------------------------------------------------------------
+// struct UpdateOrganizationMemberRolesResponse.RolesNotAssignableError
+// -----------------------------------------------------------------------------
+
+sealed class UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
+
+  UpdateOrganizationMemberRolesResponse_RolesNotAssignableError toFrozen();
+}
+
+/// Deeply immutable.
+final class UpdateOrganizationMemberRolesResponse_RolesNotAssignableError implements UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_kernel_v1_record_id.RecordId> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory UpdateOrganizationMemberRolesResponse_RolesNotAssignableError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => UpdateOrganizationMemberRolesResponse_RolesNotAssignableError._(
+    _skir.internal__frozenMappedCopy(roleIds, (it) => it.toFrozen()),
+  );
+
+  UpdateOrganizationMemberRolesResponse_RolesNotAssignableError._(
+    this.roleIds,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = UpdateOrganizationMemberRolesResponse_RolesNotAssignableError._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable mutable() => UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_RolesNotAssignableError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable toMutable() => UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable._(
+    this.roleIds,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! UpdateOrganizationMemberRolesResponse_RolesNotAssignableError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.roleIds,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `UpdateOrganizationMemberRolesResponse_RolesNotAssignableError` instances.
+  static _skir.StructSerializer<UpdateOrganizationMemberRolesResponse_RolesNotAssignableError, UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "role_ids",
+        "roleIds",
+        0,
+        _skir.Serializers.iterable(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.roleIds,
+        (it, v) => it.roleIds = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/member.skir:UpdateOrganizationMemberRolesResponse.RolesNotAssignableError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [UpdateOrganizationMemberRolesResponse_RolesNotAssignableError].
+final class UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable implements UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  UpdateOrganizationMemberRolesResponse_RolesNotAssignableError_mutable._(
+    this.roleIds,
+  );
+
+  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
+  _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
+    final value = this.roleIds;
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+      return value;
+    } else {
+      return this.roleIds = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_RolesNotAssignableError toFrozen() => UpdateOrganizationMemberRolesResponse_RolesNotAssignableError(
+    roleIds: this.roleIds,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct UpdateOrganizationMemberRolesResponse.RolesRequiredError
+// -----------------------------------------------------------------------------
+
+sealed class UpdateOrganizationMemberRolesResponse_RolesRequiredError_orMutable {
+  UpdateOrganizationMemberRolesResponse_RolesRequiredError toFrozen();
+}
+
+/// Deeply immutable.
+final class UpdateOrganizationMemberRolesResponse_RolesRequiredError implements UpdateOrganizationMemberRolesResponse_RolesRequiredError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory UpdateOrganizationMemberRolesResponse_RolesRequiredError() => UpdateOrganizationMemberRolesResponse_RolesRequiredError._();
+
+  UpdateOrganizationMemberRolesResponse_RolesRequiredError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = UpdateOrganizationMemberRolesResponse_RolesRequiredError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable mutable() => UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_RolesRequiredError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable toMutable() => UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! UpdateOrganizationMemberRolesResponse_RolesRequiredError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `UpdateOrganizationMemberRolesResponse_RolesRequiredError` instances.
+  static _skir.StructSerializer<UpdateOrganizationMemberRolesResponse_RolesRequiredError, UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/member.skir:UpdateOrganizationMemberRolesResponse.RolesRequiredError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [UpdateOrganizationMemberRolesResponse_RolesRequiredError].
+final class UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable implements UpdateOrganizationMemberRolesResponse_RolesRequiredError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  UpdateOrganizationMemberRolesResponse_RolesRequiredError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_RolesRequiredError toFrozen() => UpdateOrganizationMemberRolesResponse_RolesRequiredError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct UpdateOrganizationMemberRolesResponse.FounderRoleRequiredError
+// -----------------------------------------------------------------------------
+
+sealed class UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_orMutable {
+  UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError toFrozen();
+}
+
+/// Deeply immutable.
+final class UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError implements UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError() => UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError._();
+
+  UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable mutable() => UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable toMutable() => UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError` instances.
+  static _skir.StructSerializer<UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError, UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/member.skir:UpdateOrganizationMemberRolesResponse.FounderRoleRequiredError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError].
+final class UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable implements UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError toFrozen() => UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum UpdateOrganizationMemberRolesResponse
 // -----------------------------------------------------------------------------
 
@@ -1121,6 +1439,9 @@ final class UpdateOrganizationMemberRolesResponse_InternalError_mutable implemen
 ///     case UpdateOrganizationMemberRolesResponse_userNotFoundError(:var value): { ... }
 ///     case UpdateOrganizationMemberRolesResponse_rolesNotFoundError(:var value): { ... }
 ///     case UpdateOrganizationMemberRolesResponse_internalError(:var value): { ... }
+///     case UpdateOrganizationMemberRolesResponse_rolesNotAssignableError(:var value): { ... }
+///     case UpdateOrganizationMemberRolesResponse_rolesRequiredError(:var value): { ... }
+///     case UpdateOrganizationMemberRolesResponse_founderRoleRequiredError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1192,6 +1513,40 @@ sealed class UpdateOrganizationMemberRolesResponse {
     UpdateOrganizationMemberRolesResponse_InternalError()
   );
 
+  /// Create a 'roles_not_assignable_error' variant wrapping around the given value.
+  factory UpdateOrganizationMemberRolesResponse.wrapRolesNotAssignableError(
+    UpdateOrganizationMemberRolesResponse_RolesNotAssignableError value
+  ) => UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper._(value);
+
+  /// Same as `wrapRolesNotAssignableError(UpdateOrganizationMemberRolesResponse_RolesNotAssignableError(...))`.
+  factory UpdateOrganizationMemberRolesResponse.createRolesNotAssignableError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => UpdateOrganizationMemberRolesResponse.wrapRolesNotAssignableError(
+    UpdateOrganizationMemberRolesResponse_RolesNotAssignableError(
+      roleIds: roleIds,
+    )
+  );
+
+  /// Create a 'roles_required_error' variant wrapping around the given value.
+  factory UpdateOrganizationMemberRolesResponse.wrapRolesRequiredError(
+    UpdateOrganizationMemberRolesResponse_RolesRequiredError value
+  ) => UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper._(value);
+
+  /// Same as `wrapRolesRequiredError(UpdateOrganizationMemberRolesResponse_RolesRequiredError(...))`.
+  factory UpdateOrganizationMemberRolesResponse.createRolesRequiredError() => UpdateOrganizationMemberRolesResponse.wrapRolesRequiredError(
+    UpdateOrganizationMemberRolesResponse_RolesRequiredError()
+  );
+
+  /// Create a 'founder_role_required_error' variant wrapping around the given value.
+  factory UpdateOrganizationMemberRolesResponse.wrapFounderRoleRequiredError(
+    UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError value
+  ) => UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper._(value);
+
+  /// Same as `wrapFounderRoleRequiredError(UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError(...))`.
+  factory UpdateOrganizationMemberRolesResponse.createFounderRoleRequiredError() => UpdateOrganizationMemberRolesResponse.wrapFounderRoleRequiredError(
+    UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError()
+  );
+
   /// Returns the kind of variant held by this UpdateOrganizationMemberRolesResponse.
   UpdateOrganizationMemberRolesResponse_kind get kind;
 
@@ -1238,6 +1593,36 @@ sealed class UpdateOrganizationMemberRolesResponse {
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind.internalErrorWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "roles_not_assignable_error",
+        "wrapRolesNotAssignableError",
+        UpdateOrganizationMemberRolesResponse_RolesNotAssignableError.serializer,
+        "",
+        UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateOrganizationMemberRolesResponse_kind.rolesNotAssignableErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "roles_required_error",
+        "wrapRolesRequiredError",
+        UpdateOrganizationMemberRolesResponse_RolesRequiredError.serializer,
+        "",
+        UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateOrganizationMemberRolesResponse_kind.rolesRequiredErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
+        "founder_role_required_error",
+        "wrapFounderRoleRequiredError",
+        UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError.serializer,
+        "",
+        UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateOrganizationMemberRolesResponse_kind.founderRoleRequiredErrorWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1260,7 +1645,10 @@ enum UpdateOrganizationMemberRolesResponse_kind {
   successWrapper(1),
   userNotFoundErrorWrapper(2),
   rolesNotFoundErrorWrapper(3),
-  internalErrorWrapper(4);
+  internalErrorWrapper(4),
+  rolesNotAssignableErrorWrapper(5),
+  rolesRequiredErrorWrapper(6),
+  founderRoleRequiredErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -1335,6 +1723,33 @@ final class UpdateOrganizationMemberRolesResponse_internalErrorWrapper extends _
 
   @_core.override
   UpdateOrganizationMemberRolesResponse_kind get kind => UpdateOrganizationMemberRolesResponse_kind.internalErrorWrapper;
+}
+
+final class UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper extends _UpdateOrganizationMemberRolesResponse_wrapper {
+  final UpdateOrganizationMemberRolesResponse_RolesNotAssignableError value;
+
+  UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_kind get kind => UpdateOrganizationMemberRolesResponse_kind.rolesNotAssignableErrorWrapper;
+}
+
+final class UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper extends _UpdateOrganizationMemberRolesResponse_wrapper {
+  final UpdateOrganizationMemberRolesResponse_RolesRequiredError value;
+
+  UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_kind get kind => UpdateOrganizationMemberRolesResponse_kind.rolesRequiredErrorWrapper;
+}
+
+final class UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper extends _UpdateOrganizationMemberRolesResponse_wrapper {
+  final UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError value;
+
+  UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateOrganizationMemberRolesResponse_kind get kind => UpdateOrganizationMemberRolesResponse_kind.founderRoleRequiredErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1728,6 +2143,125 @@ final class RemoveOrganizationMemberResponse_InternalError_mutable implements Re
 }
 
 // -----------------------------------------------------------------------------
+// struct RemoveOrganizationMemberResponse.FounderCannotBeRemovedError
+// -----------------------------------------------------------------------------
+
+sealed class RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get userId;
+
+  RemoveOrganizationMemberResponse_FounderCannotBeRemovedError toFrozen();
+}
+
+/// Deeply immutable.
+final class RemoveOrganizationMemberResponse_FounderCannotBeRemovedError implements RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId userId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RemoveOrganizationMemberResponse_FounderCannotBeRemovedError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
+  }) => RemoveOrganizationMemberResponse_FounderCannotBeRemovedError._(
+    userId.toFrozen(),
+  );
+
+  RemoveOrganizationMemberResponse_FounderCannotBeRemovedError._(
+    this.userId,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RemoveOrganizationMemberResponse_FounderCannotBeRemovedError._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable mutable() => RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RemoveOrganizationMemberResponse_FounderCannotBeRemovedError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable toMutable() => RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable._(
+    this.userId,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RemoveOrganizationMemberResponse_FounderCannotBeRemovedError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.userId,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RemoveOrganizationMemberResponse_FounderCannotBeRemovedError` instances.
+  static _skir.StructSerializer<RemoveOrganizationMemberResponse_FounderCannotBeRemovedError, RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "user_id",
+        "userId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.userId,
+        (it, v) => it.userId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/member.skir:RemoveOrganizationMemberResponse.FounderCannotBeRemovedError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RemoveOrganizationMemberResponse_FounderCannotBeRemovedError].
+final class RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable implements RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable userId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RemoveOrganizationMemberResponse_FounderCannotBeRemovedError_mutable._(
+    this.userId,
+  );
+
+  /// If the value of [userId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableUserId {
+    final value = this.userId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.userId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RemoveOrganizationMemberResponse_FounderCannotBeRemovedError toFrozen() => RemoveOrganizationMemberResponse_FounderCannotBeRemovedError(
+    userId: this.userId,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum RemoveOrganizationMemberResponse
 // -----------------------------------------------------------------------------
 
@@ -1738,6 +2272,7 @@ final class RemoveOrganizationMemberResponse_InternalError_mutable implements Re
 ///     case RemoveOrganizationMemberResponse_success(:var value): { ... }
 ///     case RemoveOrganizationMemberResponse_userNotMemberError(:var value): { ... }
 ///     case RemoveOrganizationMemberResponse_internalError(:var value): { ... }
+///     case RemoveOrganizationMemberResponse_founderCannotBeRemovedError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1781,6 +2316,20 @@ sealed class RemoveOrganizationMemberResponse {
     RemoveOrganizationMemberResponse_InternalError()
   );
 
+  /// Create a 'founder_cannot_be_removed_error' variant wrapping around the given value.
+  factory RemoveOrganizationMemberResponse.wrapFounderCannotBeRemovedError(
+    RemoveOrganizationMemberResponse_FounderCannotBeRemovedError value
+  ) => RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper._(value);
+
+  /// Same as `wrapFounderCannotBeRemovedError(RemoveOrganizationMemberResponse_FounderCannotBeRemovedError(...))`.
+  factory RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
+  }) => RemoveOrganizationMemberResponse.wrapFounderCannotBeRemovedError(
+    RemoveOrganizationMemberResponse_FounderCannotBeRemovedError(
+      userId: userId,
+    )
+  );
+
   /// Returns the kind of variant held by this RemoveOrganizationMemberResponse.
   RemoveOrganizationMemberResponse_kind get kind;
 
@@ -1817,6 +2366,16 @@ sealed class RemoveOrganizationMemberResponse {
         (it) => it.value,
         ordinal: RemoveOrganizationMemberResponse_kind.internalErrorWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "founder_cannot_be_removed_error",
+        "wrapFounderCannotBeRemovedError",
+        RemoveOrganizationMemberResponse_FounderCannotBeRemovedError.serializer,
+        "",
+        RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper._,
+        (it) => it.value,
+        ordinal: RemoveOrganizationMemberResponse_kind.founderCannotBeRemovedErrorWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1838,7 +2397,8 @@ enum RemoveOrganizationMemberResponse_kind {
   unknown(0),
   successWrapper(1),
   userNotMemberErrorWrapper(2),
-  internalErrorWrapper(3);
+  internalErrorWrapper(3),
+  founderCannotBeRemovedErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -1904,6 +2464,15 @@ final class RemoveOrganizationMemberResponse_internalErrorWrapper extends _Remov
 
   @_core.override
   RemoveOrganizationMemberResponse_kind get kind => RemoveOrganizationMemberResponse_kind.internalErrorWrapper;
+}
+
+final class RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper extends _RemoveOrganizationMemberResponse_wrapper {
+  final RemoveOrganizationMemberResponse_FounderCannotBeRemovedError value;
+
+  RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper._(this.value);
+
+  @_core.override
+  RemoveOrganizationMemberResponse_kind get kind => RemoveOrganizationMemberResponse_kind.founderCannotBeRemovedErrorWrapper;
 }
 
 final _skir.Method<

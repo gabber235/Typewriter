@@ -6,6 +6,7 @@ import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 
 part "user_join_requests.freezed.dart";
 part "user_join_requests.g.dart";
@@ -99,10 +100,7 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     state.ensureReady();
     final code = _extractCode(urlOrCode);
-    final codeId = skir.RecordId(
-      table: "organization_join_codes",
-      key: skir.RecordIdKey.wrapString(code),
-    );
+    final codeId = recordId("organization_join_codes:$code");
 
     final request = skir.SubmitUserJoinRequestRequest(code: codeId);
 

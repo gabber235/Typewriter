@@ -1573,6 +1573,322 @@ final class ApproveOrganizationJoinRequestResponse_InternalError_mutable impleme
 }
 
 // -----------------------------------------------------------------------------
+// struct ApproveOrganizationJoinRequestResponse.RolesNotAssignableError
+// -----------------------------------------------------------------------------
+
+sealed class ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
+
+  ApproveOrganizationJoinRequestResponse_RolesNotAssignableError toFrozen();
+}
+
+/// Deeply immutable.
+final class ApproveOrganizationJoinRequestResponse_RolesNotAssignableError implements ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_kernel_v1_record_id.RecordId> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ApproveOrganizationJoinRequestResponse_RolesNotAssignableError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => ApproveOrganizationJoinRequestResponse_RolesNotAssignableError._(
+    _skir.internal__frozenMappedCopy(roleIds, (it) => it.toFrozen()),
+  );
+
+  ApproveOrganizationJoinRequestResponse_RolesNotAssignableError._(
+    this.roleIds,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ApproveOrganizationJoinRequestResponse_RolesNotAssignableError._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable mutable() => ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_RolesNotAssignableError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable toMutable() => ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable._(
+    this.roleIds,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ApproveOrganizationJoinRequestResponse_RolesNotAssignableError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.roleIds,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ApproveOrganizationJoinRequestResponse_RolesNotAssignableError` instances.
+  static _skir.StructSerializer<ApproveOrganizationJoinRequestResponse_RolesNotAssignableError, ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "role_ids",
+        "roleIds",
+        0,
+        _skir.Serializers.iterable(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.roleIds,
+        (it, v) => it.roleIds = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:ApproveOrganizationJoinRequestResponse.RolesNotAssignableError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ApproveOrganizationJoinRequestResponse_RolesNotAssignableError].
+final class ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable implements ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ApproveOrganizationJoinRequestResponse_RolesNotAssignableError_mutable._(
+    this.roleIds,
+  );
+
+  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
+  _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
+    final value = this.roleIds;
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+      return value;
+    } else {
+      return this.roleIds = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_RolesNotAssignableError toFrozen() => ApproveOrganizationJoinRequestResponse_RolesNotAssignableError(
+    roleIds: this.roleIds,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ApproveOrganizationJoinRequestResponse.RolesRequiredError
+// -----------------------------------------------------------------------------
+
+sealed class ApproveOrganizationJoinRequestResponse_RolesRequiredError_orMutable {
+  ApproveOrganizationJoinRequestResponse_RolesRequiredError toFrozen();
+}
+
+/// Deeply immutable.
+final class ApproveOrganizationJoinRequestResponse_RolesRequiredError implements ApproveOrganizationJoinRequestResponse_RolesRequiredError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ApproveOrganizationJoinRequestResponse_RolesRequiredError() => ApproveOrganizationJoinRequestResponse_RolesRequiredError._();
+
+  ApproveOrganizationJoinRequestResponse_RolesRequiredError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ApproveOrganizationJoinRequestResponse_RolesRequiredError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable mutable() => ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_RolesRequiredError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable toMutable() => ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ApproveOrganizationJoinRequestResponse_RolesRequiredError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ApproveOrganizationJoinRequestResponse_RolesRequiredError` instances.
+  static _skir.StructSerializer<ApproveOrganizationJoinRequestResponse_RolesRequiredError, ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:ApproveOrganizationJoinRequestResponse.RolesRequiredError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ApproveOrganizationJoinRequestResponse_RolesRequiredError].
+final class ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable implements ApproveOrganizationJoinRequestResponse_RolesRequiredError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ApproveOrganizationJoinRequestResponse_RolesRequiredError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_RolesRequiredError toFrozen() => ApproveOrganizationJoinRequestResponse_RolesRequiredError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ApproveOrganizationJoinRequestResponse.UserAlreadyMemberError
+// -----------------------------------------------------------------------------
+
+sealed class ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get userId;
+
+  ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError toFrozen();
+}
+
+/// Deeply immutable.
+final class ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError implements ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId userId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
+  }) => ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError._(
+    userId.toFrozen(),
+  );
+
+  ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError._(
+    this.userId,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable mutable() => ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable toMutable() => ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable._(
+    this.userId,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.userId,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError` instances.
+  static _skir.StructSerializer<ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError, ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "user_id",
+        "userId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.userId,
+        (it, v) => it.userId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_request.skir:ApproveOrganizationJoinRequestResponse.UserAlreadyMemberError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError].
+final class ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable implements ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable userId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError_mutable._(
+    this.userId,
+  );
+
+  /// If the value of [userId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableUserId {
+    final value = this.userId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.userId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError toFrozen() => ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError(
+    userId: this.userId,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum ApproveOrganizationJoinRequestResponse
 // -----------------------------------------------------------------------------
 
@@ -1584,6 +1900,9 @@ final class ApproveOrganizationJoinRequestResponse_InternalError_mutable impleme
 ///     case ApproveOrganizationJoinRequestResponse_requestNotFoundError(:var value): { ... }
 ///     case ApproveOrganizationJoinRequestResponse_rolesNotFoundError(:var value): { ... }
 ///     case ApproveOrganizationJoinRequestResponse_internalError(:var value): { ... }
+///     case ApproveOrganizationJoinRequestResponse_rolesNotAssignableError(:var value): { ... }
+///     case ApproveOrganizationJoinRequestResponse_rolesRequiredError(:var value): { ... }
+///     case ApproveOrganizationJoinRequestResponse_userAlreadyMemberError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1655,6 +1974,44 @@ sealed class ApproveOrganizationJoinRequestResponse {
     ApproveOrganizationJoinRequestResponse_InternalError()
   );
 
+  /// Create a 'roles_not_assignable_error' variant wrapping around the given value.
+  factory ApproveOrganizationJoinRequestResponse.wrapRolesNotAssignableError(
+    ApproveOrganizationJoinRequestResponse_RolesNotAssignableError value
+  ) => ApproveOrganizationJoinRequestResponse_rolesNotAssignableErrorWrapper._(value);
+
+  /// Same as `wrapRolesNotAssignableError(ApproveOrganizationJoinRequestResponse_RolesNotAssignableError(...))`.
+  factory ApproveOrganizationJoinRequestResponse.createRolesNotAssignableError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => ApproveOrganizationJoinRequestResponse.wrapRolesNotAssignableError(
+    ApproveOrganizationJoinRequestResponse_RolesNotAssignableError(
+      roleIds: roleIds,
+    )
+  );
+
+  /// Create a 'roles_required_error' variant wrapping around the given value.
+  factory ApproveOrganizationJoinRequestResponse.wrapRolesRequiredError(
+    ApproveOrganizationJoinRequestResponse_RolesRequiredError value
+  ) => ApproveOrganizationJoinRequestResponse_rolesRequiredErrorWrapper._(value);
+
+  /// Same as `wrapRolesRequiredError(ApproveOrganizationJoinRequestResponse_RolesRequiredError(...))`.
+  factory ApproveOrganizationJoinRequestResponse.createRolesRequiredError() => ApproveOrganizationJoinRequestResponse.wrapRolesRequiredError(
+    ApproveOrganizationJoinRequestResponse_RolesRequiredError()
+  );
+
+  /// Create a 'user_already_member_error' variant wrapping around the given value.
+  factory ApproveOrganizationJoinRequestResponse.wrapUserAlreadyMemberError(
+    ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError value
+  ) => ApproveOrganizationJoinRequestResponse_userAlreadyMemberErrorWrapper._(value);
+
+  /// Same as `wrapUserAlreadyMemberError(ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError(...))`.
+  factory ApproveOrganizationJoinRequestResponse.createUserAlreadyMemberError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable userId,
+  }) => ApproveOrganizationJoinRequestResponse.wrapUserAlreadyMemberError(
+    ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError(
+      userId: userId,
+    )
+  );
+
   /// Returns the kind of variant held by this ApproveOrganizationJoinRequestResponse.
   ApproveOrganizationJoinRequestResponse_kind get kind;
 
@@ -1701,6 +2058,36 @@ sealed class ApproveOrganizationJoinRequestResponse {
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestResponse_kind.internalErrorWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "roles_not_assignable_error",
+        "wrapRolesNotAssignableError",
+        ApproveOrganizationJoinRequestResponse_RolesNotAssignableError.serializer,
+        "",
+        ApproveOrganizationJoinRequestResponse_rolesNotAssignableErrorWrapper._,
+        (it) => it.value,
+        ordinal: ApproveOrganizationJoinRequestResponse_kind.rolesNotAssignableErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "roles_required_error",
+        "wrapRolesRequiredError",
+        ApproveOrganizationJoinRequestResponse_RolesRequiredError.serializer,
+        "",
+        ApproveOrganizationJoinRequestResponse_rolesRequiredErrorWrapper._,
+        (it) => it.value,
+        ordinal: ApproveOrganizationJoinRequestResponse_kind.rolesRequiredErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
+        "user_already_member_error",
+        "wrapUserAlreadyMemberError",
+        ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError.serializer,
+        "",
+        ApproveOrganizationJoinRequestResponse_userAlreadyMemberErrorWrapper._,
+        (it) => it.value,
+        ordinal: ApproveOrganizationJoinRequestResponse_kind.userAlreadyMemberErrorWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1723,7 +2110,10 @@ enum ApproveOrganizationJoinRequestResponse_kind {
   successWrapper(1),
   requestNotFoundErrorWrapper(2),
   rolesNotFoundErrorWrapper(3),
-  internalErrorWrapper(4);
+  internalErrorWrapper(4),
+  rolesNotAssignableErrorWrapper(5),
+  rolesRequiredErrorWrapper(6),
+  userAlreadyMemberErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -1798,6 +2188,33 @@ final class ApproveOrganizationJoinRequestResponse_internalErrorWrapper extends 
 
   @_core.override
   ApproveOrganizationJoinRequestResponse_kind get kind => ApproveOrganizationJoinRequestResponse_kind.internalErrorWrapper;
+}
+
+final class ApproveOrganizationJoinRequestResponse_rolesNotAssignableErrorWrapper extends _ApproveOrganizationJoinRequestResponse_wrapper {
+  final ApproveOrganizationJoinRequestResponse_RolesNotAssignableError value;
+
+  ApproveOrganizationJoinRequestResponse_rolesNotAssignableErrorWrapper._(this.value);
+
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_kind get kind => ApproveOrganizationJoinRequestResponse_kind.rolesNotAssignableErrorWrapper;
+}
+
+final class ApproveOrganizationJoinRequestResponse_rolesRequiredErrorWrapper extends _ApproveOrganizationJoinRequestResponse_wrapper {
+  final ApproveOrganizationJoinRequestResponse_RolesRequiredError value;
+
+  ApproveOrganizationJoinRequestResponse_rolesRequiredErrorWrapper._(this.value);
+
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_kind get kind => ApproveOrganizationJoinRequestResponse_kind.rolesRequiredErrorWrapper;
+}
+
+final class ApproveOrganizationJoinRequestResponse_userAlreadyMemberErrorWrapper extends _ApproveOrganizationJoinRequestResponse_wrapper {
+  final ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError value;
+
+  ApproveOrganizationJoinRequestResponse_userAlreadyMemberErrorWrapper._(this.value);
+
+  @_core.override
+  ApproveOrganizationJoinRequestResponse_kind get kind => ApproveOrganizationJoinRequestResponse_kind.userAlreadyMemberErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------

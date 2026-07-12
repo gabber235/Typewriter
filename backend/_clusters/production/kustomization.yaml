@@ -5,3 +5,4 @@ resources:
   - ../../access/auth-sentinel/deploy/production
   - ../../access/auth-typewriter-permissions/deploy/production
   - ../../organization/user-organization/deploy/production
+  - ../../organization/organization-members/deploy/production

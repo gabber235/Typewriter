@@ -178,7 +178,7 @@ async fn is_member_of_organization(
         ",
     )
     .bind("user_id", &user_id)
-    .bind("org_id", surrealdb_component_sdk::RecordId::from(org_id.clone()))
+    .bind("org_id", surrealdb_component_sdk::RecordId::from(org_id))
     .execute()
     .await
     .error_with_slug("organization-permissions-failed")?
@@ -235,37 +235,40 @@ fn add_organization_members_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.list",
+        "cloud.out.user.{}.organization.{}.members.watch",
         user_id, org_id
     ));
-    allow_subscribe.push(format!("cloud.in.organization.{}.members.list", org_id));
+    allow_subscribe.push(format!("cloud.in.organization.{}.members.watch", org_id));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.invite",
+        "cloud.out.user.{}.organization.{}.members.update",
         user_id, org_id
     ));
-    allow_subscribe.push(format!("cloud.in.organization.{}.members.invite", org_id));
     allow_publish.push(format!(
         "cloud.out.user.{}.organization.{}.members.remove",
         user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.out.user.{}.organization.{}.members.join_requests.watch",
+        user_id, org_id
+    ));
+    allow_subscribe.push(format!(
+        "cloud.in.organization.{}.members.join_requests.watch",
+        org_id
     ));
     allow_publish.push(format!(
         "cloud.out.user.{}.organization.{}.members.join_requests.approve",
         user_id, org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_requests.reject",
+        "cloud.out.user.{}.organization.{}.members.join_requests.decline",
         user_id, org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.role.assign",
-        user_id, org_id
-    ));
-    allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_codes.list",
+        "cloud.out.user.{}.organization.{}.members.join_codes.watch",
         user_id, org_id
     ));
     allow_subscribe.push(format!(
-        "cloud.in.organization.{}.members.join_codes.list",
+        "cloud.in.organization.{}.members.join_codes.watch",
         org_id
     ));
     allow_publish.push(format!(
@@ -315,4 +318,59 @@ fn add_organization_realm_permissions(
     allow_publish.push(format!("cloud.out.organization.{}.realm.create", org_id));
     allow_publish.push(format!("cloud.out.organization.{}.realm.delete", org_id));
     allow_publish.push(format!("cloud.out.organization.{}.realm.update", org_id));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::add_organization_members_permissions;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case::simple_ids("user-1", "org-1")]
+    #[case::uuid_ids(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "123e4567-e89b-12d3-a456-426614174000"
+    )]
+    #[case::distinct_ids("member-alpha", "organization-beta")]
+    fn organization_member_permissions_match_current_api(
+        #[case] user_id: &str,
+        #[case] org_id: &str,
+    ) {
+        let mut publish = Vec::new();
+        let mut subscribe = Vec::new();
+        add_organization_members_permissions(user_id, org_id, &mut publish, &mut subscribe);
+
+        let publish_prefix = format!("cloud.out.user.{user_id}.organization.{org_id}.members");
+        assert_eq!(
+            publish,
+            [
+                format!("{publish_prefix}.watch"),
+                format!("{publish_prefix}.update"),
+                format!("{publish_prefix}.remove"),
+                format!("{publish_prefix}.join_requests.watch"),
+                format!("{publish_prefix}.join_requests.approve"),
+                format!("{publish_prefix}.join_requests.decline"),
+                format!("{publish_prefix}.join_codes.watch"),
+                format!("{publish_prefix}.join_codes.generate"),
+                format!("{publish_prefix}.join_codes.revoke"),
+            ]
+        );
+        let subscribe_prefix = format!("cloud.in.organization.{org_id}.members");
+        assert_eq!(
+            subscribe,
+            [
+                format!("{subscribe_prefix}.watch"),
+                format!("{subscribe_prefix}.join_requests.watch"),
+                format!("{subscribe_prefix}.join_codes.watch"),
+            ]
+        );
+        assert!(publish.iter().all(|subject| !subject.ends_with(".list")));
+        assert!(publish.iter().all(|subject| !subject.ends_with(".invite")));
+        assert!(
+            publish
+                .iter()
+                .all(|subject| !subject.ends_with(".role.assign"))
+        );
+        assert!(publish.iter().all(|subject| !subject.ends_with(".reject")));
+    }
 }

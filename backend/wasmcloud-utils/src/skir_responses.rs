@@ -89,7 +89,11 @@ wasmcloud_utils_macros::skir_response! {
 wasmcloud_utils_macros::skir_response! {
     GenerateOrganizationJoinCodeResponse {
         success: Success,
-        errors {}
+        errors {
+            RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
+            RolesNotAssignableError(e) => format!("Roles not assignable: {:?}", e.role_ids),
+            InvalidExpirationError(e) => format!("Invalid expiration duration: {:?}", e.duration),
+        }
     }
 }
 
@@ -115,6 +119,9 @@ wasmcloud_utils_macros::skir_response! {
         errors {
             RequestNotFoundError(e) => format!("Join request not found: '{}'", e.request_id),
             RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
+            RolesNotAssignableError(e) => format!("Roles not assignable: {:?}", e.role_ids),
+            RolesRequiredError => "At least one role is required",
+            UserAlreadyMemberError(e) => format!("User is already a member: '{}'", e.user_id),
         }
     }
 }
@@ -130,7 +137,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationMembersResponse {
-        success: [List, Add, Remove],
+        success: [List, Add, Update, Remove],
         errors {}
     }
 }
@@ -141,6 +148,9 @@ wasmcloud_utils_macros::skir_response! {
         errors {
             UserNotFoundError(e) => format!("User not found: '{}'", e.user_id),
             RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
+            RolesNotAssignableError(e) => format!("Roles not assignable: {:?}", e.role_ids),
+            RolesRequiredError => "At least one role is required",
+            FounderRoleRequiredError => "Founder role is required",
         }
     }
 }
@@ -150,6 +160,7 @@ wasmcloud_utils_macros::skir_response! {
         success: Success,
         errors {
             UserNotMemberError(e) => format!("User is not a member: '{}'", e.user_id),
+            FounderCannotBeRemovedError(e) => format!("Founder cannot be removed: '{}'", e.user_id),
         }
     }
 }

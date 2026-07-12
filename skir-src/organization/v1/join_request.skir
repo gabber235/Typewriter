@@ -53,6 +53,13 @@ method ApproveOrganizationJoinRequest(
   roles_not_found_error: struct {
     role_ids: [RecordId];
   };
+  roles_not_assignable_error: struct {
+    role_ids: [RecordId];
+  };
+  roles_required_error: struct {};
+  user_already_member_error: struct {
+    user_id: RecordId;
+  };
   internal_error: struct {};
 } = 167357;
 

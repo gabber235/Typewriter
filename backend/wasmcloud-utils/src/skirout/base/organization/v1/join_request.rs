@@ -537,6 +537,180 @@ impl ApproveOrganizationJoinRequestResponse_InternalError {
 }
 
 // ==============================================================================
+// struct ApproveOrganizationJoinRequestResponse.RolesNotAssignableError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ApproveOrganizationJoinRequestResponse_RolesNotAssignableError {
+    pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ApproveOrganizationJoinRequestResponse_RolesNotAssignableError,
+        >,
+    >,
+}
+
+impl ApproveOrganizationJoinRequestResponse_RolesNotAssignableError {
+    pub fn default_ref() -> &'static ApproveOrganizationJoinRequestResponse_RolesNotAssignableError
+    {
+        static D: std::sync::LazyLock<
+            ApproveOrganizationJoinRequestResponse_RolesNotAssignableError,
+        > = std::sync::LazyLock::new(
+            ApproveOrganizationJoinRequestResponse_RolesNotAssignableError::default,
+        );
+        &D
+    }
+}
+
+impl ApproveOrganizationJoinRequestResponse_RolesNotAssignableError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ApproveOrganizationJoinRequestResponse_RolesNotAssignableError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ApproveOrganizationJoinRequestResponse_RolesNotAssignableError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/join_request.skir",
+                "ApproveOrganizationJoinRequestResponse.RolesNotAssignableError",
+                "",
+                |x: &ApproveOrganizationJoinRequestResponse_RolesNotAssignableError| {
+                    &x._unrecognized
+                },
+                |x: &mut ApproveOrganizationJoinRequestResponse_RolesNotAssignableError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<
+        ApproveOrganizationJoinRequestResponse_RolesNotAssignableError,
+    > {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ApproveOrganizationJoinRequestResponse_RolesNotAssignableError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct ApproveOrganizationJoinRequestResponse.RolesRequiredError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ApproveOrganizationJoinRequestResponse_RolesRequiredError {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ApproveOrganizationJoinRequestResponse_RolesRequiredError,
+        >,
+    >,
+}
+
+impl ApproveOrganizationJoinRequestResponse_RolesRequiredError {
+    pub fn default_ref() -> &'static ApproveOrganizationJoinRequestResponse_RolesRequiredError {
+        static D: std::sync::LazyLock<ApproveOrganizationJoinRequestResponse_RolesRequiredError> =
+            std::sync::LazyLock::new(
+                ApproveOrganizationJoinRequestResponse_RolesRequiredError::default,
+            );
+        &D
+    }
+}
+
+impl ApproveOrganizationJoinRequestResponse_RolesRequiredError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ApproveOrganizationJoinRequestResponse_RolesRequiredError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ApproveOrganizationJoinRequestResponse_RolesRequiredError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/join_request.skir",
+                "ApproveOrganizationJoinRequestResponse.RolesRequiredError",
+                "",
+                |x: &ApproveOrganizationJoinRequestResponse_RolesRequiredError| &x._unrecognized,
+                |x: &mut ApproveOrganizationJoinRequestResponse_RolesRequiredError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ApproveOrganizationJoinRequestResponse_RolesRequiredError>
+    {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ApproveOrganizationJoinRequestResponse_RolesRequiredError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct ApproveOrganizationJoinRequestResponse.UserAlreadyMemberError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError {
+    pub user_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError,
+        >,
+    >,
+}
+
+impl ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError {
+    pub fn default_ref() -> &'static ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError {
+        static D: std::sync::LazyLock<
+            ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError,
+        > = std::sync::LazyLock::new(
+            ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError::default,
+        );
+        &D
+    }
+}
+
+impl ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/join_request.skir",
+                "ApproveOrganizationJoinRequestResponse.UserAlreadyMemberError",
+                "",
+                |x: &ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError| {
+                    &x._unrecognized
+                },
+                |x: &mut ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError>
+    {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // enum ApproveOrganizationJoinRequestResponse
 // ==============================================================================
 
@@ -549,6 +723,9 @@ pub enum ApproveOrganizationJoinRequestResponse {
     RequestNotFoundError(Box<ApproveOrganizationJoinRequestResponse_RequestNotFoundError>),
     RolesNotFoundError(Box<ApproveOrganizationJoinRequestResponse_RolesNotFoundError>),
     InternalError(Box<ApproveOrganizationJoinRequestResponse_InternalError>),
+    RolesNotAssignableError(Box<ApproveOrganizationJoinRequestResponse_RolesNotAssignableError>),
+    RolesRequiredError(Box<ApproveOrganizationJoinRequestResponse_RolesRequiredError>),
+    UserAlreadyMemberError(Box<ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError>),
 }
 
 impl Default for ApproveOrganizationJoinRequestResponse {
@@ -571,6 +748,9 @@ impl ApproveOrganizationJoinRequestResponse {
                     ApproveOrganizationJoinRequestResponse::RequestNotFoundError(_) => 2,
                     ApproveOrganizationJoinRequestResponse::RolesNotFoundError(_) => 3,
                     ApproveOrganizationJoinRequestResponse::InternalError(_) => 4,
+                    ApproveOrganizationJoinRequestResponse::RolesNotAssignableError(_) => 5,
+                    ApproveOrganizationJoinRequestResponse::RolesRequiredError(_) => 6,
+                    ApproveOrganizationJoinRequestResponse::UserAlreadyMemberError(_) => 7,
                 },
                 |u| ApproveOrganizationJoinRequestResponse::Unknown(Some(u)),
                 |x: &ApproveOrganizationJoinRequestResponse| match x {
@@ -1149,6 +1329,49 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ApproveOrganizationJoinRequestResponse_RolesNotAssignableError,
+            > = ApproveOrganizationJoinRequestResponse_RolesNotAssignableError::_adapter()
+                as *const _ as *mut _;
+            (*a).add_field(
+                "role_ids",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &ApproveOrganizationJoinRequestResponse_RolesNotAssignableError| &x.role_ids,
+                |x: &mut ApproveOrganizationJoinRequestResponse_RolesNotAssignableError, v| {
+                    x.role_ids = v
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ApproveOrganizationJoinRequestResponse_RolesRequiredError,
+            > = ApproveOrganizationJoinRequestResponse_RolesRequiredError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError,
+            > = ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError::_adapter()
+                as *const _ as *mut _;
+            (*a).add_field(
+                "user_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError| &x.user_id,
+                |x: &mut ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError, v| {
+                    x.user_id = v
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<
                 ApproveOrganizationJoinRequestResponse,
             > = ApproveOrganizationJoinRequestResponse::_adapter() as *const _ as *mut _;
@@ -1203,6 +1426,50 @@ fn initialize_module_serializers() {
                 |v| ApproveOrganizationJoinRequestResponse::InternalError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "roles_not_assignable_error",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ApproveOrganizationJoinRequestResponse_RolesNotAssignableError::_adapter(),
+                ),
+                "",
+                |v| ApproveOrganizationJoinRequestResponse::RolesNotAssignableError(Box::new(v)),
+                |x| match x {
+                    ApproveOrganizationJoinRequestResponse::RolesNotAssignableError(b) => {
+                        b.as_ref()
+                    }
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "roles_required_error",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ApproveOrganizationJoinRequestResponse_RolesRequiredError::_adapter(),
+                ),
+                "",
+                |v| ApproveOrganizationJoinRequestResponse::RolesRequiredError(Box::new(v)),
+                |x| match x {
+                    ApproveOrganizationJoinRequestResponse::RolesRequiredError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "user_already_member_error",
+                7,
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ApproveOrganizationJoinRequestResponse_UserAlreadyMemberError::_adapter(),
+                ),
+                "",
+                |v| ApproveOrganizationJoinRequestResponse::UserAlreadyMemberError(Box::new(v)),
+                |x| match x {
+                    ApproveOrganizationJoinRequestResponse::UserAlreadyMemberError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

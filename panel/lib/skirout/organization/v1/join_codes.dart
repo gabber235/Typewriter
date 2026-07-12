@@ -1231,6 +1231,367 @@ final class GenerateOrganizationJoinCodeResponse_InternalError_mutable implement
 }
 
 // -----------------------------------------------------------------------------
+// struct GenerateOrganizationJoinCodeResponse.RolesNotFoundError
+// -----------------------------------------------------------------------------
+
+sealed class GenerateOrganizationJoinCodeResponse_RolesNotFoundError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
+
+  GenerateOrganizationJoinCodeResponse_RolesNotFoundError toFrozen();
+}
+
+/// Deeply immutable.
+final class GenerateOrganizationJoinCodeResponse_RolesNotFoundError implements GenerateOrganizationJoinCodeResponse_RolesNotFoundError_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_kernel_v1_record_id.RecordId> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GenerateOrganizationJoinCodeResponse_RolesNotFoundError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => GenerateOrganizationJoinCodeResponse_RolesNotFoundError._(
+    _skir.internal__frozenMappedCopy(roleIds, (it) => it.toFrozen()),
+  );
+
+  GenerateOrganizationJoinCodeResponse_RolesNotFoundError._(
+    this.roleIds,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GenerateOrganizationJoinCodeResponse_RolesNotFoundError._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable mutable() => GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_RolesNotFoundError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable toMutable() => GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable._(
+    this.roleIds,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GenerateOrganizationJoinCodeResponse_RolesNotFoundError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.roleIds,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GenerateOrganizationJoinCodeResponse_RolesNotFoundError` instances.
+  static _skir.StructSerializer<GenerateOrganizationJoinCodeResponse_RolesNotFoundError, GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "role_ids",
+        "roleIds",
+        0,
+        _skir.Serializers.iterable(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.roleIds,
+        (it, v) => it.roleIds = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_codes.skir:GenerateOrganizationJoinCodeResponse.RolesNotFoundError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GenerateOrganizationJoinCodeResponse_RolesNotFoundError].
+final class GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable implements GenerateOrganizationJoinCodeResponse_RolesNotFoundError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable._(
+    this.roleIds,
+  );
+
+  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
+  _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
+    final value = this.roleIds;
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+      return value;
+    } else {
+      return this.roleIds = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_RolesNotFoundError toFrozen() => GenerateOrganizationJoinCodeResponse_RolesNotFoundError(
+    roleIds: this.roleIds,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GenerateOrganizationJoinCodeResponse.RolesNotAssignableError
+// -----------------------------------------------------------------------------
+
+sealed class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
+
+  GenerateOrganizationJoinCodeResponse_RolesNotAssignableError toFrozen();
+}
+
+/// Deeply immutable.
+final class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError implements GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_kernel_v1_record_id.RecordId> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GenerateOrganizationJoinCodeResponse_RolesNotAssignableError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => GenerateOrganizationJoinCodeResponse_RolesNotAssignableError._(
+    _skir.internal__frozenMappedCopy(roleIds, (it) => it.toFrozen()),
+  );
+
+  GenerateOrganizationJoinCodeResponse_RolesNotAssignableError._(
+    this.roleIds,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GenerateOrganizationJoinCodeResponse_RolesNotAssignableError._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable mutable() => GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_RolesNotAssignableError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable toMutable() => GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable._(
+    this.roleIds,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GenerateOrganizationJoinCodeResponse_RolesNotAssignableError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.roleIds,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GenerateOrganizationJoinCodeResponse_RolesNotAssignableError` instances.
+  static _skir.StructSerializer<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "role_ids",
+        "roleIds",
+        0,
+        _skir.Serializers.iterable(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.roleIds,
+        (it, v) => it.roleIds = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_codes.skir:GenerateOrganizationJoinCodeResponse.RolesNotAssignableError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GenerateOrganizationJoinCodeResponse_RolesNotAssignableError].
+final class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable implements GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_orMutable {
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable._(
+    this.roleIds,
+  );
+
+  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
+  _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
+    final value = this.roleIds;
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+      return value;
+    } else {
+      return this.roleIds = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_RolesNotAssignableError toFrozen() => GenerateOrganizationJoinCodeResponse_RolesNotAssignableError(
+    roleIds: this.roleIds,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GenerateOrganizationJoinCodeResponse.InvalidExpirationError
+// -----------------------------------------------------------------------------
+
+sealed class GenerateOrganizationJoinCodeResponse_InvalidExpirationError_orMutable {
+  _lib_kernel_v1_duration.Duration_orMutable get duration;
+
+  GenerateOrganizationJoinCodeResponse_InvalidExpirationError toFrozen();
+}
+
+/// Deeply immutable.
+final class GenerateOrganizationJoinCodeResponse_InvalidExpirationError implements GenerateOrganizationJoinCodeResponse_InvalidExpirationError_orMutable {
+  @_core.override
+  final _lib_kernel_v1_duration.Duration duration;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GenerateOrganizationJoinCodeResponse_InvalidExpirationError({
+    required _lib_kernel_v1_duration.Duration_orMutable duration,
+  }) => GenerateOrganizationJoinCodeResponse_InvalidExpirationError._(
+    duration.toFrozen(),
+  );
+
+  GenerateOrganizationJoinCodeResponse_InvalidExpirationError._(
+    this.duration,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GenerateOrganizationJoinCodeResponse_InvalidExpirationError._(
+    _lib_kernel_v1_duration.Duration.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable mutable() => GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable._(
+    _lib_kernel_v1_duration.Duration.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_InvalidExpirationError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable toMutable() => GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable._(
+    this.duration,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GenerateOrganizationJoinCodeResponse_InvalidExpirationError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.duration,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GenerateOrganizationJoinCodeResponse_InvalidExpirationError` instances.
+  static _skir.StructSerializer<GenerateOrganizationJoinCodeResponse_InvalidExpirationError, GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "duration",
+        "duration",
+        0,
+        _lib_kernel_v1_duration.Duration.serializer,
+        "",
+        (it) => it.duration,
+        (it, v) => it.duration = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_codes.skir:GenerateOrganizationJoinCodeResponse.InvalidExpirationError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GenerateOrganizationJoinCodeResponse_InvalidExpirationError].
+final class GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable implements GenerateOrganizationJoinCodeResponse_InvalidExpirationError_orMutable {
+  _lib_kernel_v1_duration.Duration_orMutable duration;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable._(
+    this.duration,
+  );
+
+  /// If the value of [duration] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [duration] and returns it.
+  _lib_kernel_v1_duration.Duration_mutable get mutableDuration {
+    final value = this.duration;
+    if (value is _lib_kernel_v1_duration.Duration_mutable) {
+      return value;
+    } else {
+      return this.duration = (value as _lib_kernel_v1_duration.Duration).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_InvalidExpirationError toFrozen() => GenerateOrganizationJoinCodeResponse_InvalidExpirationError(
+    duration: this.duration,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum GenerateOrganizationJoinCodeResponse
 // -----------------------------------------------------------------------------
 
@@ -1240,6 +1601,9 @@ final class GenerateOrganizationJoinCodeResponse_InternalError_mutable implement
 ///     case GenerateOrganizationJoinCodeResponse_unknown(): { ... }
 ///     case GenerateOrganizationJoinCodeResponse_success(:var value): { ... }
 ///     case GenerateOrganizationJoinCodeResponse_internalError(:var value): { ... }
+///     case GenerateOrganizationJoinCodeResponse_rolesNotFoundError(:var value): { ... }
+///     case GenerateOrganizationJoinCodeResponse_rolesNotAssignableError(:var value): { ... }
+///     case GenerateOrganizationJoinCodeResponse_invalidExpirationError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1281,6 +1645,48 @@ sealed class GenerateOrganizationJoinCodeResponse {
     GenerateOrganizationJoinCodeResponse_InternalError()
   );
 
+  /// Create a 'roles_not_found_error' variant wrapping around the given value.
+  factory GenerateOrganizationJoinCodeResponse.wrapRolesNotFoundError(
+    GenerateOrganizationJoinCodeResponse_RolesNotFoundError value
+  ) => GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper._(value);
+
+  /// Same as `wrapRolesNotFoundError(GenerateOrganizationJoinCodeResponse_RolesNotFoundError(...))`.
+  factory GenerateOrganizationJoinCodeResponse.createRolesNotFoundError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => GenerateOrganizationJoinCodeResponse.wrapRolesNotFoundError(
+    GenerateOrganizationJoinCodeResponse_RolesNotFoundError(
+      roleIds: roleIds,
+    )
+  );
+
+  /// Create a 'roles_not_assignable_error' variant wrapping around the given value.
+  factory GenerateOrganizationJoinCodeResponse.wrapRolesNotAssignableError(
+    GenerateOrganizationJoinCodeResponse_RolesNotAssignableError value
+  ) => GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper._(value);
+
+  /// Same as `wrapRolesNotAssignableError(GenerateOrganizationJoinCodeResponse_RolesNotAssignableError(...))`.
+  factory GenerateOrganizationJoinCodeResponse.createRolesNotAssignableError({
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> roleIds,
+  }) => GenerateOrganizationJoinCodeResponse.wrapRolesNotAssignableError(
+    GenerateOrganizationJoinCodeResponse_RolesNotAssignableError(
+      roleIds: roleIds,
+    )
+  );
+
+  /// Create a 'invalid_expiration_error' variant wrapping around the given value.
+  factory GenerateOrganizationJoinCodeResponse.wrapInvalidExpirationError(
+    GenerateOrganizationJoinCodeResponse_InvalidExpirationError value
+  ) => GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper._(value);
+
+  /// Same as `wrapInvalidExpirationError(GenerateOrganizationJoinCodeResponse_InvalidExpirationError(...))`.
+  factory GenerateOrganizationJoinCodeResponse.createInvalidExpirationError({
+    required _lib_kernel_v1_duration.Duration_orMutable duration,
+  }) => GenerateOrganizationJoinCodeResponse.wrapInvalidExpirationError(
+    GenerateOrganizationJoinCodeResponse_InvalidExpirationError(
+      duration: duration,
+    )
+  );
+
   /// Returns the kind of variant held by this GenerateOrganizationJoinCodeResponse.
   GenerateOrganizationJoinCodeResponse_kind get kind;
 
@@ -1307,6 +1713,36 @@ sealed class GenerateOrganizationJoinCodeResponse {
         (it) => it.value,
         ordinal: GenerateOrganizationJoinCodeResponse_kind.internalErrorWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "roles_not_found_error",
+        "wrapRolesNotFoundError",
+        GenerateOrganizationJoinCodeResponse_RolesNotFoundError.serializer,
+        "",
+        GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper._,
+        (it) => it.value,
+        ordinal: GenerateOrganizationJoinCodeResponse_kind.rolesNotFoundErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "roles_not_assignable_error",
+        "wrapRolesNotAssignableError",
+        GenerateOrganizationJoinCodeResponse_RolesNotAssignableError.serializer,
+        "",
+        GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper._,
+        (it) => it.value,
+        ordinal: GenerateOrganizationJoinCodeResponse_kind.rolesNotAssignableErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "invalid_expiration_error",
+        "wrapInvalidExpirationError",
+        GenerateOrganizationJoinCodeResponse_InvalidExpirationError.serializer,
+        "",
+        GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper._,
+        (it) => it.value,
+        ordinal: GenerateOrganizationJoinCodeResponse_kind.invalidExpirationErrorWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1327,7 +1763,10 @@ sealed class GenerateOrganizationJoinCodeResponse {
 enum GenerateOrganizationJoinCodeResponse_kind {
   unknown(0),
   successWrapper(1),
-  internalErrorWrapper(2);
+  internalErrorWrapper(2),
+  rolesNotFoundErrorWrapper(3),
+  rolesNotAssignableErrorWrapper(4),
+  invalidExpirationErrorWrapper(5);
 
   final _core.int _ordinal;
 
@@ -1384,6 +1823,33 @@ final class GenerateOrganizationJoinCodeResponse_internalErrorWrapper extends _G
 
   @_core.override
   GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.internalErrorWrapper;
+}
+
+final class GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
+  final GenerateOrganizationJoinCodeResponse_RolesNotFoundError value;
+
+  GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper._(this.value);
+
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.rolesNotFoundErrorWrapper;
+}
+
+final class GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
+  final GenerateOrganizationJoinCodeResponse_RolesNotAssignableError value;
+
+  GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper._(this.value);
+
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.rolesNotAssignableErrorWrapper;
+}
+
+final class GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
+  final GenerateOrganizationJoinCodeResponse_InvalidExpirationError value;
+
+  GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper._(this.value);
+
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.invalidExpirationErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------

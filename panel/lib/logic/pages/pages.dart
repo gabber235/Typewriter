@@ -5,7 +5,9 @@ import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/logic/realm.dart";
+import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/riverpod.dart";
+import "package:typewriter_panel/utils/skir.dart";
 
 part "pages.g.dart";
 
@@ -205,6 +207,8 @@ class Pages extends _$Pages {
 }
 
 @riverpod
-String? pageId(Ref ref) {
-  return ref.watch(routeParamProvider("pageId"));
+skir.RecordId? pageId(Ref ref) {
+  final id = ref.watch(routeParamProvider("pageId"));
+  if (id == null) return null;
+  return recordId("page:$id");
 }

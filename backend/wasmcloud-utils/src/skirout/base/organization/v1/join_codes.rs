@@ -456,6 +456,174 @@ impl GenerateOrganizationJoinCodeResponse_InternalError {
 }
 
 // ==============================================================================
+// struct GenerateOrganizationJoinCodeResponse.RolesNotFoundError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
+    pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
+        >,
+    >,
+}
+
+impl GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
+    pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> =
+            std::sync::LazyLock::new(
+                GenerateOrganizationJoinCodeResponse_RolesNotFoundError::default,
+            );
+        &D
+    }
+}
+
+impl GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/join_codes.skir",
+                "GenerateOrganizationJoinCodeResponse.RolesNotFoundError",
+                "",
+                |x: &GenerateOrganizationJoinCodeResponse_RolesNotFoundError| &x._unrecognized,
+                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotFoundError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer()
+    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct GenerateOrganizationJoinCodeResponse.RolesNotAssignableError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
+    pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
+        >,
+    >,
+}
+
+impl GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
+    pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
+        static D: std::sync::LazyLock<
+            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
+        > = std::sync::LazyLock::new(
+            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::default,
+        );
+        &D
+    }
+}
+
+impl GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/join_codes.skir",
+                "GenerateOrganizationJoinCodeResponse.RolesNotAssignableError",
+                "",
+                |x: &GenerateOrganizationJoinCodeResponse_RolesNotAssignableError| &x._unrecognized,
+                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer()
+    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>
+    {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct GenerateOrganizationJoinCodeResponse.InvalidExpirationError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
+    pub duration: crate::skirout::base::kernel::v1::duration::Duration,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
+        >,
+    >,
+}
+
+impl GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
+    pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_InvalidExpirationError> =
+            std::sync::LazyLock::new(
+                GenerateOrganizationJoinCodeResponse_InvalidExpirationError::default,
+            );
+        &D
+    }
+}
+
+impl GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/join_codes.skir",
+                "GenerateOrganizationJoinCodeResponse.InvalidExpirationError",
+                "",
+                |x: &GenerateOrganizationJoinCodeResponse_InvalidExpirationError| &x._unrecognized,
+                |x: &mut GenerateOrganizationJoinCodeResponse_InvalidExpirationError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer()
+    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>
+    {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // enum GenerateOrganizationJoinCodeResponse
 // ==============================================================================
 
@@ -464,6 +632,9 @@ pub enum GenerateOrganizationJoinCodeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<GenerateOrganizationJoinCodeResponse>>),
     Success(Box<JoinCode>),
     InternalError(Box<GenerateOrganizationJoinCodeResponse_InternalError>),
+    RolesNotFoundError(Box<GenerateOrganizationJoinCodeResponse_RolesNotFoundError>),
+    RolesNotAssignableError(Box<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>),
+    InvalidExpirationError(Box<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>),
 }
 
 impl Default for GenerateOrganizationJoinCodeResponse {
@@ -484,6 +655,9 @@ impl GenerateOrganizationJoinCodeResponse {
                     GenerateOrganizationJoinCodeResponse::Unknown(_) => 0,
                     GenerateOrganizationJoinCodeResponse::Success(_) => 1,
                     GenerateOrganizationJoinCodeResponse::InternalError(_) => 2,
+                    GenerateOrganizationJoinCodeResponse::RolesNotFoundError(_) => 3,
+                    GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(_) => 4,
+                    GenerateOrganizationJoinCodeResponse::InvalidExpirationError(_) => 5,
                 },
                 |u| GenerateOrganizationJoinCodeResponse::Unknown(Some(u)),
                 |x: &GenerateOrganizationJoinCodeResponse| match x {
@@ -971,6 +1145,59 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
+            > = GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter() as *const _
+                as *mut _;
+            (*a).add_field(
+                "role_ids",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &GenerateOrganizationJoinCodeResponse_RolesNotFoundError| &x.role_ids,
+                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotFoundError, v| x.role_ids = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
+            > = GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter() as *const _
+                as *mut _;
+            (*a).add_field(
+                "role_ids",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &GenerateOrganizationJoinCodeResponse_RolesNotAssignableError| &x.role_ids,
+                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, v| {
+                    x.role_ids = v
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
+            > = GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter() as *const _
+                as *mut _;
+            (*a).add_field(
+                "duration",
+                0,
+                crate::skirout::base::kernel::v1::duration::Duration::serializer(),
+                "",
+                |x: &GenerateOrganizationJoinCodeResponse_InvalidExpirationError| &x.duration,
+                |x: &mut GenerateOrganizationJoinCodeResponse_InvalidExpirationError, v| {
+                    x.duration = v
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<
                 GenerateOrganizationJoinCodeResponse,
             > = GenerateOrganizationJoinCodeResponse::_adapter() as *const _ as *mut _;
@@ -997,6 +1224,48 @@ fn initialize_module_serializers() {
                 |v| GenerateOrganizationJoinCodeResponse::InternalError(Box::new(v)),
                 |x| match x {
                     GenerateOrganizationJoinCodeResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "roles_not_found_error",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter(),
+                ),
+                "",
+                |v| GenerateOrganizationJoinCodeResponse::RolesNotFoundError(Box::new(v)),
+                |x| match x {
+                    GenerateOrganizationJoinCodeResponse::RolesNotFoundError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "roles_not_assignable_error",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter(),
+                ),
+                "",
+                |v| GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(Box::new(v)),
+                |x| match x {
+                    GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid_expiration_error",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter(),
+                ),
+                "",
+                |v| GenerateOrganizationJoinCodeResponse::InvalidExpirationError(Box::new(v)),
+                |x| match x {
+                    GenerateOrganizationJoinCodeResponse::InvalidExpirationError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

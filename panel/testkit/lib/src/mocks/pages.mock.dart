@@ -10,6 +10,7 @@ import "package:typewriter_panel/generated/models/book.pb.dart";
 import "package:typewriter_panel/logic/pages/pages.dart";
 import "package:typewriter_panel/logic/pages/page_elements.dart";
 import "package:typewriter_panel/logic/pages/graph_direction.dart";
+import "package:typewriter_panel/utils/skir.dart";
 
 import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
@@ -213,9 +214,9 @@ List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
 ];
 
 List<Override> pageIdProviderOverrides({String? pageId}) => [
-  pageIdProvider.overrideWith((ref) => pageId),
+  pageIdProvider.overrideWith((ref) => recordId("page:${pageId ?? ""}")),
 ];
 
 List<Override> bookIdProviderOverrides({String? bookId}) => [
-  bookIdProvider.overrideWith((ref) => bookId),
+  bookIdProvider.overrideWith((ref) => recordId("book:${bookId ?? ""}")),
 ];
