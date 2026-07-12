@@ -26,6 +26,8 @@ func (m *Typewriter) buildRunner(
 		WithWorkdir(dir).
 		WithMountedCache("/root/.pub-cache", dag.CacheVolume("pub-cache")).
 		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"cd", "widgetbook", "flutter", "pub", "get"}).
+		WithExec([]string{"cd", "testkit", "flutter", "pub", "get"}).
 		WithMountedCache("/workspace/.dart_tool", dag.CacheVolume("dart-tool")).
 		WithExec([]string{"dart", "run", "build_runner", "build"}).
 		Directory("/workspace")
