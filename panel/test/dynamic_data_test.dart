@@ -348,11 +348,10 @@ void main() {
           (value) => value == 2 ? null : value,
         );
 
-        expect(
-          newDynamicData.get("simple_list"),
-          [1, 3],
-          reason: "Should have removed the value of 2",
-        );
+        expect(newDynamicData.get("simple_list"), [
+          1,
+          3,
+        ], reason: "Should have removed the value of 2");
       },
     );
 

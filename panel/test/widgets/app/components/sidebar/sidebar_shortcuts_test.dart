@@ -12,7 +12,6 @@ Widget _focusableChild(FocusNode node) =>
     Focus(focusNode: node, child: const SizedBox.shrink());
 
 void main() {
-
   group("Sidebar shortcuts", () {
     testWidgets("comma shrinks and period expands (small step)", (
       tester,

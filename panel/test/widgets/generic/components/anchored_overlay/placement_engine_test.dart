@@ -57,7 +57,10 @@ void main() {
       );
 
       expect(result.appliedSteps, contains(OverflowResolutionStep.shift));
-      expect(result.appliedSteps, isNot(contains(OverflowResolutionStep.resize)));
+      expect(
+        result.appliedSteps,
+        isNot(contains(OverflowResolutionStep.resize)),
+      );
       expect(result.offset.dx + result.size.width, lessThanOrEqualTo(300));
     });
 

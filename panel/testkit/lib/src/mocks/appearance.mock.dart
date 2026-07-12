@@ -16,5 +16,5 @@ class AppearanceMock extends Appearance {
 }
 
 List<Override> appearanceProviderOverrides({AppearanceMock? mock}) => [
-      appearanceProvider.overrideWith(() => mock ?? AppearanceMock()),
-    ];
+  appearanceProvider.overrideWith(() => mock ?? AppearanceMock()),
+];

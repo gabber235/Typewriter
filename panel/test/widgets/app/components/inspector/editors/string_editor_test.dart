@@ -55,8 +55,9 @@ void main() {
       expect(textField.readOnly, isTrue);
     });
 
-    testWidgets("readOnly modifier disables editing even in interactive mode",
-        (tester) async {
+    testWidgets("readOnly modifier disables editing even in interactive mode", (
+      tester,
+    ) async {
       await tester.pumpEditor(
         dataBlueprint: DataBlueprint.string(modifiers: [Modifier.readOnly()]),
         initialData: {"test": "Bob"},
@@ -76,11 +77,10 @@ void main() {
       expect(textField.readOnly, isTrue);
     });
 
-    testWidgets("default hint is shown when no hint is provided",
-        (tester) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(),
-      );
+    testWidgets("default hint is shown when no hint is provided", (
+      tester,
+    ) async {
+      await tester.pumpEditor(dataBlueprint: DataBlueprint.string());
 
       expect(find.text("Enter a string"), findsOneWidget);
     });
@@ -99,8 +99,9 @@ void main() {
       expect(find.text("Custom hint"), findsOneWidget);
     });
 
-    testWidgets("forceValue shows forced text and still updates on change",
-        (tester) async {
+    testWidgets("forceValue shows forced text and still updates on change", (
+      tester,
+    ) async {
       await tester.pumpEditor(
         dataBlueprint: DataBlueprint.string(),
         child: StringEditorWidget(
@@ -120,8 +121,9 @@ void main() {
       expect(find.text("Alice"), findsOneWidget);
     });
 
-    testWidgets("snake_case modifier formats input to snake_case",
-        (tester) async {
+    testWidgets("snake_case modifier formats input to snake_case", (
+      tester,
+    ) async {
       await tester.pumpEditor(
         dataBlueprint: DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
       );

@@ -27,8 +27,7 @@ void main() {
 
       mockClient.registerHandler(
         "test.subject",
-        (requestData) =>
-            skir.GetSentinelCredentialsResponse.serializer.toBytes(
+        (requestData) => skir.GetSentinelCredentialsResponse.serializer.toBytes(
           responseProto,
         ),
       );
@@ -59,10 +58,7 @@ void main() {
       mockClient.registerHandler("test.subject", (requestData) {
         capturedRequestData = Uint8List.fromList(requestData);
         return skir.GetSentinelCredentialsResponse.serializer.toBytes(
-          skir.GetSentinelCredentialsResponse.createSuccess(
-            jwt: "",
-            seed: "",
-          ),
+          skir.GetSentinelCredentialsResponse.createSuccess(jwt: "", seed: ""),
         );
       });
 
@@ -74,10 +70,8 @@ void main() {
 
       expect(capturedRequestData, isNotNull);
 
-      final decodedRequest =
-          skir.GetSentinelCredentialsRequest.serializer.fromBytes(
-        capturedRequestData!,
-      );
+      final decodedRequest = skir.GetSentinelCredentialsRequest.serializer
+          .fromBytes(capturedRequestData!);
       expect(decodedRequest, isA<skir.GetSentinelCredentialsRequest>());
     });
 
@@ -110,10 +104,7 @@ void main() {
     });
 
     test("handles empty response data", () async {
-      mockClient.registerHandler(
-        "test.subject",
-        (requestData) => Uint8List(0),
-      );
+      mockClient.registerHandler("test.subject", (requestData) => Uint8List(0));
 
       final response = await mockClient.requestSkir(
         "test.subject",
@@ -123,10 +114,7 @@ void main() {
         skir.GetSentinelCredentialsResponse.serializer,
       );
 
-      expect(
-        response,
-        isA<skir.GetSentinelCredentialsResponse_unknown>(),
-      );
+      expect(response, isA<skir.GetSentinelCredentialsResponse_unknown>());
     });
   });
 

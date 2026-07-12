@@ -3,7 +3,9 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay_scope.dart";
 
 void main() {
-  testWidgets("returns nearest scope bounds in overlay coordinates", (tester) async {
+  testWidgets("returns nearest scope bounds in overlay coordinates", (
+    tester,
+  ) async {
     final scopeKey = GlobalKey();
     Rect? resolved;
 
@@ -19,7 +21,8 @@ void main() {
               child: Builder(
                 builder: (context) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    final overlayBox = scopeKey.currentContext?.findRenderObject();
+                    final overlayBox = scopeKey.currentContext
+                        ?.findRenderObject();
                     if (overlayBox is RenderBox) {
                       resolved = AnchoredOverlayScope.maybeScopeBoundsInOverlay(
                         context,
@@ -56,7 +59,8 @@ void main() {
           child: Builder(
             builder: (context) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                final overlayBox = overlayKey.currentContext?.findRenderObject();
+                final overlayBox = overlayKey.currentContext
+                    ?.findRenderObject();
                 if (overlayBox is RenderBox) {
                   resolved = AnchoredOverlayScope.maybeScopeBoundsInOverlay(
                     context,

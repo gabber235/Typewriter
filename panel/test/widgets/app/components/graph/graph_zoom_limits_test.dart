@@ -52,7 +52,6 @@ Future<void> _pumpGraphWithFocus(WidgetTester tester, FocusNode node) async {
 }
 
 void main() {
-
   group("Graph zoom limits", () {
     testWidgets("InteractiveViewer min/max scale are configured and leading", (
       tester,

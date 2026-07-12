@@ -32,13 +32,17 @@ void main() {
     );
 
     final rootRect = tester.getRect(find.byType(AnchoredOverlayPositioned));
-    final childRect = tester.getRect(find.byKey(const ValueKey("positioned_child")));
+    final childRect = tester.getRect(
+      find.byKey(const ValueKey("positioned_child")),
+    );
 
     expect(childRect.left - rootRect.left, 40);
     expect(childRect.top - rootRect.top, 94);
   });
 
-  testWidgets("match anchor constrains width for vertical sides", (tester) async {
+  testWidgets("match anchor constrains width for vertical sides", (
+    tester,
+  ) async {
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
@@ -63,11 +67,15 @@ void main() {
       ),
     );
 
-    final childSize = tester.getSize(find.byKey(const ValueKey("positioned_child")));
+    final childSize = tester.getSize(
+      find.byKey(const ValueKey("positioned_child")),
+    );
     expect(childSize.width, 180);
   });
 
-  testWidgets("match anchor constrains height for horizontal sides", (tester) async {
+  testWidgets("match anchor constrains height for horizontal sides", (
+    tester,
+  ) async {
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
@@ -92,7 +100,9 @@ void main() {
       ),
     );
 
-    final childSize = tester.getSize(find.byKey(const ValueKey("positioned_child")));
+    final childSize = tester.getSize(
+      find.byKey(const ValueKey("positioned_child")),
+    );
     expect(childSize.height, 28);
   });
 }

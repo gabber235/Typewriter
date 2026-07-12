@@ -7,8 +7,9 @@ import "package:typewriter_panel/widgets/generic/components/floating_button.dart
 import "../../../test_utils.dart";
 
 void main() {
-  testWidgets("invokes async and changes FAB icon to spinner while running",
-      (tester) async {
+  testWidgets("invokes async and changes FAB icon to spinner while running", (
+    tester,
+  ) async {
     final completer = Completer<void>();
     var invoked = 0;
 
@@ -21,9 +22,7 @@ void main() {
             await completer.future;
             invoked++;
           },
-          child: const SizedBox.expand(
-            child: Center(child: Text("Content")),
-          ),
+          child: const SizedBox.expand(child: Center(child: Text("Content"))),
         ),
       ),
     );
@@ -59,9 +58,7 @@ void main() {
           onPressed: () {
             throw Exception("Boom");
           },
-          child: const SizedBox.expand(
-            child: Center(child: Text("Content")),
-          ),
+          child: const SizedBox.expand(child: Center(child: Text("Content"))),
         ),
       ),
     );

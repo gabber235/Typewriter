@@ -7,21 +7,12 @@ import "../../../../test_utils.dart";
 void main() {
   group("ModeDisplayChip", () {
     testWidgets("converts label to uppercase", (tester) async {
-      const testCases = [
-        "normal",
-        "Insert",
-        "MOVE",
-        "rEsIzE",
-        "custom mode",
-      ];
+      const testCases = ["normal", "Insert", "MOVE", "rEsIzE", "custom mode"];
 
       for (final label in testCases) {
         await tester.pumpTestApp(
           child: Center(
-            child: ModeDisplayChip(
-              label: label,
-              color: Colors.blue,
-            ),
+            child: ModeDisplayChip(label: label, color: Colors.blue),
           ),
         );
 
@@ -35,10 +26,7 @@ void main() {
     testWidgets("handles empty label", (tester) async {
       await tester.pumpTestApp(
         child: const Center(
-          child: ModeDisplayChip(
-            label: "",
-            color: Colors.blue,
-          ),
+          child: ModeDisplayChip(label: "", color: Colors.blue),
         ),
       );
 
@@ -46,17 +34,15 @@ void main() {
       expect(find.byType(Container), findsOneWidget);
     });
 
-    testWidgets("maintains consistent size with different labels",
-        (tester) async {
+    testWidgets("maintains consistent size with different labels", (
+      tester,
+    ) async {
       const shortLabel = "A";
       const longLabel = "Very Long Mode Name";
 
       await tester.pumpTestApp(
         child: const Center(
-          child: ModeDisplayChip(
-            label: shortLabel,
-            color: Colors.blue,
-          ),
+          child: ModeDisplayChip(label: shortLabel, color: Colors.blue),
         ),
       );
 
@@ -64,10 +50,7 @@ void main() {
 
       await tester.pumpTestApp(
         child: const Center(
-          child: ModeDisplayChip(
-            label: longLabel,
-            color: Colors.blue,
-          ),
+          child: ModeDisplayChip(label: longLabel, color: Colors.blue),
         ),
       );
 

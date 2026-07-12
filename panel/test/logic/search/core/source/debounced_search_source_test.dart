@@ -144,7 +144,9 @@ void main() {
       expect(selectors, [emitted]);
     });
 
-    testWidgets("debounces preview and resolves after duration", (tester) async {
+    testWidgets("debounces preview and resolves after duration", (
+      tester,
+    ) async {
       final inner = FakeSearchSource();
       final source = inner.debounced(const Duration(milliseconds: 100));
       addTearDown(source.dispose);

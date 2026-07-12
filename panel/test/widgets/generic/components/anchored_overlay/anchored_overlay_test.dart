@@ -66,7 +66,9 @@ void main() {
       expect(find.byKey(const ValueKey("overlay_content")), findsNothing);
     });
 
-    testWidgets("match anchor constrains width for bottom side", (tester) async {
+    testWidgets("match anchor constrains width for bottom side", (
+      tester,
+    ) async {
       await tester.pumpTestApp(
         child: Align(
           alignment: Alignment.topLeft,
@@ -91,7 +93,9 @@ void main() {
       await tester.pump();
 
       final anchorRect = tester.getRect(find.byType(SizedBox).first);
-      final overlayRect = tester.getRect(find.byKey(const ValueKey("overlay_content")));
+      final overlayRect = tester.getRect(
+        find.byKey(const ValueKey("overlay_content")),
+      );
       expect(overlayRect.width, anchorRect.width);
     });
   });

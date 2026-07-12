@@ -25,11 +25,10 @@ class TestModeWithoutDisplay extends InteractionMode {
 
 void main() {
   group("ModeDisplayWidget", () {
-    testWidgets("shows display when mode implements ModeDisplay",
-        (tester) async {
-      await tester.pumpTestApp(
-        child: const ModeDisplayWidget(),
-      );
+    testWidgets("shows display when mode implements ModeDisplay", (
+      tester,
+    ) async {
+      await tester.pumpTestApp(child: const ModeDisplayWidget());
 
       tester
           .container()
@@ -44,11 +43,10 @@ void main() {
       );
     });
 
-    testWidgets("hides display when mode doesn't implement ModeDisplay",
-        (tester) async {
-      await tester.pumpTestApp(
-        child: const ModeDisplayWidget(),
-      );
+    testWidgets("hides display when mode doesn't implement ModeDisplay", (
+      tester,
+    ) async {
+      await tester.pumpTestApp(child: const ModeDisplayWidget());
 
       tester
           .container()
@@ -69,14 +67,11 @@ void main() {
     });
 
     testWidgets("updates display when mode changes", (tester) async {
-      await tester.pumpTestApp(
-        child: const ModeDisplayWidget(),
-      );
+      await tester.pumpTestApp(child: const ModeDisplayWidget());
 
-      final notifier = tester
-          .container()
-          .read(currentInteractionModeProvider.notifier)
-        ..setMode(TestModeWithoutDisplay());
+      final notifier = tester.container().read(
+        currentInteractionModeProvider.notifier,
+      )..setMode(TestModeWithoutDisplay());
       await tester.pump();
 
       expect(
@@ -106,9 +101,7 @@ void main() {
     });
 
     testWidgets("renders SizedBox.shrink when no display", (tester) async {
-      await tester.pumpTestApp(
-        child: const ModeDisplayWidget(),
-      );
+      await tester.pumpTestApp(child: const ModeDisplayWidget());
 
       tester
           .container()

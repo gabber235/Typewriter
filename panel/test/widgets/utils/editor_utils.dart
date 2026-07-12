@@ -35,12 +35,8 @@ extension EditorTesterExtension on WidgetTester {
     final objectBlueprint = dataBlueprint is ObjectBlueprint && path.isEmpty
         ? dataBlueprint
         : dataBlueprint != null
-            ? ObjectBlueprint(
-                fields: {
-                  path: dataBlueprint,
-                },
-              )
-            : null;
+        ? ObjectBlueprint(fields: {path: dataBlueprint})
+        : null;
 
     await pumpTestApp(
       overrides: [
@@ -55,7 +51,8 @@ extension EditorTesterExtension on WidgetTester {
       ],
       settle: settle,
       child: Consumer(
-        child: child ??
+        child:
+            child ??
             SingleChildScrollView(
               child: ObjectEditorWidget(
                 path: "",
@@ -98,10 +95,7 @@ extension EditorTesterExtension on WidgetTester {
     container().read(selectionProvider.notifier).selectAll(identifiers);
   }
 
-  dynamic fieldValue({
-    String selectedId = "editor",
-    String path = "test",
-  }) {
+  dynamic fieldValue({String selectedId = "editor", String path = "test"}) {
     return container().read(testDataProvider(selectedId))?.get(path);
   }
 

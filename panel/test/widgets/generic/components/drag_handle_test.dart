@@ -5,43 +5,43 @@ import "package:typewriter_panel/widgets/generic/components/drag_handle.dart";
 import "../../../test_utils.dart";
 
 void main() {
-
   group("DragHandle", () {
     testWidgets(
-        "horizontal increases size when dragging right (default resolver)",
-        (tester) async {
-      final harnessKey = GlobalKey<_DragHarnessState>();
+      "horizontal increases size when dragging right (default resolver)",
+      (tester) async {
+        final harnessKey = GlobalKey<_DragHarnessState>();
 
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 300,
-            child: DragHarness(
-              key: harnessKey,
-              axis: Axis.horizontal,
-              initialSize: 300,
-              minSize: 150,
-              maxSize: 700,
-              enabled: true,
+        await tester.pumpTestApp(
+          child: Center(
+            child: SizedBox(
+              width: 800,
+              height: 300,
+              child: DragHarness(
+                key: harnessKey,
+                axis: Axis.horizontal,
+                initialSize: 300,
+                minSize: 150,
+                maxSize: 700,
+                enabled: true,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      final start = harnessKey.currentState!.size;
-      expect(start, 300);
+        final start = harnessKey.currentState!.size;
+        expect(start, 300);
 
-      final handle = find.byKey(const Key("drag_handle"));
-      expect(handle, findsOneWidget);
+        final handle = find.byKey(const Key("drag_handle"));
+        expect(handle, findsOneWidget);
 
-      await tester.drag(handle, const Offset(80, 0));
-      await tester.pumpAndSettle();
+        await tester.drag(handle, const Offset(80, 0));
+        await tester.pumpAndSettle();
 
-      final end = harnessKey.currentState!.size;
-      expect(end, greaterThan(start));
-      expect(end, 380);
-    });
+        final end = harnessKey.currentState!.size;
+        expect(end, greaterThan(start));
+        expect(end, 380);
+      },
+    );
 
     testWidgets("horizontal custom resolver inverts delta", (tester) async {
       final harnessKey = GlobalKey<_DragHarnessState>();
@@ -107,38 +107,40 @@ void main() {
       expect(harnessKey.currentState!.size, 200);
     });
 
-    testWidgets("vertical increases size when dragging down (default resolver)",
-        (tester) async {
-      final harnessKey = GlobalKey<_DragHarnessState>();
+    testWidgets(
+      "vertical increases size when dragging down (default resolver)",
+      (tester) async {
+        final harnessKey = GlobalKey<_DragHarnessState>();
 
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 600,
-            height: 600,
-            child: DragHarness(
-              key: harnessKey,
-              axis: Axis.vertical,
-              initialSize: 200,
-              minSize: 100,
-              maxSize: 500,
-              enabled: true,
+        await tester.pumpTestApp(
+          child: Center(
+            child: SizedBox(
+              width: 600,
+              height: 600,
+              child: DragHarness(
+                key: harnessKey,
+                axis: Axis.vertical,
+                initialSize: 200,
+                minSize: 100,
+                maxSize: 500,
+                enabled: true,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      final start = harnessKey.currentState!.size;
-      expect(start, 200);
+        final start = harnessKey.currentState!.size;
+        expect(start, 200);
 
-      final handle = find.byKey(const Key("drag_handle"));
-      await tester.drag(handle, const Offset(0, 60));
-      await tester.pumpAndSettle();
+        final handle = find.byKey(const Key("drag_handle"));
+        await tester.drag(handle, const Offset(0, 60));
+        await tester.pumpAndSettle();
 
-      final end = harnessKey.currentState!.size;
-      expect(end, greaterThan(start));
-      expect(end, 260);
-    });
+        final end = harnessKey.currentState!.size;
+        expect(end, greaterThan(start));
+        expect(end, 260);
+      },
+    );
 
     testWidgets("disabled handle does not change size on drag", (tester) async {
       final harnessKey = GlobalKey<_DragHarnessState>();
@@ -221,9 +223,7 @@ class _DragHarnessState extends State<DragHarness> {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Container(color: Colors.blueGrey.shade100),
-          ),
+          Expanded(child: Container(color: Colors.blueGrey.shade100)),
           handle,
           AnimatedContainer(
             duration: const Duration(milliseconds: 50),
@@ -239,9 +239,7 @@ class _DragHarnessState extends State<DragHarness> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Container(color: Colors.blueGrey.shade100),
-        ),
+        Expanded(child: Container(color: Colors.blueGrey.shade100)),
         handle,
         AnimatedContainer(
           duration: const Duration(milliseconds: 50),

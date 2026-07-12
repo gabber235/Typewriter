@@ -31,7 +31,6 @@ Widget _focusBox(FocusNode focusNode) {
 }
 
 void main() {
-
   GraphData dataWithFocusableChild(FocusNode node) {
     return GraphData(
       cellSize: 50,

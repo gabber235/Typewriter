@@ -9,8 +9,9 @@ import "../../../test_utils.dart";
 void main() {
   for (final variant in LoadingVariant.values) {
     group("LoadingButton.${variant.name}", () {
-      testWidgets("invokes async and shows spinner while running",
-          (tester) async {
+      testWidgets("invokes async and shows spinner while running", (
+        tester,
+      ) async {
         final completer = Completer<void>();
         var invoked = 0;
 
@@ -69,50 +70,52 @@ void main() {
       });
 
       testWidgets(
-          "with icon invokes async and changes icon to spinner while running",
-          (tester) async {
-        final completer = Completer<void>();
-        var invoked = 0;
-        await tester.pumpTestApp(
-          child: Center(
-            child: LoadingButton.icon(
-              variant: variant,
-              icon: Icon(Icons.add),
-              label: const Text("Go"),
-              onPressed: () async {
-                invoked++;
-                await completer.future;
-                invoked++;
-              },
+        "with icon invokes async and changes icon to spinner while running",
+        (tester) async {
+          final completer = Completer<void>();
+          var invoked = 0;
+          await tester.pumpTestApp(
+            child: Center(
+              child: LoadingButton.icon(
+                variant: variant,
+                icon: Icon(Icons.add),
+                label: const Text("Go"),
+                onPressed: () async {
+                  invoked++;
+                  await completer.future;
+                  invoked++;
+                },
+              ),
             ),
-          ),
-        );
+          );
 
-        expect(invoked, 0);
-        expect(find.text("Go"), findsOneWidget);
-        expect(find.byType(Icon), findsOneWidget);
-        expect(find.byType(CircularProgressIndicator), findsNothing);
-        await tester.tap(find.byType(InkWell));
-
-        await tester.pumpUntil(() {
-          expect(invoked, 1);
-          expect(find.text("Go"), findsOneWidget);
-          expect(find.byType(Icon), findsNothing);
-          expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        });
-
-        completer.complete();
-
-        await tester.pumpUntil(() {
-          expect(invoked, 2);
+          expect(invoked, 0);
           expect(find.text("Go"), findsOneWidget);
           expect(find.byType(Icon), findsOneWidget);
           expect(find.byType(CircularProgressIndicator), findsNothing);
-        });
-      });
+          await tester.tap(find.byType(InkWell));
 
-      testWidgets("with icon shows snackbar and tooltip on failure",
-          (tester) async {
+          await tester.pumpUntil(() {
+            expect(invoked, 1);
+            expect(find.text("Go"), findsOneWidget);
+            expect(find.byType(Icon), findsNothing);
+            expect(find.byType(CircularProgressIndicator), findsOneWidget);
+          });
+
+          completer.complete();
+
+          await tester.pumpUntil(() {
+            expect(invoked, 2);
+            expect(find.text("Go"), findsOneWidget);
+            expect(find.byType(Icon), findsOneWidget);
+            expect(find.byType(CircularProgressIndicator), findsNothing);
+          });
+        },
+      );
+
+      testWidgets("with icon shows snackbar and tooltip on failure", (
+        tester,
+      ) async {
         await tester.pumpTestApp(
           child: Center(
             child: LoadingButton(
@@ -250,8 +253,9 @@ void main() {
       expect(invoked, true);
     });
 
-    testWidgets("handles errors when triggered programmatically",
-        (tester) async {
+    testWidgets("handles errors when triggered programmatically", (
+      tester,
+    ) async {
       final controller = LoadingButtonController();
 
       await tester.pumpTestApp(

@@ -64,8 +64,10 @@ void main() {
 
   group("VersionFilter.expand", () {
     test("expands fixed version without epoch by fixing epoch=0", () {
-      final f = VersionFilterParser.parse(query: "1.2.3", hasEpoch: false)
-          .copyWith(epoch: const FixedPart(0));
+      final f = VersionFilterParser.parse(
+        query: "1.2.3",
+        hasEpoch: false,
+      ).copyWith(epoch: const FixedPart(0));
 
       final list = f.expand();
 
@@ -74,8 +76,10 @@ void main() {
     });
 
     test("expands minor/patch ranges without epoch by fixing epoch=0", () {
-      final f = VersionFilterParser.parse(query: "1.3-4.0-1", hasEpoch: false)
-          .copyWith(epoch: const FixedPart(0));
+      final f = VersionFilterParser.parse(
+        query: "1.3-4.0-1",
+        hasEpoch: false,
+      ).copyWith(epoch: const FixedPart(0));
 
       final list = f.expand();
 
@@ -93,10 +97,7 @@ void main() {
     });
 
     test("expands ranges across epoch and major with epoch=true", () {
-      final f = VersionFilterParser.parse(
-        query: "1-2.0-1.0.0",
-        hasEpoch: true,
-      );
+      final f = VersionFilterParser.parse(query: "1-2.0-1.0.0", hasEpoch: true);
 
       final list = f.expand();
 
@@ -115,21 +116,15 @@ void main() {
 
     test("throws when any segment is AnyPart (epoch Any)", () {
       final f = VersionFilterParser.parse(query: "1.2.3", hasEpoch: false);
-      expect(
-        f.expand,
-        throwsA(isA<FormatException>()),
-      );
+      expect(f.expand, throwsA(isA<FormatException>()));
     });
 
     test("throws when any segment is AnyPart (patch Any)", () {
-      final f =
-          VersionFilterParser.parse(query: "1.2.*", hasEpoch: false).copyWith(
-        epoch: const FixedPart(0),
-      );
-      expect(
-        f.expand,
-        throwsA(isA<FormatException>()),
-      );
+      final f = VersionFilterParser.parse(
+        query: "1.2.*",
+        hasEpoch: false,
+      ).copyWith(epoch: const FixedPart(0));
+      expect(f.expand, throwsA(isA<FormatException>()));
     });
   });
 }

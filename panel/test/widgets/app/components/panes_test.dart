@@ -14,10 +14,7 @@ void main() {
             final panes = ref.watch(panesProvider);
             return Column(
               children: [
-                const Pane(
-                  id: "test-pane",
-                  child: Text("Test Pane"),
-                ),
+                const Pane(id: "test-pane", child: Text("Test Pane")),
                 Text("Pane count: ${panes.length}"),
                 if (panes.containsKey("test-pane"))
                   Text("Has test-pane: ${panes["test-pane"]?.enabled}"),
@@ -77,9 +74,7 @@ void main() {
 
   group("Navigation Logic Tests", () {
     testWidgets("navigation with empty state returns false", (tester) async {
-      await tester.pumpTestApp(
-        child: Text("Empty state test"),
-      );
+      await tester.pumpTestApp(child: Text("Empty state test"));
 
       final container = tester.container();
 
@@ -90,8 +85,9 @@ void main() {
       expect(result, isFalse);
     });
 
-    testWidgets("navigation with only disabled panes returns false",
-        (tester) async {
+    testWidgets("navigation with only disabled panes returns false", (
+      tester,
+    ) async {
       await tester.pumpTestApp(
         child: Column(
           children: [
@@ -329,8 +325,9 @@ void main() {
       expect(panes["pane-3"]!.focusNode.hasFocus, isTrue);
     });
 
-    testWidgets("navigation with no valid target returns false",
-        (tester) async {
+    testWidgets("navigation with no valid target returns false", (
+      tester,
+    ) async {
       await tester.pumpTestApp(
         child: Column(
           children: [
@@ -338,10 +335,7 @@ void main() {
               width: 100,
               height: 100,
               margin: const EdgeInsets.all(10),
-              child: const Pane(
-                id: "only-pane",
-                child: Text("Only Pane"),
-              ),
+              child: const Pane(id: "only-pane", child: Text("Only Pane")),
             ),
           ],
         ),
@@ -564,10 +558,7 @@ void main() {
             final panes = ref.watch(panesProvider);
             return Column(
               children: [
-                const Pane(
-                  id: "test-pane",
-                  child: Text("Test Pane"),
-                ),
+                const Pane(id: "test-pane", child: Text("Test Pane")),
                 Text("Registered panes: ${panes.keys.join(', ')}"),
               ],
             );
@@ -586,8 +577,9 @@ void main() {
   });
 
   group("Widget Integration Tests", () {
-    testWidgets("GlobalPaneNavigator renders and manages actions",
-        (tester) async {
+    testWidgets("GlobalPaneNavigator renders and manages actions", (
+      tester,
+    ) async {
       await tester.pumpTestApp(
         child: Consumer(
           builder: (context, ref, child) {
