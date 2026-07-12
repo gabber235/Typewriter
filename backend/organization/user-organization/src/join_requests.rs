@@ -210,10 +210,7 @@ async fn fetch_join_code(
         WHERE expires_at IS NONE OR expires_at > time::now()
         "#,
     )
-    .bind(
-        "code",
-        surrealdb_component_sdk::RecordId::from(code.clone()),
-    )
+    .bind("code", surrealdb_component_sdk::RecordId::from(code))
     .execute()
     .await
     .error_with_slug("join-request-code-query-failed")?
@@ -276,10 +273,7 @@ async fn handle_auto_accept(
     )
     .bind("user_id", user_id)
     .bind("org", org.id.clone())
-    .bind(
-        "code",
-        surrealdb_component_sdk::RecordId::from(code.clone()),
-    )
+    .bind("code", surrealdb_component_sdk::RecordId::from(code))
     .bind("single_use", single_use)
     .bind("auto_accept_roles", auto_accept_roles)
     .execute()
@@ -378,10 +372,7 @@ async fn handle_manual_accept(
     )
     .bind("user_id", user_id)
     .bind("org", org_id.clone())
-    .bind(
-        "code",
-        surrealdb_component_sdk::RecordId::from(code.clone()),
-    )
+    .bind("code", surrealdb_component_sdk::RecordId::from(code))
     .bind("single_use", single_use)
     .execute()
     .await
@@ -443,7 +434,7 @@ pub async fn handle_cancel(
     )
     .bind(
         "request",
-        surrealdb_component_sdk::RecordId::from(request_id.clone()),
+        surrealdb_component_sdk::RecordId::from(&request_id),
     )
     .bind("user_id", user_id)
     .execute()
