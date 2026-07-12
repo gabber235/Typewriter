@@ -182,7 +182,7 @@ class QueryBar extends HookWidget {
 
     final shortcuts = useMemoized(() {
       return [
-        if (focusNode.hasPrimaryFocus)
+        if (popupSuggestionsVisible) ...[
           ActionShortcut(
             id: "query_bar_accept_first_suggestion",
             label: "Accept suggestion",
@@ -195,7 +195,6 @@ class QueryBar extends HookWidget {
             show: true,
             onInvoke: (_) => acceptActiveOrFirstSuggestion(),
           ),
-        if (popupSuggestionsVisible) ...[
           ActionShortcut(
             id: "query_bar_navigate_suggestions_popup",
             label: "Switch suggestions",
@@ -213,7 +212,10 @@ class QueryBar extends HookWidget {
             id: "query_bar_previous_suggestion",
             label: "",
             description: "",
-            activators: [const SingleActivator(LogicalKeyboardKey.arrowUp)],
+            activators: const [
+              SingleActivator(LogicalKeyboardKey.arrowUp),
+              SingleActivator(LogicalKeyboardKey.keyP, control: true),
+            ],
             onInvoke: (_) => selectPreviousSuggestion(),
             show: false,
             priority: -1,
@@ -222,7 +224,10 @@ class QueryBar extends HookWidget {
             id: "query_bar_next_suggestion",
             label: "",
             description: "",
-            activators: [const SingleActivator(LogicalKeyboardKey.arrowDown)],
+            activators: const [
+              SingleActivator(LogicalKeyboardKey.arrowDown),
+              SingleActivator(LogicalKeyboardKey.keyN, control: true),
+            ],
             onInvoke: (_) => selectNextSuggestion(),
             show: false,
             priority: -1,
