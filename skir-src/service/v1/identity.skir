@@ -1,0 +1,40 @@
+enum ServiceRole {
+  engine: struct {
+    version: string;
+  };
+  realm: struct {
+    version: string;
+  };
+  custom: struct {
+    name: string;
+    version: string;
+  };
+}
+
+method IssueServiceIdentity(
+  struct {
+    roles: [ServiceRole];
+  }
+): enum {
+  internal_error: struct {};
+  success: struct {
+    service_id: string;
+    display_name: string;
+    username: string;
+    token: string;
+  };
+  malformed_request_error: struct {};
+  unknown_role_error: struct {};
+  roles_required_error: struct {};
+  role_unknown_property_error: struct {};
+  role_type_invalid_error: struct {};
+  role_version_blank_error: struct {};
+  role_invalid_error: struct {};
+  custom_role_name_required_error: struct {};
+  custom_role_name_invalid_error: struct {};
+  builtin_role_name_forbidden_error: struct {};
+  engine_role_duplicate_error: struct {};
+  realm_role_duplicate_error: struct {};
+  custom_role_duplicate_error: struct {};
+  identity_provider_unavailable_error: struct {};
+} = 672941;

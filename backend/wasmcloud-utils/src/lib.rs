@@ -14,6 +14,8 @@ macro_rules! export {
 
 pub mod wasmcloud;
 
+#[rustfmt::skip]
+#[allow(clippy::redundant_closure)]
 pub mod skirout;
 pub use crate::skirout as skir;
 pub use otel_wasi;

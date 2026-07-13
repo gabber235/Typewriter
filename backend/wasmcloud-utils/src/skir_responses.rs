@@ -11,6 +11,7 @@ use crate::skir::base::organization::v1::join_request::*;
 use crate::skir::base::organization::v1::member::*;
 use crate::skir::base::organization::v1::organization::*;
 use crate::skir::base::organization::v1::user::*;
+use crate::skir::base::service::v1::identity::*;
 use crate::skir::base::service::v1::status::*;
 use crate::skirout::base::organization::v1::role::*;
 
@@ -18,6 +19,28 @@ wasmcloud_utils_macros::skir_response! {
     GetSentinelCredentialsResponse {
         success: Success,
         errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    IssueServiceIdentityResponse {
+        success: Success,
+        errors {
+            MalformedRequestError => "Malformed request",
+            UnknownRoleError => "Unknown role",
+            RolesRequiredError => "Roles required",
+            RoleUnknownPropertyError => "Unknown role property",
+            RoleTypeInvalidError => "Invalid role type",
+            RoleVersionBlankError => "Blank role version",
+            RoleInvalidError => "Invalid role",
+            CustomRoleNameRequiredError => "Custom role name required",
+            CustomRoleNameInvalidError => "Invalid custom role name",
+            BuiltinRoleNameForbiddenError => "Built-in role name forbidden",
+            EngineRoleDuplicateError => "Duplicate engine role",
+            RealmRoleDuplicateError => "Duplicate realm role",
+            CustomRoleDuplicateError => "Duplicate custom role",
+            IdentityProviderUnavailableError => "Identity provider unavailable",
+        }
     }
 }
 
@@ -62,7 +85,7 @@ wasmcloud_utils_macros::skir_response! {
     SubmitUserJoinRequestResponse {
         success: [RequestMade, AutoAccepted],
         errors {
-            CodeNotFoundError(e) => format!("Could not find code: '{}'", e.code.key.to_string()),
+            CodeNotFoundError(e) => format!("Could not find code: '{}'", e.code.key),
             AlreadyMemberError => "User is already a member of this organization",
             NoAssignableRolesError => "No assignable roles are available for this organization",
             MaxPendingRequestsError => "User already has the maximum number of pending join requests",
