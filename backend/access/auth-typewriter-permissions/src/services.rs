@@ -43,14 +43,14 @@ pub async fn handle_service(
 
     let mut allow_publish = vec![];
     let mut allow_subscribe = vec![];
-    let mut tags = vec![format!("service:{}", service_id)];
+    let mut tags = vec![format!("service:{service_id}")];
 
-    allow_subscribe.push(format!("_INBOX.{}.>", service_id));
+    allow_subscribe.push(format!("_INBOX.{service_id}.>"));
     allow_publish.push(format!("_INBOX.>"));
 
-    allow_publish.push(format!("cloud.to.service.{}.status", service_id));
-    allow_publish.push(format!("cloud.to.service.{}.heartbeat", service_id));
-    allow_publish.push(format!("cloud.to.service.{}.shutdown", service_id));
+    allow_publish.push(format!("cloud.to.service.{service_id}.status"));
+    allow_publish.push(format!("cloud.to.service.{service_id}.heartbeat"));
+    allow_publish.push(format!("cloud.to.service.{service_id}.shutdown"));
 
     match status {
         GetServiceStatusResponse::Status(status) => handle_service_status(
@@ -96,7 +96,7 @@ pub async fn handle_service(
 async fn query_service_status(
     service_id: &str,
 ) -> Result<GetServiceStatusResponse, otel_wasi::Error> {
-    let subject = format!("typewriter.from.service.{}.status", service_id);
+    let subject = format!("typewriter.from.service.{service_id}.status");
 
     let data = GetServiceStatusRequest::default();
 
@@ -148,23 +148,22 @@ fn handle_bound_binding(
         "auth.permissions.category.realm" = true,
     );
 
-    tags.push(format!("org:{}", org_id));
+    tags.push(format!("org:{org_id}"));
 
     // TODO: Don't make this broad, make it narrow.
     allow_publish.push(format!(
-        "cloud.to.service.{}.organization.{}.>",
-        service_id, org_id
+        "cloud.to.service.{service_id}.organization.{org_id}.>",
     ));
     allow_subscribe.push(format!(
-        "cloud.from.service.{}.organization.{}.>",
-        service_id, org_id
+        "cloud.from.service.{service_id}.organization.{org_id}.>",
     ));
 
     allow_publish.push(format!(
-        "realm.from.{}.organization.{}.>",
-        service_id, org_id
+        "service.from.{service_id}.organization.{org_id}.realm.>",
     ));
-    allow_subscribe.push(format!("realm.to.{}.organization.{}.>", service_id, org_id));
+    allow_subscribe.push(format!(
+        "service.to.{service_id}.organization.{org_id}.realm.>",
+    ));
 }
 
 fn handle_unbound_binding(service_id: &str, allow_subscribe: &mut Vec<String>) {
@@ -173,7 +172,6 @@ fn handle_unbound_binding(service_id: &str, allow_subscribe: &mut Vec<String>) {
         "auth.permissions.category.registration" = true,
     );
     allow_subscribe.push(format!(
-        "cloud.from.service.{}.registration.bound",
-        service_id
+        "cloud.from.service.{service_id}.registration.bound"
     ));
 }

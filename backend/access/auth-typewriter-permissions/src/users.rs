@@ -44,7 +44,7 @@ pub async fn handle_panel_user(
 
     // ########### PERMISSIONS ###########
     {
-        allow_subscribe.push(format!("_INBOX.{}.>", &user_id));
+        allow_subscribe.push(format!("_INBOX.{user_id}.>"));
         allow_publish.push(format!("_INBOX.>"));
 
         add_user_organizations_permissions(&user_id, &mut allow_publish, &mut allow_subscribe);
@@ -100,9 +100,9 @@ pub async fn handle_panel_user(
 
     let mut tags = vec![];
     if let Some(ref organization_id) = organization_id {
-        tags.push(format!("org:{}", organization_id));
+        tags.push(format!("org:{organization_id}"));
     }
-    tags.push(format!("user:{}", user_id));
+    tags.push(format!("user:{user_id}"));
 
     Ok((permissions, tags))
 }
@@ -192,24 +192,20 @@ fn add_user_organizations_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
-    allow_publish.push(format!("cloud.to.user.{}.organization.watch", user_id));
-    allow_subscribe.push(format!("cloud.from.user.{}.organization.watch", user_id));
-    allow_publish.push(format!("cloud.to.user.{}.organization.create", user_id));
+    allow_publish.push(format!("cloud.to.user.{user_id}.organization.watch"));
+    allow_subscribe.push(format!("cloud.from.user.{user_id}.organization.watch"));
+    allow_publish.push(format!("cloud.to.user.{user_id}.organization.create"));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.join_requests.watch",
-        user_id
+        "cloud.to.user.{user_id}.organization.join_requests.watch"
     ));
     allow_subscribe.push(format!(
-        "cloud.from.user.{}.organization.join_requests.watch",
-        user_id
+        "cloud.from.user.{user_id}.organization.join_requests.watch"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.join_requests.request",
-        user_id
+        "cloud.to.user.{user_id}.organization.join_requests.request"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.join_requests.cancel",
-        user_id
+        "cloud.to.user.{user_id}.organization.join_requests.cancel"
     ));
 }
 
@@ -221,10 +217,9 @@ fn add_organization_roles_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.roles.watch",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.roles.watch"
     ));
-    allow_subscribe.push(format!("cloud.from.organization.{}.roles.watch", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{org_id}.roles.watch"));
 }
 
 /// Adds permissions for organization/members component
@@ -235,49 +230,35 @@ fn add_organization_members_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.watch",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.watch"
     ));
-    allow_subscribe.push(format!("cloud.from.organization.{}.members.watch", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{org_id}.members.watch"));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.update",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.remove"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.remove",
-        user_id, org_id
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.join_requests.watch",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.join_requests.watch"
     ));
     allow_subscribe.push(format!(
-        "cloud.from.organization.{}.members.join_requests.watch",
-        org_id
+        "cloud.from.organization.{org_id}.members.join_requests.watch"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.join_requests.approve",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.join_requests.approve"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.join_requests.decline",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.join_requests.decline"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.join_codes.watch",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.join_codes.watch"
     ));
     allow_subscribe.push(format!(
-        "cloud.from.organization.{}.members.join_codes.watch",
-        org_id
+        "cloud.from.organization.{org_id}.members.join_codes.watch"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.join_codes.generate",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.join_codes.generate"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.members.join_codes.revoke",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.members.join_codes.revoke"
     ));
 }
 
@@ -289,21 +270,17 @@ fn add_organization_services_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.services.list",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.services.list"
     ));
-    allow_subscribe.push(format!("cloud.from.organization.{}.services.list", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{org_id}.services.list"));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.services.bind",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.services.bind"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.services.update",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.services.update"
     ));
     allow_publish.push(format!(
-        "cloud.to.user.{}.organization.{}.services.unbind",
-        user_id, org_id
+        "cloud.to.user.{user_id}.organization.{org_id}.services.unbind"
     ));
 }
 
@@ -313,11 +290,11 @@ fn add_organization_realm_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
-    allow_publish.push(format!("cloud.to.organization.{}.realm.list", org_id));
-    allow_subscribe.push(format!("cloud.from.organization.{}.realm.list", org_id));
-    allow_publish.push(format!("cloud.to.organization.{}.realm.create", org_id));
-    allow_publish.push(format!("cloud.to.organization.{}.realm.delete", org_id));
-    allow_publish.push(format!("cloud.to.organization.{}.realm.update", org_id));
+    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.list"));
+    allow_subscribe.push(format!("cloud.from.organization.{org_id}.realm.list"));
+    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.create"));
+    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.delete"));
+    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.update"));
 }
 
 #[cfg(test)]
