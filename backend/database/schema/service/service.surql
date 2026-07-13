@@ -1,11 +1,25 @@
+REMOVE FIELD IF EXISTS service_types.* ON TABLE service;
+REMOVE FIELD IF EXISTS service_types ON TABLE service;
+
 DEFINE TABLE OVERWRITE service SCHEMAFULL
     PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE name ON service TYPE string
     ASSERT fn::is_id($value);
 
-DEFINE FIELD OVERWRITE service_types ON service TYPE array<"engine" | "realm">
-    ASSERT array::len($value) > 0 AND array::len(array::distinct($value)) = array::len($value);
+DEFINE FIELD OVERWRITE roles ON service TYPE array<object>
+    ASSERT fn::service::valid_roles($value);
+
+DEFINE FIELD OVERWRITE roles.* ON service TYPE object
+    ASSERT fn::service::valid_role($value);
+
+DEFINE FIELD OVERWRITE roles.*.type ON service
+    TYPE "engine" | "realm" | "custom";
+
+DEFINE FIELD OVERWRITE roles.*.version ON service TYPE string
+    ASSERT { IF string::len(string::trim($value)) < 1 { THROW "role-version-blank-error" }; RETURN true; };
+
+DEFINE FIELD OVERWRITE roles.*.name ON service TYPE option<string>;
 
 DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
     DEFAULT time::now()
@@ -15,10 +29,6 @@ DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
 DEFINE FIELD OVERWRITE state ON service TYPE option<object>;
 DEFINE FIELD OVERWRITE state.status ON service TYPE option<"ONLINE" | "OFFLINE">;
 DEFINE FIELD OVERWRITE state.last_seen ON service TYPE option<datetime>;
-
-DEFINE FIELD OVERWRITE metadata ON service TYPE option<object>;
-DEFINE FIELD OVERWRITE metadata.engine_version ON service TYPE option<string>;
-DEFINE FIELD OVERWRITE metadata.realm_version ON service TYPE option<string>;
 
 DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
     REFERENCE ON DELETE THEN {

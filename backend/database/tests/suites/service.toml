@@ -17,34 +17,151 @@ path = ""
 equals = true
 
 [[cases]]
-name = "service_types_cannot_be_empty"
+name = "schema_application_removes_legacy_service_types_fields"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:no_types SET name = 'no_types', service_types = [];"
-allow = false
-error_contains = "service_types"
+sql = "DEFINE FIELD OVERWRITE service_types ON TABLE service TYPE array<string>; DEFINE FIELD OVERWRITE service_types.* ON TABLE service TYPE string; REMOVE FIELD IF EXISTS service_types.* ON TABLE service; REMOVE FIELD IF EXISTS service_types ON TABLE service; LET $fields = (INFO FOR TABLE service).fields; RETURN $fields.service_types = NONE AND $fields['service_types.*'] = NONE;"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
 
 [[cases]]
-name = "service_types_cannot_be_duplicate"
+name = "roles_are_required"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:dup_types SET name = 'dup_types', service_types = ['engine', 'engine'];"
+sql = "CREATE service:no_roles SET name = 'no_roles';"
 allow = false
-error_contains = "service_types"
+error_contains = "roles"
 
 [[cases]]
-name = "service_types_are_limited_to_known_values"
+name = "roles_cannot_be_empty"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:bad_type SET name = 'bad_type', service_types = ['database'];"
+sql = "CREATE service:empty_roles SET name = 'empty_roles', roles = [];"
 allow = false
-error_contains = "service_types"
+error_contains = "roles-required-error"
+
+[[cases]]
+name = "role_type_is_required"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:no_role_type SET name = 'no_role_type', roles = [{ version: '1.0.0' }];"
+allow = false
+
+[[cases]]
+name = "role_type_must_be_known"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:bad_role_type SET name = 'bad_role_type', roles = [{ type: 'database', version: '1.0.0' }];"
+allow = false
+
+[[cases]]
+name = "role_version_is_required"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:no_version SET name = 'no_version', roles = [{ type: 'engine' }];"
+allow = false
+error_contains = "role-version-blank-error"
+
+[[cases]]
+name = "role_version_cannot_be_empty"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:empty_version SET name = 'empty_version', roles = [{ type: 'engine', version: '' }];"
+allow = false
+error_contains = "role-version-blank-error"
+
+[[cases]]
+name = "role_version_cannot_be_whitespace"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:blank_version SET name = 'blank_version', roles = [{ type: 'engine', version: '   ' }];"
+allow = false
+error_contains = "role-version-blank-error"
+
+[[cases]]
+name = "engine_role_cannot_have_name"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:named_engine SET name = 'named_engine', roles = [{ type: 'engine', name: 'voice', version: '1.0.0' }];"
+allow = false
+error_contains = "builtin-role-name-forbidden-error"
+
+[[cases]]
+name = "realm_role_cannot_have_name"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:named_realm SET name = 'named_realm', roles = [{ type: 'realm', name: 'voice', version: '1.0.0' }];"
+allow = false
+error_contains = "builtin-role-name-forbidden-error"
+
+[[cases]]
+name = "custom_role_requires_name"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:unnamed_custom SET name = 'unnamed_custom', roles = [{ type: 'custom', version: '1.0.0' }];"
+allow = false
+error_contains = "custom-role-name-required-error"
+
+[[cases]]
+name = "custom_role_name_must_be_canonical_slug"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:bad_custom_slug SET name = 'bad_custom_slug', roles = [{ type: 'custom', name: 'Voice Role', version: '1.0.0' }];"
+allow = false
+error_contains = "custom-role-name-invalid-error"
+
+[[cases]]
+name = "unknown_role_properties_are_rejected"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:extra_role_field SET name = 'extra_role_field', roles = [{ type: 'engine', version: '1.0.0', enabled: true }];"
+allow = false
+
+[[cases]]
+name = "engine_role_must_be_unique"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:duplicate_engine SET name = 'duplicate_engine', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'engine', version: '2.0.0' }];"
+allow = false
+error_contains = "engine-role-duplicate-error"
+
+[[cases]]
+name = "realm_role_must_be_unique"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:duplicate_realm SET name = 'duplicate_realm', roles = [{ type: 'realm', version: '1.0.0' }, { type: 'realm', version: '2.0.0' }];"
+allow = false
+error_contains = "realm-role-duplicate-error"
+
+[[cases]]
+name = "custom_role_names_must_be_unique"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:duplicate_custom SET name = 'duplicate_custom', roles = [{ type: 'custom', name: 'voice', version: '1.0.0' }, { type: 'custom', name: 'voice', version: '2.0.0' }];"
+allow = false
+error_contains = "custom-role-duplicate-error"
+
+[[cases]]
+name = "multiple_distinct_custom_roles_are_valid"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:custom_roles SET name = 'custom_roles', roles = [{ type: 'custom', name: 'voice', version: '1.0.0' }, { type: 'custom', name: 'analytics2', version: '1.0.0' }];"
+allow = true
+
+[[cases]]
+name = "combined_engine_and_realm_roles_are_valid"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:combined_roles SET name = 'combined_roles', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'realm', version: '1.0.0' }];"
+allow = true
 
 [[cases]]
 name = "registration_token_must_match_format"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:bad_token SET name = 'bad_token', service_types = ['engine'], registration = { token: 'bad-token', expires_at: time::now() + 1h };"
+sql = "CREATE service:bad_token SET name = 'bad_token', roles = [{ type: 'engine', version: '1.0.0' }], registration = { token: 'bad-token', expires_at: time::now() + 1h };"
 allow = false
 error_contains = "token"
 
@@ -52,31 +169,85 @@ error_contains = "token"
 name = "service_cannot_have_registration_and_organization"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:bound_and_registration SET name = 'bound_and_registration', service_types = ['engine'], organization = organization:acme, registration = { token: 'ABCDEF1234', expires_at: time::now() + 1h };"
+sql = "CREATE service:bound_and_registration SET name = 'bound_and_registration', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, registration = { token: 'ABCDEF1234', expires_at: time::now() + 1h };"
 allow = false
 error_contains = "organization and registration"
 
 [[cases]]
-name = "only_engines_can_have_runs_in"
+name = "plain_realm_cannot_have_runs_in"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:realm_with_runs_in SET name = 'realm_with_runs_in', service_types = ['realm'], runs_in = service:realm_unbound;"
+sql = "CREATE service:realm_with_runs_in SET name = 'realm_with_runs_in', roles = [{ type: 'realm', version: '1.0.0' }], runs_in = service:realm_unbound;"
 allow = false
-error_contains = "engine type"
+error_contains = "engine or custom role"
 
 [[cases]]
 name = "runs_in_target_must_be_realm"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:engine_target SET name = 'engine_target', service_types = ['engine']; CREATE service:engine_bad_runs_in SET name = 'engine_bad_runs_in', service_types = ['engine'], runs_in = service:engine_target;"
+sql = "CREATE service:engine_target SET name = 'engine_target', roles = [{ type: 'engine', version: '1.0.0' }]; CREATE service:engine_bad_runs_in SET name = 'engine_bad_runs_in', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:engine_target;"
 allow = false
-error_contains = "realm type"
+error_contains = "realm role"
+
+[[cases]]
+name = "custom_only_without_runs_in_is_valid"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:custom_standalone SET name = 'custom_standalone', roles = [{ type: 'custom', name: 'voice', version: '1.0.0' }];"
+allow = true
+
+[[cases]]
+name = "custom_only_can_run_in_realm"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:custom_in_realm SET name = 'custom_in_realm', roles = [{ type: 'custom', name: 'voice', version: '1.0.0' }], runs_in = service:realm_unbound;"
+allow = true
+
+[[cases]]
+name = "custom_only_cannot_be_runs_in_target"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:custom_target SET name = 'custom_target', roles = [{ type: 'custom', name: 'target', version: '1.0.0' }]; CREATE service:engine_custom_target SET name = 'engine_custom_target', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:custom_target;"
+allow = false
+error_contains = "realm role"
+
+[[cases]]
+name = "engine_plus_custom_can_run_in_realm"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:engine_custom_source SET name = 'engine_custom_source', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'custom', name: 'voice', version: '1.0.0' }], runs_in = service:realm_unbound;"
+allow = true
+
+[[cases]]
+name = "realm_plus_custom_can_be_runs_in_target"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:realm_custom_target SET name = 'realm_custom_target', roles = [{ type: 'realm', version: '1.0.0' }, { type: 'custom', name: 'voice', version: '1.0.0' }]; CREATE service:engine_realm_custom SET name = 'engine_realm_custom', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:realm_custom_target;"
+allow = true
+
+[[cases]]
+name = "removing_engine_with_custom_remaining_preserves_runs_in"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service:mutable_source SET name = 'mutable_source', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'custom', name: 'voice', version: '1.0.0' }], runs_in = service:realm_unbound; UPDATE service:mutable_source SET roles = [{ type: 'custom', name: 'voice', version: '1.0.0' }]; RETURN service:mutable_source.runs_in = service:realm_unbound; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "removing_final_source_role_with_runs_in_is_rejected"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:last_source SET name = 'last_source', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:realm_unbound; UPDATE service:last_source SET roles = [{ type: 'realm', version: '1.0.0' }];"
+allow = false
+error_contains = "engine or custom role"
 
 [[cases]]
 name = "runs_in_rejects_different_organizations"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:realm_beta SET name = 'realm_beta', service_types = ['realm'], organization = organization:beta; CREATE service:engine_cross_org SET name = 'engine_cross_org', service_types = ['engine'], organization = organization:acme, runs_in = service:realm_beta;"
+sql = "CREATE service:realm_beta SET name = 'realm_beta', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:beta; CREATE service:engine_cross_org SET name = 'engine_cross_org', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, runs_in = service:realm_beta;"
 allow = false
 error_contains = "same organization"
 
@@ -84,7 +255,7 @@ error_contains = "same organization"
 name = "runs_in_rejects_mixed_bound_unbound_lifecycle"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:engine_mixed SET name = 'engine_mixed', service_types = ['engine'], organization = organization:acme, runs_in = service:realm_unbound;"
+sql = "CREATE service:engine_mixed SET name = 'engine_mixed', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, runs_in = service:realm_unbound;"
 allow = false
 error_contains = "unbound or bound"
 
@@ -92,7 +263,7 @@ error_contains = "unbound or bound"
 name = "deleting_realm_unsets_engine_runs_in"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { CREATE service:realm_to_delete SET name = 'realm_to_delete', service_types = ['realm']; CREATE service:engine_to_unset SET name = 'engine_to_unset', service_types = ['engine'], runs_in = service:realm_to_delete; DELETE service:realm_to_delete; RETURN service:engine_to_unset.runs_in == NONE; };"
+sql = "RETURN { CREATE service:realm_to_delete SET name = 'realm_to_delete', roles = [{ type: 'realm', version: '1.0.0' }]; CREATE service:engine_to_unset SET name = 'engine_to_unset', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:realm_to_delete; DELETE service:realm_to_delete; RETURN service:engine_to_unset.runs_in == NONE; };"
 allow = true
 [[cases.assertions]]
 path = ""
@@ -102,7 +273,7 @@ equals = true
 name = "deleting_organization_unbinds_services"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { CREATE user:service_delete_owner SET email = 'service_delete_owner@example.com'; CREATE organization:service_delete_org SET name = 'service_delete_org', founder = user:service_delete_owner; CREATE service:service_delete_realm SET name = 'service_delete_realm', service_types = ['realm'], organization = organization:service_delete_org; DELETE organization:service_delete_org; RETURN service:service_delete_realm.organization == NONE; };"
+sql = "RETURN { CREATE user:service_delete_owner SET email = 'service_delete_owner@example.com'; CREATE organization:service_delete_org SET name = 'service_delete_org', founder = user:service_delete_owner; CREATE service:service_delete_realm SET name = 'service_delete_realm', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:service_delete_org; DELETE organization:service_delete_org; RETURN service:service_delete_realm.organization == NONE; };"
 allow = true
 [[cases.assertions]]
 path = ""
@@ -138,7 +309,7 @@ error_contains = "unbound or bound"
 name = "same_organization_bound_engine_and_realm_can_keep_runs_in"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { CREATE service:realm_pair SET name = 'realm_pair', service_types = ['realm'], organization = organization:acme; CREATE service:engine_pair SET name = 'engine_pair', service_types = ['engine'], organization = organization:acme, runs_in = service:realm_pair; RETURN service:engine_pair.runs_in = service:realm_pair; };"
+sql = "RETURN { CREATE service:realm_pair SET name = 'realm_pair', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:acme; CREATE service:engine_pair SET name = 'engine_pair', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, runs_in = service:realm_pair; RETURN service:engine_pair.runs_in = service:realm_pair; };"
 allow = true
 [[cases.assertions]]
 path = ""
@@ -148,7 +319,7 @@ equals = true
 name = "deleting_organization_with_bound_engine_realm_clears_contextual_runs_in"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { CREATE user:pair_owner SET email = 'pair_owner@example.com'; CREATE organization:pair_org SET name = 'pair_org', founder = user:pair_owner; CREATE service:pair_realm SET name = 'pair_realm', service_types = ['realm'], organization = organization:pair_org; CREATE service:pair_engine SET name = 'pair_engine', service_types = ['engine'], organization = organization:pair_org, runs_in = service:pair_realm; DELETE organization:pair_org; RETURN service:pair_engine.organization == NONE AND service:pair_realm.organization == NONE AND service:pair_engine.runs_in == NONE; };"
+sql = "RETURN { CREATE user:pair_owner SET email = 'pair_owner@example.com'; CREATE organization:pair_org SET name = 'pair_org', founder = user:pair_owner; CREATE service:pair_realm SET name = 'pair_realm', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:pair_org; CREATE service:pair_engine SET name = 'pair_engine', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:pair_org, runs_in = service:pair_realm; DELETE organization:pair_org; RETURN service:pair_engine.organization == NONE AND service:pair_realm.organization == NONE AND service:pair_engine.runs_in == NONE; };"
 allow = true
 [[cases.assertions]]
 path = ""

@@ -15,7 +15,7 @@ RELATE user:bob->member_of->organization:acme SET roles = [$member_role.id];
 
 CREATE organization_join_code:manual_acme SET organization = organization:acme, created_by = user:alice;
 
-CREATE service:realm_acme SET name = "realm_acme", service_types = ["realm"], organization = organization:acme;
-CREATE service:engine_acme SET name = "engine_acme", service_types = ["engine"], organization = organization:acme, runs_in = service:realm_acme;
-CREATE service:realm_unbound SET name = "realm_unbound", service_types = ["realm"];
-CREATE service:engine_unbound SET name = "engine_unbound", service_types = ["engine"], runs_in = service:realm_unbound;
+CREATE service:realm_acme SET name = "realm_acme", roles = [{ type: "realm", version: "1.0.0" }], organization = organization:acme;
+CREATE service:engine_acme SET name = "engine_acme", roles = [{ type: "engine", version: "1.0.0" }], organization = organization:acme, runs_in = service:realm_acme;
+CREATE service:realm_unbound SET name = "realm_unbound", roles = [{ type: "realm", version: "1.0.0" }];
+CREATE service:engine_unbound SET name = "engine_unbound", roles = [{ type: "engine", version: "1.0.0" }], runs_in = service:realm_unbound;

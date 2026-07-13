@@ -31,7 +31,7 @@
     },
     {
       "path": "database/schema/organization/organization_role.surql",
-      "hash": "04777003d2f63f135227638fafb8a4cc2648695b8b7771253b28d14fd446d400"
+      "hash": "1d9e6635ef9368d11fbf8fcb1c3c720c406323b28d7f01425cf2fe4676cc16c5"
     },
     {
       "path": "database/schema/organization/request_to_join.surql",
@@ -39,15 +39,15 @@
     },
     {
       "path": "database/schema/service/functions.surql",
-      "hash": "f7c1d2617b9befb381057e12fd187a74d2aed06871259df90e3736e16b39a047"
+      "hash": "6e79010fc9e6d4846744da623efc9c1af761bede447d0760af2b659c4e10c1a0"
     },
     {
       "path": "database/schema/service/service.surql",
-      "hash": "72d55b16ca3d0d68f3ba1cb0a049084599fc7f1c1a4cc097b88a7819deab8685"
+      "hash": "91af834daa49c529d332d8aace98871d09bf8a69dacbb7f9df24bd4e70778771"
     },
     {
       "path": "database/schema/user.surql",
-      "hash": "e4f8a9f119f34a61480d01a8ee786afa8b394c07e8cd735dfaff261298879ed1"
+      "hash": "d7e9699f51d435ef5eb0ad6029ef9cb35f56f0085f72475a04120825cf190844"
     }
   ]
 }

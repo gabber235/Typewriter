@@ -1,0 +1,5 @@
+#V2
+RETURN fn::service::valid_roles([{ type: "engine", version: "readiness-check" }]);
+INFO FOR TABLE service;
+RETURN fn::service::valid_roles([]);
+INFO FOR TABLE service;

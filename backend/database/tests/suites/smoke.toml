@@ -22,5 +22,8 @@ contains = [
   "service",
   "fn::organization::member",
   "fn::organization::founder_member",
+  "fn::service::has_role",
+  "fn::service::valid_role",
+  "fn::service::valid_roles",
   "fn::service::valid_runs_in",
 ]

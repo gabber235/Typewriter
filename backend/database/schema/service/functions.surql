@@ -1,12 +1,76 @@
+DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
+    IF !array::all(object::keys($role), |$key| $key IN ["type", "version", "name"]) {
+        THROW "role-unknown-property-error"
+    };
+
+    IF $role.type NOT IN ["engine", "realm", "custom"] {
+        THROW "role-type-invalid-error"
+    };
+
+    IF $role.version = NONE OR string::len(string::trim($role.version)) < 1 {
+        THROW "role-version-blank-error"
+    };
+
+    IF $role.type = "custom" {
+        IF $role.name = NONE {
+            THROW "custom-role-name-required-error"
+        };
+        IF !fn::is_id($role.name) {
+            THROW "custom-role-name-invalid-error"
+        };
+        RETURN true;
+    };
+
+    IF $role.name != NONE {
+        THROW "builtin-role-name-forbidden-error"
+    };
+
+    RETURN true;
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::valid_roles($roles: array<object>) -> bool {
+    IF array::len($roles) < 1 {
+        THROW "roles-required-error"
+    };
+
+    IF !array::all($roles, |$role| fn::service::valid_role($role)) {
+        THROW "role-invalid-error"
+    };
+
+    LET $engines = $roles.filter(|$role| $role.type = "engine");
+    LET $realms = $roles.filter(|$role| $role.type = "realm");
+    LET $custom = $roles.filter(|$role| $role.type = "custom");
+
+    IF array::len($engines) > 1 {
+        THROW "engine-role-duplicate-error"
+    };
+
+    IF array::len($realms) > 1 {
+        THROW "realm-role-duplicate-error"
+    };
+
+    LET $custom_slugs = $custom.map(|$role| $role.name);
+    IF array::len(array::distinct($custom_slugs)) != array::len($custom_slugs) {
+        THROW "custom-role-duplicate-error"
+    };
+
+    RETURN true;
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::has_role($service: object, $role_type: string) -> bool {
+    RETURN array::any($service.roles, |$role| $role.type = $role_type);
+};
+
 DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: option<record<service>>) -> bool {
     IF $realm == NONE { RETURN true };
 
-    IF !("engine" IN $service.service_types) {
-        THROW "Only services with engine type can have runs_in set"
+    LET $can_run_in = fn::service::has_role($service, "engine") OR fn::service::has_role($service, "custom");
+    IF !$can_run_in {
+        THROW "Only services with an engine or custom role can have runs_in set"
     };
 
-    IF !("realm" IN $realm.service_types) {
-        THROW "runs_in must reference a service with realm type"
+    IF !fn::service::has_role({ roles: $realm.roles }, "realm") {
+        THROW "runs_in must reference a service with a realm role"
     };
 
     LET $service_org = $service.organization;
@@ -19,10 +83,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: o
 };
 
 DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
-    IF array::len($service.service_types) < 1 { THROW "Service must have at least one type" };
-    IF array::len(array::distinct($service.service_types)) != array::len($service.service_types) {
-        THROW "Service types must be unique"
-    };
+    fn::service::valid_roles($service.roles);
     IF $service.organization != NONE AND $service.registration != NONE {
         THROW "Service cannot have both organization and registration set"
     };

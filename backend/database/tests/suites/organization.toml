@@ -128,7 +128,7 @@ RETURN {
     CREATE user:delete_owner SET email = 'delete_owner@example.com';
     CREATE organization:delete_org SET name = 'delete_org', founder = user:delete_owner;
     CREATE organization_join_code:delete_code SET organization = organization:delete_org;
-    CREATE service:delete_realm SET name = 'delete_realm', service_types = ['realm'], organization = organization:delete_org;
+    CREATE service:delete_realm SET name = 'delete_realm', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:delete_org;
     DELETE organization:delete_org;
 
     RETURN (SELECT VALUE id FROM ONLY organization:delete_org) == NONE
