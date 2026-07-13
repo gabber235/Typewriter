@@ -7,3 +7,5 @@ resources:
   - ../../organization/user-organization/deploy/production
   - ../../organization/organization-members/deploy/production
   - ../../organization/organization-roles/deploy/production
+  - ../../service/identity/deploy/production
+  - ../../service/registration/deploy/production

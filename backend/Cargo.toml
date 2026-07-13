@@ -7,6 +7,8 @@ members = [
   "organization/organization-members",
   "organization/organization-roles",
   "organization/user-organization",
+  "service/identity",
+  "service/registration",
   "wasmcloud-utils",
   "wasmcloud-utils-macros"
 ]
@@ -18,12 +20,18 @@ repository = "https://github.com/gabber235/Typewriter"
 
 [workspace.dependencies]
 base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
 nats-jwt-rs = "0.1"
 nkeys = "0.4"
+prost = "0.13"
+prost-types = "0.13"
+regex = "1.12.2"
 serde = { version = "1", features = ["derive"] }
+serde_cbor = "0.11"
 serde_json = "1"
 url = "2"
+uuid = { version = "1", features = ["v4"] }
 
 skir-client = "0.1"
 surrealdb-component-sdk = "0.7"
@@ -33,18 +41,11 @@ wasmcloud-utils-macros = { path = "wasmcloud-utils-macros" }
 wstd = "0.6"
 
 opentelemetry = "0.31"
-otel-wasi = {
-  package = "otel-wasi",
-  git = "https://github.com/Seamlezz/otel-wasi",
-  branch = "main"
-}
+otel-wasi = { package = "otel-wasi", git = "https://github.com/Seamlezz/otel-wasi", branch = "main" }
 tracing = "0.1"
 tracing-opentelemetry = "0.32"
 
-wit-bindgen = {
-  version = "0.58",
-  features = ["async-spawn", "inter-task-wakeup"]
-}
+wit-bindgen = { version = "0.58", features = ["async-spawn", "inter-task-wakeup"] }
 
 convert_case = "0.6"
 proc-macro2 = "1"
@@ -53,9 +54,4 @@ rstest = "0.26.1"
 syn = { version = "2", features = ["full"] }
 
 [workspace.metadata.dylint]
-libraries = [
-  {
-    git = "https://github.com/Seamlezz/otel-wasi",
-    pattern = "otel-wasi-dylint"
-  }
-]
+libraries = [{ git = "https://github.com/Seamlezz/otel-wasi", pattern = "otel-wasi-dylint" }]

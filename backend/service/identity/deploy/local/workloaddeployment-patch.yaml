@@ -1,0 +1,13 @@
+- op: add
+  path: /spec/template/spec/components/0/image
+  value: oci.local.seamlezz.net/typewriter/service-identity:latest
+- op: add
+  path: /spec/template/spec/components/0/imagePullPolicy
+  value: Always
+- op: replace
+  path: /spec/template/spec/hostInterfaces/1/config/host
+  value: api.tw.seamlezz.net
+- op: add
+  path: /spec/template/spec/components/0/localResources/allowedHosts
+  value:
+    - "auth.tw.seamlezz.net"

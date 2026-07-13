@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: service-identity
+  namespace: typewriter
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - api.typewritermc.com
+      secretName: api-typewritermc-com-tls
+  rules:
+    - host: api.typewritermc.com
+      http:
+        paths:
+          - path: /service/identity/issue
+            pathType: Exact
+            backend:
+              service:
+                name: service-identity
+                port:
+                  number: 80

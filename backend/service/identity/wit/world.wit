@@ -1,13 +1,9 @@
-package typewriter:service-identity;
-
-world service-identity {
-  // HTTP handler for REST endpoint
-  import wasi:http/outgoing-handler@0.2.2;
-  export wasi:http/incoming-handler@0.2.2;
-
-  // Logging
-  import wasi:logging/logging@0.1.0-draft;
-
-  // SurrealDB
-  import seamlezz:surrealdb/call@0.1.0;
+package typewriter:service-identity@0.1.0;
+world component {
+  import wasi:http/types@0.3.0;
+  import wasi:http/client@0.3.0;
+  import wasi:clocks/types@0.3.0;
+  import wasi:random/random@0.3.0;
+  import seamlezz:surrealdb/call@0.2.0;
+  export wasi:http/handler@0.3.0;
 }

@@ -1,255 +1,319 @@
-use std::io::{Read as _, Write as _};
-use wasmcloud_component::{
-    debug, error, info, trace,
-    wasi::http::{
-        outgoing_handler::{handle, OutgoingRequest, RequestOptions},
-        types::{Fields, Method, Scheme},
-    },
-};
+use serde::{Deserialize, Serialize};
+use url::Url;
+use wit_bindgen::spawn_local;
 
-#[derive(Debug, serde::Serialize)]
-struct CreateServiceAccountRequest {
-    name: String,
+use crate::bindings;
+use crate::bindings::wasi::http::types::{
+    Fields, Method, Request, RequestOptions, Response, Scheme,
+};
+use crate::identity::{AccountProvider, ProviderError, ProvisionedAccount};
+
+const MAX_RESPONSE_BODY: usize = 64 * 1024;
+
+pub struct AuthentikClient;
+
+struct Config {
+    base_url: Url,
+    token: String,
+}
+
+#[derive(Serialize)]
+struct CreateRequest<'a> {
+    name: &'a str,
     create_group: bool,
     expiring: bool,
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct ServiceAccountResponse {
-    pub username: String,
-    pub token: String,
-    pub user_uid: String,
-    #[allow(dead_code)]
-    pub user_pk: i64,
+#[derive(Deserialize, Debug, PartialEq)]
+struct CreateResponse {
+    username: String,
+    token: String,
+    user_uid: String,
+    user_pk: i64,
 }
 
-#[derive(Debug)]
-pub enum AuthentikError {
-    EnvVarMissing(String),
-    HttpError(String),
-    ParseError(String),
-    ApiError { status: u16, message: String },
+impl Config {
+    fn load() -> Result<Self, ProviderError> {
+        let base_url =
+            Url::parse(&std::env::var("AUTHENTIK_URL").map_err(|_| ProviderError::Internal)?)
+                .map_err(|_| ProviderError::Internal)?;
+
+        if !matches!(base_url.scheme(), "http" | "https") || base_url.host_str().is_none() {
+            return Err(ProviderError::Internal);
+        }
+
+        let token = std::env::var("AUTHENTIK_TOKEN").map_err(|_| ProviderError::Internal)?;
+        if token.is_empty() {
+            return Err(ProviderError::Internal);
+        }
+
+        Ok(Self { base_url, token })
+    }
 }
 
-impl std::fmt::Display for AuthentikError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AuthentikError::EnvVarMissing(var) => {
-                write!(f, "Missing environment variable: {}", var)
-            }
-            AuthentikError::HttpError(msg) => write!(f, "HTTP error: {}", msg),
-            AuthentikError::ParseError(msg) => write!(f, "Parse error: {}", msg),
-            AuthentikError::ApiError { status, message } => {
-                write!(f, "API error (status {}): {}", status, message)
-            }
+impl AccountProvider for AuthentikClient {
+    #[tracing::instrument(skip(self, username))]
+    async fn create_account(&self, username: &str) -> Result<ProvisionedAccount, ProviderError> {
+        otel_wasi::attribute!("provider.operation" = "create");
+        let config = Config::load()?;
+        let body = create_request_json(username)?;
+        let response = send(
+            &config,
+            Method::Post,
+            "/api/v3/core/users/service_account/",
+            Some(body),
+        )
+        .await?;
+        let status = response.get_status_code();
+        otel_wasi::attribute!("provider.response.status_code" = status as i64);
+        otel_wasi::main_attribute!("identity.provider.create.status_code" = status as i64);
+        classify_create_status(status)?;
+        let body = response_body(response).await?;
+        let result = parse_create_response(&body)?;
+        Ok(ProvisionedAccount {
+            username: result.username,
+            token: result.token,
+            user_uid: result.user_uid,
+            user_pk: result.user_pk,
+        })
+    }
+
+    #[tracing::instrument(skip_all)]
+    async fn delete_account(&self, user_pk: i64) -> Result<(), ProviderError> {
+        otel_wasi::attribute!("provider.operation" = "delete");
+        let config = Config::load()?;
+        let response = send(
+            &config,
+            Method::Delete,
+            &format!("/api/v3/core/users/{user_pk}/"),
+            None,
+        )
+        .await?;
+
+        let status = response.get_status_code();
+        otel_wasi::attribute!("provider.response.status_code" = status as i64);
+        otel_wasi::main_attribute!("identity.provider.delete.status_code" = status as i64);
+
+        if status == 204 {
+            Ok(())
+        } else if status >= 500 {
+            Err(ProviderError::Unavailable)
+        } else {
+            Err(ProviderError::Internal)
         }
     }
 }
 
-impl std::error::Error for AuthentikError {}
-
-pub fn create_service_account() -> Result<ServiceAccountResponse, AuthentikError> {
-    debug!("Creating service account");
-
-    let api_url = std::env::var("AUTHENTIK_URL")
-        .map_err(|_| AuthentikError::EnvVarMissing("AUTHENTIK_URL not set".to_string()))?;
-
-    let api_token = std::env::var("AUTHENTIK_TOKEN")
-        .map_err(|_| AuthentikError::EnvVarMissing("AUTHENTIK_TOKEN not set".to_string()))?;
-
-    debug!("Using Authentik API URL: {}", api_url);
-
-    let url = parse_url(&api_url)?;
-
-    let unique_id = uuid::Uuid::new_v4().to_string();
-    let service_name = format!("service-{}", &unique_id);
-
-    let request_body = CreateServiceAccountRequest {
-        name: service_name,
+fn create_request_json(name: &str) -> Result<Vec<u8>, ProviderError> {
+    serde_json::to_vec(&CreateRequest {
+        name,
         create_group: false,
         expiring: false,
-    };
+    })
+    .map_err(|_| ProviderError::Internal)
+}
 
-    let body_json = serde_json::to_string(&request_body)
-        .map_err(|e| AuthentikError::ParseError(format!("Failed to serialize request: {}", e)))?;
+fn classify_create_status(status: u16) -> Result<(), ProviderError> {
+    match status {
+        200 => Ok(()),
+        500..=599 => Err(ProviderError::Unavailable),
+        _ => Err(ProviderError::Internal),
+    }
+}
 
-    let body_bytes = body_json.as_bytes();
-    let content_length = body_bytes.len();
+fn parse_create_response(body: &[u8]) -> Result<CreateResponse, ProviderError> {
+    serde_json::from_slice(body).map_err(|_| ProviderError::Internal)
+}
 
-    debug!("Request body: {}", body_json);
-    trace!("Request body length: {} bytes", content_length);
+#[tracing::instrument(skip_all)]
+async fn send(
+    config: &Config,
+    method: Method,
+    path: &str,
+    body: Option<Vec<u8>>,
+) -> Result<Response, ProviderError> {
+    otel_wasi::attribute!(
+        "provider.operation" = "send",
+        "http.request.method" = method_name(&method),
+        "http.route" = path.to_string(),
+        "http.request.body.size" = body.as_ref().map_or(0, Vec::len) as i64,
+    );
 
     let headers = Fields::new();
     headers
-        .set(&"content-type".to_string(), &[b"application/json".to_vec()])
-        .map_err(|_| AuthentikError::HttpError("Failed to set content-type header".to_string()))?;
-
-    headers
         .set(
-            &"content-length".to_string(),
-            &[content_length.to_string().into_bytes()],
+            "authorization",
+            &[format!("Bearer {}", config.token).into_bytes()],
         )
-        .map_err(|_| {
-            AuthentikError::HttpError("Failed to set content-length header".to_string())
-        })?;
-
-    let auth_header = format!("Bearer {}", api_token);
+        .map_err(|_| ProviderError::Internal)?;
     headers
-        .set(
-            &"authorization".to_string(),
-            &[auth_header.as_bytes().to_vec()],
-        )
-        .map_err(|_| AuthentikError::HttpError("Failed to set authorization header".to_string()))?;
+        .set("content-type", &[b"application/json".to_vec()])
+        .map_err(|_| ProviderError::Internal)?;
 
-    trace!(
-        "Request headers: content-type=application/json, content-length={}, authorization=Bearer ***",
-        content_length
-    );
-
-    let request = OutgoingRequest::new(headers);
-
-    request
-        .set_method(&Method::Post)
-        .map_err(|_| AuthentikError::HttpError("Failed to set POST method".to_string()))?;
-
-    request
-        .set_scheme(Some(&url.scheme))
-        .map_err(|_| AuthentikError::HttpError("Failed to set scheme".to_string()))?;
-
-    request
-        .set_authority(Some(&url.authority))
-        .map_err(|_| AuthentikError::HttpError("Failed to set authority".to_string()))?;
-
-    let path = "/api/v3/core/users/service_account/";
-    request
-        .set_path_with_query(Some(path))
-        .map_err(|_| AuthentikError::HttpError("Failed to set path".to_string()))?;
-
-    trace!(
-        "Request: POST {}://{}{} (body: {} bytes)",
-        match url.scheme {
-            Scheme::Https => "https",
-            Scheme::Http => "http",
-            _ => "unknown",
-        },
-        url.authority,
-        path,
-        content_length
-    );
-
-    let request_body_resource = request
-        .body()
-        .map_err(|_| AuthentikError::HttpError("Failed to get request body".to_string()))?;
-
-    let mut output_stream = request_body_resource
-        .write()
-        .map_err(|_| AuthentikError::HttpError("Failed to get output stream".to_string()))?;
-
-    output_stream
-        .write_all(body_bytes)
-        .map_err(|e| AuthentikError::HttpError(format!("Failed to write request body: {}", e)))?;
-
-    trace!("Wrote {} bytes to request body", content_length);
-
-    output_stream
-        .flush()
-        .map_err(|e| AuthentikError::HttpError(format!("Failed to flush output stream: {}", e)))?;
-
-    trace!("Flushed output stream");
-
-    drop(output_stream);
-    trace!("Dropped output stream, finishing request body");
-
-    wasmcloud_component::wasi::http::types::OutgoingBody::finish(request_body_resource, None)
-        .map_err(|_| AuthentikError::HttpError("Failed to finish request body".to_string()))?;
-
-    trace!("Request body finished, sending request");
-
-    let options = RequestOptions::new();
-    let future_response = handle(request, Some(options))
-        .map_err(|e| AuthentikError::HttpError(format!("Failed to send request: {:?}", e)))?;
-
-    trace!("Request sent, waiting for response");
-
-    // TODO: with wasi preview 3 we should be able to make this a proper async call
-    future_response.subscribe().block();
-
-    let incoming_response = future_response
-        .get()
-        .ok_or_else(|| AuthentikError::HttpError("Failed to get response future".to_string()))?
-        .map_err(|e| AuthentikError::HttpError(format!("Request failed: {:?}", e)))?
-        .map_err(|e| AuthentikError::HttpError(format!("Request error: {:?}", e)))?;
-
-    let status = incoming_response.status();
-    debug!("Received response with status: {}", status);
-
-    let body_stream = incoming_response
-        .consume()
-        .map_err(|_| AuthentikError::HttpError("Failed to consume response body".to_string()))?;
-
-    let mut input_stream = body_stream
-        .stream()
-        .map_err(|_| AuthentikError::HttpError("Failed to get input stream".to_string()))?;
-
-    let mut response_text = String::new();
-    input_stream
-        .read_to_string(&mut response_text)
-        .map_err(|e| AuthentikError::HttpError(format!("Failed to read response body: {}", e)))?;
-
-    debug!("Response body: '{}'", response_text);
-
-    if status < 200 || status >= 300 {
-        error!(
-            "Authentik API returned status code {}: '{}'",
-            status, response_text
-        );
-        return Err(AuthentikError::ApiError {
-            status,
-            message: response_text,
+    let (stream, body_result) = if let Some(bytes) = body {
+        let (mut tx, rx) = bindings::wit_stream::new();
+        let (tx_done, rx_done) = bindings::wit_future::new(|| todo!());
+        spawn_local(async move {
+            tx.write_all(bytes).await;
+            drop(tx);
+            let _ = tx_done.write(Ok(None)).await;
         });
-    }
-
-    let response: ServiceAccountResponse = serde_json::from_str(&response_text)
-        .map_err(|e| AuthentikError::ParseError(format!("Failed to parse response: {}", e)))?;
-
-    info!(
-        "Successfully created service account: {}",
-        response.username
-    );
-
-    Ok(response)
-}
-
-struct ParsedUrl {
-    scheme: Scheme,
-    authority: String,
-}
-
-fn parse_url(url: &str) -> Result<ParsedUrl, AuthentikError> {
-    let url = url.trim_end_matches('/');
-
-    let (scheme_str, rest) = if let Some(rest) = url.strip_prefix("https://") {
-        ("https", rest)
-    } else if let Some(rest) = url.strip_prefix("http://") {
-        ("http", rest)
+        (Some(rx), rx_done)
     } else {
-        return Err(AuthentikError::ParseError(
-            "URL must start with http:// or https://".to_string(),
-        ));
+        let (tx_done, rx_done) = bindings::wit_future::new(|| todo!());
+        spawn_local(async move {
+            let _ = tx_done.write(Ok(None)).await;
+        });
+        (None, rx_done)
     };
 
-    let scheme = if scheme_str == "https" {
+    let options = RequestOptions::new();
+    options
+        .set_connect_timeout(Some(5_000_000_000))
+        .map_err(|_| ProviderError::Internal)?;
+    options
+        .set_first_byte_timeout(Some(10_000_000_000))
+        .map_err(|_| ProviderError::Internal)?;
+    options
+        .set_between_bytes_timeout(Some(5_000_000_000))
+        .map_err(|_| ProviderError::Internal)?;
+
+    let (request, transmission) = Request::new(headers, stream, body_result, Some(options));
+    request
+        .set_method(&method)
+        .map_err(|_| ProviderError::Internal)?;
+    request
+        .set_path_with_query(Some(path))
+        .map_err(|_| ProviderError::Internal)?;
+
+    let scheme = if config.base_url.scheme() == "https" {
         Scheme::Https
     } else {
         Scheme::Http
     };
 
-    let authority = if let Some(idx) = rest.find('/') {
-        let (auth, _) = rest.split_at(idx);
-        auth.to_string()
-    } else {
-        rest.to_string()
-    };
+    request
+        .set_scheme(Some(&scheme))
+        .map_err(|_| ProviderError::Internal)?;
+    request
+        .set_authority(Some(config.base_url.authority()))
+        .map_err(|_| ProviderError::Internal)?;
 
-    Ok(ParsedUrl { scheme, authority })
+    let response = bindings::wasi::http::client::send(request)
+        .await
+        .map_err(|_| ProviderError::Unavailable)?;
+
+    transmission.await.map_err(|_| ProviderError::Unavailable)?;
+
+    Ok(response)
+}
+
+fn method_name(method: &Method) -> String {
+    match method {
+        Method::Get => "GET".to_string(),
+        Method::Head => "HEAD".to_string(),
+        Method::Post => "POST".to_string(),
+        Method::Put => "PUT".to_string(),
+        Method::Delete => "DELETE".to_string(),
+        Method::Connect => "CONNECT".to_string(),
+        Method::Options => "OPTIONS".to_string(),
+        Method::Trace => "TRACE".to_string(),
+        Method::Patch => "PATCH".to_string(),
+        Method::Other(value) => value.clone(),
+    }
+}
+
+fn push_bounded(body: &mut Vec<u8>, byte: u8, limit: usize) -> Result<(), ()> {
+    if body.len() >= limit {
+        return Err(());
+    }
+    body.push(byte);
+    Ok(())
+}
+
+#[tracing::instrument(skip_all)]
+async fn response_body(response: Response) -> Result<Vec<u8>, ProviderError> {
+    otel_wasi::attribute!("provider.operation" = "read_response_body");
+
+    let (done_tx, done_rx) = bindings::wit_future::new(|| todo!());
+    let (mut stream, trailers) = Response::consume_body(response, done_rx);
+    let mut body = Vec::new();
+
+    while let Some(byte) = stream.next().await {
+        if push_bounded(&mut body, byte, MAX_RESPONSE_BODY).is_err() {
+            drop(stream);
+            done_tx
+                .write(Err(
+                    crate::bindings::wasi::http::types::ErrorCode::HttpResponseBodySize(Some(
+                        MAX_RESPONSE_BODY as u64,
+                    )),
+                ))
+                .await
+                .map_err(|_| ProviderError::Unavailable)?;
+            drop(trailers);
+            return Err(ProviderError::Internal);
+        }
+    }
+
+    drop(stream);
+    done_tx
+        .write(Ok(()))
+        .await
+        .map_err(|_| ProviderError::Unavailable)?;
+
+    trailers.await.map_err(|_| ProviderError::Unavailable)?;
+    otel_wasi::attribute!("http.response.body.size" = body.len() as i64);
+
+    Ok(body)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_json_matches_authentik_contract() {
+        let value: serde_json::Value =
+            serde_json::from_slice(&create_request_json("service-abc").unwrap()).unwrap();
+        assert_eq!(
+            value,
+            serde_json::json!({"name":"service-abc","create_group":false,"expiring":false})
+        );
+    }
+
+    #[test]
+    fn parses_success_response() {
+        let parsed = parse_create_response(
+            br#"{"username":"service-a","token":"secret","user_uid":"uid","user_pk":42}"#,
+        )
+        .unwrap();
+        assert_eq!(parsed.username, "service-a");
+        assert_eq!(parsed.user_uid, "uid");
+        assert_eq!(parsed.user_pk, 42);
+    }
+
+    #[test]
+    fn bounded_body_rejects_first_byte_past_limit() {
+        let mut body = Vec::new();
+        assert!(push_bounded(&mut body, 1, 1).is_ok());
+        assert!(push_bounded(&mut body, 2, 1).is_err());
+        assert_eq!(body, vec![1]);
+    }
+
+    #[test]
+    fn classifies_every_status_class() {
+        assert!(classify_create_status(200).is_ok());
+        for status in [100, 199, 201, 299, 300, 399, 400, 499] {
+            assert!(matches!(
+                classify_create_status(status),
+                Err(ProviderError::Internal)
+            ));
+        }
+        for status in 500..=599 {
+            assert!(matches!(
+                classify_create_status(status),
+                Err(ProviderError::Unavailable)
+            ));
+        }
+    }
 }
