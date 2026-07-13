@@ -1,4 +1,4 @@
-package seamlezz:organization-members@0.1.0;
+package typewriter:organization-members@0.1.0;
 
 world organization-members {
     import seamlezz:surrealdb/call@0.2.0;

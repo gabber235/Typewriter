@@ -11,9 +11,11 @@ enum ServiceBinding {
 method GetServiceStatus(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   status: struct {
     binding: ServiceBinding;
   };
+
   service_not_found: struct {};
-  internal_error: struct {};
 } = 955610;

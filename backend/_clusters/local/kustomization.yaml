@@ -6,3 +6,4 @@ resources:
   - ../../access/auth-typewriter-permissions/deploy/local
   - ../../organization/user-organization/deploy/local
   - ../../organization/organization-members/deploy/local
+  - ../../organization/organization-roles/deploy/local

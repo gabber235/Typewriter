@@ -237,6 +237,11 @@ class OrganizationRoles extends _$OrganizationRoles {
             return value.map(OrganizationRole.fromSkir).toList();
           case skir.WatchOrganizationRolesResponse_addWrapper(:final value):
             return [...?previous, OrganizationRole.fromSkir(value)];
+          case skir.WatchOrganizationRolesResponse_updateWrapper(:final value):
+            return previous.updateByKey(
+              (role) => role.roleId,
+              OrganizationRole.fromSkir(value),
+            );
           case skir.WatchOrganizationRolesResponse_removeWrapper(:final value):
             return previous?.where((role) => role.roleId != value).toList() ??
                 [];

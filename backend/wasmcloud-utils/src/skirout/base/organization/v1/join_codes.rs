@@ -26,25 +26,23 @@ pub struct JoinCode_AutoAccept {
 
 impl JoinCode_AutoAccept {
     pub fn default_ref() -> &'static JoinCode_AutoAccept {
-        static D: std::sync::LazyLock<JoinCode_AutoAccept> =
-            std::sync::LazyLock::new(JoinCode_AutoAccept::default);
+        static D: std::sync::LazyLock<JoinCode_AutoAccept> = std::sync::LazyLock::new(JoinCode_AutoAccept::default);
         &D
     }
 }
 
 impl JoinCode_AutoAccept {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<JoinCode_AutoAccept> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<JoinCode_AutoAccept>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "JoinCode.AutoAccept",
-                "",
-                |x: &JoinCode_AutoAccept| &x._unrecognized,
-                |x: &mut JoinCode_AutoAccept, u| x._unrecognized = u,
-            )
-        });
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<JoinCode_AutoAccept>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "JoinCode.AutoAccept",
+                    "",
+                    |x: &JoinCode_AutoAccept| &x._unrecognized,
+                    |x: &mut JoinCode_AutoAccept, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<JoinCode_AutoAccept> {
@@ -115,39 +113,33 @@ impl JoinCode {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WatchOrganizationJoinCodesRequest {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<WatchOrganizationJoinCodesRequest>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchOrganizationJoinCodesRequest>>,
 }
 
 impl WatchOrganizationJoinCodesRequest {
     pub fn default_ref() -> &'static WatchOrganizationJoinCodesRequest {
-        static D: std::sync::LazyLock<WatchOrganizationJoinCodesRequest> =
-            std::sync::LazyLock::new(WatchOrganizationJoinCodesRequest::default);
+        static D: std::sync::LazyLock<WatchOrganizationJoinCodesRequest> = std::sync::LazyLock::new(WatchOrganizationJoinCodesRequest::default);
         &D
     }
 }
 
 impl WatchOrganizationJoinCodesRequest {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesRequest> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "WatchOrganizationJoinCodesRequest",
-                "",
-                |x: &WatchOrganizationJoinCodesRequest| &x._unrecognized,
-                |x: &mut WatchOrganizationJoinCodesRequest, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "WatchOrganizationJoinCodesRequest",
+                    "",
+                    |x: &WatchOrganizationJoinCodesRequest| &x._unrecognized,
+                    |x: &mut WatchOrganizationJoinCodesRequest, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationJoinCodesRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            WatchOrganizationJoinCodesRequest::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationJoinCodesRequest::_adapter())
     }
 }
 
@@ -158,44 +150,33 @@ impl WatchOrganizationJoinCodesRequest {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WatchOrganizationJoinCodesResponse_InternalError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<WatchOrganizationJoinCodesResponse_InternalError>,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchOrganizationJoinCodesResponse_InternalError>>,
 }
 
 impl WatchOrganizationJoinCodesResponse_InternalError {
     pub fn default_ref() -> &'static WatchOrganizationJoinCodesResponse_InternalError {
-        static D: std::sync::LazyLock<WatchOrganizationJoinCodesResponse_InternalError> =
-            std::sync::LazyLock::new(WatchOrganizationJoinCodesResponse_InternalError::default);
+        static D: std::sync::LazyLock<WatchOrganizationJoinCodesResponse_InternalError> = std::sync::LazyLock::new(WatchOrganizationJoinCodesResponse_InternalError::default);
         &D
     }
 }
 
 impl WatchOrganizationJoinCodesResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        WatchOrganizationJoinCodesResponse_InternalError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                WatchOrganizationJoinCodesResponse_InternalError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "WatchOrganizationJoinCodesResponse.InternalError",
-                "",
-                |x: &WatchOrganizationJoinCodesResponse_InternalError| &x._unrecognized,
-                |x: &mut WatchOrganizationJoinCodesResponse_InternalError, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesResponse_InternalError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesResponse_InternalError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "WatchOrganizationJoinCodesResponse.InternalError",
+                    "",
+                    |x: &WatchOrganizationJoinCodesResponse_InternalError| &x._unrecognized,
+                    |x: &mut WatchOrganizationJoinCodesResponse_InternalError, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<WatchOrganizationJoinCodesResponse_InternalError> {
+    pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationJoinCodesResponse_InternalError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            WatchOrganizationJoinCodesResponse_InternalError::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationJoinCodesResponse_InternalError::_adapter())
     }
 }
 
@@ -206,10 +187,10 @@ impl WatchOrganizationJoinCodesResponse_InternalError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum WatchOrganizationJoinCodesResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchOrganizationJoinCodesResponse>>),
+    InternalError(Box<WatchOrganizationJoinCodesResponse_InternalError>),
     List(Vec<JoinCode>),
     Add(Box<JoinCode>),
     Remove(Box<crate::skirout::base::kernel::v1::record_id::RecordId>),
-    InternalError(Box<WatchOrganizationJoinCodesResponse_InternalError>),
 }
 
 impl Default for WatchOrganizationJoinCodesResponse {
@@ -219,36 +200,29 @@ impl Default for WatchOrganizationJoinCodesResponse {
 }
 
 impl WatchOrganizationJoinCodesResponse {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<WatchOrganizationJoinCodesResponse> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<WatchOrganizationJoinCodesResponse>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &WatchOrganizationJoinCodesResponse| match x {
-                    WatchOrganizationJoinCodesResponse::Unknown(_) => 0,
-                    WatchOrganizationJoinCodesResponse::List(_) => 1,
-                    WatchOrganizationJoinCodesResponse::Add(_) => 2,
-                    WatchOrganizationJoinCodesResponse::Remove(_) => 3,
-                    WatchOrganizationJoinCodesResponse::InternalError(_) => 4,
-                },
-                |u| WatchOrganizationJoinCodesResponse::Unknown(Some(u)),
-                |x: &WatchOrganizationJoinCodesResponse| match x {
-                    WatchOrganizationJoinCodesResponse::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "organization/v1/join_codes.skir",
-                "WatchOrganizationJoinCodesResponse",
-                "",
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchOrganizationJoinCodesResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<WatchOrganizationJoinCodesResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &WatchOrganizationJoinCodesResponse| match x {
+                        WatchOrganizationJoinCodesResponse::Unknown(_) => 0,
+                        WatchOrganizationJoinCodesResponse::InternalError(_) => 1,
+                        WatchOrganizationJoinCodesResponse::List(_) => 2,
+                        WatchOrganizationJoinCodesResponse::Add(_) => 3,
+                        WatchOrganizationJoinCodesResponse::Remove(_) => 4,
+                    },
+                    |u| WatchOrganizationJoinCodesResponse::Unknown(Some(u)),
+                    |x: &WatchOrganizationJoinCodesResponse| match x { WatchOrganizationJoinCodesResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "organization/v1/join_codes.skir",
+                    "WatchOrganizationJoinCodesResponse",
+                    "",
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationJoinCodesResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            WatchOrganizationJoinCodesResponse::_adapter(),
-        )
+        crate::skir_client::internal::enum_serializer_from_static(WatchOrganizationJoinCodesResponse::_adapter())
     }
 }
 
@@ -258,11 +232,7 @@ impl WatchOrganizationJoinCodesResponse {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum GenerateOrganizationJoinCodeRequest_Expiration {
-    Unknown(
-        Option<
-            crate::skir_client::UnrecognizedVariant<GenerateOrganizationJoinCodeRequest_Expiration>,
-        >,
-    ),
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<GenerateOrganizationJoinCodeRequest_Expiration>>),
     Never,
     Duration(Box<crate::skirout::base::kernel::v1::duration::Duration>),
 }
@@ -274,40 +244,27 @@ impl Default for GenerateOrganizationJoinCodeRequest_Expiration {
 }
 
 impl GenerateOrganizationJoinCodeRequest_Expiration {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<
-        GenerateOrganizationJoinCodeRequest_Expiration,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<
-                GenerateOrganizationJoinCodeRequest_Expiration,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &GenerateOrganizationJoinCodeRequest_Expiration| match x {
-                    GenerateOrganizationJoinCodeRequest_Expiration::Unknown(_) => 0,
-                    GenerateOrganizationJoinCodeRequest_Expiration::Never => 1,
-                    GenerateOrganizationJoinCodeRequest_Expiration::Duration(_) => 2,
-                },
-                |u| GenerateOrganizationJoinCodeRequest_Expiration::Unknown(Some(u)),
-                |x: &GenerateOrganizationJoinCodeRequest_Expiration| match x {
-                    GenerateOrganizationJoinCodeRequest_Expiration::Unknown(Some(u)) => {
-                        Some(u.as_ref())
-                    }
-                    _ => None,
-                },
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeRequest.Expiration",
-                "",
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeRequest_Expiration> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeRequest_Expiration>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &GenerateOrganizationJoinCodeRequest_Expiration| match x {
+                        GenerateOrganizationJoinCodeRequest_Expiration::Unknown(_) => 0,
+                        GenerateOrganizationJoinCodeRequest_Expiration::Never => 1,
+                        GenerateOrganizationJoinCodeRequest_Expiration::Duration(_) => 2,
+                    },
+                    |u| GenerateOrganizationJoinCodeRequest_Expiration::Unknown(Some(u)),
+                    |x: &GenerateOrganizationJoinCodeRequest_Expiration| match x { GenerateOrganizationJoinCodeRequest_Expiration::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeRequest.Expiration",
+                    "",
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeRequest_Expiration> {
+    pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeRequest_Expiration> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            GenerateOrganizationJoinCodeRequest_Expiration::_adapter(),
-        )
+        crate::skir_client::internal::enum_serializer_from_static(GenerateOrganizationJoinCodeRequest_Expiration::_adapter())
     }
 }
 
@@ -319,44 +276,33 @@ impl GenerateOrganizationJoinCodeRequest_Expiration {
 pub struct GenerateOrganizationJoinCodeRequest_AutoAccept {
     pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeRequest_AutoAccept>,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeRequest_AutoAccept>>,
 }
 
 impl GenerateOrganizationJoinCodeRequest_AutoAccept {
     pub fn default_ref() -> &'static GenerateOrganizationJoinCodeRequest_AutoAccept {
-        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeRequest_AutoAccept> =
-            std::sync::LazyLock::new(GenerateOrganizationJoinCodeRequest_AutoAccept::default);
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeRequest_AutoAccept> = std::sync::LazyLock::new(GenerateOrganizationJoinCodeRequest_AutoAccept::default);
         &D
     }
 }
 
 impl GenerateOrganizationJoinCodeRequest_AutoAccept {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        GenerateOrganizationJoinCodeRequest_AutoAccept,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeRequest_AutoAccept,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeRequest.AutoAccept",
-                "",
-                |x: &GenerateOrganizationJoinCodeRequest_AutoAccept| &x._unrecognized,
-                |x: &mut GenerateOrganizationJoinCodeRequest_AutoAccept, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest_AutoAccept> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest_AutoAccept>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeRequest.AutoAccept",
+                    "",
+                    |x: &GenerateOrganizationJoinCodeRequest_AutoAccept| &x._unrecognized,
+                    |x: &mut GenerateOrganizationJoinCodeRequest_AutoAccept, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeRequest_AutoAccept> {
+    pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeRequest_AutoAccept> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            GenerateOrganizationJoinCodeRequest_AutoAccept::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeRequest_AutoAccept::_adapter())
     }
 }
 
@@ -370,40 +316,33 @@ pub struct GenerateOrganizationJoinCodeRequest {
     pub expiration: GenerateOrganizationJoinCodeRequest_Expiration,
     pub auto_accept: GenerateOrganizationJoinCodeRequest_AutoAccept,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeRequest>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeRequest>>,
 }
 
 impl GenerateOrganizationJoinCodeRequest {
     pub fn default_ref() -> &'static GenerateOrganizationJoinCodeRequest {
-        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeRequest> =
-            std::sync::LazyLock::new(GenerateOrganizationJoinCodeRequest::default);
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeRequest> = std::sync::LazyLock::new(GenerateOrganizationJoinCodeRequest::default);
         &D
     }
 }
 
 impl GenerateOrganizationJoinCodeRequest {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest>
-    {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeRequest",
-                "",
-                |x: &GenerateOrganizationJoinCodeRequest| &x._unrecognized,
-                |x: &mut GenerateOrganizationJoinCodeRequest, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeRequest",
+                    "",
+                    |x: &GenerateOrganizationJoinCodeRequest| &x._unrecognized,
+                    |x: &mut GenerateOrganizationJoinCodeRequest, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            GenerateOrganizationJoinCodeRequest::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeRequest::_adapter())
     }
 }
 
@@ -414,44 +353,33 @@ impl GenerateOrganizationJoinCodeRequest {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GenerateOrganizationJoinCodeResponse_InternalError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeResponse_InternalError>,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeResponse_InternalError>>,
 }
 
 impl GenerateOrganizationJoinCodeResponse_InternalError {
     pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_InternalError {
-        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_InternalError> =
-            std::sync::LazyLock::new(GenerateOrganizationJoinCodeResponse_InternalError::default);
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_InternalError> = std::sync::LazyLock::new(GenerateOrganizationJoinCodeResponse_InternalError::default);
         &D
     }
 }
 
 impl GenerateOrganizationJoinCodeResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        GenerateOrganizationJoinCodeResponse_InternalError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_InternalError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeResponse.InternalError",
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_InternalError| &x._unrecognized,
-                |x: &mut GenerateOrganizationJoinCodeResponse_InternalError, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_InternalError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_InternalError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeResponse.InternalError",
+                    "",
+                    |x: &GenerateOrganizationJoinCodeResponse_InternalError| &x._unrecognized,
+                    |x: &mut GenerateOrganizationJoinCodeResponse_InternalError, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_InternalError> {
+    pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_InternalError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            GenerateOrganizationJoinCodeResponse_InternalError::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_InternalError::_adapter())
     }
 }
 
@@ -463,50 +391,33 @@ impl GenerateOrganizationJoinCodeResponse_InternalError {
 pub struct GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
     pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
-        >,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeResponse_RolesNotFoundError>>,
 }
 
 impl GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
     pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
-        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> =
-            std::sync::LazyLock::new(
-                GenerateOrganizationJoinCodeResponse_RolesNotFoundError::default,
-            );
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> = std::sync::LazyLock::new(GenerateOrganizationJoinCodeResponse_RolesNotFoundError::default);
         &D
     }
 }
 
 impl GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeResponse.RolesNotFoundError",
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_RolesNotFoundError| &x._unrecognized,
-                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotFoundError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_RolesNotFoundError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeResponse.RolesNotFoundError",
+                    "",
+                    |x: &GenerateOrganizationJoinCodeResponse_RolesNotFoundError| &x._unrecognized,
+                    |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotFoundError, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> {
+    pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter())
     }
 }
 
@@ -518,52 +429,33 @@ impl GenerateOrganizationJoinCodeResponse_RolesNotFoundError {
 pub struct GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
     pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
-        >,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>>,
 }
 
 impl GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
     pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
-        static D: std::sync::LazyLock<
-            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
-        > = std::sync::LazyLock::new(
-            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::default,
-        );
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError> = std::sync::LazyLock::new(GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::default);
         &D
     }
 }
 
 impl GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeResponse.RolesNotAssignableError",
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_RolesNotAssignableError| &x._unrecognized,
-                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeResponse.RolesNotAssignableError",
+                    "",
+                    |x: &GenerateOrganizationJoinCodeResponse_RolesNotAssignableError| &x._unrecognized,
+                    |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>
-    {
+    pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter())
     }
 }
 
@@ -575,51 +467,33 @@ impl GenerateOrganizationJoinCodeResponse_RolesNotAssignableError {
 pub struct GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
     pub duration: crate::skirout::base::kernel::v1::duration::Duration,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
-        >,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>>,
 }
 
 impl GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
     pub fn default_ref() -> &'static GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
-        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_InvalidExpirationError> =
-            std::sync::LazyLock::new(
-                GenerateOrganizationJoinCodeResponse_InvalidExpirationError::default,
-            );
+        static D: std::sync::LazyLock<GenerateOrganizationJoinCodeResponse_InvalidExpirationError> = std::sync::LazyLock::new(GenerateOrganizationJoinCodeResponse_InvalidExpirationError::default);
         &D
     }
 }
 
 impl GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeResponse.InvalidExpirationError",
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_InvalidExpirationError| &x._unrecognized,
-                |x: &mut GenerateOrganizationJoinCodeResponse_InvalidExpirationError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_InvalidExpirationError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeResponse.InvalidExpirationError",
+                    "",
+                    |x: &GenerateOrganizationJoinCodeResponse_InvalidExpirationError| &x._unrecognized,
+                    |x: &mut GenerateOrganizationJoinCodeResponse_InvalidExpirationError, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>
-    {
+    pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse_InvalidExpirationError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter())
     }
 }
 
@@ -630,8 +504,8 @@ impl GenerateOrganizationJoinCodeResponse_InvalidExpirationError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GenerateOrganizationJoinCodeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<GenerateOrganizationJoinCodeResponse>>),
-    Success(Box<JoinCode>),
     InternalError(Box<GenerateOrganizationJoinCodeResponse_InternalError>),
+    Success(Box<JoinCode>),
     RolesNotFoundError(Box<GenerateOrganizationJoinCodeResponse_RolesNotFoundError>),
     RolesNotAssignableError(Box<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>),
     InvalidExpirationError(Box<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>),
@@ -644,38 +518,30 @@ impl Default for GenerateOrganizationJoinCodeResponse {
 }
 
 impl GenerateOrganizationJoinCodeResponse {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeResponse>
-    {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeResponse>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &GenerateOrganizationJoinCodeResponse| match x {
-                    GenerateOrganizationJoinCodeResponse::Unknown(_) => 0,
-                    GenerateOrganizationJoinCodeResponse::Success(_) => 1,
-                    GenerateOrganizationJoinCodeResponse::InternalError(_) => 2,
-                    GenerateOrganizationJoinCodeResponse::RolesNotFoundError(_) => 3,
-                    GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(_) => 4,
-                    GenerateOrganizationJoinCodeResponse::InvalidExpirationError(_) => 5,
-                },
-                |u| GenerateOrganizationJoinCodeResponse::Unknown(Some(u)),
-                |x: &GenerateOrganizationJoinCodeResponse| match x {
-                    GenerateOrganizationJoinCodeResponse::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "organization/v1/join_codes.skir",
-                "GenerateOrganizationJoinCodeResponse",
-                "",
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &GenerateOrganizationJoinCodeResponse| match x {
+                        GenerateOrganizationJoinCodeResponse::Unknown(_) => 0,
+                        GenerateOrganizationJoinCodeResponse::InternalError(_) => 1,
+                        GenerateOrganizationJoinCodeResponse::Success(_) => 2,
+                        GenerateOrganizationJoinCodeResponse::RolesNotFoundError(_) => 3,
+                        GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(_) => 4,
+                        GenerateOrganizationJoinCodeResponse::InvalidExpirationError(_) => 5,
+                    },
+                    |u| GenerateOrganizationJoinCodeResponse::Unknown(Some(u)),
+                    |x: &GenerateOrganizationJoinCodeResponse| match x { GenerateOrganizationJoinCodeResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "organization/v1/join_codes.skir",
+                    "GenerateOrganizationJoinCodeResponse",
+                    "",
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GenerateOrganizationJoinCodeResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            GenerateOrganizationJoinCodeResponse::_adapter(),
-        )
+        crate::skir_client::internal::enum_serializer_from_static(GenerateOrganizationJoinCodeResponse::_adapter())
     }
 }
 
@@ -687,39 +553,70 @@ impl GenerateOrganizationJoinCodeResponse {
 pub struct RevokeOrganizationJoinCodeRequest {
     pub code_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeRequest>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeRequest>>,
 }
 
 impl RevokeOrganizationJoinCodeRequest {
     pub fn default_ref() -> &'static RevokeOrganizationJoinCodeRequest {
-        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeRequest> =
-            std::sync::LazyLock::new(RevokeOrganizationJoinCodeRequest::default);
+        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeRequest> = std::sync::LazyLock::new(RevokeOrganizationJoinCodeRequest::default);
         &D
     }
 }
 
 impl RevokeOrganizationJoinCodeRequest {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeRequest> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "RevokeOrganizationJoinCodeRequest",
-                "",
-                |x: &RevokeOrganizationJoinCodeRequest| &x._unrecognized,
-                |x: &mut RevokeOrganizationJoinCodeRequest, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "RevokeOrganizationJoinCodeRequest",
+                    "",
+                    |x: &RevokeOrganizationJoinCodeRequest| &x._unrecognized,
+                    |x: &mut RevokeOrganizationJoinCodeRequest, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            RevokeOrganizationJoinCodeRequest::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RevokeOrganizationJoinCodeResponse.InternalError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RevokeOrganizationJoinCodeResponse_InternalError {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeResponse_InternalError>>,
+}
+
+impl RevokeOrganizationJoinCodeResponse_InternalError {
+    pub fn default_ref() -> &'static RevokeOrganizationJoinCodeResponse_InternalError {
+        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeResponse_InternalError> = std::sync::LazyLock::new(RevokeOrganizationJoinCodeResponse_InternalError::default);
+        &D
+    }
+}
+
+impl RevokeOrganizationJoinCodeResponse_InternalError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_InternalError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_InternalError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "RevokeOrganizationJoinCodeResponse.InternalError",
+                    "",
+                    |x: &RevokeOrganizationJoinCodeResponse_InternalError| &x._unrecognized,
+                    |x: &mut RevokeOrganizationJoinCodeResponse_InternalError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse_InternalError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeResponse_InternalError::_adapter())
     }
 }
 
@@ -730,41 +627,33 @@ impl RevokeOrganizationJoinCodeRequest {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RevokeOrganizationJoinCodeResponse_Success {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeResponse_Success>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeResponse_Success>>,
 }
 
 impl RevokeOrganizationJoinCodeResponse_Success {
     pub fn default_ref() -> &'static RevokeOrganizationJoinCodeResponse_Success {
-        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeResponse_Success> =
-            std::sync::LazyLock::new(RevokeOrganizationJoinCodeResponse_Success::default);
+        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeResponse_Success> = std::sync::LazyLock::new(RevokeOrganizationJoinCodeResponse_Success::default);
         &D
     }
 }
 
 impl RevokeOrganizationJoinCodeResponse_Success {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        RevokeOrganizationJoinCodeResponse_Success,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_Success>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "RevokeOrganizationJoinCodeResponse.Success",
-                "",
-                |x: &RevokeOrganizationJoinCodeResponse_Success| &x._unrecognized,
-                |x: &mut RevokeOrganizationJoinCodeResponse_Success, u| x._unrecognized = u,
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_Success> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_Success>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "RevokeOrganizationJoinCodeResponse.Success",
+                    "",
+                    |x: &RevokeOrganizationJoinCodeResponse_Success| &x._unrecognized,
+                    |x: &mut RevokeOrganizationJoinCodeResponse_Success, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse_Success>
-    {
+    pub fn serializer() -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse_Success> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            RevokeOrganizationJoinCodeResponse_Success::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeResponse_Success::_adapter())
     }
 }
 
@@ -776,96 +665,33 @@ impl RevokeOrganizationJoinCodeResponse_Success {
 pub struct RevokeOrganizationJoinCodeResponse_CodeNotFoundError {
     pub code_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            RevokeOrganizationJoinCodeResponse_CodeNotFoundError,
-        >,
-    >,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeResponse_CodeNotFoundError>>,
 }
 
 impl RevokeOrganizationJoinCodeResponse_CodeNotFoundError {
     pub fn default_ref() -> &'static RevokeOrganizationJoinCodeResponse_CodeNotFoundError {
-        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeResponse_CodeNotFoundError> =
-            std::sync::LazyLock::new(RevokeOrganizationJoinCodeResponse_CodeNotFoundError::default);
+        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeResponse_CodeNotFoundError> = std::sync::LazyLock::new(RevokeOrganizationJoinCodeResponse_CodeNotFoundError::default);
         &D
     }
 }
 
 impl RevokeOrganizationJoinCodeResponse_CodeNotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        RevokeOrganizationJoinCodeResponse_CodeNotFoundError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                RevokeOrganizationJoinCodeResponse_CodeNotFoundError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "RevokeOrganizationJoinCodeResponse.CodeNotFoundError",
-                "",
-                |x: &RevokeOrganizationJoinCodeResponse_CodeNotFoundError| &x._unrecognized,
-                |x: &mut RevokeOrganizationJoinCodeResponse_CodeNotFoundError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_CodeNotFoundError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_CodeNotFoundError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "organization/v1/join_codes.skir",
+                    "RevokeOrganizationJoinCodeResponse.CodeNotFoundError",
+                    "",
+                    |x: &RevokeOrganizationJoinCodeResponse_CodeNotFoundError| &x._unrecognized,
+                    |x: &mut RevokeOrganizationJoinCodeResponse_CodeNotFoundError, u| x._unrecognized = u,
+                )
+            });
         &*ADAPTER
     }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse_CodeNotFoundError> {
+    pub fn serializer() -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse_CodeNotFoundError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct RevokeOrganizationJoinCodeResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct RevokeOrganizationJoinCodeResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<RevokeOrganizationJoinCodeResponse_InternalError>,
-    >,
-}
-
-impl RevokeOrganizationJoinCodeResponse_InternalError {
-    pub fn default_ref() -> &'static RevokeOrganizationJoinCodeResponse_InternalError {
-        static D: std::sync::LazyLock<RevokeOrganizationJoinCodeResponse_InternalError> =
-            std::sync::LazyLock::new(RevokeOrganizationJoinCodeResponse_InternalError::default);
-        &D
-    }
-}
-
-impl RevokeOrganizationJoinCodeResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        RevokeOrganizationJoinCodeResponse_InternalError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                RevokeOrganizationJoinCodeResponse_InternalError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/join_codes.skir",
-                "RevokeOrganizationJoinCodeResponse.InternalError",
-                "",
-                |x: &RevokeOrganizationJoinCodeResponse_InternalError| &x._unrecognized,
-                |x: &mut RevokeOrganizationJoinCodeResponse_InternalError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            RevokeOrganizationJoinCodeResponse_InternalError::_adapter(),
-        )
+        crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter())
     }
 }
 
@@ -876,9 +702,9 @@ impl RevokeOrganizationJoinCodeResponse_InternalError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RevokeOrganizationJoinCodeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RevokeOrganizationJoinCodeResponse>>),
+    InternalError(Box<RevokeOrganizationJoinCodeResponse_InternalError>),
     Success(Box<RevokeOrganizationJoinCodeResponse_Success>),
     CodeNotFoundError(Box<RevokeOrganizationJoinCodeResponse_CodeNotFoundError>),
-    InternalError(Box<RevokeOrganizationJoinCodeResponse_InternalError>),
 }
 
 impl Default for RevokeOrganizationJoinCodeResponse {
@@ -888,35 +714,28 @@ impl Default for RevokeOrganizationJoinCodeResponse {
 }
 
 impl RevokeOrganizationJoinCodeResponse {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<RevokeOrganizationJoinCodeResponse> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<RevokeOrganizationJoinCodeResponse>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &RevokeOrganizationJoinCodeResponse| match x {
-                    RevokeOrganizationJoinCodeResponse::Unknown(_) => 0,
-                    RevokeOrganizationJoinCodeResponse::Success(_) => 1,
-                    RevokeOrganizationJoinCodeResponse::CodeNotFoundError(_) => 2,
-                    RevokeOrganizationJoinCodeResponse::InternalError(_) => 3,
-                },
-                |u| RevokeOrganizationJoinCodeResponse::Unknown(Some(u)),
-                |x: &RevokeOrganizationJoinCodeResponse| match x {
-                    RevokeOrganizationJoinCodeResponse::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "organization/v1/join_codes.skir",
-                "RevokeOrganizationJoinCodeResponse",
-                "",
-            )
-        });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RevokeOrganizationJoinCodeResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RevokeOrganizationJoinCodeResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &RevokeOrganizationJoinCodeResponse| match x {
+                        RevokeOrganizationJoinCodeResponse::Unknown(_) => 0,
+                        RevokeOrganizationJoinCodeResponse::InternalError(_) => 1,
+                        RevokeOrganizationJoinCodeResponse::Success(_) => 2,
+                        RevokeOrganizationJoinCodeResponse::CodeNotFoundError(_) => 3,
+                    },
+                    |u| RevokeOrganizationJoinCodeResponse::Unknown(Some(u)),
+                    |x: &RevokeOrganizationJoinCodeResponse| match x { RevokeOrganizationJoinCodeResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "organization/v1/join_codes.skir",
+                    "RevokeOrganizationJoinCodeResponse",
+                    "",
+                )
+            });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RevokeOrganizationJoinCodeResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            RevokeOrganizationJoinCodeResponse::_adapter(),
-        )
+        crate::skir_client::internal::enum_serializer_from_static(RevokeOrganizationJoinCodeResponse::_adapter())
     }
 }
 
@@ -925,442 +744,110 @@ impl RevokeOrganizationJoinCodeResponse {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<JoinCode_AutoAccept> =
-                JoinCode_AutoAccept::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "role_ids",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                ),
-                "",
-                |x: &JoinCode_AutoAccept| &x.role_ids,
-                |x: &mut JoinCode_AutoAccept, v| x.role_ids = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<JoinCode> =
-                JoinCode::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "code",
-                0,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &JoinCode| &x.code,
-                |x: &mut JoinCode, v| x.code = v,
-            );
-            (*a).add_field(
-                "created_at",
-                1,
-                crate::skir_client::Serializer::timestamp(),
-                "",
-                |x: &JoinCode| &x.created_at,
-                |x: &mut JoinCode, v| x.created_at = v,
-            );
-            (*a).add_field(
-                "expires_at",
-                2,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::Serializer::timestamp(),
-                ),
-                "",
-                |x: &JoinCode| &x.expires_at,
-                |x: &mut JoinCode, v| x.expires_at = v,
-            );
-            (*a).add_field(
-                "single_use",
-                3,
-                crate::skir_client::Serializer::bool(),
-                "",
-                |x: &JoinCode| &x.single_use,
-                |x: &mut JoinCode, v| x.single_use = v,
-            );
-            (*a).add_field(
-                "auto_accept",
-                4,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    JoinCode_AutoAccept::_adapter(),
-                ),
-                "",
-                |x: &JoinCode| &x.auto_accept,
-                |x: &mut JoinCode, v| x.auto_accept = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                WatchOrganizationJoinCodesRequest,
-            > = WatchOrganizationJoinCodesRequest::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                WatchOrganizationJoinCodesResponse_InternalError,
-            > = WatchOrganizationJoinCodesResponse_InternalError::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<
-                WatchOrganizationJoinCodesResponse,
-            > = WatchOrganizationJoinCodesResponse::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "list",
-                1,
-                1,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        JoinCode::_adapter(),
-                    ),
-                ),
-                "",
-                |v| WatchOrganizationJoinCodesResponse::List(v),
-                |x| match x {
-                    WatchOrganizationJoinCodesResponse::List(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "add",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(JoinCode::_adapter()),
-                "",
-                |v| WatchOrganizationJoinCodesResponse::Add(Box::new(v)),
-                |x| match x {
-                    WatchOrganizationJoinCodesResponse::Add(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "remove",
-                3,
-                3,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |v| WatchOrganizationJoinCodesResponse::Remove(Box::new(v)),
-                |x| match x {
-                    WatchOrganizationJoinCodesResponse::Remove(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "internal_error",
-                4,
-                4,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    WatchOrganizationJoinCodesResponse_InternalError::_adapter(),
-                ),
-                "",
-                |v| WatchOrganizationJoinCodesResponse::InternalError(Box::new(v)),
-                |x| match x {
-                    WatchOrganizationJoinCodesResponse::InternalError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<
-                GenerateOrganizationJoinCodeRequest_Expiration,
-            > = GenerateOrganizationJoinCodeRequest_Expiration::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant(
-                "never",
-                1,
-                1,
-                "",
-                GenerateOrganizationJoinCodeRequest_Expiration::Never,
-            );
-            (*a).add_wrapper_variant(
-                "duration",
-                2,
-                2,
-                crate::skirout::base::kernel::v1::duration::Duration::serializer(),
-                "",
-                |v| GenerateOrganizationJoinCodeRequest_Expiration::Duration(Box::new(v)),
-                |x| match x {
-                    GenerateOrganizationJoinCodeRequest_Expiration::Duration(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeRequest_AutoAccept,
-            > = GenerateOrganizationJoinCodeRequest_AutoAccept::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "role_ids",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                ),
-                "",
-                |x: &GenerateOrganizationJoinCodeRequest_AutoAccept| &x.role_ids,
-                |x: &mut GenerateOrganizationJoinCodeRequest_AutoAccept, v| x.role_ids = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeRequest,
-            > = GenerateOrganizationJoinCodeRequest::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "single_use",
-                0,
-                crate::skir_client::Serializer::bool(),
-                "",
-                |x: &GenerateOrganizationJoinCodeRequest| &x.single_use,
-                |x: &mut GenerateOrganizationJoinCodeRequest, v| x.single_use = v,
-            );
-            (*a).add_field(
-                "expiration",
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    GenerateOrganizationJoinCodeRequest_Expiration::_adapter(),
-                ),
-                "",
-                |x: &GenerateOrganizationJoinCodeRequest| &x.expiration,
-                |x: &mut GenerateOrganizationJoinCodeRequest, v| x.expiration = v,
-            );
-            (*a).add_field(
-                "auto_accept",
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    GenerateOrganizationJoinCodeRequest_AutoAccept::_adapter(),
-                ),
-                "",
-                |x: &GenerateOrganizationJoinCodeRequest| &x.auto_accept,
-                |x: &mut GenerateOrganizationJoinCodeRequest, v| x.auto_accept = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_InternalError,
-            > = GenerateOrganizationJoinCodeResponse_InternalError::_adapter() as *const _
-                as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_RolesNotFoundError,
-            > = GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter() as *const _
-                as *mut _;
-            (*a).add_field(
-                "role_ids",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                ),
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_RolesNotFoundError| &x.role_ids,
-                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotFoundError, v| x.role_ids = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_RolesNotAssignableError,
-            > = GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter() as *const _
-                as *mut _;
-            (*a).add_field(
-                "role_ids",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                ),
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_RolesNotAssignableError| &x.role_ids,
-                |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, v| {
-                    x.role_ids = v
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                GenerateOrganizationJoinCodeResponse_InvalidExpirationError,
-            > = GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter() as *const _
-                as *mut _;
-            (*a).add_field(
-                "duration",
-                0,
-                crate::skirout::base::kernel::v1::duration::Duration::serializer(),
-                "",
-                |x: &GenerateOrganizationJoinCodeResponse_InvalidExpirationError| &x.duration,
-                |x: &mut GenerateOrganizationJoinCodeResponse_InvalidExpirationError, v| {
-                    x.duration = v
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<
-                GenerateOrganizationJoinCodeResponse,
-            > = GenerateOrganizationJoinCodeResponse::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "success",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(JoinCode::_adapter()),
-                "",
-                |v| GenerateOrganizationJoinCodeResponse::Success(Box::new(v)),
-                |x| match x {
-                    GenerateOrganizationJoinCodeResponse::Success(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "internal_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    GenerateOrganizationJoinCodeResponse_InternalError::_adapter(),
-                ),
-                "",
-                |v| GenerateOrganizationJoinCodeResponse::InternalError(Box::new(v)),
-                |x| match x {
-                    GenerateOrganizationJoinCodeResponse::InternalError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "roles_not_found_error",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter(),
-                ),
-                "",
-                |v| GenerateOrganizationJoinCodeResponse::RolesNotFoundError(Box::new(v)),
-                |x| match x {
-                    GenerateOrganizationJoinCodeResponse::RolesNotFoundError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "roles_not_assignable_error",
-                4,
-                4,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter(),
-                ),
-                "",
-                |v| GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(Box::new(v)),
-                |x| match x {
-                    GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "invalid_expiration_error",
-                5,
-                5,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter(),
-                ),
-                "",
-                |v| GenerateOrganizationJoinCodeResponse::InvalidExpirationError(Box::new(v)),
-                |x| match x {
-                    GenerateOrganizationJoinCodeResponse::InvalidExpirationError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                RevokeOrganizationJoinCodeRequest,
-            > = RevokeOrganizationJoinCodeRequest::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "code_id",
-                0,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &RevokeOrganizationJoinCodeRequest| &x.code_id,
-                |x: &mut RevokeOrganizationJoinCodeRequest, v| x.code_id = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                RevokeOrganizationJoinCodeResponse_Success,
-            > = RevokeOrganizationJoinCodeResponse_Success::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                RevokeOrganizationJoinCodeResponse_CodeNotFoundError,
-            > = RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter() as *const _
-                as *mut _;
-            (*a).add_field(
-                "code_id",
-                0,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &RevokeOrganizationJoinCodeResponse_CodeNotFoundError| &x.code_id,
-                |x: &mut RevokeOrganizationJoinCodeResponse_CodeNotFoundError, v| x.code_id = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                RevokeOrganizationJoinCodeResponse_InternalError,
-            > = RevokeOrganizationJoinCodeResponse_InternalError::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<
-                RevokeOrganizationJoinCodeResponse,
-            > = RevokeOrganizationJoinCodeResponse::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "success",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    RevokeOrganizationJoinCodeResponse_Success::_adapter(),
-                ),
-                "",
-                |v| RevokeOrganizationJoinCodeResponse::Success(Box::new(v)),
-                |x| match x {
-                    RevokeOrganizationJoinCodeResponse::Success(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "code_not_found_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter(),
-                ),
-                "",
-                |v| RevokeOrganizationJoinCodeResponse::CodeNotFoundError(Box::new(v)),
-                |x| match x {
-                    RevokeOrganizationJoinCodeResponse::CodeNotFoundError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "internal_error",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    RevokeOrganizationJoinCodeResponse_InternalError::_adapter(),
-                ),
-                "",
-                |v| RevokeOrganizationJoinCodeResponse::InternalError(Box::new(v)),
-                |x| match x {
-                    RevokeOrganizationJoinCodeResponse::InternalError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-    });
+    static INIT: std::sync::LazyLock<()> =
+        std::sync::LazyLock::new(|| {
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<JoinCode_AutoAccept> = JoinCode_AutoAccept::_adapter() as *const _ as *mut _;
+                (*a).add_field("role_ids", 0, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &JoinCode_AutoAccept| &x.role_ids, |x: &mut JoinCode_AutoAccept, v| x.role_ids = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<JoinCode> = JoinCode::_adapter() as *const _ as *mut _;
+                (*a).add_field("code", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &JoinCode| &x.code, |x: &mut JoinCode, v| x.code = v);
+                (*a).add_field("created_at", 1, crate::skir_client::Serializer::timestamp(), "", |x: &JoinCode| &x.created_at, |x: &mut JoinCode, v| x.created_at = v);
+                (*a).add_field("expires_at", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::timestamp()), "", |x: &JoinCode| &x.expires_at, |x: &mut JoinCode, v| x.expires_at = v);
+                (*a).add_field("single_use", 3, crate::skir_client::Serializer::bool(), "", |x: &JoinCode| &x.single_use, |x: &mut JoinCode, v| x.single_use = v);
+                (*a).add_field("auto_accept", 4, crate::skir_client::internal::struct_serializer_from_static(JoinCode_AutoAccept::_adapter()), "", |x: &JoinCode| &x.auto_accept, |x: &mut JoinCode, v| x.auto_accept = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesRequest> = WatchOrganizationJoinCodesRequest::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationJoinCodesResponse_InternalError> = WatchOrganizationJoinCodesResponse_InternalError::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationJoinCodesResponse> = WatchOrganizationJoinCodesResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationJoinCodesResponse_InternalError::_adapter()), "", |v| WatchOrganizationJoinCodesResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationJoinCodesResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("list", 2, 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(JoinCode::_adapter())), "", |v| WatchOrganizationJoinCodesResponse::List(v), |x| match x { WatchOrganizationJoinCodesResponse::List(v) => v, _ => unreachable!() });
+                (*a).add_wrapper_variant("add", 3, 3, crate::skir_client::internal::struct_serializer_from_static(JoinCode::_adapter()), "", |v| WatchOrganizationJoinCodesResponse::Add(Box::new(v)), |x| match x { WatchOrganizationJoinCodesResponse::Add(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("remove", 4, 4, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |v| WatchOrganizationJoinCodesResponse::Remove(Box::new(v)), |x| match x { WatchOrganizationJoinCodesResponse::Remove(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeRequest_Expiration> = GenerateOrganizationJoinCodeRequest_Expiration::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("never", 1, 1, "", GenerateOrganizationJoinCodeRequest_Expiration::Never);
+                (*a).add_wrapper_variant("duration", 2, 2, crate::skirout::base::kernel::v1::duration::Duration::serializer(), "", |v| GenerateOrganizationJoinCodeRequest_Expiration::Duration(Box::new(v)), |x| match x { GenerateOrganizationJoinCodeRequest_Expiration::Duration(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest_AutoAccept> = GenerateOrganizationJoinCodeRequest_AutoAccept::_adapter() as *const _ as *mut _;
+                (*a).add_field("role_ids", 0, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &GenerateOrganizationJoinCodeRequest_AutoAccept| &x.role_ids, |x: &mut GenerateOrganizationJoinCodeRequest_AutoAccept, v| x.role_ids = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeRequest> = GenerateOrganizationJoinCodeRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("single_use", 0, crate::skir_client::Serializer::bool(), "", |x: &GenerateOrganizationJoinCodeRequest| &x.single_use, |x: &mut GenerateOrganizationJoinCodeRequest, v| x.single_use = v);
+                (*a).add_field("expiration", 1, crate::skir_client::internal::enum_serializer_from_static(GenerateOrganizationJoinCodeRequest_Expiration::_adapter()), "", |x: &GenerateOrganizationJoinCodeRequest| &x.expiration, |x: &mut GenerateOrganizationJoinCodeRequest, v| x.expiration = v);
+                (*a).add_field("auto_accept", 2, crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeRequest_AutoAccept::_adapter()), "", |x: &GenerateOrganizationJoinCodeRequest| &x.auto_accept, |x: &mut GenerateOrganizationJoinCodeRequest, v| x.auto_accept = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_InternalError> = GenerateOrganizationJoinCodeResponse_InternalError::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_RolesNotFoundError> = GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter() as *const _ as *mut _;
+                (*a).add_field("role_ids", 0, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &GenerateOrganizationJoinCodeResponse_RolesNotFoundError| &x.role_ids, |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotFoundError, v| x.role_ids = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError> = GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter() as *const _ as *mut _;
+                (*a).add_field("role_ids", 0, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &GenerateOrganizationJoinCodeResponse_RolesNotAssignableError| &x.role_ids, |x: &mut GenerateOrganizationJoinCodeResponse_RolesNotAssignableError, v| x.role_ids = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GenerateOrganizationJoinCodeResponse_InvalidExpirationError> = GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter() as *const _ as *mut _;
+                (*a).add_field("duration", 0, crate::skirout::base::kernel::v1::duration::Duration::serializer(), "", |x: &GenerateOrganizationJoinCodeResponse_InvalidExpirationError| &x.duration, |x: &mut GenerateOrganizationJoinCodeResponse_InvalidExpirationError, v| x.duration = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<GenerateOrganizationJoinCodeResponse> = GenerateOrganizationJoinCodeResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_InternalError::_adapter()), "", |v| GenerateOrganizationJoinCodeResponse::InternalError(Box::new(v)), |x| match x { GenerateOrganizationJoinCodeResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(JoinCode::_adapter()), "", |v| GenerateOrganizationJoinCodeResponse::Success(Box::new(v)), |x| match x { GenerateOrganizationJoinCodeResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("roles_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter()), "", |v| GenerateOrganizationJoinCodeResponse::RolesNotFoundError(Box::new(v)), |x| match x { GenerateOrganizationJoinCodeResponse::RolesNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("roles_not_assignable_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter()), "", |v| GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(Box::new(v)), |x| match x { GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_expiration_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter()), "", |v| GenerateOrganizationJoinCodeResponse::InvalidExpirationError(Box::new(v)), |x| match x { GenerateOrganizationJoinCodeResponse::InvalidExpirationError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeRequest> = RevokeOrganizationJoinCodeRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("code_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RevokeOrganizationJoinCodeRequest| &x.code_id, |x: &mut RevokeOrganizationJoinCodeRequest, v| x.code_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_InternalError> = RevokeOrganizationJoinCodeResponse_InternalError::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_Success> = RevokeOrganizationJoinCodeResponse_Success::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RevokeOrganizationJoinCodeResponse_CodeNotFoundError> = RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter() as *const _ as *mut _;
+                (*a).add_field("code_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RevokeOrganizationJoinCodeResponse_CodeNotFoundError| &x.code_id, |x: &mut RevokeOrganizationJoinCodeResponse_CodeNotFoundError, v| x.code_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<RevokeOrganizationJoinCodeResponse> = RevokeOrganizationJoinCodeResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeResponse_InternalError::_adapter()), "", |v| RevokeOrganizationJoinCodeResponse::InternalError(Box::new(v)), |x| match x { RevokeOrganizationJoinCodeResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeResponse_Success::_adapter()), "", |v| RevokeOrganizationJoinCodeResponse::Success(Box::new(v)), |x| match x { RevokeOrganizationJoinCodeResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("code_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter()), "", |v| RevokeOrganizationJoinCodeResponse::CodeNotFoundError(Box::new(v)), |x| match x { RevokeOrganizationJoinCodeResponse::CodeNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+        });
     let _ = *INIT;
 }
 
@@ -1368,59 +855,41 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn watch_organization_join_codes_method() -> &'static crate::skir_client::Method<
-    WatchOrganizationJoinCodesRequest,
-    WatchOrganizationJoinCodesResponse,
-> {
-    static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<
-            WatchOrganizationJoinCodesRequest,
-            WatchOrganizationJoinCodesResponse,
-        >,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "WatchOrganizationJoinCodes".to_string(),
-        number: 690316_i64,
-        request_serializer: WatchOrganizationJoinCodesRequest::serializer(),
-        response_serializer: WatchOrganizationJoinCodesResponse::serializer(),
-        doc: "".to_string(),
+pub fn watch_organization_join_codes_method() -> &'static crate::skir_client::Method<WatchOrganizationJoinCodesRequest, WatchOrganizationJoinCodesResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchOrganizationJoinCodesRequest, WatchOrganizationJoinCodesResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "WatchOrganizationJoinCodes".to_string(),
+            number: 690316_i64,
+            request_serializer: WatchOrganizationJoinCodesRequest::serializer(),
+            response_serializer: WatchOrganizationJoinCodesResponse::serializer(),
+            doc: "".to_string(),
+        }
     });
     &*METHOD
 }
 
-pub fn generate_organization_join_code_method() -> &'static crate::skir_client::Method<
-    GenerateOrganizationJoinCodeRequest,
-    GenerateOrganizationJoinCodeResponse,
-> {
-    static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<
-            GenerateOrganizationJoinCodeRequest,
-            GenerateOrganizationJoinCodeResponse,
-        >,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "GenerateOrganizationJoinCode".to_string(),
-        number: 804958_i64,
-        request_serializer: GenerateOrganizationJoinCodeRequest::serializer(),
-        response_serializer: GenerateOrganizationJoinCodeResponse::serializer(),
-        doc: "".to_string(),
+pub fn generate_organization_join_code_method() -> &'static crate::skir_client::Method<GenerateOrganizationJoinCodeRequest, GenerateOrganizationJoinCodeResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<GenerateOrganizationJoinCodeRequest, GenerateOrganizationJoinCodeResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "GenerateOrganizationJoinCode".to_string(),
+            number: 804958_i64,
+            request_serializer: GenerateOrganizationJoinCodeRequest::serializer(),
+            response_serializer: GenerateOrganizationJoinCodeResponse::serializer(),
+            doc: "".to_string(),
+        }
     });
     &*METHOD
 }
 
-pub fn revoke_organization_join_code_method() -> &'static crate::skir_client::Method<
-    RevokeOrganizationJoinCodeRequest,
-    RevokeOrganizationJoinCodeResponse,
-> {
-    static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<
-            RevokeOrganizationJoinCodeRequest,
-            RevokeOrganizationJoinCodeResponse,
-        >,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "RevokeOrganizationJoinCode".to_string(),
-        number: 510187_i64,
-        request_serializer: RevokeOrganizationJoinCodeRequest::serializer(),
-        response_serializer: RevokeOrganizationJoinCodeResponse::serializer(),
-        doc: "".to_string(),
+pub fn revoke_organization_join_code_method() -> &'static crate::skir_client::Method<RevokeOrganizationJoinCodeRequest, RevokeOrganizationJoinCodeResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<RevokeOrganizationJoinCodeRequest, RevokeOrganizationJoinCodeResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "RevokeOrganizationJoinCode".to_string(),
+            number: 510187_i64,
+            request_serializer: RevokeOrganizationJoinCodeRequest::serializer(),
+            response_serializer: RevokeOrganizationJoinCodeResponse::serializer(),
+            doc: "".to_string(),
+        }
     });
     &*METHOD
 }

@@ -517,10 +517,10 @@ final class WatchOrganizationJoinCodesResponse_InternalError_mutable implements 
 ///   ```
 ///   switch (e) {
 ///     case WatchOrganizationJoinCodesResponse_unknown(): { ... }
+///     case WatchOrganizationJoinCodesResponse_internalError(:var value): { ... }
 ///     case WatchOrganizationJoinCodesResponse_list(:var value): { ... }
 ///     case WatchOrganizationJoinCodesResponse_add(:var value): { ... }
 ///     case WatchOrganizationJoinCodesResponse_remove(:var value): { ... }
-///     case WatchOrganizationJoinCodesResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -529,6 +529,16 @@ sealed class WatchOrganizationJoinCodesResponse {
   /// Constant indicating an unknown `WatchOrganizationJoinCodesResponse`.
   /// Default value for fields of type `WatchOrganizationJoinCodesResponse`.
   static const WatchOrganizationJoinCodesResponse unknown = WatchOrganizationJoinCodesResponse_unknown._instance;
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory WatchOrganizationJoinCodesResponse.wrapInternalError(
+    WatchOrganizationJoinCodesResponse_InternalError value
+  ) => WatchOrganizationJoinCodesResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(WatchOrganizationJoinCodesResponse_InternalError(...))`.
+  factory WatchOrganizationJoinCodesResponse.createInternalError() => WatchOrganizationJoinCodesResponse.wrapInternalError(
+    WatchOrganizationJoinCodesResponse_InternalError()
+  );
 
   /// Create a 'list' variant wrapping around the given value.
   factory WatchOrganizationJoinCodesResponse.wrapList(
@@ -573,16 +583,6 @@ sealed class WatchOrganizationJoinCodesResponse {
     )
   );
 
-  /// Create a 'internal_error' variant wrapping around the given value.
-  factory WatchOrganizationJoinCodesResponse.wrapInternalError(
-    WatchOrganizationJoinCodesResponse_InternalError value
-  ) => WatchOrganizationJoinCodesResponse_internalErrorWrapper._(value);
-
-  /// Same as `wrapInternalError(WatchOrganizationJoinCodesResponse_InternalError(...))`.
-  factory WatchOrganizationJoinCodesResponse.createInternalError() => WatchOrganizationJoinCodesResponse.wrapInternalError(
-    WatchOrganizationJoinCodesResponse_InternalError()
-  );
-
   /// Returns the kind of variant held by this WatchOrganizationJoinCodesResponse.
   WatchOrganizationJoinCodesResponse_kind get kind;
 
@@ -591,6 +591,16 @@ sealed class WatchOrganizationJoinCodesResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
+        "internal_error",
+        "wrapInternalError",
+        WatchOrganizationJoinCodesResponse_InternalError.serializer,
+        "",
+        WatchOrganizationJoinCodesResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: WatchOrganizationJoinCodesResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
         "list",
         "wrapList",
         _skir.Serializers.iterable(
@@ -602,7 +612,7 @@ sealed class WatchOrganizationJoinCodesResponse {
         ordinal: WatchOrganizationJoinCodesResponse_kind.listWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        2,
+        3,
         "add",
         "wrapAdd",
         JoinCode.serializer,
@@ -612,7 +622,7 @@ sealed class WatchOrganizationJoinCodesResponse {
         ordinal: WatchOrganizationJoinCodesResponse_kind.addWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        3,
+        4,
         "remove",
         "wrapRemove",
         _lib_kernel_v1_record_id.RecordId.serializer,
@@ -620,16 +630,6 @@ sealed class WatchOrganizationJoinCodesResponse {
         WatchOrganizationJoinCodesResponse_removeWrapper._,
         (it) => it.value,
         ordinal: WatchOrganizationJoinCodesResponse_kind.removeWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
-        "internal_error",
-        "wrapInternalError",
-        WatchOrganizationJoinCodesResponse_InternalError.serializer,
-        "",
-        WatchOrganizationJoinCodesResponse_internalErrorWrapper._,
-        (it) => it.value,
-        ordinal: WatchOrganizationJoinCodesResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -650,10 +650,10 @@ sealed class WatchOrganizationJoinCodesResponse {
 /// The kind of variant held by a `WatchOrganizationJoinCodesResponse`.
 enum WatchOrganizationJoinCodesResponse_kind {
   unknown(0),
-  listWrapper(1),
-  addWrapper(2),
-  removeWrapper(3),
-  internalErrorWrapper(4);
+  internalErrorWrapper(1),
+  listWrapper(2),
+  addWrapper(3),
+  removeWrapper(4);
 
   final _core.int _ordinal;
 
@@ -694,6 +694,15 @@ sealed class _WatchOrganizationJoinCodesResponse_wrapper implements WatchOrganiz
   _core.String toString() => _skir.internal__stringify(this, WatchOrganizationJoinCodesResponse.serializer);
 }
 
+final class WatchOrganizationJoinCodesResponse_internalErrorWrapper extends _WatchOrganizationJoinCodesResponse_wrapper {
+  final WatchOrganizationJoinCodesResponse_InternalError value;
+
+  WatchOrganizationJoinCodesResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  WatchOrganizationJoinCodesResponse_kind get kind => WatchOrganizationJoinCodesResponse_kind.internalErrorWrapper;
+}
+
 final class WatchOrganizationJoinCodesResponse_listWrapper extends _WatchOrganizationJoinCodesResponse_wrapper {
   final _core.Iterable<JoinCode> value;
 
@@ -719,15 +728,6 @@ final class WatchOrganizationJoinCodesResponse_removeWrapper extends _WatchOrgan
 
   @_core.override
   WatchOrganizationJoinCodesResponse_kind get kind => WatchOrganizationJoinCodesResponse_kind.removeWrapper;
-}
-
-final class WatchOrganizationJoinCodesResponse_internalErrorWrapper extends _WatchOrganizationJoinCodesResponse_wrapper {
-  final WatchOrganizationJoinCodesResponse_InternalError value;
-
-  WatchOrganizationJoinCodesResponse_internalErrorWrapper._(this.value);
-
-  @_core.override
-  WatchOrganizationJoinCodesResponse_kind get kind => WatchOrganizationJoinCodesResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1599,8 +1599,8 @@ final class GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable 
 ///   ```
 ///   switch (e) {
 ///     case GenerateOrganizationJoinCodeResponse_unknown(): { ... }
-///     case GenerateOrganizationJoinCodeResponse_success(:var value): { ... }
 ///     case GenerateOrganizationJoinCodeResponse_internalError(:var value): { ... }
+///     case GenerateOrganizationJoinCodeResponse_success(:var value): { ... }
 ///     case GenerateOrganizationJoinCodeResponse_rolesNotFoundError(:var value): { ... }
 ///     case GenerateOrganizationJoinCodeResponse_rolesNotAssignableError(:var value): { ... }
 ///     case GenerateOrganizationJoinCodeResponse_invalidExpirationError(:var value): { ... }
@@ -1612,6 +1612,16 @@ sealed class GenerateOrganizationJoinCodeResponse {
   /// Constant indicating an unknown `GenerateOrganizationJoinCodeResponse`.
   /// Default value for fields of type `GenerateOrganizationJoinCodeResponse`.
   static const GenerateOrganizationJoinCodeResponse unknown = GenerateOrganizationJoinCodeResponse_unknown._instance;
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory GenerateOrganizationJoinCodeResponse.wrapInternalError(
+    GenerateOrganizationJoinCodeResponse_InternalError value
+  ) => GenerateOrganizationJoinCodeResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(GenerateOrganizationJoinCodeResponse_InternalError(...))`.
+  factory GenerateOrganizationJoinCodeResponse.createInternalError() => GenerateOrganizationJoinCodeResponse.wrapInternalError(
+    GenerateOrganizationJoinCodeResponse_InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
   factory GenerateOrganizationJoinCodeResponse.wrapSuccess(
@@ -1633,16 +1643,6 @@ sealed class GenerateOrganizationJoinCodeResponse {
       singleUse: singleUse,
       autoAccept: autoAccept,
     )
-  );
-
-  /// Create a 'internal_error' variant wrapping around the given value.
-  factory GenerateOrganizationJoinCodeResponse.wrapInternalError(
-    GenerateOrganizationJoinCodeResponse_InternalError value
-  ) => GenerateOrganizationJoinCodeResponse_internalErrorWrapper._(value);
-
-  /// Same as `wrapInternalError(GenerateOrganizationJoinCodeResponse_InternalError(...))`.
-  factory GenerateOrganizationJoinCodeResponse.createInternalError() => GenerateOrganizationJoinCodeResponse.wrapInternalError(
-    GenerateOrganizationJoinCodeResponse_InternalError()
   );
 
   /// Create a 'roles_not_found_error' variant wrapping around the given value.
@@ -1695,16 +1695,6 @@ sealed class GenerateOrganizationJoinCodeResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "success",
-        "wrapSuccess",
-        JoinCode.serializer,
-        "",
-        GenerateOrganizationJoinCodeResponse_successWrapper._,
-        (it) => it.value,
-        ordinal: GenerateOrganizationJoinCodeResponse_kind.successWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
         "internal_error",
         "wrapInternalError",
         GenerateOrganizationJoinCodeResponse_InternalError.serializer,
@@ -1712,6 +1702,16 @@ sealed class GenerateOrganizationJoinCodeResponse {
         GenerateOrganizationJoinCodeResponse_internalErrorWrapper._,
         (it) => it.value,
         ordinal: GenerateOrganizationJoinCodeResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "success",
+        "wrapSuccess",
+        JoinCode.serializer,
+        "",
+        GenerateOrganizationJoinCodeResponse_successWrapper._,
+        (it) => it.value,
+        ordinal: GenerateOrganizationJoinCodeResponse_kind.successWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -1762,8 +1762,8 @@ sealed class GenerateOrganizationJoinCodeResponse {
 /// The kind of variant held by a `GenerateOrganizationJoinCodeResponse`.
 enum GenerateOrganizationJoinCodeResponse_kind {
   unknown(0),
-  successWrapper(1),
-  internalErrorWrapper(2),
+  internalErrorWrapper(1),
+  successWrapper(2),
   rolesNotFoundErrorWrapper(3),
   rolesNotAssignableErrorWrapper(4),
   invalidExpirationErrorWrapper(5);
@@ -1807,15 +1807,6 @@ sealed class _GenerateOrganizationJoinCodeResponse_wrapper implements GenerateOr
   _core.String toString() => _skir.internal__stringify(this, GenerateOrganizationJoinCodeResponse.serializer);
 }
 
-final class GenerateOrganizationJoinCodeResponse_successWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
-  final JoinCode value;
-
-  GenerateOrganizationJoinCodeResponse_successWrapper._(this.value);
-
-  @_core.override
-  GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.successWrapper;
-}
-
 final class GenerateOrganizationJoinCodeResponse_internalErrorWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
   final GenerateOrganizationJoinCodeResponse_InternalError value;
 
@@ -1823,6 +1814,15 @@ final class GenerateOrganizationJoinCodeResponse_internalErrorWrapper extends _G
 
   @_core.override
   GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.internalErrorWrapper;
+}
+
+final class GenerateOrganizationJoinCodeResponse_successWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
+  final JoinCode value;
+
+  GenerateOrganizationJoinCodeResponse_successWrapper._(this.value);
+
+  @_core.override
+  GenerateOrganizationJoinCodeResponse_kind get kind => GenerateOrganizationJoinCodeResponse_kind.successWrapper;
 }
 
 final class GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper extends _GenerateOrganizationJoinCodeResponse_wrapper {
@@ -1969,6 +1969,82 @@ final class RevokeOrganizationJoinCodeRequest_mutable implements RevokeOrganizat
   RevokeOrganizationJoinCodeRequest toFrozen() => RevokeOrganizationJoinCodeRequest(
     codeId: this.codeId,
   ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RevokeOrganizationJoinCodeResponse.InternalError
+// -----------------------------------------------------------------------------
+
+sealed class RevokeOrganizationJoinCodeResponse_InternalError_orMutable {
+  RevokeOrganizationJoinCodeResponse_InternalError toFrozen();
+}
+
+/// Deeply immutable.
+final class RevokeOrganizationJoinCodeResponse_InternalError implements RevokeOrganizationJoinCodeResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RevokeOrganizationJoinCodeResponse_InternalError() => RevokeOrganizationJoinCodeResponse_InternalError._();
+
+  RevokeOrganizationJoinCodeResponse_InternalError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RevokeOrganizationJoinCodeResponse_InternalError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RevokeOrganizationJoinCodeResponse_InternalError_mutable mutable() => RevokeOrganizationJoinCodeResponse_InternalError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RevokeOrganizationJoinCodeResponse_InternalError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RevokeOrganizationJoinCodeResponse_InternalError_mutable toMutable() => RevokeOrganizationJoinCodeResponse_InternalError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RevokeOrganizationJoinCodeResponse_InternalError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RevokeOrganizationJoinCodeResponse_InternalError` instances.
+  static _skir.StructSerializer<RevokeOrganizationJoinCodeResponse_InternalError, RevokeOrganizationJoinCodeResponse_InternalError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "organization/v1/join_codes.skir:RevokeOrganizationJoinCodeResponse.InternalError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RevokeOrganizationJoinCodeResponse_InternalError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RevokeOrganizationJoinCodeResponse_InternalError].
+final class RevokeOrganizationJoinCodeResponse_InternalError_mutable implements RevokeOrganizationJoinCodeResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  RevokeOrganizationJoinCodeResponse_InternalError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RevokeOrganizationJoinCodeResponse_InternalError toFrozen() => RevokeOrganizationJoinCodeResponse_InternalError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2167,82 +2243,6 @@ final class RevokeOrganizationJoinCodeResponse_CodeNotFoundError_mutable impleme
 }
 
 // -----------------------------------------------------------------------------
-// struct RevokeOrganizationJoinCodeResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class RevokeOrganizationJoinCodeResponse_InternalError_orMutable {
-  RevokeOrganizationJoinCodeResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class RevokeOrganizationJoinCodeResponse_InternalError implements RevokeOrganizationJoinCodeResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory RevokeOrganizationJoinCodeResponse_InternalError() => RevokeOrganizationJoinCodeResponse_InternalError._();
-
-  RevokeOrganizationJoinCodeResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = RevokeOrganizationJoinCodeResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static RevokeOrganizationJoinCodeResponse_InternalError_mutable mutable() => RevokeOrganizationJoinCodeResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  RevokeOrganizationJoinCodeResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  RevokeOrganizationJoinCodeResponse_InternalError_mutable toMutable() => RevokeOrganizationJoinCodeResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! RevokeOrganizationJoinCodeResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `RevokeOrganizationJoinCodeResponse_InternalError` instances.
-  static _skir.StructSerializer<RevokeOrganizationJoinCodeResponse_InternalError, RevokeOrganizationJoinCodeResponse_InternalError_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "organization/v1/join_codes.skir:RevokeOrganizationJoinCodeResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (RevokeOrganizationJoinCodeResponse_InternalError_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [RevokeOrganizationJoinCodeResponse_InternalError].
-final class RevokeOrganizationJoinCodeResponse_InternalError_mutable implements RevokeOrganizationJoinCodeResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  RevokeOrganizationJoinCodeResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  RevokeOrganizationJoinCodeResponse_InternalError toFrozen() => RevokeOrganizationJoinCodeResponse_InternalError().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum RevokeOrganizationJoinCodeResponse
 // -----------------------------------------------------------------------------
 
@@ -2250,9 +2250,9 @@ final class RevokeOrganizationJoinCodeResponse_InternalError_mutable implements 
 ///   ```
 ///   switch (e) {
 ///     case RevokeOrganizationJoinCodeResponse_unknown(): { ... }
+///     case RevokeOrganizationJoinCodeResponse_internalError(:var value): { ... }
 ///     case RevokeOrganizationJoinCodeResponse_success(:var value): { ... }
 ///     case RevokeOrganizationJoinCodeResponse_codeNotFoundError(:var value): { ... }
-///     case RevokeOrganizationJoinCodeResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2261,6 +2261,16 @@ sealed class RevokeOrganizationJoinCodeResponse {
   /// Constant indicating an unknown `RevokeOrganizationJoinCodeResponse`.
   /// Default value for fields of type `RevokeOrganizationJoinCodeResponse`.
   static const RevokeOrganizationJoinCodeResponse unknown = RevokeOrganizationJoinCodeResponse_unknown._instance;
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory RevokeOrganizationJoinCodeResponse.wrapInternalError(
+    RevokeOrganizationJoinCodeResponse_InternalError value
+  ) => RevokeOrganizationJoinCodeResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(RevokeOrganizationJoinCodeResponse_InternalError(...))`.
+  factory RevokeOrganizationJoinCodeResponse.createInternalError() => RevokeOrganizationJoinCodeResponse.wrapInternalError(
+    RevokeOrganizationJoinCodeResponse_InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
   factory RevokeOrganizationJoinCodeResponse.wrapSuccess(
@@ -2286,16 +2296,6 @@ sealed class RevokeOrganizationJoinCodeResponse {
     )
   );
 
-  /// Create a 'internal_error' variant wrapping around the given value.
-  factory RevokeOrganizationJoinCodeResponse.wrapInternalError(
-    RevokeOrganizationJoinCodeResponse_InternalError value
-  ) => RevokeOrganizationJoinCodeResponse_internalErrorWrapper._(value);
-
-  /// Same as `wrapInternalError(RevokeOrganizationJoinCodeResponse_InternalError(...))`.
-  factory RevokeOrganizationJoinCodeResponse.createInternalError() => RevokeOrganizationJoinCodeResponse.wrapInternalError(
-    RevokeOrganizationJoinCodeResponse_InternalError()
-  );
-
   /// Returns the kind of variant held by this RevokeOrganizationJoinCodeResponse.
   RevokeOrganizationJoinCodeResponse_kind get kind;
 
@@ -2304,6 +2304,16 @@ sealed class RevokeOrganizationJoinCodeResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
+        "internal_error",
+        "wrapInternalError",
+        RevokeOrganizationJoinCodeResponse_InternalError.serializer,
+        "",
+        RevokeOrganizationJoinCodeResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: RevokeOrganizationJoinCodeResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
         "success",
         "wrapSuccess",
         RevokeOrganizationJoinCodeResponse_Success.serializer,
@@ -2313,7 +2323,7 @@ sealed class RevokeOrganizationJoinCodeResponse {
         ordinal: RevokeOrganizationJoinCodeResponse_kind.successWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        2,
+        3,
         "code_not_found_error",
         "wrapCodeNotFoundError",
         RevokeOrganizationJoinCodeResponse_CodeNotFoundError.serializer,
@@ -2321,16 +2331,6 @@ sealed class RevokeOrganizationJoinCodeResponse {
         RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: RevokeOrganizationJoinCodeResponse_kind.codeNotFoundErrorWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "internal_error",
-        "wrapInternalError",
-        RevokeOrganizationJoinCodeResponse_InternalError.serializer,
-        "",
-        RevokeOrganizationJoinCodeResponse_internalErrorWrapper._,
-        (it) => it.value,
-        ordinal: RevokeOrganizationJoinCodeResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2351,9 +2351,9 @@ sealed class RevokeOrganizationJoinCodeResponse {
 /// The kind of variant held by a `RevokeOrganizationJoinCodeResponse`.
 enum RevokeOrganizationJoinCodeResponse_kind {
   unknown(0),
-  successWrapper(1),
-  codeNotFoundErrorWrapper(2),
-  internalErrorWrapper(3);
+  internalErrorWrapper(1),
+  successWrapper(2),
+  codeNotFoundErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -2394,6 +2394,15 @@ sealed class _RevokeOrganizationJoinCodeResponse_wrapper implements RevokeOrgani
   _core.String toString() => _skir.internal__stringify(this, RevokeOrganizationJoinCodeResponse.serializer);
 }
 
+final class RevokeOrganizationJoinCodeResponse_internalErrorWrapper extends _RevokeOrganizationJoinCodeResponse_wrapper {
+  final RevokeOrganizationJoinCodeResponse_InternalError value;
+
+  RevokeOrganizationJoinCodeResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  RevokeOrganizationJoinCodeResponse_kind get kind => RevokeOrganizationJoinCodeResponse_kind.internalErrorWrapper;
+}
+
 final class RevokeOrganizationJoinCodeResponse_successWrapper extends _RevokeOrganizationJoinCodeResponse_wrapper {
   final RevokeOrganizationJoinCodeResponse_Success value;
 
@@ -2410,15 +2419,6 @@ final class RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper extends 
 
   @_core.override
   RevokeOrganizationJoinCodeResponse_kind get kind => RevokeOrganizationJoinCodeResponse_kind.codeNotFoundErrorWrapper;
-}
-
-final class RevokeOrganizationJoinCodeResponse_internalErrorWrapper extends _RevokeOrganizationJoinCodeResponse_wrapper {
-  final RevokeOrganizationJoinCodeResponse_InternalError value;
-
-  RevokeOrganizationJoinCodeResponse_internalErrorWrapper._(this.value);
-
-  @_core.override
-  RevokeOrganizationJoinCodeResponse_kind get kind => RevokeOrganizationJoinCodeResponse_kind.internalErrorWrapper;
 }
 
 final _skir.Method<

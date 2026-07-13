@@ -8,20 +8,22 @@ import { Organization } from "organization/v1/organization.skir";
 method WatchUserOrganizations(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   list: [Organization];
   add: Organization;
   remove: RecordId;
-  internal_error: struct {};
 } = 246975;
 
 // All pending join requests made by the user.
 method WatchUserJoinRequests(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   list: [UserJoinRequest];
   add: UserJoinRequest;
   remove: RecordId;
-  internal_error: struct {};
 } = 939197;
 
 method SubmitUserJoinRequest(
@@ -29,8 +31,11 @@ method SubmitUserJoinRequest(
     code: RecordId;
   }
 ): enum {
+  internal_error: struct {};
+
   request_made: UserJoinRequest;
   auto_accepted: AutoAcceptedMember;
+
   code_not_found_error: struct {
     code: RecordId;
   };
@@ -38,7 +43,6 @@ method SubmitUserJoinRequest(
   no_assignable_roles_error: struct {};
   max_pending_requests_error: struct {};
   pending_request_exists_error: struct {};
-  internal_error: struct {};
 } = 4962;
 
 method CancelUserJoinRequest(
@@ -46,9 +50,11 @@ method CancelUserJoinRequest(
     request_id: RecordId;
   }
 ): enum {
+  internal_error: struct {};
+
   success: struct {};
+
   request_not_found_error: struct {
     request_id: RecordId;
   };
-  internal_error: struct {};
 } = 387737;

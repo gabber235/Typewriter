@@ -221,10 +221,10 @@ fn add_organization_roles_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.roles.list",
+        "cloud.out.user.{}.organization.{}.roles.watch",
         user_id, org_id
     ));
-    allow_subscribe.push(format!("cloud.in.organization.{}.roles.list", org_id));
+    allow_subscribe.push(format!("cloud.in.organization.{}.roles.watch", org_id));
 }
 
 /// Adds permissions for organization/members component

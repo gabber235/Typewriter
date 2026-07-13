@@ -17,7 +17,7 @@ serde_json = "1"
 surrealdb-component = { path = "../../providers/surrealdb/surrealdb-component" }
 uuid = { version = "1.0", features = ["v4"] }
 wasmcloud-component = "0.2"
-wasmcloud-utils = { path = "../../wasmcloud-utils" }
+wasmcloud-utils = { workspace = true }
 wit-bindgen = "0.41"
 
 [build-dependencies]

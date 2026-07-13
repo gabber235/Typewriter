@@ -13,11 +13,12 @@ struct OrganizationMember {
 method WatchOrganizationMembers(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   list: [OrganizationMember];
   add: OrganizationMember;
-  remove: RecordId;
-  internal_error: struct {};
   update: OrganizationMember;
+  remove: RecordId;
 } = 638484;
 
 method UpdateOrganizationMemberRoles(
@@ -26,7 +27,10 @@ method UpdateOrganizationMemberRoles(
     role_ids: [RecordId];
   }
 ): enum {
+  internal_error: struct {};
+
   success: OrganizationMember;
+
   user_not_found_error: struct {
     user_id: RecordId;
   };
@@ -38,7 +42,6 @@ method UpdateOrganizationMemberRoles(
   };
   roles_required_error: struct {};
   founder_role_required_error: struct {};
-  internal_error: struct {};
 } = 813953;
 
 method RemoveOrganizationMember(
@@ -46,12 +49,14 @@ method RemoveOrganizationMember(
     user_id: RecordId;
   }
 ): enum {
+  internal_error: struct {};
+
   success: struct {};
+
   user_not_member_error: struct {
     user_id: RecordId;
   };
   founder_cannot_be_removed_error: struct {
     user_id: RecordId;
   };
-  internal_error: struct {};
 } = 291414;

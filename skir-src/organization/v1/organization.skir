@@ -12,8 +12,9 @@ method CreateOrganization(
     logo_url: string?;
   }
 ): enum {
-  success: Organization;
   internal_error: struct {};
+
+  success: Organization;
 } = 336038;
 
 method DeleteOrganization(
@@ -21,6 +22,7 @@ method DeleteOrganization(
     organization_id: RecordId;
   }
 ): enum {
-  success: struct {};
   internal_error: struct {};
+
+  success: struct {};
 } = 627251;

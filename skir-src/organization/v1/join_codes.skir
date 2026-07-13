@@ -15,10 +15,11 @@ struct JoinCode {
 method WatchOrganizationJoinCodes(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   list: [JoinCode];
   add: JoinCode;
   remove: RecordId;
-  internal_error: struct {};
 } = 690316;
 
 method GenerateOrganizationJoinCode(
@@ -33,7 +34,10 @@ method GenerateOrganizationJoinCode(
     };
   }
 ): enum {
+  internal_error: struct {};
+
   success: JoinCode;
+
   roles_not_found_error: struct {
     role_ids: [RecordId];
   };
@@ -43,7 +47,6 @@ method GenerateOrganizationJoinCode(
   invalid_expiration_error: struct {
     duration: Duration;
   };
-  internal_error: struct {};
 } = 804958;
 
 method RevokeOrganizationJoinCode(
@@ -51,9 +54,11 @@ method RevokeOrganizationJoinCode(
     code_id: RecordId;
   }
 ): enum {
+  internal_error: struct {};
+
   success: struct {};
+
   code_not_found_error: struct {
     code_id: RecordId;
   };
-  internal_error: struct {};
 } = 510187;

@@ -12,5 +12,5 @@ crate-type = ["cdylib"]
 otel-wasi = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-wasmcloud-utils = { path = "../../wasmcloud-utils" }
+wasmcloud-utils = { workspace = true }
 wit-bindgen = { workspace = true }

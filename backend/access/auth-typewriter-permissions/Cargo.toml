@@ -17,7 +17,7 @@ serde_json = { workspace = true }
 wstd = { workspace = true }
 
 surrealdb-component-sdk = { workspace = true }
-wasmcloud-utils = { path = "../../wasmcloud-utils" }
+wasmcloud-utils = { workspace = true }
 wit-bindgen = { workspace = true }
 
 opentelemetry = { workspace = true }

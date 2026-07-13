@@ -56,18 +56,13 @@ impl Color {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
-        let a: *mut crate::skir_client::internal::StructAdapter<Color> =
-            Color::_adapter() as *const _ as *mut _;
-        (*a).add_field(
-            "argb",
-            0,
-            crate::skir_client::Serializer::int32(),
-            "",
-            |x: &Color| &x.argb,
-            |x: &mut Color, v| x.argb = v,
-        );
-        (*a).finalize();
-    });
+    static INIT: std::sync::LazyLock<()> =
+        std::sync::LazyLock::new(|| {
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<Color> = Color::_adapter() as *const _ as *mut _;
+                (*a).add_field("argb", 0, crate::skir_client::Serializer::int32(), "", |x: &Color| &x.argb, |x: &mut Color, v| x.argb = v);
+                (*a).finalize();
+            }
+        });
     let _ = *INIT;
 }

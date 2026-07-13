@@ -3,9 +3,10 @@
 method GetSentinelCredentials(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   success: struct {
     jwt: string;
     seed: string;
   };
-  internal_error: struct {};
 } = 403062;

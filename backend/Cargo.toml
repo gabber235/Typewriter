@@ -5,6 +5,7 @@ members = [
   "access/auth-sentinel",
   "access/auth-typewriter-permissions",
   "organization/organization-members",
+  "organization/organization-roles",
   "organization/user-organization",
   "wasmcloud-utils",
   "wasmcloud-utils-macros"
@@ -27,6 +28,8 @@ url = "2"
 skir-client = "0.1"
 surrealdb-component-sdk = "0.7"
 wasmcloud-component = "0.2.0"
+wasmcloud-utils = { path = "wasmcloud-utils" }
+wasmcloud-utils-macros = { path = "wasmcloud-utils-macros" }
 wstd = "0.6"
 
 opentelemetry = "0.31"

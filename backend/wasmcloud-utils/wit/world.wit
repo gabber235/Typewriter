@@ -1,4 +1,4 @@
-package typewriter:wasmcloud-utils;
+package typewriter:wasmcloud-utils@0.1.0;
 
 world interfaces {
   import wasmcloud:messaging/consumer@0.2.0;

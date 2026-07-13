@@ -12,6 +12,7 @@ use crate::skir::base::organization::v1::member::*;
 use crate::skir::base::organization::v1::organization::*;
 use crate::skir::base::organization::v1::user::*;
 use crate::skir::base::service::v1::status::*;
+use crate::skirout::base::organization::v1::role::*;
 
 wasmcloud_utils_macros::skir_response! {
     GetSentinelCredentialsResponse {
@@ -162,5 +163,12 @@ wasmcloud_utils_macros::skir_response! {
             UserNotMemberError(e) => format!("User is not a member: '{}'", e.user_id),
             FounderCannotBeRemovedError(e) => format!("Founder cannot be removed: '{}'", e.user_id),
         }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationRolesResponse {
+        success: [List, Add, Update, Remove],
+        errors {}
     }
 }

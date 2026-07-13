@@ -16,8 +16,10 @@ struct OrganizationRole {
 method WatchOrganizationRoles(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   list: [OrganizationRole];
   add: OrganizationRole;
+  update: OrganizationRole;
   remove: RecordId;
-  internal_error: struct {};
 } = 49267;

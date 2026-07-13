@@ -1,0 +1,8 @@
+package typewriter:organization-roles@0.1.0;
+
+world organization-roles {
+  import seamlezz:surrealdb/call@0.2.0;
+  import wasmcloud:messaging/types@0.2.0;
+  import wasmcloud:messaging/consumer@0.2.0;
+  export wasmcloud:messaging/handler@0.2.0;
+}

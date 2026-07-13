@@ -4,6 +4,18 @@ import "dart:typed_data";
 import "package:dart_nats/dart_nats.dart";
 import "package:mocktail/mocktail.dart";
 
+class MockNatsPublication {
+  MockNatsPublication({
+    required this.subject,
+    required Uint8List data,
+    required this.replyTo,
+  }) : data = Uint8List.fromList(data);
+
+  final String? subject;
+  final Uint8List data;
+  final String? replyTo;
+}
+
 class MockNatsClient extends Mock implements Client {
   final Map<String, Uint8List Function(Uint8List)> _handlers = {};
   final Map<int, MockSubscription<dynamic>> _subscriptions = {};
@@ -12,6 +24,11 @@ class MockNatsClient extends Mock implements Client {
       StreamController<Status>.broadcast();
 
   int _sidCounter = 0;
+
+  final List<MockNatsPublication> publications = [];
+
+  Iterable<String> get subscriptionSubjects =>
+      _subscriptions.values.map((subscription) => subscription.subject);
 
   @override
   Status get status => _status;
@@ -38,6 +55,15 @@ class MockNatsClient extends Mock implements Client {
     if (_subscriptions.containsKey(sid)) {
       final sub = _subscriptions[sid]!;
       final message = Message(sub.subject, sid, data, this);
+      sub.addMessage(message);
+    }
+  }
+
+  void emitMessageOnSubject(String subject, Uint8List data) {
+    for (final sub in _subscriptions.values.where(
+      (subscription) => subscription.subject == subject,
+    )) {
+      final message = Message(sub.subject, sub.sid, data, this);
       sub.addMessage(message);
     }
   }
@@ -73,6 +99,9 @@ class MockNatsClient extends Mock implements Client {
     if (_status != Status.connected && !(buffer ?? true)) {
       return false;
     }
+    publications.add(
+      MockNatsPublication(subject: subject, data: data, replyTo: replyTo),
+    );
     return true;
   }
 

@@ -6,3 +6,4 @@ resources:
   - ../../access/auth-typewriter-permissions/deploy/production
   - ../../organization/user-organization/deploy/production
   - ../../organization/organization-members/deploy/production
+  - ../../organization/organization-roles/deploy/production

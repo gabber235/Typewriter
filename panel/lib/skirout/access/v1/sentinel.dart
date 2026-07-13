@@ -91,6 +91,82 @@ final class GetSentinelCredentialsRequest_mutable implements GetSentinelCredenti
 }
 
 // -----------------------------------------------------------------------------
+// struct GetSentinelCredentialsResponse.InternalError
+// -----------------------------------------------------------------------------
+
+sealed class GetSentinelCredentialsResponse_InternalError_orMutable {
+  GetSentinelCredentialsResponse_InternalError toFrozen();
+}
+
+/// Deeply immutable.
+final class GetSentinelCredentialsResponse_InternalError implements GetSentinelCredentialsResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GetSentinelCredentialsResponse_InternalError() => GetSentinelCredentialsResponse_InternalError._();
+
+  GetSentinelCredentialsResponse_InternalError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GetSentinelCredentialsResponse_InternalError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GetSentinelCredentialsResponse_InternalError_mutable mutable() => GetSentinelCredentialsResponse_InternalError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GetSentinelCredentialsResponse_InternalError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GetSentinelCredentialsResponse_InternalError_mutable toMutable() => GetSentinelCredentialsResponse_InternalError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GetSentinelCredentialsResponse_InternalError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GetSentinelCredentialsResponse_InternalError` instances.
+  static _skir.StructSerializer<GetSentinelCredentialsResponse_InternalError, GetSentinelCredentialsResponse_InternalError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "access/v1/sentinel.skir:GetSentinelCredentialsResponse.InternalError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GetSentinelCredentialsResponse_InternalError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GetSentinelCredentialsResponse_InternalError].
+final class GetSentinelCredentialsResponse_InternalError_mutable implements GetSentinelCredentialsResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  GetSentinelCredentialsResponse_InternalError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GetSentinelCredentialsResponse_InternalError toFrozen() => GetSentinelCredentialsResponse_InternalError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct GetSentinelCredentialsResponse.Success
 // -----------------------------------------------------------------------------
 
@@ -221,82 +297,6 @@ final class GetSentinelCredentialsResponse_Success_mutable implements GetSentine
 }
 
 // -----------------------------------------------------------------------------
-// struct GetSentinelCredentialsResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class GetSentinelCredentialsResponse_InternalError_orMutable {
-  GetSentinelCredentialsResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class GetSentinelCredentialsResponse_InternalError implements GetSentinelCredentialsResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory GetSentinelCredentialsResponse_InternalError() => GetSentinelCredentialsResponse_InternalError._();
-
-  GetSentinelCredentialsResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = GetSentinelCredentialsResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static GetSentinelCredentialsResponse_InternalError_mutable mutable() => GetSentinelCredentialsResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  GetSentinelCredentialsResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  GetSentinelCredentialsResponse_InternalError_mutable toMutable() => GetSentinelCredentialsResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! GetSentinelCredentialsResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `GetSentinelCredentialsResponse_InternalError` instances.
-  static _skir.StructSerializer<GetSentinelCredentialsResponse_InternalError, GetSentinelCredentialsResponse_InternalError_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "access/v1/sentinel.skir:GetSentinelCredentialsResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (GetSentinelCredentialsResponse_InternalError_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [GetSentinelCredentialsResponse_InternalError].
-final class GetSentinelCredentialsResponse_InternalError_mutable implements GetSentinelCredentialsResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  GetSentinelCredentialsResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  GetSentinelCredentialsResponse_InternalError toFrozen() => GetSentinelCredentialsResponse_InternalError().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum GetSentinelCredentialsResponse
 // -----------------------------------------------------------------------------
 
@@ -304,8 +304,8 @@ final class GetSentinelCredentialsResponse_InternalError_mutable implements GetS
 ///   ```
 ///   switch (e) {
 ///     case GetSentinelCredentialsResponse_unknown(): { ... }
-///     case GetSentinelCredentialsResponse_success(:var value): { ... }
 ///     case GetSentinelCredentialsResponse_internalError(:var value): { ... }
+///     case GetSentinelCredentialsResponse_success(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -314,6 +314,16 @@ sealed class GetSentinelCredentialsResponse {
   /// Constant indicating an unknown `GetSentinelCredentialsResponse`.
   /// Default value for fields of type `GetSentinelCredentialsResponse`.
   static const GetSentinelCredentialsResponse unknown = GetSentinelCredentialsResponse_unknown._instance;
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory GetSentinelCredentialsResponse.wrapInternalError(
+    GetSentinelCredentialsResponse_InternalError value
+  ) => GetSentinelCredentialsResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(GetSentinelCredentialsResponse_InternalError(...))`.
+  factory GetSentinelCredentialsResponse.createInternalError() => GetSentinelCredentialsResponse.wrapInternalError(
+    GetSentinelCredentialsResponse_InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
   factory GetSentinelCredentialsResponse.wrapSuccess(
@@ -331,16 +341,6 @@ sealed class GetSentinelCredentialsResponse {
     )
   );
 
-  /// Create a 'internal_error' variant wrapping around the given value.
-  factory GetSentinelCredentialsResponse.wrapInternalError(
-    GetSentinelCredentialsResponse_InternalError value
-  ) => GetSentinelCredentialsResponse_internalErrorWrapper._(value);
-
-  /// Same as `wrapInternalError(GetSentinelCredentialsResponse_InternalError(...))`.
-  factory GetSentinelCredentialsResponse.createInternalError() => GetSentinelCredentialsResponse.wrapInternalError(
-    GetSentinelCredentialsResponse_InternalError()
-  );
-
   /// Returns the kind of variant held by this GetSentinelCredentialsResponse.
   GetSentinelCredentialsResponse_kind get kind;
 
@@ -349,16 +349,6 @@ sealed class GetSentinelCredentialsResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "success",
-        "wrapSuccess",
-        GetSentinelCredentialsResponse_Success.serializer,
-        "",
-        GetSentinelCredentialsResponse_successWrapper._,
-        (it) => it.value,
-        ordinal: GetSentinelCredentialsResponse_kind.successWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
         "internal_error",
         "wrapInternalError",
         GetSentinelCredentialsResponse_InternalError.serializer,
@@ -366,6 +356,16 @@ sealed class GetSentinelCredentialsResponse {
         GetSentinelCredentialsResponse_internalErrorWrapper._,
         (it) => it.value,
         ordinal: GetSentinelCredentialsResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "success",
+        "wrapSuccess",
+        GetSentinelCredentialsResponse_Success.serializer,
+        "",
+        GetSentinelCredentialsResponse_successWrapper._,
+        (it) => it.value,
+        ordinal: GetSentinelCredentialsResponse_kind.successWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -386,8 +386,8 @@ sealed class GetSentinelCredentialsResponse {
 /// The kind of variant held by a `GetSentinelCredentialsResponse`.
 enum GetSentinelCredentialsResponse_kind {
   unknown(0),
-  successWrapper(1),
-  internalErrorWrapper(2);
+  internalErrorWrapper(1),
+  successWrapper(2);
 
   final _core.int _ordinal;
 
@@ -428,15 +428,6 @@ sealed class _GetSentinelCredentialsResponse_wrapper implements GetSentinelCrede
   _core.String toString() => _skir.internal__stringify(this, GetSentinelCredentialsResponse.serializer);
 }
 
-final class GetSentinelCredentialsResponse_successWrapper extends _GetSentinelCredentialsResponse_wrapper {
-  final GetSentinelCredentialsResponse_Success value;
-
-  GetSentinelCredentialsResponse_successWrapper._(this.value);
-
-  @_core.override
-  GetSentinelCredentialsResponse_kind get kind => GetSentinelCredentialsResponse_kind.successWrapper;
-}
-
 final class GetSentinelCredentialsResponse_internalErrorWrapper extends _GetSentinelCredentialsResponse_wrapper {
   final GetSentinelCredentialsResponse_InternalError value;
 
@@ -444,6 +435,15 @@ final class GetSentinelCredentialsResponse_internalErrorWrapper extends _GetSent
 
   @_core.override
   GetSentinelCredentialsResponse_kind get kind => GetSentinelCredentialsResponse_kind.internalErrorWrapper;
+}
+
+final class GetSentinelCredentialsResponse_successWrapper extends _GetSentinelCredentialsResponse_wrapper {
+  final GetSentinelCredentialsResponse_Success value;
+
+  GetSentinelCredentialsResponse_successWrapper._(this.value);
+
+  @_core.override
+  GetSentinelCredentialsResponse_kind get kind => GetSentinelCredentialsResponse_kind.successWrapper;
 }
 
 final _skir.Method<

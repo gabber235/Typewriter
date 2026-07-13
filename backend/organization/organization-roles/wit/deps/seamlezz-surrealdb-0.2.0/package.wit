@@ -1,0 +1,23 @@
+package seamlezz:surrealdb@0.2.0;
+
+interface call {
+  variant live-action {
+    create,
+    update,
+    delete,
+    killed,
+  }
+
+  record live-event {
+    subscription-id: u64,
+    query-id: string,
+    action: live-action,
+    data: list<u8>,
+  }
+
+  query: async func(query: string, params: list<tuple<string, list<u8>>>) -> list<result<list<u8>, string>>;
+
+  subscribe: async func(query: string, params: list<tuple<string, list<u8>>>) -> tuple<u64, stream<live-event>>;
+
+  cancel: async func(subscription-id: u64) -> result<_, string>;
+}

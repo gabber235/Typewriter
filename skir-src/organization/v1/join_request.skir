@@ -34,10 +34,11 @@ struct AutoAcceptedMember {
 method WatchOrganizationJoinRequests(
   struct {}
 ): enum {
+  internal_error: struct {};
+
   list: [OrganizationJoinRequest];
   add: OrganizationJoinRequest;
   remove: RecordId;
-  internal_error: struct {};
 } = 399821;
 
 method ApproveOrganizationJoinRequest(
@@ -46,7 +47,10 @@ method ApproveOrganizationJoinRequest(
     role_ids: [RecordId];
   }
 ): enum {
+  internal_error: struct {};
+
   success: OrganizationMember;
+
   request_not_found_error: struct {
     request_id: RecordId;
   };
@@ -60,7 +64,6 @@ method ApproveOrganizationJoinRequest(
   user_already_member_error: struct {
     user_id: RecordId;
   };
-  internal_error: struct {};
 } = 167357;
 
 method DeclineOrganizationJoinRequest(
@@ -68,9 +71,11 @@ method DeclineOrganizationJoinRequest(
     request_id: RecordId;
   }
 ): enum {
+  internal_error: struct {};
+
   success: struct {};
+
   request_not_found_error: struct {
     request_id: RecordId;
   };
-  internal_error: struct {};
 } = 329306;

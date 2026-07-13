@@ -487,6 +487,82 @@ final class GetServiceStatusRequest_mutable implements GetServiceStatusRequest_o
 }
 
 // -----------------------------------------------------------------------------
+// struct GetServiceStatusResponse.InternalError
+// -----------------------------------------------------------------------------
+
+sealed class GetServiceStatusResponse_InternalError_orMutable {
+  GetServiceStatusResponse_InternalError toFrozen();
+}
+
+/// Deeply immutable.
+final class GetServiceStatusResponse_InternalError implements GetServiceStatusResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GetServiceStatusResponse_InternalError() => GetServiceStatusResponse_InternalError._();
+
+  GetServiceStatusResponse_InternalError._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GetServiceStatusResponse_InternalError._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GetServiceStatusResponse_InternalError_mutable mutable() => GetServiceStatusResponse_InternalError_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GetServiceStatusResponse_InternalError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GetServiceStatusResponse_InternalError_mutable toMutable() => GetServiceStatusResponse_InternalError_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GetServiceStatusResponse_InternalError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GetServiceStatusResponse_InternalError` instances.
+  static _skir.StructSerializer<GetServiceStatusResponse_InternalError, GetServiceStatusResponse_InternalError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/status.skir:GetServiceStatusResponse.InternalError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GetServiceStatusResponse_InternalError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GetServiceStatusResponse_InternalError].
+final class GetServiceStatusResponse_InternalError_mutable implements GetServiceStatusResponse_InternalError_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  GetServiceStatusResponse_InternalError_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GetServiceStatusResponse_InternalError toFrozen() => GetServiceStatusResponse_InternalError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct GetServiceStatusResponse.Status
 // -----------------------------------------------------------------------------
 
@@ -671,82 +747,6 @@ final class GetServiceStatusResponse_ServiceNotFound_mutable implements GetServi
 }
 
 // -----------------------------------------------------------------------------
-// struct GetServiceStatusResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class GetServiceStatusResponse_InternalError_orMutable {
-  GetServiceStatusResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class GetServiceStatusResponse_InternalError implements GetServiceStatusResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory GetServiceStatusResponse_InternalError() => GetServiceStatusResponse_InternalError._();
-
-  GetServiceStatusResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = GetServiceStatusResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static GetServiceStatusResponse_InternalError_mutable mutable() => GetServiceStatusResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  GetServiceStatusResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  GetServiceStatusResponse_InternalError_mutable toMutable() => GetServiceStatusResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! GetServiceStatusResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `GetServiceStatusResponse_InternalError` instances.
-  static _skir.StructSerializer<GetServiceStatusResponse_InternalError, GetServiceStatusResponse_InternalError_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/status.skir:GetServiceStatusResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (GetServiceStatusResponse_InternalError_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [GetServiceStatusResponse_InternalError].
-final class GetServiceStatusResponse_InternalError_mutable implements GetServiceStatusResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  GetServiceStatusResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  GetServiceStatusResponse_InternalError toFrozen() => GetServiceStatusResponse_InternalError().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum GetServiceStatusResponse
 // -----------------------------------------------------------------------------
 
@@ -754,9 +754,9 @@ final class GetServiceStatusResponse_InternalError_mutable implements GetService
 ///   ```
 ///   switch (e) {
 ///     case GetServiceStatusResponse_unknown(): { ... }
+///     case GetServiceStatusResponse_internalError(:var value): { ... }
 ///     case GetServiceStatusResponse_status(:var value): { ... }
 ///     case GetServiceStatusResponse_serviceNotFound(:var value): { ... }
-///     case GetServiceStatusResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -765,6 +765,16 @@ sealed class GetServiceStatusResponse {
   /// Constant indicating an unknown `GetServiceStatusResponse`.
   /// Default value for fields of type `GetServiceStatusResponse`.
   static const GetServiceStatusResponse unknown = GetServiceStatusResponse_unknown._instance;
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory GetServiceStatusResponse.wrapInternalError(
+    GetServiceStatusResponse_InternalError value
+  ) => GetServiceStatusResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(GetServiceStatusResponse_InternalError(...))`.
+  factory GetServiceStatusResponse.createInternalError() => GetServiceStatusResponse.wrapInternalError(
+    GetServiceStatusResponse_InternalError()
+  );
 
   /// Create a 'status' variant wrapping around the given value.
   factory GetServiceStatusResponse.wrapStatus(
@@ -790,16 +800,6 @@ sealed class GetServiceStatusResponse {
     GetServiceStatusResponse_ServiceNotFound()
   );
 
-  /// Create a 'internal_error' variant wrapping around the given value.
-  factory GetServiceStatusResponse.wrapInternalError(
-    GetServiceStatusResponse_InternalError value
-  ) => GetServiceStatusResponse_internalErrorWrapper._(value);
-
-  /// Same as `wrapInternalError(GetServiceStatusResponse_InternalError(...))`.
-  factory GetServiceStatusResponse.createInternalError() => GetServiceStatusResponse.wrapInternalError(
-    GetServiceStatusResponse_InternalError()
-  );
-
   /// Returns the kind of variant held by this GetServiceStatusResponse.
   GetServiceStatusResponse_kind get kind;
 
@@ -808,6 +808,16 @@ sealed class GetServiceStatusResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
+        "internal_error",
+        "wrapInternalError",
+        GetServiceStatusResponse_InternalError.serializer,
+        "",
+        GetServiceStatusResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: GetServiceStatusResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
         "status",
         "wrapStatus",
         GetServiceStatusResponse_Status.serializer,
@@ -817,7 +827,7 @@ sealed class GetServiceStatusResponse {
         ordinal: GetServiceStatusResponse_kind.statusWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        2,
+        3,
         "service_not_found",
         "wrapServiceNotFound",
         GetServiceStatusResponse_ServiceNotFound.serializer,
@@ -825,16 +835,6 @@ sealed class GetServiceStatusResponse {
         GetServiceStatusResponse_serviceNotFoundWrapper._,
         (it) => it.value,
         ordinal: GetServiceStatusResponse_kind.serviceNotFoundWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "internal_error",
-        "wrapInternalError",
-        GetServiceStatusResponse_InternalError.serializer,
-        "",
-        GetServiceStatusResponse_internalErrorWrapper._,
-        (it) => it.value,
-        ordinal: GetServiceStatusResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -855,9 +855,9 @@ sealed class GetServiceStatusResponse {
 /// The kind of variant held by a `GetServiceStatusResponse`.
 enum GetServiceStatusResponse_kind {
   unknown(0),
-  statusWrapper(1),
-  serviceNotFoundWrapper(2),
-  internalErrorWrapper(3);
+  internalErrorWrapper(1),
+  statusWrapper(2),
+  serviceNotFoundWrapper(3);
 
   final _core.int _ordinal;
 
@@ -898,6 +898,15 @@ sealed class _GetServiceStatusResponse_wrapper implements GetServiceStatusRespon
   _core.String toString() => _skir.internal__stringify(this, GetServiceStatusResponse.serializer);
 }
 
+final class GetServiceStatusResponse_internalErrorWrapper extends _GetServiceStatusResponse_wrapper {
+  final GetServiceStatusResponse_InternalError value;
+
+  GetServiceStatusResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.internalErrorWrapper;
+}
+
 final class GetServiceStatusResponse_statusWrapper extends _GetServiceStatusResponse_wrapper {
   final GetServiceStatusResponse_Status value;
 
@@ -914,15 +923,6 @@ final class GetServiceStatusResponse_serviceNotFoundWrapper extends _GetServiceS
 
   @_core.override
   GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.serviceNotFoundWrapper;
-}
-
-final class GetServiceStatusResponse_internalErrorWrapper extends _GetServiceStatusResponse_wrapper {
-  final GetServiceStatusResponse_InternalError value;
-
-  GetServiceStatusResponse_internalErrorWrapper._(this.value);
-
-  @_core.override
-  GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.internalErrorWrapper;
 }
 
 final _skir.Method<
