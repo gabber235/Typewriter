@@ -3,13 +3,13 @@ import "package:typewriter_panel/skir.dart" as skir;
 
 extension SkirColorExtension on skir.Color {
   Color toFlutterColor() {
-    return Color(argb);
+    return Color(argb.toUnsigned(32));
   }
 }
 
 extension FlutterColorExtension on Color {
   skir.Color toSkirColor() {
-    return skir.Color(argb: toARGB32());
+    return skir.Color(argb: toARGB32().toSigned(32));
   }
 }
 

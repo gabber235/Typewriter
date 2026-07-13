@@ -1,9 +1,27 @@
+import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:skir_client/skir_client.dart";
 import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/skir.dart";
 
 void main() {
+  group("Color serialization", () {
+    for (final color in [
+      Colors.blue,
+      const Color(0x00000000),
+      const Color(0x7fffffff),
+      const Color(0x80000000),
+      const Color(0xffffffff),
+    ]) {
+      test("preserves 0x${color.toARGB32().toRadixString(16)}", () {
+        final bytes = skir.Color.serializer.toBytes(color.toSkirColor());
+        final decoded = skir.Color.serializer.fromBytes(bytes).toFlutterColor();
+
+        expect(decoded.toARGB32(), color.toARGB32());
+      });
+    }
+  });
+
   group("RecordIdExtension.id", () {
     test("formats unknown, number, and string keys", () {
       expect(_id(skir.RecordIdKey.unknown), "<unknown>");
