@@ -39,8 +39,8 @@ class Services extends _$Services {
     final request = ListOrganizationServicesRequest();
     final stream = ref.requestProtoThenListen(
       subject:
-          "cloud.out.user.$userId.organization.$organizationId.services.list",
-      listenSubject: "cloud.in.organization.$organizationId.services.list",
+          "cloud.to.user.$userId.organization.$organizationId.services.list",
+      listenSubject: "cloud.from.organization.$organizationId.services.list",
       request: request,
       responseBuilder: ListOrganizationServicesResponse.new,
     );
@@ -68,7 +68,7 @@ class Services extends _$Services {
     final response = await ref
         .read(natsProvider)
         .requestProto(
-          "cloud.out.user.$userId.organization.$organizationId.services.bind",
+          "cloud.to.user.$userId.organization.$organizationId.services.bind",
           request,
           BindServiceResponse.new,
         );
@@ -107,7 +107,7 @@ class Services extends _$Services {
       final response = await ref
           .read(natsProvider)
           .requestProto(
-            "cloud.out.user.$userId.organization.$organizationId.services.update",
+            "cloud.to.user.$userId.organization.$organizationId.services.update",
             request,
             UpdateServiceResponse.new,
           );
@@ -143,7 +143,7 @@ class Services extends _$Services {
       final response = await ref
           .read(natsProvider)
           .requestProto(
-            "cloud.out.user.$userId.organization.$organizationId.services.unbind",
+            "cloud.to.user.$userId.organization.$organizationId.services.unbind",
             request,
             UnbindServiceResponse.new,
           );

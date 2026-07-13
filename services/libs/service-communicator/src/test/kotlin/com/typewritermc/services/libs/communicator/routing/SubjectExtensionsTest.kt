@@ -23,7 +23,7 @@ class SubjectExtensionsTest : FunSpec({
         }
 
         test("joins multiple segments") {
-            "cloud.in".join("realm.{realmId}") shouldBe "cloud.in.realm.{realmId}"
+            "cloud.from".join("realm.{realmId}") shouldBe "cloud.from.realm.{realmId}"
         }
     }
 })

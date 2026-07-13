@@ -221,8 +221,8 @@ class OrganizationRoles extends _$OrganizationRoles {
 
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.${organizationId.id}.roles.watch",
-      listenSubject: "cloud.in.organization.${organizationId.id}.roles.watch",
+          "cloud.to.user.$userId.organization.${organizationId.id}.roles.watch",
+      listenSubject: "cloud.from.organization.${organizationId.id}.roles.watch",
       requestBytes: skir.WatchOrganizationRolesRequest.serializer.toBytes(
         request,
       ),
@@ -270,8 +270,9 @@ class OrganizationMembers extends _$OrganizationMembers {
     final request = skir.WatchOrganizationMembersRequest();
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.${organizationId.id}.members.watch",
-      listenSubject: "cloud.in.organization.${organizationId.id}.members.watch",
+          "cloud.to.user.$userId.organization.${organizationId.id}.members.watch",
+      listenSubject:
+          "cloud.from.organization.${organizationId.id}.members.watch",
       requestBytes: skir.WatchOrganizationMembersRequest.serializer.toBytes(
         request,
       ),
@@ -366,7 +367,7 @@ class OrganizationMembers extends _$OrganizationMembers {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.${organizationId.id}.members.update",
+            "cloud.to.user.$userId.organization.${organizationId.id}.members.update",
             skir.UpdateOrganizationMemberRolesRequest.serializer.toBytes(
               request,
             ),
@@ -435,7 +436,7 @@ class OrganizationMembers extends _$OrganizationMembers {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.${organizationId.id}.members.remove",
+            "cloud.to.user.$userId.organization.${organizationId.id}.members.remove",
             skir.RemoveOrganizationMemberRequest.serializer.toBytes(request),
             skir.RemoveOrganizationMemberResponse.serializer,
           );
@@ -485,9 +486,9 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
     final request = skir.WatchOrganizationJoinRequestsRequest();
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.${organizationId.id}.members.join_requests.watch",
+          "cloud.to.user.$userId.organization.${organizationId.id}.members.join_requests.watch",
       listenSubject:
-          "cloud.in.organization.${organizationId.id}.members.join_requests.watch",
+          "cloud.from.organization.${organizationId.id}.members.join_requests.watch",
       requestBytes: skir.WatchOrganizationJoinRequestsRequest.serializer
           .toBytes(request),
       serializer: skir.WatchOrganizationJoinRequestsResponse.serializer,
@@ -545,7 +546,7 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.$organizationId.members.join_requests.approve",
+            "cloud.to.user.$userId.organization.$organizationId.members.join_requests.approve",
             skir.ApproveOrganizationJoinRequestRequest.serializer.toBytes(
               request,
             ),
@@ -608,7 +609,7 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.$organizationId.members.join_requests.decline",
+            "cloud.to.user.$userId.organization.$organizationId.members.join_requests.decline",
             skir.DeclineOrganizationJoinRequestRequest.serializer.toBytes(
               request,
             ),
@@ -662,9 +663,9 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     final request = skir.WatchOrganizationJoinCodesRequest();
     yield* ref.watchRequest(
       subject:
-          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.watch",
+          "cloud.to.user.$userId.organization.$organizationId.members.join_codes.watch",
       listenSubject:
-          "cloud.in.organization.$organizationId.members.join_codes.watch",
+          "cloud.from.organization.$organizationId.members.join_codes.watch",
       requestBytes: skir.WatchOrganizationJoinCodesRequest.serializer.toBytes(
         request,
       ),
@@ -715,7 +716,7 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.$organizationId.members.join_codes.revoke",
+            "cloud.to.user.$userId.organization.$organizationId.members.join_codes.revoke",
             skir.RevokeOrganizationJoinCodeRequest.serializer.toBytes(request),
             skir.RevokeOrganizationJoinCodeResponse.serializer,
           );

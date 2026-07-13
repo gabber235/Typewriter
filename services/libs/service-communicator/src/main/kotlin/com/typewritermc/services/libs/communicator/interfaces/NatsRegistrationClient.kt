@@ -28,7 +28,7 @@ class NatsRegistrationClient(
         name = "registration.query_status",
         kind = SpanKind.CLIENT
     ) { span ->
-        val subject = "cloud.out.service.$serviceId.status"
+        val subject = "cloud.to.service.$serviceId.status"
         val request = GetServiceStatusRequest {}
 
         val outputStream = ByteArrayOutputStream()
@@ -116,7 +116,7 @@ class NatsRegistrationClient(
         name = "registration.subscribe_bound",
         kind = SpanKind.CLIENT
     ) { span ->
-        val subject = "cloud.in.service.$serviceId.registration.bound"
+        val subject = "cloud.from.service.$serviceId.registration.bound"
         span.setAttribute("messaging.subscription", subject)
         span.addEvent("subscribing")
 
@@ -144,7 +144,7 @@ class NatsRegistrationClient(
     }
 
     override suspend fun sendHeartbeat(serviceId: String) {
-        val subject = "cloud.out.service.$serviceId.heartbeat"
+        val subject = "cloud.to.service.$serviceId.heartbeat"
         val request = ServiceHeartbeatRequest {}
 
         val outputStream = ByteArrayOutputStream()
@@ -164,7 +164,7 @@ class NatsRegistrationClient(
             name = "registration.shutdown",
             kind = SpanKind.CLIENT
         ) { span ->
-            val subject = "cloud.out.service.$serviceId.shutdown"
+            val subject = "cloud.to.service.$serviceId.shutdown"
             val request = ServiceShutdownRequest {}
 
             val outputStream = ByteArrayOutputStream()

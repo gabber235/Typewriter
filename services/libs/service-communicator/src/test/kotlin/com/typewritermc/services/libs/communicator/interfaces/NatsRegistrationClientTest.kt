@@ -268,7 +268,7 @@ class NatsRegistrationClientTest : FunSpec({
             val client = NatsRegistrationClient(messageBus, createMockTracer())
             client.queryServiceStatus("my-unique-service-123")
 
-            subjectSlot.captured shouldBe "cloud.out.service.my-unique-service-123.status"
+            subjectSlot.captured shouldBe "cloud.to.service.my-unique-service-123.status"
         }
 
         test("subscribeToBoundNotification subscribes to correct subject with serviceId") {
@@ -285,7 +285,7 @@ class NatsRegistrationClientTest : FunSpec({
 
             job.join()
 
-            subjectSlot.captured shouldBe "cloud.in.service.svc-xyz-789.registration.bound"
+            subjectSlot.captured shouldBe "cloud.from.service.svc-xyz-789.registration.bound"
         }
 
         test("subscribeToBoundNotification handles null message data gracefully") {

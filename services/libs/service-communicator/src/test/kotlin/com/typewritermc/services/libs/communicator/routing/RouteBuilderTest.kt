@@ -12,26 +12,26 @@ class RouteBuilderTest : FunSpec({
             val mockBus = MockMessageBus()
             val routing = NatsRouting(mockBus)
 
-            RouteBuilder(routing, "cloud.in.realm").apply {
+            RouteBuilder(routing, "cloud.from.realm").apply {
                 handle("action") { }
             }
 
             routing.routes shouldHaveSize 1
-            routing.routes[0].pattern.subscriptionSubject shouldBe "cloud.in.realm.action"
+            routing.routes[0].pattern.subscriptionSubject shouldBe "cloud.from.realm.action"
         }
 
         test("nested routes accumulate prefix correctly") {
             val mockBus = MockMessageBus()
             val routing = NatsRouting(mockBus)
 
-            RouteBuilder(routing, "cloud.in").apply {
+            RouteBuilder(routing, "cloud.from").apply {
                 route("realm.{realmId}") {
                     handle("action") { }
                 }
             }
 
             routing.routes shouldHaveSize 1
-            routing.routes[0].pattern.subscriptionSubject shouldBe "cloud.in.realm.*.action"
+            routing.routes[0].pattern.subscriptionSubject shouldBe "cloud.from.realm.*.action"
         }
 
         test("deeply nested routes work correctly") {
@@ -116,14 +116,14 @@ class RouteBuilderTest : FunSpec({
             val mockBus = MockMessageBus()
             val routing = NatsRouting(mockBus)
 
-            RouteBuilder(routing, "cloud.in.realm.{realmId}").apply {
+            RouteBuilder(routing, "cloud.from.realm.{realmId}").apply {
                 route("world.{worldId}") {
                     handle("chunk.{chunkId}") { }
                 }
             }
 
             routing.routes shouldHaveSize 1
-            routing.routes[0].pattern.subscriptionSubject shouldBe "cloud.in.realm.*.world.*.chunk.*"
+            routing.routes[0].pattern.subscriptionSubject shouldBe "cloud.from.realm.*.world.*.chunk.*"
         }
     }
 })

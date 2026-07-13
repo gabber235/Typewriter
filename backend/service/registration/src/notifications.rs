@@ -16,7 +16,7 @@ pub fn publish_bound_notification(
     };
 
     send(
-        format!("typewriter.out.service.{}.registration.bound", service_id),
+        format!("typewriter.to.service.{}.registration.bound", service_id),
         String::new(),
         notification.encode_to_vec(),
     )
@@ -30,10 +30,10 @@ pub fn refresh_organization_services_list(
 
     send(
         format!(
-            "typewriter.in.user.{}.organization.{}.services.list",
+            "typewriter.from.user.{}.organization.{}.services.list",
             user_id, org_id,
         ),
-        format!("typewriter.out.organization.{}.services.list", org_id),
+        format!("typewriter.to.organization.{}.services.list", org_id),
         ListOrganizationServicesRequest {}.encode_to_vec(),
     )
 }

@@ -53,8 +53,8 @@ class Organizations extends _$Organizations {
     }
 
     yield* ref.watchRequest(
-      subject: "cloud.out.user.$userId.organization.watch",
-      listenSubject: "cloud.in.user.$userId.organization.watch",
+      subject: "cloud.to.user.$userId.organization.watch",
+      listenSubject: "cloud.from.user.$userId.organization.watch",
       requestBytes: skir.WatchUserOrganizationsRequest.serializer.toBytes(
         skir.WatchUserOrganizationsRequest(),
       ),
@@ -108,7 +108,7 @@ class Organizations extends _$Organizations {
     final response = await ref
         .read(natsProvider)
         .requestSkir(
-          "cloud.out.user.$userId.organization.create",
+          "cloud.to.user.$userId.organization.create",
           skir.CreateOrganizationRequest.serializer.toBytes(request),
           skir.CreateOrganizationResponse.serializer,
         );
@@ -179,7 +179,7 @@ class Organization extends _$Organization {
     final response = await ref
         .read(natsProvider)
         .requestSkir(
-          "cloud.out.user.$userId.organization.$organizationId.members.join_codes.generate",
+          "cloud.to.user.$userId.organization.$organizationId.members.join_codes.generate",
           skir.GenerateOrganizationJoinCodeRequest.serializer.toBytes(request),
           skir.GenerateOrganizationJoinCodeResponse.serializer,
         );

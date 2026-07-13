@@ -43,12 +43,12 @@ pub use crate::bindings::wasmcloud::messaging::*;
 /// assert_eq!(m4.get("action"), Some(&"join_requests.list".to_string()));
 ///
 /// // Optional segments can be specified with []:
-/// let m5 = parse_subject("[typewriter.in.]user.<user_id>.organization.<action>",
-///                         "typewriter.in.user.abc.organization.list")
+/// let m5 = parse_subject("[typewriter.from.]user.<user_id>.organization.<action>",
+///                         "typewriter.from.user.abc.organization.list")
 ///                         .expect("Failed to parse subject");
 /// assert_eq!(m5.get("user_id"), Some(&"abc".to_string()));
 ///
-/// let m6 = parse_subject("[typewriter.in.]user.<user_id>.organization.<action>",
+/// let m6 = parse_subject("[typewriter.from.]user.<user_id>.organization.<action>",
 ///                         "user.abc.organization.list")
 ///                         .expect("Failed to parse subject");
 /// assert_eq!(m6.get("user_id"), Some(&"abc".to_string()));
@@ -302,8 +302,8 @@ mod tests {
 
     #[test]
     fn test_parse_subject_optional_prefix_present() {
-        let template = "[typewriter.in.]user.<user_id>.organization.<action>";
-        let subject = "typewriter.in.user.abc.organization.list";
+        let template = "[typewriter.from.]user.<user_id>.organization.<action>";
+        let subject = "typewriter.from.user.abc.organization.list";
 
         let result = parse_subject(template, subject).unwrap();
         assert_eq!(result.get("user_id"), Some(&"abc".to_string()));
@@ -312,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_parse_subject_optional_prefix_absent() {
-        let template = "[typewriter.in.]user.<user_id>.organization.<action>";
+        let template = "[typewriter.from.]user.<user_id>.organization.<action>";
         let subject = "user.abc.organization.list";
 
         let result = parse_subject(template, subject).unwrap();
@@ -356,8 +356,8 @@ mod tests {
 
     #[test]
     fn test_parse_subject_multi_segment_action_deep() {
-        let template = "typewriter.in.user.<user_id>.organization.<org_id>.members.<action>";
-        let subject = "typewriter.in.user.abc123.organization.org456.members.join_requests.list";
+        let template = "typewriter.from.user.<user_id>.organization.<org_id>.members.<action>";
+        let subject = "typewriter.from.user.abc123.organization.org456.members.join_requests.list";
 
         let result = parse_subject(template, subject).unwrap();
         assert_eq!(result.get("user_id"), Some(&"abc123".to_string()));
@@ -392,20 +392,20 @@ mod tests {
 
     #[test]
     fn test_expand_template_pattern_single() {
-        let templates: &[(&str, &str)] = &[("services", "typewriter.in.service.<service_id>")];
+        let templates: &[(&str, &str)] = &[("services", "typewriter.from.service.<service_id>")];
         let pattern = "{services}.status";
 
         let expanded = expand_template_pattern(pattern, templates);
-        assert_eq!(expanded, "typewriter.in.service.<service_id>.status");
+        assert_eq!(expanded, "typewriter.from.service.<service_id>.status");
     }
 
     #[test]
     fn test_expand_template_pattern_multiple() {
         let templates: &[(&str, &str)] = &[
-            ("services", "typewriter.in.service.<service_id>"),
+            ("services", "typewriter.from.service.<service_id>"),
             (
                 "user_services",
-                "typewriter.in.user.<user_id>.organization.<org_id>.services",
+                "typewriter.from.user.<user_id>.organization.<org_id>.services",
             ),
         ];
 
@@ -414,26 +414,29 @@ mod tests {
 
         assert_eq!(
             expand_template_pattern(pattern1, templates),
-            "typewriter.in.service.<service_id>.status"
+            "typewriter.from.service.<service_id>.status"
         );
         assert_eq!(
             expand_template_pattern(pattern2, templates),
-            "typewriter.in.user.<user_id>.organization.<org_id>.services.bind"
+            "typewriter.from.user.<user_id>.organization.<org_id>.services.bind"
         );
     }
 
     #[test]
     fn test_expand_template_pattern_in_middle() {
-        let templates: &[(&str, &str)] = &[("base", "typewriter.in.user.<user_id>")];
+        let templates: &[(&str, &str)] = &[("base", "typewriter.from.user.<user_id>")];
         let pattern = "hey.{base}.something.<id>";
 
         let expanded = expand_template_pattern(pattern, templates);
-        assert_eq!(expanded, "hey.typewriter.in.user.<user_id>.something.<id>");
+        assert_eq!(
+            expanded,
+            "hey.typewriter.from.user.<user_id>.something.<id>"
+        );
     }
 
     #[test]
     fn test_expand_template_pattern_no_match() {
-        let templates: &[(&str, &str)] = &[("services", "typewriter.in.service.<service_id>")];
+        let templates: &[(&str, &str)] = &[("services", "typewriter.from.service.<service_id>")];
         let pattern = "{unknown}.status";
 
         let expanded = expand_template_pattern(pattern, templates);

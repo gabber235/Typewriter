@@ -14,8 +14,8 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _userId = "user1";
 final _organizationId = recordId("organization:org1");
-const _publishSubject = "cloud.out.user.user1.organization.org1.roles.watch";
-const _listenSubject = "cloud.in.organization.org1.roles.watch";
+const _publishSubject = "cloud.to.user.user1.organization.org1.roles.watch";
+const _listenSubject = "cloud.from.organization.org1.roles.watch";
 
 OrganizationRole _role(String id, {String? name}) => OrganizationRole(
   roleId: recordId("organization_role:$id"),

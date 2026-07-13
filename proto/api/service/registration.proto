@@ -7,7 +7,7 @@ import "models/service.proto";
 
 // =============================================================================
 // Service Status Query
-// Subject: typewriter.in.service.{service_id}.status
+// Subject: typewriter.from.service.{service_id}.status
 // Used by auth-permissions and services to check binding status.
 // =============================================================================
 
@@ -44,7 +44,7 @@ message UnboundStatus {
 
 // =============================================================================
 // Bind Service
-// Subject: typewriter.in.user.{user_id}.organization.{org_id}.services.bind
+// Subject: typewriter.from.user.{user_id}.organization.{org_id}.services.bind
 // Used by Panel to bind a service using a registration token.
 // =============================================================================
 
@@ -70,7 +70,7 @@ message BoundService {
 
 // =============================================================================
 // List Organization Services
-// Subject: typewriter.in.user.{user_id}.organization.{org_id}.services.list
+// Subject: typewriter.from.user.{user_id}.organization.{org_id}.services.list
 // Used by Panel to list all services in an organization.
 // =============================================================================
 
@@ -93,7 +93,7 @@ message OrganizationServicesList {
 
 // =============================================================================
 // Bound Notification
-// Subject: typewriter.out.service.{service_id}.registration.bound
+// Subject: typewriter.to.service.{service_id}.registration.bound
 // Published when a service is successfully bound to an organization.
 // =============================================================================
 
@@ -105,7 +105,7 @@ message ServiceBoundNotification {
 
 // =============================================================================
 // Update Service
-// Subject: typewriter.in.user.{user_id}.organization.{org_id}.services.update
+// Subject: typewriter.from.user.{user_id}.organization.{org_id}.services.update
 // Used by Panel to update a service's name.
 // =============================================================================
 
@@ -126,7 +126,7 @@ message UpdateServiceResponse {
 
 // =============================================================================
 // Unbind Service
-// Subject: typewriter.in.user.{user_id}.organization.{org_id}.services.unbind
+// Subject: typewriter.from.user.{user_id}.organization.{org_id}.services.unbind
 // Used by Panel to unbind a service from an organization.
 // The service record remains but is no longer bound. When the service
 // reconnects, it will be assigned a new registration token.
@@ -148,7 +148,7 @@ message UnbindServiceResponse {
 
 // =============================================================================
 // Service Heartbeat
-// Subject: typewriter.in.service.{service_id}.heartbeat
+// Subject: typewriter.from.service.{service_id}.heartbeat
 // Sent by services periodically to indicate they are online.
 // Updates state.status to ONLINE and state.last_seen to current time.
 // Fire-and-forget - no response is sent.
@@ -160,7 +160,7 @@ message ServiceHeartbeatRequest {}
 
 // =============================================================================
 // Service Shutdown
-// Subject: typewriter.in.service.{service_id}.shutdown
+// Subject: typewriter.from.service.{service_id}.shutdown
 // Sent by services when they are shutting down gracefully.
 // Updates state.status to OFFLINE and state.last_seen to current time.
 // Fire-and-forget - no response is sent.

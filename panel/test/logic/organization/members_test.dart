@@ -18,11 +18,11 @@ final _testMemberId = recordId("user:m1");
 final _testTimestamp = DateTime.utc(2025, 1, 1, 12);
 
 String get _memberUpdateSubject =>
-    "cloud.out.user.$_testUserId.organization.org1.members.update";
+    "cloud.to.user.$_testUserId.organization.org1.members.update";
 String get _memberRemoveSubject =>
-    "cloud.out.user.$_testUserId.organization.org1.members.remove";
+    "cloud.to.user.$_testUserId.organization.org1.members.remove";
 String get _approveRequestSubject =>
-    "cloud.out.user.$_testUserId.organization.$_testOrganizationId.members.join_requests.approve";
+    "cloud.to.user.$_testUserId.organization.$_testOrganizationId.members.join_requests.approve";
 
 OrganizationRole _role({
   String id = "r1",

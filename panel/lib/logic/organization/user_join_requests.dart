@@ -66,8 +66,8 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     final request = skir.WatchUserJoinRequestsRequest();
     yield* ref.watchRequest(
-      subject: "cloud.out.user.$userId.organization.join_requests.watch",
-      listenSubject: "cloud.in.user.$userId.organization.join_requests.watch",
+      subject: "cloud.to.user.$userId.organization.join_requests.watch",
+      listenSubject: "cloud.from.user.$userId.organization.join_requests.watch",
       requestBytes: skir.WatchUserJoinRequestsRequest.serializer.toBytes(
         request,
       ),
@@ -107,7 +107,7 @@ class UserJoinRequests extends _$UserJoinRequests {
     final response = await ref
         .read(natsProvider)
         .requestSkir(
-          "cloud.out.user.$userId.organization.join_requests.request",
+          "cloud.to.user.$userId.organization.join_requests.request",
           skir.SubmitUserJoinRequestRequest.serializer.toBytes(request),
           skir.SubmitUserJoinRequestResponse.serializer,
         );
@@ -163,7 +163,7 @@ class UserJoinRequests extends _$UserJoinRequests {
       final response = await ref
           .read(natsProvider)
           .requestSkir(
-            "cloud.out.user.$userId.organization.join_requests.cancel",
+            "cloud.to.user.$userId.organization.join_requests.cancel",
             skir.CancelUserJoinRequestRequest.serializer.toBytes(request),
             skir.CancelUserJoinRequestResponse.serializer,
           );

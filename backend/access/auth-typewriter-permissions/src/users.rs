@@ -192,23 +192,23 @@ fn add_user_organizations_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
-    allow_publish.push(format!("cloud.out.user.{}.organization.watch", user_id));
-    allow_subscribe.push(format!("cloud.in.user.{}.organization.watch", user_id));
-    allow_publish.push(format!("cloud.out.user.{}.organization.create", user_id));
+    allow_publish.push(format!("cloud.to.user.{}.organization.watch", user_id));
+    allow_subscribe.push(format!("cloud.from.user.{}.organization.watch", user_id));
+    allow_publish.push(format!("cloud.to.user.{}.organization.create", user_id));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.join_requests.watch",
+        "cloud.to.user.{}.organization.join_requests.watch",
         user_id
     ));
     allow_subscribe.push(format!(
-        "cloud.in.user.{}.organization.join_requests.watch",
+        "cloud.from.user.{}.organization.join_requests.watch",
         user_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.join_requests.request",
+        "cloud.to.user.{}.organization.join_requests.request",
         user_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.join_requests.cancel",
+        "cloud.to.user.{}.organization.join_requests.cancel",
         user_id
     ));
 }
@@ -221,10 +221,10 @@ fn add_organization_roles_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.roles.watch",
+        "cloud.to.user.{}.organization.{}.roles.watch",
         user_id, org_id
     ));
-    allow_subscribe.push(format!("cloud.in.organization.{}.roles.watch", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{}.roles.watch", org_id));
 }
 
 /// Adds permissions for organization/members component
@@ -235,48 +235,48 @@ fn add_organization_members_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.watch",
+        "cloud.to.user.{}.organization.{}.members.watch",
         user_id, org_id
     ));
-    allow_subscribe.push(format!("cloud.in.organization.{}.members.watch", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{}.members.watch", org_id));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.update",
-        user_id, org_id
-    ));
-    allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.remove",
+        "cloud.to.user.{}.organization.{}.members.update",
         user_id, org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_requests.watch",
-        user_id, org_id
-    ));
-    allow_subscribe.push(format!(
-        "cloud.in.organization.{}.members.join_requests.watch",
-        org_id
-    ));
-    allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_requests.approve",
+        "cloud.to.user.{}.organization.{}.members.remove",
         user_id, org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_requests.decline",
-        user_id, org_id
-    ));
-    allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_codes.watch",
+        "cloud.to.user.{}.organization.{}.members.join_requests.watch",
         user_id, org_id
     ));
     allow_subscribe.push(format!(
-        "cloud.in.organization.{}.members.join_codes.watch",
+        "cloud.from.organization.{}.members.join_requests.watch",
         org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_codes.generate",
+        "cloud.to.user.{}.organization.{}.members.join_requests.approve",
         user_id, org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.members.join_codes.revoke",
+        "cloud.to.user.{}.organization.{}.members.join_requests.decline",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.to.user.{}.organization.{}.members.join_codes.watch",
+        user_id, org_id
+    ));
+    allow_subscribe.push(format!(
+        "cloud.from.organization.{}.members.join_codes.watch",
+        org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.to.user.{}.organization.{}.members.join_codes.generate",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.to.user.{}.organization.{}.members.join_codes.revoke",
         user_id, org_id
     ));
 }
@@ -289,20 +289,20 @@ fn add_organization_services_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.services.list",
+        "cloud.to.user.{}.organization.{}.services.list",
         user_id, org_id
     ));
-    allow_subscribe.push(format!("cloud.in.organization.{}.services.list", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{}.services.list", org_id));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.services.bind",
-        user_id, org_id
-    ));
-    allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.services.update",
+        "cloud.to.user.{}.organization.{}.services.bind",
         user_id, org_id
     ));
     allow_publish.push(format!(
-        "cloud.out.user.{}.organization.{}.services.unbind",
+        "cloud.to.user.{}.organization.{}.services.update",
+        user_id, org_id
+    ));
+    allow_publish.push(format!(
+        "cloud.to.user.{}.organization.{}.services.unbind",
         user_id, org_id
     ));
 }
@@ -313,11 +313,11 @@ fn add_organization_realm_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
-    allow_publish.push(format!("cloud.out.organization.{}.realm.list", org_id));
-    allow_subscribe.push(format!("cloud.in.organization.{}.realm.list", org_id));
-    allow_publish.push(format!("cloud.out.organization.{}.realm.create", org_id));
-    allow_publish.push(format!("cloud.out.organization.{}.realm.delete", org_id));
-    allow_publish.push(format!("cloud.out.organization.{}.realm.update", org_id));
+    allow_publish.push(format!("cloud.to.organization.{}.realm.list", org_id));
+    allow_subscribe.push(format!("cloud.from.organization.{}.realm.list", org_id));
+    allow_publish.push(format!("cloud.to.organization.{}.realm.create", org_id));
+    allow_publish.push(format!("cloud.to.organization.{}.realm.delete", org_id));
+    allow_publish.push(format!("cloud.to.organization.{}.realm.update", org_id));
 }
 
 #[cfg(test)]
@@ -340,7 +340,7 @@ mod tests {
         let mut subscribe = Vec::new();
         add_organization_members_permissions(user_id, org_id, &mut publish, &mut subscribe);
 
-        let publish_prefix = format!("cloud.out.user.{user_id}.organization.{org_id}.members");
+        let publish_prefix = format!("cloud.to.user.{user_id}.organization.{org_id}.members");
         assert_eq!(
             publish,
             [
@@ -355,7 +355,7 @@ mod tests {
                 format!("{publish_prefix}.join_codes.revoke"),
             ]
         );
-        let subscribe_prefix = format!("cloud.in.organization.{org_id}.members");
+        let subscribe_prefix = format!("cloud.from.organization.{org_id}.members");
         assert_eq!(
             subscribe,
             [

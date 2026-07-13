@@ -49,7 +49,7 @@ impl Guest for Component {
 }
 
 async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_actions!(msg, "typewriter.in.user.<user_id>.organization.<org_id>.roles.<action>",
+    dispatch_actions!(msg, "typewriter.from.user.<user_id>.organization.<org_id>.roles.<action>",
         "watch" => async watch::handle_watch,
     )
 }

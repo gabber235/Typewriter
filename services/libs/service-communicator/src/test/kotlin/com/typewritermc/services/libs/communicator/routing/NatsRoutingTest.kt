@@ -13,13 +13,13 @@ class NatsRoutingTest : FunSpec({
 
             val result = testRoute(
                 routing = {
-                    route("cloud.in.realm.{realmId}") {
+                    route("cloud.from.realm.{realmId}") {
                         handle("player.join") {
                             handled = true
                         }
                     }
                 },
-                subject = "cloud.in.realm.test-realm.player.join",
+                subject = "cloud.from.realm.test-realm.player.join",
                 data = byteArrayOf()
             )
 
@@ -32,13 +32,13 @@ class NatsRoutingTest : FunSpec({
 
             val result = testRoute(
                 routing = {
-                    route("cloud.in.realm.{realmId}") {
+                    route("cloud.from.realm.{realmId}") {
                         handle("action") {
                             capturedRealmId = params.require("realmId")
                         }
                     }
                 },
-                subject = "cloud.in.realm.my-realm-123.action",
+                subject = "cloud.from.realm.my-realm-123.action",
                 data = byteArrayOf()
             )
 
@@ -52,7 +52,7 @@ class NatsRoutingTest : FunSpec({
 
             val result = testRoute(
                 routing = {
-                    route("cloud.in.realm.{realmId}") {
+                    route("cloud.from.realm.{realmId}") {
                         route("world.{worldId}") {
                             handle("chunk.load") {
                                 capturedRealmId = params.require("realmId")
@@ -61,7 +61,7 @@ class NatsRoutingTest : FunSpec({
                         }
                     }
                 },
-                subject = "cloud.in.realm.r1.world.w2.chunk.load",
+                subject = "cloud.from.realm.r1.world.w2.chunk.load",
                 data = byteArrayOf()
             )
 

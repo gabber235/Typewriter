@@ -48,9 +48,9 @@ pub async fn handle_service(
     allow_subscribe.push(format!("_INBOX.{}.>", service_id));
     allow_publish.push(format!("_INBOX.>"));
 
-    allow_publish.push(format!("cloud.out.service.{}.status", service_id));
-    allow_publish.push(format!("cloud.out.service.{}.heartbeat", service_id));
-    allow_publish.push(format!("cloud.out.service.{}.shutdown", service_id));
+    allow_publish.push(format!("cloud.to.service.{}.status", service_id));
+    allow_publish.push(format!("cloud.to.service.{}.heartbeat", service_id));
+    allow_publish.push(format!("cloud.to.service.{}.shutdown", service_id));
 
     match status {
         GetServiceStatusResponse::Status(status) => handle_service_status(
@@ -96,7 +96,7 @@ pub async fn handle_service(
 async fn query_service_status(
     service_id: &str,
 ) -> Result<GetServiceStatusResponse, otel_wasi::Error> {
-    let subject = format!("typewriter.in.service.{}.status", service_id);
+    let subject = format!("typewriter.from.service.{}.status", service_id);
 
     let data = GetServiceStatusRequest::default();
 
@@ -150,12 +150,13 @@ fn handle_bound_binding(
 
     tags.push(format!("org:{}", org_id));
 
+    // TODO: Don't make this broad, make it narrow.
     allow_publish.push(format!(
-        "cloud.out.service.{}.organization.{}.>",
+        "cloud.to.service.{}.organization.{}.>",
         service_id, org_id
     ));
     allow_subscribe.push(format!(
-        "cloud.in.service.{}.organization.{}.>",
+        "cloud.from.service.{}.organization.{}.>",
         service_id, org_id
     ));
 
@@ -172,7 +173,7 @@ fn handle_unbound_binding(service_id: &str, allow_subscribe: &mut Vec<String>) {
         "auth.permissions.category.registration" = true,
     );
     allow_subscribe.push(format!(
-        "cloud.in.service.{}.registration.bound",
+        "cloud.from.service.{}.registration.bound",
         service_id
     ));
 }

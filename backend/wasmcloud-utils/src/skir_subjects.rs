@@ -10,19 +10,19 @@ use crate::{
 
 define_skir_subjects! {
     user_organizations(user_id) -> WatchUserOrganizationsResponse =
-        "typewriter.out.user.{user_id}.organization.watch";
+        "typewriter.to.user.{user_id}.organization.watch";
 
     user_join_requests(user_id) -> WatchUserJoinRequestsResponse =
-        "typewriter.out.user.{user_id}.organization.join_requests.watch";
+        "typewriter.to.user.{user_id}.organization.join_requests.watch";
 
     organization_members(organization_id) -> WatchOrganizationMembersResponse =
-        "typewriter.out.organization.{organization_id}.members.watch";
+        "typewriter.to.organization.{organization_id}.members.watch";
 
     organization_join_requests(organization_id) -> WatchOrganizationJoinRequestsResponse =
-        "typewriter.out.organization.{organization_id}.members.join_requests.watch";
+        "typewriter.to.organization.{organization_id}.members.join_requests.watch";
 
     organization_join_codes(organization_id) -> WatchOrganizationJoinCodesResponse =
-        "typewriter.out.organization.{organization_id}.members.join_codes.watch";
+        "typewriter.to.organization.{organization_id}.members.join_codes.watch";
 }
 
 #[cfg(test)]
@@ -33,7 +33,7 @@ mod tests {
 
         assert_eq!(
             subject.subject(),
-            "typewriter.out.user.user_123.organization.watch"
+            "typewriter.to.user.user_123.organization.watch"
         );
     }
 
@@ -43,7 +43,7 @@ mod tests {
 
         assert_eq!(
             subject.subject(),
-            "typewriter.out.user.user_123.organization.join_requests.watch"
+            "typewriter.to.user.user_123.organization.join_requests.watch"
         );
     }
 
@@ -53,7 +53,7 @@ mod tests {
 
         assert_eq!(
             subject.subject(),
-            "typewriter.out.organization.org_123.members.watch"
+            "typewriter.to.organization.org_123.members.watch"
         );
     }
 
@@ -63,7 +63,7 @@ mod tests {
 
         assert_eq!(
             subject.subject(),
-            "typewriter.out.organization.org_123.members.join_requests.watch"
+            "typewriter.to.organization.org_123.members.join_requests.watch"
         );
     }
 
@@ -73,7 +73,7 @@ mod tests {
 
         assert_eq!(
             subject.subject(),
-            "typewriter.out.organization.org_123.members.join_codes.watch"
+            "typewriter.to.organization.org_123.members.join_codes.watch"
         );
     }
 }

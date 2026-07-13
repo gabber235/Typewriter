@@ -89,8 +89,8 @@ impl Guest for ServiceRegistration {
         debug!("Received message with subject: {}", msg.subject);
         dispatch_actions!(
             msg,
-            services: "[typewriter.in.]service.<service_id>",
-            user_services: "[typewriter.in.]user.<user_id>.organization.<org_id>.services";
+            services: "[typewriter.from.]service.<service_id>",
+            user_services: "[typewriter.from.]user.<user_id>.organization.<org_id>.services";
             "{services}.status" => status::handle_status => status::internal_error_status,
             "{services}.heartbeat" => heartbeat::handle_heartbeat,
             "{services}.shutdown" => shutdown::handle_shutdown,
