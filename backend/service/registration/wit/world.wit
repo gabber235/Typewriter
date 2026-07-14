@@ -1,8 +1,8 @@
-package typewriter:service-registration;
+package typewriter:service-registration@0.1.0;
 
 world registration {
-  import wasi:logging/logging@0.1.0-draft;
-  import wasmcloud:messaging/consumer@0.2.0;
-  import seamlezz:surrealdb/call@0.1.0;
-  export wasmcloud:messaging/handler@0.2.0;
+    import seamlezz:surrealdb/call@0.2.0;
+    import wasmcloud:messaging/types@0.3.0;
+    import wasmcloud:messaging/consumer@0.3.0;
+    export wasmcloud:messaging/handler@0.3.0;
 }

@@ -270,9 +270,9 @@ fn add_organization_services_permissions(
     allow_subscribe: &mut Vec<String>,
 ) {
     allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.services.list"
+        "cloud.to.user.{user_id}.organization.{org_id}.services.watch"
     ));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.services.list"));
+    allow_subscribe.push(format!("cloud.from.organization.{org_id}.services.watch"));
     allow_publish.push(format!(
         "cloud.to.user.{user_id}.organization.{org_id}.services.bind"
     ));

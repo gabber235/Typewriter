@@ -25,7 +25,7 @@ spec:
             - metrics
         - namespace: wasmcloud
           package: messaging
-          version: "0.2.0"
+          version: "0.3.0"
           interfaces:
             - handler
             - consumer

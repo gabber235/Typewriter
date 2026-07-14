@@ -66,11 +66,11 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: o
 
     LET $can_run_in = fn::service::has_role($service, "engine") OR fn::service::has_role($service, "custom");
     IF !$can_run_in {
-        THROW "Only services with an engine or custom role can have runs_in set"
+        THROW "runs-in-requires-engine-or-custom-role"
     };
 
     IF !fn::service::has_role({ roles: $realm.roles }, "realm") {
-        THROW "runs_in must reference a service with a realm role"
+        THROW "runs-in-must-reference-realm-role"
     };
 
     LET $service_org = $service.organization;
@@ -79,13 +79,13 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: o
     IF $service_org == NONE AND $realm_org == NONE { RETURN true };
     IF $service_org != NONE AND $realm_org != NONE AND $service_org = $realm_org { RETURN true };
 
-    THROW "runs_in requires both services to be unbound or bound to the same organization";
+    THROW "runs-in-organization-mismatch";
 };
 
 DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
     fn::service::valid_roles($service.roles);
     IF $service.organization != NONE AND $service.registration != NONE {
-        THROW "Service cannot have both organization and registration set"
+        THROW "service-organization-registration-conflict"
     };
     RETURN fn::service::valid_runs_in($service, $service.runs_in);
 };

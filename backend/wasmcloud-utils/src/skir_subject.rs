@@ -1,31 +1,24 @@
-use std::marker::PhantomData;
+use crate::wasmcloud::messaging;
 
-use crate::{SkirResponse, wasmcloud::messaging};
-
-pub struct SkirSubject<R> {
+pub struct SkirSubject<M> {
     subject: String,
-    _response: PhantomData<fn() -> R>,
+    serialize: fn(&M) -> Vec<u8>,
 }
 
-impl<R> SkirSubject<R> {
-    pub fn new(subject: impl Into<String>) -> Self {
+impl<M> SkirSubject<M> {
+    pub fn new(subject: impl Into<String>, serialize: fn(&M) -> Vec<u8>) -> Self {
         Self {
             subject: subject.into(),
-            _response: PhantomData,
+            serialize,
         }
     }
 
     pub fn subject(&self) -> &str {
         &self.subject
     }
-}
 
-impl<R> SkirSubject<R>
-where
-    R: SkirResponse,
-{
-    pub async fn publish(&self, response: R) -> Result<(), otel_wasi::Error> {
-        messaging::publish(self.subject.clone(), response.to_skir_bytes()).await
+    pub async fn publish(&self, message: M) -> Result<(), otel_wasi::Error> {
+        messaging::publish(self.subject.clone(), (self.serialize)(&message)).await
     }
 }
 
@@ -41,10 +34,13 @@ macro_rules! define_skir_subjects {
             pub fn $name(
                 $( $param: impl ::std::fmt::Display ),*
             ) -> $crate::SkirSubject<$response> {
-                $crate::SkirSubject::new(format!(
-                    $template,
-                    $( $param = $param ),*
-                ))
+                $crate::SkirSubject::new(
+                    format!(
+                        $template,
+                        $( $param = $param ),*
+                    ),
+                    |message: &$response| <$response>::serializer().to_bytes(message),
+                )
             }
         )*
     };

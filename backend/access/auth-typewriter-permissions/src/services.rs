@@ -60,7 +60,7 @@ pub async fn handle_service(
             &mut allow_subscribe,
             &mut tags,
         )?,
-        GetServiceStatusResponse::ServiceNotFound(_) => {
+        GetServiceStatusResponse::ServiceNotFoundError(_) => {
             return Err(wasi_error!(
                 "permissions-service-not-found",
                 "service not found: {}",
@@ -96,7 +96,7 @@ pub async fn handle_service(
 async fn query_service_status(
     service_id: &str,
 ) -> Result<GetServiceStatusResponse, otel_wasi::Error> {
-    let subject = format!("typewriter.from.service.{service_id}.status");
+    let subject = format!("service.{service_id}.status");
 
     let data = GetServiceStatusRequest::default();
 

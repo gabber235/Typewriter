@@ -1,7 +1,7 @@
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.2.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.2.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:messaging/consumer@0.3.0": wasmcloud_utils::wasmcloud::messaging::consumer,
+        "wasmcloud:messaging/handler@0.3.0": wasmcloud_utils::wasmcloud::messaging::handler,
     },
     generate_all,
 });
@@ -172,8 +172,8 @@ impl From<MemberRecord>
 
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "organization_members", export)]
-    fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
-        wit_bindgen::block_on(handle_message_async(msg))
+    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+        handle_message_async(msg).await
     }
 }
 

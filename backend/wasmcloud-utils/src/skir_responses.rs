@@ -12,6 +12,8 @@ use crate::skir::base::organization::v1::member::*;
 use crate::skir::base::organization::v1::organization::*;
 use crate::skir::base::organization::v1::user::*;
 use crate::skir::base::service::v1::identity::*;
+use crate::skir::base::service::v1::organization::*;
+use crate::skir::base::service::v1::registration::*;
 use crate::skir::base::service::v1::status::*;
 use crate::skirout::base::organization::v1::role::*;
 
@@ -48,7 +50,42 @@ wasmcloud_utils_macros::skir_response! {
     GetServiceStatusResponse {
         success: Status,
         errors {
-            ServiceNotFound => "Service not found",
+            ServiceNotFoundError => "Service not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    BindServiceResponse {
+        success: Success,
+        errors {
+            InvalidRegistrationTokenError => "Invalid or expired registration token",
+            OrganizationNotFoundError => "Organization not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    UnbindServiceResponse {
+        success: Success,
+        errors {
+            ServiceNotFoundError => "Service not found in organization",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationServicesResponse {
+        success: [List, Add, Update, Remove],
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    UpdateOrganizationServiceResponse {
+        success: Success,
+        errors {
+            ServiceNotFoundError => "Service not found in organization",
         }
     }
 }

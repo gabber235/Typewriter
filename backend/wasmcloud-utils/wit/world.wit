@@ -1,6 +1,6 @@
 package typewriter:wasmcloud-utils@0.1.0;
 
 world interfaces {
-  import wasmcloud:messaging/consumer@0.2.0;
-  export wasmcloud:messaging/handler@0.2.0;
+  import wasmcloud:messaging/consumer@0.3.0;
+  export wasmcloud:messaging/handler@0.3.0;
 }

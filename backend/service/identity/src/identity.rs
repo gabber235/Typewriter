@@ -1,6 +1,7 @@
 use serde::Serialize;
 use surrealdb_component_sdk::RecordId;
 use wasmcloud_utils::skir::base::service::v1::identity::*;
+use wasmcloud_utils::skir::base::service::v1::service::*;
 use wasmcloud_utils::{SkirDomainResult, SkirDomainResultExt, skir_variant};
 
 #[derive(Clone, Debug, PartialEq, Serialize)]

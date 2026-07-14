@@ -1,15 +1,4 @@
-enum ServiceRole {
-  engine: struct {
-    version: string;
-  };
-  realm: struct {
-    version: string;
-  };
-  custom: struct {
-    name: string;
-    version: string;
-  };
-}
+import { ServiceRole } from "service/v1/service.skir";
 
 method IssueServiceIdentity(
   struct {
@@ -17,12 +6,14 @@ method IssueServiceIdentity(
   }
 ): enum {
   internal_error: struct {};
+
   success: struct {
     service_id: string;
     display_name: string;
     username: string;
     token: string;
   };
+
   malformed_request_error: struct {};
   unknown_role_error: struct {};
   roles_required_error: struct {};

@@ -8,7 +8,7 @@ mod bindings {
 #[macro_export]
 macro_rules! export {
     ($ty:ident) => {
-        ::wasmcloud_utils::__export_wasmcloud_messaging_handler_0_2_0_cabi!($ty with_types_in ::wasmcloud_utils::wasmcloud::messaging::handler);
+        ::wasmcloud_utils::__export_wasmcloud_messaging_handler_0_3_0_cabi!($ty with_types_in ::wasmcloud_utils::wasmcloud::messaging::handler);
     };
 }
 

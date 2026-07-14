@@ -1,6 +1,3 @@
-REMOVE FIELD IF EXISTS service_types.* ON TABLE service;
-REMOVE FIELD IF EXISTS service_types ON TABLE service;
-
 DEFINE TABLE OVERWRITE service SCHEMAFULL
     PERMISSIONS NONE;
 
@@ -17,7 +14,12 @@ DEFINE FIELD OVERWRITE roles.*.type ON service
     TYPE "engine" | "realm" | "custom";
 
 DEFINE FIELD OVERWRITE roles.*.version ON service TYPE string
-    ASSERT { IF string::len(string::trim($value)) < 1 { THROW "role-version-blank-error" }; RETURN true; };
+    ASSERT {
+        IF string::len(string::trim($value)) < 1 {
+            THROW "role-version-blank-error"
+        };
+        RETURN true;
+    };
 
 DEFINE FIELD OVERWRITE roles.*.name ON service TYPE option<string>;
 
@@ -27,8 +29,8 @@ DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
     VALUE $before OR time::now();
 
 DEFINE FIELD OVERWRITE state ON service TYPE option<object>;
-DEFINE FIELD OVERWRITE state.status ON service TYPE option<"ONLINE" | "OFFLINE">;
-DEFINE FIELD OVERWRITE state.last_seen ON service TYPE option<datetime>;
+DEFINE FIELD OVERWRITE state.status ON service TYPE "ONLINE" | "OFFLINE";
+DEFINE FIELD OVERWRITE state.last_seen ON service TYPE datetime;
 
 DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
     REFERENCE ON DELETE THEN {
@@ -36,7 +38,7 @@ DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
     }
     ASSERT {
         IF $value != NONE AND $this.registration != NONE {
-            THROW "Service cannot have both organization and registration set"
+            THROW "service-organization-registration-conflict-error"
         };
         RETURN true;
     };
@@ -44,13 +46,18 @@ DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
 DEFINE FIELD OVERWRITE registration ON service TYPE option<object>
     ASSERT {
         IF $value != NONE AND $this.organization != NONE {
-            THROW "Service cannot have both organization and registration set"
+            THROW "service-organization-registration-conflict-error"
         };
         RETURN true;
     };
 
 DEFINE FIELD OVERWRITE registration.token ON service TYPE string
-    ASSERT string::matches($value, '^[A-Z0-9]{10}$');
+    ASSERT {
+        IF string::matches($value, '^[A-Z0-9]{10}$') {
+            RETURN true
+        };
+        THROW "registration-token-invalid-error"
+    };
 
 DEFINE FIELD OVERWRITE registration.expires_at ON service TYPE datetime;
 

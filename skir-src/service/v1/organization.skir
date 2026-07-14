@@ -1,0 +1,26 @@
+import { RecordId } from "kernel/v1/record_id.skir";
+import { Service } from "service/v1/service.skir";
+
+method WatchOrganizationServices(
+  struct {}
+): enum {
+  internal_error: struct {};
+
+  list: [Service];
+  add: Service;
+  update: Service;
+  remove: RecordId;
+} = 820326;
+
+method UpdateOrganizationService(
+  struct {
+    service_id: RecordId;
+    name: string?;
+  }
+): enum {
+  internal_error: struct {};
+
+  success: struct {};
+
+  service_not_found_error: struct {};
+} = 872501;

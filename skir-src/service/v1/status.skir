@@ -13,9 +13,9 @@ method GetServiceStatus(
 ): enum {
   internal_error: struct {};
 
+  service_not_found_error: struct {};
+
   status: struct {
     binding: ServiceBinding;
   };
-
-  service_not_found: struct {};
 } = 955610;

@@ -1,103 +1,123 @@
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.2.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.2.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:messaging/consumer@0.3.0": wasmcloud_utils::wasmcloud::messaging::consumer,
+        "wasmcloud:messaging/handler@0.3.0": wasmcloud_utils::wasmcloud::messaging::handler,
     },
     generate_all,
 });
 
 mod bind;
 mod heartbeat;
-mod list;
-mod notifications;
 mod shutdown;
 mod status;
 mod unbind;
 mod update;
 mod utils;
+mod watch;
+
+use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
-use surrealdb_component::{Datetime, RecordId};
-use wasmcloud_component::debug;
-use wasmcloud_utils::dispatch_actions;
-use wasmcloud_utils::wasmcloud::messaging::handler::Guest;
-use wasmcloud_utils::wasmcloud::messaging::types::BrokerMessage;
-
-mod typewriter {
-    pub mod models {
-        pub mod v1 {
-            include!("generated/typewriter.models.v1.rs");
-        }
-    }
-    pub mod api {
-        pub mod v1 {
-            include!("generated/typewriter.api.v1.rs");
-        }
-    }
-}
+use wasmcloud_utils::{
+    dispatch_actions,
+    wasmcloud::messaging::{handler::Guest, parse_subject, types},
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RegistrationData {
+pub(crate) struct ServiceRegistrationRecord {
     pub token: String,
-    pub expires_at: Datetime,
+    pub expires_at: surrealdb_component_sdk::Datetime,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ServiceMetadataRecord {
-    pub engine_version: Option<String>,
-    pub realm_version: Option<String>,
+#[serde(rename_all = "lowercase")]
+pub(crate) enum ServiceRoleTypeRecord {
+    Engine,
+    Realm,
+    Custom,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ServiceStateRecord {
-    pub status: Option<String>,
-    pub last_seen: Option<Datetime>,
+pub(crate) struct ServiceRoleRecord {
+    #[serde(rename = "type")]
+    pub role_type: ServiceRoleTypeRecord,
+    pub version: String,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ServiceRecord {
-    pub id: RecordId,
-    pub name: String,
-    pub service_types: Vec<String>,
-    pub created_at: Datetime,
-    pub metadata: Option<ServiceMetadataRecord>,
-    pub organization: Option<RecordId>,
-    pub registration: Option<RegistrationData>,
-    pub state: Option<ServiceStateRecord>,
+#[serde(rename_all = "UPPERCASE")]
+pub(crate) enum ServiceStatusRecord {
+    Online,
+    Offline,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrganizationRecord {
-    pub id: RecordId,
-    pub name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ServiceWithOrganizationRecord {
-    pub id: RecordId,
-    pub name: String,
-    pub service_types: Vec<String>,
-    pub organization: Option<OrganizationRecord>,
-    pub registration: Option<RegistrationData>,
-}
-
-struct ServiceRegistration;
-wasmcloud_utils::export!(ServiceRegistration);
-
-impl Guest for ServiceRegistration {
-    fn handle_message(msg: BrokerMessage) -> Result<(), String> {
-        debug!("Received message with subject: {}", msg.subject);
-        dispatch_actions!(
-            msg,
-            services: "[typewriter.from.]service.<service_id>",
-            user_services: "[typewriter.from.]user.<user_id>.organization.<org_id>.services";
-            "{services}.status" => status::handle_status => status::internal_error_status,
-            "{services}.heartbeat" => heartbeat::handle_heartbeat,
-            "{services}.shutdown" => shutdown::handle_shutdown,
-            "{user_services}.bind" => bind::handle_bind => bind::internal_error_bind,
-            "{user_services}.list" => list::handle_list => list::internal_error_list,
-            "{user_services}.update" => update::handle_update => update::internal_error_update,
-            "{user_services}.unbind" => unbind::handle_unbind => unbind::internal_error_unbind,
-        )
+impl Display for ServiceStatusRecord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ServiceStatusRecord::Online => write!(f, "ONLINE"),
+            ServiceStatusRecord::Offline => write!(f, "OFFLINE"),
+        }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct ServiceStateRecord {
+    pub status: ServiceStatusRecord,
+    pub last_seen: surrealdb_component_sdk::Datetime,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct ServiceRecord {
+    pub id: surrealdb_component_sdk::RecordId,
+    pub name: String,
+    pub roles: Vec<ServiceRoleRecord>,
+    pub created_at: surrealdb_component_sdk::Datetime,
+    pub organization: Option<surrealdb_component_sdk::RecordId>,
+    pub registration: Option<ServiceRegistrationRecord>,
+    pub state: Option<ServiceStateRecord>,
+    pub runs_in: Option<surrealdb_component_sdk::RecordId>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct OrganizationRecord {
+    pub id: surrealdb_component_sdk::RecordId,
+    pub name: String,
+}
+
+struct Component;
+wasmcloud_utils::export!(Component);
+
+impl Guest for Component {
+    #[otel_wasi::wasi_instrument(service = "service_registration", export)]
+    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+        handle_message_async(msg).await
+    }
+}
+
+async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+    if let Ok(params) = parse_subject(
+        "[typewriter.from.]service.<service_id>.heartbeat",
+        &msg.subject,
+    ) {
+        return heartbeat::handle_heartbeat(msg, params).await;
+    }
+
+    if let Ok(params) = parse_subject(
+        "[typewriter.from.]service.<service_id>.shutdown",
+        &msg.subject,
+    ) {
+        return shutdown::handle_shutdown(msg, params).await;
+    }
+
+    dispatch_actions!(
+        msg,
+        services: "[typewriter.from.]service.<service_id>",
+        user_services: "[typewriter.from.]user.<user_id>.organization.<org_id>.services";
+        "{services}.status" => async status::handle_status,
+        "{user_services}.bind" => async bind::handle_bind,
+        "{user_services}.watch" => async watch::handle_watch,
+        "{user_services}.update" => async update::handle_update,
+        "{user_services}.unbind" => async unbind::handle_unbind,
+    )
 }

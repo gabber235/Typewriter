@@ -176,11 +176,12 @@ pub async fn reply(
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
     if let Some(reply_to) = reply_to.reply_to {
-        consumer::publish(&types::BrokerMessage {
+        consumer::publish(types::BrokerMessage {
             subject: reply_to,
             reply_to: None,
             body: data.into(),
         })
+        .await
         .map_err(|e| otel_wasi::Error::new("message-reply-failed", e))
     } else {
         Err(otel_wasi::Error::new(
@@ -196,21 +197,23 @@ pub async fn send(
     reply_to: String,
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
-    consumer::publish(&types::BrokerMessage {
+    consumer::publish(types::BrokerMessage {
         subject,
         reply_to: Some(reply_to),
         body: data.into(),
     })
+    .await
     .error_with_slug("message-send-failed")
 }
 
 /// Publish a message without a reply_to.
 pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_wasi::Error> {
-    consumer::publish(&types::BrokerMessage {
+    consumer::publish(types::BrokerMessage {
         subject,
         reply_to: None,
         body: data.into(),
     })
+    .await
     .error_with_slug("message-publish-failed")
 }
 
@@ -219,7 +222,9 @@ pub async fn request(
     subject: String,
     data: impl Into<Vec<u8>>,
 ) -> Result<types::BrokerMessage, otel_wasi::Error> {
-    consumer::request(&subject, &data.into(), 5000).error_with_slug("message-request-failed")
+    consumer::request(subject, data.into(), 5000)
+        .await
+        .error_with_slug("message-request-failed")
 }
 
 /// Reply to a message with the result of a handler that returns `Result<R, otel_wasi::Error>`.

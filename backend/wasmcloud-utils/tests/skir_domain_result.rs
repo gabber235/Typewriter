@@ -16,7 +16,7 @@ fn maps_default_domain_error_slug() {
 
     assert!(matches!(
         response,
-        SkirDomainResult::Response(GetServiceStatusResponse::ServiceNotFound(_))
+        SkirDomainResult::Response(GetServiceStatusResponse::ServiceNotFoundError(_))
     ));
 }
 

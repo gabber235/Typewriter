@@ -1,0 +1,36 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: service-registration
+  namespace: typewriter
+spec:
+  replicas: 1
+  template:
+    spec:
+      environment: wasmcloud
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: service-registration
+      hostInterfaces:
+        - namespace: wasi
+          package: otel
+          version: "0.2.0-rc.2"
+          interfaces:
+            - tracing
+            - metrics
+        - namespace: wasmcloud
+          package: messaging
+          version: "0.3.0"
+          interfaces:
+            - handler
+            - consumer
+          config:
+            subscriptions: service.*.status,typewriter.from.service.*.status,typewriter.from.service.*.heartbeat,typewriter.from.service.*.shutdown,typewriter.from.user.*.organization.*.services.*
+        - namespace: seamlezz
+          package: surrealdb
+          version: "0.2.0"
+          interfaces:
+            - call
+          secretFrom:
+            - name: surrealdb-credentials-service-registration

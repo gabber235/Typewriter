@@ -1,0 +1,35 @@
+import { ServiceRole } from "service/v1/service.skir";
+
+method BindService(
+  struct {
+    registration_token: string;
+  }
+): enum {
+  internal_error: struct {};
+
+  success: struct {
+    service_id: string;
+    service_name: string?;
+    service_roles: [ServiceRole];
+  };
+
+  invalid_registration_token_error: struct {};
+  organization_not_found_error: struct {};
+} = 304691;
+
+struct ServiceBoundNotification {
+  organization_id: string;
+  organization_name: string?;
+}
+
+method UnbindService(
+  struct {
+    service_id: string;
+  }
+): enum {
+  internal_error: struct {};
+
+  success: struct {};
+
+  service_not_found_error: struct {};
+} = 950343;

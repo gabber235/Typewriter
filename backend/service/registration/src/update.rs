@@ -1,97 +1,70 @@
 use std::collections::HashMap;
 
-use prost::Message;
-use surrealdb_component::query;
-use wasmcloud_component::{debug, trace};
+use otel_wasi::ResultWithSlug;
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
-    error_response_bytes, extract_param, internal_error_fn,
-    wasmcloud::messaging::{reply, types::BrokerMessage},
+    decode_skir, extract_params,
+    skir::base::service::v1::organization::{
+        UpdateOrganizationServiceRequest, UpdateOrganizationServiceResponse,
+        UpdateOrganizationServiceResponse_ServiceNotFoundError,
+        UpdateOrganizationServiceResponse_Success, WatchOrganizationServicesResponse,
+    },
+    skir_variant,
+    wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::{notifications, typewriter, utils, ServiceRecord};
+use crate::ServiceRecord;
 
-pub fn handle_update(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
-    debug!("handle_update invoked");
-    let org_id = extract_param!(params, org_id);
+#[tracing::instrument(skip(msg, params))]
+pub async fn handle_update(
+    msg: BrokerMessage,
+    params: HashMap<String, String>,
+) -> Result<UpdateOrganizationServiceResponse, otel_wasi::Error> {
+    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let request = decode_skir!(UpdateOrganizationServiceRequest, &msg.body)?;
+    otel_wasi::main_attribute!(
+        "actor.id" = actor_id.to_string(),
+        "organization.id" = org_id.to_string(),
+        "service.id" = request.service_id.to_string()
+    );
 
-    let request = typewriter::api::v1::UpdateServiceRequest::decode(&msg.body[..])
-        .map_err(|e| format!("failed to decode request: {}", e))?;
-    trace!("Decoded UpdateServiceRequest");
+    if request.service_id.table != "service" {
+        return Err(otel_wasi::Error::new(
+            "service-update-id-invalid",
+            "service id must reference service table",
+        ));
+    }
 
-    let service_id = &request.service_id;
-    let new_name = &request.name;
-
-    let result = query(
+    let service_id = surrealdb_component_sdk::RecordId::from(&request.service_id);
+    let records = query(
         r#"
-        UPDATE type::thing('service', $service_id) SET name = $name
+        UPDATE $service_id SET
+            name = IF $name != NONE THEN $name ELSE name END
         WHERE organization = type::thing('organization', $org_id)
-        RETURN AFTER;
+        RETURN AFTER
         "#,
     )
     .bind("service_id", service_id)
     .bind("org_id", org_id)
-    .bind("name", new_name)
+    .bind("name", request.name)
     .execute()
-    .map_err(|e| format!("failed to update service: {}", e))?;
+    .await
+    .error_with_slug("service-update-query-failed")?
+    .take::<Option<ServiceRecord>>(0)
+    .error_with_slug("service-update-result-parse-failed")?;
 
-    let services: Vec<ServiceRecord> = result
-        .take(0)
-        .map_err(|e| format!("failed to parse result: {}", e))?;
-
-    if services.is_empty() {
-        return reply(
-            msg,
-            error_response_bytes!(
-                typewriter::api::v1::UpdateServiceResponse,
-                update_service_response,
-                404,
-                "Service not found or not in this organization"
-            ),
-        );
-    }
-
-    let service = &services[0];
-    let metadata = service.metadata.as_ref();
-    let state = service.state.as_ref();
-
-    let response = typewriter::api::v1::UpdateServiceResponse {
-        result: Some(
-            typewriter::api::v1::update_service_response::Result::Service(
-                typewriter::models::v1::Service {
-                    service_id: service.id.id.to_string(),
-                    name: Some(service.name.clone()),
-                    service_types: utils::map_service_types(&service.service_types),
-                    created_at: Some(service.created_at.clone().into()),
-                    state: state.map(|s| typewriter::models::v1::ServiceState {
-                        status: match s.status.as_deref() {
-                            Some("ONLINE") => typewriter::models::v1::ServiceStatus::Online as i32,
-                            Some("OFFLINE") => {
-                                typewriter::models::v1::ServiceStatus::Offline as i32
-                            }
-                            _ => typewriter::models::v1::ServiceStatus::Unspecified as i32,
-                        },
-                        last_seen: s.last_seen.clone().map(|dt| dt.into()),
-                    }),
-                    metadata: Some(typewriter::models::v1::ServiceMetadata {
-                        engine_version: metadata.and_then(|m| m.engine_version.clone()),
-                        realm_version: metadata.and_then(|m| m.realm_version.clone()),
-                    }),
-                    organization_id: service.organization.as_ref().map(|o| o.id.to_string()),
-                },
-            ),
-        ),
+    let Some(record) = records else {
+        otel_wasi::main_attribute!("service.outcome" = "not_found");
+        return Ok(skir_variant!(
+            UpdateOrganizationServiceResponse::ServiceNotFoundError
+        ));
     };
+    let service = record.try_into()?;
 
-    reply(msg, response.encode_to_vec())?;
+    wasmcloud_utils::skir_subjects::organization_services(org_id)
+        .publish(WatchOrganizationServicesResponse::Update(Box::new(service)))
+        .await?;
 
-    notifications::refresh_organization_services_list(org_id, params.get("user_id"))?;
-
-    Ok(())
+    otel_wasi::main_attribute!("service.outcome" = "updated");
+    Ok(skir_variant!(UpdateOrganizationServiceResponse::Success))
 }
-
-internal_error_fn!(
-    internal_error_update,
-    typewriter::api::v1::UpdateServiceResponse,
-    update_service_response,
-    "Internal Server Error when updating service"
-);

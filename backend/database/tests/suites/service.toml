@@ -17,16 +17,6 @@ path = ""
 equals = true
 
 [[cases]]
-name = "schema_application_removes_legacy_service_types_fields"
-kind = "sql_expect"
-actor = "root"
-sql = "DEFINE FIELD OVERWRITE service_types ON TABLE service TYPE array<string>; DEFINE FIELD OVERWRITE service_types.* ON TABLE service TYPE string; REMOVE FIELD IF EXISTS service_types.* ON TABLE service; REMOVE FIELD IF EXISTS service_types ON TABLE service; LET $fields = (INFO FOR TABLE service).fields; RETURN $fields.service_types = NONE AND $fields['service_types.*'] = NONE;"
-allow = true
-[[cases.assertions]]
-path = ""
-equals = true
-
-[[cases]]
 name = "roles_are_required"
 kind = "sql_expect"
 actor = "root"
@@ -171,7 +161,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:bound_and_registration SET name = 'bound_and_registration', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, registration = { token: 'ABCDEF1234', expires_at: time::now() + 1h };"
 allow = false
-error_contains = "organization and registration"
+error_contains = "service-organization-registration-conflict"
 
 [[cases]]
 name = "plain_realm_cannot_have_runs_in"
@@ -179,7 +169,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:realm_with_runs_in SET name = 'realm_with_runs_in', roles = [{ type: 'realm', version: '1.0.0' }], runs_in = service:realm_unbound;"
 allow = false
-error_contains = "engine or custom role"
+error_contains = "runs-in-requires-engine-or-custom-role"
 
 [[cases]]
 name = "runs_in_target_must_be_realm"
@@ -187,7 +177,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:engine_target SET name = 'engine_target', roles = [{ type: 'engine', version: '1.0.0' }]; CREATE service:engine_bad_runs_in SET name = 'engine_bad_runs_in', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:engine_target;"
 allow = false
-error_contains = "realm role"
+error_contains = "runs-in-must-reference-realm-role"
 
 [[cases]]
 name = "custom_only_without_runs_in_is_valid"
@@ -209,7 +199,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:custom_target SET name = 'custom_target', roles = [{ type: 'custom', name: 'target', version: '1.0.0' }]; CREATE service:engine_custom_target SET name = 'engine_custom_target', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:custom_target;"
 allow = false
-error_contains = "realm role"
+error_contains = "runs-in-must-reference-realm-role"
 
 [[cases]]
 name = "engine_plus_custom_can_run_in_realm"
@@ -241,7 +231,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:last_source SET name = 'last_source', roles = [{ type: 'engine', version: '1.0.0' }], runs_in = service:realm_unbound; UPDATE service:last_source SET roles = [{ type: 'realm', version: '1.0.0' }];"
 allow = false
-error_contains = "engine or custom role"
+error_contains = "runs-in-requires-engine-or-custom-role"
 
 [[cases]]
 name = "runs_in_rejects_different_organizations"
@@ -249,7 +239,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:realm_beta SET name = 'realm_beta', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:beta; CREATE service:engine_cross_org SET name = 'engine_cross_org', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, runs_in = service:realm_beta;"
 allow = false
-error_contains = "same organization"
+error_contains = "runs-in-organization-mismatch"
 
 [[cases]]
 name = "runs_in_rejects_mixed_bound_unbound_lifecycle"
@@ -257,7 +247,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:engine_mixed SET name = 'engine_mixed', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:acme, runs_in = service:realm_unbound;"
 allow = false
-error_contains = "unbound or bound"
+error_contains = "runs-in-organization-mismatch"
 
 [[cases]]
 name = "deleting_realm_unsets_engine_runs_in"
@@ -303,7 +293,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "UPDATE service:engine_unbound SET organization = organization:acme;"
 allow = false
-error_contains = "unbound or bound"
+error_contains = "runs-in-organization-mismatch"
 
 [[cases]]
 name = "same_organization_bound_engine_and_realm_can_keep_runs_in"

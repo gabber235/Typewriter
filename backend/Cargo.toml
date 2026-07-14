@@ -24,8 +24,6 @@ chrono = { version = "0.4", features = ["serde"] }
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
 nats-jwt-rs = "0.1"
 nkeys = "0.4"
-prost = "0.13"
-prost-types = "0.13"
 regex = "1.12.2"
 serde = { version = "1", features = ["derive"] }
 serde_cbor = "0.11"

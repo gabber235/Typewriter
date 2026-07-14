@@ -1,0 +1,40 @@
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct Service {
+  service_id: RecordId;
+  name: string;
+  roles: [ServiceRole];
+  created_at: timestamp;
+  organization: RecordId?;
+  registration: ServiceRegistration?;
+  state: ServiceState?;
+  runs_in: RecordId?;
+}
+
+enum ServiceRole {
+  engine: struct {
+    version: string;
+  };
+  realm: struct {
+    version: string;
+  };
+  custom: struct {
+    name: string;
+    version: string;
+  };
+}
+
+enum ServiceStatus {
+  online;
+  offline;
+}
+
+struct ServiceState {
+  status: ServiceStatus;
+  last_seen: timestamp;
+}
+
+struct ServiceRegistration {
+  token: string;
+  expires_at: timestamp;
+}

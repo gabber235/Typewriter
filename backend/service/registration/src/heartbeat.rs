@@ -1,48 +1,66 @@
 use std::collections::HashMap;
 
-use prost::Message;
-use surrealdb_component::query;
-use wasmcloud_component::debug;
-use wasmcloud_utils::{extract_param, wasmcloud::messaging::types::BrokerMessage};
+use otel_wasi::ResultWithSlug;
+use surrealdb_component_sdk::query;
+use wasmcloud_utils::{
+    decode_skir, extract_param,
+    skir::base::service::v1::{
+        lifecycle::ServiceHeartbeatNotification, organization::WatchOrganizationServicesResponse,
+    },
+    wasmcloud::messaging::types::BrokerMessage,
+};
 
-use crate::{notifications::refresh_organization_services_list, typewriter};
+use crate::ServiceRecord;
 
-pub fn handle_heartbeat(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
-    debug!("handle_heartbeat invoked");
-    let service_id = extract_param!(params, service_id);
+#[tracing::instrument(skip(msg, params))]
+pub async fn handle_heartbeat(
+    msg: BrokerMessage,
+    params: HashMap<String, String>,
+) -> Result<(), otel_wasi::Error> {
+    let service_id = extract_param!(params, service_id)?;
+    otel_wasi::main_attribute!("service.id" = service_id.to_string());
+    let _ = decode_skir!(ServiceHeartbeatNotification, &msg.body)?;
 
-    let _request = typewriter::api::v1::ServiceHeartbeatRequest::decode(&msg.body[..])
-        .map_err(|e| format!("failed to decode heartbeat request: {}", e))?;
+    update_state(service_id, &crate::ServiceStatusRecord::Online).await
+}
 
-    query(
+#[tracing::instrument]
+pub(crate) async fn update_state(
+    service_id: &str,
+    status: &crate::ServiceStatusRecord,
+) -> Result<(), otel_wasi::Error> {
+    let records = query(
         r#"
         UPDATE type::thing('service', $service_id) SET state = {
-            status: 'ONLINE',
+            status: $status,
             last_seen: time::now()
-        };
+        }
+        RETURN AFTER
         "#,
     )
-    .bind("service_id", &service_id)
+    .bind("service_id", service_id)
+    .bind("status", status.to_string())
     .execute()
-    .map_err(|e| format!("failed to update state: {}", e))?;
+    .await
+    .error_with_slug("service-state-update-query-failed")?
+    .take::<Option<ServiceRecord>>(0)
+    .error_with_slug("service-state-update-result-parse-failed")?;
 
-    debug!(
-        "Heartbeat recorded for service {} (status: ONLINE)",
-        service_id
-    );
+    let Some(record) = records.into_iter().next() else {
+        return Err(otel_wasi::wasi_error!(
+            "service-state-update-not-found",
+            "service not found",
+        ));
+    };
+    let Some(organization) = record.organization.clone() else {
+        return Ok(());
+    };
+    let service = record.try_into()?;
 
-    let org_id: Option<String> =
-        query(r#"SELECT VALUE <string>record::id(organization) FROM type::thing('service', $service_id);"#)
-            .bind("service_id", &service_id)
-            .execute()
-            .map_err(|e| format!("failed to fetch organization: {}", e))?
-            .take(0)
-            .map_err(|e| format!("failed to parse organization: {}", e))?;
+    wasmcloud_utils::skir_subjects::organization_services(organization.key)
+        .publish(WatchOrganizationServicesResponse::Update(Box::new(service)))
+        .await?;
 
-    if let Some(org_id) = org_id {
-        refresh_organization_services_list(&org_id, None)?;
-        debug!("Refreshed services list for organization {}", org_id);
-    }
-
+    otel_wasi::main_attribute!("service.state" = status.to_string());
     Ok(())
 }

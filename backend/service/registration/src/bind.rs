@@ -1,140 +1,116 @@
 use std::collections::HashMap;
 
-use prost::Message;
-use surrealdb_component::query;
-use wasmcloud_component::{debug, info, trace};
+use otel_wasi::ResultWithSlug;
+use serde::Deserialize;
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
-    error_response_bytes, extract_param, internal_error_fn,
-    wasmcloud::messaging::{reply, types::BrokerMessage},
+    decode_skir, extract_params,
+    skir::base::service::v1::{
+        organization::WatchOrganizationServicesResponse,
+        registration::{
+            BindServiceRequest, BindServiceResponse, BindServiceResponse_Success,
+            ServiceBoundNotification,
+        },
+    },
+    skir_domain_result,
+    wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::{notifications, typewriter, utils, OrganizationRecord, ServiceRecord};
+use crate::{OrganizationRecord, ServiceRecord};
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 struct BindResult {
     service: ServiceRecord,
     organization: OrganizationRecord,
 }
 
-pub fn handle_bind(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
-    debug!("handle_bind invoked");
-    let org_id = extract_param!(params, org_id);
-
-    let request = typewriter::api::v1::BindServiceRequest::decode(&msg.body[..])
-        .map_err(|e| format!("failed to decode request: {}", e))?;
-    trace!("Decoded BindServiceRequest");
-
-    let token = request.registration_token;
-    info!("Attempting to bind service with token: {}", token);
+#[tracing::instrument(skip(msg, params))]
+pub async fn handle_bind(
+    msg: BrokerMessage,
+    params: HashMap<String, String>,
+) -> Result<BindServiceResponse, otel_wasi::Error> {
+    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    otel_wasi::main_attribute!(
+        "actor.id" = actor_id.to_string(),
+        "organization.id" = org_id.to_string()
+    );
+    let request = decode_skir!(BindServiceRequest, &msg.body)?;
 
     let result = query(
         r#"
         BEGIN TRANSACTION;
 
-        LET $service = SELECT * FROM service
+        LET $services = SELECT * FROM service
             WHERE registration.token = $registration_token
-            AND registration.expires_at > time::now();
+                AND registration.expires_at > time::now();
 
-        IF array::is_empty($service) {
-            THROW "Invalid or expired registration token";
+        IF array::is_empty($services) {
+            THROW 'invalid-registration-token-error'
         };
 
-        LET $orgs = SELECT id, name FROM type::thing('organization', $org_id);
-
-        IF array::len($orgs) == 0 {
-            THROW "Organization not found";
+        LET $organizations = SELECT id, name FROM type::thing('organization', $org_id);
+        IF array::is_empty($organizations) {
+            THROW 'organization-not-found-error'
         };
 
-        LET $org = array::first($orgs);
-
-        LET $updated = UPDATE $service[0].id SET
-            organization = $org.id,
+        LET $organization = array::first($organizations);
+        LET $updated = UPDATE $services[0].id SET
+            organization = $organization.id,
             registration = NONE
         RETURN AFTER;
 
         RETURN {
             service: $updated[0],
-            organization: $org
+            organization: $organization
         };
 
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("registration_token", &token)
+    .bind("registration_token", request.registration_token)
     .bind("org_id", org_id)
-    .execute();
+    .execute()
+    .await
+    .error_with_slug("service-bind-query-failed")?
+    .parse_result::<BindResult>(0)
+    .error_with_slug("service-bind-result-parse-failed")?;
 
-    let result = match result {
-        Ok(r) => r,
-        Err(e) => {
-            let error_msg = e.to_string();
-            if error_msg.contains("Invalid or expired")
-                || error_msg.contains("Organization not found")
-            {
-                return reply(
-                    msg,
-                    error_response_bytes!(
-                        typewriter::api::v1::BindServiceResponse,
-                        bind_service_response,
-                        400,
-                        error_msg
-                    ),
-                );
-            }
-            return Err(format!("failed to bind service: {}", e));
-        }
-    };
+    let result = skir_domain_result!(BindServiceResponse, result);
 
-    let bind_result: Result<BindResult, String> = result
-        .parse_result(0)
-        .map_err(|e| format!("failed to parse bind result: {}", e))?;
+    let service_id = result.service.id.key.to_string();
+    let service_name = result.service.name.clone();
+    let roles = result
+        .service
+        .roles
+        .clone()
+        .into_iter()
+        .map(TryInto::try_into)
+        .collect::<Result<Vec<_>, _>>()?;
 
-    let bind_result = match bind_result {
-        Ok(r) => r,
-        Err(e) => {
-            return reply(
-                msg,
-                error_response_bytes!(
-                    typewriter::api::v1::BindServiceResponse,
-                    bind_service_response,
-                    400,
-                    e
-                ),
-            );
-        }
-    };
+    let service = result.service.try_into()?;
 
-    let service = bind_result.service;
-    let org = bind_result.organization;
-    let service_id = service.id.id.to_string();
+    wasmcloud_utils::skir_subjects::organization_services(org_id)
+        .publish(WatchOrganizationServicesResponse::Add(Box::new(service)))
+        .await?;
 
-    trace!("Bound service {} to organization {}", service_id, org.name);
+    wasmcloud_utils::skir_subjects::service_bound(&service_id)
+        .publish(ServiceBoundNotification {
+            organization_id: result.organization.id.key.to_string(),
+            organization_name: Some(result.organization.name),
+            _unrecognized: None,
+        })
+        .await?;
 
-    let response = typewriter::api::v1::BindServiceResponse {
-        result: Some(typewriter::api::v1::bind_service_response::Result::Service(
-            typewriter::api::v1::BoundService {
-                service_id: service_id.clone(),
-                service_name: Some(service.name),
-                service_types: utils::map_service_types(&service.service_types),
-            },
-        )),
-    };
-
-    reply(msg, response.encode_to_vec())?;
-
-    notifications::publish_bound_notification(&service_id, &org.id.id.to_string(), &org.name)?;
-
-    notifications::refresh_organization_services_list(
-        &org.id.id.to_string(),
-        params.get("user_id"),
-    )?;
-
-    Ok(())
+    otel_wasi::main_attribute!(
+        "service.id" = service_id.clone(),
+        "service.outcome" = "bound"
+    );
+    Ok(BindServiceResponse::Success(Box::new(
+        BindServiceResponse_Success {
+            service_id,
+            service_name: Some(service_name),
+            service_roles: roles,
+            _unrecognized: None,
+        },
+    )))
 }
-
-internal_error_fn!(
-    internal_error_bind,
-    typewriter::api::v1::BindServiceResponse,
-    bind_service_response,
-    "Internal Server Error when binding service"
-);

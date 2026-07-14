@@ -1,73 +1,63 @@
 use std::collections::HashMap;
 
-use prost::Message;
-use surrealdb_component::query;
-use wasmcloud_component::{debug, info, trace};
+use otel_wasi::ResultWithSlug;
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
-    error_response_bytes, extract_param, internal_error_fn,
-    wasmcloud::messaging::{reply, types::BrokerMessage},
+    decode_skir, extract_params,
+    skir::base::service::v1::{
+        organization::WatchOrganizationServicesResponse,
+        registration::{
+            UnbindServiceRequest, UnbindServiceResponse,
+            UnbindServiceResponse_ServiceNotFoundError, UnbindServiceResponse_Success,
+        },
+    },
+    skir_variant,
+    wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::{notifications, typewriter, ServiceRecord};
+use crate::ServiceRecord;
 
-pub fn handle_unbind(msg: BrokerMessage, params: HashMap<String, String>) -> Result<(), String> {
-    debug!("handle_unbind invoked");
-    let org_id = extract_param!(params, org_id);
-
-    let request = typewriter::api::v1::UnbindServiceRequest::decode(&msg.body[..])
-        .map_err(|e| format!("failed to decode request: {}", e))?;
-    trace!("Decoded UnbindServiceRequest");
-
-    let service_id = &request.service_id;
-    info!(
-        "Unbinding service {} from organization {}",
-        service_id, org_id
+#[tracing::instrument(skip(msg, params))]
+pub async fn handle_unbind(
+    msg: BrokerMessage,
+    params: HashMap<String, String>,
+) -> Result<UnbindServiceResponse, otel_wasi::Error> {
+    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let request = decode_skir!(UnbindServiceRequest, &msg.body)?;
+    otel_wasi::main_attribute!(
+        "actor.id" = actor_id.to_string(),
+        "organization.id" = org_id.to_string(),
+        "service.id" = request.service_id.clone()
     );
 
-    let result = query(
+    let records = query(
         r#"
         UPDATE type::thing('service', $service_id) SET
             organization = NONE,
             registration = NONE
         WHERE organization = type::thing('organization', $org_id)
-        RETURN BEFORE;
+        RETURN BEFORE
         "#,
     )
-    .bind("service_id", service_id)
+    .bind("service_id", &request.service_id)
     .bind("org_id", org_id)
     .execute()
-    .map_err(|e| format!("failed to unbind service: {}", e))?;
+    .await
+    .error_with_slug("service-unbind-query-failed")?
+    .take::<Option<ServiceRecord>>(0)
+    .error_with_slug("service-unbind-result-parse-failed")?;
 
-    let affected: Vec<ServiceRecord> = result
-        .take(0)
-        .map_err(|e| format!("failed to parse result: {}", e))?;
-
-    if affected.is_empty() {
-        return reply(
-            msg,
-            error_response_bytes!(
-                typewriter::api::v1::UnbindServiceResponse,
-                unbind_service_response,
-                404,
-                "Service not found or not in this organization"
-            ),
-        );
-    }
-
-    let response = typewriter::api::v1::UnbindServiceResponse {
-        result: Some(typewriter::api::v1::unbind_service_response::Result::Success(true)),
+    let Some(record) = records else {
+        otel_wasi::main_attribute!("service.outcome" = "not_found");
+        return Ok(skir_variant!(UnbindServiceResponse::ServiceNotFoundError));
     };
 
-    reply(msg, response.encode_to_vec())?;
+    wasmcloud_utils::skir_subjects::organization_services(org_id)
+        .publish(WatchOrganizationServicesResponse::Remove(Box::new(
+            record.id.into(),
+        )))
+        .await?;
 
-    notifications::refresh_organization_services_list(org_id, params.get("user_id"))?;
-
-    Ok(())
+    otel_wasi::main_attribute!("service.outcome" = "unbound");
+    Ok(skir_variant!(UnbindServiceResponse::Success))
 }
-
-internal_error_fn!(
-    internal_error_unbind,
-    typewriter::api::v1::UnbindServiceResponse,
-    unbind_service_response,
-    "Internal Server Error when unbinding service"
-);
