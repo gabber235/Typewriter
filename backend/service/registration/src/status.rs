@@ -13,7 +13,8 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::{OrganizationRecord, utils};
+use crate::utils;
+use wasmcloud_utils::database::organization::OrganizationRecord;
 
 #[derive(Debug, Deserialize)]
 struct StatusQueryResult {

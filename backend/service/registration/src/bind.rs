@@ -16,7 +16,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::{OrganizationRecord, ServiceRecord};
+use wasmcloud_utils::database::{organization::OrganizationRecord, service::ServiceRecord};
 
 #[derive(Debug, Deserialize)]
 struct BindResult {

@@ -1,8 +1,9 @@
-use crate::{MemberRecord, validate_roles};
+use crate::validate_roles;
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use std::collections::HashMap;
 use surrealdb_component_sdk::{RecordId, query};
+use wasmcloud_utils::database::organization::projections::OrganizationMemberProjection;
 use wasmcloud_utils::{
     decode_skir, extract_params,
     skir::base::organization::v1::{member::*, user::WatchUserOrganizationsResponse},
@@ -56,7 +57,7 @@ pub async fn handle_watch(
     .execute()
     .await
     .error_with_slug("member-watch-query-failed")?
-    .take::<Vec<MemberRecord>>(0)
+    .take::<Vec<OrganizationMemberProjection>>(0)
     .error_with_slug("member-watch-result-parse-failed")?
     .into_iter()
     .map(Into::into)
@@ -204,7 +205,7 @@ pub async fn handle_update(
     .execute()
     .await
     .error_with_slug("member-update-query-failed")?
-    .parse_result::<MemberRecord>(0)
+    .parse_result::<OrganizationMemberProjection>(0)
     .error_with_slug("member-update-result-parse-failed")?;
 
     if let Err(slug) = &result {

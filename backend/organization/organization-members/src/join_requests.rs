@@ -1,8 +1,11 @@
-use crate::{MemberRecord, OrganizationRecord, UserRecord, validate_roles};
+use crate::validate_roles;
 use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use surrealdb_component_sdk::{Datetime, query};
+use surrealdb_component_sdk::query;
+use wasmcloud_utils::database::organization::projections::{
+    JoinRequestProjection, OrganizationMemberProjection,
+};
 use wasmcloud_utils::{
     decode_skir, extract_params,
     skir::base::organization::v1::{
@@ -15,45 +18,10 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct JoinRequestRecord {
-    id: surrealdb_component_sdk::RecordId,
-    user: UserRecord,
-    organization: OrganizationRecord,
-    requested_at: Datetime,
-    expires_at: Datetime,
-}
-impl From<JoinRequestRecord> for OrganizationJoinRequest {
-    fn from(v: JoinRequestRecord) -> Self {
-        Self {
-            request_id: v.id.into(),
-            user_id: v.user.id.into(),
-            user_name: v.user.name,
-            user_email: v.user.email,
-            user_avatar_url: v.user.avatar_url,
-            requested_at: v.requested_at.into(),
-            expires_at: v.expires_at.into(),
-            _unrecognized: None,
-        }
-    }
-}
-impl From<JoinRequestRecord> for UserJoinRequest {
-    fn from(v: JoinRequestRecord) -> Self {
-        Self {
-            request_id: v.id.into(),
-            organization_id: v.organization.id.into(),
-            organization_name: v.organization.name,
-            organization_logo_url: v.organization.logo_url.unwrap_or_default(),
-            requested_at: v.requested_at.into(),
-            expires_at: v.expires_at.into(),
-            _unrecognized: None,
-        }
-    }
-}
 #[derive(Debug, Serialize, Deserialize)]
 struct ApprovalRecord {
-    request: JoinRequestRecord,
-    member: MemberRecord,
+    request: JoinRequestProjection,
+    member: OrganizationMemberProjection,
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,7 +58,7 @@ pub async fn handle_watch(
     .execute()
     .await
     .error_with_slug("join-request-watch-query-failed")?
-    .take::<Vec<JoinRequestRecord>>(0)
+    .take::<Vec<JoinRequestProjection>>(0)
     .error_with_slug("join-request-watch-result-parse-failed")?;
 
     otel_wasi::main_attribute!(
@@ -341,7 +309,7 @@ pub async fn handle_decline(
     .execute()
     .await
     .error_with_slug("join-request-decline-query-failed")?
-    .parse_result::<Option<JoinRequestRecord>>(0)
+    .parse_result::<Option<JoinRequestProjection>>(0)
     .error_with_slug("join-request-decline-result-parse-failed")?;
 
     if let Err(slug) = &row {

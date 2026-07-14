@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
-use surrealdb_component_sdk::{Datetime, query};
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
     decode_skir, extract_param,
     skir::base::{
@@ -15,107 +15,16 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::OrganizationRecord;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct JoinRequestRecord {
-    id: surrealdb_component_sdk::RecordId,
-    user: UserRecord,
-    organization: OrganizationRecord,
-    requested_at: Datetime,
-    expires_at: Datetime,
-}
-
-impl From<JoinRequestRecord> for OrganizationJoinRequest {
-    fn from(value: JoinRequestRecord) -> Self {
-        OrganizationJoinRequest {
-            request_id: value.id.into(),
-            user_id: value.user.id.into(),
-            user_name: value.user.name,
-            user_email: value.user.email,
-            user_avatar_url: value.user.avatar_url,
-            requested_at: value.requested_at.into(),
-            expires_at: value.expires_at.into(),
-            _unrecognized: None,
-        }
-    }
-}
-
-impl From<JoinRequestRecord> for UserJoinRequest {
-    fn from(value: JoinRequestRecord) -> Self {
-        UserJoinRequest {
-            request_id: value.id.into(),
-            organization_id: value.organization.id.into(),
-            organization_name: value.organization.name,
-            organization_logo_url: value.organization.logo_url,
-            requested_at: value.requested_at.into(),
-            expires_at: value.expires_at.into(),
-            _unrecognized: None,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UserRecord {
-    pub id: surrealdb_component_sdk::RecordId,
-    pub name: Option<String>,
-    pub email: Option<String>,
-    pub avatar_url: Option<String>,
-}
+use wasmcloud_utils::database::organization::{
+    OrganizationRecord,
+    projections::{JoinRequestProjection, OrganizationMemberProjection},
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JoinRequestCodeRecord {
     organization: OrganizationRecord,
     single_use: bool,
     auto_accept_roles: Vec<surrealdb_component_sdk::RecordId>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct OrganizationMemberRecord {
-    user_id: surrealdb_component_sdk::RecordId,
-    name: Option<String>,
-    email: Option<String>,
-    avatar_url: Option<String>,
-    roles: Vec<OrganizationRoleRecord>,
-    joined_at: surrealdb_component_sdk::Datetime,
-}
-
-impl From<OrganizationMemberRecord> for OrganizationMember {
-    fn from(value: OrganizationMemberRecord) -> Self {
-        OrganizationMember {
-            user_id: value.user_id.into(),
-            name: value.name,
-            email: value.email,
-            avatar_url: value.avatar_url,
-            roles: value.roles.into_iter().map(Into::into).collect(),
-            joined_at: value.joined_at.into(),
-            _unrecognized: None,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OrganizationRoleRecord {
-    id: surrealdb_component_sdk::RecordId,
-    name: String,
-    color: i64,
-    default_role: bool,
-    assignable: bool,
-    deletable: bool,
-}
-
-impl From<OrganizationRoleRecord> for OrganizationRole {
-    fn from(value: OrganizationRoleRecord) -> Self {
-        OrganizationRole {
-            role_id: value.id.into(),
-            name: value.name,
-            color: value.color.into(),
-            default_role: value.default_role,
-            assignable: value.assignable,
-            deletable: value.deletable,
-            _unrecognized: None,
-        }
-    }
 }
 
 #[tracing::instrument(skip(msg, params))]
@@ -144,7 +53,7 @@ pub async fn handle_watch(
     .execute()
     .await
     .error_with_slug("join-request-watch-query-failed")?
-    .take::<Vec<JoinRequestRecord>>(0)
+    .take::<Vec<JoinRequestProjection>>(0)
     .error_with_slug("join-request-watch-result-parse-failed")?
     .into_iter()
     .map(UserJoinRequest::from)
@@ -190,9 +99,9 @@ pub async fn handle_request(
     );
 
     if !auto_accept_roles.is_empty() {
-        handle_auto_accept(&user_id, &org, &code, single_use, &auto_accept_roles).await
+        handle_auto_accept(user_id, &org, &code, single_use, &auto_accept_roles).await
     } else {
-        handle_manual_accept(&user_id, &org.id, &code, single_use).await
+        handle_manual_accept(user_id, &org.id, &code, single_use).await
     }
 }
 
@@ -279,7 +188,7 @@ async fn handle_auto_accept(
     .execute()
     .await
     .error_with_slug("join-request-auto-accept-query-failed")?
-    .parse_result::<OrganizationMemberRecord>(0)
+    .parse_result::<OrganizationMemberProjection>(0)
     .error_with_slug("join-request-auto-accept-result-parse-failed")?;
 
     let member = skir_domain_result!(SubmitUserJoinRequestResponse, result);
@@ -315,7 +224,7 @@ async fn handle_auto_accept(
         AutoAcceptedMember {
             organization_id: org.id.clone().into(),
             organization_name: org.name.clone(),
-            organization_logo_url: Some(org.logo_url.clone()),
+            organization_logo_url: org.logo_url.clone(),
             roles,
             _unrecognized: None,
         },
@@ -377,7 +286,7 @@ async fn handle_manual_accept(
     .execute()
     .await
     .error_with_slug("join-request-create-query-failed")?
-    .parse_result::<JoinRequestRecord>(0)
+    .parse_result::<JoinRequestProjection>(0)
     .error_with_slug("join-request-create-result-parse-failed")?;
 
     let request_record = skir_domain_result!(SubmitUserJoinRequestResponse, result);
@@ -440,7 +349,7 @@ pub async fn handle_cancel(
     .execute()
     .await
     .error_with_slug("join-request-cancel-query-failed")?
-    .take::<Option<JoinRequestRecord>>(0)
+    .take::<Option<JoinRequestProjection>>(0)
     .error_with_slug("join-request-cancel-result-parse-failed")?;
 
     let Some(join_request) = join_request else {

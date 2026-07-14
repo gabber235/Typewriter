@@ -1,17 +1,11 @@
-use serde::Serialize;
 use surrealdb_component_sdk::RecordId;
 use wasmcloud_utils::skir::base::service::v1::identity::*;
 use wasmcloud_utils::skir::base::service::v1::service::*;
-use wasmcloud_utils::{SkirDomainResult, SkirDomainResultExt, skir_variant};
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct ServiceRoleRecord {
-    #[serde(rename = "type")]
-    pub role_type: &'static str,
-    pub version: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-}
+use wasmcloud_utils::{
+    SkirDomainResult, SkirDomainResultExt,
+    database::service::{ServiceRoleRecord, ServiceRoleTypeRecord},
+    skir_variant,
+};
 
 pub struct ProvisionedAccount {
     pub username: String,
@@ -67,24 +61,7 @@ pub trait NameSource {
 pub fn role_records(roles: Vec<ServiceRole>) -> Result<Vec<ServiceRoleRecord>, ()> {
     roles
         .into_iter()
-        .map(|role| match role {
-            ServiceRole::Engine(role) => Ok(ServiceRoleRecord {
-                role_type: "engine",
-                version: role.version,
-                name: None,
-            }),
-            ServiceRole::Realm(role) => Ok(ServiceRoleRecord {
-                role_type: "realm",
-                version: role.version,
-                name: None,
-            }),
-            ServiceRole::Custom(role) => Ok(ServiceRoleRecord {
-                role_type: "custom",
-                version: role.version,
-                name: Some(role.name),
-            }),
-            ServiceRole::Unknown(_) => Err(()),
-        })
+        .map(|role| role.try_into().map_err(|_| ()))
         .collect()
 }
 
@@ -104,9 +81,18 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
             ));
         }
     };
-    let engine_roles = roles.iter().filter(|r| r.role_type == "engine").count();
-    let realm_roles = roles.iter().filter(|r| r.role_type == "realm").count();
-    let custom_roles = roles.iter().filter(|r| r.role_type == "custom").count();
+    let engine_roles = roles
+        .iter()
+        .filter(|r| r.role_type == ServiceRoleTypeRecord::Engine)
+        .count();
+    let realm_roles = roles
+        .iter()
+        .filter(|r| r.role_type == ServiceRoleTypeRecord::Realm)
+        .count();
+    let custom_roles = roles
+        .iter()
+        .filter(|r| r.role_type == ServiceRoleTypeRecord::Custom)
+        .count();
     otel_wasi::main_attribute!(
         "identity.roles.count" = roles.len() as i64,
         "identity.roles.engine.count" = engine_roles as i64,

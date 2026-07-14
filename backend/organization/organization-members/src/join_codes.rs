@@ -1,40 +1,15 @@
 use crate::validate_roles;
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use surrealdb_component_sdk::{Datetime, query};
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::organization::JoinCodeRecord,
     decode_skir, extract_params,
     skir::base::organization::v1::join_codes::*,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
-
-#[derive(Debug, Serialize, Deserialize)]
-struct JoinCodeRecord {
-    id: surrealdb_component_sdk::RecordId,
-    created_at: Datetime,
-    expires_at: Option<Datetime>,
-    single_use: bool,
-    auto_accept_roles: Vec<surrealdb_component_sdk::RecordId>,
-}
-
-impl From<JoinCodeRecord> for JoinCode {
-    fn from(v: JoinCodeRecord) -> Self {
-        Self {
-            code: v.id.into(),
-            created_at: v.created_at.into(),
-            expires_at: v.expires_at.map(Into::into),
-            single_use: v.single_use,
-            auto_accept: JoinCode_AutoAccept {
-                role_ids: v.auto_accept_roles.into_skir_record_ids(),
-                _unrecognized: None,
-            },
-            _unrecognized: None,
-        }
-    }
-}
 
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(

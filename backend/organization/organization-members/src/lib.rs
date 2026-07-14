@@ -11,52 +11,16 @@ mod join_requests;
 mod members;
 
 use otel_wasi::ResultWithSlug;
-use serde::{Deserialize, Serialize};
-use surrealdb_component_sdk::{Datetime, query};
+use serde::Deserialize;
+use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
     dispatch_actions,
-    skir::base::organization::v1::{organization::Organization, role::OrganizationRole},
     wasmcloud::messaging::{handler::Guest, types},
 };
 
 struct Component;
 wasmcloud_utils::export!(Component);
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct OrganizationRecord {
-    pub id: surrealdb_component_sdk::RecordId,
-    pub name: String,
-    pub logo_url: Option<String>,
-}
-
-impl From<OrganizationRecord> for Organization {
-    fn from(v: OrganizationRecord) -> Self {
-        Self {
-            organization_id: v.id.into(),
-            name: v.name,
-            logo_url: v.logo_url.unwrap_or_default(),
-            _unrecognized: None,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct UserRecord {
-    pub id: surrealdb_component_sdk::RecordId,
-    pub name: Option<String>,
-    pub email: Option<String>,
-    pub avatar_url: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct RoleRecord {
-    pub id: surrealdb_component_sdk::RecordId,
-    pub name: String,
-    pub color: i64,
-    pub default_role: bool,
-    pub assignable: bool,
-    pub deletable: bool,
-}
 #[derive(Debug)]
 pub(crate) struct RoleValidation {
     pub missing: Vec<surrealdb_component_sdk::RecordId>,
@@ -129,45 +93,6 @@ pub(crate) async fn validate_roles(
 struct ValidatedRoleRecord {
     id: surrealdb_component_sdk::RecordId,
     assignable: bool,
-}
-
-impl From<RoleRecord> for OrganizationRole {
-    fn from(v: RoleRecord) -> Self {
-        Self {
-            role_id: v.id.into(),
-            name: v.name,
-            color: v.color.into(),
-            default_role: v.default_role,
-            assignable: v.assignable,
-            deletable: v.deletable,
-            _unrecognized: None,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct MemberRecord {
-    pub user_id: surrealdb_component_sdk::RecordId,
-    pub name: Option<String>,
-    pub email: Option<String>,
-    pub avatar_url: Option<String>,
-    pub roles: Vec<RoleRecord>,
-    pub joined_at: Datetime,
-}
-impl From<MemberRecord>
-    for wasmcloud_utils::skir::base::organization::v1::member::OrganizationMember
-{
-    fn from(v: MemberRecord) -> Self {
-        Self {
-            user_id: v.user_id.into(),
-            name: v.name,
-            email: v.email,
-            avatar_url: v.avatar_url,
-            roles: v.roles.into_iter().map(Into::into).collect(),
-            joined_at: v.joined_at.into(),
-            _unrecognized: None,
-        }
-    }
 }
 
 impl Guest for Component {

@@ -12,6 +12,7 @@ macro_rules! export {
     };
 }
 
+pub mod database;
 pub mod wasmcloud;
 
 #[rustfmt::skip]

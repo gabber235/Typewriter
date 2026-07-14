@@ -10,7 +10,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::ServiceRecord;
+use wasmcloud_utils::database::service::ServiceRecord;
 
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(

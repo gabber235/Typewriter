@@ -1,6 +1,7 @@
 use surrealdb_component_sdk::{RecordId, query};
 
-use crate::identity::{IdentityRepository, NewIdentity, RepositoryError, ServiceRoleRecord};
+use crate::identity::{IdentityRepository, NewIdentity, RepositoryError};
+use wasmcloud_utils::database::service::ServiceRoleRecord;
 
 pub struct SurrealIdentityRepository;
 

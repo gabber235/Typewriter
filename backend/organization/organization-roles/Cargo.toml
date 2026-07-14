@@ -9,7 +9,6 @@ repository = { workspace = true }
 crate-type = ["cdylib"]
 
 [dependencies]
-serde = { workspace = true }
 surrealdb-component-sdk = { workspace = true }
 wasmcloud-utils = { workspace = true }
 wit-bindgen = { workspace = true }

@@ -1414,7 +1414,6 @@ version = "0.1.0"
 dependencies = [
  "opentelemetry",
  "otel-wasi",
- "serde",
  "surrealdb-component-sdk",
  "tracing",
  "tracing-opentelemetry",
@@ -2825,6 +2824,8 @@ version = "0.0.1"
 dependencies = [
  "opentelemetry",
  "otel-wasi",
+ "serde",
+ "serde_json",
  "skir-client",
  "surrealdb-component-sdk",
  "tracing",

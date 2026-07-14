@@ -10,7 +10,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::OrganizationRoleRecord;
+use wasmcloud_utils::database::organization::OrganizationRoleRecord;
 
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(

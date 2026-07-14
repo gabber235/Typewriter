@@ -10,6 +10,7 @@ repository = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+serde = { workspace = true }
 skir-client = { workspace = true }
 surrealdb-component-sdk = { workspace = true }
 wasmcloud-utils-macros = { workspace = true }
@@ -19,3 +20,6 @@ otel-wasi = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 wit-bindgen = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

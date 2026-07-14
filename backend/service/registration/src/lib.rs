@@ -15,75 +15,10 @@ mod update;
 mod utils;
 mod watch;
 
-use std::fmt::Display;
-
-use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
     dispatch_actions,
     wasmcloud::messaging::{handler::Guest, parse_subject, types},
 };
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct ServiceRegistrationRecord {
-    pub token: String,
-    pub expires_at: surrealdb_component_sdk::Datetime,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "lowercase")]
-pub(crate) enum ServiceRoleTypeRecord {
-    Engine,
-    Realm,
-    Custom,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct ServiceRoleRecord {
-    #[serde(rename = "type")]
-    pub role_type: ServiceRoleTypeRecord,
-    pub version: String,
-    pub name: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "UPPERCASE")]
-pub(crate) enum ServiceStatusRecord {
-    Online,
-    Offline,
-}
-
-impl Display for ServiceStatusRecord {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ServiceStatusRecord::Online => write!(f, "ONLINE"),
-            ServiceStatusRecord::Offline => write!(f, "OFFLINE"),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct ServiceStateRecord {
-    pub status: ServiceStatusRecord,
-    pub last_seen: surrealdb_component_sdk::Datetime,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct ServiceRecord {
-    pub id: surrealdb_component_sdk::RecordId,
-    pub name: String,
-    pub roles: Vec<ServiceRoleRecord>,
-    pub created_at: surrealdb_component_sdk::Datetime,
-    pub organization: Option<surrealdb_component_sdk::RecordId>,
-    pub registration: Option<ServiceRegistrationRecord>,
-    pub state: Option<ServiceStateRecord>,
-    pub runs_in: Option<surrealdb_component_sdk::RecordId>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(crate) struct OrganizationRecord {
-    pub id: surrealdb_component_sdk::RecordId,
-    pub name: String,
-}
 
 struct Component;
 wasmcloud_utils::export!(Component);

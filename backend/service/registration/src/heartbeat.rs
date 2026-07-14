@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use wasmcloud_utils::database::service::ServiceStatusRecord;
 
 use otel_wasi::ResultWithSlug;
 use surrealdb_component_sdk::query;
@@ -10,7 +11,7 @@ use wasmcloud_utils::{
     wasmcloud::messaging::types::BrokerMessage,
 };
 
-use crate::ServiceRecord;
+use wasmcloud_utils::database::service::ServiceRecord;
 
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_heartbeat(
@@ -21,13 +22,13 @@ pub async fn handle_heartbeat(
     otel_wasi::main_attribute!("service.id" = service_id.to_string());
     let _ = decode_skir!(ServiceHeartbeatNotification, &msg.body)?;
 
-    update_state(service_id, &crate::ServiceStatusRecord::Online).await
+    update_state(service_id, &ServiceStatusRecord::Online).await
 }
 
 #[tracing::instrument]
 pub(crate) async fn update_state(
     service_id: &str,
-    status: &crate::ServiceStatusRecord,
+    status: &ServiceStatusRecord,
 ) -> Result<(), otel_wasi::Error> {
     let records = query(
         r#"

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use wasmcloud_utils::database::service::ServiceStatusRecord;
 
 use wasmcloud_utils::{
     decode_skir, extract_param, skir::base::service::v1::lifecycle::ServiceShutdownNotification,
@@ -14,5 +15,5 @@ pub async fn handle_shutdown(
     otel_wasi::main_attribute!("service.id" = service_id.to_string());
     let _ = decode_skir!(ServiceShutdownNotification, &msg.body)?;
 
-    crate::heartbeat::update_state(service_id, &crate::ServiceStatusRecord::Offline).await
+    crate::heartbeat::update_state(service_id, &ServiceStatusRecord::Offline).await
 }
