@@ -23,7 +23,7 @@ spec:
         - namespace: wasi
           package: otel
           version: "0.2.0-rc.2"
-          interfaces: [tracing, metrics]
+          interfaces: [tracing]
         - namespace: wasi
           package: http
           interfaces: [handler]
