@@ -1,0 +1,24 @@
+package seamlezz:surrealdb@0.3.0;
+
+interface call {
+  use wasmcloud:observability/propagation@0.1.0.{trace-context};
+
+  query: async func(parent-context: option<trace-context>, query: string, params: list<tuple<string, list<u8>>>) -> list<result<list<u8>, string>>;
+
+  variant live-action {
+    create,
+    update,
+    delete,
+    killed,
+  }
+
+  record live-event {
+    subscription-id: u64,
+    query-id: string,
+    action: live-action,
+    data: list<u8>,
+  }
+
+  subscribe: async func(parent-context: option<trace-context>, query: string, params: list<tuple<string, list<u8>>>) -> tuple<u64, stream<live-event>>;
+  cancel: async func(parent-context: option<trace-context>, subscription-id: u64) -> result<_, string>;
+}

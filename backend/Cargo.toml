@@ -32,14 +32,14 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 
 skir-client = "0.1"
-surrealdb-component-sdk = "0.7"
+surrealdb-component-sdk = { git = "https://github.com/Seamlezz/surrealdb-wasi-component", rev = "e698d633677dbeb3e4e941256b82f40403aa6e6d" }
 wasmcloud-component = "0.2.0"
 wasmcloud-utils = { path = "wasmcloud-utils" }
 wasmcloud-utils-macros = { path = "wasmcloud-utils-macros" }
 wstd = "0.6"
 
 opentelemetry = "0.31"
-otel-wasi = { package = "otel-wasi", git = "https://github.com/Seamlezz/otel-wasi", branch = "main" }
+otel-wasi = { git = "https://github.com/Seamlezz/otel-wasi", rev = "6daaf6880b332f433c6d83a6c7b376869c7535bf" }
 tracing = "0.1"
 tracing-opentelemetry = "0.32"
 

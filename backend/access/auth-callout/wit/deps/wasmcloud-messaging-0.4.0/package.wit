@@ -1,0 +1,25 @@
+package wasmcloud:messaging@0.4.0;
+
+interface types {
+  record broker-message {
+    subject: string,
+    body: list<u8>,
+    reply-to: option<string>,
+  }
+}
+
+interface handler {
+  use types.{broker-message};
+
+  handle-message: async func(msg: broker-message) -> result<_, string>;
+}
+
+interface consumer {
+  use types.{broker-message};
+  use wasmcloud:observability/propagation@0.1.0.{trace-context};
+
+  request: async func(subject: string, body: list<u8>, timeout-ms: u32, parent-context: option<trace-context>) -> result<broker-message, string>;
+
+  publish: async func(msg: broker-message, parent-context: option<trace-context>) -> result<_, string>;
+}
+

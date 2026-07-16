@@ -4,6 +4,6 @@ world component {
   import wasi:http/client@0.3.0;
   import wasi:clocks/types@0.3.0;
   import wasi:random/random@0.3.0;
-  import seamlezz:surrealdb/call@0.2.0;
+  import seamlezz:surrealdb/call@0.3.0;
   export wasi:http/handler@0.3.0;
 }

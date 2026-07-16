@@ -1,0 +1,9 @@
+[namespace_registries]
+wasi = "wasi.dev"
+wasmcloud = { registry = "seamlezz", metadata = { preferredProtocol = "oci", "oci" = { registry = "ghcr.io", namespacePrefix = "seamlezz/" } } }
+seamlezz = { registry = "seamlezz", metadata = { preferredProtocol = "oci", "oci" = { registry = "ghcr.io" } } }
+
+[package_registry_overrides]
+"wasmcloud:observability" = "seamlezz"
+"wasmcloud:messaging" = "seamlezz"
+"seamlezz:surrealdb" = "seamlezz"

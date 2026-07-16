@@ -17,7 +17,7 @@ struct Component;
 
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(
-        service = "service_identity",
+        service = "service-identity",
         export,
         attributes(
             "http.route" = "/service/identity/issue",

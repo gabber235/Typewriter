@@ -23,7 +23,7 @@ struct Component;
 
 impl Handler for Component {
     #[otel_wasi::wasi_instrument(
-        service = "auth_sentinel",
+        service = "auth-sentinel",
         export,
         attributes(
             "http.route" = "/auth/sentinel",

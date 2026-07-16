@@ -5,6 +5,16 @@ use otel_wasi::ResultWithSlug;
 pub use crate::bindings::exports::wasmcloud::messaging::*;
 pub use crate::bindings::wasmcloud::messaging::*;
 
+fn current_trace_context()
+-> Option<crate::bindings::wasmcloud::observability::propagation::TraceContext> {
+    otel_wasi::current_propagation_context().map(|context| {
+        crate::bindings::wasmcloud::observability::propagation::TraceContext {
+            traceparent: context.traceparent,
+            tracestate: context.tracestate,
+        }
+    })
+}
+
 /// Parse the subject and collect certain components.
 ///
 /// If the subject doesn't match the template an error is returned.
@@ -176,11 +186,14 @@ pub async fn reply(
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
     if let Some(reply_to) = reply_to.reply_to {
-        consumer::publish(types::BrokerMessage {
-            subject: reply_to,
-            reply_to: None,
-            body: data.into(),
-        })
+        consumer::publish(
+            types::BrokerMessage {
+                subject: reply_to,
+                reply_to: None,
+                body: data.into(),
+            },
+            current_trace_context(),
+        )
         .await
         .map_err(|e| otel_wasi::Error::new("message-reply-failed", e))
     } else {
@@ -197,22 +210,28 @@ pub async fn send(
     reply_to: String,
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
-    consumer::publish(types::BrokerMessage {
-        subject,
-        reply_to: Some(reply_to),
-        body: data.into(),
-    })
+    consumer::publish(
+        types::BrokerMessage {
+            subject,
+            reply_to: Some(reply_to),
+            body: data.into(),
+        },
+        current_trace_context(),
+    )
     .await
     .error_with_slug("message-send-failed")
 }
 
 /// Publish a message without a reply_to.
 pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_wasi::Error> {
-    consumer::publish(types::BrokerMessage {
-        subject,
-        reply_to: None,
-        body: data.into(),
-    })
+    consumer::publish(
+        types::BrokerMessage {
+            subject,
+            reply_to: None,
+            body: data.into(),
+        },
+        current_trace_context(),
+    )
     .await
     .error_with_slug("message-publish-failed")
 }
@@ -222,7 +241,7 @@ pub async fn request(
     subject: String,
     data: impl Into<Vec<u8>>,
 ) -> Result<types::BrokerMessage, otel_wasi::Error> {
-    consumer::request(subject, data.into(), 5000)
+    consumer::request(subject, data.into(), 5000, current_trace_context())
         .await
         .error_with_slug("message-request-failed")
 }

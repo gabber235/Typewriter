@@ -1,0 +1,12 @@
+package wasmcloud:observability@0.1.0;
+
+interface propagation {
+  record trace-context {
+    traceparent: string,
+    tracestate: option<string>,
+  }
+}
+
+world observability {
+  export propagation;
+}

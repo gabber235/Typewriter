@@ -1,7 +1,7 @@
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.3.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.3.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
+        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
     },
     generate_all,
 });
@@ -96,7 +96,7 @@ struct ValidatedRoleRecord {
 }
 
 impl Guest for Component {
-    #[otel_wasi::wasi_instrument(service = "organization_members", export)]
+    #[otel_wasi::wasi_instrument(service = "organization-members", export)]
     async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
         handle_message_async(msg).await
     }

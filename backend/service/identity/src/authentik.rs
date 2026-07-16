@@ -140,6 +140,11 @@ async fn send(
     );
 
     let headers = Fields::new();
+    for (name, value) in wasmcloud_utils::http::propagation_headers() {
+        headers
+            .set(&name, &[value])
+            .map_err(|_| ProviderError::Internal)?;
+    }
     headers
         .set(
             "authorization",

@@ -125,7 +125,16 @@ fn fetch_jwks(jwks_url: &str) -> Result<Jwks, otel_wasi::Error> {
 fn create_jwks_request(
     url: &url::Url,
 ) -> Result<outgoing_handler::OutgoingRequest, otel_wasi::Error> {
-    let request = outgoing_handler::OutgoingRequest::new(Fields::new());
+    let headers = Fields::new();
+    for (name, value) in wasmcloud_utils::http::propagation_headers() {
+        headers.set(&name, &[value]).map_err(|_| {
+            wasi_error!(
+                "auth-callout-jwks-request-trace-context-failed",
+                "failed to set trace context header"
+            )
+        })?;
+    }
+    let request = outgoing_handler::OutgoingRequest::new(headers);
 
     request.set_method(&Method::Get).map_err(|_| {
         wasi_error!(

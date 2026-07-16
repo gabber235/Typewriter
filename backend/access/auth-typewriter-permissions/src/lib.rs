@@ -1,7 +1,7 @@
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.3.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.3.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
+        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
     },
     generate_all,
 });
@@ -27,7 +27,7 @@ const PANEL_SUBJECT: &str = "auth.permissions.typewriter-panel";
 const SERVICES_SUBJECT: &str = "auth.permissions.typewriter-services";
 
 impl Guest for TypewriterPermissions {
-    #[otel_wasi::wasi_instrument(service = "auth_typewriter_permissions", export)]
+    #[otel_wasi::wasi_instrument(service = "auth-typewriter-permissions", export)]
     async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
         handle_message_async(msg).await
     }

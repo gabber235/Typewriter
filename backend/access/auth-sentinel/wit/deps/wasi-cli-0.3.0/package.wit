@@ -25,3 +25,4 @@ interface stdin {
 
   read-via-stream: func() -> tuple<stream<u8>, future<result<_, error-code>>>;
 }
+

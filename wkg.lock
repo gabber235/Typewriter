@@ -3,10 +3,51 @@
 version = 1
 
 [[packages]]
+name = "seamlezz:surrealdb"
+registry = "seamlezz"
+
+[[packages.versions]]
+requirement = "=0.3.0"
+version = "0.3.0"
+digest = "sha256:a9003f8e31d927fcec5b393208c41cdcac790c121bb9cdca1f645fa0a0c13bef"
+
+[[packages]]
 name = "wasi:clocks"
 registry = "wasi.dev"
 
 [[packages.versions]]
-requirement = "=0.2.0"
-version = "0.2.0"
-digest = "sha256:51911098e929732f65d1d84f8dc393299f18a9e8de632d854714f37142efe97b"
+requirement = "=0.3.0"
+version = "0.3.0"
+digest = "sha256:59e1f4079e64ada450e19ffc9d08854c904e356ed8cc1fda36ff4fe150264db2"
+
+[[packages]]
+name = "wasi:http"
+registry = "wasi.dev"
+
+[[packages.versions]]
+requirement = "=0.2.2"
+version = "0.2.2"
+digest = "sha256:a1f129cdf1fde55ec2d4ae8d998c39a7e5cf7544a8bd84a831054ac0d2ac64dd"
+
+[[packages.versions]]
+requirement = "=0.3.0"
+version = "0.3.0"
+digest = "sha256:92cd8f3730c00226dc15626a2e7b21834dd187fc221f09818720d228585bbbf7"
+
+[[packages]]
+name = "wasi:random"
+registry = "wasi.dev"
+
+[[packages.versions]]
+requirement = "=0.3.0"
+version = "0.3.0"
+digest = "sha256:daa3c8897a68fbfc58b95c2e1de1b7af5be8c647bbb2cfeaa54c1e5b1ba9b772"
+
+[[packages]]
+name = "wasmcloud:messaging"
+registry = "seamlezz"
+
+[[packages.versions]]
+requirement = "=0.4.0"
+version = "0.4.0"
+digest = "sha256:fd84618922308b18fa39900d3c23035690696e95371adef0759cdd58d48aa4a0"

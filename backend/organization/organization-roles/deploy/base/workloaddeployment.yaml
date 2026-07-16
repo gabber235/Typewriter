@@ -20,7 +20,7 @@ spec:
             - tracing
         - namespace: wasmcloud
           package: messaging
-          version: "0.3.0"
+          version: "0.4.0"
           interfaces:
             - handler
             - consumer
@@ -28,7 +28,7 @@ spec:
             subscriptions: typewriter.from.user.*.organization.*.roles.>
         - namespace: seamlezz
           package: surrealdb
-          version: "0.2.0"
+          version: "0.3.0"
           interfaces:
             - call
           secretFrom:
