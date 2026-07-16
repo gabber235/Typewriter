@@ -9,6 +9,7 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.*
+import com.typewritermc.engine.paper.entry.entries.EntityData
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.Color
@@ -16,6 +17,7 @@ import com.typewritermc.engine.paper.utils.Sound
 import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
 import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstraintProperty
+import com.typewritermc.entity.entries.data.minecraft.display.Scale3DProperty
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
 import com.typewritermc.entity.entries.data.minecraft.display.text.*
 import com.typewritermc.entity.entries.entity.minecraft.TextDisplayEntity
@@ -108,6 +110,7 @@ class NamedEntity(
                 is LineWidthProperty -> applyTextDisplayProperty(property)
                 is TextShadowProperty -> applyTextDisplayProperty(property)
                 is SeeThroughProperty -> applyTextDisplayProperty(property)
+                is Scale3DProperty -> applyTextDisplayProperty(property)
             }
         }
     }
