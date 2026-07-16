@@ -17,7 +17,7 @@ pub async fn handle_panel_user(
         .ok_or_else(|| wasi_error!("permissions-panel-no-subject", "No subject in claims"))?;
 
     let additional = claims.additional;
-    let (name, email, avatar, avatar_url) = extract_user_details(&additional);
+    let (name, email, avatar_url) = extract_user_details(&additional);
 
     // Extract organization_id from the qualifier (user-supplied, not trusted for routing)
     let organization_id = match &qualifier {
@@ -37,7 +37,7 @@ pub async fn handle_panel_user(
         main_attribute!("auth.entity.discord_id" = discord.id.clone());
     }
 
-    upsert_user(&user_id, &name, &email, &avatar, &avatar_url).await?;
+    upsert_user(&user_id, &name, &email, &avatar_url).await?;
 
     let mut allow_publish = vec![];
     let mut allow_subscribe = vec![];
@@ -107,9 +107,7 @@ pub async fn handle_panel_user(
     Ok((permissions, tags))
 }
 
-fn extract_user_details(
-    claims: &AuthentikClaims,
-) -> (String, Option<String>, Option<String>, Option<String>) {
+fn extract_user_details(claims: &AuthentikClaims) -> (String, Option<String>, Option<String>) {
     let name = claims
         .name
         .clone()
@@ -121,14 +119,12 @@ fn extract_user_details(
         .clone()
         .or_else(|| claims.discord.as_ref().and_then(|d| d.email.clone()));
 
-    let avatar = claims.avatar.clone();
-
     let avatar_url = claims
         .avatar_url
         .clone()
         .or_else(|| claims.discord.as_ref().and_then(|d| d.avatar_url.clone()));
 
-    (name, email, avatar, avatar_url)
+    (name, email, avatar_url)
 }
 
 /// Upsert user into the database.
@@ -137,7 +133,6 @@ async fn upsert_user(
     user_id: &str,
     name: &str,
     email: &Option<String>,
-    avatar: &Option<String>,
     avatar_url: &Option<String>,
 ) -> Result<(), otel_wasi::Error> {
     surrealdb_component_sdk::query(
@@ -145,7 +140,6 @@ async fn upsert_user(
             UPSERT type::thing('user',$uid) SET
                 name = $name,
                 email = $email,
-                avatar = $avatar,
                 avatar_url = $avatar_url,
                 last_login = time::now();
             ",
@@ -153,7 +147,6 @@ async fn upsert_user(
     .bind("uid", &user_id)
     .bind("name", &name)
     .bind("email", &email)
-    .bind("avatar", &avatar)
     .bind("avatar_url", &avatar_url)
     .execute()
     .await
