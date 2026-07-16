@@ -49,7 +49,7 @@ pub async fn handle_watch(
             roles.* AS roles,
             joined_at
         FROM member_of
-        WHERE out = type::thing('organization', $org_id)
+        WHERE out = type::record('organization', $org_id)
         FETCH roles
         "#,
     )

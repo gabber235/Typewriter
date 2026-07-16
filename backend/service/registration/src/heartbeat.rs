@@ -32,7 +32,7 @@ pub(crate) async fn update_state(
 ) -> Result<(), otel_wasi::Error> {
     let records = query(
         r#"
-        UPDATE type::thing('service', $service_id) SET state = {
+        UPDATE type::record('service', $service_id) SET state = {
             status: $status,
             last_seen: time::now()
         }

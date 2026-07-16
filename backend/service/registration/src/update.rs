@@ -40,7 +40,7 @@ pub async fn handle_update(
         r#"
         UPDATE $service_id SET
             name = IF $name != NONE THEN $name ELSE name END
-        WHERE organization = type::thing('organization', $org_id)
+        WHERE organization = type::record('organization', $org_id)
         RETURN AFTER
         "#,
     )

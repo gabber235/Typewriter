@@ -163,7 +163,7 @@ class BookRepositoryTest : FunSpec({
             book.tagIds shouldContainExactlyInAnyOrder listOf("red", "blue")
 
             val bearsResult = db.queryBind(
-                $$"SELECT VALUE ->bears->tag FROM ONLY type::thing('book', $id)",
+                $$"SELECT VALUE ->bears->tag FROM ONLY type::record('book', $id)",
                 mapOf("id" to book.bookId)
             )
             val bearsValue = bearsResult.take(0)
@@ -178,7 +178,7 @@ class BookRepositoryTest : FunSpec({
             book.tagIds.shouldBeEmpty()
 
             val bearsResult = db.queryBind(
-                "SELECT VALUE ->bears->tag FROM ONLY type::thing('book', \$id)",
+                "SELECT VALUE ->bears->tag FROM ONLY type::record('book', \$id)",
                 mapOf("id" to book.bookId)
             )
             bearsResult.take(0).array.shouldBeEmpty()

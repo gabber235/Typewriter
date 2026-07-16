@@ -48,7 +48,7 @@ pub async fn handle_bind(
             THROW 'invalid-registration-token-error'
         };
 
-        LET $organizations = SELECT id, name FROM type::thing('organization', $org_id);
+        LET $organizations = SELECT id, name FROM type::record('organization', $org_id);
         IF array::is_empty($organizations) {
             THROW 'organization-not-found-error'
         };

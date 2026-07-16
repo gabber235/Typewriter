@@ -150,7 +150,7 @@ class TagRepositoryTest : FunSpec({
 
             val inheritResult =
                 db.queryBind(
-                    $$"SELECT VALUE ->inherits->tag FROM ONLY type::thing('tag', $id)",
+                    $$"SELECT VALUE ->inherits->tag FROM ONLY type::record('tag', $id)",
                     mapOf("id" to tag.tagId)
                 )
             val inheritValue = inheritResult.take(0)

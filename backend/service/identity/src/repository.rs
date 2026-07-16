@@ -31,7 +31,7 @@ impl IdentityRepository for SurrealIdentityRepository {
 
         query(
             r#"
-            CREATE ONLY type::thing('service', $service_id)
+            CREATE ONLY type::record('service', $service_id)
             SET
                 name = $display_name,
                 roles = $roles

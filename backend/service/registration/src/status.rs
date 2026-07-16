@@ -39,7 +39,7 @@ pub async fn handle_status(
             IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
             registration.token AS existing_token,
             registration.expires_at AS existing_expires_at
-        FROM type::thing('service', $service_id)
+        FROM type::record('service', $service_id)
         FETCH organization;
 
         IF array::is_empty($services) {
@@ -57,7 +57,7 @@ pub async fn handle_status(
             $new_token
         };
 
-        UPDATE type::thing('service', $service_id) SET registration = {
+        UPDATE type::record('service', $service_id) SET registration = {
             token: $token,
             expires_at: time::now() + 2m30s
         };

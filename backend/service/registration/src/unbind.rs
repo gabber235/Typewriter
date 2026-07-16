@@ -32,10 +32,10 @@ pub async fn handle_unbind(
 
     let records = query(
         r#"
-        UPDATE type::thing('service', $service_id) SET
+        UPDATE type::record('service', $service_id) SET
             organization = NONE,
             registration = NONE
-        WHERE organization = type::thing('organization', $org_id)
+        WHERE organization = type::record('organization', $org_id)
         RETURN BEFORE
         "#,
     )

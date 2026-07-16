@@ -27,7 +27,7 @@ pub async fn handle_watch(
     let records = query(
         r#"
         SELECT * FROM service
-        WHERE organization = type::thing('organization', $org_id)
+        WHERE organization = type::record('organization', $org_id)
         ORDER BY name ASC
         "#,
     )

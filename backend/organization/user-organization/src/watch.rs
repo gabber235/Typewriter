@@ -23,7 +23,7 @@ pub async fn handle_watch(
     let _request = decode_skir!(WatchUserOrganizationsRequest, &msg.body)?;
 
     let organizations = query(
-        "SELECT VALUE ->member_of->organization.* AS orgs FROM type::thing('user', $user_id)",
+        "SELECT VALUE ->member_of->organization.* AS orgs FROM type::record('user', $user_id)",
     )
     .bind("user_id", user_id)
     .execute()

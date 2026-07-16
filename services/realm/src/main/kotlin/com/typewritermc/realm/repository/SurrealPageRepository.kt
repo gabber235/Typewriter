@@ -17,7 +17,7 @@ class SurrealPageRepository(
         requireValidId("Book", bookId)
 
         val result = db.get().queryBind(
-            $$"SELECT * FROM page WHERE book_id = type::thing('book', $bookId) ORDER BY priority ASC, name ASC",
+            $$"SELECT * FROM page WHERE book_id = type::record('book', $bookId) ORDER BY priority ASC, name ASC",
             mapOf("bookId" to bookId)
         ).take(0)
 
@@ -29,7 +29,7 @@ class SurrealPageRepository(
 
         val searchLower = search.lowercase()
         val result = db.get().queryBind(
-            $$"SELECT * FROM page WHERE book_id = type::thing('book', $bookId) AND string::lowercase(name) CONTAINS $search ORDER BY priority ASC",
+            $$"SELECT * FROM page WHERE book_id = type::record('book', $bookId) AND string::lowercase(name) CONTAINS $search ORDER BY priority ASC",
             mapOf("bookId" to bookId, "search" to searchLower)
         ).take(0)
 
@@ -40,7 +40,7 @@ class SurrealPageRepository(
         requireValidId("Page", id)
 
         val result = db.get().queryBind(
-            $$"SELECT * FROM type::thing('page', $id)",
+            $$"SELECT * FROM type::record('page', $id)",
             mapOf("id" to id)
         ).take(0)
 
@@ -62,11 +62,11 @@ class SurrealPageRepository(
         val typeStr = type.name()
         val result = db.get().queryBind(
             $$"""
-            CREATE page SET 
-                name = $name, 
-                book_id = type::thing('book', $bookId), 
-                type = $type, 
-                chapter = $chapter, 
+            CREATE page SET
+                name = $name,
+                book_id = type::record('book', $bookId),
+                type = $type,
+                chapter = $chapter,
                 priority = $priority
             """.trimIndent(),
             mapOf(
@@ -91,11 +91,11 @@ class SurrealPageRepository(
         val result = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::thing('page', $id);
-                UPDATE $page_record SET 
-                    name = $name, 
-                    type = $type, 
-                    chapter = $chapter, 
+                LET $page_record = type::record('page', $id);
+                UPDATE $page_record SET
+                    name = $name,
+                    type = $type,
+                    chapter = $chapter,
                     priority = $priority;
                 RETURN SELECT * FROM $page_record;
                 COMMIT TRANSACTION;
@@ -119,12 +119,12 @@ class SurrealPageRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::thing('page', $id);
-                
+                LET $page_record = type::record('page', $id);
+
                 IF !record::exists($page_record) {
                     RETURN false;
                 };
-                
+
                 DELETE $page_record;
                 RETURN true;
                 COMMIT TRANSACTION;
@@ -139,12 +139,12 @@ class SurrealPageRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::thing('page', $id);
-                
+                LET $page_record = type::record('page', $id);
+
                 IF !record::exists($page_record) {
                     RETURN false;
                 };
-                
+
                 UPDATE $page_record SET chapter = $chapter;
                 RETURN true;
                 COMMIT TRANSACTION;
@@ -159,12 +159,12 @@ class SurrealPageRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::thing('page', $id);
-                
+                LET $page_record = type::record('page', $id);
+
                 IF !record::exists($page_record) {
                     RETURN false;
                 };
-                
+
                 UPDATE $page_record SET priority = $priority;
                 RETURN true;
                 COMMIT TRANSACTION;
@@ -179,12 +179,12 @@ class SurrealPageRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::thing('page', $id);
-                
+                LET $page_record = type::record('page', $id);
+
                 IF !record::exists($page_record) {
                     RETURN false;
                 };
-                
+
                 UPDATE $page_record SET name = $name;
                 RETURN true;
                 COMMIT TRANSACTION;
@@ -201,20 +201,20 @@ class SurrealPageRepository(
         val result = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::thing('book', $book_id);
+                LET $book_record = type::record('book', $book_id);
                 LET $prefix = string::concat($old_chapter, '.');
 
                 -- Update exact matches
-                LET $exact = (UPDATE page 
-                    SET chapter = $new_chapter 
+                LET $exact = (UPDATE page
+                    SET chapter = $new_chapter
                     WHERE book_id = $book_record AND chapter = $old_chapter
                     RETURN id);
 
                 -- Update prefix matches (old_chapter.xxx -> new_chapter.xxx)
-                LET $prefixed = (UPDATE page 
-                    SET chapter = IF $new_chapter == "" 
-                        THEN string::slice(chapter, string::len($old_chapter) + 1) 
-                        ELSE string::concat($new_chapter, string::slice(chapter, string::len($old_chapter))) 
+                LET $prefixed = (UPDATE page
+                    SET chapter = IF $new_chapter == ""
+                        THEN string::slice(chapter, string::len($old_chapter) + 1)
+                        ELSE string::concat($new_chapter, string::slice(chapter, string::len($old_chapter)))
                     END
                     WHERE book_id = $book_record AND string::starts_with(chapter, $prefix)
                     RETURN id);

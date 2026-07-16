@@ -45,7 +45,7 @@ pub async fn handle_watch(
             requested_at,
             expires_at
         FROM request_to_join
-        WHERE in = type::thing('user', $user_id)
+        WHERE in = type::record('user', $user_id)
           AND expires_at > time::now()
         "#,
     )
@@ -139,7 +139,7 @@ async fn handle_auto_accept(
         r#"
         BEGIN TRANSACTION;
 
-        LET $user = type::thing('user', $user_id);
+        LET $user = type::record('user', $user_id);
 
         IF $single_use {
             DELETE $code;
@@ -242,7 +242,7 @@ async fn handle_manual_accept(
         r#"
         BEGIN TRANSACTION;
 
-        LET $user = type::thing('user', $user_id);
+        LET $user = type::record('user', $user_id);
 
         IF $single_use {
             DELETE $code;
@@ -333,7 +333,7 @@ pub async fn handle_cancel(
             BEGIN TRANSACTION;
 
             LET $request = SELECT id, in.* as user, out.* as organization, requested_at, expires_at FROM $request
-            WHERE in = type::thing('user', $user_id);
+            WHERE in = type::record('user', $user_id);
 
             DELETE $request.id;
 

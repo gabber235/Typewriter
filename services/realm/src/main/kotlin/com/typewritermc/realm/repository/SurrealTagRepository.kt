@@ -23,7 +23,7 @@ class SurrealTagRepository(
         requireValidId("Tag", id)
 
         val result = db.get().queryBind(
-            $$"SELECT * FROM type::thing('tag', $id)",
+            $$"SELECT * FROM type::record('tag', $id)",
             mapOf("id" to id)
         ).take(0)
 
@@ -39,16 +39,16 @@ class SurrealTagRepository(
         val createResult = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $tag_record = CREATE tag SET 
-                    name = $name, 
-                    color = $color, 
+                LET $tag_record = CREATE tag SET
+                    name = $name,
+                    color = $color,
                     placement = { x: $x ?? NONE, y: $y ?? NONE, width: $width ?? NONE, height: $height ?? NONE };
-                
-                LET $parent_records = $parent_ids.map(|$pid| type::thing('tag', $pid));
+
+                LET $parent_records = $parent_ids.map(|$pid| type::record('tag', $pid));
                 FOR $parent IN $parent_records {
                     RELATE $tag_record->inherits->$parent;
                 };
-                
+
                 RETURN SELECT * FROM $tag_record.id;
                 COMMIT TRANSACTION;
             """.trimIndent(),
@@ -78,31 +78,31 @@ class SurrealTagRepository(
         val result = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $tag_record = type::thing('tag', $id);
-                
+                LET $tag_record = type::record('tag', $id);
+
                 IF !record::exists($tag_record) {
                     THROW 'Tag not found';
                 };
-                
-                UPDATE $tag_record SET 
-                    name = $name, 
-                    color = $color, 
+
+                UPDATE $tag_record SET
+                    name = $name,
+                    color = $color,
                     placement = { x: $x, y: $y, width: $width, height: $height };
-                    
-                LET $target_parents = ($parent_ids.map(|$pid| type::thing('tag', $pid))) ?? [];
+
+                LET $target_parents = ($parent_ids.map(|$pid| type::record('tag', $pid))) ?? [];
                 LET $current_parents = (SELECT VALUE ->inherits->tag FROM ONLY $tag_record) ?? [];
-                
+
                 LET $new_parents = array::complement($target_parents, $current_parents);
                 LET $remove_parents = array::complement($current_parents, $target_parents);
-                
+
                 FOR $parent IN $new_parents {
                     RELATE $tag_record->inherits->$parent;
                 };
-                
+
                 FOR $parent IN $remove_parents {
                     DELETE inherits WHERE in = $tag_record AND out = $parent;
                 };
-                
+
                 RETURN SELECT * FROM $tag_record FETCH parents;
                 COMMIT TRANSACTION;
             """.trimIndent(),
@@ -128,12 +128,12 @@ class SurrealTagRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $tag_record = type::thing('tag', $id);
-                
+                LET $tag_record = type::record('tag', $id);
+
                 IF !record::exists($tag_record) {
                     RETURN false;
                 };
-                
+
                 DELETE inherits WHERE in = $tag_record OR out = $tag_record;
                 DELETE $tag_record;
                 RETURN true;
@@ -149,12 +149,12 @@ class SurrealTagRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $tag_record = type::thing('tag', $id);
-                
+                LET $tag_record = type::record('tag', $id);
+
                 IF !record::exists($tag_record) {
                     RETURN false;
                 };
-                
+
                 UPDATE $tag_record SET placement.x = $x ?? $tag_record.placement.x, placement.y = $y ?? $tag_record.placement.y;
                 RETURN true;
                 COMMIT TRANSACTION;
@@ -169,12 +169,12 @@ class SurrealTagRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $tag_record = type::thing('tag', $id);
-                
+                LET $tag_record = type::record('tag', $id);
+
                 IF !record::exists($tag_record) {
                     RETURN false;
                 };
-                
+
                 UPDATE $tag_record SET placement.width = $width ?? $tag_record.placement.width, placement.height = $height ?? $tag_record.placement.height;
                 RETURN true;
                 COMMIT TRANSACTION;

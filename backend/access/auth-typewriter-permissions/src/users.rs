@@ -137,7 +137,7 @@ async fn upsert_user(
 ) -> Result<(), otel_wasi::Error> {
     surrealdb_component_sdk::query(
         "
-            UPSERT type::thing('user',$uid) SET
+            UPSERT type::record('user',$uid) SET
                 name = $name,
                 email = $email,
                 avatar_url = $avatar_url,
@@ -166,7 +166,7 @@ async fn is_member_of_organization(
         "
         RETURN count(
             SELECT * FROM member_of
-            WHERE in = $type::thing('user', $user_id) AND out = $type::thing('organization', $org_id)
+            WHERE in = $type::record('user', $user_id) AND out = $type::record('organization', $org_id)
         ) > 0
         ",
     )

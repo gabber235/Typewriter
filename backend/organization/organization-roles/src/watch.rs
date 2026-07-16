@@ -27,7 +27,7 @@ pub async fn handle_watch(
     let roles = query(
         r#"
         SELECT * FROM organization_role
-        WHERE organization = type::thing('organization', $org_id)
+        WHERE organization = type::record('organization', $org_id)
         ORDER BY priority DESC
         "#,
     )

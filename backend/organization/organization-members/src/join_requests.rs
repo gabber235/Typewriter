@@ -50,7 +50,7 @@ pub async fn handle_watch(
             requested_at,
             expires_at
         FROM request_to_join
-        WHERE out = type::thing('organization',$org_id)
+        WHERE out = type::record('organization',$org_id)
             AND expires_at > time::now()
         "#,
     )

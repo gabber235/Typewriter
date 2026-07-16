@@ -24,7 +24,7 @@ class SurrealBookRepository(
         requireValidId("Book", id)
 
         val result = db.get().queryBind(
-            $$"SELECT * FROM type::thing('book', $id)",
+            $$"SELECT * FROM type::record('book', $id)",
             mapOf("id" to id)
         ).takeTransaction(0)
 
@@ -46,17 +46,17 @@ class SurrealBookRepository(
             $$"""
             BEGIN TRANSACTION;
             LET $book = CREATE book SET
-                title = $title, 
-                icon = $icon, 
+                title = $title,
+                icon = $icon,
                 color = $color;
-            
-            LET $tags = $tag_ids.map(|$id| type::thing('tag', $id));
+
+            LET $tags = $tag_ids.map(|$id| type::record('tag', $id));
             FOR $tag IN $tags {
                 IF record::exists($tag) {
                     RELATE $book->bears->$tag;
                 };
             };
-            
+
             RETURN SELECT * FROM $book.id;
             COMMIT TRANSACTION;
             """.trimIndent(),
@@ -81,28 +81,28 @@ class SurrealBookRepository(
         val result = db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::thing('book', $id);
-                UPDATE $book_record SET 
-                    title = $title, 
-                    icon = $icon, 
+                LET $book_record = type::record('book', $id);
+                UPDATE $book_record SET
+                    title = $title,
+                    icon = $icon,
                     color = $color;
-                    
-                LET $target_tags = $tag_ids.map(|$id| type::thing('tag', $id));
+
+                LET $target_tags = $tag_ids.map(|$id| type::record('tag', $id));
                 LET $current_tags = SELECT VALUE ->bears->tag FROM ONLY $book_record;
-                
+
                 LET $new_tags = array::complement($target_tags, $current_tags);
                 LET $remove_tags = array::complement($current_tags, $target_tags);
-                
+
                 FOR $tag IN $new_tags {
                     RELATE $book_record->bears->$tag;
                 };
-                
+
                 FOR $tag IN $remove_tags {
                     DELETE bears WHERE in = $book_record AND out = $tag;
                 };
-                
+
                 RETURN SELECT * FROM $book_record;
-            
+
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf(
@@ -123,8 +123,8 @@ class SurrealBookRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::thing('book', $id);
-                
+                LET $book_record = type::record('book', $id);
+
                 IF !record::exists($book_record) {
                     RETURN false;
                 };
@@ -144,8 +144,8 @@ class SurrealBookRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::thing('book', $bookId);
-                LET $tag_record = type::thing('tag', $tagId);
+                LET $book_record = type::record('book', $bookId);
+                LET $tag_record = type::record('tag', $tagId);
                 IF !record::exists($book_record) || !record::exists($tag_record) {
                     RETURN false;
                 };
@@ -165,15 +165,15 @@ class SurrealBookRepository(
         return db.get().queryBind(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::thing('book', $bookId);
-                LET $tag_record = type::thing('tag', $tagId);
-                
+                LET $book_record = type::record('book', $bookId);
+                LET $tag_record = type::record('tag', $tagId);
+
                 LET $bears = SELECT VALUE id FROM bears WHERE in = $book_record AND out = $tag_record;
-                
+
                 IF array::is_empty($bears) {
                     RETURN false;
                 };
-                
+
                 DELETE array::first($bears);
                 RETURN true;
                 COMMIT TRANSACTION;

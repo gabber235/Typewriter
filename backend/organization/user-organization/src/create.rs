@@ -29,7 +29,7 @@ pub async fn handle_create(
         LET $org = CREATE ONLY organization SET
             name = $name,
             logo_url = $logo_url,
-            founder = type::thing('user', $user_id)
+            founder = type::record('user', $user_id)
             ;
 
         RETURN $org;

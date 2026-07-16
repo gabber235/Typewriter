@@ -32,7 +32,7 @@ pub async fn handle_watch(
                 single_use,
                 auto_accept_roles
             FROM organization_join_code
-            WHERE organization = type::thing('organization', $org_id)
+            WHERE organization = type::record('organization', $org_id)
                 AND (expires_at IS NONE OR expires_at > time::now())
                 ORDER BY created_at DESC
         "#,
