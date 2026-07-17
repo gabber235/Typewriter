@@ -12,8 +12,11 @@ import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
 import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/app_config.dart";
+import "package:typewriter_panel/utils/async.dart";
 
 part "nats.g.dart";
+
+const _requestTimeout = Duration(seconds: 5);
 
 /// Fetches the sentinel credentials from the API.
 @Riverpod(keepAlive: true)
@@ -162,7 +165,10 @@ extension RefNatsExtension on Ref {
 
     TData? lastData;
 
-    await for (final msg in sub.stream) {
+    await for (final msg in sub.stream.timeoutFirstValue(
+      _requestTimeout,
+      message: "No response received for '$subject' within $_requestTimeout",
+    )) {
       final response = transformer(lastData, serializer.fromBytes(msg.data));
       yield response;
       lastData = response;
