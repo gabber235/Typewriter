@@ -24,15 +24,15 @@ dependencies:
   flutter_hooks: ^0.21.2
   flutter_svg: ^2.2.1
   freezed_annotation:
-  hooks_riverpod: ^3.2.1
+  hooks_riverpod: 3.3.1
   http: ^1.2.0
   iconify_flutter_plus: ^1.0.4
-  json_annotation:
+  json_annotation: ^4.11.0
   localstorage: ^6.0.0
   material_color_utilities:
-  oidc: ^0.14.0
-  oidc_core: ^0.16.0
-  oidc_default_store: ^0.6.0
+  oidc: ^2.0.0
+  oidc_core: ^2.0.0
+  oidc_default_store: ^1.1.0
   okcolor: ^1.1.0
   petitparser: ^7.0.2
   protobuf: ^6.0.0
@@ -60,6 +60,9 @@ dev_dependencies:
   test_screenshot:
   typewriter_testkit:
     path: testkit
+
+dependency_overrides:
+  json_annotation: 4.11.0
 
 icons_launcher:
   image_path: "assets/typewriter_app_icon.png"

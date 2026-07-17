@@ -108,7 +108,8 @@ class Auth extends _$Auth {
       postLogoutRedirectUri: postLogoutRedirectUri,
       frontChannelLogoutUri: frontChannelLogoutUri,
       scope: config.scopes.split(" "),
-      strictJwtVerification: true,
+      initMode: OidcInitMode.blockingValidate,
+      discoveryDocumentMaxAge: Duration.zero,
       supportOfflineAuth: false,
       refreshBefore: (token) => const Duration(seconds: 30),
     );

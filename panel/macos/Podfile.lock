@@ -1,21 +1,15 @@
 PODS:
   - FlutterMacOS (1.0.0)
-  - oidc_macos (0.0.1):
-    - FlutterMacOS
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - oidc_macos (from `Flutter/ephemeral/.symlinks/plugins/oidc_macos/macos`)
 
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
-  oidc_macos:
-    :path: Flutter/ephemeral/.symlinks/plugins/oidc_macos/macos
 
 SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  oidc_macos: 972700560d342ffc6ac9306495c1d8fe53c7a9cb
 
 PODFILE CHECKSUM: 3fca807e9e804a619eedcb22f744797e03054a3c
 

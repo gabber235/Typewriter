@@ -1,114 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Redirecting...</title>
-    <script type="text/javascript">
-        const stateNamespace = 'state';
-        const stateResponseNamespace = 'response.state';
-        const requestNamespace = 'request';
-
-        const requestBroadcastChannel = 'oidc_flutter_web/request';
-        const redirectBroadcastChannel = 'oidc_flutter_web/redirect';
-
-
-        //if the OP isn't requesting logout, handle redirect.
-        if (!handleFrontChannelLogout()) {
-            handleRedirect();
+    <meta charset="utf-8">
+    <title>Sign in redirect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            color-scheme: light dark;
         }
 
-        function handleRedirect() {
-            // For supported browsers: https://caniuse.com/broadcastchannel
-            var bc = new BroadcastChannel(redirectBroadcastChannel);
-            bc.postMessage(window.location.toString());
-            bc.close();
-            //The rest of this function handles same page redirects
-            let dataSrc;
-            dataSrc = new URLSearchParams(window.location.search);
-            var state = dataSrc.get('state');
-            if (!state) {
-                if (window.location.hash) {
-                    dataSrc = new URLSearchParams(
-                        window.location.hash.substring(1)
-                    );
-                    state = dataSrc.get('state');
-                }
-            }
-            if (!state) {
-                return;
-            }
-            const stateDataRaw = getLocalStorage(stateNamespace, state);
-            if (!stateDataRaw) {
-                console.error('state not found, key: ' + state);
-                return;
-            }
-            setLocalStorage(stateResponseNamespace, state, window.location.toString());
-            //we call JSON.parse twice, since shared_preferences double encodes json strings for some reason.
-            const parsedStateString = JSON.parse(stateDataRaw);
-            if (!parsedStateString) {
-                console.error('parsed state is null');
-                return;
-            }
-            // Read the mode from the state.
-            const webLaunchMode = parsedStateString.options?.webLaunchMode;
-            if (!webLaunchMode) {
-                console.error('webLaunchMode not found in parsed state.');
-                return;
-            }
-            if (webLaunchMode != 'samePage') {
-                return;
-            }
-            const original_uri = parsedStateString.original_uri;
-            if (!original_uri) {
-                console.warn("it's preferred that original_uri is used when webLaunchMode is samePage.");
-                return;
-            }
-            window.location.assign(original_uri);
+        html,
+        body {
+            height: 100%;
+            margin: 0;
         }
 
-        function handleFrontChannelLogout() {
-            const queryParams = new URLSearchParams(window.location.search);
-            if (queryParams.get('requestType') == 'front-channel-logout') {
-                // For supported browsers: https://caniuse.com/broadcastchannel
-                var bc = new BroadcastChannel(requestBroadcastChannel);
-                bc.postMessage(window.location.toString());
-                bc.close();
-                // this puts a marker for the flutter app that the user wants to logout.
-                //
-                // in the flutter app, if this marker exists, 
-                // we don't auth the cached user in `UserManager.init()`, and we clear the cached data.
-                setLocalStorage(requestNamespace, 'front-channel-logout', window.location.toString());
-                return true;
-            }
-            return false;
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            line-height: 1.5;
         }
 
-        function getLocalStorage(namespace, key) {
-            const rawRes = localStorage.getItem('oidc.' + namespace + '.' + key);
-            if (!rawRes) {
-                return null;
-            }
-            return rawRes;
+        .oidc-card {
+            max-width: 32rem;
+            text-align: center;
         }
-        function setLocalStorage(namespace, key, value) {
-            const keysEntryKey = 'oidc.keys.' + namespace;
-            var keys = localStorage.getItem(keysEntryKey);
-            if (!keys) {
-                keys = "[]";
-            }
-            const parsedKeys = JSON.parse(keys);
-            if (!(parsedKeys instanceof Array)) {
-                console.error('parsedKeys is not an array.', parsedKeys);
-            }
-            parsedKeys.push(key);
-            localStorage.setItem(keysEntryKey, JSON.stringify(parsedKeys));
-            localStorage.setItem('oidc.' + namespace + '.' + key, value);
+
+        .oidc-card h3 {
+            margin: 0 0 0.5rem;
+            font-weight: 600;
         }
-    </script>
+
+        .oidc-card p {
+            margin: 0.25rem 0;
+            opacity: 0.85;
+        }
+
+        .oidc-card[data-state="error"] h3 {
+            color: #c0392b;
+        }
+    </style>
 </head>
 
 <body>
-    <p>Redirecting...</p>
+    <main class="oidc-card" id="oidc-card" role="status" aria-live="polite">
+        <h3 id="oidc-title">Completing your request...</h3>
+        <p id="oidc-detail"></p>
+        <p id="oidc-error-uri" hidden></p>
+    </main>
+
+    <script type="text/javascript">
+        (function () {
+            'use strict';
+            const WIRE_VERSION = 2;
+            const requestBroadcastChannel = 'oidc_flutter_web/request';
+            const redirectBroadcastChannel = 'oidc_flutter_web/redirect';
+            const stateNamespace = 'state';
+            const stateResponseNamespace = 'response.state';
+            const requestNamespace = 'request';
+            const ACK_TIMEOUT_MS = 10000;
+            const messages = {
+                working: 'Completing your request...',
+                redirecting: 'Redirecting...',
+                success: 'All done. You can now close this tab and return to the app.',
+                loggedOut: 'You have been signed out. You can now close this tab and return to the app.',
+                safeToClose: 'You can now close this tab and return to the app.',
+                errorTitle: 'Something went wrong',
+                appError: 'The request could not be completed. Please return to the app and try again.',
+                noChannel: 'Your browser does not support tab messaging. Please return to the app; it will continue automatically.',
+            };
+
+            const channelSupported = typeof BroadcastChannel !== 'undefined';
+            if (!handleFrontChannelLogout()) {
+                handleRedirect();
+            }
+            function handleRedirect() {
+                render('status', messages.working, '');
+
+                const errorInfo = parseError();
+                let bc = null;
+                let settled = false;
+                let timer = null;
+
+                function finish(state, title, detail, errorUri, close) {
+                    if (settled) {
+                        return;
+                    }
+                    settled = true;
+                    if (timer !== null) {
+                        clearTimeout(timer);
+                    }
+                    if (bc) {
+                        try { bc.close(); } catch (e) {  }
+                    }
+                    render(state, title, detail, errorUri);
+                    if (close) {
+                        attemptClose();
+                    }
+                }
+                if (channelSupported) {
+                    try {
+                        bc = new BroadcastChannel(redirectBroadcastChannel);
+                        bc.onmessage = function (event) {
+                            let msg;
+                            try { msg = JSON.parse(event.data); } catch (e) { return; }
+                            if (!msg || msg.v !== WIRE_VERSION || msg.type !== 'ack') {
+                                return;
+                            }
+                            if (msg.status === 'ok') {
+                                finish('status', messages.success, '', null, true);
+                            } else {
+                                finish('error', messages.errorTitle, msg.message || messages.appError, null, false);
+                            }
+                        };
+                        bc.postMessage(JSON.stringify({
+                            v: WIRE_VERSION,
+                            type: 'redirect',
+                            uri: window.location.toString(),
+                        }));
+                    } catch (e) {
+                        bc = null;
+                    }
+                }
+                if (maybeSelfNavigate()) {
+                    if (timer !== null) {
+                        clearTimeout(timer);
+                    }
+                    render('status', messages.redirecting, '');
+                    return;
+                }
+                if (errorInfo) {
+                    finish('error', messages.errorTitle, errorInfo.description || errorInfo.error, errorInfo.uri, true);
+                    return;
+                }
+
+                if (!bc) {
+                    render('status', messages.working, messages.noChannel);
+                    attemptClose();
+                    return;
+                }
+                timer = setTimeout(function () {
+                    finish('status', messages.safeToClose, '', null, true);
+                }, ACK_TIMEOUT_MS);
+            }
+            function handleFrontChannelLogout() {
+                const queryParams = new URLSearchParams(window.location.search);
+                if (queryParams.get('requestType') !== 'front-channel-logout') {
+                    return false;
+                }
+                if (channelSupported) {
+                    try {
+                        const bc = new BroadcastChannel(requestBroadcastChannel);
+                        bc.postMessage(window.location.toString());
+                        bc.close();
+                    } catch (e) {  }
+                }
+                setLocalStorage(requestNamespace, 'front-channel-logout', window.location.toString());
+                render('status', messages.loggedOut, '');
+                attemptClose();
+                return true;
+            }
+            function maybeSelfNavigate() {
+                let dataSrc = new URLSearchParams(window.location.search);
+                let state = dataSrc.get('state');
+                if (!state && window.location.hash) {
+                    dataSrc = new URLSearchParams(window.location.hash.substring(1));
+                    state = dataSrc.get('state');
+                }
+                if (!state) {
+                    return false;
+                }
+                const stateDataRaw = getLocalStorage(stateNamespace, state);
+                if (!stateDataRaw) {
+                    console.error('state not found, key: ' + state);
+                    return false;
+                }
+                setLocalStorage(stateResponseNamespace, state, window.location.toString());
+                const parsedStateString = JSON.parse(stateDataRaw);
+                if (!parsedStateString) {
+                    console.error('parsed state is null');
+                    return false;
+                }
+                const webLaunchMode = parsedStateString.options?.webLaunchMode;
+                if (webLaunchMode !== 'samePage') {
+                    return false;
+                }
+                const original_uri = parsedStateString.original_uri;
+                if (!original_uri) {
+                    console.warn("it's preferred that original_uri is used when webLaunchMode is samePage.");
+                    return false;
+                }
+                window.location.assign(original_uri);
+                return true;
+            }
+            function parseError() {
+                function read(params) {
+                    const error = params.get('error');
+                    if (!error) {
+                        return null;
+                    }
+                    return {
+                        error: error,
+                        description: params.get('error_description'),
+                        uri: params.get('error_uri'),
+                    };
+                }
+                const fromQuery = read(new URLSearchParams(window.location.search));
+                if (fromQuery) {
+                    return fromQuery;
+                }
+                if (window.location.hash) {
+                    return read(new URLSearchParams(window.location.hash.substring(1)));
+                }
+                return null;
+            }
+            function attemptClose() {
+                try { window.close(); } catch (e) {  }
+            }
+            function render(state, title, detail, errorUri) {
+                const card = document.getElementById('oidc-card');
+                const titleEl = document.getElementById('oidc-title');
+                const detailEl = document.getElementById('oidc-detail');
+                const errUriEl = document.getElementById('oidc-error-uri');
+                if (card) {
+                    card.setAttribute('data-state', state);
+                }
+                if (titleEl) {
+                    titleEl.textContent = title || '';
+                }
+                if (detailEl) {
+                    detailEl.textContent = detail || '';
+                }
+                if (!errUriEl) {
+                    return;
+                }
+                if (errorUri && /^https?:\/\//i.test(errorUri)) {
+                    errUriEl.textContent = '';
+                    const a = document.createElement('a');
+                    a.href = errorUri;
+                    a.textContent = errorUri;
+                    a.rel = 'noopener noreferrer';
+                    errUriEl.appendChild(a);
+                    errUriEl.hidden = false;
+                } else if (errorUri) {
+                    errUriEl.textContent = errorUri;
+                    errUriEl.hidden = false;
+                } else {
+                    errUriEl.textContent = '';
+                    errUriEl.hidden = true;
+                }
+            }
+
+            function getLocalStorage(namespace, key) {
+                const rawRes = localStorage.getItem('oidc.' + namespace + '.' + key);
+                if (!rawRes) {
+                    return null;
+                }
+                return rawRes;
+            }
+
+            function setLocalStorage(namespace, key, value) {
+                const keysEntryKey = 'oidc.keys.' + namespace;
+                var keys = localStorage.getItem(keysEntryKey);
+                if (!keys) {
+                    keys = "[]";
+                }
+                const parsedKeys = JSON.parse(keys);
+                if (!(parsedKeys instanceof Array)) {
+                    console.error('parsedKeys is not an array.', parsedKeys);
+                }
+                parsedKeys.push(key);
+                localStorage.setItem(keysEntryKey, JSON.stringify(parsedKeys));
+                localStorage.setItem('oidc.' + namespace + '.' + key, value);
+            }
+        })();
+    </script>
 </body>
 
 </html>
