@@ -7,5 +7,5 @@ resources:
   - ../../organization/user-organization/deploy/local
   - ../../organization/organization-members/deploy/local
   - ../../organization/organization-roles/deploy/local
-  - ../../service/identity/deploy/local
-  - ../../service/registration/deploy/local
+  - ../../service/service-identity/deploy/local
+  - ../../service/service-registration/deploy/local

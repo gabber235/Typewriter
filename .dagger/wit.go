@@ -14,8 +14,8 @@ var witComponentDirs = []string{
 	"backend/organization/organization-members",
 	"backend/organization/organization-roles",
 	"backend/organization/user-organization",
-	"backend/service/identity",
-	"backend/service/registration",
+	"backend/service/service-identity",
+	"backend/service/service-registration",
 	"backend/wasmcloud-utils",
 }
 
