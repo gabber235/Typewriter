@@ -39,11 +39,7 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
         if (shrink) {
           return ErrorScreen.small(title: title, message: message);
         }
-        return ErrorScreen(
-          title: title,
-          message: message,
-          child: RetryIndicator(),
-        );
+        return ErrorScreen(title: title, message: message);
       },
     );
   }

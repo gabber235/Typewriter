@@ -32,7 +32,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([initLocalStorage(), RiveNative.init()]);
 
-  runApp(const ProviderScope(child: TypewriterPanel()));
+  runApp(
+    ProviderScope(
+      retry: kDebugMode
+          ? (retryCount, error) => null
+          : ProviderContainer.defaultRetry,
+      child: const TypewriterPanel(),
+    ),
+  );
 }
 
 class TypewriterPanel extends HookConsumerWidget {
