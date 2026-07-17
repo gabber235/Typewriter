@@ -30,6 +30,8 @@ class FakeApp extends StatelessWidget {
     };
     return ProviderScope(
       overrides: overrides,
+      // Disable retry logic for both tests and widgetbooks to make them more deterministic.
+      retry: (retryCount, error) => null,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
@@ -42,11 +44,7 @@ class FakeApp extends StatelessWidget {
           return Responsive(child: innerChild ?? const SizedBox.shrink());
         },
         home: Scaffold(
-          body: AppRequiredWidgets(
-            child: Center(
-              child: child,
-            ),
-          ),
+          body: AppRequiredWidgets(child: Center(child: child)),
         ),
       ),
     );

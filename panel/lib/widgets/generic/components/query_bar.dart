@@ -11,6 +11,7 @@ import "package:typewriter_panel/widgets/app/components/decorated_text_field.dar
 import "package:typewriter_panel/widgets/app/components/input_field_container.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay.dart";
 import "package:typewriter_panel/widgets/generic/components/anchored_overlay/anchored_overlay_config.dart";
+import "package:typewriter_panel/widgets/generic/components/elastic_message_transition.dart";
 import "package:typewriter_panel/widgets/generic/components/shortcut_display.dart";
 
 class QueryBar extends HookWidget {
@@ -303,21 +304,9 @@ class QueryBar extends HookWidget {
                 switchInCurve: Curves.linear,
                 switchOutCurve: Curves.linear,
                 transitionBuilder: (child, animation) {
-                  final elastic = CurvedAnimation(
-                    parent: animation,
-                    curve: const ElasticOutCurve(0.82),
-                    reverseCurve: Curves.easeInCubic,
-                  );
-
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: Offset(0, -0.1),
-                        end: Offset(0, 0),
-                      ).animate(elastic),
-                      child: child,
-                    ),
+                  return ElasticMessageTransition(
+                    animation: animation,
+                    child: child,
                   );
                 },
                 child: !helperVisible
