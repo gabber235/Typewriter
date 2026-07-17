@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/utils/string.dart";
 import "package:typewriter_panel/widgets/generic/components/loading_indicator.dart";
 import "package:typewriter_panel/widgets/generic/components/retry_indicator.dart";
 import "package:typewriter_panel/widgets/generic/screens/error_screen.dart";
@@ -25,7 +26,10 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
       data: (value) => HookBuilder(builder: (context) => builder(value)),
       loading: loading != null
           ? () => loading(name)
-          : () => LoadingIndicator(message: "Loading $name...", shrink: shrink),
+          : () => LoadingIndicator(
+              message: "Loading ${name.formatted}...",
+              shrink: shrink,
+            ),
       error: (e, stackTrace) {
         final title = "";
         final message = e.toString();
