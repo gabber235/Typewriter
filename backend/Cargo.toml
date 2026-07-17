@@ -7,8 +7,8 @@ members = [
   "organization/organization-members",
   "organization/organization-roles",
   "organization/user-organization",
-  "service/identity",
-  "service/registration",
+  "service/service-identity",
+  "service/service-registration",
   "wasmcloud-utils",
   "wasmcloud-utils-macros"
 ]

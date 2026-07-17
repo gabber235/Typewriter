@@ -1,5 +1,5 @@
 [package]
-name = "service-registration-component"
+name = "service-registration"
 version = "0.2.0"
 edition = { workspace = true }
 rust-version = { workspace = true }

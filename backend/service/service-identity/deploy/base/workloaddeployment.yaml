@@ -26,7 +26,8 @@ spec:
           interfaces: [tracing]
         - namespace: wasi
           package: http
-          interfaces: [handler]
+          interfaces:
+            - incoming-handler
           config:
             host: PLACEHOLDER_API_HOST
         - namespace: seamlezz
