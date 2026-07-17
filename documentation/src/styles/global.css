@@ -120,6 +120,18 @@
 	mix-blend-mode: normal;
 }
 
+/* ############################## */
+/* Mobile menu toggle visibility */
+/* ############################## */
+/* The header is transition:persist'ed, so Header.astro can't gate the toggle
+   on `hasSidebar` at render time (see its comment) — the DOM would freeze at
+   whichever page first mounted it. `data-has-sidebar` on <html>, unlike the
+   persisted header content, is kept current by Astro on every navigation, so
+   hide the toggle here instead. */
+:root:not([data-has-sidebar]) [data-mobile-menu-toggle-wrapper] {
+	display: none;
+}
+
 @layer utilities {
 	.text-label-large {
 		font-family: var(--font-mono);

@@ -19,7 +19,20 @@ const shouldRenderSearch =
 <div
   class="flex items-center justify-between h-full min-[50rem]:grid min-[50rem]:grid-cols-3 min-[50rem]:gap-0">
   <div class="flex items-center gap-2 overflow-clip min-w-0">
-    <div class="min-[50rem]:hidden flex items-center">
+    {
+      /*
+        `<header>` is transition:persist'ed (see PageFrame.astro), so on
+        client-side navigation this component doesn't re-render — the DOM
+        from whichever page first mounted the header just sticks around.
+        Gating this on `hasSidebar` here would freeze the toggle's presence
+        at that first page's value forever. Instead always render it and let
+        CSS hide it, keyed off `data-has-sidebar` on <html> — which Astro
+        does keep in sync with the current route on every navigation.
+      */
+    }
+    <div
+      data-mobile-menu-toggle-wrapper
+      class="min-[50rem]:hidden flex items-center">
       <MobileMenuToggle />
     </div>
     <SiteTitle />
