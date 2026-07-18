@@ -166,7 +166,7 @@ async fn is_member_of_organization(
         "
         RETURN count(
             SELECT * FROM member_of
-            WHERE in = $type::record('user', $user_id) AND out = $type::record('organization', $org_id)
+            WHERE in = type::record('user', $user_id) AND out = $org_id
         ) > 0
         ",
     )
