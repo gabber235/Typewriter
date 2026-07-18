@@ -56,14 +56,14 @@ class _JoinOrganization extends HookConsumerWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: DecoratedTextField(
                     controller: controller,
                     enabled: !hasReachedLimit,
                     decoration: const InputDecoration(
                       hintText: "Invite URL or code",
                     ),
                     validator: _validateInput,
-                    onFieldSubmitted: hasReachedLimit
+                    onSubmitted: hasReachedLimit
                         ? null
                         : (_) => submitJoinRequest(),
                   ),

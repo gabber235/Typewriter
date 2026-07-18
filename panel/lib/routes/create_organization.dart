@@ -27,7 +27,7 @@ class _CreateOrganization extends HookConsumerWidget {
           const SizedBox(height: 24),
           const StaggerEntrance(child: SectionTitle(title: "Name")),
           StaggerEntrance(
-            child: TextFormField(
+            child: DecoratedTextField(
               controller: nameController,
               inputFormatters: [SnakeCaseInputFormatter()],
               decoration: const InputDecoration(

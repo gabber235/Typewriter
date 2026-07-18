@@ -15,6 +15,7 @@ class DecoratedTextField extends HookWidget {
     this.autofocus = DecoratedTextFieldAutoFocus.none,
     this.controller,
     this.text,
+    this.validator,
     this.onChanged,
     this.onDone,
     this.onEditingComplete,
@@ -29,6 +30,7 @@ class DecoratedTextField extends HookWidget {
     this.maxLines = 1,
     this.textAlign = TextAlign.start,
     this.readOnly = false,
+    this.enabled = true,
     super.key,
   }) : super();
   final TextEditingController? controller;
@@ -43,6 +45,9 @@ class DecoratedTextField extends HookWidget {
   /// is supplied. Subsequent updates are handled via the `text` parameter in the
   /// widget's build method.
   final String? text;
+
+  /// Validates the text field's input.
+  final FormFieldValidator<String>? validator;
 
   /// Called any time the text changes.
   final ValueChanged<String>? onChanged;
@@ -73,6 +78,7 @@ class DecoratedTextField extends HookWidget {
   final InputDecoration? decoration;
   final int? maxLines;
   final TextAlign textAlign;
+  final bool enabled;
   final bool readOnly;
 
   @override
@@ -117,15 +123,14 @@ class DecoratedTextField extends HookWidget {
       actions: actions,
       inputActions: textFieldActions,
       surroundingActions: surroundingActions,
-      child: TextField(
+      child: TextFormField(
         focusNode: focusNode,
         autofocus: autofocus == DecoratedTextFieldAutoFocus.textField,
         controller: controller,
+        validator: validator,
         onEditingComplete:
             onEditingComplete ?? surroundingFocusNode.requestFocus,
-        onSubmitted: (value) {
-          onSubmitted?.call(value);
-        },
+        onFieldSubmitted: onSubmitted,
         onChanged: onChanged,
         style: style,
         textCapitalization: TextCapitalization.none,
@@ -135,6 +140,7 @@ class DecoratedTextField extends HookWidget {
         textAlign: textAlign,
         maxLines: maxLines,
         keyboardType: maxLines == 1 ? keyboardType : TextInputType.multiline,
+        enabled: enabled,
         readOnly: readOnly,
         selectAllOnFocus: false,
         inputFormatters: [...?inputFormatters],

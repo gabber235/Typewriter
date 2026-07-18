@@ -32,7 +32,7 @@ class _OrganizationsSelector extends HookWidget {
         const SizedBox(height: 16),
         if (organizations.length > 5) ...[
           StaggerEntrance(
-            child: TextFormField(
+            child: DecoratedTextField(
               decoration: const InputDecoration(
                 hintText: "Search Organization",
                 prefixIcon: Icon(Icons.search),
