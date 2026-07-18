@@ -18,6 +18,7 @@ import "package:typewriter_panel/logic/telemetry.dart";
 import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/fonts.dart";
+import "package:typewriter_panel/widgets/app/components/app_overlay.dart";
 import "package:typewriter_panel/widgets/app/components/app_required.dart";
 import "package:typewriter_panel/widgets/app/components/nats_connection.dart";
 import "package:typewriter_panel/widgets/app/components/panes.dart";
@@ -71,11 +72,13 @@ class TypewriterPanel extends HookConsumerWidget {
         shortcuts: typewriterShortcuts,
         scrollBehavior: GlobalCustomScrollBehavior(),
         builder: (context, child) {
-          return Scaffold(
-            body: AppRequiredWidgets(
-              child: Responsive(
-                child: RequiredNatsConnection(
-                  child: child ?? const SizedBox.shrink(),
+          return AppOverlay(
+            child: Scaffold(
+              body: AppRequiredWidgets(
+                child: Responsive(
+                  child: RequiredNatsConnection(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),
