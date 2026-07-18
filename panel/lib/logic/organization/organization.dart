@@ -8,6 +8,7 @@ import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/logic/organization/members.dart";
 import "package:typewriter_panel/skir.dart" as skir;
+import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/skir.dart";
 import "package:typewriter_panel/widgets/generic/components/secret_field.dart";
@@ -68,7 +69,10 @@ class Organizations extends _$Organizations {
           case skir.WatchUserOrganizationsResponse_listWrapper(:final value):
             return value.map(OrganizationData.fromSkir).toList();
           case skir.WatchUserOrganizationsResponse_addWrapper(:final value):
-            return [...?previous, OrganizationData.fromSkir(value)];
+            return previous.upsertByKey(
+              (org) => org.organizationId,
+              OrganizationData.fromSkir(value),
+            );
           case skir.WatchUserOrganizationsResponse_removeWrapper(:final value):
             return previous
                     ?.where((org) => org.organizationId != value)
@@ -117,10 +121,12 @@ class Organizations extends _$Organizations {
       case skir.CreateOrganizationResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
       case skir.CreateOrganizationResponse_successWrapper(:final value):
-        state = AsyncValue.data([
-          ...state.requireValue,
-          OrganizationData.fromSkir(value),
-        ]);
+        state = AsyncValue.data(
+          state.requireValue.upsertByKey(
+            (org) => org.organizationId,
+            OrganizationData.fromSkir(value),
+          ),
+        );
         return value.organizationId;
     }
   }

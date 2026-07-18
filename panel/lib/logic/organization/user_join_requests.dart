@@ -5,6 +5,7 @@ import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
 import "package:typewriter_panel/skir.dart" as skir;
+import "package:typewriter_panel/utils/collection.dart";
 import "package:typewriter_panel/utils/riverpod.dart";
 import "package:typewriter_panel/utils/skir.dart";
 
@@ -81,7 +82,10 @@ class UserJoinRequests extends _$UserJoinRequests {
           case skir.WatchUserJoinRequestsResponse_listWrapper(:final value):
             return value.map(UserJoinRequest.fromSkir).toList();
           case skir.WatchUserJoinRequestsResponse_addWrapper(:final value):
-            return [...?previous, UserJoinRequest.fromSkir(value)];
+            return previous.upsertByKey(
+              (request) => request.requestId,
+              UserJoinRequest.fromSkir(value),
+            );
           case skir.WatchUserJoinRequestsResponse_removeWrapper(:final value):
             return previous?.where((r) => r.requestId != value).toList() ?? [];
         }

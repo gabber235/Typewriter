@@ -7,7 +7,7 @@ void main() {
       final previous = [(id: 1, name: "Before")];
       final updated = (id: 1, name: "After");
 
-      final result = previous.updateByKey((value) => value.id, updated);
+      final result = previous.upsertByKey((value) => value.id, updated);
 
       expect(result, [updated]);
     });
@@ -16,7 +16,7 @@ void main() {
       final previous = [(id: 1, name: "Existing")];
       final updated = (id: 2, name: "Added");
 
-      final result = previous.updateByKey((value) => value.id, updated);
+      final result = previous.upsertByKey((value) => value.id, updated);
 
       expect(result, [previous.single, updated]);
     });
@@ -25,7 +25,7 @@ void main() {
       final List<({int id, String name})>? previous = null;
       final updated = (id: 1, name: "Added");
 
-      final result = previous.updateByKey((value) => value.id, updated);
+      final result = previous.upsertByKey((value) => value.id, updated);
 
       expect(result, [updated]);
     });

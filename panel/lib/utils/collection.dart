@@ -57,7 +57,7 @@ extension ListX<T> on List<T> {
 }
 
 extension NullableListX<T> on List<T>? {
-  List<T> updateByKey<TKey>(TKey Function(T) keySelector, T updated) {
+  List<T> upsertByKey<TKey>(TKey Function(T) keySelector, T updated) {
     if (this == null) return [updated];
 
     final updatedId = keySelector(updated);

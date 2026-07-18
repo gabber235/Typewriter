@@ -236,9 +236,12 @@ class OrganizationRoles extends _$OrganizationRoles {
           case skir.WatchOrganizationRolesResponse_listWrapper(:final value):
             return value.map(OrganizationRole.fromSkir).toList();
           case skir.WatchOrganizationRolesResponse_addWrapper(:final value):
-            return [...?previous, OrganizationRole.fromSkir(value)];
+            return previous.upsertByKey(
+              (role) => role.roleId,
+              OrganizationRole.fromSkir(value),
+            );
           case skir.WatchOrganizationRolesResponse_updateWrapper(:final value):
-            return previous.updateByKey(
+            return previous.upsertByKey(
               (role) => role.roleId,
               OrganizationRole.fromSkir(value),
             );
@@ -286,11 +289,14 @@ class OrganizationMembers extends _$OrganizationMembers {
           case skir.WatchOrganizationMembersResponse_listWrapper(:final value):
             return value.map(OrganizationMember.fromSkir).toList();
           case skir.WatchOrganizationMembersResponse_addWrapper(:final value):
-            return [...?previous, OrganizationMember.fromSkir(value)];
+            return previous.upsertByKey(
+              (member) => member.userId,
+              OrganizationMember.fromSkir(value),
+            );
           case skir.WatchOrganizationMembersResponse_updateWrapper(
             :final value,
           ):
-            return previous.updateByKey(
+            return previous.upsertByKey(
               (member) => member.userId,
               OrganizationMember.fromSkir(value),
             );
@@ -499,7 +505,10 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
           case skir.WatchOrganizationJoinRequestsResponse_addWrapper(
             :final value,
           ):
-            return [...?previous, OrganizationJoinRequest.fromSkir(value)];
+            return previous.upsertByKey(
+              (request) => request.requestId,
+              OrganizationJoinRequest.fromSkir(value),
+            );
           case skir.WatchOrganizationJoinRequestsResponse_removeWrapper(
             :final value,
           ):
@@ -667,7 +676,10 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
           ):
             return value.map(OrganizationJoinCode.fromSkir).toList();
           case skir.WatchOrganizationJoinCodesResponse_addWrapper(:final value):
-            return [...?previous, OrganizationJoinCode.fromSkir(value)];
+            return previous.upsertByKey(
+              (code) => code.code,
+              OrganizationJoinCode.fromSkir(value),
+            );
           case skir.WatchOrganizationJoinCodesResponse_removeWrapper(
             :final value,
           ):
