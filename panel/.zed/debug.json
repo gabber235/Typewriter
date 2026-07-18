@@ -5,7 +5,7 @@
     "request": "attach",
     "tcp_connection": {
       "host": "127.0.0.1",
-      "port": 60061
+      "port": 51756
     }
   }
 ]
