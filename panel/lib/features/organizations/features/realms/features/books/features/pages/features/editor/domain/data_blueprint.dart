@@ -57,6 +57,7 @@ sealed class DataBlueprint with _$DataBlueprint {
 
   /// Enum field type, such as a list of options.
   @FreezedUnionValue("enum")
+  @Assert("values.length > 0", "Values must not be empty.")
   const factory DataBlueprint.enumBlueprint({
     required List<String> values,
     @JsonKey(name: "default") dynamic internalDefaultValue,
@@ -87,6 +88,7 @@ sealed class DataBlueprint with _$DataBlueprint {
   }) = ObjectBlueprint;
 
   /// Algebraic blueprint, such as a sum type.
+  @Assert("cases.length > 0", "Cases must not be empty.")
   const factory DataBlueprint.algebraic({
     required Map<String, DataBlueprint> cases,
     @JsonKey(name: "default") dynamic internalDefaultValue,
@@ -94,6 +96,7 @@ sealed class DataBlueprint with _$DataBlueprint {
   }) = AlgebraicBlueprint;
 
   /// Custom blueprint, where a custom editor is used.
+  @Assert("editor != \"\"", "Editor must not be empty.")
   const factory DataBlueprint.custom({
     required String editor,
     required DataBlueprint shape,
@@ -125,10 +128,13 @@ abstract class Modifier with _$Modifier {
   const factory Modifier.negative() = NegativeModifier;
 
   // Entry Based
+  @Assert("tag != \"\"", "Tag must not be empty.")
   const factory Modifier.entryReference(String tag) = EntryReferenceModifier;
+  @Assert("tags.length > 0", "Tags must not be empty.")
   const factory Modifier.anyEntryReference(List<String> tags) =
       AnyEntryReferenceModifier;
 
+  @Assert("name != \"\"", "Name must not be empty.")
   const factory Modifier.custom({required String name, required dynamic data}) =
       CustomModifier;
 

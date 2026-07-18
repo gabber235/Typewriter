@@ -214,7 +214,7 @@ return $default(_that.selectorId,_that.key,_that.value);case _:
 
 
 class _SearchParsedSelector with DiagnosticableTreeMixin implements SearchParsedSelector {
-  const _SearchParsedSelector({required this.selectorId, required this.key, this.value});
+  const _SearchParsedSelector({required this.selectorId, required this.key, this.value}): assert(selectorId != "", 'Selector ID must not be empty.'),assert(key != "", 'Key must not be empty.');
   
 
 @override final  String selectorId;
@@ -772,7 +772,7 @@ return $default(_that.id,_that.title,_that.description,_that.visibility,_that.pr
 
 
 class _SearchGuidance with DiagnosticableTreeMixin implements SearchGuidance {
-  const _SearchGuidance({required this.id, required this.title, this.description, this.visibility = SearchGuidanceVisibility.emptyOnly, this.priority = 0});
+  const _SearchGuidance({required this.id, required this.title, this.description, this.visibility = SearchGuidanceVisibility.emptyOnly, this.priority = 0}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.');
   
 
 @override final  String id;
@@ -1052,7 +1052,7 @@ return $default(_that.id,_that.message,_that.severity,_that.sourceLabel);case _:
 
 
 class _SearchErrorSummary with DiagnosticableTreeMixin implements SearchErrorSummary {
-  const _SearchErrorSummary({required this.id, required this.message, required this.severity, this.sourceLabel});
+  const _SearchErrorSummary({required this.id, required this.message, required this.severity, this.sourceLabel}): assert(id != "", 'ID must not be empty.'),assert(message != "", 'Message must not be empty.');
   
 
 @override final  String id;
@@ -1601,7 +1601,7 @@ return result(_that.result);case _:
 
 
 class SearchSectionNode with DiagnosticableTreeMixin implements SearchNode {
-  const SearchSectionNode({required this.id, required this.title, this.subtitle, final  List<SearchNode> children = const <SearchNode>[]}): _children = children;
+  const SearchSectionNode({required this.id, required this.title, this.subtitle, final  List<SearchNode> children = const <SearchNode>[]}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.'),_children = children;
   
 
  final  String id;
@@ -1966,7 +1966,7 @@ return $default(_that.id,_that.rowRendererId,_that.previewRendererId,_that.label
 
 
 class _SearchResultType with DiagnosticableTreeMixin implements SearchResultType {
-  const _SearchResultType({required this.id, required this.rowRendererId, this.previewRendererId, this.label});
+  const _SearchResultType({required this.id, required this.rowRendererId, this.previewRendererId, this.label}): assert(id != "", 'ID must not be empty.'),assert(rowRendererId != "", 'Row renderer ID must not be empty.'),assert(previewRendererId == null || previewRendererId != "", 'Preview renderer ID must be null or nonempty.');
   
 
 @override final  String id;
@@ -2255,7 +2255,7 @@ return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_tha
 
 
 class _SearchResult with DiagnosticableTreeMixin implements SearchResult {
-  const _SearchResult({required this.id, required this.type, required this.payload, final  List<Type> actions = const [], this.title, this.subtitle, this.isStale = false}): _actions = actions;
+  const _SearchResult({required this.id, required this.type, required this.payload, final  List<Type> actions = const [], this.title, this.subtitle, this.isStale = false}): assert(id != "", 'ID must not be empty.'),_actions = actions;
   
 
 @override final  String id;
@@ -2646,7 +2646,7 @@ $SearchActionEffectCopyWith<$Res> get effect {
 
 
 class SearchActionResultFailed with DiagnosticableTreeMixin implements SearchActionResult {
-  const SearchActionResultFailed({required this.message, this.effect = const SearchActionEffect.refresh()});
+  const SearchActionResultFailed({required this.message, this.effect = const SearchActionEffect.refresh()}): assert(message != "", 'Message must not be empty.');
   
 
  final  String message;
@@ -3271,7 +3271,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 class SearchActionRunning with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionRunning({required this.action, required final  Set<String> resultIds}): _resultIds = resultIds;
+  const SearchActionRunning({required this.action, required final  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
   
 
  final  Type action;
@@ -3351,7 +3351,7 @@ as Set<String>,
 
 
 class SearchActionCompleted with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionCompleted({required this.action, required final  Set<String> resultIds}): _resultIds = resultIds;
+  const SearchActionCompleted({required this.action, required final  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
   
 
  final  Type action;
@@ -3431,7 +3431,7 @@ as Set<String>,
 
 
 class SearchActionFailed with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionFailed({required this.action, required final  Set<String> resultIds, required this.message}): _resultIds = resultIds;
+  const SearchActionFailed({required this.action, required final  Set<String> resultIds, required this.message}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),assert(message != "", 'Message must not be empty.'),_resultIds = resultIds;
   
 
  final  Type action;
@@ -3723,7 +3723,7 @@ return $default(_that.resultId,_that.queryContext);case _:
 
 
 class _SearchPreviewRequest with DiagnosticableTreeMixin implements SearchPreviewRequest {
-  const _SearchPreviewRequest({required this.resultId, this.queryContext});
+  const _SearchPreviewRequest({required this.resultId, this.queryContext}): assert(resultId != "", 'Result ID must not be empty.');
   
 
 @override final  String resultId;
@@ -4052,7 +4052,7 @@ data: null == data ? _self.data : data ,
 
 
 class SearchPreviewRequestResultError with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
-  const SearchPreviewRequestResultError({required this.message});
+  const SearchPreviewRequestResultError({required this.message}): assert(message != "", 'Message must not be empty.');
   
 
  final  String message;

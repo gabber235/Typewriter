@@ -7,19 +7,18 @@ part "tree_view.freezed.dart";
 
 @freezed
 class TreeNode<T> with _$TreeNode {
-  const factory TreeNode.root({
-    required List<TreeNode<T>> children,
-  }) = RootTreeNode;
+  const factory TreeNode.root({required List<TreeNode<T>> children}) =
+      RootTreeNode;
 
+  @Assert("name != \"\"", "Name must not be empty.")
+  @Assert("path != \"\"", "Path must not be empty.")
   const factory TreeNode.inner({
     required String name,
     required String path,
     required List<TreeNode<T>> children,
   }) = InnerTreeNode;
 
-  const factory TreeNode.leaf({
-    required T value,
-  }) = LeafTreeNode;
+  const factory TreeNode.leaf({required T value}) = LeafTreeNode;
 }
 
 /// Creates a tree node from a list of objects with paths.
@@ -81,10 +80,9 @@ List<TreeNode<T>> _createTreeNode<T>(
   String currentPath,
 ) {
   if (path.isEmpty) {
-    return _applyModifications(
-      elements,
-      [_TreeModification.add(node: TreeNode.leaf(value: value))],
-    );
+    return _applyModifications(elements, [
+      _TreeModification.add(node: TreeNode.leaf(value: value)),
+    ]);
   }
 
   final (overlappingNode, overlappingPath) =
@@ -93,49 +91,44 @@ List<TreeNode<T>> _createTreeNode<T>(
   // Part does not exist yet, create it
   if (overlappingNode == null || overlappingPath == null) {
     final newPath = currentPath.join(path);
-    return _applyModifications(
-      elements,
-      [
-        _TreeModification.add(
-          node: TreeNode.inner(
-            name: path,
-            path: newPath,
-            children: _createTreeNode([], "", value, newPath),
-          ),
+    return _applyModifications(elements, [
+      _TreeModification.add(
+        node: TreeNode.inner(
+          name: path,
+          path: newPath,
+          children: _createTreeNode([], "", value, newPath),
         ),
-      ],
-    );
+      ),
+    ]);
   }
 
   // Full path exists, so we only need to add it to that node
   if (overlappingNode.name == overlappingPath) {
     final remainingPath = path.removePrefixPart(overlappingPath);
     final newPath = currentPath.join(overlappingPath);
-    return _applyModifications(
-      elements,
-      [
-        _TreeModification.update(
-          path: overlappingPath,
-          node: TreeNode.inner(
-            name: overlappingPath,
-            path: newPath,
-            children: _createTreeNode(
-              overlappingNode.children,
-              remainingPath,
-              value,
-              newPath,
-            ),
+    return _applyModifications(elements, [
+      _TreeModification.update(
+        path: overlappingPath,
+        node: TreeNode.inner(
+          name: overlappingPath,
+          path: newPath,
+          children: _createTreeNode(
+            overlappingNode.children,
+            remainingPath,
+            value,
+            newPath,
           ),
         ),
-      ],
-    );
+      ),
+    ]);
   }
 
   // Part of the path exists, so we need to remove the old node and add a new node with the partial path
   // Then add the original node with the remaining path to the new node
   // And finally add the new node with the new value
-  final overlappingRemainingPath =
-      overlappingNode.name.removePrefixPart(overlappingPath);
+  final overlappingRemainingPath = overlappingNode.name.removePrefixPart(
+    overlappingPath,
+  );
   final newInnerNode = TreeNode.inner(
     name: overlappingRemainingPath,
     path: currentPath.join(overlappingNode.name),
@@ -149,22 +142,16 @@ List<TreeNode<T>> _createTreeNode<T>(
     currentPath.join(overlappingPath),
   );
 
-  return _applyModifications(
-    elements,
-    [
-      _TreeModification.remove(path: overlappingNode.name),
-      _TreeModification.add(
-        node: TreeNode.inner(
-          name: overlappingPath,
-          path: currentPath.join(overlappingPath),
-          children: [
-            newInnerNode,
-            ...newNode,
-          ],
-        ),
+  return _applyModifications(elements, [
+    _TreeModification.remove(path: overlappingNode.name),
+    _TreeModification.add(
+      node: TreeNode.inner(
+        name: overlappingPath,
+        path: currentPath.join(overlappingPath),
+        children: [newInnerNode, ...newNode],
       ),
-    ],
-  );
+    ),
+  ]);
 }
 
 List<TreeNode<T>> _applyModifications<T>(
@@ -195,18 +182,16 @@ List<TreeNode<T>> _applyModifications<T>(
 
 @freezed
 class _TreeModification<T> with _$TreeModification {
-  const factory _TreeModification.add({
-    required TreeNode<T> node,
-  }) = _TreeAdd;
+  const factory _TreeModification.add({required TreeNode<T> node}) = _TreeAdd;
 
+  @Assert("path != \"\"", "Path must not be empty.")
   const factory _TreeModification.update({
     required String path,
     required TreeNode<T> node,
   }) = _TreeUpdate;
 
-  const factory _TreeModification.remove({
-    required String path,
-  }) = _TreeRemove;
+  @Assert("path != \"\"", "Path must not be empty.")
+  const factory _TreeModification.remove({required String path}) = _TreeRemove;
 }
 
 extension on String {

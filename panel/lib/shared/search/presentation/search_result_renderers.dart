@@ -29,6 +29,7 @@ sealed class SearchResultPreviewContext with _$SearchResultPreviewContext {
     required Object data,
   }) = SearchResultPreviewContextData;
 
+  @Assert("message != \"\"", "Message must not be empty.")
   const factory SearchResultPreviewContext.error({
     required SearchResult result,
     required String message,

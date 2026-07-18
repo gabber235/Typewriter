@@ -19,6 +19,7 @@ typedef ActionInvoke = FutureOr<void> Function(WidgetRef ref);
 
 @freezed
 abstract class ActionShortcut with _$ActionShortcut {
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory ActionShortcut({
     required String id,
     required String label,
@@ -32,6 +33,7 @@ abstract class ActionShortcut with _$ActionShortcut {
     GlobalKey? owner,
   }) = ActivatorActionShortcut;
 
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory ActionShortcut.intent({
     required String id,
     required String label,

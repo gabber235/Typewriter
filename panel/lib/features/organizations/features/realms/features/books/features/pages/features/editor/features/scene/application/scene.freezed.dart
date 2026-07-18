@@ -250,7 +250,7 @@ return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLink
 @JsonSerializable()
 
 class Segment implements Cue {
-  const Segment({required this.id, required this.startFrame, required this.endFrame, required this.blueprint, required this.data, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  String? $type}): _inwardLinks = inwardLinks,_outwardLinks = outwardLinks,$type = $type ?? 'segment';
+  const Segment({required this.id, required this.startFrame, required this.endFrame, required this.blueprint, required this.data, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  String? $type}): assert(id != "", 'ID must not be empty.'),assert(startFrame >= 0, 'Start frame must not be negative.'),assert(endFrame >= startFrame, 'End frame must not precede start frame.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,$type = $type ?? 'segment';
   factory Segment.fromJson(Map<String, dynamic> json) => _$SegmentFromJson(json);
 
 @override final  String id;
@@ -356,7 +356,7 @@ $ElementBlueprintCopyWith<$Res> get blueprint {
 @JsonSerializable()
 
 class Keyframe implements Cue {
-  const Keyframe({required this.id, required this.frame, required this.blueprint, required this.data, required final  List<ElementLink> inwardLinks, final  String? $type}): _inwardLinks = inwardLinks,$type = $type ?? 'keyframe';
+  const Keyframe({required this.id, required this.frame, required this.blueprint, required this.data, required final  List<ElementLink> inwardLinks, final  String? $type}): assert(id != "", 'ID must not be empty.'),assert(frame >= 0, 'Frame must not be negative.'),_inwardLinks = inwardLinks,$type = $type ?? 'keyframe';
   factory Keyframe.fromJson(Map<String, dynamic> json) => _$KeyframeFromJson(json);
 
 @override final  String id;

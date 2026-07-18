@@ -232,7 +232,7 @@ return $default(_that.id,_that.name,_that.description,_that.extension,_that.data
 @JsonSerializable()
 
 class _ElementBlueprint implements ElementBlueprint {
-  const _ElementBlueprint({required this.id, required this.name, required this.description, required this.extension, required this.dataBlueprint, @ColorConverter() this.color = Colors.grey, this.icon = "fa-solid:question-circle", final  List<String> tags = const <String>[], final  List<DataBlueprint>? genericConstraints = null, this.variableDataBlueprint = null, final  List<ContextKey> contextKeys = const [], final  List<ElementModifier> modifiers = const []}): _tags = tags,_genericConstraints = genericConstraints,_contextKeys = contextKeys,_modifiers = modifiers;
+  const _ElementBlueprint({required this.id, required this.name, required this.description, required this.extension, required this.dataBlueprint, @ColorConverter() this.color = Colors.grey, this.icon = "fa-solid:question-circle", final  List<String> tags = const <String>[], final  List<DataBlueprint>? genericConstraints = null, this.variableDataBlueprint = null, final  List<ContextKey> contextKeys = const [], final  List<ElementModifier> modifiers = const []}): assert(id != "", 'ID must not be empty.'),assert(name != "", 'Name must not be empty.'),assert(extension != "", 'Extension must not be empty.'),_tags = tags,_genericConstraints = genericConstraints,_contextKeys = contextKeys,_modifiers = modifiers;
   factory _ElementBlueprint.fromJson(Map<String, dynamic> json) => _$ElementBlueprintFromJson(json);
 
 @override final  String id;
@@ -566,7 +566,7 @@ return $default(_that.name,_that.klassName,_that.blueprint);case _:
 @JsonSerializable()
 
 class _ContextKey implements ContextKey {
-  const _ContextKey({required this.name, required this.klassName, required this.blueprint});
+  const _ContextKey({required this.name, required this.klassName, required this.blueprint}): assert(name != "", 'Name must not be empty.'),assert(klassName != "", 'Class name must not be empty.');
   factory _ContextKey.fromJson(Map<String, dynamic> json) => _$ContextKeyFromJson(json);
 
 @override final  String name;

@@ -211,7 +211,7 @@ return $default(_that.roleId,_that.name,_that.color,_that.defaultRole,_that.assi
 
 
 class _OrganizationRole extends OrganizationRole {
-  const _OrganizationRole({required this.roleId, required this.name, required this.color, this.defaultRole = false, this.assignable = false, this.deletable = false}): super._();
+  const _OrganizationRole({required this.roleId, required this.name, required this.color, this.defaultRole = false, this.assignable = false, this.deletable = false}): assert(name != "", 'Name must not be empty.'),super._();
   
 
 @override final  skir.RecordId roleId;

@@ -299,7 +299,7 @@ $PageEntryCopyWith<$Res> get entry {
 @JsonSerializable()
 
 class PageElementGroup implements PageElement {
-  const PageElementGroup({required this.id, required this.name, required this.placement, final  String? $type}): $type = $type ?? 'group';
+  const PageElementGroup({required this.id, required this.name, required this.placement, final  String? $type}): assert(id != "", 'ID must not be empty.'),$type = $type ?? 'group';
   factory PageElementGroup.fromJson(Map<String, dynamic> json) => _$PageElementGroupFromJson(json);
 
  final  String id;
@@ -663,7 +663,7 @@ return $default(_that.linkId,_that.otherId,_that.path);case _:
 @JsonSerializable()
 
 class _ElementLink implements ElementLink {
-  const _ElementLink({required this.linkId, required this.otherId, required this.path});
+  const _ElementLink({required this.linkId, required this.otherId, required this.path}): assert(linkId != "", 'Link ID must not be empty.'),assert(otherId != "", 'Other ID must not be empty.');
   factory _ElementLink.fromJson(Map<String, dynamic> json) => _$ElementLinkFromJson(json);
 
 @override final  String linkId;

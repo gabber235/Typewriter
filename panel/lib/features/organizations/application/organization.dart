@@ -8,7 +8,8 @@ import "package:typewriter_panel/features/organizations/features/members/applica
 import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/shared/ui/components/secret_field.dart";
 import "package:typewriter_panel/shared/utilities/collection.dart";
 import "package:typewriter_panel/shared/utilities/riverpod.dart";
@@ -18,6 +19,7 @@ part "organization.g.dart";
 
 @freezed
 abstract class OrganizationData with _$OrganizationData {
+  @Assert("name != \"\"", "Name must not be empty.")
   const factory OrganizationData({
     required skir.RecordId organizationId,
     required String name,

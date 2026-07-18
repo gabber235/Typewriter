@@ -96,6 +96,7 @@ abstract class PageElement with _$PageElement {
   const factory PageElement.entry({required PageEntry entry}) =
       PageElementEntry;
 
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory PageElement.group({
     required String id,
     required String name,
@@ -200,6 +201,8 @@ extension PageElementExtension on PageElement {
 
 @freezed
 abstract class ElementLink with _$ElementLink {
+  @Assert("linkId != \"\"", "Link ID must not be empty.")
+  @Assert("otherId != \"\"", "Other ID must not be empty.")
   const factory ElementLink({
     required String linkId,
     required String otherId,

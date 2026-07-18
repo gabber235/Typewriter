@@ -259,7 +259,7 @@ as List<TreeNode<T>>,
 
 
 class InnerTreeNode<T> implements TreeNode<T> {
-  const InnerTreeNode({required this.name, required this.path, required final  List<TreeNode<T>> children}): _children = children;
+  const InnerTreeNode({required this.name, required this.path, required final  List<TreeNode<T>> children}): assert(name != "", 'Name must not be empty.'),assert(path != "", 'Path must not be empty.'),_children = children;
   
 
  final  String name;
@@ -648,7 +648,7 @@ $TreeNodeCopyWith<T, $Res> get node {
 
 
 class _TreeUpdate<T> implements _TreeModification<T> {
-  const _TreeUpdate({required this.path, required this.node});
+  const _TreeUpdate({required this.path, required this.node}): assert(path != "", 'Path must not be empty.');
   
 
  final  String path;
@@ -725,7 +725,7 @@ $TreeNodeCopyWith<T, $Res> get node {
 
 
 class _TreeRemove<T> implements _TreeModification<T> {
-  const _TreeRemove({required this.path});
+  const _TreeRemove({required this.path}): assert(path != "", 'Path must not be empty.');
   
 
  final  String path;

@@ -321,7 +321,7 @@ $EntryDefinitionCopyWith<$Res> get definition {
 @JsonSerializable()
 
 class ReferencePageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const ReferencePageEntry({required this.id, required this.name, required this.blueprint, required this.pageId, final  List<EntryMetadata> metadata = const [], final  String? $type}): _metadata = metadata,$type = $type ?? 'reference';
+  const ReferencePageEntry({required this.id, required this.name, required this.blueprint, required this.pageId, final  List<EntryMetadata> metadata = const [], final  String? $type}): assert(id != "", 'ID must not be empty.'),assert(pageId != "", 'Page ID must not be empty.'),_metadata = metadata,$type = $type ?? 'reference';
   factory ReferencePageEntry.fromJson(Map<String, dynamic> json) => _$ReferencePageEntryFromJson(json);
 
  final  String id;
@@ -423,7 +423,7 @@ $ElementBlueprintCopyWith<$Res> get blueprint {
 @JsonSerializable()
 
 class NonexistentPageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const NonexistentPageEntry({required this.id, final  String? $type}): $type = $type ?? 'nonexistent';
+  const NonexistentPageEntry({required this.id, final  String? $type}): assert(id != "", 'ID must not be empty.'),$type = $type ?? 'nonexistent';
   factory NonexistentPageEntry.fromJson(Map<String, dynamic> json) => _$NonexistentPageEntryFromJson(json);
 
  final  String id;
@@ -502,7 +502,7 @@ as String,
 @JsonSerializable()
 
 class NoBlueprintPageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const NoBlueprintPageEntry({required this.id, required this.name, required this.placement, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  List<EntryMetadata> metadata = const [], final  String? $type}): _inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata,$type = $type ?? 'noBlueprint';
+  const NoBlueprintPageEntry({required this.id, required this.name, required this.placement, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  List<EntryMetadata> metadata = const [], final  String? $type}): assert(id != "", 'ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata,$type = $type ?? 'noBlueprint';
   factory NoBlueprintPageEntry.fromJson(Map<String, dynamic> json) => _$NoBlueprintPageEntryFromJson(json);
 
  final  String id;
@@ -843,7 +843,7 @@ return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_
 @JsonSerializable()
 
 class _EntryDefinition with DiagnosticableTreeMixin implements EntryDefinition {
-  const _EntryDefinition({required this.id, required this.name, required this.blueprint, required this.placement, required this.data, required final  List<ElementLink> inwardEdges, required final  List<ElementLink> outwardEdges, final  List<EntryMetadata> metadata = const []}): _inwardEdges = inwardEdges,_outwardEdges = outwardEdges,_metadata = metadata;
+  const _EntryDefinition({required this.id, required this.name, required this.blueprint, required this.placement, required this.data, required final  List<ElementLink> inwardEdges, required final  List<ElementLink> outwardEdges, final  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardEdges = inwardEdges,_outwardEdges = outwardEdges,_metadata = metadata;
   factory _EntryDefinition.fromJson(Map<String, dynamic> json) => _$EntryDefinitionFromJson(json);
 
 @override final  String id;
@@ -1171,7 +1171,7 @@ return $default(_that.x,_that.y,_that.width,_that.height);case _:
 @JsonSerializable()
 
 class _EntryPlacement with DiagnosticableTreeMixin implements EntryPlacement {
-  const _EntryPlacement({required this.x, required this.y, required this.width, required this.height});
+  const _EntryPlacement({required this.x, required this.y, required this.width, required this.height}): assert(width >= 0, 'Width must not be negative.'),assert(height >= 0, 'Height must not be negative.');
   factory _EntryPlacement.fromJson(Map<String, dynamic> json) => _$EntryPlacementFromJson(json);
 
 @override final  int x;
@@ -1460,7 +1460,7 @@ return custom(_that.name,_that.data);case _:
 @JsonSerializable()
 
 class CustomEntryMetadata with DiagnosticableTreeMixin implements EntryMetadata {
-  const CustomEntryMetadata({required this.name, required this.data});
+  const CustomEntryMetadata({required this.name, required this.data}): assert(name != "", 'Name must not be empty.');
   factory CustomEntryMetadata.fromJson(Map<String, dynamic> json) => _$CustomEntryMetadataFromJson(json);
 
 @override final  String name;

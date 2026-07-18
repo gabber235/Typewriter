@@ -475,7 +475,7 @@ as List<Modifier>,
 @JsonSerializable()
 
 class EnumBlueprint with DiagnosticableTreeMixin implements DataBlueprint {
-  const EnumBlueprint({required final  List<String> values, @JsonKey(name: "default") this.internalDefaultValue, final  List<Modifier> modifiers = const [], final  String? $type}): _values = values,_modifiers = modifiers,$type = $type ?? 'enum';
+  const EnumBlueprint({required final  List<String> values, @JsonKey(name: "default") this.internalDefaultValue, final  List<Modifier> modifiers = const [], final  String? $type}): assert(values.length > 0, 'Values must not be empty.'),_values = values,_modifiers = modifiers,$type = $type ?? 'enum';
   factory EnumBlueprint.fromJson(Map<String, dynamic> json) => _$EnumBlueprintFromJson(json);
 
  final  List<String> _values;
@@ -872,7 +872,7 @@ as List<Modifier>,
 @JsonSerializable()
 
 class AlgebraicBlueprint with DiagnosticableTreeMixin implements DataBlueprint {
-  const AlgebraicBlueprint({required final  Map<String, DataBlueprint> cases, @JsonKey(name: "default") this.internalDefaultValue, final  List<Modifier> modifiers = const [], final  String? $type}): _cases = cases,_modifiers = modifiers,$type = $type ?? 'algebraic';
+  const AlgebraicBlueprint({required final  Map<String, DataBlueprint> cases, @JsonKey(name: "default") this.internalDefaultValue, final  List<Modifier> modifiers = const [], final  String? $type}): assert(cases.length > 0, 'Cases must not be empty.'),_cases = cases,_modifiers = modifiers,$type = $type ?? 'algebraic';
   factory AlgebraicBlueprint.fromJson(Map<String, dynamic> json) => _$AlgebraicBlueprintFromJson(json);
 
  final  Map<String, DataBlueprint> _cases;
@@ -967,7 +967,7 @@ as List<Modifier>,
 @JsonSerializable()
 
 class CustomBlueprint with DiagnosticableTreeMixin implements DataBlueprint {
-  const CustomBlueprint({required this.editor, required this.shape, @JsonKey(name: "default") this.internalDefaultValue, final  List<Modifier> modifiers = const [], final  String? $type}): _modifiers = modifiers,$type = $type ?? 'custom';
+  const CustomBlueprint({required this.editor, required this.shape, @JsonKey(name: "default") this.internalDefaultValue, final  List<Modifier> modifiers = const [], final  String? $type}): assert(editor != "", 'Editor must not be empty.'),_modifiers = modifiers,$type = $type ?? 'custom';
   factory CustomBlueprint.fromJson(Map<String, dynamic> json) => _$CustomBlueprintFromJson(json);
 
  final  String editor;
@@ -1817,7 +1817,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 @JsonSerializable()
 
 class EntryReferenceModifier with DiagnosticableTreeMixin implements Modifier {
-  const EntryReferenceModifier(this.tag, {final  String? $type}): $type = $type ?? 'entryReference';
+  const EntryReferenceModifier(this.tag, {final  String? $type}): assert(tag != "", 'Tag must not be empty.'),$type = $type ?? 'entryReference';
   factory EntryReferenceModifier.fromJson(Map<String, dynamic> json) => _$EntryReferenceModifierFromJson(json);
 
  final  String tag;
@@ -1896,7 +1896,7 @@ as String,
 @JsonSerializable()
 
 class AnyEntryReferenceModifier with DiagnosticableTreeMixin implements Modifier {
-  const AnyEntryReferenceModifier(final  List<String> tags, {final  String? $type}): _tags = tags,$type = $type ?? 'anyEntryReference';
+  const AnyEntryReferenceModifier(final  List<String> tags, {final  String? $type}): assert(tags.length > 0, 'Tags must not be empty.'),_tags = tags,$type = $type ?? 'anyEntryReference';
   factory AnyEntryReferenceModifier.fromJson(Map<String, dynamic> json) => _$AnyEntryReferenceModifierFromJson(json);
 
  final  List<String> _tags;
@@ -1981,7 +1981,7 @@ as List<String>,
 @JsonSerializable()
 
 class CustomModifier with DiagnosticableTreeMixin implements Modifier {
-  const CustomModifier({required this.name, required this.data, final  String? $type}): $type = $type ?? 'custom';
+  const CustomModifier({required this.name, required this.data, final  String? $type}): assert(name != "", 'Name must not be empty.'),$type = $type ?? 'custom';
   factory CustomModifier.fromJson(Map<String, dynamic> json) => _$CustomModifierFromJson(json);
 
  final  String name;

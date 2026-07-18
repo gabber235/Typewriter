@@ -7,7 +7,8 @@ import "package:typewriter_panel/features/organizations/application/organization
 import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/shared/utilities/collection.dart";
 import "package:typewriter_panel/shared/utilities/riverpod.dart";
 
@@ -16,6 +17,7 @@ part "members.g.dart";
 
 @freezed
 abstract class OrganizationRole with _$OrganizationRole {
+  @Assert("name != \"\"", "Name must not be empty.")
   const factory OrganizationRole({
     required skir.RecordId roleId,
     required String name,

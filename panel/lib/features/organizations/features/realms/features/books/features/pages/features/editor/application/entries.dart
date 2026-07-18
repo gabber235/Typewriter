@@ -56,6 +56,8 @@ abstract class PageEntry with _$PageEntry {
   const factory PageEntry.definition({required EntryDefinition definition}) =
       DefinitionPageEntry;
 
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("pageId != \"\"", "Page ID must not be empty.")
   const factory PageEntry.reference({
     required String id,
     required String name,
@@ -64,9 +66,11 @@ abstract class PageEntry with _$PageEntry {
     @Default([]) List<EntryMetadata> metadata,
   }) = ReferencePageEntry;
 
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory PageEntry.nonexistent({required String id}) =
       NonexistentPageEntry;
 
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory PageEntry.noBlueprint({
     required String id,
     required String name,
@@ -82,6 +86,7 @@ abstract class PageEntry with _$PageEntry {
 
 @freezed
 abstract class EntryDefinition with _$EntryDefinition {
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory EntryDefinition({
     required String id,
     required String name,
@@ -99,6 +104,8 @@ abstract class EntryDefinition with _$EntryDefinition {
 
 @freezed
 abstract class EntryPlacement with _$EntryPlacement {
+  @Assert("width >= 0", "Width must not be negative.")
+  @Assert("height >= 0", "Height must not be negative.")
   const factory EntryPlacement({
     required int x,
     required int y,
@@ -112,6 +119,7 @@ abstract class EntryPlacement with _$EntryPlacement {
 
 @Freezed(unionKey: "_kind")
 abstract class EntryMetadata with _$EntryMetadata {
+  @Assert("name != \"\"", "Name must not be empty.")
   const factory EntryMetadata.custom({
     required String name,
     required dynamic data,

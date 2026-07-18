@@ -14,6 +14,9 @@ part "scene.g.dart";
 
 @freezed
 abstract class Cue with _$Cue {
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("startFrame >= 0", "Start frame must not be negative.")
+  @Assert("endFrame >= startFrame", "End frame must not precede start frame.")
   const factory Cue.segment({
     required String id,
     required int startFrame,
@@ -24,6 +27,8 @@ abstract class Cue with _$Cue {
     required List<ElementLink> outwardLinks,
   }) = Segment;
 
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("frame >= 0", "Frame must not be negative.")
   const factory Cue.keyframe({
     required String id,
     required int frame,

@@ -246,6 +246,7 @@ class ContextMenuRegion extends HookWidget {
 
 @freezed
 abstract class MenuItem with _$MenuItem {
+  @Assert("label != \"\"", "Label must not be empty.")
   const factory MenuItem({
     required String label,
     Widget? icon,
@@ -254,6 +255,8 @@ abstract class MenuItem with _$MenuItem {
     @Default([]) List<ShortcutActivator> shortcuts,
   }) = _MenuItem;
 
+  @Assert("label != \"\"", "Label must not be empty.")
+  @Assert("items.length > 0", "Items must not be empty.")
   const factory MenuItem.submenu({
     required String label,
     required List<MenuItem> items,
@@ -261,6 +264,8 @@ abstract class MenuItem with _$MenuItem {
     Color? color,
   }) = MenuItemSubmenu;
 
+  @Assert("items.length > 0", "Items must not be empty.")
+  @Assert("label == null || label != \"\"", "Label must be null or nonempty.")
   const factory MenuItem.section({
     required List<MenuItem> items,
     String? label,

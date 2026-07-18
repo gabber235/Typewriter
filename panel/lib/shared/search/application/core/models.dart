@@ -7,6 +7,8 @@ part "models.freezed.dart";
 
 @freezed
 abstract class SearchParsedSelector with _$SearchParsedSelector {
+  @Assert("selectorId != \"\"", "Selector ID must not be empty.")
+  @Assert("key != \"\"", "Key must not be empty.")
   const factory SearchParsedSelector({
     required String selectorId,
     required String key,
@@ -85,6 +87,8 @@ enum SearchGuidanceVisibility { always, emptyOnly }
 
 @freezed
 abstract class SearchGuidance with _$SearchGuidance {
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("title != \"\"", "Title must not be empty.")
   const factory SearchGuidance({
     required String id,
     required String title,
@@ -99,6 +103,8 @@ enum SearchErrorSeverity { warning, error }
 
 @freezed
 abstract class SearchErrorSummary with _$SearchErrorSummary {
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("message != \"\"", "Message must not be empty.")
   const factory SearchErrorSummary({
     required String id,
     required String message,
@@ -178,6 +184,8 @@ abstract class SearchSourceSnapshot with _$SearchSourceSnapshot {
 
 @freezed
 sealed class SearchNode with _$SearchNode {
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("title != \"\"", "Title must not be empty.")
   const factory SearchNode.section({
     required String id,
     required String title,
@@ -242,6 +250,12 @@ extension SearchNodes on List<SearchNode> {
 
 @freezed
 abstract class SearchResultType with _$SearchResultType {
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("rowRendererId != \"\"", "Row renderer ID must not be empty.")
+  @Assert(
+    "previewRendererId == null || previewRendererId != \"\"",
+    "Preview renderer ID must be null or nonempty.",
+  )
   const factory SearchResultType({
     required String id,
     required String rowRendererId,
@@ -252,6 +266,7 @@ abstract class SearchResultType with _$SearchResultType {
 
 @freezed
 abstract class SearchResult with _$SearchResult {
+  @Assert("id != \"\"", "ID must not be empty.")
   const factory SearchResult({
     required String id,
     required SearchResultType type,
@@ -293,6 +308,7 @@ abstract class SearchActionResult with _$SearchActionResult {
     @Default(SearchActionEffect.close()) SearchActionEffect effect,
   }) = SearchActionResultCompleted;
 
+  @Assert("message != \"\"", "Message must not be empty.")
   const factory SearchActionResult.failed({
     required String message,
     @Default(SearchActionEffect.refresh()) SearchActionEffect effect,
@@ -365,16 +381,20 @@ enum SearchActionSubmitResult {
 sealed class SearchActionState with _$SearchActionState {
   const factory SearchActionState.idle() = SearchActionIdle;
 
+  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
   const factory SearchActionState.running({
     required Type action,
     required Set<String> resultIds,
   }) = SearchActionRunning;
 
+  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
   const factory SearchActionState.completed({
     required Type action,
     required Set<String> resultIds,
   }) = SearchActionCompleted;
 
+  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
+  @Assert("message != \"\"", "Message must not be empty.")
   const factory SearchActionState.failed({
     required Type action,
     required Set<String> resultIds,
@@ -384,6 +404,7 @@ sealed class SearchActionState with _$SearchActionState {
 
 @freezed
 abstract class SearchPreviewRequest with _$SearchPreviewRequest {
+  @Assert("resultId != \"\"", "Result ID must not be empty.")
   const factory SearchPreviewRequest({
     required String resultId,
     SearchQueryContext? queryContext,
@@ -395,6 +416,7 @@ abstract class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
   const factory SearchPreviewRequestResult.data({required Object data}) =
       SearchPreviewRequestResultData;
 
+  @Assert("message != \"\"", "Message must not be empty.")
   const factory SearchPreviewRequestResult.error({required String message}) =
       SearchPreviewRequestResultError;
 }

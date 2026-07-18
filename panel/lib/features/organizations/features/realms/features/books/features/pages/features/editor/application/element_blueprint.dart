@@ -12,6 +12,9 @@ part "element_blueprint.g.dart";
 
 @freezed
 abstract class ElementBlueprint with _$ElementBlueprint {
+  @Assert("id != \"\"", "ID must not be empty.")
+  @Assert("name != \"\"", "Name must not be empty.")
+  @Assert("extension != \"\"", "Extension must not be empty.")
   const factory ElementBlueprint({
     required String id,
     required String name,
@@ -33,6 +36,8 @@ abstract class ElementBlueprint with _$ElementBlueprint {
 
 @freezed
 abstract class ContextKey with _$ContextKey {
+  @Assert("name != \"\"", "Name must not be empty.")
+  @Assert("klassName != \"\"", "Class name must not be empty.")
   const factory ContextKey({
     required String name,
     required String klassName,

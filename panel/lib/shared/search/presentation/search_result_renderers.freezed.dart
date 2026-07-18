@@ -662,7 +662,7 @@ $SearchResultCopyWith<$Res> get result {
 
 
 class SearchResultPreviewContextError implements SearchResultPreviewContext {
-  const SearchResultPreviewContextError({required this.result, required this.message});
+  const SearchResultPreviewContextError({required this.result, required this.message}): assert(message != "", 'Message must not be empty.');
   
 
 @override final  SearchResult result;
