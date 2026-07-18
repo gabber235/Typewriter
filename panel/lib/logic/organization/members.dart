@@ -547,7 +547,7 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       );
 
       final response = await ref.requestSkir(
-        "cloud.to.user.$userId.organization.$organizationId.members.join_requests.approve",
+        "cloud.to.user.$userId.organization.${organizationId.id}.members.join_requests.approve",
         skir.ApproveOrganizationJoinRequestRequest.serializer.toBytes(request),
         skir.ApproveOrganizationJoinRequestResponse.serializer,
       );
@@ -606,7 +606,7 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       );
 
       final response = await ref.requestSkir(
-        "cloud.to.user.$userId.organization.$organizationId.members.join_requests.decline",
+        "cloud.to.user.$userId.organization.${organizationId.id}.members.join_requests.decline",
         skir.DeclineOrganizationJoinRequestRequest.serializer.toBytes(request),
         skir.DeclineOrganizationJoinRequestResponse.serializer,
       );
@@ -658,9 +658,9 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     final request = skir.WatchOrganizationJoinCodesRequest();
     yield* ref.watchRequest(
       subject:
-          "cloud.to.user.$userId.organization.$organizationId.members.join_codes.watch",
+          "cloud.to.user.$userId.organization.${organizationId.id}.members.join_codes.watch",
       listenSubject:
-          "cloud.from.organization.$organizationId.members.join_codes.watch",
+          "cloud.from.organization.${organizationId.id}.members.join_codes.watch",
       requestBytes: skir.WatchOrganizationJoinCodesRequest.serializer.toBytes(
         request,
       ),
@@ -712,7 +712,7 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
       final request = skir.RevokeOrganizationJoinCodeRequest(codeId: codeId);
 
       final response = await ref.requestSkir(
-        "cloud.to.user.$userId.organization.$organizationId.members.join_codes.revoke",
+        "cloud.to.user.$userId.organization.${organizationId.id}.members.join_codes.revoke",
         skir.RevokeOrganizationJoinCodeRequest.serializer.toBytes(request),
         skir.RevokeOrganizationJoinCodeResponse.serializer,
       );

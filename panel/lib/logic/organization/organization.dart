@@ -181,7 +181,7 @@ class Organization extends _$Organization {
     );
 
     final response = await ref.requestSkir(
-      "cloud.to.user.$userId.organization.$organizationId.members.join_codes.generate",
+      "cloud.to.user.$userId.organization.${organizationId.id}.members.join_codes.generate",
       skir.GenerateOrganizationJoinCodeRequest.serializer.toBytes(request),
       skir.GenerateOrganizationJoinCodeResponse.serializer,
     );

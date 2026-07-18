@@ -36,9 +36,9 @@ class Books extends _$Books {
 
     final request = ListBooksRequest();
     final stream = ref.requestProtoThenListen(
-      subject: "realm.to.$realmId.organization.$organizationId.book.list",
+      subject: "realm.to.$realmId.organization.${organizationId.id}.book.list",
       listenSubject:
-          "realm.from.$realmId.organization.$organizationId.book.list",
+          "realm.from.$realmId.organization.${organizationId.id}.book.list",
       request: request,
       responseBuilder: ListBooksResponse.new,
     );
