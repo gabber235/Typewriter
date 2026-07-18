@@ -1,6 +1,6 @@
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart" as proto;
-import "package:typewriter_panel/shared/ui/screens/error_screen.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
+import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart"
+    as proto;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Exception thrown when an API call returns an error response.
 ///
@@ -46,7 +46,11 @@ class ApiException implements Exception {
   }
 
   factory ApiException.notFound(String resource) {
-    return ApiException(code: 404, message: "$resource not found");
+    return ApiException(code: 404, message: "${resource.formatted} not found");
+  }
+
+  factory ApiException.unknown(String resource) {
+    return ApiException(code: 422, message: "${resource.formatted} not found");
   }
 
   factory ApiException.conflict(String message) {

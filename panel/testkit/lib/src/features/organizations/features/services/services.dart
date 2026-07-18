@@ -12,12 +12,16 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
 Service generateRandomService() {
-  final roles = <skir.ServiceRole>[];
+  final roles = <ServiceRole>[];
   if (faker.randomGenerator.boolean()) {
-    roles.add(skir.ServiceRole.createEngine(version: "1.0.0"));
+    roles.add(
+      EngineServiceRole(version: generateRandomVersion().canonicalizedVersion),
+    );
   }
   if (faker.randomGenerator.boolean() || roles.isEmpty) {
-    roles.add(skir.ServiceRole.createRealm(version: "1.0.0"));
+    roles.add(
+      RealmServiceRole(version: generateRandomVersion().canonicalizedVersion),
+    );
   }
   final createdAt = faker.date.dateTimeBetween(
     DateTime.now().subtract(365.days),
@@ -38,8 +42,8 @@ Service generateRandomService() {
         .toLowerCase(),
     roles: roles,
     createdAt: createdAt,
-    state: skir.ServiceState(
-      status: online ? skir.ServiceStatus.online : skir.ServiceStatus.offline,
+    state: ServiceState(
+      status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
       lastSeen: lastSeen,
     ),
     organization: recordId("organization:${faker.guid.guid()}"),

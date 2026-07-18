@@ -112,7 +112,7 @@ class _RealmMenuContent extends HookConsumerWidget {
                       ),
                       subtitle: StatusIndicator(
                         isOnline: realm.isOnline,
-                        lastSeen: realm.lastSeenTime,
+                        lastSeen: realm.lastSeen,
                         dotColor: _statusDotColor(
                           context,
                           realm.isOnline,

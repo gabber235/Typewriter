@@ -14,23 +14,23 @@ import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/utilities/collection.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/shared/utilities/utilities.dart";
 
 part "services.freezed.dart";
 part "services.g.dart";
 
 @freezed
 abstract class Service with _$Service {
-  const factory Service({
+  @Assert("name.isNotEmpty", "Name must not be empty.")
+  @Assert("roles.isNotEmpty", "Roles must not be empty.")
+  factory Service({
     required skir.RecordId serviceId,
     required String name,
-    required List<skir.ServiceRole> roles,
+    required List<ServiceRole> roles,
     required DateTime createdAt,
     skir.RecordId? organization,
-    skir.ServiceRegistration? registration,
-    skir.ServiceState? state,
+    ServiceRegistration? registration,
+    ServiceState? state,
     skir.RecordId? runsIn,
   }) = _Service;
 
@@ -39,72 +39,187 @@ abstract class Service with _$Service {
   factory Service.fromSkir(skir.Service service) => Service(
     serviceId: service.serviceId,
     name: service.name,
-    roles: service.roles.toList(),
+    roles: service.roles.map(ServiceRole.fromSkir).toList(),
     createdAt: service.createdAt,
     organization: service.organization,
-    registration: service.registration,
-    state: service.state,
+    registration: service.registration != null
+        ? ServiceRegistration.fromSkir(service.registration!)
+        : null,
+    state: service.state != null ? ServiceState.fromSkir(service.state!) : null,
     runsIn: service.runsIn,
   );
 
   skir.Service toSkir() => skir.Service(
     serviceId: serviceId,
     name: name,
-    roles: roles,
+    roles: roles.map((role) => role.toSkir()).toList(),
     createdAt: createdAt,
     organization: organization,
-    registration: registration,
-    state: state,
+    registration: registration?.toSkir(),
+    state: state?.toSkir(),
     runsIn: runsIn,
   );
-
-  bool get isEngine =>
-      roles.any((role) => role is skir.ServiceRole_engineWrapper);
-
-  bool get isRealm =>
-      roles.any((role) => role is skir.ServiceRole_realmWrapper);
 
   String get displayName =>
       name.isNotEmpty ? name.formatted : "Unnamed Service";
 
-  Color get color => switch ((isEngine, isRealm)) {
-    (true, true) => Colors.deepPurpleAccent,
-    (true, false) => Colors.blueAccent,
-    (false, true) => Colors.deepOrangeAccent,
-    (false, false) => Colors.grey,
-  };
+  Color get color => roles.map((role) => role.color).toList().mix();
 
-  bool get isOnline {
-    if (state?.status == skir.ServiceStatus.offline) return false;
-    final seen = lastSeenTime;
-    if (seen == null) return false;
-    return DateTime.now().difference(seen) < const Duration(minutes: 2);
+  bool get isOnline => state?.isOnline ?? false;
+
+  DateTime? get lastSeen => state?.lastSeen;
+  String get lastSeenLabel => state?.lastSeenLabel ?? "Never";
+
+  String get label => roles.map((role) => role.label).toList().join(" & ");
+
+  bool get isEngine => roles.any((role) => role is EngineServiceRole);
+  bool get isRealm => roles.any((role) => role is RealmServiceRole);
+  bool get isCustom => roles.any((role) => role is CustomServiceRole);
+
+  IconData get icon {
+    return switch ((isEngine, isRealm, isCustom)) {
+      (true, true, _) || (true, _, true) || (_, true, true) => Icons.dns,
+      (true, false, false) => Icons.memory,
+      (false, true, false) => Icons.cloud,
+      (false, false, true) => Icons.extension,
+      (false, false, false) => throw UnimplementedError(),
+    };
+  }
+}
+
+@freezed
+abstract class ServiceRole with _$ServiceRole {
+  @Assert("version.isNotEmpty", "Version must not be empty.")
+  factory ServiceRole.engine({required String version}) = EngineServiceRole;
+  @Assert("version.isNotEmpty", "Version must not be empty.")
+  factory ServiceRole.realm({required String version}) = RealmServiceRole;
+
+  @Assert("version.isNotEmpty", "Version must not be empty.")
+  @Assert("name.isNotEmpty", "Name must not be empty.")
+  factory ServiceRole.custom({required String version, required String name}) =
+      CustomServiceRole;
+
+  const ServiceRole._();
+
+  factory ServiceRole.fromSkir(skir.ServiceRole role) {
+    return switch (role) {
+      skir.ServiceRole_engineWrapper(value: final engine) => ServiceRole.engine(
+        version: engine.version,
+      ),
+      skir.ServiceRole_realmWrapper(value: final realm) => ServiceRole.realm(
+        version: realm.version,
+      ),
+      skir.ServiceRole_customWrapper(value: final custom) => ServiceRole.custom(
+        version: custom.version,
+        name: custom.name,
+      ),
+      skir.ServiceRole_unknown() => throw ApiException.unknown("service role"),
+    };
   }
 
-  DateTime? get lastSeenTime => state?.lastSeen;
+  skir.ServiceRole toSkir() {
+    return switch (this) {
+      EngineServiceRole(version: final version) =>
+        skir.ServiceRole.createEngine(version: version),
+      RealmServiceRole(version: final version) => skir.ServiceRole.createRealm(
+        version: version,
+      ),
+      CustomServiceRole(version: final version, name: final name) =>
+        skir.ServiceRole.createCustom(version: version, name: name),
+      ServiceRole() => throw UnimplementedError(),
+    };
+  }
+
+  Color get color => switch (this) {
+    EngineServiceRole() => Colors.blueAccent,
+    RealmServiceRole() => Colors.deepOrangeAccent,
+    CustomServiceRole() => Colors.green,
+    ServiceRole() => throw UnimplementedError(),
+  };
+
+  String get label => switch (this) {
+    EngineServiceRole() => "Engine",
+    RealmServiceRole() => "Realm",
+    CustomServiceRole(:final name) => name,
+    ServiceRole() => throw UnimplementedError(),
+  };
+}
+
+@freezed
+abstract class ServiceRegistration with _$ServiceRegistration {
+  const factory ServiceRegistration({
+    required String token,
+    required DateTime expiresAt,
+  }) = _ServiceRegistration;
+
+  const ServiceRegistration._();
+
+  factory ServiceRegistration.fromSkir(skir.ServiceRegistration registration) {
+    return ServiceRegistration(
+      token: registration.token,
+      expiresAt: registration.expiresAt,
+    );
+  }
+
+  skir.ServiceRegistration toSkir() {
+    return skir.ServiceRegistration(token: token, expiresAt: expiresAt);
+  }
+}
+
+@freezed
+abstract class ServiceState with _$ServiceState {
+  const factory ServiceState({
+    required ServiceStateStatus status,
+    required DateTime lastSeen,
+  }) = _ServiceState;
+
+  const ServiceState._();
+
+  factory ServiceState.fromSkir(skir.ServiceState state) {
+    return ServiceState(
+      status: ServiceStateStatus.fromSkir(state.status),
+      lastSeen: state.lastSeen,
+    );
+  }
+
+  skir.ServiceState toSkir() {
+    return skir.ServiceState(status: status.toSkir(), lastSeen: lastSeen);
+  }
+
+  bool get isOnline {
+    if (status == ServiceStateStatus.offline) return false;
+    return DateTime.now().difference(lastSeen) < const Duration(minutes: 2);
+  }
+
   String get lastSeenLabel {
-    final seen = lastSeenTime;
-    if (seen == null) return "Never";
-    final difference = DateTime.now().difference(seen);
+    final difference = DateTime.now().difference(lastSeen);
     if (difference.inSeconds < 60) return "Just now";
     if (difference.inMinutes < 60) return "${difference.inMinutes}m ago";
     if (difference.inHours < 24) return "${difference.inHours}h ago";
     return "${difference.inDays}d ago";
   }
+}
 
-  String get typeLabel => switch ((isEngine, isRealm)) {
-    (true, true) => "Engine & Realm",
-    (true, false) => "Engine",
-    (false, true) => "Realm",
-    (false, false) => "Unknown",
-  };
+enum ServiceStateStatus {
+  online,
+  offline;
 
-  IconData get icon => switch ((isEngine, isRealm)) {
-    (true, true) => Icons.dns,
-    (true, false) => Icons.memory,
-    (false, true) => Icons.cloud,
-    (false, false) => Icons.device_unknown,
-  };
+  factory ServiceStateStatus.fromSkir(skir.ServiceStatus status) {
+    return switch (status) {
+      skir.ServiceStatus.online => ServiceStateStatus.online,
+      skir.ServiceStatus.offline => ServiceStateStatus.offline,
+      skir.ServiceStatus_unknown() => throw ApiException.unknown(
+        "service status",
+      ),
+    };
+  }
+
+  skir.ServiceStatus toSkir() {
+    return switch (this) {
+      ServiceStateStatus.online => skir.ServiceStatus.online,
+      ServiceStateStatus.offline => skir.ServiceStatus.offline,
+    };
+  }
 }
 
 @riverpod

@@ -236,11 +236,11 @@ class _ServiceCard extends HookConsumerWidget {
             isSelected: isSelected,
             isFocused: isFocused,
             isHovered: isHovered,
-            badgeLabel: service.typeLabel,
+            badgeLabel: service.label,
             header: Icon(service.icon, size: 32),
             footer: StatusIndicator(
               isOnline: service.isOnline,
-              lastSeen: service.lastSeenTime,
+              lastSeen: service.lastSeen,
               dotColor: _statusDotColor(context, service.isOnline, isSelected),
               textColor: _statusTextColor(
                 context,
