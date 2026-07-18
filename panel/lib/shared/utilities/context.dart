@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:responsive_framework/responsive_framework.dart";
 
@@ -25,6 +26,12 @@ extension ResponsiveBreakpointsX on BuildContext {
     }
     return fourK ?? desktop ?? tablet ?? mobile;
   }
+
+  bool get debugShowCheckedModeBanner =>
+      kDebugMode &&
+      (findAncestorWidgetOfExactType<WidgetsApp>()
+              ?.debugShowCheckedModeBanner ??
+          false);
 }
 
 extension BrightnessX on Brightness {
