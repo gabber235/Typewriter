@@ -1,3 +1,5 @@
+import "dart:math" as math;
+
 import "package:flutter/material.dart";
 import "package:material_color_utilities/material_color_utilities.dart";
 
@@ -13,6 +15,42 @@ const safeColors = <Color>[
   Color(0xFF967bfa),
   Colors.purpleAccent,
 ];
+
+extension ColorsExtension on List<Color> {
+  /// An HSV circular hue mixing algorithm that evenly distributes colors across the color wheel.
+  Color mix() {
+    assert(isNotEmpty, "Cannot mix an empty color list.");
+
+    var hueX = 0.0;
+    var hueY = 0.0;
+    var saturation = 0.0;
+    var value = 0.0;
+    var alpha = 0.0;
+
+    for (final color in this) {
+      final hsv = HSVColor.fromColor(color);
+      final hueRadians = hsv.hue * math.pi / 180;
+      hueX += math.cos(hueRadians) * hsv.saturation;
+      hueY += math.sin(hueRadians) * hsv.saturation;
+      saturation += hsv.saturation;
+      value += hsv.value;
+      alpha += hsv.alpha;
+    }
+
+    final hueVectorLength = math.sqrt(hueX * hueX + hueY * hueY);
+    final hue = hueVectorLength < 1e-10
+        ? 0.0
+        : (math.atan2(hueY, hueX) * 180 / math.pi + 360) % 360;
+    final count = length;
+
+    return HSVColor.fromAHSV(
+      alpha / count,
+      hue,
+      saturation / count,
+      value / count,
+    ).toColor();
+  }
+}
 
 extension ColorExtension on Color {
   Color on(BuildContext context) => onBrightness(Theme.brightnessOf(context));
