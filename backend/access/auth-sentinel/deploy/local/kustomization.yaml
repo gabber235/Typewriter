@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ../base
   - ingress.yaml
+  - middleware-cors.yaml
 patches:
   - path: workloaddeployment-patch.yaml
     target:

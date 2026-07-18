@@ -3,19 +3,140 @@ import "dart:typed_data";
 
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:http/http.dart" as http;
+import "package:http/testing.dart";
+import "package:riverpod/riverpod.dart";
+import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/telemetry.dart";
 import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+final _testRefProvider = Provider<Ref>((ref) => ref);
+
+final class _FakeTelemetry implements PanelTelemetry {
+  @override
+  Future<T> traceNats<T>({
+    required String subject,
+    required int payloadSize,
+    required String operationName,
+    required Future<T> Function(Header? header) operation,
+  }) => operation(
+    Header(
+      headers: {
+        "traceparent":
+            "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        "tracestate": "vendor=value",
+      },
+    ),
+  );
+
+  @override
+  Future<http.Response> traceHttp({
+    required String method,
+    required Uri uri,
+    required Future<http.Response> Function(Map<String, String> headers)
+    operation,
+  }) => operation({
+    "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+    "tracestate": "vendor=value",
+  });
+}
+
 void main() {
-  group("ClientProtoExtension.requestSkir", () {
+  group("sentinelCredentials", () {
+    test("forwards trace headers and decodes a successful response", () async {
+      late http.Request capturedRequest;
+      final responseBytes = skir.GetSentinelCredentialsResponse.serializer
+          .toBytes(
+            skir.GetSentinelCredentialsResponse.createSuccess(
+              jwt: "test-jwt",
+              seed: "test-seed",
+            ),
+          );
+      final client = MockClient((request) async {
+        capturedRequest = request;
+        return http.Response.bytes(responseBytes, 200);
+      });
+      final container = ProviderContainer(
+        retry: (retryCount, error) => null,
+        overrides: [
+          panelHttpClientProvider.overrideWithValue(client),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final result = await container.read(sentinelCredentialsProvider.future);
+
+      expect(result.jwt, "test-jwt");
+      expect(capturedRequest.method, "GET");
+      expect(capturedRequest.headers["traceparent"], startsWith("00-4bf92f"));
+      expect(capturedRequest.headers["tracestate"], "vendor=value");
+    });
+
+    test("preserves a non-success HTTP status", () async {
+      final container = ProviderContainer(
+        retry: (retryCount, error) => null,
+        overrides: [
+          panelHttpClientProvider.overrideWithValue(
+            MockClient((_) async => http.Response("unavailable", 503)),
+          ),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(sentinelCredentialsProvider.future),
+        throwsA(
+          isA<ApiException>()
+              .having((error) => error.code, "code", 503)
+              .having(
+                (error) => error.message,
+                "message",
+                "Failed to fetch sentinel credentials",
+              ),
+        ),
+      );
+    });
+
+    test("rethrows the original HTTP transport exception", () async {
+      final error = StateError("network failed");
+      final container = ProviderContainer(
+        retry: (retryCount, error) => null,
+        overrides: [
+          panelHttpClientProvider.overrideWithValue(
+            MockClient((_) => Future<http.Response>.error(error)),
+          ),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(sentinelCredentialsProvider.future),
+        throwsA(same(error)),
+      );
+    });
+  });
+
+  group("RefNatsExtension.requestSkir", () {
     late MockNatsClient mockClient;
+    late ProviderContainer container;
 
     setUp(() {
       mockClient = MockNatsClient();
+      container = ProviderContainer(
+        overrides: [
+          natsProvider.overrideWithValue(mockClient),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
     });
 
     tearDown(() {
+      container.dispose();
       mockClient.dispose();
     });
 
@@ -32,13 +153,15 @@ void main() {
         ),
       );
 
-      final response = await mockClient.requestSkir(
-        "test.subject",
-        skir.GetSentinelCredentialsRequest.serializer.toBytes(
-          skir.GetSentinelCredentialsRequest(),
-        ),
-        skir.GetSentinelCredentialsResponse.serializer,
-      );
+      final response = await container
+          .read(_testRefProvider)
+          .requestSkir(
+            "test.subject",
+            skir.GetSentinelCredentialsRequest.serializer.toBytes(
+              skir.GetSentinelCredentialsRequest(),
+            ),
+            skir.GetSentinelCredentialsResponse.serializer,
+          );
 
       expect(
         response,
@@ -49,6 +172,14 @@ void main() {
               .value;
       expect(success.jwt, equals("test-jwt"));
       expect(success.seed, equals("test-seed"));
+      expect(
+        mockClient.requests.single.header?.get("traceparent"),
+        startsWith("00-4bf92f"),
+      );
+      expect(
+        mockClient.requests.single.header?.get("tracestate"),
+        "vendor=value",
+      );
     });
 
     test("sends request bytes correctly", () async {
@@ -62,11 +193,13 @@ void main() {
         );
       });
 
-      await mockClient.requestSkir(
-        "test.subject",
-        skir.GetSentinelCredentialsRequest.serializer.toBytes(request),
-        skir.GetSentinelCredentialsResponse.serializer,
-      );
+      await container
+          .read(_testRefProvider)
+          .requestSkir(
+            "test.subject",
+            skir.GetSentinelCredentialsRequest.serializer.toBytes(request),
+            skir.GetSentinelCredentialsResponse.serializer,
+          );
 
       expect(capturedRequestData, isNotNull);
 
@@ -77,13 +210,15 @@ void main() {
 
     test("throws timeout when no handler registered", () async {
       expect(
-        () => mockClient.requestSkir(
-          "unregistered.subject",
-          skir.GetSentinelCredentialsRequest.serializer.toBytes(
-            skir.GetSentinelCredentialsRequest(),
-          ),
-          skir.GetSentinelCredentialsResponse.serializer,
-        ),
+        () => container
+            .read(_testRefProvider)
+            .requestSkir(
+              "unregistered.subject",
+              skir.GetSentinelCredentialsRequest.serializer.toBytes(
+                skir.GetSentinelCredentialsRequest(),
+              ),
+              skir.GetSentinelCredentialsResponse.serializer,
+            ),
         throwsA(isA<TimeoutException>()),
       );
     });
@@ -92,15 +227,73 @@ void main() {
       mockClient.setStatus(Status.disconnected);
 
       expect(
-        () => mockClient.requestSkir(
-          "test.subject",
-          skir.GetSentinelCredentialsRequest.serializer.toBytes(
-            skir.GetSentinelCredentialsRequest(),
-          ),
-          skir.GetSentinelCredentialsResponse.serializer,
-        ),
+        () => container
+            .read(_testRefProvider)
+            .requestSkir(
+              "test.subject",
+              skir.GetSentinelCredentialsRequest.serializer.toBytes(
+                skir.GetSentinelCredentialsRequest(),
+              ),
+              skir.GetSentinelCredentialsResponse.serializer,
+            ),
         throwsA(isA<NatsException>()),
       );
+    });
+  });
+
+  group("RefNatsExtension.watchRequest", () {
+    late MockNatsClient mockClient;
+    late ProviderContainer container;
+
+    setUp(() {
+      mockClient = MockNatsClient();
+      container = ProviderContainer(
+        overrides: [
+          natsProvider.overrideWithValue(mockClient),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+    });
+
+    tearDown(() {
+      container.dispose();
+      mockClient.dispose();
+    });
+
+    test("injects trace headers on the initial Skir publication", () async {
+      const listenSubject = "test.responses";
+      final stream = container
+          .read(_testRefProvider)
+          .watchRequest(
+            subject: "test.watch",
+            listenSubject: listenSubject,
+            requestBytes: Uint8List.fromList([1, 2, 3]),
+            serializer: skir.GetSentinelCredentialsResponse.serializer,
+            transformer: (_, response) => response,
+          );
+      final firstResponse = stream.first;
+
+      while (mockClient.publications.isEmpty) {
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      final publication = mockClient.publications.single;
+      expect(publication.subject, "test.watch");
+      expect(publication.replyTo, listenSubject);
+      expect(publication.header?.get("traceparent"), startsWith("00-4bf92f"));
+      expect(publication.header?.get("tracestate"), "vendor=value");
+
+      mockClient.emitMessageOnSubject(
+        listenSubject,
+        skir.GetSentinelCredentialsResponse.serializer.toBytes(
+          skir.GetSentinelCredentialsResponse.createSuccess(
+            jwt: "test-jwt",
+            seed: "test-seed",
+          ),
+        ),
+      );
+
+      expect(await firstResponse, isA<skir.GetSentinelCredentialsResponse>());
     });
   });
 

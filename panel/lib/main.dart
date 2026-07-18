@@ -14,6 +14,7 @@ import "package:typewriter_panel/app_router.dart";
 import "package:typewriter_panel/logic/appearance.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/nats.dart";
+import "package:typewriter_panel/logic/telemetry.dart";
 import "package:typewriter_panel/utils/adaptive_single_activator.dart";
 import "package:typewriter_panel/utils/color.dart";
 import "package:typewriter_panel/utils/fonts.dart";
@@ -69,15 +70,17 @@ class TypewriterPanel extends HookConsumerWidget {
         ),
         shortcuts: typewriterShortcuts,
         scrollBehavior: GlobalCustomScrollBehavior(),
-        builder: (context, child) => Scaffold(
-          body: AppRequiredWidgets(
-            child: Responsive(
-              child: RequiredNatsConnection(
-                child: child ?? const SizedBox.shrink(),
+        builder: (context, child) {
+          return Scaffold(
+            body: AppRequiredWidgets(
+              child: Responsive(
+                child: RequiredNatsConnection(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -440,33 +443,38 @@ class _EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final (_, otelWidget) = require(ref.watch(panelTelemetryProvider));
+    if (otelWidget != null) {
+      return otelWidget;
+    }
+
     // Fetch sentinel credentials before authentication checks
     final (_, sentinelWidget) = require(ref.watch(sentinelCredentialsProvider));
     if (sentinelWidget != null) {
       return sentinelWidget;
     }
 
-    final (isAuthenticated, widget) = require(
+    final (isAuthenticated, authenticatedWidget) = require(
       ref.watch(isAuthenticatedProvider),
     );
-    if (widget != null) {
-      return widget;
+    if (authenticatedWidget != null) {
+      return authenticatedWidget;
     }
     if (isAuthenticated != true) {
       return child;
     }
 
-    final (token, widget2) = require(ref.watch(accessTokenProvider));
-    if (widget2 != null) {
-      return widget2;
+    final (token, accessWidget) = require(ref.watch(accessTokenProvider));
+    if (accessWidget != null) {
+      return accessWidget;
     }
     if (token == null) {
       return child;
     }
 
-    final (_, widget3) = require(ref.watch(authUserInfoProvider));
-    if (widget3 != null) {
-      return widget3;
+    final (_, authUserInfoWidget) = require(ref.watch(authUserInfoProvider));
+    if (authUserInfoWidget != null) {
+      return authUserInfoWidget;
     }
 
     return child;

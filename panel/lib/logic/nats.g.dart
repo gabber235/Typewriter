@@ -8,6 +8,48 @@ part of 'nats.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+
+@ProviderFor(panelHttpClient)
+final panelHttpClientProvider = PanelHttpClientProvider._();
+
+final class PanelHttpClientProvider
+    extends $FunctionalProvider<http.Client, http.Client, http.Client>
+    with $Provider<http.Client> {
+  PanelHttpClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'panelHttpClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$panelHttpClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<http.Client> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  http.Client create(Ref ref) {
+    return panelHttpClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(http.Client value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<http.Client>(value),
+    );
+  }
+}
+
+String _$panelHttpClientHash() => r'7135e3872b268ca83f0cf2cb03ecc737f66a43d1';
+
 /// Fetches the sentinel credentials from the API.
 
 @ProviderFor(sentinelCredentials)
@@ -52,7 +94,7 @@ final class SentinelCredentialsProvider
 }
 
 String _$sentinelCredentialsHash() =>
-    r'ada8fb3ca054796ffdf14f0da85c68de770eb0f3';
+    r'd9ee71cee1fde6104af98ba3f2095b6144815fd6';
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();

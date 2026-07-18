@@ -105,13 +105,11 @@ class Organizations extends _$Organizations {
       "Creating organization with name: '$name' and logoUrl: '$logoUrl'",
     );
 
-    final response = await ref
-        .read(natsProvider)
-        .requestSkir(
-          "cloud.to.user.$userId.organization.create",
-          skir.CreateOrganizationRequest.serializer.toBytes(request),
-          skir.CreateOrganizationResponse.serializer,
-        );
+    final response = await ref.requestSkir(
+      "cloud.to.user.$userId.organization.create",
+      skir.CreateOrganizationRequest.serializer.toBytes(request),
+      skir.CreateOrganizationResponse.serializer,
+    );
 
     switch (response) {
       case skir.CreateOrganizationResponse_unknown():
@@ -176,13 +174,11 @@ class Organization extends _$Organization {
       ),
     );
 
-    final response = await ref
-        .read(natsProvider)
-        .requestSkir(
-          "cloud.to.user.$userId.organization.$organizationId.members.join_codes.generate",
-          skir.GenerateOrganizationJoinCodeRequest.serializer.toBytes(request),
-          skir.GenerateOrganizationJoinCodeResponse.serializer,
-        );
+    final response = await ref.requestSkir(
+      "cloud.to.user.$userId.organization.$organizationId.members.join_codes.generate",
+      skir.GenerateOrganizationJoinCodeRequest.serializer.toBytes(request),
+      skir.GenerateOrganizationJoinCodeResponse.serializer,
+    );
 
     switch (response) {
       case skir.GenerateOrganizationJoinCodeResponse_unknown():

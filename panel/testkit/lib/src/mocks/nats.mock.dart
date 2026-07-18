@@ -9,11 +9,25 @@ class MockNatsPublication {
     required this.subject,
     required Uint8List data,
     required this.replyTo,
+    required this.header,
   }) : data = Uint8List.fromList(data);
 
   final String? subject;
   final Uint8List data;
   final String? replyTo;
+  final Header? header;
+}
+
+class MockNatsRequest {
+  MockNatsRequest({
+    required this.subject,
+    required Uint8List data,
+    required this.header,
+  }) : data = Uint8List.fromList(data);
+
+  final String subject;
+  final Uint8List data;
+  final Header? header;
 }
 
 class MockNatsClient extends Mock implements Client {
@@ -26,6 +40,7 @@ class MockNatsClient extends Mock implements Client {
   int _sidCounter = 0;
 
   final List<MockNatsPublication> publications = [];
+  final List<MockNatsRequest> requests = [];
 
   Iterable<String> get subscriptionSubjects =>
       _subscriptions.values.map((subscription) => subscription.subject);
@@ -76,6 +91,7 @@ class MockNatsClient extends Mock implements Client {
     T Function(String)? jsonDecoder,
     Header? header,
   }) async {
+    requests.add(MockNatsRequest(subject: subj, data: data, header: header));
     if (_status != Status.connected) {
       throw NatsException("request error: client not connected");
     }
@@ -100,7 +116,12 @@ class MockNatsClient extends Mock implements Client {
       return false;
     }
     publications.add(
-      MockNatsPublication(subject: subject, data: data, replyTo: replyTo),
+      MockNatsPublication(
+        subject: subject,
+        data: data,
+        replyTo: replyTo,
+        header: header,
+      ),
     );
     return true;
   }

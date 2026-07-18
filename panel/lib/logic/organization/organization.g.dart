@@ -33,7 +33,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'b7a4969b5dac94c0ec561713b5c0a426b07d7f10';
+String _$organizationsHash() => r'70532d3d8bf2e84f3e0e0a1271ba785d2c6d74ca';
 
 abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
   Stream<List<OrganizationData>> build();
@@ -97,7 +97,7 @@ final class OrganizationIdProvider
   }
 }
 
-String _$organizationIdHash() => r'beb72fd1ea7bd0ac994e386364ac0b137ea7894c';
+String _$organizationIdHash() => r'9902444ecead9e5ebb83f436a847d913ff97d987';
 
 @ProviderFor(Organization)
 final organizationProvider = OrganizationProvider._();
@@ -123,7 +123,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'93f84a4af683c1b3cfbbfa70c5192ed3da5a13bf';
+String _$organizationHash() => r'76835916dc2ead497c5a1d5bae32c9daaa7614c2';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

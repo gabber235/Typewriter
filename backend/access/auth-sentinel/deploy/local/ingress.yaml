@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: auth-sentinel
   namespace: typewriter
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: typewriter-auth-sentinel-cors@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

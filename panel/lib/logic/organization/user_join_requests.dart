@@ -104,13 +104,11 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     final request = skir.SubmitUserJoinRequestRequest(code: codeId);
 
-    final response = await ref
-        .read(natsProvider)
-        .requestSkir(
-          "cloud.to.user.$userId.organization.join_requests.request",
-          skir.SubmitUserJoinRequestRequest.serializer.toBytes(request),
-          skir.SubmitUserJoinRequestResponse.serializer,
-        );
+    final response = await ref.requestSkir(
+      "cloud.to.user.$userId.organization.join_requests.request",
+      skir.SubmitUserJoinRequestRequest.serializer.toBytes(request),
+      skir.SubmitUserJoinRequestResponse.serializer,
+    );
 
     switch (response) {
       case skir.SubmitUserJoinRequestResponse_unknown():
@@ -160,13 +158,11 @@ class UserJoinRequests extends _$UserJoinRequests {
     try {
       final request = skir.CancelUserJoinRequestRequest(requestId: requestId);
 
-      final response = await ref
-          .read(natsProvider)
-          .requestSkir(
-            "cloud.to.user.$userId.organization.join_requests.cancel",
-            skir.CancelUserJoinRequestRequest.serializer.toBytes(request),
-            skir.CancelUserJoinRequestResponse.serializer,
-          );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.join_requests.cancel",
+        skir.CancelUserJoinRequestRequest.serializer.toBytes(request),
+        skir.CancelUserJoinRequestResponse.serializer,
+      );
 
       switch (response) {
         case skir.CancelUserJoinRequestResponse_unknown():

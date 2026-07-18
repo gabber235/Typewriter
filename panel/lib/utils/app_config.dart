@@ -7,6 +7,19 @@ class AppConfig {
   static const AuthConfig auth = AuthConfig._();
   static const DocsConfig docs = DocsConfig._();
   static const ApiConfig api = ApiConfig._();
+  static const TelemetryConfig telemetry = TelemetryConfig._();
+}
+
+class TelemetryConfig {
+  const TelemetryConfig._();
+
+  bool get enabled =>
+      const bool.fromEnvironment("OTEL_ENABLED", defaultValue: false);
+
+  String get tracesEndpoint => const String.fromEnvironment(
+    "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+    defaultValue: "",
+  );
 }
 
 class NatsConfig {

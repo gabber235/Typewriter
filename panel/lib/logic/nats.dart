@@ -10,6 +10,7 @@ import "package:skir_client/skir_client.dart";
 import "package:typewriter_panel/logic/api_exception.dart";
 import "package:typewriter_panel/logic/auth.dart";
 import "package:typewriter_panel/logic/organization.dart";
+import "package:typewriter_panel/logic/telemetry.dart";
 import "package:typewriter_panel/skir.dart" as skir;
 import "package:typewriter_panel/utils/app_config.dart";
 import "package:typewriter_panel/utils/async.dart";
@@ -18,13 +19,26 @@ part "nats.g.dart";
 
 const _requestTimeout = Duration(seconds: 5);
 
+@Riverpod(keepAlive: true)
+http.Client panelHttpClient(Ref ref) {
+  final client = http.Client();
+  ref.onDispose(client.close);
+  return client;
+}
+
 /// Fetches the sentinel credentials from the API.
 @Riverpod(keepAlive: true)
 Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
   Ref ref,
 ) async {
   final url = Uri.parse("${AppConfig.api.baseUrl}/auth/sentinel");
-  final response = await http.get(url);
+  final telemetry = await ref.watch(panelTelemetryProvider.future);
+  final client = ref.watch(panelHttpClientProvider);
+  final response = await telemetry.traceHttp(
+    method: "GET",
+    uri: url,
+    operation: (headers) => client.get(url, headers: headers),
+  );
 
   if (response.statusCode != 200) {
     throw ApiException(
@@ -117,15 +131,6 @@ class NatsStatus extends _$NatsStatus {
 
 /// Extension on Client to add protobuf request/response methods
 extension ClientProtoExtension on Client {
-  Future<TResponse> requestSkir<TResponse>(
-    String subject,
-    Uint8List requestBytes,
-    Serializer<TResponse> serializer,
-  ) async {
-    final response = await request(subject, requestBytes);
-    return serializer.fromBytes(response.data);
-  }
-
   /// Send a protobuf request and receive a protobuf response
   @Deprecated("migrate to skir")
   Future<TResponse> requestProto<
@@ -145,6 +150,23 @@ extension ClientProtoExtension on Client {
 
 /// Extension on Ref to allow for listening to Nats topics while sending an initial request
 extension RefNatsExtension on Ref {
+  Future<TResponse> requestSkir<TResponse>(
+    String subject,
+    Uint8List requestBytes,
+    Serializer<TResponse> serializer,
+  ) async {
+    final telemetry = await read(panelTelemetryProvider.future);
+    final client = read(natsProvider);
+    final response = await telemetry.traceNats(
+      subject: subject,
+      payloadSize: requestBytes.length,
+      operationName: "request",
+      operation: (header) =>
+          client.request(subject, requestBytes, header: header),
+    );
+    return serializer.fromBytes(response.data);
+  }
+
   Stream<TData> watchRequest<TData, TResponse>({
     required String subject,
     required String listenSubject,
@@ -161,7 +183,18 @@ extension RefNatsExtension on Ref {
     onDispose(() => client.unSub(sub));
 
     debugPrint("requesting: $subject");
-    await client.pub(subject, requestBytes, replyTo: listenSubject);
+    final telemetry = await read(panelTelemetryProvider.future);
+    await telemetry.traceNats(
+      subject: subject,
+      payloadSize: requestBytes.length,
+      operationName: "publish",
+      operation: (header) => client.pub(
+        subject,
+        requestBytes,
+        replyTo: listenSubject,
+        header: header,
+      ),
+    );
 
     TData? lastData;
 

@@ -9,5 +9,7 @@
   "AUTH_FRONT_CHANNEL_LOGOUT_URI": "http://localhost:2350/redirect.html?requestType=front-channel-logout",
   "AUTH_DISCOVERY_DOCUMENT_URI": "https://auth.tw.seamlezz.net/application/o/typewriter-panel/.well-known/openid-configuration",
   "DOCS_BASE_URL": "https://docs.typewritermc.com",
-  "API_BASE_URL": "https://api.tw.seamlezz.net"
+  "API_BASE_URL": "https://api.tw.seamlezz.net",
+  "OTEL_ENABLED": true,
+  "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT": "https://otlp.local.seamlezz.net/v1/traces"
 }

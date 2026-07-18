@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: auth-sentinel-cors
+  namespace: typewriter
+# TODO: Keep this origin/header policy local-only until panel telemetry has a
+# production rollout and security review.
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - OPTIONS
+    accessControlAllowHeaders:
+      - traceparent
+      - tracestate
+    accessControlAllowOriginList:
+      - http://localhost:2350
+    addVaryHeader: true

@@ -364,15 +364,11 @@ class OrganizationMembers extends _$OrganizationMembers {
         roleIds: roles.map((r) => r.roleId),
       );
 
-      final response = await ref
-          .read(natsProvider)
-          .requestSkir(
-            "cloud.to.user.$userId.organization.${organizationId.id}.members.update",
-            skir.UpdateOrganizationMemberRolesRequest.serializer.toBytes(
-              request,
-            ),
-            skir.UpdateOrganizationMemberRolesResponse.serializer,
-          );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.${organizationId.id}.members.update",
+        skir.UpdateOrganizationMemberRolesRequest.serializer.toBytes(request),
+        skir.UpdateOrganizationMemberRolesResponse.serializer,
+      );
 
       switch (response) {
         case skir.UpdateOrganizationMemberRolesResponse_unknown():
@@ -433,13 +429,11 @@ class OrganizationMembers extends _$OrganizationMembers {
     try {
       final request = skir.RemoveOrganizationMemberRequest(userId: memberId);
 
-      final response = await ref
-          .read(natsProvider)
-          .requestSkir(
-            "cloud.to.user.$userId.organization.${organizationId.id}.members.remove",
-            skir.RemoveOrganizationMemberRequest.serializer.toBytes(request),
-            skir.RemoveOrganizationMemberResponse.serializer,
-          );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.${organizationId.id}.members.remove",
+        skir.RemoveOrganizationMemberRequest.serializer.toBytes(request),
+        skir.RemoveOrganizationMemberResponse.serializer,
+      );
 
       switch (response) {
         case skir.RemoveOrganizationMemberResponse_unknown():
@@ -543,15 +537,11 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
         roleIds: roles.map((r) => r.roleId),
       );
 
-      final response = await ref
-          .read(natsProvider)
-          .requestSkir(
-            "cloud.to.user.$userId.organization.$organizationId.members.join_requests.approve",
-            skir.ApproveOrganizationJoinRequestRequest.serializer.toBytes(
-              request,
-            ),
-            skir.ApproveOrganizationJoinRequestResponse.serializer,
-          );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.$organizationId.members.join_requests.approve",
+        skir.ApproveOrganizationJoinRequestRequest.serializer.toBytes(request),
+        skir.ApproveOrganizationJoinRequestResponse.serializer,
+      );
 
       switch (response) {
         case skir.ApproveOrganizationJoinRequestResponse_unknown():
@@ -606,15 +596,11 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
         requestId: requestId,
       );
 
-      final response = await ref
-          .read(natsProvider)
-          .requestSkir(
-            "cloud.to.user.$userId.organization.$organizationId.members.join_requests.decline",
-            skir.DeclineOrganizationJoinRequestRequest.serializer.toBytes(
-              request,
-            ),
-            skir.DeclineOrganizationJoinRequestResponse.serializer,
-          );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.$organizationId.members.join_requests.decline",
+        skir.DeclineOrganizationJoinRequestRequest.serializer.toBytes(request),
+        skir.DeclineOrganizationJoinRequestResponse.serializer,
+      );
 
       switch (response) {
         case skir.DeclineOrganizationJoinRequestResponse_unknown():
@@ -713,13 +699,11 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     try {
       final request = skir.RevokeOrganizationJoinCodeRequest(codeId: codeId);
 
-      final response = await ref
-          .read(natsProvider)
-          .requestSkir(
-            "cloud.to.user.$userId.organization.$organizationId.members.join_codes.revoke",
-            skir.RevokeOrganizationJoinCodeRequest.serializer.toBytes(request),
-            skir.RevokeOrganizationJoinCodeResponse.serializer,
-          );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.$organizationId.members.join_codes.revoke",
+        skir.RevokeOrganizationJoinCodeRequest.serializer.toBytes(request),
+        skir.RevokeOrganizationJoinCodeResponse.serializer,
+      );
 
       switch (response) {
         case skir.RevokeOrganizationJoinCodeResponse_unknown():
