@@ -20,6 +20,8 @@ class _OrganizationsSelector extends HookWidget {
           _child(context, item, animation, ignorePointer: true),
     );
 
+    final scrollable = organizations.length > 5;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -30,7 +32,7 @@ class _OrganizationsSelector extends HookWidget {
           ),
         ),
         const SizedBox(height: 16),
-        if (organizations.length > 5) ...[
+        if (scrollable) ...[
           StaggerEntrance(
             child: DecoratedTextField(
               decoration: const InputDecoration(
@@ -49,10 +51,11 @@ class _OrganizationsSelector extends HookWidget {
           )
         else
           SizedBox(
-            height: organizations.length >= 5 ? 200 : null,
+            height: scrollable ? 200 : null,
             child: AnimatedList(
               key: animation.key,
-              shrinkWrap: organizations.length < 5,
+              shrinkWrap: !scrollable,
+              physics: scrollable ? null : NeverScrollableScrollPhysics(),
               initialItemCount: animation.items.length,
               padding: EdgeInsets.zero,
               itemBuilder: (context, index, animation) =>
@@ -91,8 +94,7 @@ class _OrganizationListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: Colors.transparent,
+      child: DepthBox(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: InkWell(
           onTap: () => _openOrganization(context),
@@ -109,9 +111,7 @@ class _OrganizationListTile extends StatelessWidget {
 
   void _openOrganization(BuildContext context) {
     context.pushRoute(
-      OrganizationRoute(
-        organizationId: organization.organizationId.key.toString(),
-      ),
+      OrganizationRoute(organizationId: organization.organizationId.id),
       onFailure: (error) {
         debugPrint("Failed to navigate to organization route: $error");
       },
