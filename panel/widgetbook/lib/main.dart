@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/main.dart";
+import "package:typewriter_panel/app/presentation/theme/theme.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 

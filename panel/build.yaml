@@ -6,10 +6,10 @@ targets:
           explicit_to_json: true
       auto_route_generator:auto_route_generator:
         generate_for:
-          - lib/routes/**.dart
+          - lib/features/**/presentation/**.dart
       auto_route_generator:auto_router_generator:
         generate_for:
-          - lib/app_router.dart
+          - lib/app/application/router/app_router.dart
 global_options:
   freezed:
     runs_before:
