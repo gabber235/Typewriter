@@ -10,7 +10,7 @@ import "package:typewriter_panel/features/organizations/features/realms/features
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector.dart";
 import "package:typewriter_panel/features/organizations/features/services/application/services.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/service.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/shared/hooks/loading_button_controller.dart";
 import "package:typewriter_panel/shared/ui/components/empty_state.dart";
 import "package:typewriter_panel/shared/ui/components/grid_selectable_card.dart";
@@ -212,12 +212,13 @@ class _ServiceCard extends HookConsumerWidget {
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,
-      onDoubleTap: scope != null && service.isOnline
+      onDoubleTap:
+          scope != null && service.isOnline && service.organization != null
           ? () {
               scope.controller.navigate(
                 OrganizationRoute(
-                  organizationId: service.organizationId,
-                  children: [RealmRoute(realmId: service.serviceId)],
+                  organizationId: service.organization!.id,
+                  children: [RealmRoute(realmId: service.serviceId.id)],
                 ),
               );
             }

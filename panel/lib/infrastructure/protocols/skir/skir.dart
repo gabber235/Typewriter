@@ -11,5 +11,8 @@ export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/organiza
 export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/organization/v1/organization.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/organization/v1/role.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/organization/v1/user.dart";
+export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/service/v1/organization.dart";
+export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/service/v1/registration.dart";
+export "package:typewriter_panel/infrastructure/protocols/skir/skir-out/service/v1/service.dart";
 
 export "converters.dart";

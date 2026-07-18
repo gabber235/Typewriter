@@ -33,7 +33,7 @@ final class ServicesProvider
   Services create() => Services();
 }
 
-String _$servicesHash() => r'21c6e06bcc3acafd403787a6c3b76dd47724f4e2';
+String _$servicesHash() => r'a12701dd25ab76fb97dc8a8ebdc18fb3c45dadf0';
 
 abstract class _$Services extends $StreamNotifier<List<Service>> {
   Stream<List<Service>> build();
@@ -62,7 +62,7 @@ final class ServiceProvider
     with $FutureModifier<Service?>, $FutureProvider<Service?> {
   ServiceProvider._({
     required ServiceFamily super.from,
-    required String super.argument,
+    required skir.RecordId super.argument,
   }) : super(
          retry: null,
          name: r'serviceProvider',
@@ -88,7 +88,7 @@ final class ServiceProvider
 
   @override
   FutureOr<Service?> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as skir.RecordId;
     return service(ref, argument);
   }
 
@@ -103,10 +103,10 @@ final class ServiceProvider
   }
 }
 
-String _$serviceHash() => r'733a3e79fd93f72b899b5187c08646c59422cbbd';
+String _$serviceHash() => r'3c409075a9fd560b0622bb74b06d4c0b1450d092';
 
 final class ServiceFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Service?>, String> {
+    with $FunctionalFamilyOverride<FutureOr<Service?>, skir.RecordId> {
   ServiceFamily._()
     : super(
         retry: null,
@@ -116,7 +116,7 @@ final class ServiceFamily extends $Family
         isAutoDispose: true,
       );
 
-  ServiceProvider call(String id) =>
+  ServiceProvider call(skir.RecordId id) =>
       ServiceProvider._(argument: id, from: this);
 
   @override

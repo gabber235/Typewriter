@@ -7,7 +7,6 @@ import "package:typewriter_panel/features/organizations/application/organization
 import "package:typewriter_panel/features/organizations/features/realms/application/realm.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector_popup.dart";
 import "package:typewriter_panel/features/organizations/features/services/application/services.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/service.pb.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/shared/ui/components/status_indicator.dart";
 import "package:typewriter_panel/shared/ui/components/surface.dart";
@@ -136,7 +135,7 @@ class _RealmMenuContent extends HookConsumerWidget {
                         context.router.navigate(
                           OrganizationRoute(
                             organizationId: orgId.id,
-                            children: [RealmRoute(realmId: realm.serviceId)],
+                            children: [RealmRoute(realmId: realm.serviceId.id)],
                           ),
                         );
                         onDismiss(realm);

@@ -121,4 +121,4 @@ final class RealmsProvider
   }
 }
 
-String _$realmsHash() => r'39f648e5667994fb41f638c47db07cb5b929310a';
+String _$realmsHash() => r'ed7e28e4f95f33cf44d5e3ea8d82d914c9796313';

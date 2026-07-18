@@ -1,157 +1,247 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app/application/router/app_router.dart";
 import "package:typewriter_panel/features/auth/application/auth.dart";
 import "package:typewriter_panel/features/organizations/application/organization.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/dynamic_data.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
 import "package:typewriter_panel/features/organizations/features/services/presentation/service_header.dart";
 import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/extensions.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/api/service/registration.pb.dart"
-    hide ServiceStatus;
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/service.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/shared/utilities/collection.dart";
 import "package:typewriter_panel/shared/utilities/riverpod.dart";
 import "package:typewriter_panel/shared/utilities/string.dart";
 
+part "services.freezed.dart";
 part "services.g.dart";
+
+@freezed
+abstract class Service with _$Service {
+  const factory Service({
+    required skir.RecordId serviceId,
+    required String name,
+    required List<skir.ServiceRole> roles,
+    required DateTime createdAt,
+    skir.RecordId? organization,
+    skir.ServiceRegistration? registration,
+    skir.ServiceState? state,
+    skir.RecordId? runsIn,
+  }) = _Service;
+
+  const Service._();
+
+  factory Service.fromSkir(skir.Service service) => Service(
+    serviceId: service.serviceId,
+    name: service.name,
+    roles: service.roles.toList(),
+    createdAt: service.createdAt,
+    organization: service.organization,
+    registration: service.registration,
+    state: service.state,
+    runsIn: service.runsIn,
+  );
+
+  skir.Service toSkir() => skir.Service(
+    serviceId: serviceId,
+    name: name,
+    roles: roles,
+    createdAt: createdAt,
+    organization: organization,
+    registration: registration,
+    state: state,
+    runsIn: runsIn,
+  );
+
+  bool get isEngine =>
+      roles.any((role) => role is skir.ServiceRole_engineWrapper);
+
+  bool get isRealm =>
+      roles.any((role) => role is skir.ServiceRole_realmWrapper);
+
+  String get displayName =>
+      name.isNotEmpty ? name.formatted : "Unnamed Service";
+
+  Color get color => switch ((isEngine, isRealm)) {
+    (true, true) => Colors.deepPurpleAccent,
+    (true, false) => Colors.blueAccent,
+    (false, true) => Colors.deepOrangeAccent,
+    (false, false) => Colors.grey,
+  };
+
+  bool get isOnline {
+    if (state?.status == skir.ServiceStatus.offline) return false;
+    final seen = lastSeenTime;
+    if (seen == null) return false;
+    return DateTime.now().difference(seen) < const Duration(minutes: 2);
+  }
+
+  DateTime? get lastSeenTime => state?.lastSeen;
+  String get lastSeenLabel {
+    final seen = lastSeenTime;
+    if (seen == null) return "Never";
+    final difference = DateTime.now().difference(seen);
+    if (difference.inSeconds < 60) return "Just now";
+    if (difference.inMinutes < 60) return "${difference.inMinutes}m ago";
+    if (difference.inHours < 24) return "${difference.inHours}h ago";
+    return "${difference.inDays}d ago";
+  }
+
+  String get typeLabel => switch ((isEngine, isRealm)) {
+    (true, true) => "Engine & Realm",
+    (true, false) => "Engine",
+    (false, true) => "Realm",
+    (false, false) => "Unknown",
+  };
+
+  IconData get icon => switch ((isEngine, isRealm)) {
+    (true, true) => Icons.dns,
+    (true, false) => Icons.memory,
+    (false, true) => Icons.cloud,
+    (false, false) => Icons.device_unknown,
+  };
+}
 
 @riverpod
 class Services extends _$Services {
   @override
   Stream<List<Service>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) {
-      yield [];
-      return;
-    }
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) {
+    if (userId == null || organizationId == null) {
       yield [];
       return;
     }
 
-    final request = ListOrganizationServicesRequest();
-    final stream = ref.requestProtoThenListen(
+    final request = skir.WatchOrganizationServicesRequest();
+    yield* ref.watchRequest(
       subject:
-          "cloud.to.user.$userId.organization.$organizationId.services.list",
-      listenSubject: "cloud.from.organization.$organizationId.services.list",
-      request: request,
-      responseBuilder: ListOrganizationServicesResponse.new,
+          "cloud.to.user.$userId.organization.${organizationId.id}.services.watch",
+      listenSubject:
+          "cloud.from.organization.${organizationId.id}.services.watch",
+      requestBytes: skir.WatchOrganizationServicesRequest.serializer.toBytes(
+        request,
+      ),
+      serializer: skir.WatchOrganizationServicesResponse.serializer,
+      transformer: (previous, response) => switch (response) {
+        skir.WatchOrganizationServicesResponse_unknown() =>
+          throw ApiException.unknownResponseMessage(),
+        skir.WatchOrganizationServicesResponse_internalErrorWrapper() =>
+          throw ApiException.internalServerError(),
+        skir.WatchOrganizationServicesResponse_listWrapper(:final value) =>
+          value.map(Service.fromSkir).toList(),
+        skir.WatchOrganizationServicesResponse_addWrapper(:final value) ||
+        skir.WatchOrganizationServicesResponse_updateWrapper(
+          :final value,
+        ) => previous.upsertByKey(
+          (service) => service.serviceId,
+          Service.fromSkir(value),
+        ),
+        skir.WatchOrganizationServicesResponse_removeWrapper(:final value) =>
+          previous?.where((service) => service.serviceId != value).toList() ??
+              [],
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      yield response.services.services.toList();
-    }
   }
 
   Future<void> bindService(String token) async {
     final userId = await ref.read(userIdProvider.future);
-    if (userId == null) {
-      throw ApiException.notAuthenticated();
-    }
+    if (userId == null) throw ApiException.notAuthenticated();
     final organizationId = ref.read(organizationIdProvider);
-    if (organizationId == null) {
-      throw ApiException.noOrganization();
+    if (organizationId == null) throw ApiException.noOrganization();
+    final request = skir.BindServiceRequest(registrationToken: token);
+    final response = await ref.requestSkir(
+      "cloud.to.user.$userId.organization.${organizationId.id}.services.bind",
+      skir.BindServiceRequest.serializer.toBytes(request),
+      skir.BindServiceResponse.serializer,
+    );
+    switch (response) {
+      case skir.BindServiceResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+      case skir.BindServiceResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.BindServiceResponse_invalidRegistrationTokenErrorWrapper():
+        throw ApiException.badRequest("Invalid or expired registration token");
+      case skir.BindServiceResponse_organizationNotFoundErrorWrapper():
+        throw ApiException.notFound("Organization");
+      case skir.BindServiceResponse_successWrapper():
+        ref.invalidateSelf();
     }
-
-    final request = BindServiceRequest()..registrationToken = token;
-    final response = await ref
-        .read(natsProvider)
-        .requestProto(
-          "cloud.to.user.$userId.organization.$organizationId.services.bind",
-          request,
-          BindServiceResponse.new,
-        );
-
-    if (response.hasError()) {
-      throw ApiException.fromProto(response.error);
-    }
-
-    ref.invalidateSelf();
   }
 
   Future<void> updateService(Service service) async {
     final userId = await ref.read(userIdProvider.future);
-    if (userId == null) {
-      throw ApiException.notAuthenticated();
-    }
+    if (userId == null) throw ApiException.notAuthenticated();
     final organizationId = ref.read(organizationIdProvider);
-    if (organizationId == null) {
-      throw ApiException.noOrganization();
-    }
-
+    if (organizationId == null) throw ApiException.noOrganization();
     state.ensureReady();
     final previousState = state;
-
-    final currentState = state.value ?? [];
     state = AsyncData(
-      currentState
-          .map((s) => s.serviceId == service.serviceId ? service : s)
+      state.requireValue
+          .map(
+            (value) => value.serviceId == service.serviceId ? service : value,
+          )
           .toList(),
     );
-
     try {
-      final request = UpdateServiceRequest()
-        ..serviceId = service.serviceId
-        ..name = service.name;
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "cloud.to.user.$userId.organization.$organizationId.services.update",
-            request,
-            UpdateServiceResponse.new,
-          );
-
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
+      final request = skir.UpdateOrganizationServiceRequest(
+        serviceId: service.serviceId,
+        name: service.name,
+      );
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.${organizationId.id}.services.update",
+        skir.UpdateOrganizationServiceRequest.serializer.toBytes(request),
+        skir.UpdateOrganizationServiceResponse.serializer,
+      );
+      switch (response) {
+        case skir.UpdateOrganizationServiceResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.UpdateOrganizationServiceResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper():
+          throw ApiException.notFound("Service");
+        case skir.UpdateOrganizationServiceResponse_successWrapper():
       }
-    } catch (e) {
+    } catch (_) {
       state = previousState;
       rethrow;
     }
   }
 
-  Future<void> deleteService(String serviceId) async {
+  Future<void> deleteService(skir.RecordId serviceId) async {
     final userId = await ref.read(userIdProvider.future);
-    if (userId == null) {
-      throw ApiException.notAuthenticated();
-    }
+    if (userId == null) throw ApiException.notAuthenticated();
     final organizationId = ref.read(organizationIdProvider);
-    if (organizationId == null) {
-      throw ApiException.noOrganization();
-    }
-
+    if (organizationId == null) throw ApiException.noOrganization();
     state.ensureReady();
     final previousState = state;
-
     state = AsyncData(
-      state.requireValue.where((s) => s.serviceId != serviceId).toList(),
+      state.requireValue
+          .where((service) => service.serviceId != serviceId)
+          .toList(),
     );
-
     try {
-      final request = UnbindServiceRequest()..serviceId = serviceId;
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "cloud.to.user.$userId.organization.$organizationId.services.unbind",
-            request,
-            UnbindServiceResponse.new,
-          );
-
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
+      final request = skir.UnbindServiceRequest(serviceId: serviceId.id);
+      final response = await ref.requestSkir(
+        "cloud.to.user.$userId.organization.${organizationId.id}.services.unbind",
+        skir.UnbindServiceRequest.serializer.toBytes(request),
+        skir.UnbindServiceResponse.serializer,
+      );
+      switch (response) {
+        case skir.UnbindServiceResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.UnbindServiceResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.UnbindServiceResponse_serviceNotFoundErrorWrapper():
+          throw ApiException.notFound("Service");
+        case skir.UnbindServiceResponse_successWrapper():
       }
-    } catch (e) {
+    } catch (_) {
       state = previousState;
       rethrow;
     }
@@ -159,123 +249,29 @@ class Services extends _$Services {
 }
 
 @riverpod
-Future<Service?> service(Ref ref, String id) async {
-  final services = await ref.watch(servicesProvider.future);
-  return services.firstWhereOrNull((service) => service.serviceId == id);
-}
-
-extension ServiceExtension on Service {
-  String get displayName =>
-      name.isNotEmpty ? name.formatted : "Unnamed Service";
-
-  Color get color {
-    Color base;
-    if (serviceTypes.contains(ServiceType.SERVICE_TYPE_ENGINE) &&
-        serviceTypes.contains(ServiceType.SERVICE_TYPE_REALM)) {
-      base = Colors.deepPurpleAccent;
-    } else if (serviceTypes.contains(ServiceType.SERVICE_TYPE_ENGINE)) {
-      base = Colors.blueAccent;
-    } else if (serviceTypes.contains(ServiceType.SERVICE_TYPE_REALM)) {
-      base = Colors.deepOrangeAccent;
-    } else {
-      base = Colors.grey;
-    }
-    return base;
-  }
-
-  bool get isOnline {
-    if (!hasState()) return false;
-
-    if (state.status == ServiceStatus.SERVICE_STATUS_OFFLINE) {
-      return false;
-    }
-
-    if (!state.hasLastSeen()) return false;
-    final now = DateTime.now();
-    final lastSeenTime = state.lastSeen.toDateTime();
-    return now.difference(lastSeenTime).inMinutes < 2;
-  }
-
-  DateTime? get lastSeenTime {
-    if (!hasState() || !state.hasLastSeen()) return null;
-    return state.lastSeen.toDateTime();
-  }
-
-  String get lastSeenLabel {
-    if (!hasState() || !state.hasLastSeen()) return "Never";
-    final now = DateTime.now();
-    final difference = now.difference(lastSeenTime!);
-
-    if (difference.inSeconds < 60) {
-      return "Just now";
-    } else if (difference.inMinutes < 60) {
-      return "${difference.inMinutes}m ago";
-    } else if (difference.inHours < 24) {
-      return "${difference.inHours}h ago";
-    } else {
-      return "${difference.inDays}d ago";
-    }
-  }
-
-  String get typeLabel {
-    if (serviceTypes.isEmpty) return "Unknown";
-    return serviceTypes
-        .map((t) {
-          switch (t) {
-            case ServiceType.SERVICE_TYPE_ENGINE:
-              return "Engine";
-            case ServiceType.SERVICE_TYPE_REALM:
-              return "Realm";
-            default:
-              return "Unknown";
-          }
-        })
-        .join(" & ");
-  }
-
-  IconData get icon {
-    if (serviceTypes.contains(ServiceType.SERVICE_TYPE_ENGINE) &&
-        serviceTypes.contains(ServiceType.SERVICE_TYPE_REALM)) {
-      return Icons.dns;
-    }
-    if (serviceTypes.contains(ServiceType.SERVICE_TYPE_ENGINE)) {
-      return Icons.memory;
-    }
-    if (serviceTypes.contains(ServiceType.SERVICE_TYPE_REALM)) {
-      return Icons.cloud;
-    }
-    return Icons.device_unknown;
-  }
-}
+Future<Service?> service(Ref ref, skir.RecordId id) async => (await ref.watch(
+  servicesProvider.future,
+)).firstWhereOrNull((service) => service.serviceId == id);
 
 class ServiceIdentifier extends SelectableIdentifier {
-  ServiceIdentifier(this.id);
-
+  ServiceIdentifier(this.serviceId);
+  final skir.RecordId serviceId;
   @override
-  final String id;
-
+  String get id => serviceId.id;
   @override
-  AsyncValue<Selectable> create(Ref ref) {
-    final asyncService = ref.watch(serviceProvider(id));
-    return asyncService.whenData((value) {
-      if (value == null) {
-        throw SelectableNotFoundException(this);
-      }
-      return ServiceSelectable(ref: ref, id: this, service: value);
-    });
-  }
-
+  AsyncValue<Selectable> create(Ref ref) =>
+      ref.watch(serviceProvider(serviceId)).whenData((value) {
+        if (value == null) throw SelectableNotFoundException(this);
+        return ServiceSelectable(ref: ref, id: this, service: value);
+      });
   @override
-  int get hashCode => id.hashCode;
-
+  int get hashCode => serviceId.hashCode;
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is ServiceIdentifier && other.id == id;
-  }
-
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ServiceIdentifier && other.serviceId == serviceId;
   @override
-  String toString() => "ServiceIdentifier(id: $id)";
+  String toString() => "ServiceIdentifier(id: $serviceId)";
 }
 
 class ServiceSelectable extends Selectable<ServiceIdentifier> {
@@ -283,42 +279,31 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
     required this.ref,
     required this.id,
     required this.service,
-  }) : _data = DynamicData(service.toJsonMap());
-
+  });
   @override
   final ServiceIdentifier id;
-
   final Service service;
-
+  final Ref ref;
   @override
   String get name => service.displayName;
-
-  final Ref ref;
-
-  final DynamicData _data;
-
   @override
-  ObjectBlueprint get objectBlueprint {
-    return ObjectBlueprint(
-      fields: {
-        "name": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
-      },
-    );
-  }
-
+  ObjectBlueprint get objectBlueprint => ObjectBlueprint(
+    fields: {
+      "name": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
+    },
+  );
   @override
   List<SelectableOperation> get operations => [
-    if (service.isOnline)
+    if (service.isOnline && service.organization != null)
       OpenSelectableOperation(
-        onOpen: () async {
-          final router = ref.read(appRouterProvider);
-          await router.navigate(
-            OrganizationRoute(
-              organizationId: service.organizationId,
-              children: [RealmRoute(realmId: service.serviceId)],
+        onOpen: () => ref
+            .read(appRouterProvider)
+            .navigate(
+              OrganizationRoute(
+                organizationId: service.organization!.id,
+                children: [RealmRoute(realmId: service.serviceId.id)],
+              ),
             ),
-          );
-        },
         allowMultiSelect: false,
       ),
     UnbindSelectableOperation(
@@ -326,36 +311,28 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
           ref.read(servicesProvider.notifier).deleteService(service.serviceId),
     ),
   ];
-
   @override
   Widget? header() => ServiceHeader(
-    id: service.serviceId,
+    id: service.serviceId.id,
     name: service.displayName,
     color: service.color,
   );
-
   @override
-  dynamic fieldValue(String path) {
-    return _data.get(path);
-  }
-
+  dynamic fieldValue(String path) => path == "name" ? service.name : null;
   @override
   void setFieldValue(String path, dynamic value) {
-    final newData = _data.copyWith(path, value);
-    final newService = Service()..mergeFromProto3Json(newData.toJson());
-    ref.read(servicesProvider.notifier).updateService(newService);
+    if (path != "name" || value is! String) {
+      throw ArgumentError.value(value, path);
+    }
+    ref
+        .read(servicesProvider.notifier)
+        .updateService(service.copyWith(name: value));
   }
 
   @override
   int get hashCode => Object.hash(id, service);
-
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! ServiceSelectable) return false;
-    return other.id == id && other.service == service;
-  }
-
-  @override
-  String toString() => "ServiceSelectable(id: $id, service: $service)";
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ServiceSelectable && other.id == id && other.service == service;
 }
