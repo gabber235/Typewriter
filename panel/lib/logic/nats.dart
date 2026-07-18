@@ -17,7 +17,7 @@ import "package:typewriter_panel/utils/async.dart";
 
 part "nats.g.dart";
 
-const _requestTimeout = Duration(seconds: 5);
+const _requestTimeout = Duration(seconds: 10);
 
 @Riverpod(keepAlive: true)
 http.Client panelHttpClient(Ref ref) {
