@@ -26,13 +26,11 @@ pub async fn handle_create(
         r#"
         BEGIN TRANSACTION;
 
-        LET $org = CREATE ONLY organization SET
+        CREATE ONLY organization SET
             name = $name,
             logo_url = $logo_url,
             founder = type::record('user', $user_id)
             ;
-
-        RETURN $org;
 
         COMMIT TRANSACTION;
         "#,
@@ -43,7 +41,7 @@ pub async fn handle_create(
     .execute()
     .await
     .error_with_slug("organization-create-query-failed")?
-    .parse::<OrganizationRecord>(0)
+    .parse::<OrganizationRecord>(1)
     .error_with_slug("organization-create-result-parse-failed")?
     .into();
 
