@@ -51,57 +51,135 @@ class StaggerScope extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(duration == null || !duration!.isNegative);
-    assert(interval == null || !interval!.isNegative);
-    assert(maxLaunchDuration == null || !maxLaunchDuration!.isNegative);
-
-    final parentMarker = context
-        .dependOnInheritedWidgetOfExactType<_StaggerScopeMarker>();
-    final parent = parentMarker?.coordinator;
-    final inherited = parent?.settings;
-    final settings = _StaggerSettings(
-      duration: duration ?? inherited?.duration ?? _defaultDuration,
-      interval: interval ?? inherited?.interval ?? _defaultInterval,
-      maxLaunchDuration:
-          maxLaunchDuration ??
-          inherited?.maxLaunchDuration ??
-          _defaultMaxLaunchDuration,
-      curve: curve ?? inherited?.curve ?? _defaultCurve,
-      slideOffset: slideOffset ?? inherited?.slideOffset ?? _defaultSlideOffset,
-    );
-
-    // Every scope keeps the same hook shape. Nested scopes share the root's
-    // controller; their local controller is intentionally idle.
-    final localController = useAnimationController(
-      duration: const Duration(milliseconds: 1),
-    );
-    final animationsDisabled =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final coordinator = useMemoized(
-      () => _StaggerCoordinator(
-        parent: parent,
-        settings: settings,
-        localController: localController,
-        animationsDisabled: animationsDisabled,
-      ),
-      [parent],
-    );
-
-    useEffect(() {
-      coordinator.mount();
-      return coordinator.dispose;
-    }, [coordinator]);
-
-    useEffect(() {
-      coordinator.setAnimationsDisabled(animationsDisabled);
-      return null;
-    }, [coordinator, animationsDisabled]);
-
-    return _StaggerScopeMarker(
-      coordinator: coordinator,
-      child: _StaggerGeometryMarker(owner: coordinator.groupNode, child: child),
+    return _buildScope(
+      context,
+      child: child,
+      duration: duration,
+      interval: interval,
+      maxLaunchDuration: maxLaunchDuration,
+      curve: curve,
+      slideOffset: slideOffset,
+      sliver: false,
     );
   }
+}
+
+/// Coordinates a one-shot entrance animation for slivers in [sliver].
+///
+/// The descendants present during the scope's first completed layout are
+/// ordered by their rendered position. Descendants mounted after that initial
+/// snapshot appear immediately. A scope without a parent starts its own
+/// schedule, so data slivers can be mounted as a new standalone cohort.
+///
+/// Wrap multiple sibling slivers in a [SliverMainAxisGroup] to expose them as
+/// the single [sliver] accepted by this scope. A nested scope is treated as one
+/// contiguous group in its parent's schedule. Omitted settings inherit from
+/// the nearest parent scope.
+class SliverStaggerScope extends HookWidget {
+  const SliverStaggerScope({
+    required this.sliver,
+    this.duration,
+    this.interval,
+    this.maxLaunchDuration,
+    this.curve,
+    this.slideOffset,
+    super.key,
+  }) : assert(slideOffset == null || slideOffset >= 0);
+
+  final Widget sliver;
+
+  /// Duration of each descendant's fade and slide.
+  final Duration? duration;
+
+  /// Preferred delay between consecutive descendants.
+  final Duration? interval;
+
+  /// Maximum time before the final descendant starts.
+  ///
+  /// The outermost scope's value caps the complete nested schedule.
+  final Duration? maxLaunchDuration;
+
+  /// Curve used by each descendant's fade and slide.
+  final Curve? curve;
+
+  /// Initial translation in the effective main axis direction as a fraction
+  /// of the sliver's paint extent.
+  final double? slideOffset;
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildScope(
+      context,
+      child: sliver,
+      duration: duration,
+      interval: interval,
+      maxLaunchDuration: maxLaunchDuration,
+      curve: curve,
+      slideOffset: slideOffset,
+      sliver: true,
+    );
+  }
+}
+
+Widget _buildScope(
+  BuildContext context, {
+  required Widget child,
+  required Duration? duration,
+  required Duration? interval,
+  required Duration? maxLaunchDuration,
+  required Curve? curve,
+  required double? slideOffset,
+  required bool sliver,
+}) {
+  assert(duration == null || !duration.isNegative);
+  assert(interval == null || !interval.isNegative);
+  assert(maxLaunchDuration == null || !maxLaunchDuration.isNegative);
+
+  final parent = context
+      .dependOnInheritedWidgetOfExactType<_StaggerScopeMarker>()
+      ?.coordinator;
+  final inherited = parent?.settings;
+  final settings = _StaggerSettings(
+    duration: duration ?? inherited?.duration ?? _defaultDuration,
+    interval: interval ?? inherited?.interval ?? _defaultInterval,
+    maxLaunchDuration:
+        maxLaunchDuration ??
+        inherited?.maxLaunchDuration ??
+        _defaultMaxLaunchDuration,
+    curve: curve ?? inherited?.curve ?? _defaultCurve,
+    slideOffset: slideOffset ?? inherited?.slideOffset ?? _defaultSlideOffset,
+  );
+  final localController = useAnimationController(
+    duration: const Duration(milliseconds: 1),
+  );
+  final animationsDisabled =
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+  final coordinator = useMemoized(
+    () => _StaggerCoordinator(
+      parent: parent,
+      settings: settings,
+      localController: localController,
+      animationsDisabled: animationsDisabled,
+    ),
+    [parent],
+  );
+
+  useEffect(() {
+    coordinator.mount();
+    return coordinator.dispose;
+  }, [coordinator]);
+  useEffect(() {
+    coordinator.setAnimationsDisabled(animationsDisabled);
+    return null;
+  }, [coordinator, animationsDisabled]);
+
+  final geometryMarker = sliver
+      ? _SliverStaggerGeometryMarker(
+          owner: coordinator.groupNode,
+          sliver: child,
+        )
+      : _StaggerGeometryMarker(owner: coordinator.groupNode, child: child);
+  return _StaggerScopeMarker(coordinator: coordinator, child: geometryMarker);
 }
 
 /// Animates [child] as part of the nearest [StaggerScope]'s initial epoch.
@@ -155,6 +233,54 @@ class StaggerEntrance extends HookWidget {
   }
 }
 
+/// Animates [sliver] as part of the nearest stagger scope's initial epoch.
+class SliverStaggerEntrance extends HookWidget {
+  const SliverStaggerEntrance({required this.sliver, super.key});
+
+  final Widget sliver;
+
+  @override
+  Widget build(BuildContext context) {
+    final marker = context
+        .dependOnInheritedWidgetOfExactType<_StaggerScopeMarker>();
+    assert(
+      marker != null,
+      "SliverStaggerEntrance must be placed below a StaggerScope or SliverStaggerScope.",
+    );
+    if (marker == null) return sliver;
+
+    final coordinator = marker.coordinator;
+    final registration = useMemoized(
+      () => _StaggerEntranceNode(settings: coordinator.settings),
+      [coordinator],
+    );
+    useEffect(() {
+      coordinator.register(registration);
+      return () {
+        coordinator.unregister(registration);
+        registration.dispose();
+      };
+    }, [coordinator, registration]);
+
+    final state = useValueListenable(registration.state);
+    final animatedSliver = switch (state) {
+      _CollectingEntranceState() => _InitialSliverEntrance(
+        slideOffset: registration.settings.slideOffset,
+        sliver: sliver,
+      ),
+      _VisibleEntranceState() => sliver,
+      _ScheduledEntranceState(:final schedule) => _ScheduledSliverEntrance(
+        schedule: schedule,
+        sliver: sliver,
+      ),
+    };
+    return _SliverStaggerGeometryMarker(
+      owner: registration,
+      sliver: animatedSliver,
+    );
+  }
+}
+
 class _InitialEntrance extends StatelessWidget {
   const _InitialEntrance({required this.slideOffset, required this.child});
 
@@ -194,9 +320,8 @@ class _ScheduledEntrance extends StatelessWidget {
         ((schedule.start + schedule.duration).inMicroseconds /
                 totalMicroseconds)
             .clamp(begin, 1.0);
-    final progress = CurvedAnimation(
-      parent: schedule.timeline,
-      curve: Interval(begin, end, curve: schedule.curve),
+    final progress = schedule.timeline.drive(
+      CurveTween(curve: Interval(begin, end, curve: schedule.curve)),
     );
 
     return FadeTransition(
@@ -207,6 +332,67 @@ class _ScheduledEntrance extends StatelessWidget {
           end: Offset.zero,
         ).animate(progress),
         child: child,
+      ),
+    );
+  }
+}
+
+class _InitialSliverEntrance extends StatelessWidget {
+  const _InitialSliverEntrance({
+    required this.slideOffset,
+    required this.sliver,
+  });
+
+  final double slideOffset;
+  final Widget sliver;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverOpacity(
+      opacity: 0,
+      sliver: _SliverFractionalTranslation(
+        fraction: AlwaysStoppedAnimation(slideOffset),
+        sliver: sliver,
+      ),
+    );
+  }
+}
+
+class _ScheduledSliverEntrance extends StatelessWidget {
+  const _ScheduledSliverEntrance({
+    required this.schedule,
+    required this.sliver,
+  });
+
+  final _EntranceSchedule schedule;
+  final Widget sliver;
+
+  @override
+  Widget build(BuildContext context) {
+    final totalMicroseconds = schedule.timelineDuration.inMicroseconds;
+    if (totalMicroseconds <= 0 || schedule.duration == Duration.zero) {
+      return sliver;
+    }
+    final begin = (schedule.start.inMicroseconds / totalMicroseconds).clamp(
+      0.0,
+      1.0,
+    );
+    final end =
+        ((schedule.start + schedule.duration).inMicroseconds /
+                totalMicroseconds)
+            .clamp(begin, 1.0);
+    final progress = schedule.timeline.drive(
+      CurveTween(curve: Interval(begin, end, curve: schedule.curve)),
+    );
+    final translation = Tween<double>(
+      begin: schedule.slideOffset,
+      end: 0,
+    ).animate(progress);
+    return SliverFadeTransition(
+      opacity: progress,
+      sliver: _SliverFractionalTranslation(
+        fraction: translation,
+        sliver: sliver,
       ),
     );
   }
@@ -542,16 +728,22 @@ class _StaggerGroupNode extends _StaggerNode {
 }
 
 abstract class _StaggerGeometryOwner {
-  _RenderStaggerGeometry? renderObject;
+  RenderObject? renderObject;
 
   Offset? get globalPosition {
     final renderObject = this.renderObject;
-    if (renderObject == null ||
-        !renderObject.attached ||
-        !renderObject.hasSize) {
+    if (renderObject == null || !renderObject.attached) return null;
+    if (renderObject case RenderBox(:final hasSize)) {
+      if (!hasSize) return null;
+    } else if (renderObject case RenderSliver(:final geometry)) {
+      if (geometry == null) return null;
+    } else {
       return null;
     }
-    final position = renderObject.localToGlobal(Offset.zero);
+    final position = MatrixUtils.transformPoint(
+      renderObject.getTransformTo(null),
+      Offset.zero,
+    );
     if (!position.dx.isFinite || !position.dy.isFinite) return null;
     return position;
   }
@@ -600,5 +792,182 @@ class _RenderStaggerGeometry extends RenderProxyBox {
   void detach() {
     if (identical(_owner.renderObject, this)) _owner.renderObject = null;
     super.detach();
+  }
+}
+
+class _SliverStaggerGeometryMarker extends SingleChildRenderObjectWidget {
+  const _SliverStaggerGeometryMarker({
+    required this.owner,
+    required Widget sliver,
+  }) : super(child: sliver);
+
+  final _StaggerGeometryOwner owner;
+
+  @override
+  _RenderSliverStaggerGeometry createRenderObject(BuildContext context) =>
+      _RenderSliverStaggerGeometry(owner);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSliverStaggerGeometry renderObject,
+  ) {
+    renderObject.owner = owner;
+  }
+}
+
+class _RenderSliverStaggerGeometry extends RenderProxySliver {
+  _RenderSliverStaggerGeometry(this._owner);
+
+  _StaggerGeometryOwner _owner;
+
+  set owner(_StaggerGeometryOwner value) {
+    if (identical(value, _owner)) return;
+    if (attached && identical(_owner.renderObject, this)) {
+      _owner.renderObject = null;
+    }
+    _owner = value;
+    if (attached) _owner.renderObject = this;
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _owner.renderObject = this;
+  }
+
+  @override
+  void detach() {
+    if (identical(_owner.renderObject, this)) _owner.renderObject = null;
+    super.detach();
+  }
+}
+
+class _SliverFractionalTranslation extends SingleChildRenderObjectWidget {
+  const _SliverFractionalTranslation({
+    required this.fraction,
+    required Widget sliver,
+  }) : super(child: sliver);
+
+  final Animation<double> fraction;
+
+  @override
+  _RenderSliverFractionalTranslation createRenderObject(BuildContext context) {
+    return _RenderSliverFractionalTranslation(fraction);
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSliverFractionalTranslation renderObject,
+  ) {
+    renderObject.fraction = fraction;
+  }
+}
+
+class _RenderSliverFractionalTranslation extends RenderProxySliver {
+  _RenderSliverFractionalTranslation(Animation<double> fraction)
+    : _fraction = fraction;
+
+  Animation<double> _fraction;
+
+  Animation<double> get fraction => _fraction;
+
+  set fraction(Animation<double> value) {
+    if (identical(value, _fraction)) return;
+    if (attached) _fraction.removeListener(_handleFractionChanged);
+    _fraction = value;
+    if (attached) _fraction.addListener(_handleFractionChanged);
+    _handleFractionChanged();
+  }
+
+  void _handleFractionChanged() {
+    markNeedsPaint();
+    markNeedsSemanticsUpdate();
+  }
+
+  double get _mainAxisTranslation =>
+      (geometry?.paintExtent ?? 0) * _fraction.value;
+
+  Offset get _paintTranslation => switch (applyGrowthDirectionToAxisDirection(
+    constraints.axisDirection,
+    constraints.growthDirection,
+  )) {
+    AxisDirection.down => Offset(0, _mainAxisTranslation),
+    AxisDirection.up => Offset(0, -_mainAxisTranslation),
+    AxisDirection.right => Offset(_mainAxisTranslation, 0),
+    AxisDirection.left => Offset(-_mainAxisTranslation, 0),
+  };
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _fraction.addListener(_handleFractionChanged);
+  }
+
+  @override
+  void detach() {
+    _fraction.removeListener(_handleFractionChanged);
+    super.detach();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null || geometry!.paintExtent == 0) return;
+    context.paintChild(child!, offset + _paintTranslation);
+  }
+
+  @override
+  void applyPaintTransform(RenderObject child, Matrix4 transform) {
+    assert(child == this.child);
+    final translation = _paintTranslation;
+    transform.translateByDouble(translation.dx, translation.dy, 0, 1);
+  }
+
+  @override
+  bool hitTest(
+    SliverHitTestResult result, {
+    required double mainAxisPosition,
+    required double crossAxisPosition,
+  }) {
+    final translation = _mainAxisTranslation;
+    if (mainAxisPosition < translation ||
+        mainAxisPosition >= geometry!.hitTestExtent + translation ||
+        crossAxisPosition < 0 ||
+        crossAxisPosition >= constraints.crossAxisExtent) {
+      return false;
+    }
+    if (!hitTestChildren(
+      result,
+      mainAxisPosition: mainAxisPosition,
+      crossAxisPosition: crossAxisPosition,
+    )) {
+      return false;
+    }
+    result.add(
+      SliverHitTestEntry(
+        this,
+        mainAxisPosition: mainAxisPosition,
+        crossAxisPosition: crossAxisPosition,
+      ),
+    );
+    return true;
+  }
+
+  @override
+  bool hitTestChildren(
+    SliverHitTestResult result, {
+    required double mainAxisPosition,
+    required double crossAxisPosition,
+  }) {
+    if (child == null || geometry!.paintExtent == 0) return false;
+    return result.addWithAxisOffset(
+      paintOffset: _paintTranslation,
+      mainAxisOffset: _mainAxisTranslation,
+      crossAxisOffset: 0,
+      mainAxisPosition: mainAxisPosition,
+      crossAxisPosition: crossAxisPosition,
+      hitTest: child!.hitTest,
+    );
   }
 }

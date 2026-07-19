@@ -214,6 +214,221 @@ void main() {
       expect(exception.toString(), contains("below a StaggerScope"));
     });
 
+    testWidgets("standalone sliver scope schedules sliver entrances", (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const _TestApp(
+          child: CustomScrollView(
+            slivers: [
+              SliverStaggerScope(
+                duration: Duration(milliseconds: 200),
+                interval: Duration(milliseconds: 100),
+                curve: Curves.linear,
+                slideOffset: 0,
+                sliver: SliverMainAxisGroup(
+                  slivers: [
+                    SliverStaggerEntrance(
+                      sliver: SliverToBoxAdapter(child: _Box("sliver-one")),
+                    ),
+                    SliverStaggerEntrance(
+                      sliver: SliverToBoxAdapter(child: _Box("sliver-two")),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(_opacity(tester, "sliver-one"), greaterThan(0));
+      expect(_opacity(tester, "sliver-one"), lessThan(1));
+      expect(_opacity(tester, "sliver-two"), 0);
+    });
+
+    testWidgets("new scope after an async load animates the loaded cohort", (
+      tester,
+    ) async {
+      final loaded = ValueNotifier(false);
+      addTearDown(loaded.dispose);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: loaded,
+            builder: (context, hasData, child) => CustomScrollView(
+              slivers: [
+                if (!hasData)
+                  const SliverToBoxAdapter(child: _Box("loading"))
+                else
+                  const SliverStaggerScope(
+                    duration: Duration(milliseconds: 200),
+                    interval: Duration(milliseconds: 100),
+                    curve: Curves.linear,
+                    slideOffset: 0,
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        SliverStaggerEntrance(
+                          sliver: SliverToBoxAdapter(child: _Box("data-one")),
+                        ),
+                        SliverStaggerEntrance(
+                          sliver: SliverToBoxAdapter(child: _Box("data-two")),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.byKey(const ValueKey("loading")), findsOneWidget);
+
+      loaded.value = true;
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(_opacity(tester, "data-one"), greaterThan(0));
+      expect(_opacity(tester, "data-one"), lessThan(1));
+      expect(_opacity(tester, "data-two"), 0);
+    });
+
+    testWidgets("sliver slide moves only its painted child", (tester) async {
+      await tester.pumpWidget(
+        const _TestApp(
+          child: CustomScrollView(
+            slivers: [
+              SliverStaggerScope(
+                duration: Duration(milliseconds: 200),
+                curve: Curves.linear,
+                slideOffset: 0.5,
+                sliver: SliverStaggerEntrance(
+                  sliver: SliverToBoxAdapter(
+                    child: SizedBox(
+                      key: ValueKey("moving-sliver"),
+                      height: 100,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(key: ValueKey("plain-sliver"), height: 40),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final movingStart = tester.getTopLeft(
+        find.byKey(const ValueKey("moving-sliver")),
+      );
+      final plainStart = tester.getTopLeft(
+        find.byKey(const ValueKey("plain-sliver")),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      final movingEnd = tester.getTopLeft(
+        find.byKey(const ValueKey("moving-sliver")),
+      );
+      final plainEnd = tester.getTopLeft(
+        find.byKey(const ValueKey("plain-sliver")),
+      );
+
+      expect(movingStart.dy, greaterThan(movingEnd.dy));
+      expect(movingEnd.dy, 0);
+      expect(plainEnd, plainStart);
+    });
+
+    testWidgets("late sliver entrance appears immediately", (tester) async {
+      final showLate = ValueNotifier(false);
+      addTearDown(showLate.dispose);
+      await tester.pumpWidget(
+        _TestApp(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: showLate,
+            builder: (context, visible, child) => CustomScrollView(
+              slivers: [
+                SliverStaggerScope(
+                  duration: const Duration(milliseconds: 100),
+                  sliver: SliverMainAxisGroup(
+                    slivers: [
+                      const SliverStaggerEntrance(
+                        sliver: SliverToBoxAdapter(
+                          child: _Box("initial-sliver"),
+                        ),
+                      ),
+                      if (visible)
+                        const SliverStaggerEntrance(
+                          sliver: SliverToBoxAdapter(
+                            child: _Box("late-sliver"),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      showLate.value = true;
+      await tester.pump();
+
+      expect(_opacity(tester, "late-sliver"), 1);
+    });
+
+    testWidgets("reduced motion reveals slivers immediately", (tester) async {
+      await tester.pumpWidget(
+        const _TestApp(
+          disableAnimations: true,
+          child: CustomScrollView(
+            slivers: [
+              SliverStaggerScope(
+                sliver: SliverStaggerEntrance(
+                  sliver: SliverToBoxAdapter(child: _Box("reduced-sliver")),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(_opacity(tester, "reduced-sliver"), 1);
+    });
+
+    testWidgets("asserts when a sliver entrance has no scope", (tester) async {
+      final errors = <FlutterErrorDetails>[];
+      final previousHandler = FlutterError.onError;
+      FlutterError.onError = errors.add;
+      addTearDown(() => FlutterError.onError = previousHandler);
+
+      await tester.pumpWidget(
+        const _TestApp(
+          child: CustomScrollView(
+            slivers: [
+              SliverStaggerEntrance(
+                sliver: SliverToBoxAdapter(child: _Box("unscoped-sliver")),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final exception = errors.first.exception;
+      expect(exception, isA<AssertionError>());
+      expect(
+        exception.toString(),
+        contains("below a StaggerScope or SliverStaggerScope"),
+      );
+    });
+
     testWidgets("removing an entrance does not restart retained entries", (
       tester,
     ) async {
@@ -286,6 +501,22 @@ Future<void> _pumpScope(
 double _opacity(WidgetTester tester, String key) {
   final child = find.byKey(ValueKey(key));
   expect(child, findsOneWidget);
+
+  final sliverFade = find.ancestor(
+    of: child,
+    matching: find.byType(SliverFadeTransition),
+  );
+  if (sliverFade.evaluate().isNotEmpty) {
+    return tester.widget<SliverFadeTransition>(sliverFade.first).opacity.value;
+  }
+
+  final sliverOpacity = find.ancestor(
+    of: child,
+    matching: find.byType(SliverOpacity),
+  );
+  if (sliverOpacity.evaluate().isNotEmpty) {
+    return tester.widget<SliverOpacity>(sliverOpacity.first).opacity;
+  }
 
   final fade = find.ancestor(of: child, matching: find.byType(FadeTransition));
   if (fade.evaluate().isNotEmpty) {
