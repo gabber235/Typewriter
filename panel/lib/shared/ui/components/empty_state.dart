@@ -19,6 +19,7 @@ class EmptyState extends HookConsumerWidget {
     this.icon,
     this.buttonText,
     this.onPressed,
+    this.color,
     super.key,
   });
 
@@ -38,12 +39,16 @@ class EmptyState extends HookConsumerWidget {
   /// Callback for the button press. Ignored when `buttonText` is null.
   final VoidCallback? onPressed;
 
+  /// Card color. Defaults to the card color of the theme.
+  final Color? color;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurfaceVariant;
 
     return Card(
+      color: color,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(

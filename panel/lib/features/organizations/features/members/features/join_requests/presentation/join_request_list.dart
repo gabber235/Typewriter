@@ -23,11 +23,12 @@ class JoinRequestsList extends HookConsumerWidget {
     );
 
     if (requests.isEmpty) {
-      return SliverToBoxAdapter(
+      return SliverFillRemaining(
         child: EmptyState(
           icon: Fa6Solid.user_plus,
           title: "No join requests",
           description: "When members request to join, they will appear here.",
+          color: Colors.transparent,
         ),
       );
     }
