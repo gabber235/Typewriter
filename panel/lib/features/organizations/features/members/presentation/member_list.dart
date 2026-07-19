@@ -15,6 +15,52 @@ class MembersTab extends HookConsumerWidget {
     final theme = Theme.of(context);
     final membersAsync = ref.watch(organizationMembersProvider);
     final selectedIds = useState<Set<skir.RecordId>>({});
+    final liveMembers = useRef<List<OrganizationMember>>([]);
+    final isRemovingSelection = useRef(false);
+
+    useEffect(() {
+      final memberIds = liveMembers.value
+          .map((member) => member.userId)
+          .toSet();
+      final validSelection = selectedIds.value.intersection(memberIds);
+      if (validSelection.length == selectedIds.value.length) return null;
+      selectedIds.value = validSelection;
+      return null;
+    }, [liveMembers.value, selectedIds.value]);
+
+    Future<void> removeSelection() async {
+      if (isRemovingSelection.value) return;
+      final memberIds = liveMembers.value
+          .map((member) => member.userId)
+          .toSet();
+      final idsToRemove = selectedIds.value.intersection(memberIds);
+      if (idsToRemove.isEmpty) {
+        selectedIds.value = {};
+        return;
+      }
+
+      isRemovingSelection.value = true;
+      try {
+        await showConfirmationDialogue(
+          context: context,
+          title: "Remove ${idsToRemove.length} member(s)?",
+          content:
+              "Are you sure you want to remove these members from the organization?",
+          confirmText: "Remove",
+          confirmIcon: Fa6Solid.user_minus,
+          onConfirm: () async {
+            for (final id in idsToRemove) {
+              await ref
+                  .read(organizationMembersProvider.notifier)
+                  .removeMember(id);
+            }
+            selectedIds.value = {};
+          },
+        );
+      } finally {
+        isRemovingSelection.value = false;
+      }
+    }
 
     return SliverMainAxisGroup(
       slivers: [
@@ -40,27 +86,7 @@ class MembersTab extends HookConsumerWidget {
                         : BulkMemberActions(
                             selectedCount: selectedIds.value.length,
                             selectedIds: selectedIds.value,
-                            onRemove: () async {
-                              await showConfirmationDialogue(
-                                context: context,
-                                title:
-                                    "Remove ${selectedIds.value.length} member(s)?",
-                                content:
-                                    "Are you sure you want to remove these members from the organization?",
-                                confirmText: "Remove",
-                                confirmIcon: Fa6Solid.user_minus,
-                                onConfirm: () async {
-                                  for (final id in selectedIds.value) {
-                                    await ref
-                                        .read(
-                                          organizationMembersProvider.notifier,
-                                        )
-                                        .removeMember(id);
-                                  }
-                                  selectedIds.value = {};
-                                },
-                              );
-                            },
+                            onRemove: removeSelection,
                             onClearSelection: () => selectedIds.value = {},
                           ),
                   ),
@@ -71,11 +97,22 @@ class MembersTab extends HookConsumerWidget {
         ),
         membersAsync(
           name: "Members",
-          builder: (members) => SliverStaggerScope(
-            sliver: context.isDesktop
-                ? MembersTable(members: members, selectedIds: selectedIds)
-                : MembersTabletList(members: members, selectedIds: selectedIds),
-          ),
+          builder: (members) {
+            liveMembers.value = members;
+            return SliverStaggerScope(
+              sliver: context.isDesktop
+                  ? MembersTable(
+                      members: members,
+                      selectedIds: selectedIds,
+                      onRemoveSelection: removeSelection,
+                    )
+                  : MembersTabletList(
+                      members: members,
+                      selectedIds: selectedIds,
+                      onRemoveSelection: removeSelection,
+                    ),
+            );
+          },
           loading: (_) => const _MembersLoadingShimmer(),
           error: (title, message) => SliverFillRemaining(
             child: Padding(

@@ -9,11 +9,13 @@ class MembersTabletList extends HookConsumerWidget {
   const MembersTabletList({
     required this.members,
     required this.selectedIds,
+    required this.onRemoveSelection,
     super.key,
   });
 
   final List<OrganizationMember> members;
   final ValueNotifier<Set<skir.RecordId>> selectedIds;
+  final Future<void> Function() onRemoveSelection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -122,6 +124,12 @@ class MembersTabletList extends HookConsumerWidget {
                       .toSet();
                 }
               },
+              onSelectAll: () => selectedIds.value = members
+                  .map((member) => member.userId)
+                  .toSet(),
+              onClearSelection: () => selectedIds.value = {},
+              hasSelection: selectedIds.value.isNotEmpty,
+              onRemoveSelection: onRemoveSelection,
             ),
           ),
         ),
