@@ -79,7 +79,7 @@ class TagsPage extends HookConsumerWidget {
                   const PageHeading(
                     title: "Tags",
                     subtext:
-                        "Tags are organizational labels for categorizing your books. They support parent-child hierarchies for organizing by location, story progression, or any system you need. Tags appear as colored chips on book covers and enable filtering to quickly find content in large projects.",
+                        "Organize books with colored labels that match your project structure. Build nested tag groups for locations or story progress, then use them to filter large libraries.",
                   ),
                   Expanded(
                     child: tagsAsync(

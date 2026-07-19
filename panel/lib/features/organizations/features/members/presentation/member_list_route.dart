@@ -10,22 +10,25 @@ class MemberListPage extends StatelessWidget {
   const MemberListPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Pane(
-    id: "members",
-    child: Section(
-      margin: EdgeInsets.zero,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const PageHeading(
-              title: "Members",
-              subtext: "Manage organization access and roles.",
-            ),
-            const Padding(padding: EdgeInsets.all(24), child: MembersTab()),
-          ],
+  Widget build(BuildContext context) {
+    return Pane(
+      id: "members",
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PageHeading(
+                title: "Members",
+                subtext:
+                    "Manage everyone who can access this organization. Review each member's assigned role and update permissions as your team and responsibilities change.",
+              ),
+              const Padding(padding: EdgeInsets.all(24), child: MembersTab()),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

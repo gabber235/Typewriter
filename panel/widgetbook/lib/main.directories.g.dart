@@ -1250,12 +1250,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                         _widgetbook_workspace_stories_shared_ui_components_page_heading_stories
                             .pageHeadingDefaultUseCase,
                   ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Without Subtext',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_page_heading_stories
-                            .pageHeadingWithoutSubtextUseCase,
-                  ),
                 ],
               ),
               _widgetbook.WidgetbookComponent(

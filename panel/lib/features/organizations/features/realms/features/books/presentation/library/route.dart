@@ -82,7 +82,7 @@ class LibraryPage extends HookConsumerWidget {
                   const PageHeading(
                     title: "Library",
                     subtext:
-                        "The library contains all your books. Each book has pages filled with entries that define your quests, dialogues, and cinematics. Search by title or tag names, and double-click a book to start editing.",
+                        "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),

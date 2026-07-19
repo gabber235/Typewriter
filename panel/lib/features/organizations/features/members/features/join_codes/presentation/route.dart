@@ -20,7 +20,8 @@ class JoinCodesPage extends StatelessWidget {
           children: [
             const PageHeading(
               title: "Join Codes",
-              subtext: "Create, share, and revoke organization join codes.",
+              subtext:
+                  "Create invitation codes that grant access to this organization. Share codes with trusted collaborators, review their assigned roles, and revoke codes when no longer needed.",
             ),
             const Padding(padding: EdgeInsets.all(24), child: JoinCodesTab()),
           ],

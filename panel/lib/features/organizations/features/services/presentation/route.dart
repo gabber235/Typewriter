@@ -52,7 +52,7 @@ class ServicesPage extends HookConsumerWidget {
               const PageHeading(
                 title: "Services",
                 subtext:
-                    "Services are your connected Typewriter instances: Minecraft servers running the Typewriter plugin (engines), content containers (realms), or both. Enter the registration token displayed in your server console to connect a service to your organization.",
+                    "Connect Minecraft servers and content realms to this organization. Enter the registration token shown in your server console to register a service and begin syncing Typewriter content.",
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
