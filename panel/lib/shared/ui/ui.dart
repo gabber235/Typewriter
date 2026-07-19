@@ -21,6 +21,7 @@ export "components/elastic_switcher.dart";
 export "components/elastic_transition.dart";
 export "components/empty_screen.dart";
 export "components/empty_state.dart";
+export "components/exclude_interaction.dart";
 export "components/floating_button.dart";
 export "components/focus_highlight.dart";
 export "components/grid_selectable_card.dart";

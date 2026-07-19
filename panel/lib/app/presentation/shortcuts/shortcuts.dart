@@ -6,10 +6,10 @@ import "package:typewriter_panel/shared/utilities/adaptive_single_activator.dart
 final typewriterShortcuts = <ShortcutActivator, Intent>{
   ...WidgetsApp.defaultShortcuts,
 
-  SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateAllIntent(),
   SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
-      ActivateIntent(),
-  SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateIntent(),
+      ActivateAllIntent(),
+  SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateAllIntent(),
 
   AdaptiveSingleActivator(LogicalKeyboardKey.keyN, control: true):
       NextFocusIntent(),
@@ -69,6 +69,10 @@ final movementShortcuts = {
   [LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.keyL]:
       TraversalDirection.right,
 };
+
+class ActivateAllIntent extends Intent {
+  const ActivateAllIntent();
+}
 
 class DeleteIntent extends Intent {
   const DeleteIntent();

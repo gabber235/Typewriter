@@ -1,71 +1,62 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/join_codes.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/selected_chip.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
-import "package:typewriter_panel/shared/ui/components/popups.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
-class BulkJoinCodeActions extends HookConsumerWidget {
+class BulkJoinCodeActions extends StatelessWidget {
   const BulkJoinCodeActions({
     required this.selectedCount,
-    required this.selectedCodes,
+    required this.onRevoke,
     required this.onClearSelection,
     super.key,
   });
 
   final int selectedCount;
-  final Set<skir.RecordId> selectedCodes;
+  final Future<void> Function() onRevoke;
   final VoidCallback onClearSelection;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 8,
-      children: [
-        SelectedChip(
-          selectedCount: selectedCount,
-          onClearSelection: onClearSelection,
+    return ManagedActionSet(
+      shortcuts: [
+        ActionShortcut.intent(
+          id: "revoke_bulk_join_codes_key",
+          label: "Revoke join codes",
+          description: "Revoke selected join codes",
+          intent: DeleteIntent,
+          priority: 2,
+          onInvoke: (_) => onRevoke(),
         ),
-        LoadingButton.outlinedIcon(
-          onPressed: () => _confirmBulkRevoke(context, ref),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: theme.colorScheme.error,
-            side: BorderSide(
-              color: theme.colorScheme.error.withValues(alpha: 0.5),
-            ),
-          ),
-          icon: const Icon(Icons.link_off, size: 18),
-          label: const Text("Revoke All"),
+        ActionShortcut.intent(
+          id: "clear_bulk_join_codes",
+          label: "Clear selection",
+          description: "Clear selected join codes",
+          intent: DismissIntent,
+          priority: 2,
+          onInvoke: (_) => onClearSelection(),
         ),
       ],
-    );
-  }
-
-  Future<void> _confirmBulkRevoke(BuildContext context, WidgetRef ref) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Revoke $selectedCount join code(s)?",
-      content:
-          "Are you sure you want to revoke these join codes? They will no longer work.",
-      confirmText: "Revoke All",
-      confirmIcon: Fa6Solid.link_slash,
-      onConfirm: () async {
-        for (final code in selectedCodes) {
-          await ref
-              .read(organizationJoinCodesProvider.notifier)
-              .revokeCode(code);
-        }
-        onClearSelection();
-      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 8,
+        children: [
+          SelectedChip(
+            selectedCount: selectedCount,
+            onClearSelection: onClearSelection,
+          ),
+          LoadingButton.outlinedIcon(
+            onPressed: onRevoke,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: theme.colorScheme.error,
+              side: BorderSide(
+                color: theme.colorScheme.error.withValues(alpha: 0.5),
+              ),
+            ),
+            icon: const Icon(Icons.link_off, size: 18),
+            label: const Text("Revoke All"),
+          ),
+        ],
+      ),
     );
   }
 }

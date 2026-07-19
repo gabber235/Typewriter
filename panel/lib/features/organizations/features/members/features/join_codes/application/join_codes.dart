@@ -198,6 +198,13 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     }
   }
 
+  void cleanupExpiredCodes() {
+    state.ensureReady();
+    state = AsyncValue.data(
+      state.requireValue.where((code) => !code.isExpired).toList(),
+    );
+  }
+
   /// Revokes a join code.
   Future<void> revokeCode(skir.RecordId codeId) async {
     final userId = await ref.read(userIdProvider.future);

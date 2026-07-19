@@ -4,29 +4,25 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/join_codes.dart";
 import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_badges.dart";
 import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_row_actions.dart";
+import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_table_row_shortcuts.dart";
 import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_url.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/hooks/animated_list.dart";
-import "package:typewriter_panel/shared/ui/components/animated_table.dart";
-import "package:typewriter_panel/shared/ui/components/blur_reveal.dart";
-import "package:typewriter_panel/shared/ui/components/countdown_badge.dart";
-import "package:typewriter_panel/shared/ui/components/empty_state.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinCodesTable extends HookConsumerWidget {
   const JoinCodesTable({
     required this.codes,
     required this.selectedCodes,
+    required this.onRevokeSelection,
     super.key,
   });
 
   final List<OrganizationJoinCode> codes;
   final ValueNotifier<Set<skir.RecordId>> selectedCodes;
+  final Future<void> Function() onRevokeSelection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,129 +47,102 @@ class JoinCodesTable extends HookConsumerWidget {
         selectedCodes.value.isNotEmpty &&
         selectedCodes.value.length < codes.length;
 
-    return AnimatedTable(
-      key: animated.key,
-      initialItemCount: animated.items.length,
-      columnWidths: const {
-        0: FixedColumnWidth(48),
-        1: FlexColumnWidth(2),
-        2: IntrinsicColumnWidth(),
-        3: IntrinsicColumnWidth(),
-        4: FixedColumnWidth(80),
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      headerRows: [
-        TableRow(
-          decoration: BoxDecoration(color: Surface.colorOf(context)),
-          children: [
-            TableCell(
-              verticalAlignment: TableCellVerticalAlignment.middle,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Checkbox(
-                  value: allSelected ? true : (someSelected ? null : false),
-                  tristate: true,
-                  onChanged: (value) {
-                    if (allSelected || someSelected) {
-                      selectedCodes.value = {};
-                    } else {
-                      selectedCodes.value = codes.map((c) => c.code).toSet();
-                    }
-                  },
-                ),
-              ),
-            ),
-            TableCell(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Text(
-                  "Join Code",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: AnimatedTable(
+        key: animated.key,
+        initialItemCount: animated.items.length,
+        columnWidths: const {
+          0: FixedColumnWidth(48),
+          1: FlexColumnWidth(2),
+          2: IntrinsicColumnWidth(),
+          3: IntrinsicColumnWidth(),
+          4: FixedColumnWidth(80),
+        },
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        headerRows: [
+          TableRow(
+            decoration: BoxDecoration(color: Surface.colorOf(context)),
+            children: [
+              TableCell(
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: StaggerEntrance(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Checkbox(
+                      value: allSelected ? true : (someSelected ? null : false),
+                      tristate: true,
+                      onChanged: (value) {
+                        if (allSelected || someSelected) {
+                          selectedCodes.value = {};
+                        } else {
+                          selectedCodes.value = codes
+                              .map((code) => code.code)
+                              .toSet();
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
-            TableCell(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Text(
-                  "Type",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Text(
-                  "Expires",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-            const TableCell(child: SizedBox.shrink()),
-          ],
+              _headerCell(theme, "Join Code"),
+              _headerCell(theme, "Type"),
+              _headerCell(theme, "Expires"),
+              const TableCell(child: SizedBox.shrink()),
+            ],
+          ),
+        ],
+        emptyBuilder: (context) => const EmptyState(
+          icon: MaterialSymbols.link_off_rounded,
+          title: "No active join codes",
+          description: "Generate a join code above to get started!",
         ),
-      ],
-      emptyBuilder: (context) => const EmptyState(
-        icon: MaterialSymbols.link_off_rounded,
-        title: "No active join codes",
-        description: "Generate a join code above to get started!",
-      ),
-      transitionBuilder: _buildRowTransition,
-      tableBuilder: (context, table) => Container(
-        decoration: BoxDecoration(
+        transitionBuilder: (context, animation, child) =>
+            ElasticTransition(animation: animation, child: child),
+        tableBuilder: (context, table) => Surface(
           color: Surface.colorOf(context),
-          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: table,
+          ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: table,
+        rowBuilder: (context, index, animation) {
+          final code = animated.items[index];
+          return _buildCodeRow(
+            context,
+            ref,
+            code,
+            selectedCodes.value.contains(code.code),
+            focusedCodeId,
+            theme,
+          );
+        },
       ),
-      rowBuilder: (context, index, animation) {
-        final code = animated.items[index];
-        return _buildCodeRow(
-          context,
-          ref,
-          code,
-          selectedCodes.value.contains(code.code),
-          focusedCodeId,
-          theme,
-        );
-      },
     );
   }
 
-  Widget _buildRowTransition(
-    BuildContext context,
-    Animation<double> animation,
-    Widget child,
-  ) {
-    return FadeTransition(
-      opacity: animation,
-      child: SizeTransition(sizeFactor: animation, child: child),
+  TableCell _headerCell(ThemeData theme, String label) {
+    return TableCell(
+      child: StaggerEntrance(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -187,6 +156,37 @@ class JoinCodesTable extends HookConsumerWidget {
   ) {
     final isFocused = focusedCodeId.value == code.code;
     final fullUrl = joinCodeUrl(code.code);
+
+    void toggleSelection() {
+      if (isSelected) {
+        selectedCodes.value = selectedCodes.value
+            .where((selected) => selected != code.code)
+            .toSet();
+        return;
+      }
+      selectedCodes.value = {...selectedCodes.value, code.code};
+    }
+
+    void updateFocus(bool focused) {
+      if (focused) {
+        focusedCodeId.value = code.code;
+      } else if (focusedCodeId.value == code.code) {
+        focusedCodeId.value = null;
+      }
+    }
+
+    Widget withShortcuts(Widget child) => JoinCodeTableRowShortcuts(
+      code: code,
+      onToggleSelection: toggleSelection,
+      onSelectAll: () => selectedCodes.value = codes.map((c) => c.code).toSet(),
+      onClearSelection: () => selectedCodes.value = {},
+      onCopy: () => _copyToClipboard(context, fullUrl),
+      isSelected: isSelected,
+      hasSelection: selectedCodes.value.isNotEmpty,
+      onRevokeSelection: onRevokeSelection,
+      onFocusChange: updateFocus,
+      child: child,
+    );
 
     return TableRow(
       key: ValueKey(code.code),
@@ -202,75 +202,84 @@ class JoinCodesTable extends HookConsumerWidget {
       children: [
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: Focus(
-              onFocusChange: (focused) {
-                if (focused) {
-                  focusedCodeId.value = code.code;
-                } else if (focusedCodeId.value == code.code) {
-                  focusedCodeId.value = null;
-                }
-              },
-              child: Checkbox(
-                value: isSelected,
-                onChanged: (value) {
-                  if (isSelected) {
-                    selectedCodes.value = selectedCodes.value
-                        .where((c) => c != code.code)
-                        .toSet();
-                  } else {
-                    selectedCodes.value = {...selectedCodes.value, code.code};
-                  }
+          child: StaggerEntrance(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: withShortcuts(
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (_) => toggleSelection(),
+                ),
+              ),
+            ),
+          ),
+        ),
+        TableCell(
+          child: StaggerEntrance(
+            child: withShortcuts(
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: BlurReveal(
+                        blurSigma: 3,
+                        child: SelectableText(
+                          fullUrl,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 16),
+                      onPressed: () => _copyToClipboard(context, fullUrl),
+                      tooltip: "Copy Join Code",
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        TableCell(
+          child: StaggerEntrance(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: JoinCodeTypeBadges(code: code),
+            ),
+          ),
+        ),
+        TableCell(
+          child: StaggerEntrance(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: CountdownBadge(
+                endDate: code.expiresAt,
+                onExpired: () {
+                  selectedCodes.value = selectedCodes.value
+                      .where((selected) => selected != code.code)
+                      .toSet();
+                  ref
+                      .read(organizationJoinCodesProvider.notifier)
+                      .cleanupExpiredCodes();
                 },
               ),
             ),
           ),
         ),
         TableCell(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: BlurReveal(
-                    blurSigma: 3,
-                    child: SelectableText(
-                      fullUrl,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 16),
-                  onPressed: () => _copyToClipboard(context, fullUrl),
-                  tooltip: "Copy Join Code",
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
+          child: StaggerEntrance(
+            child: withShortcuts(JoinCodeRowActions(code: code)),
           ),
         ),
-        TableCell(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: JoinCodeTypeBadges(code: code),
-          ),
-        ),
-        TableCell(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: CountdownBadge(
-              endDate: code.expiresAt,
-              onExpired: () => ref.invalidate(organizationJoinCodesProvider),
-            ),
-          ),
-        ),
-        TableCell(child: JoinCodeRowActions(code: code)),
       ],
     );
   }
@@ -285,5 +294,3 @@ class JoinCodesTable extends HookConsumerWidget {
     );
   }
 }
-
-/// Displays badges for join code type (single-use and/or auto-accept).

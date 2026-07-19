@@ -14,18 +14,20 @@ class JoinCodesPage extends StatelessWidget {
     id: "join-codes",
     child: Section(
       margin: EdgeInsets.zero,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const PageHeading(
+      child: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(
+            child: PageHeading(
               title: "Join Codes",
               subtext:
                   "Create invitation codes that grant access to this organization. Share codes with trusted collaborators, review their assigned roles, and revoke codes when no longer needed.",
             ),
-            const Padding(padding: EdgeInsets.all(24), child: JoinCodesTab()),
-          ],
-        ),
+          ),
+          const SliverPadding(
+            padding: EdgeInsets.all(24),
+            sliver: JoinCodesTab(),
+          ),
+        ],
       ),
     ),
   );
