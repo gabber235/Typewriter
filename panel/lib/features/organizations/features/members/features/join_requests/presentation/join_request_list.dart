@@ -15,11 +15,58 @@ class JoinRequestsList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIds = useState<Set<skir.RecordId>>({});
     final theme = Theme.of(context);
+    final isDecliningSelection = useRef(false);
+
+    Future<void> declineSelection() async {
+      if (isDecliningSelection.value) return;
+      final requestIds = requests.map((request) => request.requestId).toSet();
+      final idsToDecline = selectedIds.value.intersection(requestIds);
+      if (idsToDecline.isEmpty) {
+        selectedIds.value = {};
+        return;
+      }
+
+      isDecliningSelection.value = true;
+      try {
+        await showConfirmationDialogue(
+          context: context,
+          title: "Decline ${idsToDecline.length} request(s)?",
+          content: "Are you sure you want to decline these join requests?",
+          confirmText: "Decline All",
+          confirmIcon: Fa6Solid.xmark,
+          onConfirm: () async {
+            for (final id in idsToDecline) {
+              await ref
+                  .read(organizationJoinRequestsProvider.notifier)
+                  .declineRequest(id);
+            }
+            selectedIds.value = {};
+          },
+        );
+      } finally {
+        isDecliningSelection.value = false;
+      }
+    }
+
+    useEffect(() {
+      final requestIds = requests.map((request) => request.requestId).toSet();
+      final validSelection = selectedIds.value.intersection(requestIds);
+
+      if (validSelection.length == selectedIds.value.length) return null;
+      selectedIds.value = validSelection;
+      return null;
+    }, [requests, selectedIds]);
+
     final animation = useSliverAnimatedList(
       items: requests,
       identity: (item) => item.requestId,
-      removedItemBuilder: (context, item, animation) =>
-          _child(item, selectedIds, animation, ignorePointer: true),
+      removedItemBuilder: (context, item, animation) => _child(
+        item,
+        selectedIds,
+        declineSelection,
+        animation,
+        deleting: true,
+      ),
     );
 
     if (requests.isEmpty) {
@@ -96,6 +143,7 @@ class JoinRequestsList extends HookConsumerWidget {
                       selectedCount: selectedIds.value.length,
                       selectedIds: selectedIds.value,
                       onClearSelection: () => selectedIds.value = {},
+                      onDecline: declineSelection,
                     )
                   else
                     Flexible(
@@ -103,6 +151,7 @@ class JoinRequestsList extends HookConsumerWidget {
                         selectedCount: selectedIds.value.length,
                         selectedIds: selectedIds.value,
                         onClearSelection: () => selectedIds.value = {},
+                        onDecline: declineSelection,
                       ),
                     ),
                 ],
@@ -114,7 +163,7 @@ class JoinRequestsList extends HookConsumerWidget {
             initialItemCount: animation.items.length,
             itemBuilder: (context, index, animation) {
               final request = requests[index];
-              return _child(request, selectedIds, animation);
+              return _child(request, selectedIds, declineSelection, animation);
             },
           ),
         ],
@@ -125,12 +174,13 @@ class JoinRequestsList extends HookConsumerWidget {
   Widget _child(
     OrganizationJoinRequest request,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
+    Future<void> Function() onDeclineSelection,
     Animation<double> animation, {
-    bool ignorePointer = false,
+    bool deleting = false,
   }) {
-    return IgnorePointer(
+    return ExcludeInteraction(
       key: ValueKey(request.requestId),
-      ignoring: ignorePointer,
+      excluding: deleting,
       child: ElasticTransition(
         animation: animation,
         child: StaggerEntrance(
@@ -148,6 +198,12 @@ class JoinRequestsList extends HookConsumerWidget {
                       .toSet();
                 }
               },
+              onSelectAll: () => selectedIds.value = requests
+                  .map((request) => request.requestId)
+                  .toSet(),
+              onClearSelection: () => selectedIds.value = {},
+              hasSelection: selectedIds.value.isNotEmpty,
+              onDeclineSelection: onDeclineSelection,
             ),
           ),
         ),

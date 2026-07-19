@@ -13,12 +13,20 @@ class JoinRequestCard extends HookConsumerWidget {
     required this.request,
     required this.isSelected,
     required this.onSelectionChanged,
+    required this.onSelectAll,
+    required this.onClearSelection,
+    required this.hasSelection,
+    required this.onDeclineSelection,
     super.key,
   });
 
   final OrganizationJoinRequest request;
   final bool isSelected;
   final ValueChanged<bool> onSelectionChanged;
+  final VoidCallback onSelectAll;
+  final VoidCallback onClearSelection;
+  final bool hasSelection;
+  final Future<void> Function() onDeclineSelection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,48 +35,57 @@ class JoinRequestCard extends HookConsumerWidget {
     final selectedRoles = useState<List<OrganizationRole>>([]);
     final isDesktop = context.isDesktop;
 
+    final expansibleController = useExpansibleController();
+    useListenable(expansibleController);
+
     final backgroundColor = isSelected
-        ? Surface.colorOf(context)
+        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+        : expansibleController.isExpanded
+        ? theme.cardColor
         : Surface.colorOf(context);
 
-    final expansibleController = useExpansibleController();
-
-    return Expansible(
-      controller: expansibleController,
-      animationStyle: AnimationStyle(
-        duration: 500.ms,
-        curve: ElasticOutCurve(0.9),
-        reverseDuration: 20.ms,
-        reverseCurve: Curves.easeInCubic,
-      ),
-      headerBuilder: (context, animation) {
-        return _buildMainContent(
-          context,
-          ref,
-          theme,
-          isDesktop,
-          backgroundColor,
-          expansibleController,
-        );
-      },
-      bodyBuilder: (context, animation) {
-        return ElasticMessageTransition(
-          animation: animation,
-          child: JoinRequestApproval(
-            request: request,
-            backgroundColor: backgroundColor,
-            selectedRoles: selectedRoles.value,
-            rolesAsync: rolesAsync,
-            onRolesChanged: (roles) => selectedRoles.value = roles,
-            onConfirm: () async {
-              onSelectionChanged(false);
-              await ref
-                  .read(organizationJoinRequestsProvider.notifier)
-                  .approveRequest(request.requestId, selectedRoles.value);
-            },
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      child: Surface(
+        color: backgroundColor,
+        child: Expansible(
+          controller: expansibleController,
+          animationStyle: AnimationStyle(
+            duration: 500.ms,
+            curve: ElasticOutCurve(0.9),
+            reverseDuration: 20.ms,
+            reverseCurve: Curves.easeInCubic,
           ),
-        );
-      },
+          headerBuilder: (context, animation) {
+            return _buildMainContent(
+              context,
+              ref,
+              theme,
+              isDesktop,
+              expansibleController,
+            );
+          },
+          bodyBuilder: (context, animation) {
+            return ElasticMessageTransition(
+              animation: animation,
+              child: JoinRequestApproval(
+                request: request,
+                selectedRoles: selectedRoles.value,
+                rolesAsync: rolesAsync,
+                onRolesChanged: (roles) => selectedRoles.value = roles,
+                onConfirm: () async {
+                  onSelectionChanged(false);
+                  await ref
+                      .read(organizationJoinRequestsProvider.notifier)
+                      .approveRequest(request.requestId, selectedRoles.value);
+                },
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -77,20 +94,44 @@ class JoinRequestCard extends HookConsumerWidget {
     WidgetRef ref,
     ThemeData theme,
     bool isDesktop,
-    Color backgroundColor,
     ExpansibleController expansibleController,
   ) {
     return ManagedActionSet(
       shortcuts: [
+        ActionShortcut.intent(
+          id: "select_join_request_${request.requestId}",
+          label: "Select request",
+          description: "Toggle selection for this request",
+          intent: ActivateIntent,
+          priority: 1,
+          onInvoke: (_) => onSelectionChanged(!isSelected),
+        ),
+        ActionShortcut.intent(
+          id: "select_all_join_requests_${request.requestId}",
+          label: "Select all requests",
+          description: "Select all visible requests",
+          intent: ActivateAllIntent,
+          priority: 1,
+          onInvoke: (_) => onSelectAll(),
+        ),
+        if (hasSelection)
+          ActionShortcut.intent(
+            id: "clear_join_request_selection_${request.requestId}",
+            label: "Clear selection",
+            description: "Clear selected requests",
+            intent: DismissIntent,
+            priority: 1,
+            onInvoke: (_) => onClearSelection(),
+          ),
         ActionShortcut.intent(
           id: "decline_${request.requestId}",
           label: "Decline",
           description: "Decline this join request",
           intent: DeleteIntent,
           priority: 1,
-          onInvoke: (ref) async {
-            await _confirmDeclineRequest(context, ref);
-          },
+          onInvoke: (ref) => hasSelection && isSelected
+              ? onDeclineSelection()
+              : _confirmDeclineRequest(context, ref),
         ),
         ActionShortcut(
           id: "accept_${request.requestId}",
@@ -98,7 +139,7 @@ class JoinRequestCard extends HookConsumerWidget {
           description: "Accept this join request",
           activators: const [
             SingleActivator(LogicalKeyboardKey.keyA),
-            SingleActivator(LogicalKeyboardKey.enter),
+            SingleActivator(LogicalKeyboardKey.space),
           ],
           priority: 1,
           onInvoke: (ref) {
@@ -106,28 +147,26 @@ class JoinRequestCard extends HookConsumerWidget {
           },
         ),
       ],
-      child: Material(
-        color: backgroundColor,
+      child: InkWell(
+        onTap: () => onSelectionChanged(!isSelected),
         borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => onSelectionChanged(!isSelected),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: isDesktop
-                ? _buildDesktopLayout(context, ref, theme, expansibleController)
-                : JoinRequestResponsiveContent(
-                    request: request,
-                    isSelected: isSelected,
-                    isExpanded: expansibleController.isExpanded,
-                    onExpired: () => ref
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: isDesktop
+              ? _buildDesktopLayout(context, ref, theme, expansibleController)
+              : JoinRequestResponsiveContent(
+                  request: request,
+                  isSelected: isSelected,
+                  isExpanded: expansibleController.isExpanded,
+                  onExpired: () {
+                    onSelectionChanged(false);
+                    ref
                         .read(organizationJoinRequestsProvider.notifier)
-                        .cleanupExpiredRequests(),
-                    onDecline: () => _confirmDeclineRequest(context, ref),
-                    onToggle: () => expansibleController.toggle(),
-                  ),
-          ),
+                        .cleanupExpiredRequests();
+                  },
+                  onDecline: () => _confirmDeclineRequest(context, ref),
+                  onToggle: () => expansibleController.toggle(),
+                ),
         ),
       ),
     );
@@ -175,9 +214,12 @@ class JoinRequestCard extends HookConsumerWidget {
         ),
         CountdownBadge(
           endDate: request.expiresAt,
-          onExpired: () => ref
-              .read(organizationJoinRequestsProvider.notifier)
-              .cleanupExpiredRequests(),
+          onExpired: () {
+            onSelectionChanged(false);
+            ref
+                .read(organizationJoinRequestsProvider.notifier)
+                .cleanupExpiredRequests();
+          },
         ),
         const SizedBox(width: 16),
         Row(
