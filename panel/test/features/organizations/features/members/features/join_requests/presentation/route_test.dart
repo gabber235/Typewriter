@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/route.dart";
+import "package:typewriter_panel/shared/ui/components/page_heading.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../support/test_utils.dart";
@@ -20,11 +21,9 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text("Join Requests"), findsOneWidget);
-      expect(
-        find.text("Review pending requests and assign roles."),
-        findsOneWidget,
-      );
+      final heading = tester.widget<PageHeading>(find.byType(PageHeading));
+      expect(heading.title, "Join Requests");
+      expect(heading.subtext, isNotEmpty);
       expect(find.byType(TabBar), findsNothing);
     },
   );

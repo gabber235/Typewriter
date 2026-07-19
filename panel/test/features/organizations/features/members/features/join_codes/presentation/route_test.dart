@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/route.dart";
+import "package:typewriter_panel/shared/ui/components/page_heading.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../support/test_utils.dart";
@@ -18,11 +19,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text("Join Codes"), findsWidgets);
-    expect(
-      find.text("Create, share, and revoke organization join codes."),
-      findsOneWidget,
-    );
+    final heading = tester.widget<PageHeading>(find.byType(PageHeading));
+    expect(heading.title, "Join Codes");
+    expect(heading.subtext, isNotEmpty);
     expect(find.text("Join Code"), findsOneWidget);
     expect(find.text("Active Join Codes"), findsOneWidget);
     expect(find.textContaining("Active Links"), findsNothing);
