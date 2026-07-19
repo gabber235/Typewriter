@@ -1,3 +1,4 @@
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -30,6 +31,9 @@ class TypewriterWidgetbook extends StatelessWidget {
     );
 
     return Widgetbook.material(
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
       addons: [
         ViewportAddon([
           Viewports.none,
