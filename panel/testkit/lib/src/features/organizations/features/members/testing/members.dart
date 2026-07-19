@@ -9,6 +9,7 @@ import "package:typewriter_panel/features/organizations/features/members/applica
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/shared/utilities/utilities.dart";
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
 // ============================================================================
@@ -107,12 +108,15 @@ class OrganizationMembersMock extends OrganizationMembers {
     skir.RecordId memberId,
     List<OrganizationRole> requestedRoles,
   ) async {
-    final members = await future;
+    state.ensureReady();
+    final members = state.requireValue;
+
+    final roles = await ensureCorrectRoles(memberId, requestedRoles);
 
     state = AsyncData(
       members.map((member) {
         if (member.userId == memberId) {
-          return member.copyWith(roles: requestedRoles);
+          return member.copyWith(roles: roles);
         }
         return member;
       }).toList(),
@@ -121,7 +125,8 @@ class OrganizationMembersMock extends OrganizationMembers {
 
   @override
   Future<void> removeMember(skir.RecordId memberId) async {
-    final members = await future;
+    state.ensureReady();
+    final members = state.requireValue;
 
     state = AsyncData(members.where((m) => m.userId != memberId).toList());
   }

@@ -106,7 +106,7 @@ class OrganizationMembers extends _$OrganizationMembers {
     );
   }
 
-  Future<List<OrganizationRole>> _actualRoles(
+  Future<List<OrganizationRole>> ensureCorrectRoles(
     skir.RecordId memberId,
     List<OrganizationRole> newRoles,
   ) async {
@@ -126,6 +126,7 @@ class OrganizationMembers extends _$OrganizationMembers {
       final defaultRoles = availableRoles
           .where((role) => role.defaultRole)
           .toList();
+      assert(defaultRoles.isNotEmpty, "No default roles available.");
       return defaultRoles;
     }
 
@@ -149,7 +150,7 @@ class OrganizationMembers extends _$OrganizationMembers {
     state.ensureReady();
     final previousState = state;
 
-    final roles = await _actualRoles(memberId, requestedRoles);
+    final roles = await ensureCorrectRoles(memberId, requestedRoles);
 
     // Optimistically update the member's roles
     state = AsyncValue.data(
