@@ -51,7 +51,7 @@ class JoinRequestsList extends HookConsumerWidget {
         SliverFloatingHeader(
           child: Container(
             color: Surface.colorOf(context),
-            padding: const EdgeInsetsGeometry.only(bottom: 12),
+            padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
             child: Flex(
               direction: context.responsive(
                 mobile: Axis.vertical,
