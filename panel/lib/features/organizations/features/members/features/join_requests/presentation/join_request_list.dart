@@ -2,12 +2,9 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/join_request_actions.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/join_request_card.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/ui/components/empty_state.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
@@ -18,12 +15,20 @@ class JoinRequestsList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIds = useState<Set<skir.RecordId>>({});
     final theme = Theme.of(context);
+    final animation = useSliverAnimatedList(
+      items: requests,
+      identity: (item) => item.requestId,
+      removedItemBuilder: (context, item, animation) =>
+          _child(item, selectedIds, animation, ignorePointer: true),
+    );
 
     if (requests.isEmpty) {
-      return EmptyState(
-        icon: Fa6Solid.user_plus,
-        title: "No join requests",
-        description: "When members request to join, they will appear here.",
+      return SliverToBoxAdapter(
+        child: EmptyState(
+          icon: Fa6Solid.user_plus,
+          title: "No join requests",
+          description: "When members request to join, they will appear here.",
+        ),
       );
     }
 
@@ -41,66 +46,106 @@ class JoinRequestsList extends HookConsumerWidget {
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          direction: .horizontal,
-          alignment: .spaceBetween,
-          runSpacing: 12,
-          children: [
-            GestureDetector(
-              onTap: handleSelectAll,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: allSelected ? true : (someSelected ? null : false),
-                    tristate: true,
-                    onChanged: (value) => handleSelectAll(),
-                  ),
-                  Text(
-                    "Select all",
-                    style: TextStyle(
-                      fontVariations: [.weight(500)],
-                      color: theme.colorScheme.onSurfaceVariant,
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverFloatingHeader(
+          child: Container(
+            color: Surface.colorOf(context),
+            padding: const EdgeInsetsGeometry.only(bottom: 12),
+            child: Flex(
+              direction: context.responsive(
+                mobile: Axis.vertical,
+                tablet: Axis.horizontal,
+              ),
+              spacing: 8,
+              crossAxisAlignment: context.responsive(
+                mobile: CrossAxisAlignment.start,
+                tablet: CrossAxisAlignment.center,
+              ),
+              children: [
+                SizedBox(
+                  height: 52,
+                  child: GestureDetector(
+                    onTap: handleSelectAll,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Checkbox(
+                          value: allSelected
+                              ? true
+                              : (someSelected ? null : false),
+                          tristate: true,
+                          onChanged: (value) => handleSelectAll(),
+                        ),
+                        Text(
+                          "Select all",
+                          style: TextStyle(
+                            fontVariations: [.weight(500)],
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                if (context.isMobile)
+                  BulkJoinRequestActions(
+                    selectedCount: selectedIds.value.length,
+                    selectedIds: selectedIds.value,
+                    onClearSelection: () => selectedIds.value = {},
+                  )
+                else
+                  Flexible(
+                    child: BulkJoinRequestActions(
+                      selectedCount: selectedIds.value.length,
+                      selectedIds: selectedIds.value,
+                      onClearSelection: () => selectedIds.value = {},
+                    ),
+                  ),
+              ],
             ),
-            if (selectedIds.value.isNotEmpty)
-              BulkJoinRequestActions(
-                selectedCount: selectedIds.value.length,
-                selectedIds: selectedIds.value,
-                onClearSelection: () => selectedIds.value = {},
-              ),
-          ],
+          ),
         ),
-        const SizedBox(height: 12),
-        ...requests.asMap().entries.map((entry) {
-          final index = entry.key;
-          final request = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: JoinRequestCard(
-              key: ValueKey(request.requestId),
-              request: request,
-              index: index,
-              isSelected: selectedIds.value.contains(request.requestId),
-              onSelectionChanged: (selected) {
-                if (selected) {
-                  selectedIds.value = {...selectedIds.value, request.requestId};
-                } else {
-                  selectedIds.value = selectedIds.value
-                      .where((id) => id != request.requestId)
-                      .toSet();
-                }
-              },
-            ),
-          );
-        }),
+        SliverAnimatedList(
+          key: animation.key,
+          initialItemCount: animation.items.length,
+          itemBuilder: (context, index, animation) {
+            final request = requests[index];
+            return _child(request, selectedIds, animation);
+          },
+        ),
       ],
+    );
+  }
+
+  Widget _child(
+    OrganizationJoinRequest request,
+    ValueNotifier<Set<skir.RecordId>> selectedIds,
+    Animation<double> animation, {
+    bool ignorePointer = false,
+  }) {
+    return IgnorePointer(
+      key: ValueKey(request.requestId),
+      ignoring: ignorePointer,
+      child: ElasticTransition(
+        animation: animation,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: JoinRequestCard(
+            request: request,
+            isSelected: selectedIds.value.contains(request.requestId),
+            onSelectionChanged: (selected) {
+              if (selected) {
+                selectedIds.value = {...selectedIds.value, request.requestId};
+              } else {
+                selectedIds.value = selectedIds.value
+                    .where((id) => id != request.requestId)
+                    .toSet();
+              }
+            },
+          ),
+        ),
+      ),
     );
   }
 }

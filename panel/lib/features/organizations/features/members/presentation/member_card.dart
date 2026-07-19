@@ -5,14 +5,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/member_constants.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/role_multiselect_chips.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/selectable_avatar.dart";
-import "package:typewriter_panel/shared/ui/components/popups.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/async.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class MemberTabletCard extends HookConsumerWidget {
   const MemberTabletCard({

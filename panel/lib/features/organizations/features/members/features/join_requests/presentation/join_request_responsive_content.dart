@@ -1,9 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/member_constants.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/selectable_avatar.dart";
-import "package:typewriter_panel/shared/ui/components/countdown_badge.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinRequestResponsiveContent extends StatelessWidget {
   const JoinRequestResponsiveContent({

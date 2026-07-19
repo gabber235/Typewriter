@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
@@ -8,7 +9,6 @@ import "package:typewriter_panel/features/organizations/features/members/applica
 import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/application.dart";
 import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/join_requests.dart";
 import "package:typewriter_panel/features/organizations/features/members/presentation/role_multiselect_dropdown.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/selected_chip.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/shared/ui/components/loading_button.dart";
@@ -38,50 +38,64 @@ class BulkJoinRequestActions extends HookConsumerWidget {
       placeholder: "Select roles",
     );
 
-    return Flex(
-      direction: context.responsive(
-        mobile: Axis.vertical,
-        tablet: Axis.horizontal,
+    return AnimatedSize(
+      duration: 500.ms,
+      alignment: .topLeft,
+      curve: context.responsive(
+        mobile: ElasticOutCurve(0.9),
+        tablet: Curves.easeOutCubic,
       ),
-      spacing: 4,
-      crossAxisAlignment: context.responsive(
-        mobile: CrossAxisAlignment.start,
-        tablet: CrossAxisAlignment.center,
+      child: AnimatedSwitcher(
+        duration: 100.ms,
+        child: selectedIds.isEmpty
+            ? null
+            : Flex(
+                direction: context.responsive(
+                  mobile: Axis.vertical,
+                  tablet: Axis.horizontal,
+                ),
+                spacing: context.responsive(mobile: 8.0, tablet: 4.0),
+                crossAxisAlignment: context.responsive(
+                  mobile: CrossAxisAlignment.end,
+                  tablet: CrossAxisAlignment.center,
+                ),
+                children: [
+                  if (context.isMobile)
+                    roleDropdown
+                  else
+                    Flexible(child: roleDropdown),
+                  // Bulk accept button
+                  LoadingButton.filledIcon(
+                    onPressed: bulkRoles.value.isEmpty
+                        ? null
+                        : () async {
+                            for (final id in selectedIds) {
+                              await ref
+                                  .read(
+                                    organizationJoinRequestsProvider.notifier,
+                                  )
+                                  .approveRequest(id, bulkRoles.value);
+                            }
+                            bulkRoles.value = [];
+                            onClearSelection();
+                          },
+                    icon: const Icon(Icons.check, size: 18),
+                    label: const Text("Accept All"),
+                  ),
+                  LoadingButton.outlinedIcon(
+                    onPressed: () => _confirmBulkDecline(context, ref),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: theme.colorScheme.error,
+                      side: BorderSide(
+                        color: theme.colorScheme.error.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text("Decline All"),
+                  ),
+                ],
+              ),
       ),
-      children: [
-        SelectedChip(
-          selectedCount: selectedCount,
-          onClearSelection: onClearSelection,
-        ),
-        if (context.isMobile) roleDropdown else Flexible(child: roleDropdown),
-        // Bulk accept button
-        LoadingButton.filledIcon(
-          onPressed: bulkRoles.value.isEmpty
-              ? null
-              : () async {
-                  for (final id in selectedIds) {
-                    await ref
-                        .read(organizationJoinRequestsProvider.notifier)
-                        .approveRequest(id, bulkRoles.value);
-                  }
-                  bulkRoles.value = [];
-                  onClearSelection();
-                },
-          icon: const Icon(Icons.check, size: 18),
-          label: const Text("Accept All"),
-        ),
-        LoadingButton.outlinedIcon(
-          onPressed: () => _confirmBulkDecline(context, ref),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: theme.colorScheme.error,
-            side: BorderSide(
-              color: theme.colorScheme.error.withValues(alpha: 0.5),
-            ),
-          ),
-          icon: const Icon(Icons.close, size: 18),
-          label: const Text("Decline All"),
-        ),
-      ],
     );
   }
 

@@ -2,19 +2,9 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/members.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/member_constants.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/member_row_actions.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/role_multiselect_dropdown.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/selectable_avatar.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/ui/components/blur_reveal.dart";
-import "package:typewriter_panel/shared/ui/components/empty_state.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/async.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class MembersTable extends HookConsumerWidget {
   const MembersTable({
@@ -30,15 +20,19 @@ class MembersTable extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final focusedRowIndex = useState(-1);
-
-    if (members.isEmpty) {
-      return EmptyState(
-        title: "No members yet",
-        description: "Invite someone to get started!",
-        icon: MaterialSymbols.groups_2_rounded,
-      );
-    }
+    final focusedMemberId = useState<skir.RecordId?>(null);
+    final animated = useAnimatedTable(
+      items: members,
+      identity: (member) => member.userId,
+      removedItemBuilder: (context, member, animation) => _buildMemberRow(
+        context,
+        ref,
+        member,
+        selectedIds.value.contains(member.userId),
+        focusedMemberId,
+        theme,
+      ),
+    );
 
     final allSelected =
         members.isNotEmpty && selectedIds.value.length == members.length;
@@ -46,96 +40,115 @@ class MembersTable extends HookConsumerWidget {
         selectedIds.value.isNotEmpty &&
         selectedIds.value.length < members.length;
 
-    return Surface(
-      color: Surface.colorOf(context),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Table(
-          columnWidths: const {
-            0: FixedColumnWidth(48),
-            1: IntrinsicColumnWidth(),
-            2: FlexColumnWidth(1),
-            3: FixedColumnWidth(80),
-          },
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+    return AnimatedTable(
+      key: animated.key,
+      initialItemCount: animated.items.length,
+      columnWidths: const {
+        0: FixedColumnWidth(48),
+        1: IntrinsicColumnWidth(),
+        2: FlexColumnWidth(1),
+        3: FixedColumnWidth(80),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      headerRows: [
+        TableRow(
+          decoration: BoxDecoration(color: Surface.colorOf(context)),
           children: [
-            TableRow(
-              decoration: BoxDecoration(color: Surface.colorOf(context)),
-              children: [
-                TableCell(
-                  verticalAlignment: TableCellVerticalAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
-                    ),
-                    child: Checkbox(
-                      value: allSelected ? true : (someSelected ? null : false),
-                      tristate: true,
-                      onChanged: (value) {
-                        if (allSelected || someSelected) {
-                          selectedIds.value = {};
-                        } else {
-                          selectedIds.value = members
-                              .map((m) => m.userId)
-                              .toSet();
-                        }
-                      },
-                    ),
-                  ),
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
                 ),
-                TableCell(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
-                    ),
-                    child: Text(
-                      "Member",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
+                child: Checkbox(
+                  value: allSelected ? true : (someSelected ? null : false),
+                  tristate: true,
+                  onChanged: (value) {
+                    if (allSelected || someSelected) {
+                      selectedIds.value = {};
+                    } else {
+                      selectedIds.value = members.map((m) => m.userId).toSet();
+                    }
+                  },
                 ),
-                TableCell(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
-                    ),
-                    child: Text(
-                      "Roles",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-                const TableCell(child: SizedBox.shrink()),
-              ],
-            ),
-            for (final (index, member) in members.indexed)
-              _buildMemberRow(
-                context,
-                ref,
-                member,
-                index,
-                selectedIds.value.contains(member.userId),
-                focusedRowIndex,
-                theme,
               ),
+            ),
+            TableCell(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Text(
+                  "Member",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            TableCell(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Text(
+                  "Roles",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            const TableCell(child: SizedBox.shrink()),
           ],
         ),
+      ],
+      emptyBuilder: (context) => EmptyState(
+        title: "No members yet",
+        description: "Invite someone to get started!",
+        icon: MaterialSymbols.groups_2_rounded,
       ),
+      transitionBuilder: _buildRowTransition,
+      tableBuilder: (context, table) => Surface(
+        color: Surface.colorOf(context),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: table,
+        ),
+      ),
+      rowBuilder: (context, index, animation) {
+        final member = animated.items[index];
+        return _buildMemberRow(
+          context,
+          ref,
+          member,
+          selectedIds.value.contains(member.userId),
+          focusedMemberId,
+          theme,
+        );
+      },
+    );
+  }
+
+  Widget _buildRowTransition(
+    BuildContext context,
+    Animation<double> animation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: animation,
+      child: SizeTransition(sizeFactor: animation, child: child),
     );
   }
 
@@ -143,12 +156,11 @@ class MembersTable extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     OrganizationMember member,
-    int index,
     bool isSelected,
-    ValueNotifier<int> focusedRowIndex,
+    ValueNotifier<skir.RecordId?> focusedMemberId,
     ThemeData theme,
   ) {
-    final isFocused = focusedRowIndex.value == index;
+    final isFocused = focusedMemberId.value == member.userId;
     return TableRow(
       key: ValueKey(member.userId),
       decoration: BoxDecoration(
@@ -171,7 +183,11 @@ class MembersTable extends HookConsumerWidget {
               child: InkWell(
                 customBorder: CircleBorder(),
                 onFocusChange: (focused) {
-                  focusedRowIndex.value = focused ? index : -1;
+                  if (focused) {
+                    focusedMemberId.value = member.userId;
+                  } else if (focusedMemberId.value == member.userId) {
+                    focusedMemberId.value = null;
+                  }
                 },
                 onTap: () {
                   if (isSelected) {
@@ -200,7 +216,11 @@ class MembersTable extends HookConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
               onFocusChange: (focused) {
-                focusedRowIndex.value = focused ? index : -1;
+                if (focused) {
+                  focusedMemberId.value = member.userId;
+                } else if (focusedMemberId.value == member.userId) {
+                  focusedMemberId.value = null;
+                }
               },
               onTap: () {
                 if (isSelected) {

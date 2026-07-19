@@ -17,17 +17,21 @@ class JoinRequestsTab extends HookConsumerWidget {
       name: "Join Requests",
       shrink: true,
       builder: (requests) => JoinRequestsList(requests: requests),
-      loading: (name) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: LoadingIndicator(message: "Loading $name..."),
+      loading: (name) => SliverToBoxAdapter(
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: LoadingIndicator(message: "Loading $name..."),
+          ),
         ),
       ),
-      error: (title, message) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: ErrorScreen.small(title: title, message: message),
+      error: (title, message) => SliverToBoxAdapter(
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: ErrorScreen.small(title: title, message: message),
+            ),
           ),
         ),
       ),

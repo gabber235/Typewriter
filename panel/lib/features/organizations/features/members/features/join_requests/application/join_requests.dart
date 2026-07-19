@@ -217,6 +217,14 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       rethrow;
     }
   }
+
+  /// Locally cleans up expired join requests.
+  /// Does not affect the server state.
+  void cleanupExpiredRequests() {
+    state = AsyncData(
+      state.requireValue.where((request) => !request.isExpired).toList(),
+    );
+  }
 }
 
 /// Provider for the count of pending join requests.

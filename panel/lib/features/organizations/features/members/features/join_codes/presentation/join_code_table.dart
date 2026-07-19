@@ -11,6 +11,8 @@ import "package:typewriter_panel/features/organizations/features/members/feature
 import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_url.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/shared/hooks/animated_list.dart";
+import "package:typewriter_panel/shared/ui/components/animated_table.dart";
 import "package:typewriter_panel/shared/ui/components/blur_reveal.dart";
 import "package:typewriter_panel/shared/ui/components/countdown_badge.dart";
 import "package:typewriter_panel/shared/ui/components/empty_state.dart";
@@ -29,15 +31,19 @@ class JoinCodesTable extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final focusedRowIndex = useState(-1);
-
-    if (codes.isEmpty) {
-      return const EmptyState(
-        icon: MaterialSymbols.link_off_rounded,
-        title: "No active join codes",
-        description: "Generate a join code above to get started!",
-      );
-    }
+    final focusedCodeId = useState<skir.RecordId?>(null);
+    final animated = useAnimatedTable(
+      items: codes,
+      identity: (code) => code.code,
+      removedItemBuilder: (context, code, animation) => _buildCodeRow(
+        context,
+        ref,
+        code,
+        selectedCodes.value.contains(code.code),
+        focusedCodeId,
+        theme,
+      ),
+    );
 
     final allSelected =
         codes.isNotEmpty && selectedCodes.value.length == codes.length;
@@ -45,108 +51,129 @@ class JoinCodesTable extends HookConsumerWidget {
         selectedCodes.value.isNotEmpty &&
         selectedCodes.value.length < codes.length;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Surface.colorOf(context),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Table(
-        columnWidths: const {
-          0: FixedColumnWidth(48),
-          1: FlexColumnWidth(2),
-          2: IntrinsicColumnWidth(),
-          3: IntrinsicColumnWidth(),
-          4: FixedColumnWidth(80),
-        },
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [
-          TableRow(
-            decoration: BoxDecoration(color: Surface.colorOf(context)),
-            children: [
-              TableCell(
-                verticalAlignment: TableCellVerticalAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Checkbox(
-                    value: allSelected ? true : (someSelected ? null : false),
-                    tristate: true,
-                    onChanged: (value) {
-                      if (allSelected || someSelected) {
-                        selectedCodes.value = {};
-                      } else {
-                        selectedCodes.value = codes.map((c) => c.code).toSet();
-                      }
-                    },
-                  ),
+    return AnimatedTable(
+      key: animated.key,
+      initialItemCount: animated.items.length,
+      columnWidths: const {
+        0: FixedColumnWidth(48),
+        1: FlexColumnWidth(2),
+        2: IntrinsicColumnWidth(),
+        3: IntrinsicColumnWidth(),
+        4: FixedColumnWidth(80),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      headerRows: [
+        TableRow(
+          decoration: BoxDecoration(color: Surface.colorOf(context)),
+          children: [
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Checkbox(
+                  value: allSelected ? true : (someSelected ? null : false),
+                  tristate: true,
+                  onChanged: (value) {
+                    if (allSelected || someSelected) {
+                      selectedCodes.value = {};
+                    } else {
+                      selectedCodes.value = codes.map((c) => c.code).toSet();
+                    }
+                  },
                 ),
               ),
-              TableCell(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Text(
-                    "Join Code",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-              TableCell(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Text(
-                    "Type",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-              TableCell(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Text(
-                    "Expires",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-              const TableCell(child: SizedBox.shrink()),
-            ],
-          ),
-          for (final (index, code) in codes.indexed)
-            _buildCodeRow(
-              context,
-              ref,
-              code,
-              index,
-              selectedCodes.value.contains(code.code),
-              focusedRowIndex,
-              theme,
             ),
-        ],
+            TableCell(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Text(
+                  "Join Code",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            TableCell(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Text(
+                  "Type",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            TableCell(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Text(
+                  "Expires",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            const TableCell(child: SizedBox.shrink()),
+          ],
+        ),
+      ],
+      emptyBuilder: (context) => const EmptyState(
+        icon: MaterialSymbols.link_off_rounded,
+        title: "No active join codes",
+        description: "Generate a join code above to get started!",
       ),
+      transitionBuilder: _buildRowTransition,
+      tableBuilder: (context, table) => Container(
+        decoration: BoxDecoration(
+          color: Surface.colorOf(context),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: table,
+      ),
+      rowBuilder: (context, index, animation) {
+        final code = animated.items[index];
+        return _buildCodeRow(
+          context,
+          ref,
+          code,
+          selectedCodes.value.contains(code.code),
+          focusedCodeId,
+          theme,
+        );
+      },
+    );
+  }
+
+  Widget _buildRowTransition(
+    BuildContext context,
+    Animation<double> animation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: animation,
+      child: SizeTransition(sizeFactor: animation, child: child),
     );
   }
 
@@ -154,12 +181,11 @@ class JoinCodesTable extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     OrganizationJoinCode code,
-    int index,
     bool isSelected,
-    ValueNotifier<int> focusedRowIndex,
+    ValueNotifier<skir.RecordId?> focusedCodeId,
     ThemeData theme,
   ) {
-    final isFocused = focusedRowIndex.value == index;
+    final isFocused = focusedCodeId.value == code.code;
     final fullUrl = joinCodeUrl(code.code);
 
     return TableRow(
@@ -178,17 +204,26 @@ class JoinCodesTable extends HookConsumerWidget {
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: Checkbox(
-              value: isSelected,
-              onChanged: (value) {
-                if (isSelected) {
-                  selectedCodes.value = selectedCodes.value
-                      .where((c) => c != code.code)
-                      .toSet();
-                } else {
-                  selectedCodes.value = {...selectedCodes.value, code.code};
+            child: Focus(
+              onFocusChange: (focused) {
+                if (focused) {
+                  focusedCodeId.value = code.code;
+                } else if (focusedCodeId.value == code.code) {
+                  focusedCodeId.value = null;
                 }
               },
+              child: Checkbox(
+                value: isSelected,
+                onChanged: (value) {
+                  if (isSelected) {
+                    selectedCodes.value = selectedCodes.value
+                        .where((c) => c != code.code)
+                        .toSet();
+                  } else {
+                    selectedCodes.value = {...selectedCodes.value, code.code};
+                  }
+                },
+              ),
             ),
           ),
         ),

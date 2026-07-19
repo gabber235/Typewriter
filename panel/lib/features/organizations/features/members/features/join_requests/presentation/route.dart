@@ -1,34 +1,33 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/route_content.dart";
-import "package:typewriter_panel/shared/ui/components/page_heading.dart";
-import "package:typewriter_panel/shared/ui/components/section.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class JoinRequestsPage extends StatelessWidget {
   const JoinRequestsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Pane(
-    id: "join-requests",
-    child: Section(
-      margin: EdgeInsets.zero,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const PageHeading(
-              title: "Join Requests",
-              subtext: "Review pending requests and assign roles.",
+  Widget build(BuildContext context) {
+    return Pane(
+      id: "join-requests",
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: const PageHeading(
+                title: "Join Requests",
+                subtext:
+                    "Review people waiting to join this organization. Approve each request with the right role, or decline requests that should not receive access.",
+              ),
             ),
-            const Padding(
+            const SliverPadding(
               padding: EdgeInsets.all(24),
-              child: JoinRequestsTab(),
+              sliver: JoinRequestsTab(),
             ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }

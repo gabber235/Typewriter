@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/shared/hooks/animated_list.dart";
+import "package:typewriter_panel/shared/ui/components/animated_table.dart";
 
 import "../../support/test_utils.dart";
 
@@ -249,6 +250,65 @@ void main() {
     });
   });
 
+  testWidgets("useAnimatedTable captures removed items and synchronizes", (
+    tester,
+  ) async {
+    final source = _TestSource([
+      const _TestItem(id: "a", label: "Alpha"),
+      const _TestItem(id: "b", label: "Beta"),
+    ]);
+    addTearDown(source.dispose);
+    await tester.pumpTestApp(
+      settle: false,
+      child: _TableHarness(source: source),
+    );
+
+    source.update([const _TestItem(id: "c", label: "Gamma")]);
+    await tester.pump();
+    expect(find.text("Alpha"), findsOneWidget);
+    expect(find.text("Beta"), findsOneWidget);
+    expect(find.text("Gamma"), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 301));
+    await tester.pump();
+    expect(source.renderedIds, ["c"]);
+    expect(find.text("Alpha"), findsNothing);
+    expect(find.text("Beta"), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("useAnimatedTable handles keyed reorder and rapid re-add", (
+    tester,
+  ) async {
+    final source = _TestSource([
+      const _TestItem(id: "a", label: "Alpha"),
+      const _TestItem(id: "b", label: "Beta"),
+    ]);
+    addTearDown(source.dispose);
+    await tester.pumpTestApp(
+      settle: false,
+      child: _TableHarness(source: source),
+    );
+
+    source.update([
+      const _TestItem(id: "b", label: "Beta"),
+      const _TestItem(id: "a", label: "Alpha moved"),
+    ]);
+    await tester.pump(const Duration(milliseconds: 50));
+    source.update([
+      const _TestItem(id: "a", label: "Alpha newest"),
+      const _TestItem(id: "c", label: "Gamma"),
+    ]);
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(source.renderedIds, ["a", "c"]);
+    expect(find.text("Alpha newest"), findsOneWidget);
+    expect(find.text("Gamma"), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final variant in _Variant.values) {
     testWidgets("${variant.name} uses its typed key and synchronizes", (
       tester,
@@ -272,7 +332,7 @@ void main() {
       await tester.pump();
       source.update([const _TestItem(id: "b", label: "Beta")]);
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 501));
       await tester.pump();
 
       expect(find.text("Alpha"), findsNothing);
@@ -296,6 +356,46 @@ Future<void> _pumpSliverList(WidgetTester tester, _TestSource source) async {
 
 double _opacity(WidgetTester tester, String id) {
   return tester.widget<FadeTransition>(find.byKey(ValueKey(id))).opacity.value;
+}
+
+class _TableHarness extends HookWidget {
+  const _TableHarness({required this.source});
+
+  final _TestSource source;
+
+  @override
+  Widget build(BuildContext context) {
+    useValueListenable(source.revision);
+    final result = useAnimatedTable<_TestItem>(
+      items: source.items,
+      identity: (item) => item.id,
+      removedItemBuilder: (context, item, animation) => TableRow(
+        key: ValueKey(item.id),
+        children: [
+          TableCell(key: ValueKey("cell-${item.id}"), child: Text(item.label)),
+        ],
+      ),
+    );
+    source.renderedItems = result.items;
+    return AnimatedTable(
+      key: result.key,
+      initialItemCount: result.items.length,
+      rowBuilder: (context, index, animation) {
+        final item = result.items[index];
+        return TableRow(
+          key: ValueKey(item.id),
+          children: [
+            TableCell(
+              key: ValueKey("cell-${item.id}"),
+              child: Text(item.label),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (context, animation, child) =>
+          FadeTransition(opacity: animation, child: child),
+    );
+  }
 }
 
 class _SliverListHarness extends HookWidget {

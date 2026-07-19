@@ -1,9 +1,18 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/shared/ui/components/animated_table.dart";
 
 /// Builds an item while it is being removed from an animated list or grid.
 typedef AnimatedListRemovedItemBuilder<T> =
     Widget Function(BuildContext context, T item, Animation<double> animation);
+
+/// Builds an item while it is being removed from an animated table.
+typedef AnimatedTableRemovedItemBuilder<T> =
+    TableRow Function(
+      BuildContext context,
+      T item,
+      Animation<double> animation,
+    );
 
 /// The key and synchronized item snapshot managed by an animated collection hook.
 ///
@@ -32,7 +41,36 @@ AnimatedListHookResult<T, AnimatedListState> useAnimatedList<T>({
   String? debugLabel,
 }) {
   return use(
-    _AnimatedListHook<T, AnimatedListState>(
+    _AnimatedListHook<T, AnimatedListState, Widget>(
+      items: items,
+      identity: identity,
+      removedItemBuilder: removedItemBuilder,
+      insertDuration: insertDuration,
+      removeDuration: removeDuration,
+      debugLabel: debugLabel,
+      insertItem: (state, index, duration) {
+        state.insertItem(index, duration: duration);
+      },
+      removeItem: (state, index, builder, duration) {
+        state.removeItem(index, builder, duration: duration);
+      },
+    ),
+  );
+}
+
+/// Synchronizes [items] with an [AnimatedTable].
+///
+/// [identity] must return a stable, unique value for every item.
+AnimatedListHookResult<T, AnimatedTableState> useAnimatedTable<T>({
+  required List<T> items,
+  required Object Function(T item) identity,
+  required AnimatedTableRemovedItemBuilder<T> removedItemBuilder,
+  Duration insertDuration = const Duration(milliseconds: 300),
+  Duration removeDuration = const Duration(milliseconds: 300),
+  String? debugLabel,
+}) {
+  return use(
+    _AnimatedListHook<T, AnimatedTableState, TableRow>(
       items: items,
       identity: identity,
       removedItemBuilder: removedItemBuilder,
@@ -61,7 +99,7 @@ AnimatedListHookResult<T, SliverAnimatedListState> useSliverAnimatedList<T>({
   String? debugLabel,
 }) {
   return use(
-    _AnimatedListHook<T, SliverAnimatedListState>(
+    _AnimatedListHook<T, SliverAnimatedListState, Widget>(
       items: items,
       identity: identity,
       removedItemBuilder: removedItemBuilder,
@@ -90,7 +128,7 @@ AnimatedListHookResult<T, AnimatedGridState> useAnimatedGrid<T>({
   String? debugLabel,
 }) {
   return use(
-    _AnimatedListHook<T, AnimatedGridState>(
+    _AnimatedListHook<T, AnimatedGridState, Widget>(
       items: items,
       identity: identity,
       removedItemBuilder: removedItemBuilder,
@@ -119,7 +157,7 @@ AnimatedListHookResult<T, SliverAnimatedGridState> useSliverAnimatedGrid<T>({
   String? debugLabel,
 }) {
   return use(
-    _AnimatedListHook<T, SliverAnimatedGridState>(
+    _AnimatedListHook<T, SliverAnimatedGridState, Widget>(
       items: items,
       identity: identity,
       removedItemBuilder: removedItemBuilder,
@@ -139,15 +177,18 @@ AnimatedListHookResult<T, SliverAnimatedGridState> useSliverAnimatedGrid<T>({
 typedef _InsertItem<S extends State<StatefulWidget>> =
     void Function(S state, int index, Duration duration);
 
-typedef _RemoveItem<S extends State<StatefulWidget>> =
+typedef _RemovedItemBuilder<R> =
+    R Function(BuildContext context, Animation<double> animation);
+
+typedef _RemoveItem<S extends State<StatefulWidget>, R> =
     void Function(
       S state,
       int index,
-      AnimatedRemovedItemBuilder builder,
+      _RemovedItemBuilder<R> builder,
       Duration duration,
     );
 
-class _AnimatedListHook<T, S extends State<StatefulWidget>>
+class _AnimatedListHook<T, S extends State<StatefulWidget>, R>
     extends Hook<AnimatedListHookResult<T, S>> {
   const _AnimatedListHook({
     required this.items,
@@ -162,19 +203,21 @@ class _AnimatedListHook<T, S extends State<StatefulWidget>>
 
   final List<T> items;
   final Object Function(T item) identity;
-  final AnimatedListRemovedItemBuilder<T> removedItemBuilder;
+  final R Function(BuildContext, T, Animation<double>) removedItemBuilder;
   final Duration insertDuration;
   final Duration removeDuration;
   final _InsertItem<S> insertItem;
-  final _RemoveItem<S> removeItem;
+  final _RemoveItem<S, R> removeItem;
   final String? debugLabel;
 
   @override
-  _AnimatedListHookState<T, S> createState() => _AnimatedListHookState<T, S>();
+  _AnimatedListHookState<T, S, R> createState() =>
+      _AnimatedListHookState<T, S, R>();
 }
 
-class _AnimatedListHookState<T, S extends State<StatefulWidget>>
-    extends HookState<AnimatedListHookResult<T, S>, _AnimatedListHook<T, S>> {
+class _AnimatedListHookState<T, S extends State<StatefulWidget>, R>
+    extends
+        HookState<AnimatedListHookResult<T, S>, _AnimatedListHook<T, S, R>> {
   late final GlobalKey<S> _key;
   late List<T> _items;
   late List<Object> _identities;
@@ -190,7 +233,7 @@ class _AnimatedListHookState<T, S extends State<StatefulWidget>>
   }
 
   @override
-  void didUpdateHook(_AnimatedListHook<T, S> oldHook) {
+  void didUpdateHook(_AnimatedListHook<T, S, R> oldHook) {
     super.didUpdateHook(oldHook);
     _synchronize();
   }
