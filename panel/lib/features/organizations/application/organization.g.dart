@@ -123,7 +123,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'7297fc6f2e379a442c9c0a15b2bd95e489438237';
+String _$organizationHash() => r'45b1ea19bda17c75a1327fff03857ac4732f2038';
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

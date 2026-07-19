@@ -79,7 +79,10 @@ class OrganizationScaffold extends HookConsumerWidget {
 class OrganizationSidebarContent extends HookConsumerWidget {
   const OrganizationSidebarContent({super.key});
 
-  static List<Widget> organizationLinks(skir.RecordId organizationId) {
+  static List<Widget> organizationLinks(
+    skir.RecordId organizationId,
+    int pendingRequests,
+  ) {
     return [
       const SidebarHeader(text: "Organization"),
       SidebarLink(
@@ -95,7 +98,35 @@ class OrganizationSidebarContent extends HookConsumerWidget {
         text: "Members",
         route: OrganizationRoute(
           organizationId: organizationId.id,
-          children: [MembersRoute()],
+          children: [
+            MembersRoute(children: [const MemberListRoute()]),
+          ],
+        ),
+      ),
+      SidebarLink(
+        icon: Icones(MaterialSymbols.person_add),
+        text: "Join Requests",
+        trailing: pendingRequests > 0
+            ? Semantics(
+                label: "$pendingRequests pending join requests",
+                child: Badge(label: Text("$pendingRequests")),
+              )
+            : null,
+        route: OrganizationRoute(
+          organizationId: organizationId.id,
+          children: [
+            MembersRoute(children: [const JoinRequestsRoute()]),
+          ],
+        ),
+      ),
+      SidebarLink(
+        icon: Icones(MaterialSymbols.key),
+        text: "Join Codes",
+        route: OrganizationRoute(
+          organizationId: organizationId.id,
+          children: [
+            MembersRoute(children: [const JoinCodesRoute()]),
+          ],
         ),
       ),
     ];
@@ -134,6 +165,7 @@ class OrganizationSidebarContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
+    final pendingRequests = ref.watch(joinRequestCountProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -142,7 +174,7 @@ class OrganizationSidebarContent extends HookConsumerWidget {
             ...realmLinks(organizationId, realmId),
             const SizedBox(height: 16),
           ],
-          ...organizationLinks(organizationId),
+          ...organizationLinks(organizationId, pendingRequests),
         ],
         const Spacer(),
         UserMenu(),

@@ -3,6 +3,9 @@ import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/features/auth/application/auth.dart";
 import "package:typewriter_panel/features/auth/presentation/route.dart";
+import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/route.dart";
+import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/route.dart";
+import "package:typewriter_panel/features/organizations/features/members/presentation/member_list_route.dart";
 import "package:typewriter_panel/features/organizations/features/members/presentation/route.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/presentation/route.dart";
 import "package:typewriter_panel/features/organizations/features/realms/features/books/presentation/book/route.dart";
@@ -42,7 +45,15 @@ class AppRouter extends RootStackRouter {
       guards: [AuthGuard(ref)],
       children: [
         AutoRoute(page: ServicesRoute.page, path: "services", initial: true),
-        AutoRoute(page: MembersRoute.page, path: "members"),
+        AutoRoute(
+          page: MembersRoute.page,
+          path: "members",
+          children: [
+            AutoRoute(page: MemberListRoute.page, path: "", initial: true),
+            AutoRoute(page: JoinRequestsRoute.page, path: "join-requests"),
+            AutoRoute(page: JoinCodesRoute.page, path: "join-codes"),
+          ],
+        ),
         AutoRoute(
           page: RealmRoute.page,
           path: "realm/:realmId",

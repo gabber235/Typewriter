@@ -5,7 +5,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/features/auth/application/auth.dart";
 import "package:typewriter_panel/features/organizations/application/organization.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/members.dart";
+import "package:typewriter_panel/features/organizations/features/members/application/roles.dart";
 import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";

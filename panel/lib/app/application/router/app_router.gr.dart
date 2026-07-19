@@ -137,6 +137,38 @@ class IndexRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [JoinCodesPage]
+class JoinCodesRoute extends PageRouteInfo<void> {
+  const JoinCodesRoute({List<PageRouteInfo>? children})
+    : super(JoinCodesRoute.name, initialChildren: children);
+
+  static const String name = 'JoinCodesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const JoinCodesPage();
+    },
+  );
+}
+
+/// generated route for
+/// [JoinRequestsPage]
+class JoinRequestsRoute extends PageRouteInfo<void> {
+  const JoinRequestsRoute({List<PageRouteInfo>? children})
+    : super(JoinRequestsRoute.name, initialChildren: children);
+
+  static const String name = 'JoinRequestsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const JoinRequestsPage();
+    },
+  );
+}
+
+/// generated route for
 /// [LibraryPage]
 class LibraryRoute extends PageRouteInfo<void> {
   const LibraryRoute({List<PageRouteInfo>? children})
@@ -148,6 +180,22 @@ class LibraryRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const LibraryPage();
+    },
+  );
+}
+
+/// generated route for
+/// [MemberListPage]
+class MemberListRoute extends PageRouteInfo<void> {
+  const MemberListRoute({List<PageRouteInfo>? children})
+    : super(MemberListRoute.name, initialChildren: children);
+
+  static const String name = 'MemberListRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const MemberListPage();
     },
   );
 }

@@ -4,13 +4,11 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/app/application/router/app_router.dart";
 import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/members.dart";
 import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/ui/components/secret_field.dart";
 import "package:typewriter_panel/shared/utilities/collection.dart";
 import "package:typewriter_panel/shared/utilities/riverpod.dart";
 
@@ -151,62 +149,6 @@ class Organization extends _$Organization {
     }
     final organizations = await ref.watch(organizationsProvider.future);
     return organizations.firstWhereOrNull((org) => org.organizationId == id);
-  }
-
-  /// Generates an invite link (join code) for the current organization.
-  Future<SecretFieldRevealed> generateJoinCode({
-    JoinCodeOptions options = const JoinCodeOptions(),
-  }) async {
-    final organizationId = ref.read(organizationIdProvider);
-    if (organizationId == null) {
-      throw ApiException.noOrganization();
-    }
-
-    final userId = await ref.read(userIdProvider.future);
-    if (userId == null) {
-      throw ApiException.notAuthenticated();
-    }
-
-    final request = skir.GenerateOrganizationJoinCodeRequest(
-      singleUse: options.singleUse,
-      expiration: switch (options.expiration) {
-        JoinCodeExpirationNever() =>
-          skir.GenerateOrganizationJoinCodeRequest_Expiration.never,
-        JoinCodeExpirationDuration(:final duration) =>
-          skir.GenerateOrganizationJoinCodeRequest_Expiration.createDuration(
-            milliseconds: duration.inMilliseconds,
-          ),
-      },
-      autoAccept: skir.GenerateOrganizationJoinCodeRequest_AutoAccept(
-        roleIds: options.autoAcceptRoleIds,
-      ),
-    );
-
-    final response = await ref.requestSkir(
-      "cloud.to.user.$userId.organization.${organizationId.id}.members.join_codes.generate",
-      skir.GenerateOrganizationJoinCodeRequest.serializer.toBytes(request),
-      skir.GenerateOrganizationJoinCodeResponse.serializer,
-    );
-
-    switch (response) {
-      case skir.GenerateOrganizationJoinCodeResponse_unknown():
-        throw ApiException.unknownResponseMessage();
-      case skir.GenerateOrganizationJoinCodeResponse_internalErrorWrapper():
-        throw ApiException.internalServerError();
-      case skir.GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper():
-        throw ApiException.notFound("Roles");
-      case skir.GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper():
-        throw ApiException.badRequest("One or more roles cannot be assigned");
-      case skir.GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper():
-        throw ApiException.badRequest("Expiration duration must be positive");
-      case skir.GenerateOrganizationJoinCodeResponse_successWrapper(
-        :final value,
-      ):
-        return SecretFieldRevealed(
-          value: value.code.id,
-          expiresAt: value.expiresAt,
-        );
-    }
   }
 }
 

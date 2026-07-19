@@ -1,13 +1,13 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/route.dart";
+import "package:typewriter_panel/features/organizations/features/members/presentation/member_list_route.dart";
 import "package:typewriter_panel/features/organizations/features/realms/presentation/organization_route.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "MembersPage", type: MembersPage)
-Widget membersPageUseCase(BuildContext context) {
+@widgetbook.UseCase(name: "MemberListPage", type: MemberListPage)
+Widget memberListPageUseCase(BuildContext context) {
   final membersState = context.knobs.displayState(
     label: "Members State",
     initialOption: DisplayState.fewItems,
@@ -31,6 +31,6 @@ Widget membersPageUseCase(BuildContext context) {
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],
-    child: OrganizationScaffold(child: MembersPage()),
+    child: OrganizationScaffold(child: MemberListPage()),
   );
 }

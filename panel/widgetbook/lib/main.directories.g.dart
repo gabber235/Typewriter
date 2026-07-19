@@ -13,6 +13,10 @@
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 import 'package:widgetbook_workspace/stories/app/presentation/shortcuts/action_shortcuts.stories.dart'
     as _widgetbook_workspace_stories_app_presentation_shortcuts_action_shortcuts_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/members/features/join_codes/presentation/route.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_members_features_join_codes_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/members/features/join_requests/presentation/route.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_members_features_join_requests_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_members_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph.stories.dart'
@@ -162,16 +166,63 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'members',
                 children: [
                   _widgetbook.WidgetbookFolder(
+                    name: 'features',
+                    children: [
+                      _widgetbook.WidgetbookFolder(
+                        name: 'join_codes',
+                        children: [
+                          _widgetbook.WidgetbookFolder(
+                            name: 'presentation',
+                            children: [
+                              _widgetbook.WidgetbookComponent(
+                                name: 'JoinCodesPage',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'JoinCodesPage',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_members_features_join_codes_presentation_route_stories
+                                            .useCase,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookFolder(
+                        name: 'join_requests',
+                        children: [
+                          _widgetbook.WidgetbookFolder(
+                            name: 'presentation',
+                            children: [
+                              _widgetbook.WidgetbookComponent(
+                                name: 'JoinRequestsPage',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'JoinRequestsPage',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_members_features_join_requests_presentation_route_stories
+                                            .useCase,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
                     name: 'presentation',
                     children: [
                       _widgetbook.WidgetbookComponent(
-                        name: 'MembersPage',
+                        name: 'MemberListPage',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
-                            name: 'MembersPage',
+                            name: 'MemberListPage',
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_members_presentation_route_stories
-                                    .membersPageUseCase,
+                                    .memberListPageUseCase,
                           ),
                         ],
                       ),

@@ -194,11 +194,13 @@ class SidebarLink extends HookConsumerWidget {
     required this.icon,
     required this.text,
     required this.route,
+    this.trailing,
     super.key,
   });
   final Widget icon;
   final String text;
   final PageRouteInfo route;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -245,12 +247,13 @@ class SidebarLink extends HookConsumerWidget {
                   child: icon,
                 ),
                 const SizedBox(width: 12),
-                Flexible(
+                Expanded(
                   child: Text(
                     text,
                     style: TextStyle(color: color, fontSize: 14),
                   ),
                 ),
+                if (trailing case final trailing?) trailing,
               ],
             ),
           ),
