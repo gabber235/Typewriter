@@ -19,7 +19,9 @@ const safeColors = <Color>[
 extension ColorsExtension on List<Color> {
   /// An HSV circular hue mixing algorithm that evenly distributes colors across the color wheel.
   Color mix() {
-    assert(isNotEmpty, "Cannot mix an empty color list.");
+    if (isEmpty) {
+      throw StateError("Cannot mix an empty color list.");
+    }
 
     var hueX = 0.0;
     var hueY = 0.0;
