@@ -21,7 +21,7 @@ final _organizationId = recordId("organization:org1");
 Service _service({String name = "Original"}) => Service(
   serviceId: recordId("service:service1"),
   name: name,
-  roles: const [],
+  roles: [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2025),
 );
 
@@ -96,7 +96,7 @@ void main() {
           skir.BindServiceResponse.createSuccess(
             serviceId: "service1",
             serviceName: "Service",
-            serviceRoles: const [],
+            serviceRoles: [skir.ServiceRole.createRealm(version: "1")],
           ),
         );
       });

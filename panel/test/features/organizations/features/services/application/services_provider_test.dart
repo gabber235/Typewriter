@@ -19,7 +19,7 @@ final _organizationId = recordId("organization:org1");
 Service _service(String id, {String? name}) => Service(
   serviceId: recordId("service:$id"),
   name: name ?? "Service $id",
-  roles: const [],
+  roles: [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2025),
 );
 

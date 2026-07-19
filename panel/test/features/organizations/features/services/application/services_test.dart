@@ -5,12 +5,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 
 Service service({
   String name = "test_service",
-  List<ServiceRole> roles = const [],
+  List<ServiceRole>? roles,
   ServiceState? state,
 }) => Service(
   serviceId: recordId("service:test"),
   name: name,
-  roles: roles,
+  roles: roles ?? [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2025),
   state: state,
 );
@@ -60,6 +60,6 @@ void main() {
     final value = service();
     expect(value.displayName, "Test Service");
     expect(value.lastSeenLabel, "Never");
-    expect(value.label, "Unknown");
+    expect(value.label, "Realm");
   });
 }
