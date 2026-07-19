@@ -1,9 +1,13 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/app/application/router/app_router.dart";
+import "package:typewriter_panel/features/organizations/features/members/application/application.dart";
 import "package:typewriter_panel/features/organizations/features/members/presentation/member_list_route.dart";
 import "package:typewriter_panel/shared/ui/components/page_heading.dart";
+import "package:typewriter_panel/shared/ui/components/shimmer.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -47,4 +51,59 @@ void main() {
     expect(heading.subtext, isNotEmpty);
     expect(find.byType(TabBar), findsNothing);
   });
+
+  testWidgets("MemberListPage shows mobile member shimmers while loading", (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(400, 900);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpTestApp(
+      child: const MemberListPage(),
+      overrides: [
+        organizationMembersProvider.overrideWith(
+          _LoadingOrganizationMembers.new,
+        ),
+      ],
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey("membersLoadingMobile")), findsOneWidget);
+    expect(find.byKey(const ValueKey("membersLoadingDesktop")), findsNothing);
+    expect(find.byType(ShimmerBox), findsWidgets);
+  });
+
+  testWidgets("MemberListPage shows desktop member shimmers while loading", (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 900);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpTestApp(
+      child: const MemberListPage(),
+      overrides: [
+        organizationMembersProvider.overrideWith(
+          _LoadingOrganizationMembers.new,
+        ),
+      ],
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey("membersLoadingDesktop")), findsOneWidget);
+    expect(find.byKey(const ValueKey("membersLoadingMobile")), findsNothing);
+    expect(find.byType(ShimmerBox), findsWidgets);
+  });
+}
+
+class _LoadingOrganizationMembers extends OrganizationMembers {
+  @override
+  Stream<List<OrganizationMember>> build() {
+    final controller = StreamController<List<OrganizationMember>>();
+    ref.onDispose(controller.close);
+    return controller.stream;
+  }
 }

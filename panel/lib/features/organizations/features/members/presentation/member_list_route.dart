@@ -15,18 +15,20 @@ class MemberListPage extends StatelessWidget {
       id: "members",
       child: Section(
         margin: EdgeInsets.zero,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PageHeading(
+        child: CustomScrollView(
+          slivers: [
+            const SliverToBoxAdapter(
+              child: PageHeading(
                 title: "Members",
                 subtext:
                     "Manage everyone who can access this organization. Review each member's assigned role and update permissions as your team and responsibilities change.",
               ),
-              const Padding(padding: EdgeInsets.all(24), child: MembersTab()),
-            ],
-          ),
+            ),
+            const SliverPadding(
+              padding: EdgeInsets.all(24),
+              sliver: MembersTab(),
+            ),
+          ],
         ),
       ),
     );

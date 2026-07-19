@@ -1,12 +1,9 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/member_card.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/ui/components/empty_state.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class MembersTabletList extends HookConsumerWidget {
   const MembersTabletList({
@@ -21,12 +18,20 @@ class MembersTabletList extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final animation = useSliverAnimatedList(
+      items: members,
+      identity: (item) => item.userId,
+      removedItemBuilder: (context, item, animation) =>
+          _child(item, selectedIds, animation, ignorePointer: true),
+    );
 
     if (members.isEmpty) {
-      return const EmptyState(
-        icon: MaterialSymbols.groups_2_rounded,
-        title: "No members yet",
-        description: "Invite someone to get started!",
+      return SliverFillRemaining(
+        child: const EmptyState(
+          icon: MaterialSymbols.groups_2_rounded,
+          title: "No members yet",
+          description: "Invite someone to get started!",
+        ),
       );
     }
 
@@ -44,53 +49,83 @@ class MembersTabletList extends HookConsumerWidget {
       }
     }
 
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: handleSelectAll,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Surface.colorOf(context),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(8),
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: StaggerEntrance(
+            child: GestureDetector(
+              onTap: handleSelectAll,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Surface.colorOf(context),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: allSelected ? true : (someSelected ? null : false),
+                      tristate: true,
+                      onChanged: (_) => handleSelectAll(),
+                    ),
+                    Text(
+                      "Select all",
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: allSelected ? true : (someSelected ? null : false),
-                  tristate: true,
-                  onChanged: (_) => handleSelectAll(),
-                ),
-                Text(
-                  "Select all",
-                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ],
             ),
           ),
         ),
-        ...members.asMap().entries.map((entry) {
-          final index = entry.key;
-          final member = entry.value;
-          return MemberTabletCard(
-            key: ValueKey(member.userId),
-            member: member,
-            index: index,
-            isSelected: selectedIds.value.contains(member.userId),
-            onSelectionChanged: (selected) {
-              if (selected) {
-                selectedIds.value = {...selectedIds.value, member.userId};
-              } else {
-                selectedIds.value = selectedIds.value
-                    .where((id) => id != member.userId)
-                    .toSet();
-              }
-            },
-          );
-        }),
+
+        SliverAnimatedList(
+          key: animation.key,
+          initialItemCount: animation.items.length,
+          itemBuilder: (context, index, animation) {
+            final member = members[index];
+            return _child(member, selectedIds, animation);
+          },
+        ),
       ],
+    );
+  }
+
+  Widget _child(
+    OrganizationMember member,
+    ValueNotifier<Set<skir.RecordId>> selectedIds,
+    Animation<double> animation, {
+    bool ignorePointer = false,
+  }) {
+    return IgnorePointer(
+      key: ValueKey(member.userId),
+      ignoring: ignorePointer,
+      child: ElasticTransition(
+        animation: animation,
+        child: StaggerEntrance(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: MemberTabletCard(
+              key: ValueKey(member.userId),
+              member: member,
+              isSelected: selectedIds.value.contains(member.userId),
+              onSelectionChanged: (selected) {
+                if (selected) {
+                  selectedIds.value = {...selectedIds.value, member.userId};
+                } else {
+                  selectedIds.value = selectedIds.value
+                      .where((id) => id != member.userId)
+                      .toSet();
+                }
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

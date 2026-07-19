@@ -40,115 +40,116 @@ class MembersTable extends HookConsumerWidget {
         selectedIds.value.isNotEmpty &&
         selectedIds.value.length < members.length;
 
-    return AnimatedTable(
-      key: animated.key,
-      initialItemCount: animated.items.length,
-      columnWidths: const {
-        0: FixedColumnWidth(48),
-        1: IntrinsicColumnWidth(),
-        2: FlexColumnWidth(1),
-        3: FixedColumnWidth(80),
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      headerRows: [
-        TableRow(
-          decoration: BoxDecoration(color: Surface.colorOf(context)),
-          children: [
-            TableCell(
-              verticalAlignment: TableCellVerticalAlignment.middle,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Checkbox(
-                  value: allSelected ? true : (someSelected ? null : false),
-                  tristate: true,
-                  onChanged: (value) {
-                    if (allSelected || someSelected) {
-                      selectedIds.value = {};
-                    } else {
-                      selectedIds.value = members.map((m) => m.userId).toSet();
-                    }
-                  },
-                ),
-              ),
-            ),
-            TableCell(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Text(
-                  "Member",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
+    return SliverFillRemaining(
+      child: AnimatedTable(
+        key: animated.key,
+        initialItemCount: animated.items.length,
+        columnWidths: const {
+          0: FixedColumnWidth(48),
+          1: IntrinsicColumnWidth(),
+          2: FlexColumnWidth(1),
+          3: FixedColumnWidth(80),
+        },
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        headerRows: [
+          TableRow(
+            decoration: BoxDecoration(color: Surface.colorOf(context)),
+            children: [
+              TableCell(
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: StaggerEntrance(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Checkbox(
+                      value: allSelected ? true : (someSelected ? null : false),
+                      tristate: true,
+                      onChanged: (value) {
+                        if (allSelected || someSelected) {
+                          selectedIds.value = {};
+                        } else {
+                          selectedIds.value = members
+                              .map((m) => m.userId)
+                              .toSet();
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
-            TableCell(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Text(
-                  "Roles",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
+              TableCell(
+                child: StaggerEntrance(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      "Member",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const TableCell(child: SizedBox.shrink()),
-          ],
-        ),
-      ],
-      emptyBuilder: (context) => EmptyState(
-        title: "No members yet",
-        description: "Invite someone to get started!",
-        icon: MaterialSymbols.groups_2_rounded,
-      ),
-      transitionBuilder: _buildRowTransition,
-      tableBuilder: (context, table) => Surface(
-        color: Surface.colorOf(context),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+              TableCell(
+                child: StaggerEntrance(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      "Roles",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const TableCell(child: SizedBox.shrink()),
+            ],
           ),
-          clipBehavior: Clip.antiAlias,
-          child: table,
+        ],
+        emptyBuilder: (context) => EmptyState(
+          title: "No members yet",
+          description: "Invite someone to get started!",
+          icon: MaterialSymbols.groups_2_rounded,
         ),
+        transitionBuilder: (context, animation, child) {
+          return ElasticTransition(animation: animation, child: child);
+        },
+        tableBuilder: (context, table) => Surface(
+          color: Surface.colorOf(context),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: table,
+          ),
+        ),
+        rowBuilder: (context, index, animation) {
+          final member = animated.items[index];
+          return _buildMemberRow(
+            context,
+            ref,
+            member,
+            selectedIds.value.contains(member.userId),
+            focusedMemberId,
+            theme,
+          );
+        },
       ),
-      rowBuilder: (context, index, animation) {
-        final member = animated.items[index];
-        return _buildMemberRow(
-          context,
-          ref,
-          member,
-          selectedIds.value.contains(member.userId),
-          focusedMemberId,
-          theme,
-        );
-      },
-    );
-  }
-
-  Widget _buildRowTransition(
-    BuildContext context,
-    Animation<double> animation,
-    Widget child,
-  ) {
-    return FadeTransition(
-      opacity: animation,
-      child: SizeTransition(sizeFactor: animation, child: child),
     );
   }
 
@@ -175,13 +176,49 @@ class MembersTable extends HookConsumerWidget {
       children: [
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: StaggerEntrance(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Material(
+                color: Colors.transparent,
+                shape: CircleBorder(),
+                child: InkWell(
+                  customBorder: CircleBorder(),
+                  onFocusChange: (focused) {
+                    if (focused) {
+                      focusedMemberId.value = member.userId;
+                    } else if (focusedMemberId.value == member.userId) {
+                      focusedMemberId.value = null;
+                    }
+                  },
+                  onTap: () {
+                    if (isSelected) {
+                      selectedIds.value = selectedIds.value
+                          .where((id) => id != member.userId)
+                          .toSet();
+                    } else {
+                      selectedIds.value = {...selectedIds.value, member.userId};
+                    }
+                  },
+                  child: SelectableAvatar(
+                    avatarUrl:
+                        member.avatarUrl?.nullIfEmpty ??
+                        "$userIconUrl&seed=${member.userId}",
+                    isSelected: isSelected,
+                    radius: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        TableCell(
+          child: StaggerEntrance(
             child: Material(
               color: Colors.transparent,
-              shape: CircleBorder(),
+              borderRadius: BorderRadius.circular(8),
               child: InkWell(
-                customBorder: CircleBorder(),
+                borderRadius: BorderRadius.circular(8),
                 onFocusChange: (focused) {
                   if (focused) {
                     focusedMemberId.value = member.userId;
@@ -198,87 +235,59 @@ class MembersTable extends HookConsumerWidget {
                     selectedIds.value = {...selectedIds.value, member.userId};
                   }
                 },
-                child: SelectableAvatar(
-                  avatarUrl:
-                      member.avatarUrl?.nullIfEmpty ??
-                      "$userIconUrl&seed=${member.userId}",
-                  isSelected: isSelected,
-                  radius: 16,
-                ),
-              ),
-            ),
-          ),
-        ),
-        TableCell(
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onFocusChange: (focused) {
-                if (focused) {
-                  focusedMemberId.value = member.userId;
-                } else if (focusedMemberId.value == member.userId) {
-                  focusedMemberId.value = null;
-                }
-              },
-              onTap: () {
-                if (isSelected) {
-                  selectedIds.value = selectedIds.value
-                      .where((id) => id != member.userId)
-                      .toSet();
-                } else {
-                  selectedIds.value = {...selectedIds.value, member.userId};
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (member.name != null)
-                      Text(
-                        member.name!,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    if (member.email != null)
-                      BlurReveal(
-                        blurSigma: 3,
-                        child: Text(
-                          member.email!,
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (member.name != null)
+                        Text(
+                          member.name!,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                  ],
+                      if (member.email != null)
+                        BlurReveal(
+                          blurSigma: 3,
+                          child: Text(
+                            member.email!,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
         TableCell(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: RoleMultiselectDropdown(
-              selectedRoles: member.roles,
-              onRolesChanged: (newRoles) {
-                ref
-                    .read(organizationMembersProvider.notifier)
-                    .updateMemberRoles(member.userId, newRoles)
-                    .catchApiExceptionsAndDisplay(context);
-              },
-              placeholder: "Select roles",
+          child: StaggerEntrance(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: RoleMultiselectDropdown(
+                selectedRoles: member.roles,
+                onRolesChanged: (newRoles) {
+                  ref
+                      .read(organizationMembersProvider.notifier)
+                      .updateMemberRoles(member.userId, newRoles)
+                      .catchApiExceptionsAndDisplay(context);
+                },
+                placeholder: "Select roles",
+              ),
             ),
           ),
         ),
-        TableCell(child: MemberRowActions(member: member)),
+        TableCell(
+          child: StaggerEntrance(child: MemberRowActions(member: member)),
+        ),
       ],
     );
   }

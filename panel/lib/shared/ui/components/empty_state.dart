@@ -19,7 +19,6 @@ class EmptyState extends HookConsumerWidget {
     this.icon,
     this.buttonText,
     this.onPressed,
-    this.color,
     super.key,
   });
 
@@ -39,54 +38,48 @@ class EmptyState extends HookConsumerWidget {
   /// Callback for the button press. Ignored when `buttonText` is null.
   final VoidCallback? onPressed;
 
-  /// Card color. Defaults to the card color of the theme.
-  final Color? color;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurfaceVariant;
 
-    return Card(
-      color: color,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Icones(
-                    icon!,
-                    size: 48,
-                    color: textColor.withValues(alpha: 0.5),
-                  ),
-                ),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge?.copyWith(color: textColor),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: textColor.withValues(alpha: 0.7),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Icones(
+                  icon!,
+                  size: 48,
+                  color: textColor.withValues(alpha: 0.5),
                 ),
               ),
-              if (buttonText != null) ...[
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: onPressed,
-                  icon: const Icones(Fa6Solid.plus),
-                  label: Text(buttonText!),
-                ),
-              ],
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(color: textColor),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: textColor.withValues(alpha: 0.7),
+              ),
+            ),
+            if (buttonText != null) ...[
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: onPressed,
+                icon: const Icones(Fa6Solid.plus),
+                label: Text(buttonText!),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );

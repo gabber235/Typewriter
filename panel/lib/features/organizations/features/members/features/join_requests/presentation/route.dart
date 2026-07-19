@@ -14,8 +14,8 @@ class JoinRequestsPage extends StatelessWidget {
         margin: EdgeInsets.zero,
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: const PageHeading(
+            const SliverToBoxAdapter(
+              child: PageHeading(
                 title: "Join Requests",
                 subtext:
                     "Review people waiting to join this organization. Approve each request with the right role, or decline requests that should not receive access.",

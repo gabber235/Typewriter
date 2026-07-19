@@ -28,7 +28,6 @@ class JoinRequestsList extends HookConsumerWidget {
           icon: Fa6Solid.user_plus,
           title: "No join requests",
           description: "When members request to join, they will appear here.",
-          color: Colors.transparent,
         ),
       );
     }
@@ -47,75 +46,79 @@ class JoinRequestsList extends HookConsumerWidget {
       }
     }
 
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverFloatingHeader(
-          child: Container(
-            color: Surface.colorOf(context),
-            padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
-            child: Flex(
-              direction: context.responsive(
-                mobile: Axis.vertical,
-                tablet: Axis.horizontal,
-              ),
-              spacing: 8,
-              crossAxisAlignment: context.responsive(
-                mobile: CrossAxisAlignment.start,
-                tablet: CrossAxisAlignment.center,
-              ),
-              children: [
-                SizedBox(
-                  height: 52,
-                  child: GestureDetector(
-                    onTap: handleSelectAll,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Checkbox(
-                          value: allSelected
-                              ? true
-                              : (someSelected ? null : false),
-                          tristate: true,
-                          onChanged: (value) => handleSelectAll(),
+    return SliverStaggerScope(
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          SliverFloatingHeader(
+            child: Container(
+              color: Surface.colorOf(context),
+              padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
+              child: Flex(
+                direction: context.responsive(
+                  mobile: Axis.vertical,
+                  tablet: Axis.horizontal,
+                ),
+                spacing: 8,
+                crossAxisAlignment: context.responsive(
+                  mobile: CrossAxisAlignment.start,
+                  tablet: CrossAxisAlignment.center,
+                ),
+                children: [
+                  StaggerEntrance(
+                    child: SizedBox(
+                      height: 52,
+                      child: GestureDetector(
+                        onTap: handleSelectAll,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Checkbox(
+                              value: allSelected
+                                  ? true
+                                  : (someSelected ? null : false),
+                              tristate: true,
+                              onChanged: (value) => handleSelectAll(),
+                            ),
+                            Text(
+                              "Select all",
+                              style: TextStyle(
+                                fontVariations: [.weight(500)],
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          "Select all",
-                          style: TextStyle(
-                            fontVariations: [.weight(500)],
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                if (context.isMobile)
-                  BulkJoinRequestActions(
-                    selectedCount: selectedIds.value.length,
-                    selectedIds: selectedIds.value,
-                    onClearSelection: () => selectedIds.value = {},
-                  )
-                else
-                  Flexible(
-                    child: BulkJoinRequestActions(
+                  if (context.isMobile)
+                    BulkJoinRequestActions(
                       selectedCount: selectedIds.value.length,
                       selectedIds: selectedIds.value,
                       onClearSelection: () => selectedIds.value = {},
+                    )
+                  else
+                    Flexible(
+                      child: BulkJoinRequestActions(
+                        selectedCount: selectedIds.value.length,
+                        selectedIds: selectedIds.value,
+                        onClearSelection: () => selectedIds.value = {},
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SliverAnimatedList(
-          key: animation.key,
-          initialItemCount: animation.items.length,
-          itemBuilder: (context, index, animation) {
-            final request = requests[index];
-            return _child(request, selectedIds, animation);
-          },
-        ),
-      ],
+          SliverAnimatedList(
+            key: animation.key,
+            initialItemCount: animation.items.length,
+            itemBuilder: (context, index, animation) {
+              final request = requests[index];
+              return _child(request, selectedIds, animation);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -130,20 +133,22 @@ class JoinRequestsList extends HookConsumerWidget {
       ignoring: ignorePointer,
       child: ElasticTransition(
         animation: animation,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: JoinRequestCard(
-            request: request,
-            isSelected: selectedIds.value.contains(request.requestId),
-            onSelectionChanged: (selected) {
-              if (selected) {
-                selectedIds.value = {...selectedIds.value, request.requestId};
-              } else {
-                selectedIds.value = selectedIds.value
-                    .where((id) => id != request.requestId)
-                    .toSet();
-              }
-            },
+        child: StaggerEntrance(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: JoinRequestCard(
+              request: request,
+              isSelected: selectedIds.value.contains(request.requestId),
+              onSelectionChanged: (selected) {
+                if (selected) {
+                  selectedIds.value = {...selectedIds.value, request.requestId};
+                } else {
+                  selectedIds.value = selectedIds.value
+                      .where((id) => id != request.requestId)
+                      .toSet();
+                }
+              },
+            ),
           ),
         ),
       ),

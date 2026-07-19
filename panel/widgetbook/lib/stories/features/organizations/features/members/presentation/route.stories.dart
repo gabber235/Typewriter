@@ -16,10 +16,6 @@ Widget memberListPageUseCase(BuildContext context) {
     label: "Join Requests State",
     initialOption: DisplayState.fewItems,
   );
-  final joinCodesState = context.knobs.displayState(
-    label: "Join Codes State",
-    initialOption: DisplayState.fewItems,
-  );
 
   return FakeApp(
     overrides: [
@@ -27,7 +23,6 @@ Widget memberListPageUseCase(BuildContext context) {
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...organizationMembersProviderOverrides(state: membersState),
       ...organizationJoinRequestsProviderOverrides(state: joinRequestsState),
-      ...organizationJoinCodesProviderOverrides(state: joinCodesState),
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],
