@@ -29,7 +29,13 @@ void main() {
       );
 
       expect(find.byKey(firstKey), findsOneWidget);
-      expect(find.byType(ClipRect), findsOneWidget);
+      final animatedSize = tester.widget<AnimatedSize>(
+        find.descendant(
+          of: find.byType(ElasticMessageSwitcher),
+          matching: find.byType(AnimatedSize),
+        ),
+      );
+      expect(animatedSize.clipBehavior, Clip.hardEdge);
 
       showSecond.value = true;
       await tester.pump();
