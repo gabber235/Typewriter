@@ -325,10 +325,10 @@ packages:
     dependency: transitive
     description:
       name: dartastic_opentelemetry_api
-      sha256: "4949390ea0b77a67bc3d47fb17845c76f2894b92629b5d3146c01c892ce87064"
+      sha256: "2224561025dea6c2926e3f8c7172000bfc12b583f9dd8c75b53eaa5348d8d023"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0-beta.9"
+    version: "1.0.0-rc.1"
   dotted_border:
     dependency: "direct main"
     description:
