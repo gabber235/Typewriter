@@ -231,32 +231,47 @@ class _PendingJoinRequestTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ListTile(
-        leading: OrganizationLogo(
-          logoUrl: request.organizationLogoUrl,
-          size: 40,
-        ),
-        title: Text(request.organizationName.formatted),
-        subtitle: Text(
-          "Awaiting approval",
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+      child: ManagedActionSet(
+        shortcuts: [
+          ActionShortcut.intent(
+            id: "revoke_join_request",
+            label: "Revoke request",
+            description: "Cancel the join request",
+            intent: DeleteIntent,
+            priority: 2,
+            onInvoke: (_) => onCancel(),
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CountdownBadge(endDate: request.expiresAt),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              onPressed: onCancel,
-              tooltip: "Cancel request",
-              style: IconButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
+        ],
+        child: ManagedFocusHighlight(
+          borderRadius: BorderRadius.circular(8),
+          child: ListTile(
+            leading: OrganizationLogo(
+              logoUrl: request.organizationLogoUrl,
+              size: 40,
+            ),
+            title: Text(request.organizationName.formatted),
+            subtitle: Text(
+              "Awaiting approval",
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ],
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CountdownBadge(endDate: request.expiresAt),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: onCancel,
+                  tooltip: "Cancel request",
+                  style: IconButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
