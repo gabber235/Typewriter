@@ -8,6 +8,7 @@ export "components/anchored_overlay/anchored_overlay_scope.dart";
 export "components/anchored_overlay/placement_engine.dart";
 export "components/animated_table.dart";
 export "components/blur_reveal.dart";
+export "components/centered_sliver_main_axis_group.dart";
 export "components/content_size_tab_bar_view.dart";
 export "components/context_menu.dart";
 export "components/countdown_badge.dart";

@@ -93,27 +93,34 @@ class _IndexPageContent extends StatelessWidget {
         primary: true,
         slivers: [
           SliverStaggerScope(
-            sliver: SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              sliver: SliverMainAxisGroup(
-                slivers: [
-                  if (organizations.isNotEmpty) ...[
-                    _OrganizationsSelector(organizations: organizations),
-                    spacer,
-                    const SliverStaggerEntrance(
-                      sliver: SliverToBoxAdapter(child: LabeledDivider()),
-                    ),
-                    spacer,
-                  ],
-                  _JoinOrganization(joinRequests: joinRequests),
-                  spacer,
-                  const SliverStaggerEntrance(
-                    sliver: SliverToBoxAdapter(child: LabeledDivider()),
+            sliver: CenteredSliverMainAxisGroup(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
                   ),
-                  spacer,
-                  const _CreateOrganization(),
-                ],
-              ),
+                  sliver: SliverMainAxisGroup(
+                    slivers: [
+                      if (organizations.isNotEmpty) ...[
+                        _OrganizationsSelector(organizations: organizations),
+                        spacer,
+                        const SliverStaggerEntrance(
+                          sliver: SliverToBoxAdapter(child: LabeledDivider()),
+                        ),
+                        spacer,
+                      ],
+                      _JoinOrganization(joinRequests: joinRequests),
+                      spacer,
+                      const SliverStaggerEntrance(
+                        sliver: SliverToBoxAdapter(child: LabeledDivider()),
+                      ),
+                      spacer,
+                      const _CreateOrganization(),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
