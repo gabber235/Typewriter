@@ -5,7 +5,8 @@ import "package:typewriter_panel/features/auth/application/auth.dart";
 import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/shared/utilities/collection.dart";
 import "package:typewriter_panel/shared/utilities/riverpod.dart";
 
@@ -193,5 +194,13 @@ class UserJoinRequests extends _$UserJoinRequests {
       return uri.pathSegments.last;
     }
     return urlOrCode;
+  }
+
+  /// Locally cleans up expired join requests.
+  /// Does not affect the server state.
+  void cleanupExpiredRequests() {
+    state = AsyncData(
+      state.requireValue.where((request) => !request.isExpired).toList(),
+    );
   }
 }

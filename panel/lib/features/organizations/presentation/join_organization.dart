@@ -138,6 +138,9 @@ class _JoinOrganization extends HookConsumerWidget {
             request: item,
             onCancel: () =>
                 _cancelJoinRequest(context: context, ref: ref, request: item),
+            onExpire: () => ref
+                .read(userJoinRequestsProvider.notifier)
+                .cleanupExpiredRequests(),
           ),
         ),
       ),
@@ -219,10 +222,12 @@ class _PendingJoinRequestTile extends StatelessWidget {
   const _PendingJoinRequestTile({
     required this.request,
     required this.onCancel,
+    required this.onExpire,
   });
 
   final UserJoinRequest request;
   final VoidCallback onCancel;
+  final VoidCallback onExpire;
 
   @override
   Widget build(BuildContext context) {
@@ -259,7 +264,7 @@ class _PendingJoinRequestTile extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CountdownBadge(endDate: request.expiresAt),
+                CountdownBadge(endDate: request.expiresAt, onExpired: onExpire),
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),
