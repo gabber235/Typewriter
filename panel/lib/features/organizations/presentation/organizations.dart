@@ -5,6 +5,8 @@ class _OrganizationsSelector extends HookWidget {
 
   final List<OrganizationData> organizations;
 
+  Widget get spacer => const SliverToBoxAdapter(child: SizedBox(height: 16));
+
   @override
   Widget build(BuildContext context) {
     final searchQuery = useState("");
@@ -13,27 +15,26 @@ class _OrganizationsSelector extends HookWidget {
       return organization.name.toLowerCase().contains(normalizedQuery);
     }).toList();
 
-    final animation = useAnimatedList(
+    final animation = useSliverAnimatedList(
       items: filteredOrganizations,
       identity: (item) => item.organizationId,
       removedItemBuilder: (context, item, animation) =>
           _child(context, item, animation, ignorePointer: true),
     );
 
-    final scrollable = organizations.length > 5;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        StaggerEntrance(
-          child: Text(
-            "Select organization",
-            style: Theme.of(context).textTheme.headlineMedium,
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverStaggerEntrance(
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              "Select organization",
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        if (scrollable) ...[
-          StaggerEntrance(
+        spacer,
+        SliverStaggerEntrance(
+          sliver: SliverToBoxAdapter(
             child: DecoratedTextField(
               decoration: const InputDecoration(
                 hintText: "Search Organization",
@@ -42,25 +43,24 @@ class _OrganizationsSelector extends HookWidget {
               onChanged: (query) => searchQuery.value = query,
             ),
           ),
-          const SizedBox(height: 16),
-        ],
+        ),
+        spacer,
         if (filteredOrganizations.isEmpty)
-          const Padding(
+          const SliverPadding(
             padding: EdgeInsets.symmetric(vertical: 24),
-            child: Text("No organizations found."),
+            sliver: SliverToBoxAdapter(
+              child: EmptyState(
+                title: "No organizations found.",
+                description: "Try adjusting your search query.",
+              ),
+            ),
           )
         else
-          SizedBox(
-            height: scrollable ? 200 : null,
-            child: AnimatedList(
-              key: animation.key,
-              shrinkWrap: !scrollable,
-              physics: scrollable ? null : NeverScrollableScrollPhysics(),
-              initialItemCount: animation.items.length,
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index, animation) =>
-                  _child(context, filteredOrganizations[index], animation),
-            ),
+          SliverAnimatedList(
+            key: animation.key,
+            initialItemCount: animation.items.length,
+            itemBuilder: (context, index, animation) =>
+                _child(context, filteredOrganizations[index], animation),
           ),
       ],
     );

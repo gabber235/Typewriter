@@ -13,53 +13,55 @@ class _CreateOrganization extends HookConsumerWidget {
     useListenable(nameController);
     final iconUrl = _buildIconUrl(nameController.text, randomSeed.value);
 
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StaggerEntrance(
-            child: Text(
-              "Create organization",
-              style: theme.textTheme.headlineMedium,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const StaggerEntrance(child: SectionTitle(title: "Name")),
-          StaggerEntrance(
-            child: DecoratedTextField(
-              controller: nameController,
-              inputFormatters: [SnakeCaseInputFormatter()],
-              decoration: const InputDecoration(
-                hintText: "Enter organization name",
+    return SliverToBoxAdapter(
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StaggerEntrance(
+              child: Text(
+                "Create organization",
+                style: theme.textTheme.headlineMedium,
               ),
-              validator: _validateName,
             ),
-          ),
-          const SizedBox(height: 24),
-          StaggerEntrance(
-            child: _OrganizationIconPicker(
-              iconUrl: iconUrl,
-              onRandomize: () => randomSeed.value = _generateSeed(),
-            ),
-          ),
-          const SizedBox(height: 32),
-          StaggerEntrance(
-            child: SizedBox(
-              width: double.infinity,
-              child: LoadingButton.filled(
-                onPressed: () => _createOrganization(
-                  context: context,
-                  ref: ref,
-                  formKey: formKey,
-                  nameController: nameController,
-                  seed: randomSeed.value,
+            const SizedBox(height: 24),
+            const StaggerEntrance(child: SectionTitle(title: "Name")),
+            StaggerEntrance(
+              child: DecoratedTextField(
+                controller: nameController,
+                inputFormatters: [SnakeCaseInputFormatter()],
+                decoration: const InputDecoration(
+                  hintText: "Enter organization name",
                 ),
-                child: const Text("Create"),
+                validator: _validateName,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            StaggerEntrance(
+              child: _OrganizationIconPicker(
+                iconUrl: iconUrl,
+                onRandomize: () => randomSeed.value = _generateSeed(),
+              ),
+            ),
+            const SizedBox(height: 32),
+            StaggerEntrance(
+              child: SizedBox(
+                width: double.infinity,
+                child: LoadingButton.filled(
+                  onPressed: () => _createOrganization(
+                    context: context,
+                    ref: ref,
+                    formKey: formKey,
+                    nameController: nameController,
+                    seed: randomSeed.value,
+                  ),
+                  child: const Text("Create"),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

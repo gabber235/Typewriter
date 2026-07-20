@@ -16,6 +16,7 @@ class MemberListPage extends StatelessWidget {
       child: Section(
         margin: EdgeInsets.zero,
         child: CustomScrollView(
+          primary: true,
           slivers: [
             const SliverToBoxAdapter(
               child: PageHeading(

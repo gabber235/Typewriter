@@ -17,7 +17,7 @@ class _JoinOrganization extends HookConsumerWidget {
       return !request.isExpired;
     }).toList();
     final hasReachedLimit = activeRequests.length >= _maxPendingRequests;
-    final animation = useAnimatedList(
+    final animation = useSliverAnimatedList(
       items: activeRequests,
       identity: (item) => item.requestId,
       removedItemBuilder: (context, item, animation) =>
@@ -31,19 +31,19 @@ class _JoinOrganization extends HookConsumerWidget {
       controller: controller,
     );
 
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StaggerEntrance(
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverStaggerEntrance(
+          sliver: SliverToBoxAdapter(
             child: Text(
               "Join organization",
               style: theme.textTheme.headlineMedium,
             ),
           ),
-          const SizedBox(height: 8),
-          StaggerEntrance(
+        ),
+        spacer(8),
+        SliverStaggerEntrance(
+          sliver: SliverToBoxAdapter(
             child: Text(
               "Enter an invite URL or code to request to join an organization.",
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -51,32 +51,39 @@ class _JoinOrganization extends HookConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          StaggerEntrance(
-            child: Row(
-              children: [
-                Expanded(
-                  child: DecoratedTextField(
-                    controller: controller,
-                    enabled: !hasReachedLimit,
-                    decoration: const InputDecoration(
-                      hintText: "Invite URL or code",
+        ),
+        spacer(16),
+        SliverStaggerEntrance(
+          sliver: SliverToBoxAdapter(
+            child: Form(
+              key: formKey,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: DecoratedTextField(
+                      controller: controller,
+                      enabled: !hasReachedLimit,
+                      decoration: const InputDecoration(
+                        hintText: "Invite URL or code",
+                      ),
+                      validator: _validateInput,
+                      onSubmitted: hasReachedLimit
+                          ? null
+                          : (_) => submitJoinRequest(),
                     ),
-                    validator: _validateInput,
-                    onSubmitted: hasReachedLimit
-                        ? null
-                        : (_) => submitJoinRequest(),
                   ),
-                ),
-                const SizedBox(width: 12),
-                LoadingButton.filled(
-                  onPressed: hasReachedLimit ? null : submitJoinRequest,
-                  child: const Text("Join"),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  LoadingButton.filled(
+                    onPressed: hasReachedLimit ? null : submitJoinRequest,
+                    child: const Text("Join"),
+                  ),
+                ],
+              ),
             ),
           ),
-          ElasticMessageSwitcher(
+        ),
+        SliverToBoxAdapter(
+          child: ElasticMessageSwitcher(
             child: hasReachedLimit
                 ? StaggerEntrance(
                     child: Padding(
@@ -91,25 +98,28 @@ class _JoinOrganization extends HookConsumerWidget {
                   )
                 : null,
           ),
-          if (activeRequests.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            const StaggerEntrance(
+        ),
+        if (activeRequests.isNotEmpty) ...[
+          spacer(24),
+          const SliverStaggerEntrance(
+            sliver: SliverToBoxAdapter(
               child: SectionTitle(title: "Pending requests"),
             ),
-            const SizedBox(height: 8),
-            AnimatedList(
-              key: animation.key,
-              shrinkWrap: true,
-              initialItemCount: animation.items.length,
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index, animation) =>
-                  _child(context, activeRequests[index], ref, animation),
-            ),
-          ],
+          ),
+          spacer(8),
+          SliverAnimatedList(
+            key: animation.key,
+            initialItemCount: animation.items.length,
+            itemBuilder: (context, index, animation) =>
+                _child(context, activeRequests[index], ref, animation),
+          ),
         ],
-      ),
+      ],
     );
   }
+
+  Widget spacer(double height) =>
+      SliverToBoxAdapter(child: SizedBox(height: height));
 
   Widget _child(
     BuildContext context,
