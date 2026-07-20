@@ -3,7 +3,6 @@ export "features/members/members.dart";
 import "package:flutter_animate/flutter_animate.dart";
 
 import "package:faker/faker.dart";
-import "package:flutter/material.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/features/organizations/organizations.dart";
