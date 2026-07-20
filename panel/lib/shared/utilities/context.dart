@@ -6,14 +6,53 @@ extension BuildContextX on BuildContext {
   bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
 }
 
+enum Breakpoint {
+  mobile("MOBILE"),
+  tablet("TABLET"),
+  desktop("DESK"),
+  fourK("4K");
+
+  const Breakpoint(this.name);
+
+  final String name;
+}
+
 extension ResponsiveBreakpointsX on BuildContext {
   bool get isMobile => ResponsiveBreakpoints.of(this).isMobile;
   bool get isTablet => ResponsiveBreakpoints.of(this).isTablet;
   bool get isDesktop => ResponsiveBreakpoints.of(this).isDesktop;
   bool get is4K => ResponsiveBreakpoints.of(this).breakpoint.name == "4K";
 
-  bool isSmallerThan(double width) {
+  bool isSmallerThan(Breakpoint breakpoint) {
+    return ResponsiveBreakpoints.of(this).smallerThan(breakpoint.name);
+  }
+
+  bool isSmallerThanOrEqualTo(Breakpoint breakpoint) {
+    return ResponsiveBreakpoints.of(this).smallerOrEqualTo(breakpoint.name);
+  }
+
+  bool isLargerThan(Breakpoint breakpoint) {
+    return ResponsiveBreakpoints.of(this).largerThan(breakpoint.name);
+  }
+
+  bool isLargerThanOrEqualTo(Breakpoint breakpoint) {
+    return ResponsiveBreakpoints.of(this).largerOrEqualTo(breakpoint.name);
+  }
+
+  bool smallerThan(double width) {
     return ResponsiveBreakpoints.of(this).screenWidth < width;
+  }
+
+  bool smallerThanOrEqualTo(double width) {
+    return ResponsiveBreakpoints.of(this).screenWidth <= width;
+  }
+
+  bool largerThan(double width) {
+    return ResponsiveBreakpoints.of(this).screenWidth > width;
+  }
+
+  bool largerThanOrEqualTo(double width) {
+    return ResponsiveBreakpoints.of(this).screenWidth >= width;
   }
 
   T responsive<T>({required T mobile, T? tablet, T? desktop, T? fourK}) {

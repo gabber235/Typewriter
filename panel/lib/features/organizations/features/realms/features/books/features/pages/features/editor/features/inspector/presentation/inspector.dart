@@ -54,7 +54,7 @@ class Inspector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (context.isSmallerThan(3 * kInspectorMinSize)) {
+    if (context.smallerThan(3 * kInspectorMinSize)) {
       return MobileInspector(child: child);
     }
 
