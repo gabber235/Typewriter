@@ -177,7 +177,7 @@ class OrganizationSidebarContent extends HookConsumerWidget {
           ...organizationLinks(organizationId, pendingRequests),
         ],
         const Spacer(),
-        UserMenu(),
+        const FooterSidebarLinks(),
       ],
     );
   }

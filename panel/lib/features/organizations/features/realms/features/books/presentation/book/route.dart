@@ -224,7 +224,7 @@ class BookSidebarContent extends HookConsumerWidget {
               },
               loading: (_) => Expanded(child: const LoadingPagesSidebar()),
             ),
-            UserMenu(),
+            const FooterSidebarLinks(),
           ],
         ),
       ),

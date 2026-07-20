@@ -8,18 +8,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app/application/appearance.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/shared/hooks/menu_controller.dart";
-import "package:typewriter_panel/shared/ui/components/context_menu.dart";
-import "package:typewriter_panel/shared/ui/components/drag_handle.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:url_launcher/url_launcher.dart";
 
 part "sidebar.g.dart";
@@ -195,12 +184,14 @@ class SidebarLink extends HookConsumerWidget {
     required this.text,
     required this.route,
     this.trailing,
+    this.expand = true,
     super.key,
   });
   final Widget icon;
   final String text;
   final PageRouteInfo route;
   final Widget? trailing;
+  final bool expand;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -241,24 +232,156 @@ class SidebarLink extends HookConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             child: Row(
+              spacing: 12,
               children: [
                 IconTheme(
                   data: IconThemeData(color: color, size: 20),
                   child: icon,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(color: color, fontSize: 14),
-                  ),
-                ),
-                if (trailing case final trailing?) trailing,
+
+                if (expand)
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: TextStyle(color: color, fontSize: 14),
+                    ),
+                  )
+                else
+                  Text(text, style: TextStyle(color: color, fontSize: 14)),
+
+                ?trailing,
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class ExternalSidebarLink extends StatelessWidget {
+  const ExternalSidebarLink({
+    required this.icon,
+    required this.text,
+    required this.url,
+    this.trailing,
+    this.expand = true,
+    super.key,
+  });
+
+  final Widget icon;
+  final String text;
+  final String url;
+  final Widget? trailing;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    final uri = Uri.parse(url);
+
+    return Surface(
+      color: Colors.transparent,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: uri.launchExternally,
+          hoverColor: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            child: Row(
+              spacing: 12,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 20),
+                  child: icon,
+                ),
+
+                if (expand)
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: TextStyle(color: color, fontSize: 14),
+                    ),
+                  )
+                else
+                  Text(text, style: TextStyle(color: color, fontSize: 14)),
+
+                ?trailing,
+                IconTheme(
+                  data: IconThemeData(color: color, size: 18),
+                  child: Icones(MaterialSymbols.open_in_new),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FooterSidebarLinks extends StatelessWidget {
+  const FooterSidebarLinks({
+    this.compact = false,
+    this.expand = true,
+    super.key,
+  });
+
+  final bool compact;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: .start,
+      children: [
+        if (!compact) ...[
+          SupportSidebarLink(expand: expand),
+          DocumentationSidebarLink(expand: expand),
+        ],
+        UserMenu(compact: compact, expand: expand),
+      ],
+    );
+  }
+}
+
+const discordUrl = "https://discord.gg/j5WWscvQkW";
+
+class SupportSidebarLink extends StatelessWidget {
+  const SupportSidebarLink({super.key, this.expand = false});
+
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExternalSidebarLink(
+      icon: Icones(MaterialSymbols.contact_support_rounded),
+      text: "Support",
+      url: discordUrl,
+      expand: expand,
+    );
+  }
+}
+
+const docsUrl = "https://docs.typewritermc.com";
+
+class DocumentationSidebarLink extends StatelessWidget {
+  const DocumentationSidebarLink({super.key, this.expand = false});
+
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExternalSidebarLink(
+      icon: Icones(MaterialSymbols.book_outline),
+      text: "Documentation",
+      url: docsUrl,
+      expand: expand,
     );
   }
 }
@@ -281,7 +404,7 @@ class UserMenu extends HookConsumerWidget {
       const MenuItem(label: "Account", icon: Icones(MaterialSymbols.person)),
       MenuItem.submenu(
         label: "Appearance",
-        icon: Icones(MaterialSymbols.palette_outline),
+        icon: Icones(MaterialSymbols.palette),
         items: [
           MenuItem(
             label: "System",
@@ -332,13 +455,13 @@ class UserMenu extends HookConsumerWidget {
       const MenuItem.divider(),
       MenuItem(
         label: "Help & Support",
-        icon: Icones(MaterialSymbols.help_outline),
-        onPressed: () async {
-          final url = Uri.parse("https://discord.gg/j5WWscvQkW");
-          if (await canLaunchUrl(url)) {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
-          }
-        },
+        icon: Icones(MaterialSymbols.contact_support_rounded),
+        onPressed: () => Uri.parse(discordUrl).launchExternally(),
+      ),
+      MenuItem(
+        label: "Documentation",
+        icon: Icones(MaterialSymbols.book),
+        onPressed: () => Uri.parse(docsUrl).launchExternally(),
       ),
       const MenuItem.divider(),
       MenuItem(

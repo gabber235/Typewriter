@@ -27,4 +27,5 @@ export "string.dart";
 export "test_environment.dart";
 export "tree_view/tree_view.dart";
 export "two_dimensional_focus_traversal_policy.dart";
+export "uri.dart";
 export "widget_state.dart";
