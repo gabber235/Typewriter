@@ -126,7 +126,7 @@ class ErrorScreen extends StatelessWidget {
                   .fadeIn(duration: 300.ms, delay: 200.ms)
                   .slideY(begin: 0.1, end: 0),
               if (message.isNotEmpty)
-                Text(
+                SelectableText(
                       message,
                       textAlign: TextAlign.center,
                       style: TextStyle(
