@@ -15,6 +15,7 @@ import com.typewritermc.roadnetwork.gps.GPSEdge
 import com.typewritermc.roadnetwork.gps.findPathBetweenPosition
 import com.typewritermc.roadnetwork.pathfinding.pathetic.PathCalculationResult
 import de.bsommerfeld.pathetic.api.pathing.result.Path
+import de.bsommerfeld.pathetic.api.wrapper.PathPosition
 import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -170,6 +171,8 @@ sealed interface NavigationActivityTaskState {
         companion object {
             private const val MIN_DISTANCE_SQUARED = 0.001
 
+            private const val PASS_NODE_RADIUS_SQUARED = 1.0
+
             private const val JUMP_DISTANCE_THRESHOLD = 2.4
             private const val JUMP_SPEED_DIVISOR = 0.2085
             private const val JUMP_HORIZONTAL_SPEED_FACTOR = 0.45
@@ -258,6 +261,11 @@ sealed interface NavigationActivityTaskState {
                 return
             }
 
+            if (pathIndex < currentPath.length()) {
+                checkStuckState()
+                advancePastReachedNodes(currentPath, world)
+            }
+
             if (pathIndex >= currentPath.length()) {
                 val target = PositionProperty(
                     location.world,
@@ -277,32 +285,45 @@ sealed interface NavigationActivityTaskState {
                 return
             }
 
-            checkStuckState()
-
             val targetNode = currentPath.elementAtOrNull(pathIndex) ?: return
-            val targetBukkitLocation = BukkitMapper.toLocation(targetNode, world)
-            val targetCentered = targetBukkitLocation.toCenterLocation()
-            val targetSurfaceY = computeSurfaceY(
-                world, targetBukkitLocation.blockX, targetBukkitLocation.blockY, targetBukkitLocation.blockZ
+            moveTo(nodeTarget(targetNode, world))
+            super.tick(context)
+        }
+
+        private fun advancePastReachedNodes(currentPath: Path, world: World) {
+            if (!isOnGround()) return
+            while (pathIndex < currentPath.length()) {
+                val node = currentPath.elementAtOrNull(pathIndex) ?: return
+                val isLastNode = pathIndex == currentPath.length() - 1
+                val canAdvance = canAdvancePastNode(
+                    location,
+                    nodeTarget(node, world),
+                    isLastNode,
+                    capabilities.maxStepHeight,
+                    nearNodeRadius,
+                    PASS_NODE_RADIUS_SQUARED,
+                )
+                if (!canAdvance) return
+
+                pathIndex++
+                resetStuckState()
+            }
+        }
+
+        private fun nodeTarget(node: PathPosition, world: World): PositionProperty {
+            val bukkitLocation = BukkitMapper.toLocation(node, world)
+            val centered = bukkitLocation.toCenterLocation()
+            val surfaceY = computeSurfaceY(
+                world, bukkitLocation.blockX, bukkitLocation.blockY, bukkitLocation.blockZ
             )
-            val target = PositionProperty(
+            return PositionProperty(
                 location.world,
-                targetCentered.x,
-                targetSurfaceY,
-                targetCentered.z,
+                centered.x,
+                surfaceY,
+                centered.z,
                 location.yaw,
                 location.pitch
             )
-
-            val distanceToTarget = location.distanceSquaredWeightedY(target, 0.8) ?: Double.POSITIVE_INFINITY
-            if (distanceToTarget <= nearNodeRadius && isOnGround()) {
-                pathIndex++
-                resetStuckState()
-                return
-            }
-
-            moveTo(target)
-            super.tick(context)
         }
 
         private fun checkStuckState() {

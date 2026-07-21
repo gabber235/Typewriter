@@ -4,6 +4,8 @@ import com.typewritermc.core.utils.point.Vector
 import com.typewritermc.core.utils.point.World
 import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.floats.plusOrMinus
 import io.kotest.matchers.shouldBe
 
@@ -80,6 +82,51 @@ class WalkingSteeringSpec : FunSpec({
             }
 
             pitch shouldBe (45f plusOrMinus 2f)
+        }
+    }
+
+    context("canAdvancePastNode") {
+        val arrivalRadiusSquared = 0.5
+        val passRadiusSquared = 1.0
+        val maxStepHeight = 0.6
+
+        fun advance(location: PositionProperty, node: PositionProperty, isLastNode: Boolean = false) =
+            canAdvancePastNode(location, node, isLastNode, maxStepHeight, arrivalRadiusSquared, passRadiusSquared)
+
+        test("arriving at a node always advances") {
+            val location = positionAt(0.5, 65.0, 0.5)
+            val node = positionAt(1.0, 65.0, 0.5)
+
+            advance(location, node).shouldBeTrue()
+            advance(location, node, isLastNode = true).shouldBeTrue()
+        }
+
+        test("an intermediate node on the same level can be passed early") {
+            val location = positionAt(0.5, 65.0, 0.5)
+            val node = positionAt(1.4, 65.0, 0.5)
+
+            advance(location, node).shouldBeTrue()
+        }
+
+        test("the last node requires actual arrival") {
+            val location = positionAt(0.5, 65.0, 0.5)
+            val node = positionAt(1.4, 65.0, 0.5)
+
+            advance(location, node, isLastNode = true).shouldBeFalse()
+        }
+
+        test("a node above step height cannot be cut short") {
+            val location = positionAt(0.5, 65.0, 0.5)
+            val node = positionAt(1.4, 66.0, 0.5)
+
+            advance(location, node).shouldBeFalse()
+        }
+
+        test("a node too far away does not advance") {
+            val location = positionAt(0.5, 65.0, 0.5)
+            val node = positionAt(2.0, 65.0, 0.5)
+
+            advance(location, node).shouldBeFalse()
         }
     }
 })
