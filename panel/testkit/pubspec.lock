@@ -1211,10 +1211,11 @@ packages:
   skir_client:
     dependency: transitive
     description:
-      name: skir_client
-      sha256: bce0990cb694a58e1653e4f38243ddf88e2e1746ec5613108ad7f4e3e845c43a
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: "6d2e035dbcb060002a7a9f8f32d8e6598c76befd"
+      resolved-ref: "6d2e035dbcb060002a7a9f8f32d8e6598c76befd"
+      url: "https://github.com/gabber235/skir-dart-client.git"
+    source: git
     version: "1.0.12"
   sky_engine:
     dependency: transitive
