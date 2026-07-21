@@ -32,7 +32,7 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 
 skir-client = "0.1"
-surrealdb-component-sdk = { git = "https://github.com/Seamlezz/surrealdb-wasi-component", rev = "1d8639361b4f87bb84bae663289ce709a976d072" }
+surrealdb-component-sdk = { git = "https://github.com/Seamlezz/surrealdb-wasi-component", rev = "039b2495b8fe62ca77e25203ef07f99ebab6c5fa" }
 wasmcloud-component = "0.2.0"
 wasmcloud-utils = { path = "wasmcloud-utils" }
 wasmcloud-utils-macros = { path = "wasmcloud-utils-macros" }

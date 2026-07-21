@@ -6,7 +6,7 @@ void main() {
   group("OrganizationJoinCode", () {
     test("isExpired returns true when expiresAt is in the past", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
       );
@@ -18,7 +18,7 @@ void main() {
 
     test("isExpired returns false when expiresAt is in the future", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
       );
@@ -30,7 +30,7 @@ void main() {
 
     test("neverExpires returns true when expiresAt is null", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );

@@ -1,4 +1,8 @@
 import { Duration } from "kernel/v1/duration.skir";
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
 // JoinCode represents a code that can be used to request to join an organization.
@@ -15,7 +19,7 @@ struct JoinCode {
 method WatchOrganizationJoinCodes(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   list: [JoinCode];
   add: JoinCode;
@@ -34,7 +38,7 @@ method GenerateOrganizationJoinCode(
     };
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: JoinCode;
 
@@ -47,6 +51,8 @@ method GenerateOrganizationJoinCode(
   invalid_expiration_error: struct {
     duration: Duration;
   };
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 804958;
 
 method RevokeOrganizationJoinCode(
@@ -54,11 +60,13 @@ method RevokeOrganizationJoinCode(
     code_id: RecordId;
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {};
 
   code_not_found_error: struct {
     code_id: RecordId;
   };
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 510187;

@@ -1,0 +1,6 @@
+struct InternalError {}
+
+struct InvalidRecordIdError {
+  expected_table: string;
+  given_tables: [string];
+}

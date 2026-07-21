@@ -104,6 +104,35 @@ macro_rules! extract_params {
     };
 }
 
+/// Validate that one SKIR record ID or a collection of IDs references the expected table.
+///
+/// On a mismatch, returns the response's standardized `InvalidRecordIdError` domain variant
+/// from the enclosing handler. The response must opt into that conventional variant.
+///
+/// # Example
+/// ```rust,ignore
+/// validate_record_ids!(UpdateOrganizationServiceResponse, request.service_id, "service");
+/// ```
+#[macro_export]
+macro_rules! validate_record_ids {
+    ($response:ident, $record_ids:expr, $expected_table:expr $(,)?) => {{
+        let record_ids = &$record_ids;
+        let expected_table = $expected_table;
+        let given_tables =
+            $crate::skir_utils::RecordIdTableInput::invalid_tables(record_ids, expected_table);
+        if !given_tables.is_empty() {
+            let error = $crate::skir::base::kernel::v1::errors::InvalidRecordIdError {
+                expected_table: expected_table.to_owned(),
+                given_tables,
+                _unrecognized: None,
+            };
+            return Ok($response::InvalidRecordIdError(::std::boxed::Box::new(
+                error,
+            )));
+        }
+    }};
+}
+
 /// Decode a skir message from bytes, dropping unrecognized fields.
 ///
 /// Returns a `Result<T, otel_wasi::Error>`.

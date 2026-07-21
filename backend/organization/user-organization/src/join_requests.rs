@@ -74,6 +74,11 @@ pub async fn handle_request(
     let user_id = extract_param!(params, user_id)?;
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let request = decode_skir!(SubmitUserJoinRequestRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        SubmitUserJoinRequestResponse,
+        request.code,
+        "organization_join_code"
+    );
 
     let code = request.code;
 
@@ -145,7 +150,7 @@ async fn handle_auto_accept(
             DELETE $code;
         };
 
-        LET $existing_member = SELECT * FROM member_of
+        LET $existing_member = SELECT id FROM member_of
             WHERE in = $user AND out = $org;
         IF array::len($existing_member) > 0 {
             THROW "already-member-error";
@@ -188,7 +193,7 @@ async fn handle_auto_accept(
     .execute()
     .await
     .error_with_slug("join-request-auto-accept-query-failed")?
-    .parse_result::<OrganizationMemberProjection>(0)
+    .parse_result::<OrganizationMemberProjection>(9)
     .error_with_slug("join-request-auto-accept-result-parse-failed")?;
 
     let member = skir_domain_result!(SubmitUserJoinRequestResponse, result);
@@ -248,15 +253,14 @@ async fn handle_manual_accept(
             DELETE $code;
         };
 
-        LET $existing_member = SELECT * FROM member_of
+        LET $existing_member = SELECT id FROM member_of
             WHERE in = $user AND out = $org;
         IF array::len($existing_member) > 0 {
             THROW "already-member-error";
         };
 
-        LET $existing_requests = SELECT * FROM request_to_join
-            WHERE in = $user AND expires_at > time::now()
-            GROUP ALL;
+        LET $existing_requests = SELECT out FROM request_to_join
+            WHERE in = $user AND expires_at > time::now();
 
         IF array::len($existing_requests) >= 5 {
             THROW "max-pending-requests-error";
@@ -286,7 +290,7 @@ async fn handle_manual_accept(
     .execute()
     .await
     .error_with_slug("join-request-create-query-failed")?
-    .parse_result::<JoinRequestProjection>(0)
+    .parse_result::<JoinRequestProjection>(9)
     .error_with_slug("join-request-create-result-parse-failed")?;
 
     let request_record = skir_domain_result!(SubmitUserJoinRequestResponse, result);
@@ -325,6 +329,11 @@ pub async fn handle_cancel(
     let user_id = extract_param!(params, user_id)?;
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let request = decode_skir!(CancelUserJoinRequestRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        CancelUserJoinRequestResponse,
+        request.request_id,
+        "request_to_join"
+    );
 
     let request_id = request.request_id;
 
@@ -349,7 +358,7 @@ pub async fn handle_cancel(
     .execute()
     .await
     .error_with_slug("join-request-cancel-query-failed")?
-    .take::<Option<JoinRequestProjection>>(0)
+    .take::<Option<JoinRequestProjection>>(3)
     .error_with_slug("join-request-cancel-result-parse-failed")?;
 
     let Some(join_request) = join_request else {

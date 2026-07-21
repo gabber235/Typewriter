@@ -61,6 +61,11 @@ pub async fn handle_generate(
 ) -> Result<GenerateOrganizationJoinCodeResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let req = decode_skir!(GenerateOrganizationJoinCodeRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        GenerateOrganizationJoinCodeResponse,
+        req.auto_accept.role_ids,
+        "organization_role"
+    );
     main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string()
@@ -161,7 +166,7 @@ pub async fn handle_generate(
     .execute()
     .await
     .error_with_slug("join-code-generate-query-failed")?
-    .parse_result::<JoinCodeRecord>(0)
+    .parse_result::<JoinCodeRecord>(5)
     .error_with_slug("join-code-generate-result-parse-failed")?;
 
     if let Err(slug) = &result {
@@ -197,6 +202,11 @@ pub async fn handle_revoke(
 ) -> Result<RevokeOrganizationJoinCodeResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let req = decode_skir!(RevokeOrganizationJoinCodeRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        RevokeOrganizationJoinCodeResponse,
+        req.code_id,
+        "organization_join_code"
+    );
     let code = req.code_id.clone();
     main_attribute!(
         "actor.id" = actor_id.to_string(),

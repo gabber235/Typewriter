@@ -182,6 +182,10 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
         throw ApiException.unknownResponseMessage();
       case skir.GenerateOrganizationJoinCodeResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
+      case skir.GenerateOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper(
+        :final value,
+      ):
+        throw ApiException.invalidRecordId(value);
       case skir.GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper():
         throw ApiException.notFound("Roles");
       case skir.GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper():
@@ -238,6 +242,10 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
           throw ApiException.unknownResponseMessage();
         case skir.RevokeOrganizationJoinCodeResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.RevokeOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper():
           throw ApiException.notFound("Join Code");
         case skir.RevokeOrganizationJoinCodeResponse_successWrapper():

@@ -286,12 +286,7 @@ mod tests {
             )),
             503
         );
-        assert_eq!(
-            status(&skir_variant!(
-                IssueServiceIdentityResponse::InternalError {}
-            )),
-            500
-        );
+        assert_eq!(status(&IssueServiceIdentityResponse::internal_error()), 500);
         assert_eq!(status(&IssueServiceIdentityResponse::Unknown(None)), 500);
     }
 }

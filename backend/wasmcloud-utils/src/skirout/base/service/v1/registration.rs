@@ -52,43 +52,6 @@ impl BindServiceRequest {
 }
 
 // ==============================================================================
-// struct BindServiceResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BindServiceResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BindServiceResponse_InternalError>>,
-}
-
-impl BindServiceResponse_InternalError {
-    pub fn default_ref() -> &'static BindServiceResponse_InternalError {
-        static D: std::sync::LazyLock<BindServiceResponse_InternalError> = std::sync::LazyLock::new(BindServiceResponse_InternalError::default);
-        &D
-    }
-}
-
-impl BindServiceResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BindServiceResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BindServiceResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/registration.skir",
-                    "BindServiceResponse.InternalError",
-                    "",
-                    |x: &BindServiceResponse_InternalError| &x._unrecognized,
-                    |x: &mut BindServiceResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BindServiceResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(BindServiceResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct BindServiceResponse.Success
 // ==============================================================================
 
@@ -209,7 +172,7 @@ impl BindServiceResponse_OrganizationNotFoundError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum BindServiceResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<BindServiceResponse>>),
-    InternalError(Box<BindServiceResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<BindServiceResponse_Success>),
     InvalidRegistrationTokenError(Box<BindServiceResponse_InvalidRegistrationTokenError>),
     OrganizationNotFoundError(Box<BindServiceResponse_OrganizationNotFoundError>),
@@ -326,43 +289,6 @@ impl UnbindServiceRequest {
 }
 
 // ==============================================================================
-// struct UnbindServiceResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct UnbindServiceResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UnbindServiceResponse_InternalError>>,
-}
-
-impl UnbindServiceResponse_InternalError {
-    pub fn default_ref() -> &'static UnbindServiceResponse_InternalError {
-        static D: std::sync::LazyLock<UnbindServiceResponse_InternalError> = std::sync::LazyLock::new(UnbindServiceResponse_InternalError::default);
-        &D
-    }
-}
-
-impl UnbindServiceResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UnbindServiceResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UnbindServiceResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/registration.skir",
-                    "UnbindServiceResponse.InternalError",
-                    "",
-                    |x: &UnbindServiceResponse_InternalError| &x._unrecognized,
-                    |x: &mut UnbindServiceResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<UnbindServiceResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(UnbindServiceResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct UnbindServiceResponse.Success
 // ==============================================================================
 
@@ -443,7 +369,7 @@ impl UnbindServiceResponse_ServiceNotFoundError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnbindServiceResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UnbindServiceResponse>>),
-    InternalError(Box<UnbindServiceResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<UnbindServiceResponse_Success>),
     ServiceNotFoundError(Box<UnbindServiceResponse_ServiceNotFoundError>),
 }
@@ -493,10 +419,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BindServiceResponse_InternalError> = BindServiceResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<BindServiceResponse_Success> = BindServiceResponse_Success::_adapter() as *const _ as *mut _;
                 (*a).add_field("service_id", 0, crate::skir_client::Serializer::string(), "", |x: &BindServiceResponse_Success| &x.service_id, |x: &mut BindServiceResponse_Success, v| x.service_id = v);
                 (*a).add_field("service_name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &BindServiceResponse_Success| &x.service_name, |x: &mut BindServiceResponse_Success, v| x.service_name = v);
@@ -513,7 +435,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<BindServiceResponse> = BindServiceResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(BindServiceResponse_InternalError::_adapter()), "", |v| BindServiceResponse::InternalError(Box::new(v)), |x| match x { BindServiceResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| BindServiceResponse::InternalError(Box::new(v)), |x| match x { BindServiceResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(BindServiceResponse_Success::_adapter()), "", |v| BindServiceResponse::Success(Box::new(v)), |x| match x { BindServiceResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalid_registration_token_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(BindServiceResponse_InvalidRegistrationTokenError::_adapter()), "", |v| BindServiceResponse::InvalidRegistrationTokenError(Box::new(v)), |x| match x { BindServiceResponse::InvalidRegistrationTokenError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("organization_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(BindServiceResponse_OrganizationNotFoundError::_adapter()), "", |v| BindServiceResponse::OrganizationNotFoundError(Box::new(v)), |x| match x { BindServiceResponse::OrganizationNotFoundError(b) => b.as_ref(), _ => unreachable!() });
@@ -531,10 +453,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<UnbindServiceResponse_InternalError> = UnbindServiceResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<UnbindServiceResponse_Success> = UnbindServiceResponse_Success::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
@@ -544,7 +462,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<UnbindServiceResponse> = UnbindServiceResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(UnbindServiceResponse_InternalError::_adapter()), "", |v| UnbindServiceResponse::InternalError(Box::new(v)), |x| match x { UnbindServiceResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| UnbindServiceResponse::InternalError(Box::new(v)), |x| match x { UnbindServiceResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(UnbindServiceResponse_Success::_adapter()), "", |v| UnbindServiceResponse::Success(Box::new(v)), |x| match x { UnbindServiceResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("service_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UnbindServiceResponse_ServiceNotFoundError::_adapter()), "", |v| UnbindServiceResponse::ServiceNotFoundError(Box::new(v)), |x| match x { UnbindServiceResponse::ServiceNotFoundError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();

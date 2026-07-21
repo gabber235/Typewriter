@@ -1,3 +1,7 @@
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 import { OrganizationMember } from "organization/v1/member.skir";
 import { OrganizationRole } from "organization/v1/role.skir";
@@ -34,7 +38,7 @@ struct AutoAcceptedMember {
 method WatchOrganizationJoinRequests(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   list: [OrganizationJoinRequest];
   add: OrganizationJoinRequest;
@@ -47,7 +51,7 @@ method ApproveOrganizationJoinRequest(
     role_ids: [RecordId];
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: OrganizationMember;
 
@@ -64,6 +68,8 @@ method ApproveOrganizationJoinRequest(
   user_already_member_error: struct {
     user_id: RecordId;
   };
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 167357;
 
 method DeclineOrganizationJoinRequest(
@@ -71,11 +77,13 @@ method DeclineOrganizationJoinRequest(
     request_id: RecordId;
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {};
 
   request_not_found_error: struct {
     request_id: RecordId;
   };
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 329306;

@@ -1,10 +1,14 @@
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 import { Service } from "service/v1/service.skir";
 
 method WatchOrganizationServices(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   list: [Service];
   add: Service;
@@ -18,9 +22,11 @@ method UpdateOrganizationService(
     name: string?;
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {};
 
   service_not_found_error: struct {};
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 872501;

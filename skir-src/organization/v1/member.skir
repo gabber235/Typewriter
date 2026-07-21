@@ -1,3 +1,7 @@
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 import { OrganizationRole } from "organization/v1/role.skir";
 
@@ -13,7 +17,7 @@ struct OrganizationMember {
 method WatchOrganizationMembers(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   list: [OrganizationMember];
   add: OrganizationMember;
@@ -27,7 +31,7 @@ method UpdateOrganizationMemberRoles(
     role_ids: [RecordId];
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: OrganizationMember;
 
@@ -42,6 +46,8 @@ method UpdateOrganizationMemberRoles(
   };
   roles_required_error: struct {};
   founder_role_required_error: struct {};
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 813953;
 
 method RemoveOrganizationMember(
@@ -49,7 +55,7 @@ method RemoveOrganizationMember(
     user_id: RecordId;
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {};
 
@@ -59,4 +65,6 @@ method RemoveOrganizationMember(
   founder_cannot_be_removed_error: struct {
     user_id: RecordId;
   };
+
+  invalid_record_id_error: InvalidRecordIdError;
 } = 291414;

@@ -147,6 +147,10 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
           throw ApiException.unknownResponseMessage();
         case skir.ApproveOrganizationJoinRequestResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.ApproveOrganizationJoinRequestResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.ApproveOrganizationJoinRequestResponse_requestNotFoundErrorWrapper():
           throw ApiException.notFound("Request");
         case skir.ApproveOrganizationJoinRequestResponse_rolesNotFoundErrorWrapper():
@@ -206,6 +210,10 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
           throw ApiException.unknownResponseMessage();
         case skir.DeclineOrganizationJoinRequestResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.DeclineOrganizationJoinRequestResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.DeclineOrganizationJoinRequestResponse_requestNotFoundErrorWrapper():
           throw ApiException.notFound("Request");
         case skir.DeclineOrganizationJoinRequestResponse_successWrapper():

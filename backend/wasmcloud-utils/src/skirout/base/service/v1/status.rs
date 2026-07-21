@@ -170,43 +170,6 @@ impl GetServiceStatusRequest {
 }
 
 // ==============================================================================
-// struct GetServiceStatusResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct GetServiceStatusResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceStatusResponse_InternalError>>,
-}
-
-impl GetServiceStatusResponse_InternalError {
-    pub fn default_ref() -> &'static GetServiceStatusResponse_InternalError {
-        static D: std::sync::LazyLock<GetServiceStatusResponse_InternalError> = std::sync::LazyLock::new(GetServiceStatusResponse_InternalError::default);
-        &D
-    }
-}
-
-impl GetServiceStatusResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/status.skir",
-                    "GetServiceStatusResponse.InternalError",
-                    "",
-                    |x: &GetServiceStatusResponse_InternalError| &x._unrecognized,
-                    |x: &mut GetServiceStatusResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<GetServiceStatusResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct GetServiceStatusResponse.ServiceNotFoundError
 // ==============================================================================
 
@@ -288,7 +251,7 @@ impl GetServiceStatusResponse_Status {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GetServiceStatusResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<GetServiceStatusResponse>>),
-    InternalError(Box<GetServiceStatusResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     ServiceNotFoundError(Box<GetServiceStatusResponse_ServiceNotFoundError>),
     Status(Box<GetServiceStatusResponse_Status>),
 }
@@ -354,10 +317,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_InternalError> = GetServiceStatusResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<GetServiceStatusResponse_ServiceNotFoundError> = GetServiceStatusResponse_ServiceNotFoundError::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
@@ -368,7 +327,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<GetServiceStatusResponse> = GetServiceStatusResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_InternalError::_adapter()), "", |v| GetServiceStatusResponse::InternalError(Box::new(v)), |x| match x { GetServiceStatusResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| GetServiceStatusResponse::InternalError(Box::new(v)), |x| match x { GetServiceStatusResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("service_not_found_error", 2, 2, crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_ServiceNotFoundError::_adapter()), "", |v| GetServiceStatusResponse::ServiceNotFoundError(Box::new(v)), |x| match x { GetServiceStatusResponse::ServiceNotFoundError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("status", 3, 3, crate::skir_client::internal::struct_serializer_from_static(GetServiceStatusResponse_Status::_adapter()), "", |v| GetServiceStatusResponse::Status(Box::new(v)), |x| match x { GetServiceStatusResponse::Status(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();

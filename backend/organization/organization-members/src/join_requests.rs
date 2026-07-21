@@ -78,6 +78,16 @@ pub async fn handle_approve(
 ) -> Result<ApproveOrganizationJoinRequestResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let req = decode_skir!(ApproveOrganizationJoinRequestRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        ApproveOrganizationJoinRequestResponse,
+        req.request_id,
+        "request_to_join"
+    );
+    wasmcloud_utils::validate_record_ids!(
+        ApproveOrganizationJoinRequestResponse,
+        req.role_ids,
+        "organization_role"
+    );
     let request_id = req.request_id.clone();
     let role_ids = req.role_ids.clone();
     otel_wasi::main_attribute!(
@@ -204,7 +214,8 @@ pub async fn handle_approve(
                 FETCH roles
             )
         };
-        COMMIT TRANSACTION;"#,
+        COMMIT TRANSACTION;
+        "#,
     )
     .bind(
         "request",
@@ -218,7 +229,7 @@ pub async fn handle_approve(
     .execute()
     .await
     .error_with_slug("join-request-approve-query-failed")?
-    .parse_result::<ApprovalRecord>(0)
+    .parse_result::<ApprovalRecord>(10)
     .error_with_slug("join-request-approve-result-parse-failed")?;
 
     if let Err(slug) = &result {
@@ -270,6 +281,11 @@ pub async fn handle_decline(
 ) -> Result<DeclineOrganizationJoinRequestResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let req = decode_skir!(DeclineOrganizationJoinRequestRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        DeclineOrganizationJoinRequestResponse,
+        req.request_id,
+        "request_to_join"
+    );
     let request_id = req.request_id.clone();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),

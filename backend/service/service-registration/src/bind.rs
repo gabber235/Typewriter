@@ -72,7 +72,7 @@ pub async fn handle_bind(
     .execute()
     .await
     .error_with_slug("service-bind-query-failed")?
-    .parse_result::<BindResult>(0)
+    .parse_result::<BindResult>(7)
     .error_with_slug("service-bind-result-parse-failed")?;
 
     let result = skir_domain_result!(BindServiceResponse, result);

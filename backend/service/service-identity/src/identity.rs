@@ -2,7 +2,7 @@ use surrealdb_component_sdk::RecordId;
 use wasmcloud_utils::skir::base::service::v1::identity::*;
 use wasmcloud_utils::skir::base::service::v1::service::*;
 use wasmcloud_utils::{
-    SkirDomainResult, SkirDomainResultExt,
+    SkirDomainResult, SkirDomainResultExt, SkirResponse,
     database::service::{ServiceRoleRecord, ServiceRoleTypeRecord},
     skir_variant,
 };
@@ -109,9 +109,7 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
                 "identity.validation.outcome" = "infrastructure_error",
                 "identity.outcome" = "internal_error",
             );
-            return Ok(skir_variant!(
-                IssueServiceIdentityResponse::InternalError {}
-            ));
+            return Ok(IssueServiceIdentityResponse::internal_error());
         }
     };
 
@@ -138,9 +136,7 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
                 "exception.slug" = "service-identity-name-generation-failed",
                 "identity.outcome" = "internal_error",
             );
-            return Ok(skir_variant!(
-                IssueServiceIdentityResponse::InternalError {}
-            ));
+            return Ok(IssueServiceIdentityResponse::internal_error());
         }
     };
 
@@ -165,9 +161,7 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
                 "identity.provider.create.outcome" = "internal_error",
                 "identity.outcome" = "internal_error",
             );
-            return Ok(skir_variant!(
-                IssueServiceIdentityResponse::InternalError {}
-            ));
+            return Ok(IssueServiceIdentityResponse::internal_error());
         }
     };
 
@@ -229,9 +223,7 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
                 "identity.persistence.outcome" = "infrastructure_error",
                 "identity.outcome" = "internal_error",
             );
-            Ok(skir_variant!(
-                IssueServiceIdentityResponse::InternalError {}
-            ))
+            Ok(IssueServiceIdentityResponse::internal_error())
         }
     }
 }

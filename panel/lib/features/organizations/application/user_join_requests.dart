@@ -105,7 +105,7 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     state.ensureReady();
     final code = _extractCode(urlOrCode);
-    final codeId = recordId("organization_join_codes:$code");
+    final codeId = recordId("organization_join_code:$code");
 
     final request = skir.SubmitUserJoinRequestRequest(code: codeId);
 
@@ -122,6 +122,10 @@ class UserJoinRequests extends _$UserJoinRequests {
         throw ApiException.notFound("Join code not found or expired");
       case skir.SubmitUserJoinRequestResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
+      case skir.SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper(
+        :final value,
+      ):
+        throw ApiException.invalidRecordId(value);
       case skir.SubmitUserJoinRequestResponse_alreadyMemberErrorWrapper():
         throw ApiException.conflict(
           "You are already a member of this organization",
@@ -174,6 +178,10 @@ class UserJoinRequests extends _$UserJoinRequests {
           throw ApiException.unknownResponseMessage();
         case skir.CancelUserJoinRequestResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.CancelUserJoinRequestResponse_requestNotFoundErrorWrapper():
           throw ApiException.notFound("Join request not found");
         case skir.CancelUserJoinRequestResponse_successWrapper():

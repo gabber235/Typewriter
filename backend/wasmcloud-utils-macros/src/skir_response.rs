@@ -14,10 +14,22 @@ pub(crate) struct SkirResponseInput {
     errors: Vec<ErrorEntry>,
 }
 
-struct ErrorEntry {
-    variant: Ident,
-    binding: Option<Ident>,
-    message: Expr,
+enum ErrorEntry {
+    Custom {
+        variant: Ident,
+        binding: Option<Ident>,
+        message: Expr,
+    },
+    StandardInvalidRecordId {
+        variant: Ident,
+    },
+}
+impl ErrorEntry {
+    fn variant(&self) -> &Ident {
+        match self {
+            Self::Custom { variant, .. } | Self::StandardInvalidRecordId { variant } => variant,
+        }
+    }
 }
 
 impl Parse for SkirResponseInput {
@@ -47,7 +59,6 @@ pub(crate) fn expand(input: SkirResponseInput) -> TokenStream {
     let slug_arms = slug_arms(&input);
     let message_arms = message_arms(&input);
     let domain_error_from_slug_arms = domain_error_from_slug_arms(&input);
-    let internal_error_ty = syn::Ident::new(&format!("{}_InternalError", ty), ty.span());
 
     quote! {
         impl #skir_response_path for #ty {
@@ -75,7 +86,7 @@ pub(crate) fn expand(input: SkirResponseInput) -> TokenStream {
 
             fn internal_error() -> Self {
                 #ty::InternalError(::std::boxed::Box::new(
-                    #internal_error_ty::default(),
+                    #utils_path::skir::base::kernel::v1::errors::InternalError::default(),
                 ))
             }
 
@@ -161,19 +172,28 @@ fn parse_error_variants(
             ));
         }
 
-        let binding = parse_optional_binding(&content)?;
-        let _: Token![=>] = content.parse()?;
-        let message = content.parse()?;
+        if variant == "InvalidRecordIdError" {
+            if content.peek(token::Paren) || content.peek(Token![=>]) {
+                return Err(syn::Error::new(
+                    variant.span(),
+                    "`InvalidRecordIdError` is reserved and does not accept a binding or custom message",
+                ));
+            }
+            errors.push(ErrorEntry::StandardInvalidRecordId { variant });
+        } else {
+            let binding = parse_optional_binding(&content)?;
+            let _: Token![=>] = content.parse()?;
+            let message = content.parse()?;
+            errors.push(ErrorEntry::Custom {
+                variant,
+                binding,
+                message,
+            });
+        }
 
         if content.peek(Token![,]) {
             let _: Token![,] = content.parse()?;
         }
-
-        errors.push(ErrorEntry {
-            variant,
-            binding,
-            message,
-        });
     }
 
     Ok(errors)
@@ -221,7 +241,7 @@ fn outcome_arms(input: &SkirResponseInput, utils_path: &syn::Path) -> Vec<TokenS
     }
 
     for error in &input.errors {
-        let variant = &error.variant;
+        let variant = error.variant();
         arms.push(quote! { #ty::#variant(_) => #utils_path::SkirResponseOutcome::DomainError, });
     }
 
@@ -240,7 +260,7 @@ fn slug_arms(input: &SkirResponseInput) -> Vec<TokenStream> {
     }
 
     for error in &input.errors {
-        let variant = &error.variant;
+        let variant = error.variant();
         let slug = variant.to_string().to_case(Case::Kebab);
         arms.push(quote! { #ty::#variant(_) => #slug, });
     }
@@ -254,8 +274,12 @@ fn domain_error_from_slug_arms(input: &SkirResponseInput) -> Vec<TokenStream> {
     let ty = &input.ty;
     let mut arms = Vec::new();
 
-    for error in input.errors.iter().filter(|error| error.binding.is_none()) {
-        let variant = &error.variant;
+    for error in input
+        .errors
+        .iter()
+        .filter(|error| matches!(error, ErrorEntry::Custom { binding: None, .. }))
+    {
+        let variant = error.variant();
         let slug = variant.to_string().to_case(Case::Kebab);
         arms.push(quote! {
             #slug => ::std::option::Option::Some(#ty::#variant(::std::default::Default::default())),
@@ -274,11 +298,23 @@ fn message_arms(input: &SkirResponseInput) -> Vec<TokenStream> {
     }
 
     for error in &input.errors {
-        let variant = &error.variant;
-        let message = &error.message;
-        let arm = match &error.binding {
-            Some(binding) => quote! { #ty::#variant(#binding) => #message, },
-            None => quote! { #ty::#variant(_) => #message.to_string(), },
+        let variant = error.variant();
+        let arm = match error {
+            ErrorEntry::Custom {
+                binding: Some(binding),
+                message,
+                ..
+            } => quote! { #ty::#variant(#binding) => #message, },
+            ErrorEntry::Custom { message, .. } => {
+                quote! { #ty::#variant(_) => #message.to_string(), }
+            }
+            ErrorEntry::StandardInvalidRecordId { .. } => quote! {
+                #ty::#variant(error) => ::std::format!(
+                    "Expected record IDs from table '{}', but received tables: {}.",
+                    error.expected_table,
+                    error.given_tables.iter().map(|table| ::std::format!("'{}'", table)).collect::<::std::vec::Vec<_>>().join(", "),
+                ),
+            },
         };
         arms.push(arm);
     }
@@ -286,4 +322,44 @@ fn message_arms(input: &SkirResponseInput) -> Vec<TokenStream> {
     arms.push(quote! { #ty::InternalError(_) => "internal error".to_string(), });
     arms.push(quote! { #ty::Unknown(_) => "unknown response variant".to_string(), });
     arms
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_reserved_invalid_record_id_shorthand() {
+        let input = syn::parse_str::<SkirResponseInput>(
+            "Response { success: Success, errors { InvalidRecordIdError, } }",
+        )
+        .expect("reserved shorthand should parse");
+
+        assert!(matches!(
+            input.errors.as_slice(),
+            [ErrorEntry::StandardInvalidRecordId { .. }]
+        ));
+    }
+
+    #[test]
+    fn rejects_binding_on_reserved_invalid_record_id_shorthand() {
+        let error = syn::parse_str::<SkirResponseInput>(
+            "Response { success: Success, errors { InvalidRecordIdError(error) } }",
+        )
+        .err()
+        .expect("reserved shorthand must reject bindings");
+
+        assert!(error.to_string().contains("does not accept a binding"));
+    }
+
+    #[test]
+    fn rejects_custom_message_on_reserved_invalid_record_id_shorthand() {
+        let error = syn::parse_str::<SkirResponseInput>(
+            "Response { success: Success, errors { InvalidRecordIdError => \"invalid\" } }",
+        )
+        .err()
+        .expect("reserved shorthand must reject custom messages");
+
+        assert!(error.to_string().contains("does not accept a binding"));
+    }
 }

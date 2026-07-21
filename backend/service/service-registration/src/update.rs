@@ -22,18 +22,16 @@ pub async fn handle_update(
 ) -> Result<UpdateOrganizationServiceResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let request = decode_skir!(UpdateOrganizationServiceRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        UpdateOrganizationServiceResponse,
+        request.service_id,
+        "service"
+    );
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
         "service.id" = request.service_id.to_string()
     );
-
-    if request.service_id.table != "service" {
-        return Err(otel_wasi::Error::new(
-            "service-update-id-invalid",
-            "service id must reference service table",
-        ));
-    }
 
     let service_id = surrealdb_component_sdk::RecordId::from(&request.service_id);
     let records = query(

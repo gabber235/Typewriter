@@ -77,6 +77,16 @@ pub async fn handle_update(
 ) -> Result<UpdateOrganizationMemberRolesResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let request = decode_skir!(UpdateOrganizationMemberRolesRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        UpdateOrganizationMemberRolesResponse,
+        request.user_id,
+        "user"
+    );
+    wasmcloud_utils::validate_record_ids!(
+        UpdateOrganizationMemberRolesResponse,
+        request.role_ids,
+        "organization_role"
+    );
     let user_id = request.user_id.clone();
     let role_ids = request.role_ids.clone();
     otel_wasi::main_attribute!(
@@ -205,7 +215,7 @@ pub async fn handle_update(
     .execute()
     .await
     .error_with_slug("member-update-query-failed")?
-    .parse_result::<OrganizationMemberProjection>(0)
+    .parse_result::<OrganizationMemberProjection>(15)
     .error_with_slug("member-update-result-parse-failed")?;
 
     if let Err(slug) = &result {
@@ -238,6 +248,11 @@ pub async fn handle_remove(
 ) -> Result<RemoveOrganizationMemberResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
     let request = decode_skir!(RemoveOrganizationMemberRequest, &msg.body)?;
+    wasmcloud_utils::validate_record_ids!(
+        RemoveOrganizationMemberResponse,
+        request.user_id,
+        "user"
+    );
     let user_id = request.user_id.clone();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
@@ -249,14 +264,15 @@ pub async fn handle_remove(
         r#"
         BEGIN TRANSACTION;
 
+        LET $founder = $org.founder;
+        IF $founder = $user {
+            THROW 'founder-cannot-be-removed-error'
+        };
+
         LET $member = SELECT * FROM member_of WHERE in = $user AND out = $org;
 
         IF array::len($member) = 0 {
             THROW 'user-not-member-error'
-        };
-
-        IF $org.founder = $user {
-            THROW 'founder-cannot-be-removed-error'
         };
 
         LET $is_founder = fn::organization::roles::has_named_role($member[0].roles, 'founder');
@@ -278,7 +294,7 @@ pub async fn handle_remove(
     .execute()
     .await
     .error_with_slug("member-remove-query-failed")?
-    .parse_result::<RemovedMemberRecord>(0)
+    .parse_result::<RemovedMemberRecord>(9)
     .error_with_slug("member-remove-result-parse-failed")?;
 
     if let Err(slug) = &result {

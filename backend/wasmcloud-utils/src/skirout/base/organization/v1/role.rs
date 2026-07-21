@@ -94,50 +94,13 @@ impl WatchOrganizationRolesRequest {
 }
 
 // ==============================================================================
-// struct WatchOrganizationRolesResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WatchOrganizationRolesResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchOrganizationRolesResponse_InternalError>>,
-}
-
-impl WatchOrganizationRolesResponse_InternalError {
-    pub fn default_ref() -> &'static WatchOrganizationRolesResponse_InternalError {
-        static D: std::sync::LazyLock<WatchOrganizationRolesResponse_InternalError> = std::sync::LazyLock::new(WatchOrganizationRolesResponse_InternalError::default);
-        &D
-    }
-}
-
-impl WatchOrganizationRolesResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationRolesResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchOrganizationRolesResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/role.skir",
-                    "WatchOrganizationRolesResponse.InternalError",
-                    "",
-                    |x: &WatchOrganizationRolesResponse_InternalError| &x._unrecognized,
-                    |x: &mut WatchOrganizationRolesResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationRolesResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationRolesResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum WatchOrganizationRolesResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum WatchOrganizationRolesResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchOrganizationRolesResponse>>),
-    InternalError(Box<WatchOrganizationRolesResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     List(Vec<OrganizationRole>),
     Add(Box<OrganizationRole>),
     Update(Box<OrganizationRole>),
@@ -200,12 +163,8 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationRolesResponse_InternalError> = WatchOrganizationRolesResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse> = WatchOrganizationRolesResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationRolesResponse_InternalError::_adapter()), "", |v| WatchOrganizationRolesResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchOrganizationRolesResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("list", 2, 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(OrganizationRole::_adapter())), "", |v| WatchOrganizationRolesResponse::List(v), |x| match x { WatchOrganizationRolesResponse::List(v) => v, _ => unreachable!() });
                 (*a).add_wrapper_variant("add", 3, 3, crate::skir_client::internal::struct_serializer_from_static(OrganizationRole::_adapter()), "", |v| WatchOrganizationRolesResponse::Add(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::Add(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("update", 4, 4, crate::skir_client::internal::struct_serializer_from_static(OrganizationRole::_adapter()), "", |v| WatchOrganizationRolesResponse::Update(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::Update(b) => b.as_ref(), _ => unreachable!() });

@@ -30,7 +30,7 @@ void main() {
             : now.add(const Duration(days: 7));
       }
       return OrganizationJoinCode(
-        code: recordId("organization_join_codes:CODE-$codeCounter"),
+        code: recordId("organization_join_code:CODE-$codeCounter"),
         createdAt: now.subtract(const Duration(days: 1)),
         expiresAt: expiresAt,
       );

@@ -43,7 +43,7 @@ OrganizationJoinCode generateRandomJoinCode({
       : JoinCodeAutoAccept();
 
   return OrganizationJoinCode(
-    code: recordId("organization_join_codes:${generateCode(20)}"),
+    code: recordId("organization_join_code:${generateCode(20)}"),
     createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
     singleUse: singleUse,

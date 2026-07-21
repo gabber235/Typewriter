@@ -94,6 +94,7 @@ impl<T> SkirDomainResultExt<T> for Result<T, String> {
         match self {
             Ok(value) => Ok(SkirDomainResult::Value(value)),
             Err(slug) => {
+                let slug = slug.strip_prefix("An error occurred: ").unwrap_or(&slug);
                 if let Some(response) =
                     override_constructor(&slug).or_else(|| R::domain_error_from_slug(&slug))
                 {

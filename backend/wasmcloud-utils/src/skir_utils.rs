@@ -5,7 +5,7 @@ use crate::skirout::base::kernel::v1::color::Color;
 use crate::skirout::base::kernel::v1::record_id::{
     ObjectRecordIdKey, ObjectRecordIdValue, RecordId, RecordIdKey, RecordIdValue,
 };
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fmt;
 
 // =============================================================================
@@ -50,6 +50,47 @@ fn fmt_string_value(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 // =============================================================================
 // Skir → Surreal
 // =============================================================================
+
+pub trait RecordIdTableInput {
+    fn invalid_tables(&self, expected_table: &str) -> Vec<String>;
+}
+
+impl RecordIdTableInput for RecordId {
+    fn invalid_tables(&self, expected_table: &str) -> Vec<String> {
+        (self.table != expected_table)
+            .then(|| self.table.clone())
+            .into_iter()
+            .collect()
+    }
+}
+
+impl RecordIdTableInput for [RecordId] {
+    fn invalid_tables(&self, expected_table: &str) -> Vec<String> {
+        self.iter()
+            .filter_map(|record_id| {
+                (record_id.table != expected_table).then_some(record_id.table.as_str())
+            })
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .map(str::to_owned)
+            .collect()
+    }
+}
+
+impl RecordIdTableInput for Vec<RecordId> {
+    fn invalid_tables(&self, expected_table: &str) -> Vec<String> {
+        self.as_slice().invalid_tables(expected_table)
+    }
+}
+
+impl<T> RecordIdTableInput for &T
+where
+    T: RecordIdTableInput + ?Sized,
+{
+    fn invalid_tables(&self, expected_table: &str) -> Vec<String> {
+        (*self).invalid_tables(expected_table)
+    }
+}
 
 impl From<RecordId> for surrealdb_component_sdk::RecordId {
     fn from(value: RecordId) -> Self {
@@ -318,5 +359,38 @@ impl From<i32> for Color {
             argb: value,
             _unrecognized: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn record_id(table: &str) -> RecordId {
+        RecordId {
+            table: table.to_owned(),
+            key: RecordIdKey::String("id".to_owned()),
+            _unrecognized: None,
+        }
+    }
+
+    #[test]
+    fn single_record_id_reports_only_a_wrong_table() {
+        assert!(record_id("user").invalid_tables("user").is_empty());
+        assert_eq!(record_id("service").invalid_tables("user"), ["service"]);
+    }
+
+    #[test]
+    fn record_id_list_sorts_and_deduplicates_wrong_tables() {
+        let ids = vec![
+            record_id("user"),
+            record_id("zebra"),
+            record_id("service"),
+            record_id("zebra"),
+        ];
+
+        assert_eq!(ids.invalid_tables("user"), ["service", "zebra"]);
+        assert_eq!(ids.as_slice().invalid_tables("user"), ["service", "zebra"]);
+        assert!(Vec::<RecordId>::new().invalid_tables("user").is_empty());
     }
 }

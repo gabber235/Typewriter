@@ -4,13 +4,13 @@ DEFINE TABLE OVERWRITE user SCHEMAFULL
         FOR select WHERE id = $auth.id
         FOR create, update, delete NONE;
 
-DEFINE FIELD OVERWRITE email ON user TYPE option<string>
-    ASSERT $value == NONE OR string::is_email($value);
+DEFINE FIELD OVERWRITE email ON user TYPE none | null | string
+    ASSERT $value == NONE OR $value == NULL OR string::is_email($value);
 
-DEFINE FIELD OVERWRITE name ON user TYPE option<string>;
+DEFINE FIELD OVERWRITE name ON user TYPE none | null | string;
 
-DEFINE FIELD OVERWRITE avatar_url ON user TYPE option<string>
-    ASSERT $value == NONE OR fn::is_http_url($value);
+DEFINE FIELD OVERWRITE avatar_url ON user TYPE none | null | string
+    ASSERT $value == NONE OR $value == NULL OR fn::is_http_url($value);
 
 DEFINE FIELD OVERWRITE created_at ON user TYPE datetime
     DEFAULT time::now()

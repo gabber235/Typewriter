@@ -52,43 +52,6 @@ impl IssueServiceIdentityRequest {
 }
 
 // ==============================================================================
-// struct IssueServiceIdentityResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_InternalError>>,
-}
-
-impl IssueServiceIdentityResponse_InternalError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_InternalError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_InternalError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_InternalError::default);
-        &D
-    }
-}
-
-impl IssueServiceIdentityResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.InternalError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_InternalError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct IssueServiceIdentityResponse.Success
 // ==============================================================================
 
@@ -654,7 +617,7 @@ impl IssueServiceIdentityResponse_IdentityProviderUnavailableError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum IssueServiceIdentityResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<IssueServiceIdentityResponse>>),
-    InternalError(Box<IssueServiceIdentityResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<IssueServiceIdentityResponse_Success>),
     MalformedRequestError(Box<IssueServiceIdentityResponse_MalformedRequestError>),
     UnknownRoleError(Box<IssueServiceIdentityResponse_UnknownRoleError>),
@@ -730,10 +693,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_InternalError> = IssueServiceIdentityResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_Success> = IssueServiceIdentityResponse_Success::_adapter() as *const _ as *mut _;
                 (*a).add_field("service_id", 0, crate::skir_client::Serializer::string(), "", |x: &IssueServiceIdentityResponse_Success| &x.service_id, |x: &mut IssueServiceIdentityResponse_Success, v| x.service_id = v);
                 (*a).add_field("display_name", 1, crate::skir_client::Serializer::string(), "", |x: &IssueServiceIdentityResponse_Success| &x.display_name, |x: &mut IssueServiceIdentityResponse_Success, v| x.display_name = v);
@@ -799,7 +758,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse> = IssueServiceIdentityResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_InternalError::_adapter()), "", |v| IssueServiceIdentityResponse::InternalError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| IssueServiceIdentityResponse::InternalError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_Success::_adapter()), "", |v| IssueServiceIdentityResponse::Success(Box::new(v)), |x| match x { IssueServiceIdentityResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("malformed_request_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_MalformedRequestError::_adapter()), "", |v| IssueServiceIdentityResponse::MalformedRequestError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::MalformedRequestError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("unknown_role_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_UnknownRoleError::_adapter()), "", |v| IssueServiceIdentityResponse::UnknownRoleError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::UnknownRoleError(b) => b.as_ref(), _ => unreachable!() });

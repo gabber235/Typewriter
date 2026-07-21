@@ -1,5 +1,7 @@
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart"
     as proto;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Exception thrown when an API call returns an error response.
@@ -36,6 +38,13 @@ class ApiException implements Exception {
 
   factory ApiException.badRequest(String message) {
     return ApiException(code: 400, message: message);
+  }
+
+  factory ApiException.invalidRecordId(skir.InvalidRecordIdError error) {
+    final givenTables = error.givenTables.map((table) => "'$table'").join(", ");
+    return ApiException.badRequest(
+      "Expected record IDs from table '${error.expectedTable}', but received tables: $givenTables.",
+    );
   }
 
   factory ApiException.userNotMemberError() {

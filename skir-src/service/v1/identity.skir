@@ -1,3 +1,4 @@
+import { InternalError } from "kernel/v1/errors.skir";
 import { ServiceRole } from "service/v1/service.skir";
 
 method IssueServiceIdentity(
@@ -5,7 +6,7 @@ method IssueServiceIdentity(
     roles: [ServiceRole];
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {
     service_id: string;

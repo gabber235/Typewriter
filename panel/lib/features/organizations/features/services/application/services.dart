@@ -318,6 +318,10 @@ class Services extends _$Services {
           throw ApiException.unknownResponseMessage();
         case skir.UpdateOrganizationServiceResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper():
           throw ApiException.notFound("Service");
         case skir.UpdateOrganizationServiceResponse_successWrapper():

@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 
 extension SkirColorExtension on skir.Color {
   Color toFlutterColor() {
@@ -51,15 +52,18 @@ String _formatStringKey(String value) {
   return "`$value`";
 }
 
+final _maxInt64 = (BigInt.one << 63) - BigInt.one;
+final _minInt64 = -(BigInt.one << 63);
+
 bool _isSimpleId(String value) {
   if (value.isEmpty || !RegExp(r"^[A-Za-z0-9_]+$").hasMatch(value)) {
     return false;
   }
+
   final number = BigInt.tryParse(value);
   if (number == null) return true;
-  const maxInt64 = 9223372036854775807;
-  const minInt64 = -9223372036854775808;
-  return number > BigInt.from(maxInt64) || number < BigInt.from(minInt64);
+
+  return number > _maxInt64 || number < _minInt64;
 }
 
 skir.RecordId recordId(String id) {

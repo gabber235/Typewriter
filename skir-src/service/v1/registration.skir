@@ -1,3 +1,4 @@
+import { InternalError } from "kernel/v1/errors.skir";
 import { ServiceRole } from "service/v1/service.skir";
 
 method BindService(
@@ -5,7 +6,7 @@ method BindService(
     registration_token: string;
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {
     service_id: string;
@@ -27,7 +28,7 @@ method UnbindService(
     service_id: string;
   }
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {};
 

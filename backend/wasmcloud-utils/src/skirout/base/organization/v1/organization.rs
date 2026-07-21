@@ -93,50 +93,13 @@ impl CreateOrganizationRequest {
 }
 
 // ==============================================================================
-// struct CreateOrganizationResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CreateOrganizationResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreateOrganizationResponse_InternalError>>,
-}
-
-impl CreateOrganizationResponse_InternalError {
-    pub fn default_ref() -> &'static CreateOrganizationResponse_InternalError {
-        static D: std::sync::LazyLock<CreateOrganizationResponse_InternalError> = std::sync::LazyLock::new(CreateOrganizationResponse_InternalError::default);
-        &D
-    }
-}
-
-impl CreateOrganizationResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CreateOrganizationResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CreateOrganizationResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/organization.skir",
-                    "CreateOrganizationResponse.InternalError",
-                    "",
-                    |x: &CreateOrganizationResponse_InternalError| &x._unrecognized,
-                    |x: &mut CreateOrganizationResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CreateOrganizationResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CreateOrganizationResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum CreateOrganizationResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CreateOrganizationResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CreateOrganizationResponse>>),
-    InternalError(Box<CreateOrganizationResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<Organization>),
 }
 
@@ -210,43 +173,6 @@ impl DeleteOrganizationRequest {
 }
 
 // ==============================================================================
-// struct DeleteOrganizationResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct DeleteOrganizationResponse_InternalError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeleteOrganizationResponse_InternalError>>,
-}
-
-impl DeleteOrganizationResponse_InternalError {
-    pub fn default_ref() -> &'static DeleteOrganizationResponse_InternalError {
-        static D: std::sync::LazyLock<DeleteOrganizationResponse_InternalError> = std::sync::LazyLock::new(DeleteOrganizationResponse_InternalError::default);
-        &D
-    }
-}
-
-impl DeleteOrganizationResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeleteOrganizationResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeleteOrganizationResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/organization.skir",
-                    "DeleteOrganizationResponse.InternalError",
-                    "",
-                    |x: &DeleteOrganizationResponse_InternalError| &x._unrecognized,
-                    |x: &mut DeleteOrganizationResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<DeleteOrganizationResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(DeleteOrganizationResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct DeleteOrganizationResponse.Success
 // ==============================================================================
 
@@ -290,8 +216,9 @@ impl DeleteOrganizationResponse_Success {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DeleteOrganizationResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<DeleteOrganizationResponse>>),
-    InternalError(Box<DeleteOrganizationResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<DeleteOrganizationResponse_Success>),
+    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
 impl Default for DeleteOrganizationResponse {
@@ -309,6 +236,7 @@ impl DeleteOrganizationResponse {
                         DeleteOrganizationResponse::Unknown(_) => 0,
                         DeleteOrganizationResponse::InternalError(_) => 1,
                         DeleteOrganizationResponse::Success(_) => 2,
+                        DeleteOrganizationResponse::InvalidRecordIdError(_) => 3,
                     },
                     |u| DeleteOrganizationResponse::Unknown(Some(u)),
                     |x: &DeleteOrganizationResponse| match x { DeleteOrganizationResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -346,12 +274,8 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CreateOrganizationResponse_InternalError> = CreateOrganizationResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<CreateOrganizationResponse> = CreateOrganizationResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(CreateOrganizationResponse_InternalError::_adapter()), "", |v| CreateOrganizationResponse::InternalError(Box::new(v)), |x| match x { CreateOrganizationResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| CreateOrganizationResponse::InternalError(Box::new(v)), |x| match x { CreateOrganizationResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Organization::_adapter()), "", |v| CreateOrganizationResponse::Success(Box::new(v)), |x| match x { CreateOrganizationResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
@@ -361,17 +285,14 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<DeleteOrganizationResponse_InternalError> = DeleteOrganizationResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<DeleteOrganizationResponse_Success> = DeleteOrganizationResponse_Success::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<DeleteOrganizationResponse> = DeleteOrganizationResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skir_client::internal::struct_serializer_from_static(DeleteOrganizationResponse_InternalError::_adapter()), "", |v| DeleteOrganizationResponse::InternalError(Box::new(v)), |x| match x { DeleteOrganizationResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| DeleteOrganizationResponse::InternalError(Box::new(v)), |x| match x { DeleteOrganizationResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(DeleteOrganizationResponse_Success::_adapter()), "", |v| DeleteOrganizationResponse::Success(Box::new(v)), |x| match x { DeleteOrganizationResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 3, 3, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| DeleteOrganizationResponse::InvalidRecordIdError(Box::new(v)), |x| match x { DeleteOrganizationResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

@@ -1,3 +1,5 @@
+import { InternalError } from "kernel/v1/errors.skir";
+
 enum ServiceBinding {
   bound: struct {
     organization_id: string;
@@ -11,7 +13,7 @@ enum ServiceBinding {
 method GetServiceStatus(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   service_not_found_error: struct {};
 

@@ -13,6 +13,7 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 import "./join_request.dart" as _lib_organization_v1_join_request;
 import "./organization.dart" as _lib_organization_v1_organization;
@@ -107,98 +108,6 @@ final class WatchUserOrganizationsRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct WatchUserOrganizationsResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class WatchUserOrganizationsResponse_InternalError_orMutable {
-  WatchUserOrganizationsResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class WatchUserOrganizationsResponse_InternalError
-    implements WatchUserOrganizationsResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory WatchUserOrganizationsResponse_InternalError() =>
-      WatchUserOrganizationsResponse_InternalError._();
-
-  WatchUserOrganizationsResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      WatchUserOrganizationsResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static WatchUserOrganizationsResponse_InternalError_mutable mutable() =>
-      WatchUserOrganizationsResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  WatchUserOrganizationsResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  WatchUserOrganizationsResponse_InternalError_mutable toMutable() =>
-      WatchUserOrganizationsResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! WatchUserOrganizationsResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `WatchUserOrganizationsResponse_InternalError` instances.
-  static _skir.StructSerializer<
-    WatchUserOrganizationsResponse_InternalError,
-    WatchUserOrganizationsResponse_InternalError_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "organization/v1/user.skir:WatchUserOrganizationsResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchUserOrganizationsResponse_InternalError_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [WatchUserOrganizationsResponse_InternalError].
-final class WatchUserOrganizationsResponse_InternalError_mutable
-    implements WatchUserOrganizationsResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  WatchUserOrganizationsResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  WatchUserOrganizationsResponse_InternalError toFrozen() =>
-      WatchUserOrganizationsResponse_InternalError().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum WatchUserOrganizationsResponse
 // -----------------------------------------------------------------------------
 
@@ -222,13 +131,13 @@ sealed class WatchUserOrganizationsResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchUserOrganizationsResponse.wrapInternalError(
-    WatchUserOrganizationsResponse_InternalError value,
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchUserOrganizationsResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(WatchUserOrganizationsResponse_InternalError(...))`.
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
   factory WatchUserOrganizationsResponse.createInternalError() =>
       WatchUserOrganizationsResponse.wrapInternalError(
-        WatchUserOrganizationsResponse_InternalError(),
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Create a 'list' variant wrapping around the given value.
@@ -277,7 +186,7 @@ sealed class WatchUserOrganizationsResponse {
         1,
         "internal_error",
         "wrapInternalError",
-        WatchUserOrganizationsResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         WatchUserOrganizationsResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -392,7 +301,7 @@ sealed class _WatchUserOrganizationsResponse_wrapper
 
 final class WatchUserOrganizationsResponse_internalErrorWrapper
     extends _WatchUserOrganizationsResponse_wrapper {
-  final WatchUserOrganizationsResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   WatchUserOrganizationsResponse_internalErrorWrapper._(this.value);
 
@@ -523,98 +432,6 @@ final class WatchUserJoinRequestsRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct WatchUserJoinRequestsResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class WatchUserJoinRequestsResponse_InternalError_orMutable {
-  WatchUserJoinRequestsResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class WatchUserJoinRequestsResponse_InternalError
-    implements WatchUserJoinRequestsResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory WatchUserJoinRequestsResponse_InternalError() =>
-      WatchUserJoinRequestsResponse_InternalError._();
-
-  WatchUserJoinRequestsResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      WatchUserJoinRequestsResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static WatchUserJoinRequestsResponse_InternalError_mutable mutable() =>
-      WatchUserJoinRequestsResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  WatchUserJoinRequestsResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  WatchUserJoinRequestsResponse_InternalError_mutable toMutable() =>
-      WatchUserJoinRequestsResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! WatchUserJoinRequestsResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `WatchUserJoinRequestsResponse_InternalError` instances.
-  static _skir.StructSerializer<
-    WatchUserJoinRequestsResponse_InternalError,
-    WatchUserJoinRequestsResponse_InternalError_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "organization/v1/user.skir:WatchUserJoinRequestsResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchUserJoinRequestsResponse_InternalError_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [WatchUserJoinRequestsResponse_InternalError].
-final class WatchUserJoinRequestsResponse_InternalError_mutable
-    implements WatchUserJoinRequestsResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  WatchUserJoinRequestsResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  WatchUserJoinRequestsResponse_InternalError toFrozen() =>
-      WatchUserJoinRequestsResponse_InternalError().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum WatchUserJoinRequestsResponse
 // -----------------------------------------------------------------------------
 
@@ -638,13 +455,13 @@ sealed class WatchUserJoinRequestsResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchUserJoinRequestsResponse.wrapInternalError(
-    WatchUserJoinRequestsResponse_InternalError value,
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchUserJoinRequestsResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(WatchUserJoinRequestsResponse_InternalError(...))`.
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
   factory WatchUserJoinRequestsResponse.createInternalError() =>
       WatchUserJoinRequestsResponse.wrapInternalError(
-        WatchUserJoinRequestsResponse_InternalError(),
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Create a 'list' variant wrapping around the given value.
@@ -699,7 +516,7 @@ sealed class WatchUserJoinRequestsResponse {
         1,
         "internal_error",
         "wrapInternalError",
-        WatchUserJoinRequestsResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         WatchUserJoinRequestsResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -810,7 +627,7 @@ sealed class _WatchUserJoinRequestsResponse_wrapper
 
 final class WatchUserJoinRequestsResponse_internalErrorWrapper
     extends _WatchUserJoinRequestsResponse_wrapper {
-  final WatchUserJoinRequestsResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   WatchUserJoinRequestsResponse_internalErrorWrapper._(this.value);
 
@@ -970,98 +787,6 @@ final class SubmitUserJoinRequestRequest_mutable
   @_core.override
   SubmitUserJoinRequestRequest toFrozen() =>
       SubmitUserJoinRequestRequest(code: this.code).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct SubmitUserJoinRequestResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class SubmitUserJoinRequestResponse_InternalError_orMutable {
-  SubmitUserJoinRequestResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class SubmitUserJoinRequestResponse_InternalError
-    implements SubmitUserJoinRequestResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory SubmitUserJoinRequestResponse_InternalError() =>
-      SubmitUserJoinRequestResponse_InternalError._();
-
-  SubmitUserJoinRequestResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      SubmitUserJoinRequestResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static SubmitUserJoinRequestResponse_InternalError_mutable mutable() =>
-      SubmitUserJoinRequestResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  SubmitUserJoinRequestResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  SubmitUserJoinRequestResponse_InternalError_mutable toMutable() =>
-      SubmitUserJoinRequestResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! SubmitUserJoinRequestResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `SubmitUserJoinRequestResponse_InternalError` instances.
-  static _skir.StructSerializer<
-    SubmitUserJoinRequestResponse_InternalError,
-    SubmitUserJoinRequestResponse_InternalError_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "organization/v1/user.skir:SubmitUserJoinRequestResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (SubmitUserJoinRequestResponse_InternalError_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [SubmitUserJoinRequestResponse_InternalError].
-final class SubmitUserJoinRequestResponse_InternalError_mutable
-    implements SubmitUserJoinRequestResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  SubmitUserJoinRequestResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  SubmitUserJoinRequestResponse_InternalError toFrozen() =>
-      SubmitUserJoinRequestResponse_InternalError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1583,6 +1308,7 @@ final class SubmitUserJoinRequestResponse_PendingRequestExistsError_mutable
 ///     case SubmitUserJoinRequestResponse_noAssignableRolesError(:var value): { ... }
 ///     case SubmitUserJoinRequestResponse_maxPendingRequestsError(:var value): { ... }
 ///     case SubmitUserJoinRequestResponse_pendingRequestExistsError(:var value): { ... }
+///     case SubmitUserJoinRequestResponse_invalidRecordIdError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1595,13 +1321,13 @@ sealed class SubmitUserJoinRequestResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory SubmitUserJoinRequestResponse.wrapInternalError(
-    SubmitUserJoinRequestResponse_InternalError value,
+    _lib_kernel_v1_errors.InternalError value,
   ) => SubmitUserJoinRequestResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(SubmitUserJoinRequestResponse_InternalError(...))`.
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
   factory SubmitUserJoinRequestResponse.createInternalError() =>
       SubmitUserJoinRequestResponse.wrapInternalError(
-        SubmitUserJoinRequestResponse_InternalError(),
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Create a 'request_made' variant wrapping around the given value.
@@ -1707,6 +1433,22 @@ sealed class SubmitUserJoinRequestResponse {
         SubmitUserJoinRequestResponse_PendingRequestExistsError(),
       );
 
+  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  factory SubmitUserJoinRequestResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError value,
+  ) => SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper._(value);
+
+  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
+  factory SubmitUserJoinRequestResponse.createInvalidRecordIdError({
+    required _core.String expectedTable,
+    required _core.Iterable<_core.String> givenTables,
+  }) => SubmitUserJoinRequestResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError(
+      expectedTable: expectedTable,
+      givenTables: givenTables,
+    ),
+  );
+
   /// Returns the kind of variant held by this SubmitUserJoinRequestResponse.
   SubmitUserJoinRequestResponse_kind get kind;
 
@@ -1717,7 +1459,7 @@ sealed class SubmitUserJoinRequestResponse {
         1,
         "internal_error",
         "wrapInternalError",
-        SubmitUserJoinRequestResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         SubmitUserJoinRequestResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -1805,6 +1547,18 @@ sealed class SubmitUserJoinRequestResponse {
             .pendingRequestExistsErrorWrapper
             ._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        9,
+        "invalid_record_id_error",
+        "wrapInvalidRecordIdError",
+        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
+        "",
+        SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper._,
+        (it) => it.value,
+        ordinal: SubmitUserJoinRequestResponse_kind
+            .invalidRecordIdErrorWrapper
+            ._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1832,7 +1586,8 @@ enum SubmitUserJoinRequestResponse_kind {
   alreadyMemberErrorWrapper(5),
   noAssignableRolesErrorWrapper(6),
   maxPendingRequestsErrorWrapper(7),
-  pendingRequestExistsErrorWrapper(8);
+  pendingRequestExistsErrorWrapper(8),
+  invalidRecordIdErrorWrapper(9);
 
   final _core.int _ordinal;
 
@@ -1881,7 +1636,7 @@ sealed class _SubmitUserJoinRequestResponse_wrapper
 
 final class SubmitUserJoinRequestResponse_internalErrorWrapper
     extends _SubmitUserJoinRequestResponse_wrapper {
-  final SubmitUserJoinRequestResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   SubmitUserJoinRequestResponse_internalErrorWrapper._(this.value);
 
@@ -1965,6 +1720,17 @@ final class SubmitUserJoinRequestResponse_pendingRequestExistsErrorWrapper
   @_core.override
   SubmitUserJoinRequestResponse_kind get kind =>
       SubmitUserJoinRequestResponse_kind.pendingRequestExistsErrorWrapper;
+}
+
+final class SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper
+    extends _SubmitUserJoinRequestResponse_wrapper {
+  final _lib_kernel_v1_errors.InvalidRecordIdError value;
+
+  SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper._(this.value);
+
+  @_core.override
+  SubmitUserJoinRequestResponse_kind get kind =>
+      SubmitUserJoinRequestResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2085,98 +1851,6 @@ final class CancelUserJoinRequestRequest_mutable
   @_core.override
   CancelUserJoinRequestRequest toFrozen() =>
       CancelUserJoinRequestRequest(requestId: this.requestId).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CancelUserJoinRequestResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class CancelUserJoinRequestResponse_InternalError_orMutable {
-  CancelUserJoinRequestResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class CancelUserJoinRequestResponse_InternalError
-    implements CancelUserJoinRequestResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CancelUserJoinRequestResponse_InternalError() =>
-      CancelUserJoinRequestResponse_InternalError._();
-
-  CancelUserJoinRequestResponse_InternalError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      CancelUserJoinRequestResponse_InternalError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CancelUserJoinRequestResponse_InternalError_mutable mutable() =>
-      CancelUserJoinRequestResponse_InternalError_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CancelUserJoinRequestResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CancelUserJoinRequestResponse_InternalError_mutable toMutable() =>
-      CancelUserJoinRequestResponse_InternalError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CancelUserJoinRequestResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CancelUserJoinRequestResponse_InternalError` instances.
-  static _skir.StructSerializer<
-    CancelUserJoinRequestResponse_InternalError,
-    CancelUserJoinRequestResponse_InternalError_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "organization/v1/user.skir:CancelUserJoinRequestResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CancelUserJoinRequestResponse_InternalError_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CancelUserJoinRequestResponse_InternalError].
-final class CancelUserJoinRequestResponse_InternalError_mutable
-    implements CancelUserJoinRequestResponse_InternalError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  CancelUserJoinRequestResponse_InternalError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CancelUserJoinRequestResponse_InternalError toFrozen() =>
-      CancelUserJoinRequestResponse_InternalError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2410,6 +2084,7 @@ final class CancelUserJoinRequestResponse_RequestNotFoundError_mutable
 ///     case CancelUserJoinRequestResponse_internalError(:var value): { ... }
 ///     case CancelUserJoinRequestResponse_success(:var value): { ... }
 ///     case CancelUserJoinRequestResponse_requestNotFoundError(:var value): { ... }
+///     case CancelUserJoinRequestResponse_invalidRecordIdError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2422,13 +2097,13 @@ sealed class CancelUserJoinRequestResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory CancelUserJoinRequestResponse.wrapInternalError(
-    CancelUserJoinRequestResponse_InternalError value,
+    _lib_kernel_v1_errors.InternalError value,
   ) => CancelUserJoinRequestResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(CancelUserJoinRequestResponse_InternalError(...))`.
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
   factory CancelUserJoinRequestResponse.createInternalError() =>
       CancelUserJoinRequestResponse.wrapInternalError(
-        CancelUserJoinRequestResponse_InternalError(),
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Create a 'success' variant wrapping around the given value.
@@ -2454,6 +2129,22 @@ sealed class CancelUserJoinRequestResponse {
     CancelUserJoinRequestResponse_RequestNotFoundError(requestId: requestId),
   );
 
+  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  factory CancelUserJoinRequestResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError value,
+  ) => CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper._(value);
+
+  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
+  factory CancelUserJoinRequestResponse.createInvalidRecordIdError({
+    required _core.String expectedTable,
+    required _core.Iterable<_core.String> givenTables,
+  }) => CancelUserJoinRequestResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError(
+      expectedTable: expectedTable,
+      givenTables: givenTables,
+    ),
+  );
+
   /// Returns the kind of variant held by this CancelUserJoinRequestResponse.
   CancelUserJoinRequestResponse_kind get kind;
 
@@ -2464,7 +2155,7 @@ sealed class CancelUserJoinRequestResponse {
         1,
         "internal_error",
         "wrapInternalError",
-        CancelUserJoinRequestResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         CancelUserJoinRequestResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -2493,6 +2184,18 @@ sealed class CancelUserJoinRequestResponse {
             .requestNotFoundErrorWrapper
             ._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "invalid_record_id_error",
+        "wrapInvalidRecordIdError",
+        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
+        "",
+        CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper._,
+        (it) => it.value,
+        ordinal: CancelUserJoinRequestResponse_kind
+            .invalidRecordIdErrorWrapper
+            ._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -2515,7 +2218,8 @@ enum CancelUserJoinRequestResponse_kind {
   unknown(0),
   internalErrorWrapper(1),
   successWrapper(2),
-  requestNotFoundErrorWrapper(3);
+  requestNotFoundErrorWrapper(3),
+  invalidRecordIdErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -2564,7 +2268,7 @@ sealed class _CancelUserJoinRequestResponse_wrapper
 
 final class CancelUserJoinRequestResponse_internalErrorWrapper
     extends _CancelUserJoinRequestResponse_wrapper {
-  final CancelUserJoinRequestResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   CancelUserJoinRequestResponse_internalErrorWrapper._(this.value);
 
@@ -2593,6 +2297,17 @@ final class CancelUserJoinRequestResponse_requestNotFoundErrorWrapper
   @_core.override
   CancelUserJoinRequestResponse_kind get kind =>
       CancelUserJoinRequestResponse_kind.requestNotFoundErrorWrapper;
+}
+
+final class CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper
+    extends _CancelUserJoinRequestResponse_wrapper {
+  final _lib_kernel_v1_errors.InvalidRecordIdError value;
+
+  CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper._(this.value);
+
+  @_core.override
+  CancelUserJoinRequestResponse_kind get kind =>
+      CancelUserJoinRequestResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 final _skir.Method<

@@ -1,4 +1,5 @@
 import { Color } from "kernel/v1/color.skir";
+import { InternalError } from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
 struct OrganizationRole {
@@ -16,7 +17,7 @@ struct OrganizationRole {
 method WatchOrganizationRoles(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   list: [OrganizationRole];
   add: OrganizationRole;

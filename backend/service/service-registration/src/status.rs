@@ -35,34 +35,37 @@ pub async fn handle_status(
         r#"
         BEGIN TRANSACTION;
 
-        LET $services = SELECT
-            IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
-            registration.token AS existing_token,
-            registration.expires_at AS existing_expires_at
-        FROM type::record('service', $service_id)
-        FETCH organization;
+        RETURN {
+            LET $services = SELECT
+                IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
+                registration.token AS existing_token,
+                registration.expires_at AS existing_expires_at
+            FROM type::record('service', $service_id)
+            FETCH organization;
 
-        IF array::is_empty($services) {
-            THROW 'service-not-found-error'
+            IF array::is_empty($services) {
+                THROW 'service-not-found-error'
+            };
+
+            LET $service = array::first($services);
+            IF $service.organization != NONE {
+                RETURN { organization: $service.organization, token: NONE }
+            };
+
+            LET $token = IF $service.existing_token != NONE AND $service.existing_expires_at > time::now() {
+                $service.existing_token
+            } ELSE {
+                $new_token
+            };
+
+            UPDATE type::record('service', $service_id) SET registration = {
+                token: $token,
+                expires_at: time::now() + 2m30s
+            };
+
+            RETURN { organization: NONE, token: $token };
         };
 
-        LET $service = array::first($services);
-        IF $service.organization != NONE {
-            RETURN { organization: $service.organization, token: NONE }
-        };
-
-        LET $token = IF $service.existing_token != NONE AND $service.existing_expires_at > time::now() {
-            $service.existing_token
-        } ELSE {
-            $new_token
-        };
-
-        UPDATE type::record('service', $service_id) SET registration = {
-            token: $token,
-            expires_at: time::now() + 2m30s
-        };
-
-        RETURN { organization: NONE, token: $token };
         COMMIT TRANSACTION;
         "#,
     )

@@ -176,6 +176,10 @@ class OrganizationMembers extends _$OrganizationMembers {
           throw ApiException.unknownResponseMessage();
         case skir.UpdateOrganizationMemberRolesResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.UpdateOrganizationMemberRolesResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.UpdateOrganizationMemberRolesResponse_userNotFoundErrorWrapper():
           throw ApiException.notFound("User");
         case skir.UpdateOrganizationMemberRolesResponse_rolesNotFoundErrorWrapper():
@@ -241,6 +245,10 @@ class OrganizationMembers extends _$OrganizationMembers {
           throw ApiException.unknownResponseMessage();
         case skir.RemoveOrganizationMemberResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
+        case skir.RemoveOrganizationMemberResponse_invalidRecordIdErrorWrapper(
+          :final value,
+        ):
+          throw ApiException.invalidRecordId(value);
         case skir.RemoveOrganizationMemberResponse_userNotMemberErrorWrapper():
           throw ApiException.notFound("Organization member");
         case skir.RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper():

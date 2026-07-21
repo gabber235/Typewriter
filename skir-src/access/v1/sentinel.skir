@@ -1,9 +1,11 @@
+import { InternalError } from "kernel/v1/errors.skir";
+
 // Public unauthenticated query used to bootstrap NATS auth callout.
 // These credentials identify the sentinel user and carry no publish/subscribe permissions.
 method GetSentinelCredentials(
   struct {}
 ): enum {
-  internal_error: struct {};
+  internal_error: InternalError;
 
   success: struct {
     jwt: string;

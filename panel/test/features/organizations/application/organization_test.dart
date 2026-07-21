@@ -71,7 +71,7 @@ void main() {
   group("JoinCode expiration", () {
     test("isExpired returns false when expiresAt is null (never expires)", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );
@@ -82,7 +82,7 @@ void main() {
 
     test("isExpired returns false when expiresAt is in the future", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
       );
@@ -93,7 +93,7 @@ void main() {
 
     test("isExpired returns true when expiresAt is in the past", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 14)),
         expiresAt: DateTime.now().subtract(const Duration(days: 7)),
       );
@@ -103,7 +103,7 @@ void main() {
 
     test("remainingDuration returns null when never expires", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );
@@ -113,7 +113,7 @@ void main() {
 
     test("remainingDuration returns zero for past expiry", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_codes:ABC123"),
+        code: recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 14)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
       );

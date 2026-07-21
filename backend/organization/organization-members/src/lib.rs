@@ -27,18 +27,6 @@ pub(crate) struct RoleValidation {
     pub unassignable: Vec<surrealdb_component_sdk::RecordId>,
 }
 
-fn classify_requested_roles(
-    requested: &[surrealdb_component_sdk::RecordId],
-) -> (
-    Vec<surrealdb_component_sdk::RecordId>,
-    Vec<surrealdb_component_sdk::RecordId>,
-) {
-    requested
-        .iter()
-        .cloned()
-        .partition(|id| id.table == "organization_role")
-}
-
 pub(crate) async fn validate_roles(
     org_id: &str,
     requested: &[surrealdb_component_sdk::RecordId],
@@ -46,9 +34,8 @@ pub(crate) async fn validate_roles(
     query_slug: &'static str,
     parse_slug: &'static str,
 ) -> Result<RoleValidation, otel_wasi::Error> {
-    let (requested_db, incorrectly_typed) = classify_requested_roles(requested);
     let found = query("SELECT id, assignable FROM $roles WHERE organization = $org")
-        .bind("roles", requested_db.clone())
+        .bind("roles", requested.to_vec())
         .bind(
             "org",
             surrealdb_component_sdk::RecordId::new("organization", org_id),
@@ -61,28 +48,18 @@ pub(crate) async fn validate_roles(
 
     let missing: Vec<surrealdb_component_sdk::RecordId> = requested
         .iter()
-        .filter(|id| id.table != "organization_role" || !found.iter().any(|role| role.id == **id))
+        .filter(|id| !found.iter().any(|role| role.id == **id))
         .cloned()
         .collect();
 
     let unassignable: Vec<surrealdb_component_sdk::RecordId> = requested
         .iter()
-        .filter(|id| id.table == "organization_role")
         .filter(|id| {
             found.iter().any(|role| role.id == **id && !role.assignable)
-                && !allowed_unassignable.contains(&id)
+                && !allowed_unassignable.contains(id)
         })
         .cloned()
         .collect();
-
-    debug_assert_eq!(
-        incorrectly_typed,
-        missing
-            .iter()
-            .filter(|id| id.table != "organization_role")
-            .cloned()
-            .collect::<Vec<_>>()
-    );
     Ok(RoleValidation {
         missing,
         unassignable,
@@ -114,38 +91,4 @@ async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi
         "join_codes.generate" => async join_codes::handle_generate,
         "join_codes.revoke" => async join_codes::handle_revoke,
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::classify_requested_roles;
-    use surrealdb_component_sdk::{RecordId, RecordIdKey};
-
-    fn id(table: &str, key: &str) -> RecordId {
-        surrealdb_component_sdk::RecordId {
-            table: table.to_owned(),
-            key: RecordIdKey::String(key.to_owned()),
-        }
-    }
-
-    #[test]
-    fn classifies_only_organization_role_ids_as_queryable() {
-        let valid = id("organization_role", "shared");
-        let wrong_table = id("other_role", "shared");
-        let another_valid = id("organization_role", "another");
-
-        let (queryable, missing) = classify_requested_roles(&[
-            wrong_table.clone(),
-            valid.clone(),
-            wrong_table.clone(),
-            another_valid.clone(),
-        ]);
-
-        assert_eq!(
-            queryable,
-            vec![valid.into(), another_valid.into()],
-            "wrong-table IDs must never be queried"
-        );
-        assert_eq!(missing, vec![wrong_table.clone(), wrong_table]);
-    }
 }
