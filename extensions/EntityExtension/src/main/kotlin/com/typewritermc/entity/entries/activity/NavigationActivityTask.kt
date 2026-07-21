@@ -503,8 +503,18 @@ sealed interface NavigationActivityTaskState {
         }
 
         private fun calculateRotation(): Pair<Float, Float> {
-            val currentPath = patheticPath ?: return Pair(location.yaw, location.pitch)
-            if (pathIndex >= currentPath.length()) return Pair(location.yaw, location.pitch)
+            val lookTarget = lookTarget() ?: return Pair(location.yaw, location.pitch)
+            return walkingLookRotation(location, lookTarget, yawVelocity, pitchVelocity)
+        }
+
+        private fun lookTarget(): Vector? {
+            val currentPath = patheticPath ?: return null
+            val world = location.world.toBukkitWorld()
+
+            if (pathIndex >= currentPath.length()) {
+                val surfaceY = computeSurfaceY(world, edge.end.blockX, edge.end.blockY, edge.end.blockZ)
+                return Vector(edge.end.x, surfaceY, edge.end.z)
+            }
 
             val lookAheadIndex = if (hasDirectionConflict()) {
                 pathIndex
@@ -512,33 +522,15 @@ sealed interface NavigationActivityTaskState {
                 min(pathIndex + rotationLookAhead, currentPath.length() - 1)
             }
 
-            val targetNode = currentPath.elementAtOrNull(lookAheadIndex) ?: return Pair(location.yaw, location.pitch)
-            val targetBukkitLoc = BukkitMapper.toLocation(targetNode, location.world.toBukkitWorld())
+            val targetNode = currentPath.elementAtOrNull(lookAheadIndex) ?: return null
+            val targetBukkitLoc = BukkitMapper.toLocation(targetNode, world)
             val targetLocation = targetBukkitLoc.toCenterLocation()
             val targetSurfaceY = computeSurfaceY(
-                location.world.toBukkitWorld(),
+                world,
                 targetBukkitLoc.blockX, targetBukkitLoc.blockY, targetBukkitLoc.blockZ
             )
 
-            val dx = targetLocation.x - location.x
-            val dy = targetSurfaceY - location.y
-            val dz = targetLocation.z - location.z
-
-            val targetYaw = getLookYaw(dx, dz)
-            val targetPitch = getLookPitch(dx, dy, dz)
-
-            val currentYaw = if (location.yaw - targetYaw > 180) {
-                location.yaw - 360
-            } else if (location.yaw - targetYaw < -180) {
-                location.yaw + 360
-            } else {
-                location.yaw
-            }
-
-            val yaw = smoothDamp(currentYaw, targetYaw, yawVelocity, 0.2f)
-            val pitch = smoothDamp(location.pitch, targetPitch, pitchVelocity, 0.2f)
-
-            return yaw to pitch
+            return Vector(targetLocation.x, targetSurfaceY, targetLocation.z)
         }
 
         private fun hasDirectionConflict(): Boolean {
