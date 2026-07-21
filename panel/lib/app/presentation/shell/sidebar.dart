@@ -9,7 +9,6 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:url_launcher/url_launcher.dart";
 
 part "sidebar.g.dart";
 
@@ -379,7 +378,7 @@ class DocumentationSidebarLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExternalSidebarLink(
       icon: Icones(MaterialSymbols.book_outline),
-      text: "Documentation",
+      text: "Docs",
       url: docsUrl,
       expand: expand,
     );
