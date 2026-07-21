@@ -6,8 +6,6 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_badges.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_url.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinCodeCard extends HookConsumerWidget {

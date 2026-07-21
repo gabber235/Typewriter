@@ -3,12 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:pub_semver/pub_semver.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.dart";
-import "package:typewriter_panel/shared/ui/components/input_icon_button.dart";
-import "package:typewriter_panel/shared/utilities/adaptive_single_activator.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Version number segment filter abstraction used by the query parser and UI.
 sealed class VersionPartFilter {

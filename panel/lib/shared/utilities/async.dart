@@ -1,8 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
-import "package:typewriter_panel/shared/utilities/snackbar.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 extension FutureExt<T> on Future<T> {
   Future<T> catchApiExceptionsAndDisplay(BuildContext context) {

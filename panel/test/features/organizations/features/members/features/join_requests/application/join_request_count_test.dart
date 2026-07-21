@@ -2,8 +2,7 @@ import "dart:async";
 
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/join_requests.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/join_requests_test_support.dart";
 

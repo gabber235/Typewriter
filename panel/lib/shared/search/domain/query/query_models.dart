@@ -1,5 +1,4 @@
-import "package:typewriter_panel/shared/search/domain/query/query_lexer.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_spans.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 enum QueryOperatorType { prefix, group, postfix }
 

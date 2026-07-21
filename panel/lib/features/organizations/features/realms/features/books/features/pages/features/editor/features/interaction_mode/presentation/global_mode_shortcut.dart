@@ -1,8 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/current_interaction_mode.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/mode_shortcut.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Global widget that bridges interaction modes with the managed action system.
 ///

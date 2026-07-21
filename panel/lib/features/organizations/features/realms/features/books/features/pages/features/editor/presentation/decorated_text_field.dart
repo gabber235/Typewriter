@@ -1,10 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/input_field_container.dart";
-import "package:typewriter_panel/shared/hooks/focused_change.dart";
-import "package:typewriter_panel/shared/hooks/input_field_controller.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 enum DecoratedTextFieldAutoFocus { none, textField, surroundingField }
 

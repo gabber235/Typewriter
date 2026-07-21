@@ -1,8 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/search/domain/query/query.dart";
-import "package:typewriter_panel/shared/ui/components/query_bar.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";

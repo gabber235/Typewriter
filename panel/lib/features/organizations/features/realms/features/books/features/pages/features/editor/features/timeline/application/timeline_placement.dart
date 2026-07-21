@@ -2,10 +2,7 @@ import "dart:math" as math;
 
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_layout.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_viewport.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_style.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TimelinePlacementEngine {
   const TimelinePlacementEngine();

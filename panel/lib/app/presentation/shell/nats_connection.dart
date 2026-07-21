@@ -1,11 +1,7 @@
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shell/sign_out_button.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats.dart";
-import "package:typewriter_panel/shared/ui/screens/error_screen.dart";
-import "package:typewriter_panel/shared/ui/screens/loading_screen.dart";
+import "package:typewriter_panel/typewriter_panel.dart" hide Header;
 
 class RequiredNatsConnection extends HookConsumerWidget {
   const RequiredNatsConnection({required this.child, super.key});

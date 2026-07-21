@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:url_launcher/url_launcher.dart";
 
 /// Small tappable text widget that displays a type/kind label with a hover
@@ -45,17 +45,19 @@ class TypeLink extends HookWidget {
 
     final effectiveStyle =
         (style ?? Theme.of(context).textTheme.bodySmall)?.copyWith(
-              color: baseColor,
-              decoration:
-                  highlight ? TextDecoration.underline : TextDecoration.none,
-              decorationColor: baseColor,
-            ) ??
-            TextStyle(
-              color: baseColor,
-              decoration:
-                  highlight ? TextDecoration.underline : TextDecoration.none,
-              decorationColor: baseColor,
-            );
+          color: baseColor,
+          decoration: highlight
+              ? TextDecoration.underline
+              : TextDecoration.none,
+          decorationColor: baseColor,
+        ) ??
+        TextStyle(
+          color: baseColor,
+          decoration: highlight
+              ? TextDecoration.underline
+              : TextDecoration.none,
+          decorationColor: baseColor,
+        );
 
     Future<void> handleTap() async {
       final target = url;
@@ -82,8 +84,9 @@ class TypeLink extends HookWidget {
 
     return FocusableActionDetector(
       enabled: clickable,
-      mouseCursor:
-          clickable ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      mouseCursor: clickable
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onShowFocusHighlight: (focus) => focused.value = focus,
       onShowHoverHighlight: (hover) => hovering.value = hover,
       child: GestureDetector(

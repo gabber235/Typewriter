@@ -1,20 +1,7 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/features/auth/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/member_list_route.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/presentation/book/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/presentation/library/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/presentation/organization_route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/services/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/presentation/route.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "app_router.g.dart";
 part "app_router.gr.dart";

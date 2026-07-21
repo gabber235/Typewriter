@@ -2,7 +2,7 @@ import "package:flutter/foundation.dart";
 import "package:oidc/oidc.dart";
 import "package:oidc_default_store/oidc_default_store.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/shared/utilities/app_config.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "auth.g.dart";
 

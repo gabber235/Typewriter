@@ -1,22 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/element_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/entries.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/page_elements.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/application/scene.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/empty_entry_page.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/entry.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/inner_element_node.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector.dart";
-import "package:typewriter_panel/shared/ui/components/shimmer.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class EntryScene extends HookConsumerWidget {
   const EntryScene({required this.pageId, super.key});

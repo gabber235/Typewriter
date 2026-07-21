@@ -6,12 +6,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/app/presentation/responsive.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/presentation/global_mode_shortcut.dart";
-import "package:typewriter_panel/shared/hooks/timer.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class ConfirmationDialogue extends HookWidget {
   const ConfirmationDialogue({

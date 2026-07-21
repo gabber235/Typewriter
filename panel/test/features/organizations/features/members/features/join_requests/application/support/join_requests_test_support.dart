@@ -1,7 +1,7 @@
 import "dart:async";
 
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/join_requests.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 Future<List<OrganizationJoinRequest>> readJoinRequests(
   ProviderContainer container,

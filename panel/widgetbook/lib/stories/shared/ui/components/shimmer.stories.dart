@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/ui/components/shimmer.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -55,13 +55,7 @@ Widget shimmerBoxUseCase(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ShimmerBox(
-          width: width,
-          height: height,
-          shape: shape,
-        ),
-      ],
+      children: [ShimmerBox(width: width, height: height, shape: shape)],
     ),
   );
 }
@@ -83,10 +77,7 @@ Widget shimmerLayoutUseCase(BuildContext context) {
             itemBuilder: (context, index) {
               return const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
-                child: ShimmerBox.circle(
-                  width: 54,
-                  height: 54,
-                ),
+                child: ShimmerBox.circle(width: 54, height: 54),
               );
             },
           ),
@@ -98,10 +89,7 @@ Widget shimmerLayoutUseCase(BuildContext context) {
         ...List.generate(
           3,
           (index) => Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 16,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -173,10 +161,7 @@ Widget shimmerCustomShapesUseCase(BuildContext context) {
           // Row of different shapes
           Row(
             children: [
-              const ShimmerBox.circle(
-                width: 60,
-                height: 60,
-              ),
+              const ShimmerBox.circle(width: 60, height: 60),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -196,10 +181,7 @@ Widget shimmerCustomShapesUseCase(BuildContext context) {
                 ),
               ),
               const SizedBox(width: 12),
-              const ShimmerBox.stadium(
-                width: 80,
-                height: 32,
-              ),
+              const ShimmerBox.stadium(width: 80, height: 32),
             ],
           ),
 
@@ -269,10 +251,7 @@ Widget shimmerShapeBordersUseCase(BuildContext context) {
             children: [
               Column(
                 children: [
-                  ShimmerBox.rectangle(
-                    width: 80,
-                    height: 60,
-                  ),
+                  ShimmerBox.rectangle(width: 80, height: 60),
                   const SizedBox(height: 8),
                   Text(
                     "Rectangle",
@@ -283,10 +262,7 @@ Widget shimmerShapeBordersUseCase(BuildContext context) {
               const SizedBox(width: 16),
               Column(
                 children: [
-                  const ShimmerBox.circle(
-                    width: 60,
-                    height: 60,
-                  ),
+                  const ShimmerBox.circle(width: 60, height: 60),
                   const SizedBox(height: 8),
                   Text("Circle", style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -294,10 +270,7 @@ Widget shimmerShapeBordersUseCase(BuildContext context) {
               const SizedBox(width: 16),
               Column(
                 children: [
-                  const ShimmerBox.stadium(
-                    width: 80,
-                    height: 40,
-                  ),
+                  const ShimmerBox.stadium(width: 80, height: 40),
                   const SizedBox(height: 8),
                   Text("Stadium", style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -387,10 +360,7 @@ Widget shimmerShapeBordersUseCase(BuildContext context) {
               const SizedBox(height: 16),
 
               // Pill shape with different aspect ratio
-              const ShimmerBox.stadium(
-                width: 200,
-                height: 30,
-              ),
+              const ShimmerBox.stadium(width: 200, height: 30),
             ],
           ),
         ],

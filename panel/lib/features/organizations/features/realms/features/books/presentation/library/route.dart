@@ -5,24 +5,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:responsive_framework/responsive_framework.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/application/books.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/inspector.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/presentation/book.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tags.dart";
-import "package:typewriter_panel/shared/ui/components/floating_button.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
-import "package:typewriter_panel/shared/ui/components/page_heading.dart";
-import "package:typewriter_panel/shared/ui/components/popups.dart";
-import "package:typewriter_panel/shared/ui/components/section.dart";
-import "package:typewriter_panel/shared/ui/components/vertical_clipper.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
-import "package:typewriter_panel/shared/utilities/snake_case_input_formatter.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class LibraryPage extends HookConsumerWidget {

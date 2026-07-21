@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_viewport.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/timeline_test_dsl.dart";
 

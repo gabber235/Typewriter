@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -36,14 +36,14 @@ Widget actionRowUseCase(BuildContext context) {
     final isAsync = i.isOdd;
     final activators = switch (i % 4) {
       0 => [
-          SingleActivator(LogicalKeyboardKey.keyS, meta: true),
-          SingleActivator(LogicalKeyboardKey.keyS, control: true),
-        ],
+        SingleActivator(LogicalKeyboardKey.keyS, meta: true),
+        SingleActivator(LogicalKeyboardKey.keyS, control: true),
+      ],
       1 => [SingleActivator(LogicalKeyboardKey.keyO, meta: true)],
       2 => [
-          SingleActivator(LogicalKeyboardKey.keyD, meta: true),
-          SingleActivator(LogicalKeyboardKey.keyD, control: true),
-        ],
+        SingleActivator(LogicalKeyboardKey.keyD, meta: true),
+        SingleActivator(LogicalKeyboardKey.keyD, control: true),
+      ],
       _ => <ShortcutActivator>[],
     };
 
@@ -54,15 +54,13 @@ Widget actionRowUseCase(BuildContext context) {
         description: "Runs $label",
         activators: activators,
         priority: priority,
-        icon: Icon(
-          switch (i % 5) {
-            0 => Icons.save_outlined,
-            1 => Icons.folder_open,
-            2 => Icons.copy,
-            3 => Icons.ios_share,
-            _ => Icons.flash_on,
-          },
-        ),
+        icon: Icon(switch (i % 5) {
+          0 => Icons.save_outlined,
+          1 => Icons.folder_open,
+          2 => Icons.copy,
+          3 => Icons.ios_share,
+          _ => Icons.flash_on,
+        }),
         onInvoke: isAsync
             ? (ref) async {
                 await Future.delayed(asyncDelay);

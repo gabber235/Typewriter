@@ -3,13 +3,9 @@ import "dart:math" as math;
 import "package:faker/faker.dart" hide Color;
 import "package:flutter_animate/flutter_animate.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tags.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/extensions.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
 const _tagWidth = 4;

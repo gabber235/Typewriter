@@ -1,14 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/responsive.dart";
-import "package:typewriter_panel/app/presentation/shell/sign_out_button.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats.dart";
-import "package:typewriter_panel/infrastructure/observability/telemetry.dart";
-import "package:typewriter_panel/shared/ui/screens/error_screen.dart";
-import "package:typewriter_panel/shared/ui/screens/loading_screen.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class EagerInitialization extends ConsumerWidget {
   const EagerInitialization({required this.child, super.key});

@@ -1,9 +1,7 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
-import "package:typewriter_panel/shared/utilities/rive.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class AuthPage extends HookConsumerWidget {

@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
-import "package:typewriter_panel/app/application/appearance.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class AppearanceMock extends Appearance {
   @override

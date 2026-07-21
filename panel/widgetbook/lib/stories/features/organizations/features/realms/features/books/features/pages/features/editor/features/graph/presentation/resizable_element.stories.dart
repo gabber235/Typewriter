@@ -1,16 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_element.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_identifier.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(
-  name: "Default",
-  type: ResizableElement,
-)
+@widgetbook.UseCase(name: "Default", type: ResizableElement)
 Widget resizableElementDefault(BuildContext context) {
   const cellSize = 40.0;
 
@@ -109,11 +103,7 @@ class CustomDotPainter extends CustomPainter {
 
     for (var x = 0.0; x < size.width; x += cellSize) {
       for (var y = 0.0; y < size.height; y += cellSize) {
-        canvas.drawCircle(
-          Offset(x, y),
-          2,
-          paint,
-        );
+        canvas.drawCircle(Offset(x, y), 2, paint);
       }
     }
   }

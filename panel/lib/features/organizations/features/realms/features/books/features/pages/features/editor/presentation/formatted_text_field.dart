@@ -1,8 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class FormattedTextField extends HookWidget {
   const FormattedTextField({

@@ -1,10 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/field_editor.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/header.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class BooleanEditor extends Editor {
   @override
@@ -32,28 +28,25 @@ class BooleanHeaderAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode editorMode,
-  ) =>
-      dataBlueprint.matches(DataBlueprint.boolean());
+  ) => dataBlueprint.matches(DataBlueprint.boolean());
   @override
   HeaderActionLocation location(
     String path,
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode editorMode,
-  ) =>
-      HeaderActionLocation.trailing;
+  ) => HeaderActionLocation.trailing;
   @override
   Widget build(
     String path,
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode editorMode,
-  ) =>
-      BooleanEditorWidget(
-        path: path,
-        primitiveBlueprint: dataBlueprint as PrimitiveBlueprint,
-        editorMode: editorMode,
-      );
+  ) => BooleanEditorWidget(
+    path: path,
+    primitiveBlueprint: dataBlueprint as PrimitiveBlueprint,
+    editorMode: editorMode,
+  );
 }
 
 class BooleanEditorWidget extends HookConsumerWidget {

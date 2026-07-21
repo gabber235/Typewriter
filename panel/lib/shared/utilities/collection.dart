@@ -1,8 +1,7 @@
 import "dart:math";
 
 import "package:collection/collection.dart";
-import "package:typewriter_panel/shared/utilities/globals.dart";
-import "package:typewriter_panel/shared/utilities/map.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 extension ListX<T> on List<T> {
   T? randomOrNull() {

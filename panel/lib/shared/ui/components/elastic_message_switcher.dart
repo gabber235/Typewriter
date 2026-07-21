@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_message_transition.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches messages with a clipped elastic slide and fade transition.
 class ElasticMessageSwitcher extends StatelessWidget {

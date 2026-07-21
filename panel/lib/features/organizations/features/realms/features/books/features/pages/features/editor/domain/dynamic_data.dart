@@ -1,8 +1,7 @@
 import "dart:convert";
 
 import "package:flutter/foundation.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class DynamicData {
   const DynamicData(this.data);

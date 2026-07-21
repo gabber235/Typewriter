@@ -1,8 +1,6 @@
 import "dart:async";
 
-import "package:typewriter_panel/shared/search/application/core/models.dart";
-import "package:typewriter_panel/shared/search/application/core/search_source.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_selector.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class CachedSearchSource implements SearchSource {
   CachedSearchSource({required this.source}) {
@@ -36,7 +34,9 @@ final class CachedSearchSource implements SearchSource {
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) async {
+  Future<SearchPreviewRequestResult> preview(
+    SearchPreviewRequest request,
+  ) async {
     final cachedResult = _previewCache[request.resultId];
     if (cachedResult != null) return cachedResult;
 

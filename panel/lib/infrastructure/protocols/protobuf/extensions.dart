@@ -1,8 +1,9 @@
 import "package:flutter/material.dart" show Color;
 import "package:protobuf/protobuf.dart";
 import "package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart" as proto;
-import "package:typewriter_panel/shared/utilities/map.dart";
+import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart"
+    as proto;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Extension on uint32 (int) to convert to/from Flutter Color
 extension ColorIntExtension on int {
@@ -13,7 +14,7 @@ extension ColorIntExtension on int {
 }
 
 /// Extension on Flutter Color to convert to/from uint32
-extension FlutterColorExtension on Color {
+extension FlutterColorToProtoExtension on Color {
   /// Convert Flutter Color to uint32
   int toUint32() {
     return toARGB32();

@@ -6,8 +6,7 @@ import "package:flutter/rendering.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:test_screenshot/test_screenshot.dart";
-import "package:typewriter_panel/app/presentation/shell/app_required.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// Build a reusable test app with ProviderScope, ResponsiveBreakpoints, and MaterialApp.

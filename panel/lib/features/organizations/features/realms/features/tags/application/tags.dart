@@ -1,12 +1,9 @@
 import "package:collection/collection.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/organizations.dart";
-import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/api/tag.pb.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "tags.g.dart";
 

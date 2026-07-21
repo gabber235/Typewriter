@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_item.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class BookSearchResultItem extends StatelessWidget {
   const BookSearchResultItem({

@@ -3,11 +3,7 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/current_interaction_mode.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/modes/insert_mode.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/modes/normal_mode.dart";
-
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/dropdown.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../../../../../support/test_utils.dart";
 

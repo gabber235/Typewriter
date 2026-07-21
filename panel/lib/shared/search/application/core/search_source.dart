@@ -1,7 +1,6 @@
 import "dart:async";
 
-import "package:typewriter_panel/shared/search/application/core/models.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_selector.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 abstract interface class SearchSource {
   Stream<SearchSourceSnapshot> get snapshots;

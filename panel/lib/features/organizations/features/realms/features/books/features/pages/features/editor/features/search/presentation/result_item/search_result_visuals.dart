@@ -1,12 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/shortcut_display.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchResultIconTile extends StatelessWidget {
   const SearchResultIconTile({
@@ -232,8 +226,8 @@ class SearchResultTags extends StatelessWidget {
   }
 }
 
-class SearchResultType extends StatelessWidget {
-  const SearchResultType({required this.label, this.color, super.key});
+class SearchResultTypeLabel extends StatelessWidget {
+  const SearchResultTypeLabel({required this.label, this.color, super.key});
   final String label;
   final Color? color;
 
@@ -272,7 +266,10 @@ class SearchResultSuffix extends StatelessWidget {
     return Row(
       spacing: 8,
       children: [
-        SearchResultType(label: label, color: onSurface.withValues(alpha: 0.7)),
+        SearchResultTypeLabel(
+          label: label,
+          color: onSurface.withValues(alpha: 0.7),
+        ),
         if (shortcutActivator != null)
           ShortcutDisplay(
             shortcut: shortcutActivator!,

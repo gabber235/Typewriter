@@ -2,9 +2,7 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/validated_editor_text_field.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class NumberEditor extends Editor {
   @override
@@ -41,8 +39,8 @@ class NumberEditorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNegativeAllowed =
-        primitiveBlueprint.hasModifier<NegativeModifier>();
+    final isNegativeAllowed = primitiveBlueprint
+        .hasModifier<NegativeModifier>();
     final minModifiers = primitiveBlueprint.getModifiers<MinModifier>();
     final maxModifiers = primitiveBlueprint.getModifiers<MaxModifier>();
 

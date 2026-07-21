@@ -2,7 +2,7 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A reusable empty state widget used across the organization members and
 /// join‑request screens. It displays an optional icon, a title and a short

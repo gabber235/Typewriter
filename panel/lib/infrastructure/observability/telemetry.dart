@@ -2,7 +2,7 @@ import "package:dart_nats/dart_nats.dart";
 import "package:dartastic_opentelemetry/dartastic_opentelemetry.dart";
 import "package:http/http.dart" as http;
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/shared/utilities/app_config.dart";
+import "package:typewriter_panel/typewriter_panel.dart" hide Header;
 
 part "telemetry.g.dart";
 

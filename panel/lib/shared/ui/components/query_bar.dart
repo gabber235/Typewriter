@@ -2,17 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/input_field_container.dart";
-import "package:typewriter_panel/shared/hooks/input_field_controller.dart";
-import "package:typewriter_panel/shared/search/domain/query/query.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/anchored_overlay.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/anchored_overlay_config.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_message_transition.dart";
-import "package:typewriter_panel/shared/ui/components/shortcut_display.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/shortcut.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class QueryBar extends HookWidget {
   const QueryBar({

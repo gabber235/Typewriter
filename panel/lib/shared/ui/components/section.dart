@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class Section extends StatelessWidget {
   const Section({

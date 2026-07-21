@@ -3,13 +3,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/field_editor.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/header.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "list_editor.g.dart";
 
@@ -27,7 +21,7 @@ class ListEditor extends Editor {
 
   @override
   (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
-      headerActions(
+  headerActions(
     Ref ref,
     String path,
     DataBlueprint dataBlueprint,
@@ -37,8 +31,13 @@ class ListEditor extends Editor {
     final listBlueprint = dataBlueprint as ListBlueprint;
     final length = ref.watch(_listValueLengthProvider(path));
 
-    final actions =
-        super.headerActions(ref, path, dataBlueprint, context, mode);
+    final actions = super.headerActions(
+      ref,
+      path,
+      dataBlueprint,
+      context,
+      mode,
+    );
     final childContext = context.copyWith(parentBlueprint: dataBlueprint);
     final children = List.generate(
       length,
@@ -140,11 +139,7 @@ class ListEditorWidget extends HookConsumerWidget {
 }
 
 class NoElements extends HookConsumerWidget {
-  const NoElements({
-    required this.path,
-    required this.onAdd,
-    super.key,
-  });
+  const NoElements({required this.path, required this.onAdd, super.key});
 
   final String path;
   final VoidCallback? onAdd;

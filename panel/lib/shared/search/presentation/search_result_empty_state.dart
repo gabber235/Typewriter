@@ -1,10 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
-import "package:typewriter_panel/shared/ui/components/labeled_message.dart";
-import "package:typewriter_panel/shared/ui/components/shimmer.dart";
-import "package:typewriter_panel/shared/ui/screens/error_screen.dart";
-import "package:typewriter_panel/shared/utilities/globals.dart";
-import "package:typewriter_panel/shared/utilities/rive.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchResultEmptyState extends StatelessWidget {
   const SearchResultEmptyState({required this.snapshot, super.key});

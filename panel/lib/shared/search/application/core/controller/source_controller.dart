@@ -1,7 +1,7 @@
 import "dart:async";
 
 import "package:flutter/foundation.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SourceController extends ChangeNotifier {
   SourceController({

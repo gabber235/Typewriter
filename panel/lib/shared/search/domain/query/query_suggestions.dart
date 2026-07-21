@@ -1,8 +1,6 @@
 // ignore_for_file: sort_constructors_first
 
-import "package:typewriter_panel/shared/search/domain/query/query_models.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_selector.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class QuerySuggestionEngine {
   const QuerySuggestionEngine(this.selectors);

@@ -4,8 +4,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/shared/hooks/menu_controller.dart";
-import "package:typewriter_panel/shared/ui/components/shortcut_display.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "context_menu.freezed.dart";
 

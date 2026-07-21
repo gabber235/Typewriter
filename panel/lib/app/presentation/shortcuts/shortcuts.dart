@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/shared/utilities/adaptive_single_activator.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final typewriterShortcuts = <ShortcutActivator, Intent>{
   ...WidgetsApp.defaultShortcuts,

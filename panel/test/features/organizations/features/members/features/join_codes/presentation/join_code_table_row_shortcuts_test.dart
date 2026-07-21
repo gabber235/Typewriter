@@ -1,9 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/join_codes.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_table_row_shortcuts.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {

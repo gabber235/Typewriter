@@ -3,12 +3,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/ic.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/shared/search/presentation/search_root.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
-import "package:typewriter_panel/shared/ui/components/admonition.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_transition.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchActionInfo extends HookConsumerWidget {
   const SearchActionInfo({super.key});

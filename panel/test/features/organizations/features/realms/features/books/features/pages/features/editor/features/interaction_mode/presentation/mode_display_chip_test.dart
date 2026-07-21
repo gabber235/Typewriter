@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/presentation/mode_display_chip.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../../../../../../../support/test_utils.dart";
 

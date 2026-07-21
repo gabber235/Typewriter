@@ -1,16 +1,8 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/application/pages.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/domain/page_type_extensions.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/entry_graph.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/inspector.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/shared/ui/components/section.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class PagePage extends HookConsumerWidget {

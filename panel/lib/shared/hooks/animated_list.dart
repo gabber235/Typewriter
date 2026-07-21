@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/animated_table.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Builds an item while it is being removed from an animated list or grid.
 typedef AnimatedListRemovedItemBuilder<T> =

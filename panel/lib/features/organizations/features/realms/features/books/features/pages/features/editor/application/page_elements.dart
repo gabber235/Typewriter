@@ -1,8 +1,6 @@
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/entries.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/application/scene.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "page_elements.freezed.dart";
 part "page_elements.g.dart";

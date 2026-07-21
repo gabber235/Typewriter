@@ -1,14 +1,9 @@
 import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/utilities/collection.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "user_join_requests.freezed.dart";
 part "user_join_requests.g.dart";
@@ -40,7 +35,7 @@ abstract class UserJoinRequest with _$UserJoinRequest {
   skir.UserJoinRequest toSkir() {
     return skir.UserJoinRequest(
       requestId: requestId,
-      organizationId: organizationId,
+      organizationId: this.organizationId,
       organizationName: organizationName,
       organizationLogoUrl: organizationLogoUrl,
       requestedAt: requestedAt,

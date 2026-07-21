@@ -7,11 +7,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/shared/hooks/timer.dart";
-import "package:typewriter_panel/shared/ui/components/countdown_badge.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
-import "package:typewriter_panel/shared/utilities/snackbar.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 sealed class SecretFieldState {
   const SecretFieldState();

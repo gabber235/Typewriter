@@ -1,6 +1,6 @@
 import "package:flutter/foundation.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef ActionEffectCallback = void Function(SearchActionEffect effect);
 

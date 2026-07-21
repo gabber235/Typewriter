@@ -1,8 +1,6 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/page_elements.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/presentation/book/route.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -118,7 +116,12 @@ Widget pagePageSceneUseCase(BuildContext context) {
               ),
             ],
           ),
-          .segment("Player Dialogue", start: 131, end: 200, color: Colors.greenAccent)
+          .segment(
+            "Player Dialogue",
+            start: 131,
+            end: 200,
+            color: Colors.greenAccent,
+          ),
         ],
       )
       .entry(
@@ -159,9 +162,19 @@ Widget pagePageSceneUseCase(BuildContext context) {
             end: 180,
             color: Colors.yellowAccent,
             children: [
-            .segment("Move Closer", start: 0, end: 20, color: Colors.yellowAccent.shade100),
-            .segment("Move Farther", start: 45, end: 60, color: Colors.yellowAccent.shade100),
-           ],
+              .segment(
+                "Move Closer",
+                start: 0,
+                end: 20,
+                color: Colors.yellowAccent.shade100,
+              ),
+              .segment(
+                "Move Farther",
+                start: 45,
+                end: 60,
+                color: Colors.yellowAccent.shade100,
+              ),
+            ],
           ),
         ],
       )

@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/animation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A reusable, presentation-only grid card used to display a selectable item
 /// with an optional badge and a title.

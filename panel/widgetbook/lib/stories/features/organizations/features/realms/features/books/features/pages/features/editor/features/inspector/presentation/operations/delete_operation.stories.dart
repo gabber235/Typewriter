@@ -3,10 +3,7 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/operations.stories.dart";
 
@@ -20,10 +17,7 @@ Widget deleteSingleSuccessUseCase(BuildContext context) {
   ]);
 }
 
-@widgetbook.UseCase(
-  name: "Multiple Success",
-  type: DeleteOperationButton,
-)
+@widgetbook.UseCase(name: "Multiple Success", type: DeleteOperationButton)
 Widget deleteMultipleSuccessUseCase(BuildContext context) {
   return operationUseCase(context, [
     (ctx) => _DeleteSelectableIdentifier(
@@ -37,10 +31,7 @@ Widget deleteMultipleSuccessUseCase(BuildContext context) {
   ]);
 }
 
-@widgetbook.UseCase(
-  name: "Partial Failures",
-  type: DeleteOperationButton,
-)
+@widgetbook.UseCase(name: "Partial Failures", type: DeleteOperationButton)
 Widget deletePartialFailureUseCase(BuildContext context) {
   return operationUseCase(context, [
     (ctx) => _DeleteSelectableIdentifier(

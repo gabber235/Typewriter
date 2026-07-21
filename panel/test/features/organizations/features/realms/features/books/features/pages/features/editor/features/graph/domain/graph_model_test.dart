@@ -1,9 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/edge_side.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_edge.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_element.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_identifier.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("EdgeSide", () {

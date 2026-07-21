@@ -8,7 +8,7 @@ extension SkirColorExtension on skir.Color {
   }
 }
 
-extension FlutterColorExtension on Color {
+extension FlutterColorToSkirExtension on Color {
   skir.Color toSkirColor() {
     return skir.Color(argb: toARGB32().toSigned(32));
   }

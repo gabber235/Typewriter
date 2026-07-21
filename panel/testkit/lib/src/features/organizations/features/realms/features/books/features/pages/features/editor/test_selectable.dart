@@ -3,13 +3,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/dynamic_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/shared/ui/components/identifier.dart";
-import "package:typewriter_panel/shared/ui/components/title.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "test_selectable.g.dart";
 

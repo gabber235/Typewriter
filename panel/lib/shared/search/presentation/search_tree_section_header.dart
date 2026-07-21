@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchTreeSectionHeader extends StatelessWidget {
   const SearchTreeSectionHeader({

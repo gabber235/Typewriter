@@ -1,5 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/utilities/tree_view/tree_view.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Test data class with path and value for tree construction tests.
 class Pair {

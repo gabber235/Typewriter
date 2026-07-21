@@ -1,5 +1,4 @@
-import "package:typewriter_panel/shared/search/domain/query/query.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const List<String> _roleSuggestionValues = ["admin", "editor", "viewer"];
 const List<String> _statusSuggestionValues = ["active", "archived", "draft"];

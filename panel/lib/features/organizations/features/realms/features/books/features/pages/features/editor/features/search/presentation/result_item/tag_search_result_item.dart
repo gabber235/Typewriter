@@ -1,9 +1,6 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_visuals.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/extensions.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagSearchResultItem extends StatelessWidget {
   const TagSearchResultItem({

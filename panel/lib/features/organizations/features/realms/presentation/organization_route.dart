@@ -3,17 +3,9 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/app/presentation/shell/custom_appbar.dart";
-import "package:typewriter_panel/app/presentation/shell/sidebar.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/organizations.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/simple_scaffold.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class OrganizationPage extends HookConsumerWidget {

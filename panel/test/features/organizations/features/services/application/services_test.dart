@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/services/application/services.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 Service service({
   String name = "test_service",

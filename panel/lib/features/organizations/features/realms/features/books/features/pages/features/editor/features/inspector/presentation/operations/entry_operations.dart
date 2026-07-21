@@ -7,17 +7,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/element_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/entries.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/shared/ui/components/context_menu.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Operation to create a connection between the selected entry and another entry.
 class EntryLinkWithOperation extends ActivatorShortcutOperation {

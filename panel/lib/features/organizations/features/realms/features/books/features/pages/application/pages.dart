@@ -1,12 +1,9 @@
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/features/organizations/organizations.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/api/page.pb.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "pages.g.dart";
 

@@ -1,16 +1,7 @@
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/dynamic_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_identifier.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph_drag.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tags.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/presentation/tag_header.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/shared/utilities/map.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagIdentifier extends SelectableIdentifier implements GraphDragData {
   const TagIdentifier(this.id);

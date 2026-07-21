@@ -1,7 +1,6 @@
 import "package:collection/collection.dart";
 import "package:json_annotation/json_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_controller.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_data.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "timeline_layout.g.dart";
 

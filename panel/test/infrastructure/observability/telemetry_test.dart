@@ -3,7 +3,7 @@ import "dart:typed_data";
 import "package:dartastic_opentelemetry/dartastic_opentelemetry.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:http/http.dart" as http;
-import "package:typewriter_panel/infrastructure/observability/telemetry.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   const telemetry = NoopPanelTelemetry();

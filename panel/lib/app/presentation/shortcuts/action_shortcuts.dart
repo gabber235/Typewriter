@@ -6,11 +6,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/shortcuts.dart";
-import "package:typewriter_panel/shared/hooks/delayed_execution.dart";
-import "package:typewriter_panel/shared/hooks/global_key.dart";
-import "package:typewriter_panel/shared/ui/components/shortcut_display.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "action_shortcuts.freezed.dart";
 part "action_shortcuts.g.dart";

@@ -4,10 +4,7 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_layout.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_viewport.dart";
-import "package:typewriter_panel/shared/utilities/spring_value.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 enum TimelineInteractionMode { move, resizeStart, resizeEnd }
 

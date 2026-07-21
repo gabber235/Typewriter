@@ -1,9 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:skir_client/skir_client.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("Color serialization", () {

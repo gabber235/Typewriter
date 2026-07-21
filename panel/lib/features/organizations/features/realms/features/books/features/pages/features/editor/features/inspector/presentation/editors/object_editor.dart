@@ -1,10 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/field_editor.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/header.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class ObjectEditor extends Editor {
   @override
@@ -20,7 +16,7 @@ class ObjectEditor extends Editor {
 
   @override
   (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
-      headerActions(
+  headerActions(
     Ref ref,
     String path,
     DataBlueprint dataBlueprint,
@@ -28,8 +24,13 @@ class ObjectEditor extends Editor {
     EditorMode mode,
   ) {
     final objectBlueprint = dataBlueprint as ObjectBlueprint;
-    final actions =
-        super.headerActions(ref, path, dataBlueprint, context, mode);
+    final actions = super.headerActions(
+      ref,
+      path,
+      dataBlueprint,
+      context,
+      mode,
+    );
     final childContext = context.copyWith(parentBlueprint: dataBlueprint);
     final children = objectBlueprint.fields.entries.map(
       (entry) => (path.join(entry.key), childContext, entry.value),
@@ -85,9 +86,7 @@ class ObjectEditorWidget extends HookConsumerWidget {
 
   FieldEditor buildFieldEditor(MapEntry<String, DataBlueprint> field) {
     return FieldEditor(
-      key: ValueKey(
-        path.isNotEmpty ? path.join(field.key) : field.key,
-      ),
+      key: ValueKey(path.isNotEmpty ? path.join(field.key) : field.key),
       path: path.isNotEmpty ? path.join(field.key) : field.key,
       dataBlueprint: field.value,
       editorMode: editorMode,

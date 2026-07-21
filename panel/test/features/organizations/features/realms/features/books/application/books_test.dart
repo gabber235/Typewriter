@@ -3,11 +3,11 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/application/books.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tags.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart"
     as proto;
+import "package:typewriter_panel/typewriter_panel.dart" as proto;
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 class _MockBooks extends Books {

@@ -1,7 +1,7 @@
 // ignore_for_file: sort_constructors_first
 import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/shared/utilities/globals.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_blueprint.freezed.dart";
 part "data_blueprint.g.dart";

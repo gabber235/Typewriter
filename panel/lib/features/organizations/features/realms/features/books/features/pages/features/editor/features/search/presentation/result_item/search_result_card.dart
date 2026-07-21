@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:okcolor/models/extensions.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchResultCard extends StatelessWidget {
   const SearchResultCard({

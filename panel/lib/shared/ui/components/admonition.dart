@@ -2,8 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:iconify_flutter_plus/icons/ph.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class Admonition extends StatelessWidget {
   const Admonition({

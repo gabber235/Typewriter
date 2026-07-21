@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("invalid record ID errors preserve table details", () {

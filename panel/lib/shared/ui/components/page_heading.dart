@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/fonts.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A prominent page heading with supporting subtext for context.
 /// Includes responsive padding that adjusts based on screen size.

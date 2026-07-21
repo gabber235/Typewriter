@@ -1,7 +1,6 @@
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hooks_riverpod/misc.dart" show Override;
-import "package:typewriter_panel/app/presentation/shell/sidebar.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final mockUserInfo = const UserInfo(
   sub: "1",

@@ -1,7 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/widgets.dart";
 import "package:petitparser/petitparser.dart";
-import "package:typewriter_panel/shared/search/domain/query/query.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const quotes = ["'", '"'];
 

@@ -1,6 +1,5 @@
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/interaction_mode.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/modes/normal_mode.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "current_interaction_mode.g.dart";
 

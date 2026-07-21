@@ -3,9 +3,7 @@ import "dart:collection";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/shared/ui/components/focus_highlight.dart";
-import "package:typewriter_panel/shared/utilities/shortcut.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class _PaneRegistration {
   _PaneRegistration({required this.scope});

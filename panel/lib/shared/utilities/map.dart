@@ -1,4 +1,4 @@
-import "package:typewriter_panel/shared/utilities/collection.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 extension MapX on Map<dynamic, dynamic> {
   /// Merges this map with [other] using "mask" semantics.

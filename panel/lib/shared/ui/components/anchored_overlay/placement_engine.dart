@@ -1,13 +1,9 @@
 import "dart:math" as math;
 
 import "package:flutter/widgets.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/anchored_overlay_config.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
-enum OverflowResolutionStep {
-  flip,
-  shift,
-  resize,
-}
+enum OverflowResolutionStep { flip, shift, resize }
 
 class AnchoredOverlayPlacementInput {
   const AnchoredOverlayPlacementInput({
@@ -53,7 +49,10 @@ AnchoredOverlayPlacementResult computeAnchoredPlacement(
     input.config,
   );
 
-  Offset candidateOffsetFor(AnchoredOverlaySide candidateSide, Size candidateSize) {
+  Offset candidateOffsetFor(
+    AnchoredOverlaySide candidateSide,
+    Size candidateSize,
+  ) {
     return switch (candidateSide) {
       AnchoredOverlaySide.top => Offset(
         input.anchorRect.left,
@@ -127,18 +126,20 @@ Size _applySharedAxisSizing({
     return childSize;
   }
 
-  final isVerticalAttach = side == AnchoredOverlaySide.top || side == AnchoredOverlaySide.bottom;
+  final isVerticalAttach =
+      side == AnchoredOverlaySide.top || side == AnchoredOverlaySide.bottom;
   return isVerticalAttach
       ? Size(anchorRect.width, childSize.height)
       : Size(childSize.width, anchorRect.height);
 }
 
-Size _applyInitialSizeConstraints(
-  Size size,
-  AnchoredOverlayConfig config,
-) {
-  final constrainedWidth = config.maxWidth == null ? size.width : math.min(size.width, config.maxWidth!);
-  final constrainedHeight = config.maxHeight == null ? size.height : math.min(size.height, config.maxHeight!);
+Size _applyInitialSizeConstraints(Size size, AnchoredOverlayConfig config) {
+  final constrainedWidth = config.maxWidth == null
+      ? size.width
+      : math.min(size.width, config.maxWidth!);
+  final constrainedHeight = config.maxHeight == null
+      ? size.height
+      : math.min(size.height, config.maxHeight!);
   return Size(constrainedWidth, constrainedHeight);
 }
 
@@ -162,7 +163,9 @@ bool _fits(Rect boundaryRect, Offset offset, Size size) {
 Offset _clampOffset(Rect boundaryRect, Offset offset, Size size) {
   final rawMaxLeft = boundaryRect.right - size.width;
   final rawMaxTop = boundaryRect.bottom - size.height;
-  final maxLeft = rawMaxLeft < boundaryRect.left ? boundaryRect.left : rawMaxLeft;
+  final maxLeft = rawMaxLeft < boundaryRect.left
+      ? boundaryRect.left
+      : rawMaxLeft;
   final maxTop = rawMaxTop < boundaryRect.top ? boundaryRect.top : rawMaxTop;
 
   final clampedLeft = offset.dx.clamp(boundaryRect.left, maxLeft);

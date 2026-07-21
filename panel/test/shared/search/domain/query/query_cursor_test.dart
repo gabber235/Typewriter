@@ -1,5 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/search/domain/query/query.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/query_test_harness.dart";
 

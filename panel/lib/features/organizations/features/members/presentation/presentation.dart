@@ -4,6 +4,7 @@ export "member_list.dart";
 export "member_list_route.dart";
 export "member_row_actions.dart";
 export "member_table.dart";
+export "member_table_row_shortcuts.dart";
 export "member_tablet_list.dart";
 export "role_multiselect_chips.dart";
 export "role_multiselect_dropdown.dart";

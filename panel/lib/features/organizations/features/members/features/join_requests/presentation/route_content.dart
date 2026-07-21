@@ -1,11 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/join_request_list.dart";
-import "package:typewriter_panel/shared/ui/components/shimmer.dart";
-import "package:typewriter_panel/shared/ui/screens/error_screen.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinRequestsTab extends HookConsumerWidget {
   const JoinRequestsTab({super.key});

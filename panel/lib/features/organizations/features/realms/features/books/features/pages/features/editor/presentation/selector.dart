@@ -2,14 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/shared/hooks/focused_change.dart";
-import "package:typewriter_panel/shared/hooks/menu_controller.dart";
-import "package:typewriter_panel/shared/ui/components/context_menu.dart";
-import "package:typewriter_panel/shared/ui/components/pixel_scale_transition.dart";
-import "package:typewriter_panel/shared/utilities/animation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Provides SelectableIdentifier to descendants and exposes primary focus lookup.
 class SelectableScope extends InheritedWidget {

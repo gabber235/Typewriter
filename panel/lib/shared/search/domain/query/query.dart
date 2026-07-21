@@ -1,9 +1,5 @@
 import "package:collection/collection.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_cursor.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_lexer.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_models.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_selector.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_spans.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 export "query_cursor.dart";
 export "query_lexer.dart";

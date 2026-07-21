@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/outline_decorator.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -11,8 +11,10 @@ Widget outlineDecoratorShowcaseUseCase(BuildContext context) {
     label: "Outer color",
     initialValue: Colors.blue,
   );
-  final hasInner =
-      context.knobs.boolean(label: "Inner outline", initialValue: true);
+  final hasInner = context.knobs.boolean(
+    label: "Inner outline",
+    initialValue: true,
+  );
   final innerColor = hasInner
       ? context.knobs.color(
           label: "Inner color",
@@ -35,10 +37,7 @@ Widget outlineDecoratorShowcaseUseCase(BuildContext context) {
     divisions: 16,
   );
 
-  Widget tile({
-    required Size size,
-    required Widget child,
-  }) {
+  Widget tile({required Size size, required Widget child}) {
     return HookBuilder(
       builder: (context) {
         final hovering = useState(false);
@@ -51,11 +50,8 @@ Widget outlineDecoratorShowcaseUseCase(BuildContext context) {
             innerColor: innerColor,
             outerThickness: outerThickness,
             innerThickness: innerThickness,
-            builder: (context) => SizedBox(
-              width: size.width,
-              height: size.height,
-              child: child,
-            ),
+            builder: (context) =>
+                SizedBox(width: size.width, height: size.height, child: child),
           ),
         );
       },
@@ -74,9 +70,7 @@ Widget outlineDecoratorShowcaseUseCase(BuildContext context) {
     ),
     tile(
       size: const Size(80, 80),
-      child: ClipOval(
-        child: ColoredBox(color: Colors.grey.shade400),
-      ),
+      child: ClipOval(child: ColoredBox(color: Colors.grey.shade400)),
     ),
     tile(
       size: const Size(140, 48),
@@ -127,10 +121,7 @@ Widget outlineDecoratorShowcaseUseCase(BuildContext context) {
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Center(
-          child: Text(
-            "Badge",
-            style: TextStyle(color: Colors.white),
-          ),
+          child: Text("Badge", style: TextStyle(color: Colors.white)),
         ),
       ),
     ),

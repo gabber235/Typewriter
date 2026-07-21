@@ -1,7 +1,6 @@
 import "package:flutter/rendering.dart";
 import "package:flutter/widgets.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/anchored_overlay_config.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/placement_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class AnchoredOverlayPositioned extends SingleChildRenderObjectWidget {
   const AnchoredOverlayPositioned({
@@ -103,8 +102,12 @@ class RenderAnchoredOverlayPositioned extends RenderBox
   @override
   void performLayout() {
     final resolvedSize = constraints.biggest;
-    final width = resolvedSize.width.isFinite ? resolvedSize.width : overlaySize.width;
-    final height = resolvedSize.height.isFinite ? resolvedSize.height : overlaySize.height;
+    final width = resolvedSize.width.isFinite
+        ? resolvedSize.width
+        : overlaySize.width;
+    final height = resolvedSize.height.isFinite
+        ? resolvedSize.height
+        : overlaySize.height;
     size = Size(width, height);
 
     final currentChild = child;
@@ -125,7 +128,10 @@ class RenderAnchoredOverlayPositioned extends RenderBox
     );
 
     if (currentChild.size != result.size) {
-      currentChild.layout(BoxConstraints.tight(result.size), parentUsesSize: true);
+      currentChild.layout(
+        BoxConstraints.tight(result.size),
+        parentUsesSize: true,
+      );
       result = AnchoredOverlayPlacementResult(
         offset: result.offset,
         size: currentChild.size,

@@ -1,8 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/hooks/text_size.dart";
-import "package:typewriter_panel/shared/hooks/timer.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches between the given texts in a loop.
 class TextScroller extends HookWidget {
@@ -42,11 +41,7 @@ class TextScroller extends HookWidget {
         physics: const NeverScrollableScrollPhysics(),
         children: [
           for (final text in [texts.last, ...texts])
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: style,
-            ),
+            Text(text, textAlign: TextAlign.center, style: style),
         ],
       ),
     );

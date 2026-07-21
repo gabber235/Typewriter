@@ -3,17 +3,8 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph_drag.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tag_selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tags.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/extensions.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/shared/ui/components/shimmer.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
-import "package:typewriter_panel/shared/utilities/riverpod.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagNode extends HookConsumerWidget {
   const TagNode({required this.tagId, super.key});

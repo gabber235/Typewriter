@@ -3,9 +3,7 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/hooks/forward_animation.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/utilities/snackbar.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class FloatingButton extends HookWidget {
   const FloatingButton({
@@ -50,9 +48,7 @@ class FloatingButton extends HookWidget {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: child,
-        ),
+        Positioned.fill(child: child),
         Positioned(
           right: 8,
           bottom: 8,
@@ -62,13 +58,13 @@ class FloatingButton extends HookWidget {
             backgroundColor: lastError.value != null
                 ? Theme.of(context).colorScheme.error
                 : isActive
-                    ? null
-                    : Theme.of(context).disabledColor,
+                ? null
+                : Theme.of(context).disabledColor,
             foregroundColor: lastError.value != null
                 ? Theme.of(context).colorScheme.onError
                 : isActive
-                    ? null
-                    : Theme.of(context).colorScheme.onSurface,
+                ? null
+                : Theme.of(context).colorScheme.onSurface,
             child: ElasticSwitcher(
               child: isLoading.value ? const _Spinner() : icon,
             ),
@@ -84,7 +80,8 @@ class _Spinner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = IconTheme.of(context).color ??
+    final color =
+        IconTheme.of(context).color ??
         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);
     final size = IconTheme.of(context).size ?? 24.0;
 

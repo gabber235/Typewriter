@@ -2,6 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/mod
     as proto;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart" as proto;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Exception thrown when an API call returns an error response.

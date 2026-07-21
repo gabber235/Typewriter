@@ -1,7 +1,6 @@
 import "package:faker/faker.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
+import "package:typewriter_panel/typewriter_panel.dart" hide random;
 
 const defaultBlueprintIcons = <String>[
   "fa-solid:star",

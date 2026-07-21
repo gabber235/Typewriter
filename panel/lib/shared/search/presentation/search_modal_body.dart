@@ -1,17 +1,6 @@
 import "package:flutter/material.dart" hide SearchController;
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.dart";
-import "package:typewriter_panel/shared/hooks/input_field_controller.dart";
-import "package:typewriter_panel/shared/search/presentation/search_action_info.dart";
-import "package:typewriter_panel/shared/search/presentation/search_frame.dart";
-import "package:typewriter_panel/shared/search/presentation/search_preview.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_renderers.dart";
-import "package:typewriter_panel/shared/search/presentation/search_root.dart";
-import "package:typewriter_panel/shared/search/presentation/search_shortcuts.dart";
-import "package:typewriter_panel/shared/search/presentation/search_tree_results.dart";
-import "package:typewriter_panel/shared/ui/components/input_icon_button.dart";
-import "package:typewriter_panel/shared/ui/components/query_bar.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchModalBody extends HookConsumerWidget {
   const SearchModalBody({

@@ -2,8 +2,7 @@
 
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/element_blueprint.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class InnerElementNode extends StatelessWidget {
   const InnerElementNode({

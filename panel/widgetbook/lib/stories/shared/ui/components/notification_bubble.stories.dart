@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/notification_bubble.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -95,8 +95,10 @@ Widget notificationBubbleCountUseCase(BuildContext context) {
     max: 24,
   );
   final count = context.knobs.int.input(label: "Count", initialValue: 7);
-  final maxCount =
-      context.knobs.int.input(label: "Max Count", initialValue: 99);
+  final maxCount = context.knobs.int.input(
+    label: "Max Count",
+    initialValue: 99,
+  );
   final hideZero = context.knobs.boolean(
     label: "Hide When Zero",
     initialValue: true,
@@ -169,10 +171,7 @@ Widget notificationBubbleCustomUseCase(BuildContext context) {
 
   final bubble = Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-    decoration: ShapeDecoration(
-      color: bg,
-      shape: StadiumBorder(),
-    ),
+    decoration: ShapeDecoration(color: bg, shape: StadiumBorder()),
     child: Text(
       label,
       style: TextStyle(

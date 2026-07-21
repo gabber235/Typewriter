@@ -1,7 +1,6 @@
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/identifier.dart";
-import "package:typewriter_panel/shared/ui/components/title.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class ServiceHeader extends HookWidget {
   const ServiceHeader({

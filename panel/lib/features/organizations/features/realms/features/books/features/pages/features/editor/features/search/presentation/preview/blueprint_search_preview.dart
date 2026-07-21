@@ -1,10 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/element_blueprint.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_renderers.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class BlueprintSearchPreview extends StatelessWidget {
   const BlueprintSearchPreview({required this.context, super.key});
@@ -19,23 +14,25 @@ class BlueprintSearchPreview extends StatelessWidget {
         subtitle: result.subtitle,
         child: const Center(child: CircularProgressIndicator()),
       ),
-      SearchResultPreviewContextData(:final result, :final data) => _PreviewFrame(
-        title: result.title ?? result.id,
-        subtitle: result.subtitle,
-        blueprint: switch (result.payload) {
-          final ElementBlueprint bp => bp,
-          _ => null,
-        },
-        child: _PreviewData(data: data, subtitle: result.subtitle),
-      ),
-      SearchResultPreviewContextError(:final result, :final message) => _PreviewFrame(
-        title: result.title ?? result.id,
-        subtitle: result.subtitle,
-        child: _StatusMessage(
-          message: message,
-          color: Theme.of(context).colorScheme.error,
+      SearchResultPreviewContextData(:final result, :final data) =>
+        _PreviewFrame(
+          title: result.title ?? result.id,
+          subtitle: result.subtitle,
+          blueprint: switch (result.payload) {
+            final ElementBlueprint bp => bp,
+            _ => null,
+          },
+          child: _PreviewData(data: data, subtitle: result.subtitle),
         ),
-      ),
+      SearchResultPreviewContextError(:final result, :final message) =>
+        _PreviewFrame(
+          title: result.title ?? result.id,
+          subtitle: result.subtitle,
+          child: _StatusMessage(
+            message: message,
+            color: Theme.of(context).colorScheme.error,
+          ),
+        ),
     };
   }
 }
@@ -233,10 +230,9 @@ class _SoftChip extends StatelessWidget {
         label,
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          fontSize: 10,
-          color: foregroundColor,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(fontSize: 10, color: foregroundColor),
       ),
     );
   }
@@ -258,7 +254,8 @@ class _PreviewData extends StatelessWidget {
     final description = map["description"];
     final fields = _normalizeFields(map["fields"]);
 
-    final shouldShowDescription = description is String &&
+    final shouldShowDescription =
+        description is String &&
         description.isNotEmpty &&
         (subtitle == null || subtitle!.isEmpty);
 
@@ -360,10 +357,7 @@ class _FieldsTable extends StatelessWidget {
 }
 
 class _StatusMessage extends StatelessWidget {
-  const _StatusMessage({
-    required this.message,
-    this.color,
-  });
+  const _StatusMessage({required this.message, this.color});
 
   final String message;
   final Color? color;
@@ -382,9 +376,9 @@ class _StatusMessage extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Text(
           message,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: foreground,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: foreground),
         ),
       ),
     );

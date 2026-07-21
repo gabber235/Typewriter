@@ -3,14 +3,7 @@ import "dart:async";
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/shared/ui/components/context_menu.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
-import "package:typewriter_panel/shared/ui/components/popups.dart";
-import "package:typewriter_panel/shared/ui/components/shortcut_display.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A selectable-level operation holding the asynchronous delete callback.
 class DeleteSelectableOperation extends SelectableOperation {
@@ -121,7 +114,10 @@ class DeleteOperationButton extends HookConsumerWidget {
             ),
             if (operation.shortcut.canInvoke) ...[
               const SizedBox(width: 8),
-              RotatingShortcuts(shortcuts: operation.shortcut.shortcuts, style: KeyStyle.outline),
+              RotatingShortcuts(
+                shortcuts: operation.shortcut.shortcuts,
+                style: KeyStyle.outline,
+              ),
             ],
           ],
         ),

@@ -6,11 +6,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:okcolor/models/extensions.dart";
-import "package:typewriter_panel/shared/hooks/timer.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/shortcut.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 // The default spacing between the leading icon, label, trailing icon, and
 // shortcut label in a _MenuItemLabel.

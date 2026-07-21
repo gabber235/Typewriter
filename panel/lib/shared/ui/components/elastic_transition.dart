@@ -2,7 +2,7 @@ import "dart:math";
 
 import "package:flutter/material.dart";
 
-import "package:typewriter_panel/shared/utilities/animation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class ElasticTransition extends StatelessWidget {
   const ElasticTransition({

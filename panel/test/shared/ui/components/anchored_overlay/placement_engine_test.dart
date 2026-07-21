@@ -1,7 +1,6 @@
 import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/anchored_overlay_config.dart";
-import "package:typewriter_panel/shared/ui/components/anchored_overlay/placement_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("computeAnchoredPlacement", () {

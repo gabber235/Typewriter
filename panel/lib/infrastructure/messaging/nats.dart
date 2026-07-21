@@ -7,13 +7,9 @@ import "package:http/http.dart" as http;
 import "package:protobuf/protobuf.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:skir_client/skir_client.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/features/organizations/organizations.dart";
-import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
-import "package:typewriter_panel/infrastructure/observability/telemetry.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
-import "package:typewriter_panel/shared/utilities/app_config.dart";
-import "package:typewriter_panel/shared/utilities/async.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart" hide Header;
 
 part "nats.g.dart";
 

@@ -1,9 +1,7 @@
 import "package:flutter/material.dart" hide Title;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/shared/ui/components/identifier.dart";
-import "package:typewriter_panel/shared/ui/components/title.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagHeader extends HookConsumerWidget {
   const TagHeader({required this.tag, super.key});

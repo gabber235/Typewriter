@@ -1,15 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/application/appearance.dart";
-import "package:typewriter_panel/app/application/eager_initialization.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/app/presentation/responsive.dart";
-import "package:typewriter_panel/app/presentation/scroll_behavior.dart";
-import "package:typewriter_panel/app/presentation/shell/app_overlay.dart";
-import "package:typewriter_panel/app/presentation/shell/app_required.dart";
-import "package:typewriter_panel/app/presentation/shell/nats_connection.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/shortcuts.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TypewriterPanel extends HookConsumerWidget {
   const TypewriterPanel({super.key});

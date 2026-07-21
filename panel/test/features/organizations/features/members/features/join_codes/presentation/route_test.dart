@@ -1,9 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/join_codes.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/route.dart";
-import "package:typewriter_panel/shared/ui/components/page_heading.dart";
-import "package:typewriter_panel/shared/ui/components/shimmer.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../support/test_utils.dart";

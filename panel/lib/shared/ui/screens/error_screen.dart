@@ -1,8 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
-import "package:typewriter_panel/shared/utilities/rive.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const funnyErrorTitles = [
   "The plot thickened too much",

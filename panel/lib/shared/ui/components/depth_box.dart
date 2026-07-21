@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class DepthContainer extends InheritedWidget {
   const DepthContainer({required this.depth, required super.child, super.key});

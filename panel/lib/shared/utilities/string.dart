@@ -1,5 +1,5 @@
 import "package:dart_casing/dart_casing.dart";
-import "package:typewriter_panel/shared/utilities/globals.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 extension StringX on String {
   String titleCase() {

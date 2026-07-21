@@ -1,9 +1,6 @@
 import "package:flutter/material.dart" hide SearchController;
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_renderers.dart";
-import "package:typewriter_panel/shared/search/presentation/search_root.dart";
-import "package:typewriter_panel/shared/search/presentation/search_tree_results.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
 import "../application/core/support/search_core_test_harness.dart";

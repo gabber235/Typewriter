@@ -1,8 +1,5 @@
 import "package:collection/collection.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_lexer.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_models.dart";
-import "package:typewriter_panel/shared/search/domain/query/query_spans.dart";
-import "package:typewriter_panel/shared/utilities/collection.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 QueryCursorContext resolveQueryCursorContext(
   List<QueryLexerToken> tokens,
@@ -99,15 +96,15 @@ String _slice(String input, QueryRange range, int cursorOffset) {
 }
 
 QuerySide _side(List<QueryLexerToken> tokens, int cursorOffset) {
-    if (tokens.isEmpty) {
-        return QuerySide.before;
-    }
+  if (tokens.isEmpty) {
+    return QuerySide.before;
+  }
 
-    final min = tokens.minByOrNull((t) => t.range.start)!.range.start;
-    final max = tokens.maxByOrNull((t) => t.range.end)!.range.end;
-    return min < cursorOffset && cursorOffset < max
-        ? QuerySide.expression
-        : cursorOffset < min
-        ? QuerySide.before
-        : QuerySide.after;
+  final min = tokens.minByOrNull((t) => t.range.start)!.range.start;
+  final max = tokens.maxByOrNull((t) => t.range.end)!.range.end;
+  return min < cursorOffset && cursorOffset < max
+      ? QuerySide.expression
+      : cursorOffset < min
+      ? QuerySide.before
+      : QuerySide.after;
 }

@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hook for creating and managing a LoadingButtonController.
 LoadingButtonController useLoadingButtonController() {

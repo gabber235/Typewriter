@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A shared widget for displaying interaction mode information in the app bar.
 ///
@@ -27,7 +27,8 @@ class ModeDisplayChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor ??
+        color:
+            backgroundColor ??
             color.withValues(alpha: context.isDarkMode ? .1 : .2),
         borderRadius: BorderRadius.circular(4),
       ),

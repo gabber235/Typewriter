@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/ui/ui.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   Widget scrollView(List<Widget> slivers) {

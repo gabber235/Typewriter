@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/ui/components/text_scroller.dart";
-import "package:typewriter_panel/shared/utilities/rive.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({this.title = "Waiting for connection", super.key});

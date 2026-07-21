@@ -5,10 +5,7 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/app/app.dart";
-import "package:typewriter_panel/features/organizations/organizations.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
-import "package:typewriter_panel/shared/shared.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "create_organization.dart";
 part "join_organization.dart";

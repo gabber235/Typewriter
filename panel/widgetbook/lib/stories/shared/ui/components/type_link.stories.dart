@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/ui/components/type_link.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -20,11 +20,11 @@ Widget typeLinkDefaultUseCase(BuildContext context) {
 
   final darkColor =
       context.knobs.boolean(label: "Custom Dark Color?", initialValue: false)
-          ? context.knobs.color(
-              label: "Dark Color",
-              initialValue: Colors.lightBlueAccent,
-            )
-          : null;
+      ? context.knobs.color(
+          label: "Dark Color",
+          initialValue: Colors.lightBlueAccent,
+        )
+      : null;
 
   return FakeApp(
     child: Center(

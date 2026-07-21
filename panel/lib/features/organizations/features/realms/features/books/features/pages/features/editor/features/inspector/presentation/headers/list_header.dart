@@ -2,14 +2,7 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/ion.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/data_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/header.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/headers/add_header.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/headers/remove_header.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class AddListHeaderAction extends HeaderAction {
   @override
@@ -18,8 +11,7 @@ class AddListHeaderAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      (mode, dataBlueprint).canEdit && dataBlueprint is ListBlueprint;
+  ) => (mode, dataBlueprint).canEdit && dataBlueprint is ListBlueprint;
 
   @override
   HeaderActionLocation location(
@@ -27,8 +19,7 @@ class AddListHeaderAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      HeaderActionLocation.actions;
+  ) => HeaderActionLocation.actions;
 
   @override
   Widget build(
@@ -36,11 +27,10 @@ class AddListHeaderAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      AddListHeaderActionWidget(
-        path: path,
-        listBlueprint: dataBlueprint as ListBlueprint,
-      );
+  ) => AddListHeaderActionWidget(
+    path: path,
+    listBlueprint: dataBlueprint as ListBlueprint,
+  );
 }
 
 class AddListHeaderActionWidget extends HookConsumerWidget {
@@ -85,8 +75,7 @@ class ReorderListHeaderAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      HeaderActionLocation.leading;
+  ) => HeaderActionLocation.leading;
 
   @override
   Widget build(
@@ -127,8 +116,7 @@ class DuplicateListItemAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      HeaderActionLocation.actions;
+  ) => HeaderActionLocation.actions;
 
   @override
   Widget build(
@@ -136,11 +124,7 @@ class DuplicateListItemAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      DuplicateListItemActionWidget(
-        path: path,
-        dataBlueprint: dataBlueprint,
-      );
+  ) => DuplicateListItemActionWidget(path: path, dataBlueprint: dataBlueprint);
 }
 
 class DuplicateListItemActionWidget extends HookConsumerWidget {
@@ -162,10 +146,10 @@ class DuplicateListItemActionWidget extends HookConsumerWidget {
     final parentValue = _get(ref, parentPath, []);
     final value = _get(ref, path, dataBlueprint.defaultValue());
 
-    ref.read(selectedProvider.notifier).updateFieldValue(
-      parentPath,
-      [...parentValue, value],
-    );
+    ref.read(selectedProvider.notifier).updateFieldValue(parentPath, [
+      ...parentValue,
+      value,
+    ]);
   }
 
   T _get<T>(WidgetRef ref, String path, T defaultValue) {
@@ -201,8 +185,7 @@ class RemoveListItemAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      HeaderActionLocation.actions;
+  ) => HeaderActionLocation.actions;
 
   @override
   Widget build(
@@ -210,15 +193,11 @@ class RemoveListItemAction extends HeaderAction {
     HeaderContext context,
     DataBlueprint dataBlueprint,
     EditorMode mode,
-  ) =>
-      RemoveListItemActionWidget(path: path);
+  ) => RemoveListItemActionWidget(path: path);
 }
 
 class RemoveListItemActionWidget extends HookConsumerWidget {
-  const RemoveListItemActionWidget({
-    required this.path,
-    super.key,
-  });
+  const RemoveListItemActionWidget({required this.path, super.key});
 
   final String path;
 
@@ -228,10 +207,9 @@ class RemoveListItemActionWidget extends HookConsumerWidget {
     final parentPath = parts.join(".");
 
     final value = _get(ref, parentPath, []);
-    ref.read(selectedProvider.notifier).updateFieldValue(
-          parentPath,
-          [...value]..removeAt(index),
-        );
+    ref
+        .read(selectedProvider.notifier)
+        .updateFieldValue(parentPath, [...value]..removeAt(index));
   }
 
   T _get<T>(WidgetRef ref, String path, T defaultValue) {

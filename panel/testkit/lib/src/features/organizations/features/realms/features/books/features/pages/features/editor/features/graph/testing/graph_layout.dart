@@ -2,9 +2,7 @@ import "dart:math" as math;
 import "dart:math";
 
 import "package:collection/collection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/entries.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/page_elements.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/graph_direction.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class Point<T> {
   final T x, y;

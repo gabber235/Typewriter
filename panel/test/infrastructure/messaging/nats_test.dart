@@ -6,11 +6,9 @@ import "package:flutter_test/flutter_test.dart";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:riverpod/riverpod.dart";
-import "package:typewriter_panel/infrastructure/messaging/api_exception.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats.dart";
-import "package:typewriter_panel/infrastructure/observability/telemetry.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart" hide Header;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final _testRefProvider = Provider<Ref>((ref) => ref);

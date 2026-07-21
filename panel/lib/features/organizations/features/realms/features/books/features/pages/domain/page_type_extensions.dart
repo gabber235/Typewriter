@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/icon_park_solid.dart";
 import "package:iconify_flutter_plus/icons/ph.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/graph_direction.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 extension PageTypeExtensions on PageType {
   /// The tag string used for matching blueprint tags

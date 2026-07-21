@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/utilities/two_dimensional_focus_traversal_policy.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../support/test_utils.dart";
 

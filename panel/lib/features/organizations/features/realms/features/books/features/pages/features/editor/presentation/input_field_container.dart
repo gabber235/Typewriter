@@ -2,11 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/current_interaction_mode.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/modes/insert_mode.dart";
-import "package:typewriter_panel/shared/ui/components/focus_highlight.dart";
-import "package:typewriter_panel/shared/utilities/globals.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef KeyEventBlocker = bool Function(BuildContext context, KeyEvent event);
 
@@ -28,7 +24,8 @@ class InputFieldController {
   }) : this._(
          inputFocusNode: inputFocusNode,
          surroundingFocusNode: FocusNode(
-           debugLabel: surroundingDebugLabel ?? "SurroundingInputFieldContainer",
+           debugLabel:
+               surroundingDebugLabel ?? "SurroundingInputFieldContainer",
            descendantsAreTraversable: false,
          ),
          ownsInputFocusNode: false,

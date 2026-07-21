@@ -1,8 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/join_codes.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/type_badge.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinCodeTypeBadges extends StatelessWidget {
   const JoinCodeTypeBadges({required this.code, super.key});

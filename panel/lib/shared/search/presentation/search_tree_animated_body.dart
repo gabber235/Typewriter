@@ -1,8 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_renderers.dart";
-import "package:typewriter_panel/shared/search/presentation/search_tree_results.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_transition.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchTreeAnimatedBody extends StatefulWidget {
   const SearchTreeAnimatedBody({

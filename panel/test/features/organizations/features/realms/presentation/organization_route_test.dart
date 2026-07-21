@@ -1,9 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/app/presentation/shell/sidebar.dart";
-import "package:typewriter_panel/features/organizations/features/realms/presentation/organization_route.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
 

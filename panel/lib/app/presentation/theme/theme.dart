@@ -1,8 +1,7 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/shared/utilities/color.dart";
-import "package:typewriter_panel/shared/utilities/fonts.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 ThemeData buildTheme(Brightness brightness) {
   final isLight = brightness == Brightness.light;

@@ -2,7 +2,7 @@ import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 

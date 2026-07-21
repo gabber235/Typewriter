@@ -1,9 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/route_content.dart";
-import "package:typewriter_panel/shared/ui/components/page_heading.dart";
-import "package:typewriter_panel/shared/ui/components/section.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class JoinCodesPage extends StatelessWidget {

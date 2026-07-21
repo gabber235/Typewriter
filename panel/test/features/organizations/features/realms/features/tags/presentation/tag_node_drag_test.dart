@@ -1,16 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_data.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_element.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/graph_identifier.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph_drag.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tag_selectable.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/application/tags.dart"
-    as tags_lib;
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/presentation/tag_graph.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/tags/presentation/tag_node.dart";
 import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/typewriter_panel.dart" as tags_lib;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../support/test_utils.dart";
 

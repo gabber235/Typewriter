@@ -4,21 +4,7 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/shared/hooks/forward_animation.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_empty_state.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_renderers.dart";
-import "package:typewriter_panel/shared/search/presentation/search_root.dart";
-import "package:typewriter_panel/shared/search/presentation/search_tree_animated_body.dart";
-import "package:typewriter_panel/shared/search/presentation/search_tree_section_header.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
-import "package:typewriter_panel/shared/ui/components/admonition.dart";
-import "package:typewriter_panel/shared/ui/components/context_menu.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/ui/components/labeled_message.dart";
-import "package:typewriter_panel/shared/ui/components/vertical_clipper.dart";
-import "package:typewriter_panel/shared/utilities/animation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchTreeResults extends HookConsumerWidget {
   const SearchTreeResults({required this.rowRenderers, super.key});

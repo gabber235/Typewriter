@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SignOutButton extends HookConsumerWidget {
   const SignOutButton({super.key});

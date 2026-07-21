@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/roles.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A component that displays role selection as FilterChips in a Wrap layout.
 ///

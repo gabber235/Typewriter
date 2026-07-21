@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_requests/presentation/route.dart";
-import "package:typewriter_panel/features/organizations/features/realms/presentation/organization_route.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;

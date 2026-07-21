@@ -1,6 +1,6 @@
 import "package:petitparser/debug.dart";
 import "package:petitparser/petitparser.dart";
-import "package:typewriter_panel/shared/search/domain/query/query.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final _andOperatorParser = [
   string("AND", ignoreCase: true),

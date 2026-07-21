@@ -1,8 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/hooks/animated_list.dart";
-import "package:typewriter_panel/shared/ui/components/animated_table.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../support/test_utils.dart";
 

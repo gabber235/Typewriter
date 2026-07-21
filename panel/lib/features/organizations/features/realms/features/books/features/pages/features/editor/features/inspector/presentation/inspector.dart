@@ -6,19 +6,7 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/domain/selection.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/object_editor.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations.dart";
-import "package:typewriter_panel/shared/hooks/timer.dart";
-import "package:typewriter_panel/shared/ui/components/drag_handle.dart";
-import "package:typewriter_panel/shared/ui/components/draggable_sheet_handle.dart";
-import "package:typewriter_panel/shared/ui/components/section.dart";
-import "package:typewriter_panel/shared/ui/components/section_title.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "inspector.g.dart";
 

@@ -1,4 +1,4 @@
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/domain/edge_side.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Direction for graph layout flow
 enum GraphDirection {

@@ -1,12 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/shared/search/presentation/search_root.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/utilities/adaptive_single_activator.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class SearchShortcuts extends HookConsumerWidget {
   const SearchShortcuts({required this.child, super.key});

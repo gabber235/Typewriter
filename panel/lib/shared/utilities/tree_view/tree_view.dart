@@ -1,7 +1,7 @@
 import "dart:math";
 
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/shared/utilities/string.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "tree_view.freezed.dart";
 

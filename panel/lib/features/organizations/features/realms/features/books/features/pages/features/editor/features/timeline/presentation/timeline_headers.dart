@@ -1,7 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_placement.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/application/timeline_viewport.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_style.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class TimelineTopLeftHeader extends StatelessWidget {
   const TimelineTopLeftHeader({

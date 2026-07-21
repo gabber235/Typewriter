@@ -2,13 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/members/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/application/join_codes.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/join_code_duration_input.dart";
-import "package:typewriter_panel/features/organizations/features/members/features/join_codes/presentation/setting_row.dart";
-import "package:typewriter_panel/features/organizations/features/members/presentation/role_multiselect_chips.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class JoinCodeSettings extends HookConsumerWidget {
   const JoinCodeSettings({

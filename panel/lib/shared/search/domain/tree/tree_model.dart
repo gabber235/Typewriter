@@ -1,4 +1,4 @@
-import "package:typewriter_panel/shared/search/search_engine.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 sealed class SearchTreeRow {
   const SearchTreeRow({required this.key, required this.depth});

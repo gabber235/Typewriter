@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/utilities/rive.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   testWidgets("RiveAsset renders placeholder during Flutter tests", (

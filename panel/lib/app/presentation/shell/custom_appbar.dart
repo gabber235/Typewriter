@@ -1,9 +1,6 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/shared/ui/components/modal_header.dart";
-import "package:typewriter_panel/shared/ui/components/surface.dart";
-import "package:typewriter_panel/shared/utilities/context.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A customizable app bar for flexible layouts, always including the organization selector if available.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {

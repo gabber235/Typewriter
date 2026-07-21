@@ -1,10 +1,8 @@
 import "package:collection/collection.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app/application/router/app_router.dart";
-import "package:typewriter_panel/features/organizations/features/services/application/services.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm.g.dart";
 

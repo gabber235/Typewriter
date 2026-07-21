@@ -1,15 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/application/element_blueprint.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/preview/search_preview.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_item.dart";
-import "package:typewriter_panel/features/organizations/features/realms/features/books/presentation/book/route.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/extensions.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart" hide Book;
-import "package:typewriter_panel/shared/search/presentation/search_modal.dart";
-import "package:typewriter_panel/shared/search/presentation/search_result_renderers.dart";
-import "package:typewriter_panel/shared/search/search_engine.dart";
-import "package:typewriter_panel/shared/ui/components/section.dart";
+import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart"
+    hide Book;
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
