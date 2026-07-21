@@ -286,11 +286,6 @@ class JoinCodesTable extends HookConsumerWidget {
 
   void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text("Join code copied to clipboard"),
-        duration: 2.seconds,
-      ),
-    );
+    showSuccessSnackBar(context, "Join code copied to clipboard");
   }
 }
