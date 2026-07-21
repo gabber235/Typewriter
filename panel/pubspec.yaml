@@ -79,6 +79,8 @@ icons_launcher:
       enable: true
     linux:
       enable: true
+    web:
+      enable: true
 
 flutter:
   uses-material-design: true
