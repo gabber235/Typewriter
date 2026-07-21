@@ -27,7 +27,7 @@ class NatsConfig {
 
   String get webUrl => const String.fromEnvironment(
     "NATS_WEB_URL",
-    defaultValue: "ws://nats.seamlezz.com:4223",
+    defaultValue: "wss://nats.seamlezz.com",
   );
 
   String get desktopUrl => const String.fromEnvironment(

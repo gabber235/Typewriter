@@ -1,5 +1,5 @@
 {
-  "NATS_WEB_URL": "wss://nats.seamlezz.com:4223",
+  "NATS_WEB_URL": "wss://nats.seamlezz.com",
   "NATS_DESKTOP_URL": "tls://nats.seamlezz.com:4222",
   "AUTH_ISSUER": "https://auth.typewritermc.com/",
   "AUTH_CLIENT_ID": "typewriter-panel",
