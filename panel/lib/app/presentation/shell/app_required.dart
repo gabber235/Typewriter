@@ -11,10 +11,7 @@ import "package:typewriter_panel/shared/ui/components/shimmer.dart";
 /// A widget that makes sure that all the required global widgets are present.
 /// It's a shortcut for wrapping the entire app with all the different widgets individually.
 class AppRequiredWidgets extends HookWidget {
-  const AppRequiredWidgets({
-    required this.child,
-    super.key,
-  });
+  const AppRequiredWidgets({required this.child, super.key});
 
   final Widget child;
 
@@ -25,11 +22,7 @@ class AppRequiredWidgets extends HookWidget {
       child: GlobalPaneNavigator(
         child: GlobalActionsManager(
           child: GlobalModeShortcut(
-            child: GlobalOperationShortcuts(
-              child: Shimmer(
-                child: child,
-              ),
-            ),
+            child: GlobalOperationShortcuts(child: Shimmer(child: child)),
           ),
         ),
       ),
