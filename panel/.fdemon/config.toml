@@ -2,7 +2,7 @@
 
 [behavior]
 confirm_quit = true
-auto_launch = true
+auto_launch = false
 
 [watcher]
 paths = ["lib", "widgetbook/lib", "assets", "config"]
