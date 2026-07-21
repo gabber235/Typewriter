@@ -117,7 +117,7 @@ pub async fn handle_approve(
     .execute()
     .await
     .error_with_slug("join-request-approve-requester-query-failed")?
-    .take::<Option<RequesterRecord>>(0)
+    .parse::<Option<RequesterRecord>>(0)
     .error_with_slug("join-request-approve-requester-result-parse-failed")?;
 
     let Some(requester) = requester else {
@@ -196,7 +196,8 @@ pub async fn handle_approve(
             THROW 'user-already-member-error'
         };
 
-        LET $member = RELATE ONLY $request[0].user.id->member_of->$org SET roles = $roles;
+        LET $user = $request[0].user.id;
+        LET $member = RELATE ONLY $user->member_of->$org SET roles = $roles;
 
         DELETE $request[0].id;
 
@@ -229,7 +230,7 @@ pub async fn handle_approve(
     .execute()
     .await
     .error_with_slug("join-request-approve-query-failed")?
-    .parse_result::<ApprovalRecord>(10)
+    .parse_result::<ApprovalRecord>(11)
     .error_with_slug("join-request-approve-result-parse-failed")?;
 
     if let Err(slug) = &result {
@@ -325,7 +326,7 @@ pub async fn handle_decline(
     .execute()
     .await
     .error_with_slug("join-request-decline-query-failed")?
-    .parse_result::<Option<JoinRequestProjection>>(0)
+    .parse_result::<Option<JoinRequestProjection>>(3)
     .error_with_slug("join-request-decline-result-parse-failed")?;
 
     if let Err(slug) = &row {
