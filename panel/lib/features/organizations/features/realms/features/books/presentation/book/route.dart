@@ -75,6 +75,7 @@ class EmptyBookPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pane(
       id: "empty_book_page",
+      primary: true,
       borderRadius: BorderRadius.circular(12),
       margin: EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
       child: Section(

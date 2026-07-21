@@ -30,6 +30,7 @@ class IndexPage extends ConsumerWidget {
           name: "joinRequests",
           builder: (joinRequests) => Pane(
             id: "index",
+            primary: true,
             highlightOnFocus: false,
             trapFocus: false,
             child: _IndexPageContent(

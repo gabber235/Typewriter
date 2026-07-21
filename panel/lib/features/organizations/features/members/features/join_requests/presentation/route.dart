@@ -10,6 +10,7 @@ class JoinRequestsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pane(
       id: "join-requests",
+      primary: true,
       child: Section(
         margin: EdgeInsets.zero,
         child: CustomScrollView(

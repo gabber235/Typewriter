@@ -25,6 +25,7 @@ class PagePage extends HookConsumerWidget {
       margin: EdgeInsets.only(top: 8, right: 8),
       child: Pane(
         id: "pagepage",
+        primary: true,
         borderRadius: BorderRadius.circular(12),
         margin: EdgeInsets.only(
           top: 8,

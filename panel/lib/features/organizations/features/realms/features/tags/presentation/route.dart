@@ -46,6 +46,7 @@ class TagsPage extends HookConsumerWidget {
       margin: const EdgeInsets.only(top: 8, right: 8),
       child: Pane(
         id: "tags",
+        primary: true,
         borderRadius: BorderRadius.circular(12),
         margin: EdgeInsets.only(
           top: 8,

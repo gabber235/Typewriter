@@ -49,6 +49,7 @@ class LibraryPage extends HookConsumerWidget {
       margin: EdgeInsets.only(top: 8, right: 8),
       child: Pane(
         id: "library",
+        primary: true,
         borderRadius: BorderRadius.circular(12),
         margin: EdgeInsets.only(
           top: 8,

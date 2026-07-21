@@ -13,6 +13,7 @@ class MemberListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pane(
       id: "members",
+      primary: true,
       child: Section(
         margin: EdgeInsets.zero,
         child: CustomScrollView(

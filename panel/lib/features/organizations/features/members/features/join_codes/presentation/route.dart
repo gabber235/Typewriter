@@ -12,6 +12,7 @@ class JoinCodesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Pane(
     id: "join-codes",
+    primary: true,
     child: Section(
       margin: EdgeInsets.zero,
       child: CustomScrollView(
