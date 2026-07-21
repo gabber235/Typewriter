@@ -75,11 +75,12 @@ class JoinRequestCard extends HookConsumerWidget {
                 selectedRoles: selectedRoles.value,
                 rolesAsync: rolesAsync,
                 onRolesChanged: (roles) => selectedRoles.value = roles,
-                onConfirm: () async {
+                onConfirm: () {
                   onSelectionChanged(false);
-                  await ref
+                  return ref
                       .read(organizationJoinRequestsProvider.notifier)
-                      .approveRequest(request.requestId, selectedRoles.value);
+                      .approveRequest(request.requestId, selectedRoles.value)
+                      .catchApiExceptionsAndDisplay(context);
                 },
               ),
             );

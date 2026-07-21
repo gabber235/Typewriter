@@ -136,10 +136,12 @@ class UserJoinRequests extends _$UserJoinRequests {
           "You already have a pending join request for this organization",
         );
       case skir.SubmitUserJoinRequestResponse_requestMadeWrapper(:final value):
-        state = AsyncValue.data([
-          ...state.requireValue,
-          UserJoinRequest.fromSkir(value),
-        ]);
+        state = AsyncValue.data(
+          state.requireValue.upsertByKey(
+            (request) => request.requestId,
+            UserJoinRequest.fromSkir(value),
+          ),
+        );
       case skir.SubmitUserJoinRequestResponse_autoAcceptedWrapper():
         debugPrint("User was auto-accepted as a member");
     }

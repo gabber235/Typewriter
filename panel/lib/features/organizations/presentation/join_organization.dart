@@ -16,6 +16,7 @@ class _JoinOrganization extends HookConsumerWidget {
     final activeRequests = joinRequests.where((request) {
       return !request.isExpired;
     }).toList();
+    final hasActiveRequests = activeRequests.isNotEmpty;
     final hasReachedLimit = activeRequests.length >= _maxPendingRequests;
     final animation = useSliverAnimatedList(
       items: activeRequests,
@@ -99,27 +100,33 @@ class _JoinOrganization extends HookConsumerWidget {
                 : null,
           ),
         ),
-        if (activeRequests.isNotEmpty) ...[
-          spacer(24),
-          const SliverStaggerEntrance(
-            sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: "Pending requests"),
+        spacer(hasActiveRequests ? 24 : 0),
+        SliverStaggerEntrance(
+          sliver: SliverToBoxAdapter(
+            child: Align(
+              alignment: .centerLeft,
+              child: ElasticMessageSwitcher(
+                child: hasActiveRequests
+                    ? SectionTitle(title: "Pending requests")
+                    : const SizedBox.shrink(),
+              ),
             ),
           ),
-          spacer(8),
-          SliverAnimatedList(
-            key: animation.key,
-            initialItemCount: animation.items.length,
-            itemBuilder: (context, index, animation) =>
-                _child(context, activeRequests[index], ref, animation),
-          ),
-        ],
+        ),
+        spacer(hasActiveRequests ? 8 : 0),
+        SliverAnimatedList(
+          key: animation.key,
+          initialItemCount: animation.items.length,
+          itemBuilder: (context, index, animation) =>
+              _child(context, activeRequests[index], ref, animation),
+        ),
       ],
     );
   }
 
-  Widget spacer(double height) =>
-      SliverToBoxAdapter(child: SizedBox(height: height));
+  Widget spacer(double height) => SliverToBoxAdapter(
+    child: AnimatedContainer(height: height, duration: 300.ms),
+  );
 
   Widget _child(
     BuildContext context,

@@ -116,14 +116,6 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       throw ApiException.noOrganization();
     }
 
-    // Store previous state for rollback
-    final previousState = state;
-
-    // Optimistically remove the request from join requests
-    state = AsyncValue.data(
-      state.value!.where((r) => r.requestId != requestId).toList(),
-    );
-
     try {
       final request = skir.ApproveOrganizationJoinRequestRequest(
         requestId: requestId,
@@ -163,7 +155,6 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
           );
       }
     } catch (e) {
-      state = previousState;
       ref.invalidateSelf();
       rethrow;
     }
