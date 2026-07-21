@@ -33,21 +33,25 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
     type: ScrollIncrementType.page,
   ),
 
-  AdaptiveSingleActivator(LogicalKeyboardKey.keyH, control: true):
+  SingleActivator(LogicalKeyboardKey.keyH, control: true): NavigatePaneIntent(
+    AxisDirection.left,
+  ),
+  SingleActivator(LogicalKeyboardKey.keyL, control: true): NavigatePaneIntent(
+    AxisDirection.right,
+  ),
+  SingleActivator(LogicalKeyboardKey.keyJ, control: true): NavigatePaneIntent(
+    AxisDirection.down,
+  ),
+  SingleActivator(LogicalKeyboardKey.keyK, control: true): NavigatePaneIntent(
+    AxisDirection.up,
+  ),
+  SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
       NavigatePaneIntent(AxisDirection.left),
-  AdaptiveSingleActivator(LogicalKeyboardKey.keyL, control: true):
+  SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
       NavigatePaneIntent(AxisDirection.right),
-  AdaptiveSingleActivator(LogicalKeyboardKey.keyJ, control: true):
+  SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
       NavigatePaneIntent(AxisDirection.down),
-  AdaptiveSingleActivator(LogicalKeyboardKey.keyK, control: true):
-      NavigatePaneIntent(AxisDirection.up),
-  AdaptiveSingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
-      NavigatePaneIntent(AxisDirection.left),
-  AdaptiveSingleActivator(LogicalKeyboardKey.arrowRight, control: true):
-      NavigatePaneIntent(AxisDirection.right),
-  AdaptiveSingleActivator(LogicalKeyboardKey.arrowDown, control: true):
-      NavigatePaneIntent(AxisDirection.down),
-  AdaptiveSingleActivator(LogicalKeyboardKey.arrowUp, control: true):
+  SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
       NavigatePaneIntent(AxisDirection.up),
 
   SingleActivator(LogicalKeyboardKey.keyD): DeleteIntent(),
