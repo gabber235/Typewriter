@@ -11,11 +11,11 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 /**
- * Encourages pathfinding to stay centered in open spaces by penalizing positions
- * that are too close to walls.
+ * Encourages pathfinding to stay centered in corridors by penalizing off-center positions.
  *
- * It calculates the distance to the nearest walls horizontally and applies a
- * penalty that scales with both the available width and the node's distance from the center.
+ * A corridor requires walls on both sides of an axis. A wall on only one side, like a path
+ * running along a building, applies no penalty; otherwise the path would drift away from
+ * the wall towards the center of a corridor that does not exist.
  *
  * @param intensity Multiplier for the centering penalty. Higher values create stronger
  *                  preference for center positions, lower values allow more wall-hugging
@@ -65,8 +65,8 @@ class SpaceAwareCostProcessor(
             else -> axis.multiply(-1.0)
         }
 
-        val distanceToPositiveWall = scanForWall(position, axis, context)
-        val distanceToNegativeWall = scanForWall(position, negativeAxis, context)
+        val distanceToPositiveWall = scanForWall(position, axis, context) ?: return 0.0
+        val distanceToNegativeWall = scanForWall(position, negativeAxis, context) ?: return 0.0
         val totalWidth = distanceToPositiveWall + distanceToNegativeWall
 
         // Skip penalty for narrow passages to allow corridor navigation
@@ -84,7 +84,7 @@ class SpaceAwareCostProcessor(
         startPosition: PathPosition,
         direction: PathVector,
         context: EvaluationContext
-    ): Int {
+    ): Int? {
         var currentPosition = startPosition
 
         for (distance in 1..maxScanDistance) {
@@ -93,7 +93,7 @@ class SpaceAwareCostProcessor(
                 return distance - 1
             }
         }
-        return maxScanDistance
+        return null
     }
 
     private fun isWall(position: PathPosition, context: EvaluationContext): Boolean {
