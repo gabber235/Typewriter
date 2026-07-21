@@ -301,10 +301,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_nats
-      sha256: "96878aa3e73b42d4df99493c4fcc5c09742b4abd1d49eb1f09c6b8f4555ee782"
+      sha256: "5bf5a39e698d870fb3117293227b6ea5dea989de9d1354c57dad1a7dfd3fa9b6"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
+    version: "1.2.4"
   dart_style:
     dependency: transitive
     description:
