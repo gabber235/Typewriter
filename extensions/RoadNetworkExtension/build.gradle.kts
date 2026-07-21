@@ -1,6 +1,6 @@
 repositories {}
 dependencies {
-    api("com.github.bsommerfeld.pathetic-bukkit:core:5.4.7-a")
+    api("com.github.bsommerfeld.pathetic-bukkit:core:5.5.2")
 }
 
 typewriter {

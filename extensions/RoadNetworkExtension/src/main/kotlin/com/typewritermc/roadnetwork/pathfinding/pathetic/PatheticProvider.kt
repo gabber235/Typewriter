@@ -12,6 +12,7 @@ import de.bsommerfeld.pathetic.api.pathing.heuristic.HeuristicStrategies
 import de.bsommerfeld.pathetic.api.pathing.heuristic.HeuristicWeights
 import de.bsommerfeld.pathetic.api.pathing.processing.CostProcessor
 import de.bsommerfeld.pathetic.api.pathing.processing.ValidationProcessor
+import de.bsommerfeld.pathetic.bukkit.hook.PreloadingHook
 import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider
 import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory
 import kotlin.math.ceil
@@ -29,6 +30,7 @@ fun providePathConfiguration(): PathfinderConfiguration.PathfinderConfigurationB
         .heuristicStrategy(HeuristicStrategies.LINEAR)
         .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
         .maxLength(ceil(roadNetworkMaxDistance).toInt() + 2)
+        .pathfindingHooks(listOf(PreloadingHook()))
         .fallback(true)
         .async(true)
 }
