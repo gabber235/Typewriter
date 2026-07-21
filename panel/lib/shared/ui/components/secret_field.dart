@@ -65,6 +65,7 @@ class SecretField extends HookWidget {
     this.expiredText = "Expired",
     this.copiedSnackbarText = "Copied to clipboard",
     this.errorSnackbarText = "Failed to generate",
+    this.copyOnGenerate = true,
     this.onCopied,
     this.onExpired,
     super.key,
@@ -80,6 +81,7 @@ class SecretField extends HookWidget {
   final String expiredText;
   final String copiedSnackbarText;
   final String errorSnackbarText;
+  final bool copyOnGenerate;
   final VoidCallback? onCopied;
   final VoidCallback? onExpired;
 
@@ -100,22 +102,6 @@ class SecretField extends HookWidget {
       }
     });
 
-    Future<void> handleGenerate() async {
-      state.value = const SecretFieldLoading();
-      try {
-        final result = await onGenerate();
-        state.value = result.isExpired
-            ? SecretFieldExpired(value: result.value)
-            : result;
-      } on Exception catch (e) {
-        final errorMessage = e.toString();
-        state.value = SecretFieldError(message: errorMessage);
-        if (context.mounted) {
-          showErrorSnackBar(context, "$errorSnackbarText: $errorMessage");
-        }
-      }
-    }
-
     Future<void> handleCopy() async {
       final currentState = state.value;
       final value = switch (currentState) {
@@ -128,6 +114,25 @@ class SecretField extends HookWidget {
       onCopied?.call();
       if (context.mounted) {
         showSuccessSnackBar(context, copiedSnackbarText);
+      }
+    }
+
+    Future<void> handleGenerate() async {
+      state.value = const SecretFieldLoading();
+      try {
+        final result = await onGenerate();
+        state.value = result.isExpired
+            ? SecretFieldExpired(value: result.value)
+            : result;
+        if (copyOnGenerate) {
+          await handleCopy();
+        }
+      } on Exception catch (e) {
+        final errorMessage = e.toString();
+        state.value = SecretFieldError(message: errorMessage);
+        if (context.mounted) {
+          showErrorSnackBar(context, "$errorSnackbarText: $errorMessage");
+        }
       }
     }
 
