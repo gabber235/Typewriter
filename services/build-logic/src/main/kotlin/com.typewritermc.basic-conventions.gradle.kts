@@ -1,23 +1,12 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm")
+    kotlin("jvm")
+    id("de.infix.testBalloon")
 }
 
 group = "com.typewritermc"
 
 repositories {
     mavenCentral()
-    maven {
-        name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/gabber235/nats.kt")
-        credentials {
-            username = System.getenv("GITHUB_ACTOR")
-                ?: "gh api user --jq .login".runCommand()
-                        ?: ""
-            password = System.getenv("GITHUB_TOKEN")
-                ?: "gh auth token".runCommand()
-                        ?: ""
-        }
-    }
 }
 
 kotlin {
@@ -47,6 +36,6 @@ fun String.runCommand(): String? = try {
         .start()
         .apply { waitFor(10, TimeUnit.SECONDS) }
         .inputStream.bufferedReader().readText().trim()
-} catch (e: Exception) {
+} catch (_: Exception) {
     null
 }

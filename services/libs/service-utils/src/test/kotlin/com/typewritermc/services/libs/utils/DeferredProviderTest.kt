@@ -1,7 +1,7 @@
 package com.typewritermc.services.libs.utils
 
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -9,10 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-class DeferredProviderTest : FunSpec({
-
-    context("Initial State") {
-
+val DeferredProviderTest by testSuite {
+    testSuite("Initial State") {
         test("isSet returns false before value is set") {
             val provider = DeferredProvider<String>()
             provider.isSet shouldBe false
@@ -24,8 +22,7 @@ class DeferredProviderTest : FunSpec({
         }
     }
 
-    context("Setting Values") {
-
+    testSuite("Setting Values") {
         test("set completes the deferred and isSet becomes true") {
             val provider = DeferredProvider<String>()
             provider.set("hello")
@@ -59,8 +56,7 @@ class DeferredProviderTest : FunSpec({
         }
     }
 
-    context("Getting Values") {
-
+    testSuite("Getting Values") {
         test("get returns value after set") {
             val provider = DeferredProvider<String>()
             provider.set("expected")
@@ -115,8 +111,7 @@ class DeferredProviderTest : FunSpec({
         }
     }
 
-    context("Type Safety") {
-
+    testSuite("Type Safety") {
         test("works with nullable types") {
             val provider = DeferredProvider<String?>()
             provider.set(null)
@@ -135,8 +130,7 @@ class DeferredProviderTest : FunSpec({
         }
     }
 
-    context("Concurrent Access") {
-
+    testSuite("Concurrent Access") {
         test("multiple coroutines waiting on get all receive the value") {
             val provider = DeferredProvider<String>()
 
@@ -152,4 +146,4 @@ class DeferredProviderTest : FunSpec({
             }
         }
     }
-})
+}

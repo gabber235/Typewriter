@@ -3,11 +3,11 @@ plugins {
 }
 
 // Find the libs.versions.toml file by traversing up from the settings directory
-var current: java.io.File? = settings.settingsDir
-var catalogFile: java.io.File? = null
+var current: File? = settings.settingsDir
+var catalogFile: File? = null
 while (current != null) {
     val searchDir = current!!
-    val potential = java.io.File(searchDir, "libs.versions.toml")
+    val potential = File(searchDir, "libs.versions.toml")
     if (potential.exists()) {
         catalogFile = potential
         break

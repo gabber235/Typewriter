@@ -13,4 +13,5 @@ repositories {
 dependencies {
     implementation(libs.kotlin.gradle.plugin)
     implementation(libs.foojay.resolver)
+    implementation(libs.test.balloon.gradle.plugin)
 }

@@ -1,18 +1,19 @@
 package com.typewritermc.services.libs.utils
 
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlin.time.Duration.Companion.milliseconds
 
-class StateProviderTest : FunSpec({
-
-    context("Happy Path Scenarios") {
-
+@OptIn(ExperimentalCoroutinesApi::class)
+val StateProviderTest by testSuite {
+    testSuite("Happy Path Scenarios") {
         test("get() returns initial value when no updates have occurred") {
             val provider = StateProvider("initial")
 
@@ -52,17 +53,16 @@ class StateProviderTest : FunSpec({
                 provider.awaitValue { it >= 5 }
             }
 
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set(3)
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set(5)
 
             deferred.await() shouldBe 5
         }
     }
 
-    context("Edge Cases") {
-
+    testSuite("Edge Cases") {
         test("awaitValue() with already-satisfied predicate returns initial value") {
             val provider = StateProvider("match")
 
@@ -101,9 +101,9 @@ class StateProviderTest : FunSpec({
                 provider.state.take(3).toList(collected2)
             }
 
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set(1)
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set(2)
 
             job1.join()
@@ -114,8 +114,7 @@ class StateProviderTest : FunSpec({
         }
     }
 
-    context("Nullable Extension Methods") {
-
+    testSuite("Nullable Extension Methods") {
         test("awaitNonNull() returns immediately when value is already set") {
             val provider = StateProvider<String?>("value")
 
@@ -131,7 +130,7 @@ class StateProviderTest : FunSpec({
                 provider.awaitNonNull()
             }
 
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set("now set")
 
             deferred.await() shouldBe "now set"
@@ -144,9 +143,9 @@ class StateProviderTest : FunSpec({
                 provider.awaitNonNull()
             }
 
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set("first")
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set("second")
 
             deferred.await() shouldBe "first"
@@ -175,10 +174,10 @@ class StateProviderTest : FunSpec({
                 provider.awaitNonNull()
             }
 
-            delay(10)
+            testScope.advanceTimeBy(10.milliseconds)
             provider.set("restored")
 
             deferred.await() shouldBe "restored"
         }
     }
-})
+}

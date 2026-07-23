@@ -1,26 +1,28 @@
 [versions]
-kotlin = "2.3.0"
-foojay = "0.8.0"
-koin-bom = "4.2.0-beta2"
-kotlin-logging = "7.0.4"
-logback = "1.5.23"
+kotlin = "2.4.10"
+foojay = "1.0.0"
+koin-bom = "4.2.2"
+kotlin-logging = "8.0.4"
+logback = "1.6.0"
 mordant = "3.0.2"
-opentelemetry = "1.58.0"
-opentelemetry-semconv = "1.39.0"
+opentelemetry = "1.64.0"
+opentelemetry-semconv = "1.43.0"
 
-protokt = "1.0.0-beta.8"
-protobuf-java = "4.33.2"
-nats = "0.7.0"
-surrealdb = "1.0.0-beta.1"
+protokt = "1.0.0-beta.13"
+protobuf-java = "4.35.1"
+nats = "0.9.1"
+surrealdb = "2.1.2"
 
-kotlin-serialize = "1.10.0-RC"
-kotlin-coroutines = "1.10.2"
-jline = "3.30.6"
-clikt = "5.0.3"
-gradle-buildconfig = "6.0.7"
+kotlin-serialize = "1.11.0"
+kotlin-coroutines = "1.11.0"
+jline = "4.3.1"
+clikt = "5.1.0"
+gradle-buildconfig = "6.0.10"
 
-kotest = "5.9.1"
-mockk = "1.13.16"
+test-balloon = "1.0.1-K2.4.0"
+test-balloon-addons = "0.16.0"
+kotest = "6.2.3"
+mockk = "1.14.11"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -38,6 +40,11 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-test = { module = "io.insert-koin:koin-test" }
 
+test-balloon = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "test-balloon" }
+test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBalloon.gradle.plugin", version.ref = "test-balloon" }
+test-balllon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
+test-balloon-data-test = { module = "at.asitplus.testballoon:datatest", version.ref = "test-balloon-addons"}
+test-balloon-property-test = { module = "at.asitplus.testballoon:property", version.ref = "test-balloon-addons"}
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
@@ -72,7 +79,9 @@ kotlin-serialize = { id = "org.jetbrains.kotlin.plugin.serialization", version.r
 
 gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "gradle-buildconfig" }
 
+test-balloon-plugin = { id = "de.infix.testBalloon", version.ref = "test-balloon"}
+
 
 [bundles]
 basic-implementation = ["kotlin-stdlib", "koin-core", "kotlin-logging-jvm", "kotlin-coroutines-core"]
-basic-test = ["koin-test", "kotest-runner", "kotest-assertions", "kotest-property", "mockk", "kotlin-coroutines-test"]
+basic-test = ["koin-test", "test-balloon", "test-balllon-kotest-assertions", "test-balloon-data-test", "test-balloon-property-test", "kotest-runner", "kotest-assertions", "kotest-property", "mockk", "kotlin-coroutines-test"]
