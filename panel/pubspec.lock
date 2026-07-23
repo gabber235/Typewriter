@@ -301,10 +301,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_nats
-      sha256: "5bf5a39e698d870fb3117293227b6ea5dea989de9d1354c57dad1a7dfd3fa9b6"
+      sha256: "88c8d5aca85bf1380de9cace8740742e9f977ff50bcde6c3cd6600c31aa46adf"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.4"
+    version: "1.4.0"
   dart_style:
     dependency: transitive
     description:
@@ -1140,18 +1140,18 @@ packages:
     dependency: "direct main"
     description:
       name: rive
-      sha256: "84a640f48122679e48397935ed1b971db19ef2e44bfcbae60e42fb5ce29a0a4e"
+      sha256: b3aa3bb588efa03224c163772e6f8ecabe66dc80f6f56fb097d4defa308ce2cb
       url: "https://pub.dev"
     source: hosted
-    version: "0.14.9"
+    version: "0.14.10"
   rive_native:
     dependency: transitive
     description:
       name: rive_native
-      sha256: "85dc8413398f7540eab9b73c6d704ecd5051ab9c57e539eed85ccd2a69f119aa"
+      sha256: "1caedaeb1b8310ed9cc07319d33e3b0b9b435263a533b645132c60be88db8efa"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.9"
+    version: "0.1.10"
   riverpod:
     dependency: "direct main"
     description:
@@ -1378,10 +1378,10 @@ packages:
     dependency: transitive
     description:
       name: synchronized
-      sha256: "93b153dcb6a26dcddee6ca087dd634b53e38c10b5aa163e8e49501a776456153"
+      sha256: "61894a1956de6b4fc1aefd0892e109514a1a706cbece3ac59decd90ff5a7a423"
       url: "https://pub.dev"
     source: hosted
-    version: "3.4.1"
+    version: "3.4.1+1"
   term_glyph:
     dependency: transitive
     description:
@@ -1545,10 +1545,10 @@ packages:
     dependency: "direct main"
     description:
       name: vector_math
-      sha256: "1d774bbdf6b72a0b12122fc1560c9c2d2a67db5a4a4cc2bd8a5c990ab20e3188"
+      sha256: "99b6fb0d1881dd1302cd42e0f53bcce99ea246e0a85c8aeb79fb38b283852e88"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "2.4.1"
   vm_service:
     dependency: transitive
     description:
