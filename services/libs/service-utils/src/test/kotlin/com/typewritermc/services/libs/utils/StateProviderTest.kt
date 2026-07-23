@@ -152,18 +152,6 @@ class StateProviderTest : FunSpec({
             deferred.await() shouldBe "first"
         }
 
-        test("getOrNull() returns null when value is null") {
-            val provider = StateProvider<String?>(null)
-
-            provider.getOrNull() shouldBe null
-        }
-
-        test("getOrNull() returns value when set") {
-            val provider = StateProvider<String?>("value")
-
-            provider.getOrNull() shouldBe "value"
-        }
-
         test("require() throws when value is null") {
             val provider = StateProvider<String?>(null)
 

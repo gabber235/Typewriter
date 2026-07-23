@@ -30,11 +30,6 @@ class StateProvider<T>(initial: T) {
 suspend fun <T : Any> StateProvider<T?>.awaitNonNull(): T = awaitValue { it != null }!!
 
 /**
- * Returns the current value if non-null, otherwise null.
- */
-fun <T : Any> StateProvider<T?>.getOrNull(): T? = get()
-
-/**
  * Returns the current value if non-null, otherwise throws IllegalStateException.
  */
 fun <T : Any> StateProvider<T?>.require(): T =
