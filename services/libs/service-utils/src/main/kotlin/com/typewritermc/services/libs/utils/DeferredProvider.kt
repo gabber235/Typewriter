@@ -8,7 +8,7 @@ import kotlin.time.Duration
 /**
  * Thread-safe wrapper for a value that will be set later.
  *
- * Use when a dependency becomes available after application startup
+ * Use when a dependency becomes available after the application startup
  * (e.g., NatsClient after connection, Credential after issuance).
  * Consumers inject DeferredProvider<T> and call get() or getOrNull().
  * Producers call set() when the value is ready.
