@@ -12,49 +12,18 @@ part of 'app_router.dart';
 
 /// generated route for
 /// [AuthPage]
-class AuthRoute extends PageRouteInfo<AuthRouteArgs> {
-  AuthRoute({
-    required void Function(bool) onResult,
-    Key? key,
-    List<PageRouteInfo>? children,
-  }) : super(
-         AuthRoute.name,
-         args: AuthRouteArgs(onResult: onResult, key: key),
-         initialChildren: children,
-       );
+class AuthRoute extends PageRouteInfo<void> {
+  const AuthRoute({List<PageRouteInfo>? children})
+    : super(AuthRoute.name, initialChildren: children);
 
   static const String name = 'AuthRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      final args = data.argsAs<AuthRouteArgs>();
-      return AuthPage(onResult: args.onResult, key: args.key);
+      return const AuthPage();
     },
   );
-}
-
-class AuthRouteArgs {
-  const AuthRouteArgs({required this.onResult, this.key});
-
-  final void Function(bool) onResult;
-
-  final Key? key;
-
-  @override
-  String toString() {
-    return 'AuthRouteArgs{onResult: $onResult, key: $key}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! AuthRouteArgs) return false;
-    return key == other.key;
-  }
-
-  @override
-  int get hashCode => key.hashCode;
 }
 
 /// generated route for

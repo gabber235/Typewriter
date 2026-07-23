@@ -48,7 +48,7 @@ final class AppRouterProvider
   }
 }
 
-String _$appRouterHash() => r'babffb8e22cefce44520192b1132c6d68d9f20a5';
+String _$appRouterHash() => r'dcba6f0b62eea76b19a03b6a9a3d3a97e2cb8b06';
 
 @ProviderFor(CurrentRoute)
 final currentRouteProvider = CurrentRouteProvider._();

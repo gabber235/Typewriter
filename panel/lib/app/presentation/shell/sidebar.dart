@@ -468,17 +468,11 @@ class UserMenu extends HookConsumerWidget {
         icon: Icones(MaterialSymbols.logout),
         color: Theme.of(context).colorScheme.error,
         onPressed: () async {
-          final router = ref.read(appRouterProvider);
           try {
             await ref.read(authProvider.notifier).signOut();
           } on Exception catch (e) {
             debugPrint(e.toString());
           }
-          ref
-            ..invalidate(isAuthenticatedProvider)
-            ..invalidate(accessTokenProvider);
-          await Future.delayed(const Duration(milliseconds: 500));
-          await router.reevaluateGuards();
         },
       ),
     ];

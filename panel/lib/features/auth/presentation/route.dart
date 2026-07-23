@@ -5,10 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class AuthPage extends HookConsumerWidget {
-  const AuthPage({required this.onResult, super.key});
-
-  // ignore: avoid_positional_boolean_parameters
-  final void Function(bool isAuthenticated) onResult;
+  const AuthPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,14 +28,7 @@ class AuthPage extends HookConsumerWidget {
         SizedBox(height: 24),
         LoadingButton.filled(
           child: const Text("Sign in"),
-          onPressed: () async {
-            await ref.read(authProvider.notifier).signIn();
-            if (!context.mounted) return;
-            final isAuthenticated = await ref.read(
-              isAuthenticatedProvider.future,
-            );
-            onResult(isAuthenticated);
-          },
+          onPressed: () => ref.read(authProvider.notifier).signIn(),
         ),
         Spacer(),
       ],

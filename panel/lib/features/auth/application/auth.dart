@@ -140,9 +140,7 @@ class Auth extends _$Auth {
     }
     await manager.loginAuthorizationCodeFlow();
     ref
-      ..invalidateSelf()
-      ..invalidate(authUserInfoProvider)
-      ..invalidate(userIdProvider);
+      ..invalidateSelf();
   }
 
   Future<void> signOut() async {
