@@ -5,6 +5,10 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+// Entry nodes use white as their established focus treatment so focus remains
+// legible against every data-driven blueprint color.
+const _entryFocusColor = Colors.white;
+
 class EntryNode extends HookConsumerWidget {
   const EntryNode({required this.entry, super.key});
 
@@ -127,14 +131,14 @@ class _DefinitionEntryNode extends HookConsumerWidget {
       return MouseRegion(
         cursor: SystemMouseCursors.forbidden,
         child: Material(
-          color: Colors.grey,
-          borderRadius: BorderRadius.circular(4),
+          color: context.colors.surfaceEmphasized,
+          borderRadius: context.shapes.smallBorderRadius,
           child: Padding(
             padding: const EdgeInsets.all(7.0),
             child: InnerElementNode(
               name: definition.name,
               blueprint: definition.blueprint,
-              color: Colors.white,
+              color: context.colors.contentPrimary,
               isDeprecated: isDeprecated,
             ),
           ),
@@ -150,7 +154,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
         : definition.blueprint.color;
 
     final highlightColor = isFocused
-        ? Colors.white
+        ? _entryFocusColor
         : backgroundColor.onBrightness(Brightness.dark);
 
     return AnimatedOpacity(
@@ -158,19 +162,19 @@ class _DefinitionEntryNode extends HookConsumerWidget {
       curve: Curves.easeOutCubic,
       opacity: isAccepting ? 0.5 : 1,
       child: Material(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: context.shapes.mediumBorderRadius,
         color: backgroundColor,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeOutCirc,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: context.shapes.smallBorderRadius,
             border: Border.all(
               color: isSelected ? highlightColor : backgroundColor,
               width: 3,
             ),
           ),
-          margin: const EdgeInsets.all(4.0),
+          margin: EdgeInsets.all(context.spacing.space1),
           child: AnimatedSize(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutCirc,
@@ -223,7 +227,7 @@ class _ReferenceEntryNode extends HookConsumerWidget {
           Surface.colorOf(context),
         );
 
-        final highlightColor = isFocused ? Colors.white : blueprint.color;
+        final highlightColor = isFocused ? _entryFocusColor : blueprint.color;
 
         return LongPressDraggable<EntryIdentifier>(
           data: entryIdentifier,
@@ -245,7 +249,7 @@ class _ReferenceEntryNode extends HookConsumerWidget {
             color: backgroundColor,
             shape: RoundedRectangleBorder(
               side: BorderSide(color: blueprint.color, width: 3),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: context.shapes.smallBorderRadius,
             ),
             child: InnerElementNode(
               name: name,
@@ -269,20 +273,26 @@ class _NonexistentEntryNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.redAccent,
-      borderRadius: BorderRadius.circular(4),
+      color: context.colors.danger,
+      borderRadius: context.shapes.smallBorderRadius,
       child: AdaptiveElementLayout(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        compactPadding: const EdgeInsets.all(4),
-        leading: const Icon(Icons.error, color: Colors.white, size: 18),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.spacing.space3,
+          vertical: context.spacing.space2,
+        ),
+        compactPadding: EdgeInsets.all(context.spacing.space1),
+        leading: Icon(Icons.error, color: context.colors.onDanger, size: 18),
         center: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Flexible(
+            Flexible(
               child: Text(
                 "Non-existent entry",
-                style: TextStyle(color: Colors.white, fontSize: 13),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: context.colors.onDanger,
+                  fontSize: 13,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -290,7 +300,7 @@ class _NonexistentEntryNode extends StatelessWidget {
               child: Text(
                 "Entry reference is not an entry",
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
+                  color: context.colors.onDanger.withValues(alpha: 0.7),
                   fontStyle: FontStyle.italic,
                   fontSize: 11,
                 ),
@@ -323,31 +333,34 @@ class _NoBlueprintEntryNode extends HookConsumerWidget {
         final backgroundColor = Theme.of(context).colorScheme.error;
 
         final highlightColor = isFocused
-            ? Colors.white
+            ? _entryFocusColor
             : backgroundColor.onBrightness(Brightness.dark);
 
         return Material(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: context.shapes.mediumBorderRadius,
           color: backgroundColor,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutCirc,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: context.shapes.smallBorderRadius,
               border: Border.all(
                 color: isSelected ? highlightColor : backgroundColor,
                 width: 3,
               ),
             ),
-            margin: const EdgeInsets.all(4),
-            padding: const EdgeInsets.all(4),
+            margin: EdgeInsets.all(context.spacing.space1),
+            padding: EdgeInsets.all(context.spacing.space1),
             child: AnimatedSize(
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCirc,
               alignment: Alignment.topCenter,
               child: AdaptiveElementLayout(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                compactPadding: const EdgeInsets.all(4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                  vertical: context.spacing.space1,
+                ),
+                compactPadding: EdgeInsets.all(context.spacing.space1),
                 leading: Icon(Icons.error, color: highlightColor, size: 18),
                 center: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -356,7 +369,10 @@ class _NoBlueprintEntryNode extends HookConsumerWidget {
                     Flexible(
                       child: Text(
                         name,
-                        style: TextStyle(color: highlightColor, fontSize: 13),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: highlightColor,
+                          fontSize: 13,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -399,24 +415,29 @@ class _FeedbackEntryNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final foreground = blueprint.color.on(context);
+    final secondaryForeground = foreground.withValues(alpha: 0.7);
     return Material(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: context.shapes.smallBorderRadius,
       color: blueprint.color,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.spacing.space3,
+          vertical: context.spacing.space1,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icones(blueprint.icon, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
+            Icones(blueprint.icon, color: foreground, size: 18),
+            SizedBox(width: context.spacing.space2),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
-                      color: Colors.white,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: foreground,
                       fontSize: 13,
                       decoration: isDeprecated
                           ? TextDecoration.lineThrough
@@ -431,8 +452,8 @@ class _FeedbackEntryNode extends StatelessWidget {
                   ),
                   Text(
                     blueprint.name,
-                    style: TextStyle(
-                      color: Colors.white70,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: secondaryForeground,
                       fontSize: 11,
                       decoration: isDeprecated
                           ? TextDecoration.lineThrough

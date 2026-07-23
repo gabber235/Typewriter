@@ -127,11 +127,13 @@ class _ConflictValueEditor extends HookConsumerWidget {
             child: Row(
               children: [
                 Icones(Fa6Solid.xmark, size: 22, color: errorColor),
-                const SizedBox(width: 12),
+                SizedBox(width: context.spacing.space3),
                 Expanded(
                   child: Text(
                     "Field has different values",
-                    style: TextStyle(color: errorColor),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium!.copyWith(color: errorColor),
                   ),
                 ),
               ],
@@ -186,11 +188,13 @@ class _NoneValueEditor extends HookConsumerWidget {
               child: Row(
                 children: [
                   Icones(Fa6Solid.xmark, size: 16, color: errorColor),
-                  const SizedBox(width: 12),
+                  SizedBox(width: context.spacing.space3),
                   Expanded(
                     child: Text(
                       "Field is missing",
-                      style: TextStyle(color: errorColor),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium!.copyWith(color: errorColor),
                     ),
                   ),
                 ],
@@ -212,7 +216,7 @@ class _LoadingValueEditor extends HookConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
         color: Theme.of(context).inputDecorationTheme.fillColor,
       ),
       height: 24 + 12 * 2,

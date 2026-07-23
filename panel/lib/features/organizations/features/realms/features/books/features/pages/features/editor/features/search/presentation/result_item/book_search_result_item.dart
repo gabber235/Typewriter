@@ -33,7 +33,7 @@ class BookSearchResultItem extends StatelessWidget {
       color: color,
       prefix: SearchResultIconTile(
         color: color,
-        onColor: Colors.white,
+        onColor: color.on(context),
         icon: icon ?? "fa6-solid:book-open",
         focused: focused,
         loading: loading,
@@ -44,10 +44,10 @@ class BookSearchResultItem extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        spacing: 4,
+        spacing: context.spacing.space1,
         children: [
           Row(
-            spacing: 4,
+            spacing: context.spacing.space1,
             children: [
               SearchResultTitle(title: name.formatted),
               if (tags.isNotEmpty)

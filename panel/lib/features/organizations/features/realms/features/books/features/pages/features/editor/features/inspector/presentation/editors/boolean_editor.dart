@@ -80,9 +80,19 @@ class BooleanEditorWidget extends HookConsumerWidget {
               },
             ),
             if (value)
-              const Text("True", style: TextStyle(color: Colors.greenAccent))
+              Text(
+                "True",
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(color: context.colors.success),
+              )
             else
-              const Text("False", style: TextStyle(color: Colors.grey)),
+              Text(
+                "False",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: context.colors.contentSecondary,
+                ),
+              ),
           ],
         );
       },

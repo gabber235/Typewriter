@@ -16,7 +16,7 @@ class JoinRequestsTab extends HookConsumerWidget {
       loading: (_) => const _JoinRequestsShimmer(),
       error: (title, message) => SliverFillRemaining(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(context.spacing.space4),
           child: Center(
             child: ErrorScreen(title: title, message: message),
           ),
@@ -39,7 +39,7 @@ class _JoinRequestsShimmer extends StatelessWidget {
             child: Row(
               children: [
                 ShimmerBox.rectangle(width: 24, height: 24),
-                const SizedBox(width: 12),
+                SizedBox(width: context.spacing.space3),
                 ShimmerBox.rectangle(width: 76, height: 16),
               ],
             ),
@@ -47,8 +47,8 @@ class _JoinRequestsShimmer extends StatelessWidget {
         ),
         SliverList.builder(
           itemCount: context.responsive(mobile: 3, tablet: 4, desktop: 7),
-          itemBuilder: (context, index) => const Padding(
-            padding: EdgeInsets.only(bottom: 12),
+          itemBuilder: (context, index) => Padding(
+            padding: EdgeInsets.only(bottom: context.spacing.space3),
             child: _JoinRequestCardShimmer(),
           ),
         ),
@@ -63,16 +63,16 @@ class _JoinRequestCardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(context.spacing.space4),
       child: context.isDesktop
           ? Row(
               children: [
                 const ShimmerBox.circle(width: 48, height: 48),
-                const SizedBox(width: 16),
+                SizedBox(width: context.spacing.space4),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 8,
+                    spacing: context.spacing.space2,
                     children: [
                       ShimmerBox.rectangle(width: 180, height: 16),
                       ShimmerBox.rectangle(width: 220, height: 14),
@@ -80,9 +80,9 @@ class _JoinRequestCardShimmer extends StatelessWidget {
                   ),
                 ),
                 const ShimmerBox.stadium(width: 76, height: 24),
-                const SizedBox(width: 16),
+                SizedBox(width: context.spacing.space4),
                 const ShimmerBox.stadium(width: 110, height: 40),
-                const SizedBox(width: 8),
+                SizedBox(width: context.spacing.space2),
                 const ShimmerBox.stadium(width: 102, height: 40),
               ],
             )
@@ -92,11 +92,11 @@ class _JoinRequestCardShimmer extends StatelessWidget {
                 Row(
                   children: [
                     const ShimmerBox.circle(width: 40, height: 40),
-                    const SizedBox(width: 12),
+                    SizedBox(width: context.spacing.space3),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 8,
+                        spacing: context.spacing.space2,
                         children: [
                           ShimmerBox.rectangle(width: 140, height: 15),
                           ShimmerBox.rectangle(width: 200, height: 13),
@@ -105,13 +105,13 @@ class _JoinRequestCardShimmer extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: context.spacing.space3),
                 const ShimmerBox.stadium(width: 76, height: 24),
-                const SizedBox(height: 12),
-                const Row(
+                SizedBox(height: context.spacing.space3),
+                Row(
                   children: [
-                    Expanded(child: ShimmerBox.stadium(height: 40)),
-                    SizedBox(width: 8),
+                    const Expanded(child: ShimmerBox.stadium(height: 40)),
+                    SizedBox(width: context.spacing.space2),
                     Expanded(child: ShimmerBox.stadium(height: 40)),
                   ],
                 ),

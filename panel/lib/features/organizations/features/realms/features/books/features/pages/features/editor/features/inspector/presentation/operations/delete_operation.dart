@@ -86,7 +86,7 @@ class DeleteOperationButton extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: context.spacing.space2),
       child: LoadingButton.filledIcon(
         onPressed: () {
           showConfirmationDialogue(
@@ -113,7 +113,7 @@ class DeleteOperationButton extends HookConsumerWidget {
               selection.length > 1 ? "Delete (${selection.length})" : "Delete",
             ),
             if (operation.shortcut.canInvoke) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: context.spacing.space2),
               RotatingShortcuts(
                 shortcuts: operation.shortcut.shortcuts,
                 style: KeyStyle.outline,

@@ -65,9 +65,9 @@ class JoinCodesTab extends HookConsumerWidget {
       slivers: [
         SliverToBoxAdapter(
           child: Card(
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: EdgeInsets.only(bottom: context.spacing.space4),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(context.spacing.space4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -84,7 +84,7 @@ class JoinCodesTab extends HookConsumerWidget {
                     copyButtonText: "Copy Join Code",
                     copiedSnackbarText: "Join code copied to clipboard",
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: context.spacing.space2),
                   rolesAsync.when(
                     data: (roles) => JoinCodeSettings(
                       initialOptions: joinCodeOptions.value,
@@ -154,7 +154,7 @@ class JoinCodesTab extends HookConsumerWidget {
           loading: (_) => const _JoinCodesLoadingShimmer(),
           error: (title, message) => SliverFillRemaining(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(context.spacing.space4),
               child: Center(
                 child: ErrorScreen(title: title, message: message),
               ),
@@ -255,7 +255,7 @@ class _JoinCodesListShimmer extends StatelessWidget {
           child: Surface(
             color: Surface.colorOf(context),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(context.spacing.space3),
               child: Row(
                 children: [
                   ShimmerBox.circle(width: 40, height: 40),

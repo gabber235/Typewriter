@@ -29,15 +29,18 @@ class LibraryPage extends HookConsumerWidget {
     }
 
     return Inspector(
-      margin: EdgeInsets.only(top: 8, right: 8),
+      margin: EdgeInsets.only(
+        top: context.spacing.space2,
+        right: context.spacing.space2,
+      ),
       child: Pane(
         id: "library",
         primary: true,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
         margin: EdgeInsets.only(
-          top: 8,
-          left: 8,
-          right: context.isMobile ? 8 : 0,
+          top: context.spacing.space2,
+          left: context.spacing.space2,
+          right: context.isMobile ? context.spacing.space2 : 0,
         ),
         child: Section(
           margin: EdgeInsets.zero,
@@ -69,16 +72,13 @@ class LibraryPage extends HookConsumerWidget {
                         "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(context.spacing.space4),
                     child: DecoratedTextField(
                       focusNode: useFocusNode(),
                       controller: searchController,
                       decoration: InputDecoration(
                         hintText: "Search books...",
                         prefixIcon: const Icon(Icons.search),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                        ),
                       ),
                       onChanged: (value) => searchQuery.value = value,
                     ),
@@ -88,10 +88,10 @@ class LibraryPage extends HookConsumerWidget {
                       name: "filtered books",
                       builder: (books) {
                         if (books.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Text(
                               "No books match your search",
-                              style: TextStyle(fontSize: 18),
+                              style: Theme.of(context).textTheme.bodyLarge,
                             ),
                           );
                         }
@@ -99,9 +99,9 @@ class LibraryPage extends HookConsumerWidget {
                         return ClipPath(
                           clipper: VerticalClipper(additionalWidth: 100),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 16,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.spacing.space2,
+                              vertical: context.spacing.space4,
                             ),
                             child: ResponsiveGridView.builder(
                               gridDelegate: ResponsiveGridDelegate(
@@ -158,7 +158,7 @@ class LibraryPage extends HookConsumerWidget {
             final focusNode = useFocusNode();
 
             return AlertDialog(
-              title: const Text("Create Book"),
+              title: Text("Create Book"),
               content: DecoratedTextField(
                 controller: controller,
                 focusNode: focusNode,
@@ -173,7 +173,7 @@ class LibraryPage extends HookConsumerWidget {
               actions: [
                 TextButton.icon(
                   icon: const Icones(Fa6Solid.xmark),
-                  label: const Text("Cancel"),
+                  label: Text("Cancel"),
                   style: TextButton.styleFrom(
                     foregroundColor: Theme.of(
                       context,
@@ -185,7 +185,7 @@ class LibraryPage extends HookConsumerWidget {
                   onPressed: isValid
                       ? () => Navigator.of(context).pop(controller.text)
                       : null,
-                  label: const Text("Create"),
+                  label: Text("Create"),
                   icon: const Icon(Icons.add),
                 ),
               ],

@@ -54,14 +54,18 @@ class FormattedTextField extends HookWidget {
       decoration: InputDecoration(
         prefixIcon: icon != null
             ? Padding(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(context.spacing.space2),
                 child: Icones(icon!, size: 18),
               )
             : null,
         hintText: hintText,
         contentPadding: singleLine
             ? null
-            : const EdgeInsets.only(top: 12, bottom: 12, right: 8),
+            : EdgeInsets.only(
+                top: context.spacing.space3,
+                bottom: context.spacing.space3,
+                right: context.spacing.space2,
+              ),
       ),
     );
   }

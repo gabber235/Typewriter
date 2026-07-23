@@ -46,7 +46,7 @@ class JoinRequestCard extends HookConsumerWidget {
 
     return Material(
       color: backgroundColor,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: context.shapes.mediumBorderRadius,
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
@@ -150,9 +150,9 @@ class JoinRequestCard extends HookConsumerWidget {
       ],
       child: InkWell(
         onTap: () => onSelectionChanged(!isSelected),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(context.spacing.space4),
           child: isDesktop
               ? _buildDesktopLayout(context, ref, theme, expansibleController)
               : JoinRequestResponsiveContent(
@@ -197,7 +197,7 @@ class JoinRequestCard extends HookConsumerWidget {
               if (request.userName != null)
                 Text(
                   request.userName!,
-                  style: const TextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontVariations: [.weight(600)],
                     fontSize: 16,
                   ),
@@ -205,7 +205,7 @@ class JoinRequestCard extends HookConsumerWidget {
               if (request.userEmail != null)
                 Text(
                   request.userEmail!,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 14,
                   ),
@@ -234,7 +234,7 @@ class JoinRequestCard extends HookConsumerWidget {
                   color: theme.colorScheme.error.withValues(alpha: 0.5),
                 ),
               ),
-              child: const Text("Decline"),
+              child: Text("Decline"),
             ),
             const SizedBox(width: 8),
             LoadingButton.filled(

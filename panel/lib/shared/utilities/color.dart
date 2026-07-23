@@ -54,6 +54,14 @@ extension ColorsExtension on List<Color> {
   }
 }
 
+double _contrastRatio(Color first, Color second) {
+  final firstLuminance = first.computeLuminance() + 0.05;
+  final secondLuminance = second.computeLuminance() + 0.05;
+  return firstLuminance >= secondLuminance
+      ? firstLuminance / secondLuminance
+      : secondLuminance / firstLuminance;
+}
+
 extension ColorExtension on Color {
   Color on(BuildContext context) => onBrightness(Theme.brightnessOf(context));
   Color onBrightness(Brightness brightness) {
@@ -65,7 +73,11 @@ extension ColorExtension on Color {
       schemeVariant,
       contrastLevel,
     );
-    return Color(MaterialDynamicColors.onPrimary.getArgb(scheme));
+    final foreground = Color(MaterialDynamicColors.onPrimary.getArgb(scheme));
+    if (_contrastRatio(this, foreground) >= 4.5) return foreground;
+    final blackContrast = _contrastRatio(this, Colors.black);
+    final whiteContrast = _contrastRatio(this, Colors.white);
+    return blackContrast >= whiteContrast ? Colors.black : Colors.white;
   }
 }
 

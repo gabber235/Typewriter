@@ -22,9 +22,17 @@ class LoadingScreen extends StatelessWidget {
         SizedBox(height: 24),
         Text(
           title,
-          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.displayLarge!.copyWith(
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        ConnectionScroller(style: TextStyle(fontSize: 20, color: Colors.grey)),
+        ConnectionScroller(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 20,
+            color: context.colors.contentSecondary,
+          ),
+        ),
         SizedBox(height: 24),
         Spacer(),
       ],

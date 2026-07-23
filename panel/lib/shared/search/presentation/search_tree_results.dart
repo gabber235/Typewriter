@@ -46,7 +46,7 @@ class SearchTreeResults extends HookConsumerWidget {
               group: viewModel.groups[i],
               rowRenderers: rowRenderers,
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          SliverToBoxAdapter(child: SizedBox(height: context.spacing.space2)),
         ],
       ),
     );
@@ -74,7 +74,7 @@ class SearchErrorSummarySliver extends StatelessWidget {
     };
 
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
       sliver: SliverResizingHeader(
         minExtentPrototype: Admonition.danger(
           child: LabeledMessage(label: error.sourceLabel),
@@ -100,7 +100,7 @@ class SearchGuidanceSliver extends StatelessWidget {
     );
     final Widget admition = Admonition.info(child: childBuilder());
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
       sliver: SliverResizingHeader(
         minExtentPrototype: Admonition.danger(
           child: LabeledMessage(label: guidance.title),
@@ -252,7 +252,9 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     ]).animate(runningAnimation);
 
     return Padding(
-      padding: EdgeInsets.only(left: 12.0 + row.depth * 16),
+      padding: EdgeInsets.only(
+        left: context.spacing.space3 + row.depth * context.spacing.space4,
+      ),
       child: ScaleTransition(
         scale: scale,
         child: ContextMenuRegion(
@@ -332,7 +334,7 @@ class SearchTreeSectionSliver extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final section = group.section;
     return SliverPadding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: EdgeInsets.only(bottom: context.spacing.space2),
       sliver: SliverMainAxisGroup(
         slivers: [
           if (section != null)

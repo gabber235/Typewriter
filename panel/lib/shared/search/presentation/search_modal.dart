@@ -22,7 +22,7 @@ Future<void> showSearchModal(
       barrierColor:
           DialogTheme.of(context).barrierColor ??
           Theme.of(context).dialogTheme.barrierColor ??
-          Colors.black54,
+          context.colors.scrim,
       traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
       child: UncontrolledProviderScope(
         container: ProviderScope.containerOf(context),
@@ -126,7 +126,10 @@ class _PopupRoute extends PopupRoute<void> {
                 begin: 0.96,
                 end: 1,
               ).animate(curvedAnimation),
-              child: Padding(padding: const EdgeInsets.all(24), child: child),
+              child: Padding(
+                padding: EdgeInsets.all(context.spacing.space6),
+                child: child,
+              ),
             ),
           ),
         ),

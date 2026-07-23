@@ -23,11 +23,14 @@ class AuthPage extends HookConsumerWidget {
         Text(
           "Your journey starts here",
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.displayLarge!.copyWith(
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        SizedBox(height: 24),
+        SizedBox(height: context.spacing.space6),
         LoadingButton.filled(
-          child: const Text("Sign in"),
+          child: Text("Sign in"),
           onPressed: () => ref.read(authProvider.notifier).signIn(),
         ),
         Spacer(),

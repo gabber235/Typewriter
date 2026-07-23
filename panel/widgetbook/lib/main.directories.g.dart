@@ -13,6 +13,8 @@
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 import 'package:widgetbook_workspace/stories/app/presentation/shortcuts/action_shortcuts.stories.dart'
     as _widgetbook_workspace_stories_app_presentation_shortcuts_action_shortcuts_stories;
+import 'package:widgetbook_workspace/stories/app/presentation/theme/design_system.stories.dart'
+    as _widgetbook_workspace_stories_app_presentation_theme_design_system_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/features/join_codes/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_members_features_join_codes_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/features/join_requests/presentation/route.stories.dart'
@@ -130,6 +132,44 @@ final directories = <_widgetbook.WidgetbookNode>[
   _widgetbook.WidgetbookFolder(
     name: 'app',
     children: [
+      _widgetbook.WidgetbookFolder(
+        name: 'design_system',
+        children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'ControlsShowcase',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Controls',
+                builder:
+                    _widgetbook_workspace_stories_app_presentation_theme_design_system_stories
+                        .controlsShowcase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'DomainColorShowcase',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Domain colors',
+                builder:
+                    _widgetbook_workspace_stories_app_presentation_theme_design_system_stories
+                        .domainColorShowcase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'FoundationShowcase',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Foundation',
+                builder:
+                    _widgetbook_workspace_stories_app_presentation_theme_design_system_stories
+                        .foundationShowcase,
+              ),
+            ],
+          ),
+        ],
+      ),
       _widgetbook.WidgetbookFolder(
         name: 'presentation',
         children: [

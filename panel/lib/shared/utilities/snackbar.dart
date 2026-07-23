@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/app/presentation/theme/typewriter_theme_access.dart";
 
 void showSnackBar(
   BuildContext context, {
@@ -8,13 +9,13 @@ void showSnackBar(
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message, style: TextStyle(color: color)),
+      content: Text(
+        message,
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: color),
+      ),
       backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating,
       dismissDirection: DismissDirection.down,
       showCloseIcon: true,
-      margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
   );
 }
@@ -30,11 +31,10 @@ void showErrorSnackBar(BuildContext context, String message) {
 }
 
 void showSuccessSnackBar(BuildContext context, String message) {
-  final colorScheme = Theme.of(context).colorScheme;
   showSnackBar(
     context,
     message: message,
-    color: colorScheme.onPrimary,
-    backgroundColor: colorScheme.primary,
+    color: context.colors.onSuccess,
+    backgroundColor: context.colors.success,
   );
 }

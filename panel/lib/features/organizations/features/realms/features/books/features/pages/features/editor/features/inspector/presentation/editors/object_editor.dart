@@ -65,7 +65,7 @@ class ObjectEditorWidget extends HookConsumerWidget {
       editorMode: editorMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 12,
+        spacing: context.spacing.space3,
         children: [
           for (final fieldBlueprint in objectBlueprint.fields.entries)
             if (!ignoreFields.contains(fieldBlueprint.key)) ...[

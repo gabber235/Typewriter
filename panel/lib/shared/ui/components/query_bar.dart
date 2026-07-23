@@ -324,7 +324,7 @@ class QueryBar extends HookWidget {
                                     ),
                                   ),
                                 ),
-                                const TextSpan(text: ", "),
+                                TextSpan(text: ", "),
                               ],
                               if (helperBadges.hiddenCount > 0)
                                 WidgetSpan(
@@ -337,9 +337,9 @@ class QueryBar extends HookWidget {
                                     ),
                                   ),
                                 ),
-                              const TextSpan(text: "to filter results."),
+                              TextSpan(text: "to filter results."),
                               if (context.isTablet || context.isDesktop) ...[
-                                const TextSpan(text: " Press "),
+                                TextSpan(text: " Press "),
                                 WidgetSpan(
                                   alignment: PlaceholderAlignment.middle,
                                   child: ShortcutDisplay(
@@ -348,9 +348,7 @@ class QueryBar extends HookWidget {
                                     ),
                                   ),
                                 ),
-                                const TextSpan(
-                                  text: " to select first result.",
-                                ),
+                                TextSpan(text: " to select first result."),
                               ],
                             ],
                           ),
@@ -377,7 +375,7 @@ Widget _buildSuggestionPanel({
   final states = <WidgetState>{};
   final shape =
       menuStyle.shape?.resolve(states) ??
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(6));
+      RoundedRectangleBorder(borderRadius: context.shapes.mediumBorderRadius);
   final padding =
       menuStyle.padding?.resolve(states) ??
       const EdgeInsets.symmetric(horizontal: 4, vertical: 4);
@@ -528,7 +526,7 @@ Widget _buildHelperBadge(BuildContext context, String label, {Key? key}) {
     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
     decoration: BoxDecoration(
       color: colors.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: context.shapes.smallBorderRadius,
     ),
     child: Text(
       label,
@@ -573,17 +571,17 @@ class _QueryBarTextEditingController extends TextEditingController {
 
     final theme = Theme.of(context);
 
-    final operatorStyle = TextStyle(
+    final operatorStyle = baseStyle.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
       fontVariations: [.weight(900)],
     );
-    final warningStyle = TextStyle(
+    final warningStyle = baseStyle.copyWith(
       color: theme.colorScheme.tertiary,
       decoration: TextDecoration.underline,
       decorationStyle: TextDecorationStyle.wavy,
       decorationColor: theme.colorScheme.tertiary,
     );
-    final errorStyle = TextStyle(
+    final errorStyle = baseStyle.copyWith(
       color: theme.colorScheme.error,
       decoration: TextDecoration.underline,
       decorationStyle: TextDecorationStyle.wavy,
@@ -599,7 +597,7 @@ class _QueryBarTextEditingController extends TextEditingController {
             tokenRanges,
             range,
             _TokenStylePriority.selector,
-            TextStyle(
+            baseStyle.copyWith(
               color:
                   _selectorsById[selectorId]?.color ??
                   theme.colorScheme.primary,

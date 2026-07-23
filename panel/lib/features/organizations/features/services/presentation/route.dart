@@ -18,15 +18,18 @@ class ServicesPage extends HookConsumerWidget {
     final servicesAsync = ref.watch(servicesProvider);
 
     return Inspector(
-      margin: EdgeInsets.only(top: 8, right: 8),
+      margin: EdgeInsets.only(
+        top: context.spacing.space2,
+        right: context.spacing.space2,
+      ),
       child: Pane(
         id: "services",
         primary: true,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
         margin: EdgeInsets.only(
-          top: 8,
-          left: 8,
-          right: context.isMobile ? 8 : 0,
+          top: context.spacing.space2,
+          left: context.spacing.space2,
+          right: context.isMobile ? context.spacing.space2 : 0,
         ),
         child: Section(
           margin: EdgeInsets.zero,
@@ -39,7 +42,7 @@ class ServicesPage extends HookConsumerWidget {
                     "Connect Minecraft servers and content realms to this organization. Enter the registration token shown in your server console to register a service and begin syncing Typewriter content.",
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(context.spacing.space4),
                 child: const _TokenInput(),
               ),
               Expanded(
@@ -60,9 +63,9 @@ class ServicesPage extends HookConsumerWidget {
                     return ClipPath(
                       clipper: VerticalClipper(additionalWidth: 100),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 16,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.spacing.space2,
+                          vertical: context.spacing.space4,
                         ),
                         child: ResponsiveGridView.builder(
                           gridDelegate: ResponsiveGridDelegate(
@@ -130,9 +133,9 @@ class _TokenInput extends HookConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: context.shapes.largeBorderRadius,
         ),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(context.spacing.space4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -142,14 +145,14 @@ class _TokenInput extends HookConsumerWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: context.spacing.space2),
             Text(
               "When you start a Typewriter server, it will display a registration token. Enter it here to bind the service to this organization.",
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: context.spacing.space4),
             Row(
               children: [
                 Expanded(
@@ -167,7 +170,7 @@ class _TokenInput extends HookConsumerWidget {
                         : null,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.spacing.space3),
                 LoadingButton(
                   controller: loadingButtonController,
                   onPressed: handleBind,
@@ -208,6 +211,7 @@ class _ServiceCard extends HookConsumerWidget {
             }
           : null,
       builder: (isSelected, isFocused, isHovered) {
+        final onColor = service.color.on(context);
         return Opacity(
           opacity: service.isOnline
               ? 1
@@ -217,6 +221,8 @@ class _ServiceCard extends HookConsumerWidget {
           child: GridSelectableCard(
             title: service.displayName,
             baseColor: service.color,
+            onBaseColor: onColor,
+            badgeOnColor: onColor,
             isSelected: isSelected,
             isFocused: isFocused,
             isHovered: isHovered,
@@ -225,12 +231,12 @@ class _ServiceCard extends HookConsumerWidget {
             footer: StatusIndicator(
               isOnline: service.isOnline,
               lastSeen: service.lastSeen,
-              dotColor: _statusDotColor(context, service.isOnline, isSelected),
-              textColor: _statusTextColor(
-                context,
-                service.isOnline,
-                isSelected,
-              ),
+              dotColor: isSelected
+                  ? onColor
+                  : _statusDotColor(context, service.isOnline),
+              textColor: isSelected
+                  ? onColor.withValues(alpha: 0.7)
+                  : _statusTextColor(context, service.isOnline),
             ),
           ),
         );
@@ -239,20 +245,8 @@ class _ServiceCard extends HookConsumerWidget {
   }
 }
 
-Color _statusDotColor(BuildContext context, bool isOnline, bool isSelected) {
-  return switch ((isOnline, isSelected)) {
-    (true, false) => Colors.green,
-    (true, true) => Colors.white,
-    (false, false) => Colors.grey,
-    (false, true) => Surface.colorOf(context).withValues(alpha: 0.7),
-  };
-}
+Color _statusDotColor(BuildContext context, bool isOnline) =>
+    isOnline ? context.colors.online : context.colors.offline;
 
-Color _statusTextColor(BuildContext context, bool isOnline, bool isSelected) {
-  final theme = Theme.of(context);
-  return switch ((isOnline, isSelected)) {
-    (true, _) => Colors.white.withValues(alpha: 0.7),
-    (false, false) => theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-    (false, true) => Surface.colorOf(context).withValues(alpha: 0.5),
-  };
-}
+Color _statusTextColor(BuildContext context, bool isOnline) =>
+    context.colors.contentSecondary;

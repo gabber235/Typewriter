@@ -1,11 +1,8 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/app/presentation/theme/theme.dart";
 
 class ModalHeader extends StatelessWidget {
-  const ModalHeader({
-    this.title,
-    this.onClose,
-    super.key,
-  });
+  const ModalHeader({this.title, this.onClose, super.key});
 
   final String? title;
   final VoidCallback? onClose;
@@ -22,7 +19,7 @@ class ModalHeader extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey,
+                color: context.colors.contentSecondary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

@@ -25,7 +25,7 @@ class _CreateOrganization extends HookConsumerWidget {
                 style: theme.textTheme.headlineMedium,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: context.spacing.space6),
             const StaggerEntrance(child: SectionTitle(title: "Name")),
             StaggerEntrance(
               child: DecoratedTextField(
@@ -37,7 +37,7 @@ class _CreateOrganization extends HookConsumerWidget {
                 validator: _validateName,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: context.spacing.space6),
             StaggerEntrance(
               child: _OrganizationIconPicker(
                 iconUrl: iconUrl,
@@ -139,22 +139,22 @@ class _OrganizationIconPicker extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: context.shapes.largeBorderRadius,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
         onTap: onRandomize,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(context.spacing.space3),
           child: Row(
             children: [
               OrganizationLogo(logoUrl: iconUrl, size: 64),
-              const SizedBox(width: 16),
+              SizedBox(width: context.spacing.space4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SectionTitle(title: "Icon"),
-                    const SizedBox(height: 4),
+                    SizedBox(height: context.spacing.space1),
                     Text(
                       "For now, generated and can be randomized again by clicking the icon.",
                       style: theme.textTheme.bodyMedium?.copyWith(

@@ -52,7 +52,7 @@ class JoinCodesCardList extends HookConsumerWidget {
         SliverFloatingHeader(
           child: Container(
             color: Surface.colorOf(context),
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
             child: StaggerEntrance(
               child: GestureDetector(
                 onTap: handleSelectAll,
@@ -65,7 +65,7 @@ class JoinCodesCardList extends HookConsumerWidget {
                     ),
                     Text(
                       "Select all",
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),

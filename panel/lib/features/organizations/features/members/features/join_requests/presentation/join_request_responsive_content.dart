@@ -32,7 +32,7 @@ class JoinRequestResponsiveContent extends StatelessWidget {
               isSelected: isSelected,
               radius: 20,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: context.spacing.space3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +41,7 @@ class JoinRequestResponsiveContent extends StatelessWidget {
                   if (request.userName != null)
                     Text(
                       request.userName!,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontVariations: [.weight(600)],
                         fontSize: 15,
                       ),
@@ -49,7 +49,7 @@ class JoinRequestResponsiveContent extends StatelessWidget {
                   if (request.userEmail != null)
                     Text(
                       request.userEmail!,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 13,
                       ),
@@ -60,13 +60,13 @@ class JoinRequestResponsiveContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: context.spacing.space3),
         Row(
           children: [
             CountdownBadge(endDate: request.expiresAt, onExpired: onExpired),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: context.spacing.space3),
         Row(
           children: [
             Expanded(
@@ -78,10 +78,10 @@ class JoinRequestResponsiveContent extends StatelessWidget {
                     color: theme.colorScheme.error.withValues(alpha: 0.5),
                   ),
                 ),
-                child: const Text("Decline"),
+                child: Text("Decline"),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.space2),
             Expanded(
               child: FilledButton(
                 onPressed: onToggle,

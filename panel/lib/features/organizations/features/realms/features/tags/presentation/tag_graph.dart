@@ -19,7 +19,7 @@ class TagGraph extends HookConsumerWidget {
     );
   }
 
-  List<GraphEdge> _edgesFromTags(List<Tag> tags) {
+  List<GraphEdge> _edgesFromTags(BuildContext context, List<Tag> tags) {
     final edges = <GraphEdge>[];
     final tagMap = {for (final tag in tags) tag.tagId: tag};
 
@@ -35,7 +35,7 @@ class TagGraph extends HookConsumerWidget {
             target: GraphIdentifier(tag.tagId),
             color: parentTag.color.value != 0
                 ? Color(parentTag.color.value)
-                : Colors.grey,
+                : context.colors.contentDisabled,
             sourceSide: EdgeSide.bottom,
             targetSide: EdgeSide.top,
           ),
@@ -46,9 +46,9 @@ class TagGraph extends HookConsumerWidget {
     return edges;
   }
 
-  GraphData _graphFromTags(List<Tag> tags) {
+  GraphData _graphFromTags(BuildContext context, List<Tag> tags) {
     final elements = tags.map(_elementFromTag).toList();
-    final edges = _edgesFromTags(tags);
+    final edges = _edgesFromTags(context, tags);
 
     return GraphData(
       cellSize: tagGraphCellSize,
@@ -72,7 +72,7 @@ class TagGraph extends HookConsumerWidget {
         }
 
         return Graph(
-          data: _graphFromTags(tagList),
+          data: _graphFromTags(context, tagList),
           onElementsDragged: (changes) {
             for (final (element, x, y) in changes) {
               ref.read(tagsProvider.notifier).moveTag(element.id, x, y);
@@ -100,8 +100,12 @@ class EmptyTagsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pane(
       id: "empty_tags_page",
-      borderRadius: BorderRadius.circular(12),
-      margin: EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
+      borderRadius: context.shapes.largeBorderRadius,
+      margin: EdgeInsets.only(
+        top: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
+      ),
       child: Section(
         margin: EdgeInsets.zero,
         child: EmptyScreen(

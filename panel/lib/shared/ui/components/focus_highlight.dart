@@ -164,9 +164,8 @@ class FocusHighlight extends HookWidget {
       color: switch (type) {
         FocusType.none => Colors.transparent,
         FocusType.focus =>
-          focusColor?.withValues(alpha: 0.3) ??
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-        FocusType.primaryFocus => Colors.blue.withValues(alpha: 0.3),
+          focusColor?.withValues(alpha: 0.3) ?? context.colors.focusRing,
+        FocusType.primaryFocus => context.colors.focusRing,
       },
       width: width,
     );

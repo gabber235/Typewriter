@@ -38,7 +38,7 @@ class BulkJoinCodeActions extends StatelessWidget {
       ],
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        spacing: 8,
+        spacing: context.spacing.space2,
         children: [
           SelectedChip(
             selectedCount: selectedCount,

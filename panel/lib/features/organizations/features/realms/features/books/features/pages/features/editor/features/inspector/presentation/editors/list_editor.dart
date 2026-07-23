@@ -149,11 +149,11 @@ class NoElements extends HookConsumerWidget {
     final name =
         ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Fields";
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
       child: SizedBox(
         width: double.infinity,
         child: Column(
-          spacing: 8,
+          spacing: context.spacing.space2,
           children: [
             Text(
               "No $name found",
@@ -210,7 +210,7 @@ class _ListItem extends HookConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
       child: widget,
     );
   }

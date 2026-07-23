@@ -44,7 +44,7 @@ class JoinCodeCard extends HookConsumerWidget {
 
     return Material(
       color: backgroundColor,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: context.shapes.mediumBorderRadius,
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
@@ -104,29 +104,29 @@ class JoinCodeCard extends HookConsumerWidget {
             ],
             child: InkWell(
               onTap: expansibleController.toggle,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(8),
+              borderRadius: BorderRadius.vertical(
+                top: context.shapes.mediumRadius,
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(context.spacing.space3),
                 child: Row(
                   children: [
                     GestureDetector(
                       onTap: () => onSelectionChanged(!isSelected),
                       child: CircleAvatar(
                         backgroundColor: isSelected
-                            ? Colors.green
+                            ? context.colors.success
                             : theme.colorScheme.primaryContainer,
                         child: Icon(
                           isSelected ? Icons.check : Icons.link,
                           color: isSelected
-                              ? Colors.white
+                              ? context.colors.onSuccess
                               : theme.colorScheme.onPrimaryContainer,
                           size: 20,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: context.spacing.space3),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,11 +135,11 @@ class JoinCodeCard extends HookConsumerWidget {
                             blurSigma: 3,
                             child: Text(
                               fullUrl,
-                              style: const TextStyle(
-                                fontFamily: "monospace",
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                  ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -192,11 +192,11 @@ class JoinCodeCard extends HookConsumerWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(context.spacing.space3),
                   child: Wrap(
                     alignment: .center,
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: context.spacing.space2,
+                    runSpacing: context.spacing.space2,
                     children: [
                       OutlinedButton.icon(
                         onPressed: () => _copyToClipboard(context, fullUrl),

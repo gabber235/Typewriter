@@ -20,7 +20,7 @@ class OrganizationSelector extends HookConsumerWidget {
         children: [
           if (selected != null)
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: EdgeInsets.only(right: context.spacing.space2),
               child: OrganizationLogo(logoUrl: selected.logoUrl, size: 24),
             ),
           Text(
@@ -128,15 +128,13 @@ class _OrganizationsList extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 child: Material(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: context.shapes.mediumBorderRadius,
                   child: ListTile(
                     dense: true,
                     leading: OrganizationLogo(logoUrl: org.logoUrl, size: 32),
                     title: Text(
                       org.name.formatted,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                     onTap: () => onSelect(org),
@@ -209,7 +207,12 @@ class ActionList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          padding: EdgeInsets.fromLTRB(
+            context.spacing.space4,
+            context.spacing.space2,
+            context.spacing.space4,
+            context.spacing.space1,
+          ),
           child: Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -219,26 +222,20 @@ class ActionList extends StatelessWidget {
         ),
         ...actions.map(
           (action) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
             child: ListTile(
               dense: true,
               visualDensity: VisualDensity.compact,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 0,
-              ),
               leading: Icon(action.icon, size: 16),
               title: Text(
                 action.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 13),
+                style: Theme.of(context).textTheme.labelMedium,
               ),
               onTap: action.onTap,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: context.spacing.space2),
       ],
     );
   }

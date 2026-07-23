@@ -192,7 +192,9 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
       }
       return Text(
         label,
-        style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+        ),
       );
     }
 
@@ -366,7 +368,7 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
                 suffixIcon: Padding(
                   padding: isCollapsed
                       ? EdgeInsets.zero
-                      : const EdgeInsets.all(4.0),
+                      : EdgeInsets.all(context.spacing.space1),
                   child: Icon(
                     menuController.isOpen
                         ? Icons.arrow_drop_up
@@ -379,7 +381,9 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
                 contentPadding: EdgeInsets.all(12),
               ),
               keyboardType: TextInputType.text,
-              style: TextStyle(height: 1.7),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium!.copyWith(height: 1.7),
               maxLines: null,
               onEditingComplete: () =>
                   _handleEnter(filteredEntries, fakeFocusIndex, menuController),
@@ -499,7 +503,7 @@ class SmallChip extends HookWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               color: color,
               fontSize: 12,
               fontVariations: [FontVariation.weight(500)],

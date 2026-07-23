@@ -46,8 +46,8 @@ class _OrganizationsSelector extends HookWidget {
         ),
         spacer,
         if (filteredOrganizations.isEmpty)
-          const SliverPadding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(vertical: context.spacing.space6),
             sliver: SliverToBoxAdapter(
               child: EmptyState(
                 title: "No organizations found.",
@@ -93,12 +93,14 @@ class _OrganizationListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
       child: DepthBox(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+          borderRadius: context.shapes.mediumBorderRadius,
+        ),
         child: InkWell(
           onTap: () => _openOrganization(context),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           child: ListTile(
             leading: OrganizationLogo(logoUrl: organization.logoUrl, size: 40),
             title: Text(organization.name.formatted),

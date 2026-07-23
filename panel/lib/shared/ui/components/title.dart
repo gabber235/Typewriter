@@ -16,7 +16,7 @@ class Title extends StatelessWidget {
   Widget build(BuildContext context) {
     return AutoSizeText(
       title,
-      style: TextStyle(
+      style: Theme.of(context).textTheme.displayLarge!.copyWith(
         color: color,
         fontSize: 40,
         fontWeight: FontWeight.bold,

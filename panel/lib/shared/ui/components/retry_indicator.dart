@@ -1,10 +1,7 @@
 import "package:flutter/material.dart";
 
 class RetryIndicator extends StatelessWidget {
-  const RetryIndicator({
-    this.message = "Retrying...",
-    super.key,
-  });
+  const RetryIndicator({this.message = "Retrying...", super.key});
 
   final String message;
 
@@ -13,16 +10,9 @@ class RetryIndicator extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(),
-        ),
+        SizedBox(width: 16, height: 16, child: CircularProgressIndicator()),
         SizedBox(width: 12),
-        Text(
-          message,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
+        Text(message, style: Theme.of(context).textTheme.bodyLarge),
       ],
     );
   }

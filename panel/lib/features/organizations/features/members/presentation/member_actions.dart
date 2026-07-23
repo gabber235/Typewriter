@@ -82,7 +82,7 @@ class BulkMemberActions extends HookConsumerWidget {
           mobile: Axis.vertical,
           tablet: Axis.horizontal,
         ),
-        spacing: 4,
+        spacing: context.spacing.space1,
         crossAxisAlignment: context.responsive(
           mobile: CrossAxisAlignment.start,
           tablet: CrossAxisAlignment.center,

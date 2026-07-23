@@ -266,7 +266,7 @@ class _SecretFieldContent extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: context.shapes.largeBorderRadius,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -352,7 +352,6 @@ String _generateRandomString(int length, {bool includeSpaces = false}) {
 
 TextStyle _secretTextStyle(BuildContext context) {
   return Theme.of(context).textTheme.titleSmall!.copyWith(
-    fontFamily: "JetBrainsMono",
     fontVariations: [.weight(700)],
     letterSpacing: 1,
   );

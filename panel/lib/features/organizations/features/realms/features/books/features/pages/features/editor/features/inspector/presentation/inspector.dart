@@ -139,7 +139,7 @@ class MobileInspector extends HookConsumerWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: context.shapes.mediumBorderRadius,
                   ),
                   child: Section(
                     child: CustomScrollView(
@@ -151,10 +151,10 @@ class MobileInspector extends HookConsumerWidget {
                         ),
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              left: 12,
-                              right: 12,
-                              bottom: 12,
+                            padding: EdgeInsets.only(
+                              left: context.spacing.space3,
+                              right: context.spacing.space3,
+                              bottom: context.spacing.space3,
                             ),
                             child: _InspectorContent(),
                           ),
@@ -298,7 +298,7 @@ class DesktopInspector extends HookConsumerWidget {
                   : EdgeInsets.zero,
               child: Pane(
                 id: "inspector",
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: context.shapes.largeBorderRadius,
                 enabled: hasSelection,
                 margin: null,
                 child: Section(
@@ -321,7 +321,7 @@ class DesktopInspector extends HookConsumerWidget {
                         maxWidth: effectiveSize,
                         child: SingleChildScrollView(
                           child: Padding(
-                            padding: const EdgeInsets.all(12.0),
+                            padding: EdgeInsets.all(context.spacing.space3),
                             child: _InspectorContent(),
                           ),
                         ),
@@ -349,7 +349,7 @@ class _InspectorContent extends HookConsumerWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 12,
+      spacing: context.spacing.space3,
       children: [
         ?selectedHeader,
         if (selectedDataBlueprint != null)
@@ -380,7 +380,7 @@ class Operations extends HookConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      spacing: 12,
+      spacing: context.spacing.space3,
       children: [
         const SectionTitle(title: "Operations"),
         for (final operation in operations) operation.inspectorButton(selected),

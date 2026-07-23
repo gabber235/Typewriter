@@ -73,7 +73,7 @@ class _JoinOrganization extends HookConsumerWidget {
                           : (_) => submitJoinRequest(),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: context.spacing.space3),
                   LoadingButton.filled(
                     onPressed: hasReachedLimit ? null : submitJoinRequest,
                     child: const Text("Join"),
@@ -88,7 +88,7 @@ class _JoinOrganization extends HookConsumerWidget {
             child: hasReachedLimit
                 ? StaggerEntrance(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: EdgeInsets.only(top: context.spacing.space2),
                       child: Text(
                         "You have reached the maximum of $_maxPendingRequests pending requests. Please wait for approval or cancel an existing request.",
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -242,7 +242,9 @@ class _PendingJoinRequestTile extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: context.shapes.mediumBorderRadius,
+      ),
       child: ManagedActionSet(
         shortcuts: [
           ActionShortcut.intent(
@@ -255,7 +257,7 @@ class _PendingJoinRequestTile extends StatelessWidget {
           ),
         ],
         child: ManagedFocusHighlight(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           child: ListTile(
             leading: OrganizationLogo(
               logoUrl: request.organizationLogoUrl,
@@ -272,7 +274,7 @@ class _PendingJoinRequestTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 CountdownBadge(endDate: request.expiresAt, onExpired: onExpire),
-                const SizedBox(width: 8),
+                SizedBox(width: context.spacing.space2),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),
                   onPressed: onCancel,

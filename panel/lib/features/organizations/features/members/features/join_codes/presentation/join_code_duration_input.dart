@@ -53,7 +53,7 @@ class DurationInput extends HookWidget {
     final inlinePresets = context.responsive(mobile: false, tablet: true);
 
     return Column(
-      spacing: 8,
+      spacing: context.spacing.space2,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (!inlinePresets) _presets(),

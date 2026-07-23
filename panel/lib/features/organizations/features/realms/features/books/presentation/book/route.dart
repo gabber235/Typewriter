@@ -53,8 +53,12 @@ class EmptyBookPage extends StatelessWidget {
     return Pane(
       id: "empty_book_page",
       primary: true,
-      borderRadius: BorderRadius.circular(12),
-      margin: EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
+      borderRadius: context.shapes.largeBorderRadius,
+      margin: EdgeInsets.only(
+        top: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
+      ),
       child: Section(
         margin: EdgeInsets.zero,
         child: EmptyScreen(
@@ -179,10 +183,12 @@ class BookSidebarContent extends HookConsumerWidget {
                   ref.read(_pageSearchProvider.notifier).search(value),
               decoration: InputDecoration(
                 hintText: "Search pages...",
-                hintStyle: TextStyle(fontSize: 12),
+                hintStyle: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(fontSize: 12),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: context.spacing.space3),
             pages(
               name: "pages",
               shrink: true,
@@ -193,7 +199,7 @@ class BookSidebarContent extends HookConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _PagesTree(pages: data, expanded: expanded),
-                        const SizedBox(height: 12),
+                        SizedBox(height: context.spacing.space3),
                         if (expanded) const _AddPageButton(),
                       ],
                     ),
@@ -216,7 +222,7 @@ class LoadingPagesSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      spacing: 8,
+      spacing: context.spacing.space2,
       children: [
         for (var i = 0; i < 10; i++)
           ShimmerBox.rectangle(height: 35, width: double.infinity),
@@ -425,9 +431,7 @@ class _TreeCategory extends HookConsumerWidget {
                                 width: 2,
                               )
                             : BorderSide.none,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
+                        borderRadius: context.shapes.mediumBorderRadius,
                       ),
                       child: Draggable<ChapterDrag>(
                         data: ChapterDrag(chapter: chapter),
@@ -436,7 +440,7 @@ class _TreeCategory extends HookConsumerWidget {
                           child: Material(
                             color: Colors.transparent,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: context.shapes.mediumBorderRadius,
                             ),
                             child: _buildHeader(
                               context,
@@ -447,7 +451,7 @@ class _TreeCategory extends HookConsumerWidget {
                         ),
                         child: InkWell(
                           onTap: () => isExpanded.value = !isExpanded.value,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: context.shapes.mediumBorderRadius,
                           child: _buildHeader(
                             context,
                             expand: true,
@@ -491,7 +495,7 @@ class _TreeCategory extends HookConsumerWidget {
     final color = Theme.of(context).colorScheme.onSurface;
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(context.spacing.space2),
       child: Row(
         children: [
           if (expanded) const SizedBox(width: 4),
@@ -577,7 +581,7 @@ class _PageTile extends HookConsumerWidget {
     MenuItem(
       label: "Delete",
       icon: Icones(MaterialSymbols.delete_forever_rounded),
-      color: Colors.redAccent,
+      color: ref.context.colors.danger,
       onPressed: () => showPageDeletionDialogue(ref, pageId, name),
     ),
   ];
@@ -645,12 +649,12 @@ class _PageTile extends HookConsumerWidget {
     final color = Theme.of(context).colorScheme.onSurface;
 
     final child = Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(context.spacing.space2),
       child: Row(
         children: [
-          const SizedBox(width: 4),
+          SizedBox(width: context.spacing.space1),
           Icones(page.type.icon, size: 11, color: color),
-          const SizedBox(width: 8),
+          SizedBox(width: context.spacing.space2),
           Expanded(
             child: Text(
               page.name.formatted,
@@ -659,7 +663,7 @@ class _PageTile extends HookConsumerWidget {
               ).textTheme.bodySmall?.copyWith(color: color),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: context.spacing.space2),
           Icon(Icons.chevron_right, size: 16, color: color),
         ],
       ),
@@ -695,7 +699,7 @@ class _PageTile extends HookConsumerWidget {
               child: Material(
                 color: Colors.transparent,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: context.shapes.mediumBorderRadius,
                   side: isAccepting || isRejecting
                       ? BorderSide(
                           color: isAccepting
@@ -716,7 +720,7 @@ class _PageTile extends HookConsumerWidget {
                         child: Material(
                           color: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: context.shapes.mediumBorderRadius,
                           ),
                           child: child,
                         ),
@@ -728,7 +732,7 @@ class _PageTile extends HookConsumerWidget {
                               .read(appRouterProvider)
                               .push(RouteRoute(pageId: pageId));
                         },
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: context.shapes.mediumBorderRadius,
                         child: child,
                       ),
                     ),
@@ -755,11 +759,19 @@ class _SmallPageTile extends HookConsumerWidget {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
 
     return Material(
-      color: isSelected ? const Color(0xFF1e3f6f) : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
+      color: isSelected
+          ? context.colors.selectionContainer
+          : Colors.transparent,
+      borderRadius: context.shapes.mediumBorderRadius,
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icones(page.type.icon, size: 11, color: Colors.white),
+        padding: EdgeInsets.all(context.spacing.space2),
+        child: Icones(
+          page.type.icon,
+          size: 11,
+          color: isSelected
+              ? context.colors.onSelectionContainer
+              : context.colors.contentSecondary,
+        ),
       ),
     );
   }
@@ -829,9 +841,9 @@ class _AddPageButton extends HookConsumerWidget {
         ),
         child: Row(
           children: [
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.space2),
             Expanded(child: Text("Add page")),
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.space2),
             Icon(Icons.add, size: 16),
           ],
         ),
@@ -1074,7 +1086,7 @@ class AddPageDialogue extends HookConsumerWidget {
             onSubmitted: (_) => Actions.maybeInvoke(context, NextFocusIntent()),
           ),
           if (fixedType == null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: context.spacing.space3),
             Dropdown<PageType>(
               focusNode: pageTypeFocus,
               selected: type.value,
@@ -1092,12 +1104,12 @@ class AddPageDialogue extends HookConsumerWidget {
               ],
             ),
           ],
-          const SizedBox(height: 12),
+          SizedBox(height: context.spacing.space3),
           ExpansionTile(
             title: const Text("Advanced"),
             shape: const RoundedRectangleBorder(),
             children: [
-              const SizedBox(height: 12),
+              SizedBox(height: context.spacing.space3),
               FormattedTextField(
                 focusNode: chapterFocus,
                 text: chapter.value,
@@ -1120,7 +1132,7 @@ class AddPageDialogue extends HookConsumerWidget {
                 onSubmitted: (value) =>
                     Actions.maybeInvoke(context, NextFocusIntent()),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: context.spacing.space3),
               FormattedTextField(
                 focusNode: priorityFocus,
                 text: priority.value.toString(),
@@ -1244,8 +1256,8 @@ class RenamePageDialogue extends HookConsumerWidget {
           label: const Text("Rename"),
           icon: const Icones(Mingcute.pencil_fill),
           style: FilledButton.styleFrom(
-            foregroundColor: Colors.orange.on(context),
-            backgroundColor: Colors.orange,
+            foregroundColor: context.colors.onWarning,
+            backgroundColor: context.colors.warning,
           ),
         ),
       ],
@@ -1325,8 +1337,8 @@ class ChangeChapterDialogue extends HookConsumerWidget {
           label: const Text("Change"),
           icon: const Icones(Mingcute.pencil_fill),
           style: FilledButton.styleFrom(
-            foregroundColor: Colors.orange.on(context),
-            backgroundColor: Colors.orange,
+            foregroundColor: context.colors.onWarning,
+            backgroundColor: context.colors.warning,
           ),
         ),
       ],
@@ -1394,8 +1406,8 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
           label: const Text("Change"),
           icon: const Icones(Mingcute.pencil_fill),
           style: FilledButton.styleFrom(
-            foregroundColor: Colors.orange.on(context),
-            backgroundColor: Colors.orange,
+            foregroundColor: context.colors.onWarning,
+            backgroundColor: context.colors.warning,
           ),
         ),
       ],

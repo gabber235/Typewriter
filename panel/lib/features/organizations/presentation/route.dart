@@ -46,9 +46,9 @@ class IndexPage extends ConsumerWidget {
           toolbarHeight: 56,
           automaticallyImplyLeading: false,
           title: const SizedBox.shrink(),
-          actions: const [
-            FooterSidebarLinks(compact: true, expand: false),
-            SizedBox(width: 8),
+          actions: [
+            const FooterSidebarLinks(compact: true, expand: false),
+            SizedBox(width: context.spacing.space2),
           ],
         ),
         child: content,
@@ -95,9 +95,9 @@ class _IndexPageContent extends StatelessWidget {
             sliver: CenteredSliverMainAxisGroup(
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 24,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space4,
+                    vertical: context.spacing.space6,
                   ),
                   sliver: SliverMainAxisGroup(
                     slivers: [

@@ -105,7 +105,7 @@ class JoinRequestsList extends HookConsumerWidget {
                   mobile: Axis.vertical,
                   tablet: Axis.horizontal,
                 ),
-                spacing: 8,
+                spacing: context.spacing.space2,
                 crossAxisAlignment: context.responsive(
                   mobile: CrossAxisAlignment.start,
                   tablet: CrossAxisAlignment.center,
@@ -128,10 +128,11 @@ class JoinRequestsList extends HookConsumerWidget {
                             ),
                             Text(
                               "Select all",
-                              style: TextStyle(
-                                fontVariations: [.weight(500)],
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium!
+                                  .copyWith(
+                                    fontVariations: [.weight(500)],
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ],
                         ),

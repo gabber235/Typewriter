@@ -40,7 +40,7 @@ class MemberTabletCard extends HookConsumerWidget {
 
     return Material(
       color: backgroundColor,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: context.shapes.mediumBorderRadius,
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
@@ -103,11 +103,11 @@ class MemberTabletCard extends HookConsumerWidget {
               ],
               child: InkWell(
                 onTap: expansibleController.toggle,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
+                borderRadius: BorderRadius.vertical(
+                  top: context.shapes.mediumRadius,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(context.spacing.space3),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -120,7 +120,7 @@ class MemberTabletCard extends HookConsumerWidget {
                           radius: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: context.spacing.space3),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,18 +129,20 @@ class MemberTabletCard extends HookConsumerWidget {
                             if (member.name != null)
                               Text(
                                 member.name!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                    ),
                               ),
                             if (member.email != null)
                               Text(
                                 member.email!,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium!
+                                    .copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                           ],
@@ -175,19 +177,20 @@ class MemberTabletCard extends HookConsumerWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(context.spacing.space3),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           "Roles",
-                          style: TextStyle(
-                            fontVariations: [.weight(500)],
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(
+                                fontVariations: [.weight(500)],
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: context.spacing.space2),
                         ref
                             .watch(organizationRolesProvider)
                             .when(
@@ -209,7 +212,7 @@ class MemberTabletCard extends HookConsumerWidget {
                               loading: () => const SizedBox.shrink(),
                               error: (_, _) => const SizedBox.shrink(),
                             ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: context.spacing.space4),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(

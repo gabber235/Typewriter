@@ -11,8 +11,12 @@ class EmptyEntryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pane(
       id: "empty_graph_page",
-      borderRadius: BorderRadius.circular(12),
-      margin: EdgeInsets.only(top: 8, left: 8, right: context.isMobile ? 8 : 0),
+      borderRadius: context.shapes.largeBorderRadius,
+      margin: EdgeInsets.only(
+        top: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
+      ),
       child: Section(
         margin: EdgeInsets.zero,
         child: EmptyScreen(

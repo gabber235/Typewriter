@@ -20,12 +20,14 @@ Widget testApp({
   List<Override> overrides = const [],
   Map<ShortcutActivator, Intent>? shortcuts,
   Map<Type, Action<Intent>>? actions,
+  ThemeMode themeMode = ThemeMode.light,
 }) {
   return Screenshotter(
     child: FakeApp(
       overrides: overrides,
       shortcuts: shortcuts,
       actions: actions,
+      themeMode: themeMode,
       child: child,
     ),
   );
@@ -39,6 +41,7 @@ extension WidgetTesterAppX on WidgetTester {
     List<Override> overrides = const [],
     Map<ShortcutActivator, Intent>? shortcuts,
     Map<Type, Action<Intent>>? actions,
+    ThemeMode themeMode = ThemeMode.light,
     bool settle = true,
   }) async {
     await pumpWidget(
@@ -47,6 +50,7 @@ extension WidgetTesterAppX on WidgetTester {
         overrides: overrides,
         shortcuts: shortcuts,
         actions: actions,
+        themeMode: themeMode,
       ),
     );
     if (settle) {

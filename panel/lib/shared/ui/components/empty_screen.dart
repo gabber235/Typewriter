@@ -32,7 +32,7 @@ class EmptyScreen extends HookConsumerWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.headlineMedium!.copyWith(
             fontSize: small ? 20 : 25,
             fontWeight: FontWeight.bold,
           ),

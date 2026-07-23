@@ -57,14 +57,14 @@ class LogicalKeyBoardDisplay extends HookWidget {
       case LogicalKeyboardKey.backspace:
         return const Icon(Icons.backspace_rounded);
       case LogicalKeyboardKey.delete:
-        return const Text("Del");
+        return Text("Del");
       case LogicalKeyboardKey.enter:
         return const Icon(Icons.keyboard_return_rounded);
       case LogicalKeyboardKey.numpadEnter:
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Num"),
+            Text("Num"),
             const SizedBox(width: 4),
             const Icon(Icons.keyboard_return_rounded),
           ],
@@ -74,7 +74,7 @@ class LogicalKeyBoardDisplay extends HookWidget {
       case LogicalKeyboardKey.space:
         return const Icon(Icons.space_bar_rounded);
       case LogicalKeyboardKey.escape:
-        return const Text("Esc");
+        return Text("Esc");
       case LogicalKeyboardKey.arrowUp:
         return const Icon(Icons.arrow_upward_rounded);
       case LogicalKeyboardKey.arrowDown:
@@ -213,10 +213,10 @@ class _KeyDisplay extends StatelessWidget {
     final width = fixedWidth ? size + 8 : null;
 
     final padding = const EdgeInsets.symmetric(horizontal: 4);
-    final rounding = BorderRadius.circular(4);
+    final rounding = context.shapes.smallBorderRadius;
 
     final text = DefaultTextStyle(
-      style: TextStyle(
+      style: Theme.of(context).textTheme.labelMedium!.copyWith(
         color: textColor,
         fontSize: size,
         fontWeight: FontWeight.w700,

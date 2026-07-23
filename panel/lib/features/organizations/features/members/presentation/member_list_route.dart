@@ -23,8 +23,8 @@ class MemberListPage extends StatelessWidget {
                     "Manage everyone who can access this organization. Review each member's assigned role and update permissions as your team and responsibilities change.",
               ),
             ),
-            const SliverPadding(
-              padding: EdgeInsets.all(24),
+            SliverPadding(
+              padding: EdgeInsets.all(context.spacing.space6),
               sliver: MembersTab(),
             ),
           ],

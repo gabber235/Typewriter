@@ -157,7 +157,7 @@ class EntryGraph extends HookConsumerWidget {
       loading: (_) => ShimmerBox.rectangle(
         width: double.infinity,
         height: double.infinity,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
       ),
     );
   }

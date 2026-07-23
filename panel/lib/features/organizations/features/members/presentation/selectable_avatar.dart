@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/app/presentation/theme/theme.dart";
 
 class SelectableAvatar extends StatelessWidget {
   const SelectableAvatar({
@@ -20,10 +21,10 @@ class SelectableAvatar extends StatelessWidget {
       radius: radius,
       backgroundImage: isSelected ? null : NetworkImage(avatarUrl),
       backgroundColor: isSelected
-          ? Colors.green
+          ? context.colors.success
           : theme.inputDecorationTheme.fillColor,
       child: isSelected
-          ? Icon(Icons.check, color: Colors.white, size: radius)
+          ? Icon(Icons.check, color: context.colors.onSuccess, size: radius)
           : null,
     );
   }

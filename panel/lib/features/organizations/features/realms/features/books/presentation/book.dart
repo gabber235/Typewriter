@@ -197,7 +197,7 @@ class _AnimatedSpineLayer extends StatelessWidget {
         child: Material(
           color: spec.color(color, isDark),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: context.shapes.largeBorderRadius,
           ),
         ),
       ),
@@ -262,7 +262,7 @@ class _BookCover extends StatelessWidget {
             child: Material(
               color: color,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: context.shapes.largeBorderRadius,
               ),
             ),
           ),
@@ -278,10 +278,10 @@ class _BookCover extends StatelessWidget {
                     .darker(context.isDarkMode ? 0.3 : 0.2)
                     .desaturate(context.isDarkMode ? 0.3 : 0.2)
                     .toColor(),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
+                    topLeft: context.shapes.largeRadius,
+                    bottomLeft: context.shapes.largeRadius,
                   ),
                 ),
               ),
@@ -342,7 +342,7 @@ class _TitleText extends StatelessWidget {
     return Flexible(
       child: Text(
         title.formatted,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.titleMedium!.copyWith(
           fontSize: context.responsive(mobile: 12, tablet: 14, desktop: 16),
           fontVariations: [boldWeight],
           color: Colors.white,
@@ -374,9 +374,9 @@ class _TagsList extends StatelessWidget {
             .darker(isDark ? 0.5 : -0.5)
             .desaturate(isDark ? 0.5 : 0.5)
             .toColor(),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: context.shapes.smallBorderRadius,
       ),
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(context.spacing.space1),
       height: height,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(2),
@@ -430,7 +430,7 @@ class BookHeader extends HookWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Title(title: name, color: color),
-        const SizedBox(height: 8),
+        SizedBox(height: context.spacing.space2),
         Identifier(id: id),
       ],
     );

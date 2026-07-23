@@ -11,6 +11,8 @@ class FakeApp extends StatelessWidget {
     this.overrides = const [],
     this.shortcuts,
     this.actions,
+    this.themeMode,
+    this.locale,
     super.key,
   });
 
@@ -18,15 +20,18 @@ class FakeApp extends StatelessWidget {
   final List<Override> overrides;
   final Map<ShortcutActivator, Intent>? shortcuts;
   final Map<Type, Action<Intent>>? actions;
+  final ThemeMode? themeMode;
+  final Locale? locale;
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.maybeBrightnessOf(context);
-    final themeMode = switch (brightness) {
-      Brightness.light => ThemeMode.light,
-      Brightness.dark => ThemeMode.dark,
-      _ => ThemeMode.system,
-    };
+    final ancestorBrightness = Theme.maybeBrightnessOf(context);
+    final resolvedThemeMode =
+        themeMode ??
+        switch (ancestorBrightness) {
+          Brightness.dark => ThemeMode.dark,
+          _ => ThemeMode.light,
+        };
     return ProviderScope(
       overrides: overrides,
       // Disable retry logic for both tests and widgetbooks to make them more deterministic.
@@ -35,7 +40,8 @@ class FakeApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
-        themeMode: themeMode,
+        themeMode: resolvedThemeMode,
+        locale: locale,
         scrollBehavior: GlobalCustomScrollBehavior(),
         shortcuts: shortcuts ?? typewriterShortcuts,
         actions: actions,

@@ -71,7 +71,7 @@ class UnbindOperation extends ActivatorShortcutOperation {
     return MenuItem(
       icon: const Icon(Icons.link_off),
       label: "Unbind",
-      color: Colors.deepOrange,
+      color: Colors.orange,
       onPressed: () => executeOn(ref),
     );
   }

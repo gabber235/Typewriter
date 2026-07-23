@@ -53,7 +53,7 @@ class TagSearchResultItem extends StatelessWidget {
       color: color,
       prefix: SearchResultIconTile(
         color: color,
-        onColor: Colors.white,
+        onColor: color.on(context),
         icon: icon,
         focused: focused,
         loading: loading,
@@ -64,7 +64,7 @@ class TagSearchResultItem extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        spacing: 4,
+        spacing: context.spacing.space1,
         children: [SearchResultTitle(title: name.formatted)],
       ),
       suffix: SearchResultSuffix(

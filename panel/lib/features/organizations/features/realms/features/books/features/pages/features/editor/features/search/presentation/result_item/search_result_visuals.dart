@@ -30,7 +30,7 @@ class SearchResultIconTile extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         color: focused ? color.onBrightness(surfaceBrightness.inverted) : color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: context.shapes.smallBorderRadius,
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.32),
@@ -39,12 +39,12 @@ class SearchResultIconTile extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(context.spacing.space2),
       child: ElasticSwitcher(
         child: loading
             ? CircularProgressIndicator(
                 color: focused ? color : onColor,
-                padding: const EdgeInsets.all(4),
+                padding: EdgeInsets.all(context.spacing.space1),
               )
             : Icones(icon, color: focused ? color : onColor),
       ),
@@ -205,7 +205,7 @@ class SearchResultTags extends StatelessWidget {
         alignment: Alignment.centerLeft,
         clipBehavior: .antiAlias,
         child: Row(
-          spacing: 4,
+          spacing: context.spacing.space1,
           children: [
             Text(
               "•",
@@ -264,7 +264,7 @@ class SearchResultSuffix extends StatelessWidget {
     );
     final onSurface = surfaceColor.onBrightness(surfaceBrightness.inverted);
     return Row(
-      spacing: 8,
+      spacing: context.spacing.space2,
       children: [
         SearchResultTypeLabel(
           label: label,

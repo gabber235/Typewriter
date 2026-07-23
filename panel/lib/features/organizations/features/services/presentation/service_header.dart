@@ -20,7 +20,7 @@ class ServiceHeader extends HookWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Title(title: name, color: color),
-        const SizedBox(height: 8),
+        SizedBox(height: context.spacing.space2),
         Identifier(id: id),
       ],
     );

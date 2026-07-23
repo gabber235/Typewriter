@@ -50,7 +50,9 @@ class SearchModalBody extends HookConsumerWidget {
                       autofocus: DecoratedTextFieldAutoFocus.textField,
                       inputDecoration: InputDecoration(
                         prefixIcon: Padding(
-                          padding: const EdgeInsets.only(left: 4.0),
+                          padding: EdgeInsets.only(
+                            left: context.spacing.space1,
+                          ),
                           child: const Icon(Icons.search_rounded),
                         ),
                         hintText: searchHint,

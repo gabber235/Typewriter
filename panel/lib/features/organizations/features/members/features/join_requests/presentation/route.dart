@@ -23,8 +23,8 @@ class JoinRequestsPage extends StatelessWidget {
                     "Review people waiting to join this organization. Approve each request with the right role, or decline requests that should not receive access.",
               ),
             ),
-            const SliverPadding(
-              padding: EdgeInsets.all(24),
+            SliverPadding(
+              padding: EdgeInsets.all(context.spacing.space6),
               sliver: JoinRequestsTab(),
             ),
           ],

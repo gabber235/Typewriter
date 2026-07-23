@@ -82,7 +82,12 @@ class ConfirmationDialogue extends HookWidget {
     });
 
     return AlertDialog(
-      title: Text(title, style: TextStyle(color: titleColor)),
+      title: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge!.copyWith(color: titleColor),
+      ),
       content: body ?? Text(content!),
       actions: [
         TextButton.icon(

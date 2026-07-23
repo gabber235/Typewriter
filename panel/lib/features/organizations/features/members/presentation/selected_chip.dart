@@ -21,7 +21,9 @@ class SelectedChip extends HookWidget {
       focusNode: focusNode,
       label: Text(
         "$selectedCount selected",
-        style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+        style: Theme.of(context).textTheme.labelMedium!.copyWith(
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
       ),
       backgroundColor: theme.colorScheme.primaryContainer.withValues(
         alpha: 0.4,
@@ -29,10 +31,7 @@ class SelectedChip extends HookWidget {
       deleteIconColor: theme.colorScheme.onPrimaryContainer,
       onDeleted: onClearSelection,
       deleteButtonTooltipMessage: "Unselect all",
-      side: FocusHighlight.stateBorder(
-        context,
-        focusColor: theme.colorScheme.onPrimaryContainer,
-      ),
+      side: FocusHighlight.stateBorder(context),
     );
   }
 }

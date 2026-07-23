@@ -12,13 +12,13 @@ class TagHeader extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tagColor = tag.color.value != 0
         ? Color(tag.color.value)
-        : Colors.grey;
+        : context.colors.contentDisabled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Title(title: tag.name.formatted, color: tagColor),
-        const SizedBox(height: 8),
+        SizedBox(height: context.spacing.space2),
         Identifier(id: tag.tagId),
       ],
     );

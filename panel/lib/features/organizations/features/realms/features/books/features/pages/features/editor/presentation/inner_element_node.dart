@@ -42,7 +42,7 @@ class InnerElementNode extends StatelessWidget {
               Flexible(
                 child: Text(
                   name,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: color,
                     fontSize: fontSize,
                     decoration: isDeprecated
@@ -57,7 +57,7 @@ class InnerElementNode extends StatelessWidget {
               ),
               Text(
                 "Page: $pageId",
-                style: TextStyle(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   color: color.withValues(alpha: 0.7),
                   fontSize: secondaryFontSize,
                 ),
@@ -67,7 +67,7 @@ class InnerElementNode extends StatelessWidget {
           )
         : Text(
             name,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               color: color,
               fontSize: fontSize,
               decoration: isDeprecated ? TextDecoration.lineThrough : null,

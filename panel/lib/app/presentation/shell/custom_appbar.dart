@@ -31,21 +31,23 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
     return Pane(
       id: "appbar",
       margin: EdgeInsets.only(top: 2, left: 2, right: 2),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: context.shapes.mediumBorderRadius,
       child: SafeArea(
         bottom: false,
         child: SizedBox(
           height: height,
           child: Material(
             color: color,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: context.shapes.mediumBorderRadius,
             child: Surface(
               color: color,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: 8,
+                  spacing: context.spacing.space2,
                   children: [
                     ...row,
                     if (context.isMobile)
@@ -95,7 +97,9 @@ class _MobileSidebarMenu extends StatelessWidget {
             const ModalHeader(),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space4,
+                ),
                 child: child,
               ),
             ),

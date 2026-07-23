@@ -63,9 +63,9 @@ class JoinCodesTable extends HookConsumerWidget {
                 verticalAlignment: TableCellVerticalAlignment.middle,
                 child: StaggerEntrance(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                      vertical: context.spacing.space3,
                     ),
                     child: Checkbox(
                       value: allSelected ? true : (someSelected ? null : false),
@@ -102,7 +102,7 @@ class JoinCodesTable extends HookConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: context.shapes.mediumBorderRadius,
             ),
             clipBehavior: Clip.antiAlias,
             child: table,
@@ -130,7 +130,7 @@ class JoinCodesTable extends HookConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Text(
             label,
-            style: TextStyle(
+            style: theme.textTheme.bodyMedium!.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: 13,
               color: theme.colorScheme.onSurfaceVariant,
@@ -224,7 +224,7 @@ class JoinCodesTable extends HookConsumerWidget {
                         blurSigma: 3,
                         child: SelectableText(
                           fullUrl,
-                          style: TextStyle(
+                          style: theme.textTheme.bodyMedium!.copyWith(
                             fontSize: 13,
                             color: theme.colorScheme.onSurface,
                           ),

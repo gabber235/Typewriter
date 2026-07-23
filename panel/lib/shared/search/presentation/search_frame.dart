@@ -238,10 +238,10 @@ class _SheetPreviewLayout extends HookWidget {
                   child: Material(
                     color: Theme.of(context).colorScheme.surfaceContainer,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: context.shapes.mediumBorderRadius,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(context.spacing.space2),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         spacing: _spacing,
@@ -441,7 +441,7 @@ class _BottomPreviewSheet extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: surfaceColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: context.shapes.mediumBorderRadius,
                 ),
                 child: Section(
                   backgroundColor: Theme.of(
@@ -455,10 +455,10 @@ class _BottomPreviewSheet extends StatelessWidget {
                         delegate: DraggableSheetHandleDelegate(),
                       ),
                       SliverPadding(
-                        padding: const EdgeInsets.only(
-                          left: 8,
-                          right: 8,
-                          bottom: 8,
+                        padding: EdgeInsets.only(
+                          left: context.spacing.space2,
+                          right: context.spacing.space2,
+                          bottom: context.spacing.space2,
                         ),
                         sliver: SliverToBoxAdapter(
                           child: AnimatedSwitcher(
@@ -517,7 +517,10 @@ class _FloatingCard extends StatelessWidget {
         elevation: 3,
         shadowColor: colors.shadow,
         clipBehavior: .antiAlias,
-        child: Padding(padding: const EdgeInsets.all(16.0), child: child),
+        child: Padding(
+          padding: EdgeInsets.all(context.spacing.space4),
+          child: child,
+        ),
       ),
     );
   }

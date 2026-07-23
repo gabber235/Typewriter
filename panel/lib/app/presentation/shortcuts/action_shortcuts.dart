@@ -231,7 +231,7 @@ class ActionRow extends HookConsumerWidget {
     }, [actionsMap]);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.space4),
       child: _ActionRowLayout(
         spacing: spacing,
         children: [
@@ -392,7 +392,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
     final hasInvoke = action.canInvoke && !loading.value;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: 8,
+      spacing: context.spacing.space2,
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

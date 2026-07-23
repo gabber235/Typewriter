@@ -61,9 +61,9 @@ class MembersTable extends HookConsumerWidget {
                 verticalAlignment: TableCellVerticalAlignment.middle,
                 child: StaggerEntrance(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                      vertical: context.spacing.space3,
                     ),
                     child: Checkbox(
                       value: allSelected ? true : (someSelected ? null : false),
@@ -100,7 +100,7 @@ class MembersTable extends HookConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: context.shapes.mediumBorderRadius,
             ),
             clipBehavior: Clip.antiAlias,
             child: table,
@@ -128,7 +128,7 @@ class MembersTable extends HookConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Text(
             label,
-            style: TextStyle(
+            style: theme.textTheme.bodyMedium!.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: 13,
               color: theme.colorScheme.onSurfaceVariant,
@@ -228,9 +228,9 @@ class MembersTable extends HookConsumerWidget {
             child: withShortcuts(
               Material(
                 color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: context.shapes.mediumBorderRadius,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: context.shapes.mediumBorderRadius,
                   onTap: toggleSelection,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -243,7 +243,9 @@ class MembersTable extends HookConsumerWidget {
                         if (member.name != null)
                           Text(
                             member.name!,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                            style: theme.textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         if (member.email != null)
@@ -251,7 +253,7 @@ class MembersTable extends HookConsumerWidget {
                             blurSigma: 3,
                             child: Text(
                               member.email!,
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium!.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                                 fontSize: 13,
                               ),

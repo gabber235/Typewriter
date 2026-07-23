@@ -147,11 +147,11 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       prefixIcon:
           baseDecoration.prefixIcon ??
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(context.spacing.space2),
             child: Icones(
               icon,
               size: 18,
-              color: state.value is _Invalid ? Colors.redAccent : null,
+              color: state.value is _Invalid ? context.colors.danger : null,
             ),
           ),
       hintText: baseDecoration.hintText ?? "Enter a $name",
@@ -224,12 +224,15 @@ class _StateText extends HookWidget {
 
     final child =
         Padding(
-              padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+              padding: EdgeInsets.only(
+                left: context.spacing.space2,
+                top: context.spacing.space1,
+              ),
               child: Text(
                 value ?? state.cast<_Valid>()?.message ?? "",
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.green),
+                ).textTheme.bodySmall?.copyWith(color: context.colors.success),
               ),
             )
             .animate()

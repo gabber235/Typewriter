@@ -44,18 +44,18 @@ class JoinRequestApproval extends StatelessWidget {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.spacing.space4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Select roles for this member:",
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontVariations: const [.weight(500)],
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: context.spacing.space3),
                 rolesAsync(
                   name: "Roles",
                   shrink: true,
@@ -65,14 +65,14 @@ class JoinRequestApproval extends StatelessWidget {
                     onRolesChanged: onRolesChanged,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: context.spacing.space4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     LoadingButton.filledIcon(
                       onPressed: selectedRoles.isEmpty ? null : onConfirm,
                       icon: const Icon(Icons.check, size: 18),
-                      label: const Text("Confirm & Add Member"),
+                      label: Text("Confirm & Add Member"),
                     ),
                   ],
                 ),

@@ -42,9 +42,9 @@ class JoinCodeSettings extends HookConsumerWidget {
       children: [
         InkWell(
           onTap: () => isExpanded.value = !isExpanded.value,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
             child: Row(
               children: [
                 Icon(
@@ -52,14 +52,14 @@ class JoinCodeSettings extends HookConsumerWidget {
                   size: 20,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: context.spacing.space2),
                 Text(
                   "Advanced options",
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: context.spacing.space2),
                 Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -67,7 +67,7 @@ class JoinCodeSettings extends HookConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: context.shapes.smallBorderRadius,
                       ),
                       child: Text(
                         "Customized",
@@ -97,11 +97,11 @@ class JoinCodeSettings extends HookConsumerWidget {
           alignment: Alignment.topLeft,
           child: isExpanded.value
               ? Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.only(top: context.spacing.space2),
+                  padding: EdgeInsets.all(context.spacing.space4),
                   decoration: BoxDecoration(
                     color: Surface.colorOf(context),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: context.shapes.largeBorderRadius,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,8 +138,8 @@ class JoinCodeSettings extends HookConsumerWidget {
                       ),
 
                       if (!_isNeverExpires(options.value.expiration)) ...[
-                        const SizedBox(height: 12),
-                        const SizedBox(height: 12),
+                        SizedBox(height: context.spacing.space3),
+                        SizedBox(height: context.spacing.space3),
                         DurationInput(
                           duration:
                               (options.value.expiration
@@ -184,14 +184,14 @@ class JoinCodeSettings extends HookConsumerWidget {
                       ),
 
                       if (options.value.autoAcceptRoleIds.isNotEmpty) ...[
-                        const SizedBox(height: 12),
+                        SizedBox(height: context.spacing.space3),
                         Text(
                           "Roles to assign:",
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: context.spacing.space2),
                         RoleMultiselectChips(
                           availableRoles: availableRoles,
                           selectedRoles: availableRoles

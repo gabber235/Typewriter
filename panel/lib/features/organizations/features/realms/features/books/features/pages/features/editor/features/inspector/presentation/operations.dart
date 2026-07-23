@@ -253,18 +253,20 @@ Future<void> showOperationErrorsPopup(
                       children: [
                         Text(
                           selectable.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 13,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                              ),
                         ),
                         Text(
                           err.toString(),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                              ),
                         ),
                         const Divider(height: 8),
                       ],

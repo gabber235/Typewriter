@@ -90,14 +90,14 @@ class ErrorScreen extends StatelessWidget {
         ),
         SizedBox(height: 24),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(context.spacing.space2),
           child: Column(
             spacing: 8,
             children: [
               Text(
                     title.isEmpty ? funnyErrorTitles.randomElement() : title,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: context.responsive(
                         mobile: 24,
                         tablet: 32,
@@ -113,7 +113,7 @@ class ErrorScreen extends StatelessWidget {
               Text(
                     "Something went wrong, please report this to the Typewriter discord.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: context.responsive(
                         mobile: 14,
                         tablet: 16,
@@ -129,7 +129,7 @@ class ErrorScreen extends StatelessWidget {
                 SelectableText(
                       message,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: context.responsive(
                           mobile: 12,
                           tablet: 14,
@@ -196,14 +196,14 @@ class SmallErrorScreen extends ErrorScreen {
         Text(
               title.isEmpty ? funnyErrorTitles.randomElement() : title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: context.responsive(
                   mobile: 14,
                   tablet: 16,
                   desktop: 18,
                 ),
                 fontWeight: FontWeight.bold,
-                color: Colors.red,
+                color: context.colors.danger,
               ),
             )
             .animate()
@@ -212,13 +212,13 @@ class SmallErrorScreen extends ErrorScreen {
         Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: context.responsive(
                   mobile: 10,
                   tablet: 12,
                   desktop: 14,
                 ),
-                color: Colors.grey,
+                color: context.colors.contentSecondary,
               ),
             )
             .animate()

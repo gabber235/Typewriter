@@ -56,7 +56,7 @@ class _PreviewFrame extends StatelessWidget {
     final colors = theme.colorScheme;
     final surfaceColor = Surface.colorOf(context);
 
-    final effectiveColor = blueprint?.color ?? Colors.grey;
+    final effectiveColor = blueprint?.color ?? context.colors.contentDisabled;
     final backgroundColor = Color.alphaBlend(
       effectiveColor.withValues(alpha: 0.22),
       surfaceColor,
@@ -71,11 +71,11 @@ class _PreviewFrame extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(context.spacing.space2),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           border: Border.all(color: borderColor, width: 1.4),
         ),
         child: Padding(
@@ -102,7 +102,7 @@ class _PreviewFrame extends StatelessWidget {
                             Expanded(
                               child: Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 4,
+                                spacing: context.spacing.space1,
                                 runSpacing: 2,
                                 children: [
                                   Text(
@@ -174,7 +174,7 @@ class _IconTile extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: context.shapes.smallBorderRadius,
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.32),
@@ -183,7 +183,7 @@ class _IconTile extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(context.spacing.space2),
       child: Icones(icon, color: onColor),
     );
   }
@@ -338,7 +338,7 @@ class _FieldsTable extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: context.spacing.space2),
                 Expanded(
                   child: Text(
                     entries[i].value,
@@ -370,7 +370,7 @@ class _StatusMessage extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surfaceContainerHighest.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),

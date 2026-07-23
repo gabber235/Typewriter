@@ -125,11 +125,11 @@ class FieldHeader extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Material(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: context.shapes.smallBorderRadius,
               clipBehavior: Clip.none,
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: context.shapes.smallBorderRadius,
                 onTap: canExpand
                     ? () => expanded.value = !expanded.value
                     : null,
@@ -140,7 +140,7 @@ class FieldHeader extends HookConsumerWidget {
                         expanded.value ? Icons.expand_less : Icons.expand_more,
                       )
                     else if (canExpand)
-                      const SizedBox(width: 8),
+                      SizedBox(width: context.spacing.space2),
                     if (editorMode.hasHeaderActions)
                       ...createActions(actions, HeaderActionLocation.leading),
                     Padding(

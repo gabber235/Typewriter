@@ -26,7 +26,7 @@ class SearchActionInfo extends HookConsumerWidget {
     final child = switch (actionState) {
       SearchActionIdle() => const SizedBox.shrink(key: ValueKey("idle")),
       SearchActionRunning() => Admonition(
-        color: action!.color ?? Colors.blue,
+        color: action!.color ?? context.colors.info,
         icon: ElasticSwitcher(
           child: Builder(
             builder: (context) {
@@ -39,7 +39,7 @@ class SearchActionInfo extends HookConsumerWidget {
                 child: CircularProgressIndicator(
                   color: color,
                   strokeWidth: 3,
-                  padding: const EdgeInsets.all(4),
+                  padding: EdgeInsets.all(context.spacing.space1),
                 ),
               );
             },
@@ -49,7 +49,7 @@ class SearchActionInfo extends HookConsumerWidget {
       ).animate(key: ValueKey("info")),
       SearchActionCompleted() =>
         Admonition(
-              color: Colors.green,
+              color: context.colors.success,
               icon: ElasticSwitcher(
                 child: Icones(
                   action!.icon ?? MaterialSymbols.check_circle_rounded,
@@ -59,12 +59,12 @@ class SearchActionInfo extends HookConsumerWidget {
             )
             .animate(key: ValueKey("info"))
             .shimmer(
-              color: Colors.green.withValues(alpha: 0.7),
+              color: context.colors.success.withValues(alpha: 0.7),
               duration: 750.ms,
               curve: Curves.easeInOutCubic,
             ),
       SearchActionFailed(:final message) => Admonition(
-        color: Colors.red,
+        color: context.colors.danger,
         icon: ElasticSwitcher(
           child: Icones(action!.icon ?? Ic.round_dangerous),
         ),

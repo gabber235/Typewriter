@@ -164,7 +164,7 @@ class OrganizationSidebarContent extends HookConsumerWidget {
         if (organizationId != null) ...[
           if (realmId != null) ...[
             ...realmLinks(organizationId, realmId),
-            const SizedBox(height: 16),
+            SizedBox(height: context.spacing.space4),
           ],
           ...organizationLinks(organizationId, pendingRequests),
         ],

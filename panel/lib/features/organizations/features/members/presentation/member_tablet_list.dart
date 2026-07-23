@@ -58,11 +58,11 @@ class MembersTabletList extends HookConsumerWidget {
             child: GestureDetector(
               onTap: handleSelectAll,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
                 decoration: BoxDecoration(
                   color: Surface.colorOf(context),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
+                  borderRadius: BorderRadius.vertical(
+                    top: context.shapes.mediumRadius,
                   ),
                 ),
                 child: Row(
@@ -74,7 +74,7 @@ class MembersTabletList extends HookConsumerWidget {
                     ),
                     Text(
                       "Select all",
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),

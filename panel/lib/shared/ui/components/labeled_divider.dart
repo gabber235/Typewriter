@@ -18,20 +18,15 @@ class LabeledDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dividerColor = this.dividerColor ??
+    final dividerColor =
+        this.dividerColor ??
         DividerTheme.of(context).color ??
         Theme.of(context).dividerColor;
 
     final divider = Expanded(
       child: direction == Axis.horizontal
-          ? Divider(
-              color: dividerColor,
-              thickness: dividerThickness,
-            )
-          : VerticalDivider(
-              color: dividerColor,
-              thickness: dividerThickness,
-            ),
+          ? Divider(color: dividerColor, thickness: dividerThickness)
+          : VerticalDivider(color: dividerColor, thickness: dividerThickness),
     );
     final textWidget = Padding(
       padding: EdgeInsets.symmetric(
@@ -39,32 +34,17 @@ class LabeledDivider extends StatelessWidget {
         vertical: direction == Axis.vertical ? 8.0 : 0.0,
       ),
       child: DefaultTextStyle(
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              color: dividerColor,
-            ),
-        child: Text(
-          text,
-          style: textStyle,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium!.copyWith(color: dividerColor),
+        child: Text(text, style: textStyle),
       ),
     );
 
     if (direction == Axis.horizontal) {
-      return Row(
-        children: [
-          divider,
-          textWidget,
-          divider,
-        ],
-      );
+      return Row(children: [divider, textWidget, divider]);
     } else {
-      return Column(
-        children: [
-          divider,
-          textWidget,
-          divider,
-        ],
-      );
+      return Column(children: [divider, textWidget, divider]);
     }
   }
 }

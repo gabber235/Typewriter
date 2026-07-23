@@ -26,15 +26,18 @@ class TagsPage extends HookConsumerWidget {
     }
 
     return Inspector(
-      margin: const EdgeInsets.only(top: 8, right: 8),
+      margin: EdgeInsets.only(
+        top: context.spacing.space2,
+        right: context.spacing.space2,
+      ),
       child: Pane(
         id: "tags",
         primary: true,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
         margin: EdgeInsets.only(
-          top: 8,
-          left: 8,
-          right: context.isMobile ? 8 : 0,
+          top: context.spacing.space2,
+          left: context.spacing.space2,
+          right: context.isMobile ? context.spacing.space2 : 0,
         ),
         child: Section(
           margin: EdgeInsets.zero,

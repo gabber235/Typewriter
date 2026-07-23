@@ -90,10 +90,12 @@ class ReorderListHeaderAction extends HeaderAction {
       cursor: SystemMouseCursors.grab,
       child: ReorderableDragStartListener(
         index: index,
-        child: const Icones(
-          Fa6Solid.bars_staggered,
-          color: Colors.grey,
-          size: 14,
+        child: Builder(
+          builder: (context) => Icones(
+            Fa6Solid.bars_staggered,
+            color: context.colors.contentSecondary,
+            size: 14,
+          ),
         ),
       ),
     );

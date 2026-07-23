@@ -39,7 +39,7 @@ class _TagNode extends HookWidget {
 
     final tagColor = tag.color.value != 0
         ? tag.color.value.toFlutterColor()
-        : Colors.grey;
+        : context.colors.contentDisabled;
 
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
@@ -155,7 +155,7 @@ class _TagNodeContent extends StatelessWidget {
       duration: 100.ms,
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
         border: Border.all(
           color: isFocused
               ? theme.brightness == Brightness.dark
@@ -167,11 +167,17 @@ class _TagNodeContent extends StatelessWidget {
           width: 2,
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.space3,
+        vertical: context.spacing.space2,
+      ),
       child: Center(
         child: Text(
           tag.name.formatted,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w500,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
       ),
@@ -192,10 +198,13 @@ class FeedbackTagNode extends StatelessWidget {
       child: Opacity(
         opacity: 0.8,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.spacing.space3,
+            vertical: context.spacing.space2,
+          ),
           decoration: BoxDecoration(
             color: tagColor.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: context.shapes.largeBorderRadius,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
@@ -207,7 +216,7 @@ class FeedbackTagNode extends StatelessWidget {
           child: Center(
             child: Text(
               tag.name.formatted,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 color:
                     ThemeData.estimateBrightnessForColor(tagColor) ==
                         Brightness.dark
@@ -251,13 +260,19 @@ class PlaceholderTagNode extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: context.shapes.largeBorderRadius,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space3,
+              vertical: context.spacing.space2,
+            ),
             child: Center(
               child: Text(
                 name.formatted,
-                style: TextStyle(color: color, fontWeight: FontWeight.w500),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

@@ -75,10 +75,10 @@ class BlueprintSearchResultItem extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        spacing: 4,
+        spacing: context.spacing.space1,
         children: [
           Row(
-            spacing: 4,
+            spacing: context.spacing.space1,
             children: [
               SearchResultTitle(title: name.formatted, deprecated: deprecated),
               if (tags.isNotEmpty)

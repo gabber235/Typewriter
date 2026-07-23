@@ -387,7 +387,7 @@ class VersionFilterBar extends HookWidget {
             ],
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: context.spacing.space2),
         Wrap(
           spacing: 6,
           runSpacing: 6,

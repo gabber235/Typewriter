@@ -106,12 +106,14 @@ class _SelectorButton<T> extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: context.shapes.mediumBorderRadius,
+      ),
       child: CompositedTransformTarget(
         link: link,
         child: InkWell(
           onTap: () => _showMenu(context),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: buttonBuilder(selected),
@@ -244,7 +246,7 @@ class _PopupRoute<T> extends PopupRoute<void> {
                     elevation: 4,
                     color: color,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: context.shapes.mediumBorderRadius,
                     ),
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(
@@ -278,7 +280,7 @@ class SelectorSearchField extends HookWidget {
   Widget build(BuildContext context) {
     final focusNode = useFocusNode();
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(context.spacing.space3),
       child: DecoratedTextField(
         focusNode: focusNode,
         autofocus: DecoratedTextFieldAutoFocus.surroundingField,
@@ -304,7 +306,12 @@ class SelectorSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: EdgeInsets.fromLTRB(
+        context.spacing.space4,
+        0,
+        context.spacing.space4,
+        context.spacing.space2,
+      ),
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(

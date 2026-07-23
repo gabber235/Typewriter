@@ -22,9 +22,9 @@ class RealmSelector extends HookConsumerWidget {
           Icon(
             selected?.icon ?? Icons.cloud,
             size: 16,
-            color: selected?.color ?? Colors.grey,
+            color: selected?.color ?? context.colors.contentDisabled,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: context.spacing.space2),
           Text(
             selected?.displayName ?? "Select Realm",
             style: Theme.of(context).textTheme.bodySmall,
@@ -84,7 +84,7 @@ class _RealmMenuContent extends HookConsumerWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 child: Material(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: context.shapes.mediumBorderRadius,
                   color: isSelected ? realm.color : null,
                   child: Surface(
                     color: isSelected ? realm.color : Surface.colorOf(context),
@@ -105,21 +105,17 @@ class _RealmMenuContent extends HookConsumerWidget {
                       subtitle: StatusIndicator(
                         isOnline: realm.isOnline,
                         lastSeen: realm.lastSeen,
-                        dotColor: _statusDotColor(
-                          context,
-                          realm.isOnline,
-                          isSelected,
-                        ),
-                        textColor: _statusTextColor(
-                          context,
-                          realm.isOnline,
-                          isSelected,
-                        ),
+                        dotColor: isSelected
+                            ? onColor
+                            : _statusDotColor(context, realm.isOnline),
+                        textColor: isSelected
+                            ? onColor.withValues(alpha: 0.7)
+                            : _statusTextColor(context, realm.isOnline),
                       ),
                       trailing: Icon(
                         Icons.arrow_forward_ios,
                         size: 14,
-                        color: isSelected ? Colors.white : null,
+                        color: isSelected ? onColor : null,
                       ),
                       onTap: () {
                         final orgId = ref.read(organizationIdProvider);
@@ -139,26 +135,14 @@ class _RealmMenuContent extends HookConsumerWidget {
             },
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: context.spacing.space2),
       ],
     );
   }
 }
 
-Color _statusDotColor(BuildContext context, bool isOnline, bool isSelected) {
-  return switch ((isOnline, isSelected)) {
-    (true, false) => Colors.green,
-    (true, true) => Colors.white,
-    (false, false) => Colors.grey,
-    (false, true) => Surface.colorOf(context).withValues(alpha: 0.5),
-  };
-}
+Color _statusDotColor(BuildContext context, bool isOnline) =>
+    isOnline ? context.colors.online : context.colors.offline;
 
-Color _statusTextColor(BuildContext context, bool isOnline, bool isSelected) {
-  final theme = Theme.of(context);
-  return switch ((isOnline, isSelected)) {
-    (true, _) => Colors.white.withValues(alpha: 0.7),
-    (false, false) => theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-    (false, true) => Surface.colorOf(context).withValues(alpha: 0.5),
-  };
-}
+Color _statusTextColor(BuildContext context, bool isOnline) =>
+    context.colors.contentSecondary;

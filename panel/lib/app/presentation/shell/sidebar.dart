@@ -121,15 +121,19 @@ class Sidebar extends HookConsumerWidget {
             Expanded(
               child: Pane(
                 id: "sidebar",
-                margin: EdgeInsets.only(left: 4, top: 4, bottom: 4),
-                borderRadius: BorderRadius.circular(8),
+                margin: EdgeInsets.only(
+                  left: context.spacing.space1,
+                  top: context.spacing.space1,
+                  bottom: context.spacing.space1,
+                ),
+                borderRadius: context.shapes.mediumBorderRadius,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: context.shapes.mediumBorderRadius,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(4),
+                    padding: EdgeInsets.all(context.spacing.space1),
                     child: Surface(
                       color: Theme.of(context).colorScheme.surface,
                       child: child,
@@ -164,7 +168,12 @@ class SidebarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 8, left: 12, right: 12),
+      padding: EdgeInsets.only(
+        top: context.spacing.space5,
+        bottom: context.spacing.space2,
+        left: context.spacing.space3,
+        right: context.spacing.space3,
+      ),
       child: Row(
         children: [
           Text(
@@ -214,7 +223,7 @@ class SidebarLink extends HookConsumerWidget {
       color: backgroundColor,
       child: Material(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
         child: InkWell(
           focusNode: focusNode,
           onTap: router != null
@@ -227,11 +236,14 @@ class SidebarLink extends HookConsumerWidget {
           hoverColor: Theme.of(
             context,
           ).colorScheme.onSurface.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            padding: EdgeInsets.symmetric(
+              vertical: context.spacing.space2,
+              horizontal: context.spacing.space3,
+            ),
             child: Row(
-              spacing: 12,
+              spacing: context.spacing.space3,
               children: [
                 IconTheme(
                   data: IconThemeData(color: color, size: 20),
@@ -242,11 +254,20 @@ class SidebarLink extends HookConsumerWidget {
                   Expanded(
                     child: Text(
                       text,
-                      style: TextStyle(color: color, fontSize: 14),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: color,
+                        fontSize: 14,
+                      ),
                     ),
                   )
                 else
-                  Text(text, style: TextStyle(color: color, fontSize: 14)),
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: color,
+                      fontSize: 14,
+                    ),
+                  ),
 
                 ?trailing,
               ],
@@ -283,17 +304,20 @@ class ExternalSidebarLink extends StatelessWidget {
       color: Colors.transparent,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
         child: InkWell(
           onTap: uri.launchExternally,
           hoverColor: Theme.of(
             context,
           ).colorScheme.onSurface.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            padding: EdgeInsets.symmetric(
+              vertical: context.spacing.space2,
+              horizontal: context.spacing.space3,
+            ),
             child: Row(
-              spacing: 12,
+              spacing: context.spacing.space3,
               children: [
                 IconTheme(
                   data: IconThemeData(color: color, size: 20),
@@ -304,11 +328,20 @@ class ExternalSidebarLink extends StatelessWidget {
                   Expanded(
                     child: Text(
                       text,
-                      style: TextStyle(color: color, fontSize: 14),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: color,
+                        fontSize: 14,
+                      ),
                     ),
                   )
                 else
-                  Text(text, style: TextStyle(color: color, fontSize: 14)),
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: color,
+                      fontSize: 14,
+                    ),
+                  ),
 
                 ?trailing,
                 IconTheme(
@@ -506,7 +539,7 @@ class UserMenu extends HookConsumerWidget {
           child: Material(
             child: InkWell(
               onTap: ContextMenuRegion.onPress(controller),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: context.shapes.mediumBorderRadius,
               focusNode: focusNode,
               child: Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),
@@ -518,7 +551,7 @@ class UserMenu extends HookConsumerWidget {
                       backgroundImage: NetworkImage(avatarUrl),
                     ),
                     if (!compact) ...[
-                      const SizedBox(width: 12),
+                      SizedBox(width: context.spacing.space3),
                       if (expand) Expanded(child: text) else text,
                     ],
                   ],

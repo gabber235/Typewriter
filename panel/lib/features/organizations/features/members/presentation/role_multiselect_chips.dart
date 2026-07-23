@@ -69,7 +69,7 @@ class _RoleFilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilterChip(
       label: Text(role.name),
-      labelStyle: TextStyle(
+      labelStyle: Theme.of(context).textTheme.labelMedium!.copyWith(
         color: isSelected
             ? role.color
             : Theme.of(context).colorScheme.onSurface,

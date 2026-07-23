@@ -24,7 +24,8 @@ class _LoadingState extends StatelessWidget {
     return ListView.separated(
       itemCount: 10,
       physics: const NeverScrollableScrollPhysics(),
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      separatorBuilder: (context, index) =>
+          SizedBox(height: context.spacing.space4),
       itemBuilder: (context, index) {
         final height = (random.nextInt(12) + 8) * 5.0;
         return ShimmerBox.rectangle(height: height);
@@ -58,7 +59,7 @@ class _ErrorState extends StatelessWidget {
         children: [
           for (final summary in summaries)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
               child: LabeledMessage(
                 label: summary.sourceLabel,
                 message: summary.message,
@@ -69,7 +70,7 @@ class _ErrorState extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(context.spacing.space2),
       child: ErrorScreen(title: "", message: "", child: child),
     );
   }
@@ -94,7 +95,7 @@ class _GuidanceOrEmptyState extends StatelessWidget {
         children: [
           for (final entry in guidance)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
               child: LabeledMessage(
                 label: entry.title,
                 message: entry.description,

@@ -25,16 +25,19 @@ class ModeDisplayChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.space2,
+        vertical: context.spacing.space1,
+      ),
       decoration: BoxDecoration(
         color:
             backgroundColor ??
             color.withValues(alpha: context.isDarkMode ? .1 : .2),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: context.shapes.smallBorderRadius,
       ),
       child: Text(
         label.toUpperCase(),
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 12,
           color: color,
           fontWeight: FontWeight.w500,

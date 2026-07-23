@@ -22,8 +22,8 @@ class JoinCodesPage extends StatelessWidget {
                   "Create invitation codes that grant access to this organization. Share codes with trusted collaborators, review their assigned roles, and revoke codes when no longer needed.",
             ),
           ),
-          const SliverPadding(
-            padding: EdgeInsets.all(24),
+          SliverPadding(
+            padding: EdgeInsets.all(context.spacing.space6),
             sliver: JoinCodesTab(),
           ),
         ],

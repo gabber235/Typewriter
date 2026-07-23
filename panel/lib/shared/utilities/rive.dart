@@ -92,7 +92,7 @@ class _RiveLoadingWidget extends StatelessWidget {
     return ShimmerBox.rectangle(
       width: size.width,
       height: size.height,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: context.shapes.mediumBorderRadius,
     );
   }
 }
@@ -110,7 +110,7 @@ class _RiveErrorWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
         border: Border.all(
           color: theme.colorScheme.error.withValues(alpha: 0.3),
         ),
@@ -126,7 +126,7 @@ class _RiveErrorWidget extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             "Failed to load animation",
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: theme.colorScheme.error,

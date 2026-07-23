@@ -21,7 +21,7 @@ class JoinCodeRowActions extends HookConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
       child: IconButton(
         icon: Icon(Icons.link_off, size: 20, color: theme.colorScheme.error),
         onPressed: () => _confirmRevokeCode(context, ref, isRevoking),

@@ -95,3 +95,8 @@ flutter:
         - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf
         - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf
           style: italic
+    - family: Lilex
+      fonts:
+        - asset: assets/fonts/Lilex/Lilex-VariableFont_wght.ttf
+        - asset: assets/fonts/Lilex/Lilex-Italic-VariableFont_wght.ttf
+          style: italic

@@ -43,9 +43,9 @@ class SearchResultCard extends StatelessWidget {
       child: Material(
         animationDuration: 180.ms,
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: context.shapes.mediumBorderRadius,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: context.shapes.mediumBorderRadius,
           onTap: onTap,
           onLongPress: onLongPress,
           hoverColor: switch ((focused, surfaceBrightness)) {
@@ -70,7 +70,7 @@ class SearchResultCard extends StatelessWidget {
             curve: Curves.easeOutCubic,
             constraints: BoxConstraints(minHeight: 64),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: context.shapes.mediumBorderRadius,
               border: Border.all(color: borderColor, width: 1.4),
             ),
             clipBehavior: Clip.antiAlias,

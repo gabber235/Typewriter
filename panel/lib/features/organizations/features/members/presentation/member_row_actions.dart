@@ -21,7 +21,7 @@ class MemberRowActions extends HookConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
       child: IconButton(
         icon: Icon(
           Icons.person_remove_outlined,

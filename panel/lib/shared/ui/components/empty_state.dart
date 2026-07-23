@@ -44,7 +44,7 @@ class EmptyState extends HookConsumerWidget {
     final textColor = theme.colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(context.spacing.space4),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

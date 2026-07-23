@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/app/presentation/theme/theme.dart";
 
 class StatusIndicator extends StatelessWidget {
   const StatusIndicator({
@@ -46,10 +47,8 @@ class StatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveDotColor =
-        dotColor ?? (isOnline ? Colors.green : Colors.grey);
-    final effectiveTextColor =
-        textColor ??
-        Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+        dotColor ?? (isOnline ? context.colors.online : context.colors.offline);
+    final effectiveTextColor = textColor ?? context.colors.contentSecondary;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -65,7 +64,10 @@ class StatusIndicator extends StatelessWidget {
         SizedBox(width: dotSize * 0.75),
         Text(
           isOnline ? "Online" : _lastSeenLabel,
-          style: TextStyle(fontSize: fontSize, color: effectiveTextColor),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: fontSize,
+            color: effectiveTextColor,
+          ),
         ),
       ],
     );

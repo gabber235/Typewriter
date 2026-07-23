@@ -83,7 +83,7 @@ class NotificationBubble
           alignment: Alignment.center,
           child: Text(
             text,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               color: onColor,
               fontSize: 10,
               fontVariations: const [FontVariation("wght", 700)],

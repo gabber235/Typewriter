@@ -51,7 +51,7 @@ class TypeLink extends HookWidget {
               : TextDecoration.none,
           decorationColor: baseColor,
         ) ??
-        TextStyle(
+        Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: baseColor,
           decoration: highlight
               ? TextDecoration.underline

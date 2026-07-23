@@ -17,19 +17,19 @@ class SearchTreeSectionHeader extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Material(
       color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: context.shapes.largeBorderRadius,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: context.shapes.largeBorderRadius,
         onTap: onToggle,
         child: Padding(
           padding: EdgeInsets.only(
-            left: 12 + row.depth * 16,
-            right: 12,
-            top: 8,
-            bottom: 8,
+            left: context.spacing.space3 + row.depth * context.spacing.space4,
+            right: context.spacing.space3,
+            top: context.spacing.space2,
+            bottom: context.spacing.space2,
           ),
           child: Row(
-            spacing: 8,
+            spacing: context.spacing.space2,
             children: [
               AnimatedRotation(
                 turns: row.expanded ? 0.25 : 0,
@@ -55,7 +55,7 @@ class SearchTreeSectionHeader extends StatelessWidget {
               ),
               Text(
                 "(${row.resultCount})",
-                style: TextStyle(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
                 ),

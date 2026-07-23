@@ -18,7 +18,7 @@ class Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final color =
         backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
-    final radius = BorderRadius.circular(12);
+    final radius = context.shapes.largeBorderRadius;
 
     return Card(
       elevation: 0,

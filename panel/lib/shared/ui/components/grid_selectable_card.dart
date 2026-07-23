@@ -104,7 +104,11 @@ class GridSelectableCard extends StatelessWidget {
         onBaseColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
 
     final resolvedTitleStyle =
-        (titleStyle ?? TextStyle(fontSize: 16, fontVariations: [.weight(600)]))
+        (titleStyle ??
+                Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontSize: 16,
+                  fontVariations: [.weight(600)],
+                ))
             .copyWith(color: isSelected ? onBase : baseColor);
 
     final card = AnimatedContainer(
@@ -177,7 +181,7 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         label.toUpperCase(),
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontSize: 11,
           letterSpacing: 0.7,
           fontVariations: [.weight(700)],

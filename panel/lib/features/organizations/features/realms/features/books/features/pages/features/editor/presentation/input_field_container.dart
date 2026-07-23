@@ -139,7 +139,7 @@ class InputFieldContainer extends HookConsumerWidget {
 
     return FocusHighlight(
       type: focusType.value,
-      borderRadius: borderRadius ?? BorderRadius.circular(12),
+      borderRadius: borderRadius ?? context.shapes.largeBorderRadius,
       child: ManagedActionSet(
         shortcuts: [
           if (surroundingNode.hasPrimaryFocus) ...[

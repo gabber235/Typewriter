@@ -77,7 +77,7 @@ class PageSearchResultItem extends StatelessWidget {
       onTap: onTap,
       prefix: SearchResultIconTile(
         color: color,
-        onColor: Colors.white,
+        onColor: color.on(context),
         icon: icon,
         focused: focused,
         loading: loading,
@@ -85,7 +85,7 @@ class PageSearchResultItem extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        spacing: 4,
+        spacing: context.spacing.space1,
         children: [
           SearchResultTitle(title: name.formatted),
           Text.rich(
@@ -93,20 +93,20 @@ class PageSearchResultItem extends StatelessWidget {
               children: [
                 TextSpan(
                   text: chapter.formatted,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
                     color: descriptionColor.withValues(alpha: 0.8),
                   ),
                 ),
                 TextSpan(
                   text: " ◀ ",
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
                     color: descriptionColor.withValues(alpha: 0.5),
                     fontSize: 9,
                   ),
                 ),
                 TextSpan(
                   text: bookName.formatted,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
                     color: descriptionColor.withValues(alpha: 0.7),
                   ),
                 ),
