@@ -6,5 +6,5 @@ generators:
     outDir: ./backend/wasmcloud-utils/src/skirout
     config: {}
   - mod: skir-kotlin-gen
-    outDir: ./services/libs/service-communicator/src/main/kotlin/skirout
+    outDir: ./services/libs/service-communicator/skir/src/main/kotlin/skirout
     config: {}

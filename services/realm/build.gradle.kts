@@ -12,6 +12,10 @@ application {
 }
 
 dependencies {
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.kotlin.coroutines.core)
+    implementation(libs.kotlin.logging.jvm)
     implementation(libs.logback)
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
@@ -26,6 +30,8 @@ dependencies {
     
     testImplementation(testFixtures("com.typewritermc:service-communicator"))
     testImplementation(testFixtures("com.typewritermc:service-telemetry"))
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlin.coroutines.test)
 }
 
 buildConfig {

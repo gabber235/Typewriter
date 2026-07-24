@@ -1,7 +1,7 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.interfaces.HttpClient
-import com.typewritermc.services.libs.communicator.interfaces.HttpResponse
+import com.typewritermc.services.libs.registrar.http.HttpClient
+import com.typewritermc.services.libs.registrar.http.HttpResponse
 import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec

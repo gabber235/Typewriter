@@ -1,6 +1,6 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.interfaces.HttpClient
+import com.typewritermc.services.libs.registrar.http.HttpClient
 import com.typewritermc.services.libs.telemetry.withSpan
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer

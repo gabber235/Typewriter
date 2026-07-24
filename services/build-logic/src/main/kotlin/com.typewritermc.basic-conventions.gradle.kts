@@ -18,9 +18,6 @@ kotlin {
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 dependencies {
-    implementation(platform(libs.findLibrary("koin-bom").get()))
-    implementation(libs.findBundle("basic-implementation").get())
-
     testImplementation(libs.findBundle("basic-test").get())
 }
 

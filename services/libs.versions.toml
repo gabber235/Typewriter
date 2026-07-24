@@ -8,7 +8,8 @@ mordant = "3.0.2"
 opentelemetry = "1.64.0"
 opentelemetry-semconv = "1.43.0"
 
-skir = "latest.release"
+skir = "1.0.16"
+okio = "3.6.0"
 
 nats = "0.9.1"
 surrealdb = "2.1.2"
@@ -38,7 +39,7 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
-koin-test = { module = "io.insert-koin:koin-test" }
+koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin-bom" }
 
 test-balloon = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "test-balloon" }
 test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBalloon.gradle.plugin", version.ref = "test-balloon" }
@@ -51,9 +52,9 @@ kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest"
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 skir-client = { module = "build.skir:skir-client", version.ref = "skir"}
+okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }
 
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
-nats-jetstream = { module = "io.github.n-hass:natskt-jetstream", version.ref = "nats" }
 surrealdb = { module = "com.surrealdb:surrealdb", version.ref = "surrealdb" }
 
 kotlin-serialize-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlin-serialize" }
@@ -84,5 +85,4 @@ test-balloon-plugin = { id = "de.infix.testBalloon", version.ref = "test-balloon
 
 
 [bundles]
-basic-implementation = ["kotlin-stdlib", "koin-core", "kotlin-logging-jvm", "kotlin-coroutines-core"]
-basic-test = ["koin-test", "test-balloon", "test-balllon-kotest-assertions", "test-balloon-data-test", "test-balloon-property-test", "kotest-runner", "kotest-assertions", "kotest-property", "mockk", "kotlin-coroutines-test"]
+basic-test = ["test-balloon", "test-balllon-kotest-assertions", "kotest-runner", "kotest-assertions"]

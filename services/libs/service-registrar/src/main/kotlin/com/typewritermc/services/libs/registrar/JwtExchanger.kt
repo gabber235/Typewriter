@@ -1,6 +1,6 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.interfaces.HttpClient
+import com.typewritermc.services.libs.registrar.http.HttpClient
 import com.typewritermc.services.libs.telemetry.withSpan
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger

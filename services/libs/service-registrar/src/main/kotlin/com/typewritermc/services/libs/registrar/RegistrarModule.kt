@@ -3,6 +3,8 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.CommunicatorQualifier.*
 import com.typewritermc.services.libs.communicator.interfaces.*
 import com.typewritermc.services.libs.registrar.RegistrarQualifier.*
+import com.typewritermc.services.libs.registrar.http.HttpClient
+import com.typewritermc.services.libs.registrar.http.SimpleHttpClient
 import com.typewritermc.services.libs.utils.DeferredProvider
 import com.typewritermc.services.libs.utils.StateProvider
 import io.natskt.api.NatsClient
