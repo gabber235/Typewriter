@@ -12,7 +12,6 @@ repositories {
 kotlin {
     jvmToolchain(21)
     compilerOptions {
-        freeCompilerArgs.add("-Xcontext-parameters")
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 }
