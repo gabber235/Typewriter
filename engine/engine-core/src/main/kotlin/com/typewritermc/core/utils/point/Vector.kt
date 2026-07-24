@@ -73,6 +73,22 @@ data class Vector(
         return x * other.x + y * other.y + z * other.z
     }
 
+    /**
+     * Computes the cross product between this vector and another vector.
+     *
+     * The result is perpendicular to both inputs, with a length equal to the area of the
+     * parallelogram they span. Use this to build a basis around a direction, or to get the
+     * normal of a plane through two vectors.
+     *
+     * @param other the vector to compute the cross product with
+     * @return the vector perpendicular to both
+     */
+    fun cross(other: Vector): Vector = Vector(
+        y * other.z - z * other.y,
+        z * other.x - x * other.z,
+        x * other.y - y * other.x,
+    )
+
     fun normalize(): Vector {
         val length = length
         return if (length < EPSILON) {
