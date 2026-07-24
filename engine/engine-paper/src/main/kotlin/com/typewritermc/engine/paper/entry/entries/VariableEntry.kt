@@ -68,6 +68,14 @@ class ConstVar<T : Any>(val value: T) : Var<T> {
     override fun toString(): String {
         return "ConstVar($value)"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ConstVar<*>) return false
+        return value == other.value
+    }
+
+    override fun hashCode(): Int = value.hashCode()
 }
 
 class BackedVar<T : Any>(
@@ -82,6 +90,19 @@ class BackedVar<T : Any>(
 
     override fun toString(): String {
         return "BackedVar(ref=$ref, data=$data, klass=$klass)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is BackedVar<*>) return false
+        return ref == other.ref && data == other.data && klass == other.klass
+    }
+
+    override fun hashCode(): Int {
+        var result = ref.hashCode()
+        result = 31 * result + data.hashCode()
+        result = 31 * result + klass.hashCode()
+        return result
     }
 }
 
