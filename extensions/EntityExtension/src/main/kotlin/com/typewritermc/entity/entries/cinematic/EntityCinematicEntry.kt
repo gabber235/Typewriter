@@ -311,19 +311,6 @@ data class EntityFrame(
     }
 }
 
-class FakeProvider<P : EntityProperty>(private val klass: KClass<P>, private val supplier: () -> P?) :
-    PropertySupplier<P> {
-    override fun type(): KClass<P> = klass
-
-    override fun build(player: Player): P {
-        return supplier() ?: throw IllegalStateException("Could not build property $klass")
-    }
-
-    override fun canApply(player: Player): Boolean {
-        return supplier() != null
-    }
-}
-
 class EntityCinematicRecording(
     context: ContentContext,
     player: Player,

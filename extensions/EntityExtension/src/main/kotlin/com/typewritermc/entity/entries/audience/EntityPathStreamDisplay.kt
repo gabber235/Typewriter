@@ -5,7 +5,6 @@ import com.typewritermc.engine.paper.entry.entity.*
 import com.typewritermc.engine.paper.entry.entries.EntityDefinitionEntry
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.engine.paper.entry.entries.PropertyCollector
-import com.typewritermc.entity.entries.cinematic.FakeProvider
 import com.typewritermc.roadnetwork.entries.PathStreamDisplay
 import org.bukkit.entity.Player
 
