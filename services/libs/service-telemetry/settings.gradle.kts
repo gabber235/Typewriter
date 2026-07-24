@@ -7,3 +7,10 @@ plugins {
 }
 
 rootProject.name = "service-telemetry"
+
+include(":service-telemetry-core", ":service-telemetry-koin", ":service-telemetry-testing")
+project(":service-telemetry-core").projectDir = file("core")
+project(":service-telemetry-koin").projectDir = file("koin")
+project(":service-telemetry-testing").projectDir = file("testing")
+
+includeBuild("../service-utils")
