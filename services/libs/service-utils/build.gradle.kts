@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlin.coroutines.core)
+    api(libs.kotlin.coroutines.core)
+    testImplementation(libs.kotlin.coroutines.test)
 }

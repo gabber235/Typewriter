@@ -66,4 +66,31 @@ val ErrorsTest by testSuite {
             Result.failure<Int>(cancellation).withErrorSlug(ErrorSlug.of("must-not-wrap"))
         } shouldBeSameInstanceAs cancellation
     }
+
+    test("sync helper rethrows wrapped cancellation exactly") {
+        val cancellation = CancellationException("wrapped")
+        val wrapper = IllegalStateException("wrapper", cancellation)
+        shouldThrow<Throwable> {
+            withErrorSlug(ErrorSlug.of("must-not-wrap")) { throw wrapper }
+        } shouldBeSameInstanceAs cancellation
+    }
+
+    @Suppress("DEPRECATION")
+    test("suspend helper rethrows suppressed ThreadDeath exactly") {
+        runTest {
+            val fatal = ThreadDeath()
+            val wrapper = IllegalStateException("wrapper").apply { addSuppressed(fatal) }
+            shouldThrow<Throwable> {
+                withErrorSlugSuspending(ErrorSlug.of("must-not-wrap")) { throw wrapper }
+            } shouldBeSameInstanceAs fatal
+        }
+    }
+
+    test("Result helper rethrows suppressed JVM fatal exactly") {
+        val fatal = LinkageError("fatal")
+        val wrapper = IllegalStateException("wrapper").apply { addSuppressed(fatal) }
+        shouldThrow<Throwable> {
+            Result.failure<Int>(wrapper).withErrorSlug(ErrorSlug.of("must-not-wrap"))
+        } shouldBeSameInstanceAs fatal
+    }
 }
