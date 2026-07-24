@@ -19,6 +19,7 @@ import com.typewritermc.engine.paper.utils.playSound
 import kotlinx.coroutines.Dispatchers
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -41,6 +42,7 @@ class ContentInteraction(
     private val stack = ConcurrentLinkedDeque(listOf(mode))
     private var items = emptyMap<Int, IntractableItem>()
     private val cachedOriginalItems = mutableMapOf<Int, ItemStack>()
+    private var lastHandledDropTick = Int.MIN_VALUE
 
     private val mode: ContentMode?
         get() = stack.peek()
@@ -167,7 +169,15 @@ class ContentInteraction(
         val item = items[slot] ?: return
         val type = when (event.action) {
             Action.LEFT_CLICK_AIR,
-            Action.LEFT_CLICK_BLOCK -> if (event.player.isSneaking) ItemInteractionType.SHIFT_LEFT_CLICK else ItemInteractionType.LEFT_CLICK
+            Action.LEFT_CLICK_BLOCK -> {
+                // Dropping an item also swings the arm, which the server reports as a left click.
+                // Without this guard the drop key would trigger the click action as well.
+                if (Bukkit.getCurrentTick() <= lastHandledDropTick + 1) {
+                    event.isCancelled = true
+                    return
+                }
+                if (event.player.isSneaking) ItemInteractionType.SHIFT_LEFT_CLICK else ItemInteractionType.LEFT_CLICK
+            }
 
             Action.RIGHT_CLICK_AIR,
             Action.RIGHT_CLICK_BLOCK -> if (event.player.isSneaking) ItemInteractionType.SHIFT_RIGHT_CLICK else ItemInteractionType.RIGHT_CLICK
@@ -183,6 +193,7 @@ class ContentInteraction(
         if (event.player != player) return
         val slot = player.inventory.heldItemSlot
         val item = items[slot] ?: return
+        lastHandledDropTick = Bukkit.getCurrentTick()
         item.action(ItemInteraction(ItemInteractionType.DROP, slot, null))
         event.isCancelled = true
     }
