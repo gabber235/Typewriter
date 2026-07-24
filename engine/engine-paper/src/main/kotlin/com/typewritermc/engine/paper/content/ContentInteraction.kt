@@ -1,5 +1,9 @@
 package com.typewritermc.engine.paper.content
 
+import com.github.retrooper.packetevents.event.PacketReceiveEvent
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCreativeInventoryAction
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.typewritermc.core.interaction.Interaction
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.core.utils.failure
@@ -10,12 +14,16 @@ import com.typewritermc.engine.paper.content.components.ItemInteraction
 import com.typewritermc.engine.paper.content.components.ItemInteractionType
 import com.typewritermc.engine.paper.events.ContentEditorEndEvent
 import com.typewritermc.engine.paper.events.ContentEditorStartEvent
+import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
+import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.PlayerSessionManager
+import com.typewritermc.engine.paper.interaction.interceptPackets
 import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.msg
 import com.typewritermc.engine.paper.utils.playSound
+import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import kotlinx.coroutines.Dispatchers
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.registerEvents
@@ -40,9 +48,12 @@ class ContentInteraction(
     override val context: InteractionContext,
 ) : Interaction, Listener {
     private val stack = ConcurrentLinkedDeque(listOf(mode))
+
+    @Volatile
     private var items = emptyMap<Int, IntractableItem>()
     private val cachedOriginalItems = mutableMapOf<Int, ItemStack>()
     private var lastHandledDropTick = Int.MIN_VALUE
+    private var creativeGuard: InterceptionBundle? = null
 
     private val mode: ContentMode?
         get() = stack.peek()
@@ -64,6 +75,9 @@ class ContentInteraction(
         }
         mode.initialize()
         plugin.registerEvents(this)
+        creativeGuard = player.interceptPackets {
+            PacketType.Play.Client.CREATIVE_INVENTORY_ACTION { event -> guardCreativeAction(event) }
+        }
         return ok(Unit)
     }
 
@@ -133,6 +147,8 @@ class ContentInteraction(
 
     override suspend fun teardown() {
         unregister()
+        creativeGuard?.cancel()
+        creativeGuard = null
         Dispatchers.Sync.switchContext {
             cachedOriginalItems.forEach { (slot, item) ->
                 player.inventory.setItem(slot, item)
@@ -148,11 +164,51 @@ class ContentInteraction(
 
     fun isInLastMode(): Boolean = stack.size == 1
 
+    /**
+     * A creative client owns its own inventory: it applies an edit locally and only then
+     * tells the server, so the move cannot be refused, only undone. Dropping the packet
+     * keeps the server side intact and the client is sent the truth for the slot it
+     * touched.
+     *
+     * Both directions have to be covered. An edit landing on a slot the editor owns would
+     * take a content item away, and an edit carrying a content item towards any other slot
+     * or towards the ground would leave a second copy behind once the editor writes its
+     * own slot back.
+     *
+     * Runs on a netty thread, so nothing here may touch the inventory directly.
+     */
+    private fun guardCreativeAction(event: PacketReceiveEvent) {
+        val contentItems = items
+        if (contentItems.isEmpty()) return
+
+        val packet = WrapperPlayClientCreativeInventoryAction(event)
+        val ownedSlot = creativeSlotToInventorySlot(packet.slot)?.takeIf { it in contentItems }
+        if (ownedSlot != null) {
+            event.isCancelled = true
+            val item = SpigotReflectionUtil.decodeBukkitItemStack(contentItems.getValue(ownedSlot).item)
+            WrapperPlayServerSetSlot(PLAYER_INVENTORY_WINDOW_ID, 0, ownedSlot, item) sendPacketTo player
+            return
+        }
+
+        val written: ItemStack = SpigotReflectionUtil.encodeBukkitItemStack(packet.itemStack) ?: return
+        if (contentItems.values.none { it.item.isSimilar(written) }) return
+        event.isCancelled = true
+        Bukkit.getScheduler().runTask(plugin, Runnable { player.updateInventory() })
+    }
+
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
         if (event.whoClicked != player) return
-        if (event.clickedInventory != player.inventory) return
-        val item = items[event.slot] ?: return
+        val movesContentItemViaHotbar = event.hotbarButton >= 0 && items[event.hotbarButton] != null
+        if (event.clickedInventory != player.inventory) {
+            if (movesContentItemViaHotbar) event.isCancelled = true
+            return
+        }
+        val item = items[event.slot]
+        if (item == null) {
+            if (movesContentItemViaHotbar) event.isCancelled = true
+            return
+        }
         item.action(
             ItemInteraction(ItemInteractionType.INVENTORY_CLICK, event.slot, null),
         )
