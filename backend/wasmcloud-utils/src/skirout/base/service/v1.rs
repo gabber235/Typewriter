@@ -14,7 +14,7 @@
 //   cargo add skir-client
 pub mod status;
 pub mod service;
-pub mod registration;
 pub mod organization;
 pub mod lifecycle;
+pub mod registration;
 pub mod identity;

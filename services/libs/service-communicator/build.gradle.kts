@@ -1,8 +1,5 @@
-import org.gradle.kotlin.dsl.protokt
-
 plugins {
     id("com.typewritermc.basic-conventions")
-    alias(libs.plugins.protokt)
     alias(libs.plugins.kotlin.serialize)
     `java-test-fixtures`
 }
@@ -10,10 +7,11 @@ plugins {
 dependencies {
     implementation("com.typewritermc:service-utils")
     implementation("com.typewritermc:service-telemetry")
-    implementation(libs.protobuf.java)
     implementation(libs.nats.core)
     implementation(libs.nats.jetstream)
     implementation(libs.kotlin.serialize.json)
+
+    api(libs.skir.client)
 
     testImplementation(testFixtures("com.typewritermc:service-telemetry"))
 
@@ -21,19 +19,4 @@ dependencies {
     testFixturesImplementation("com.typewritermc:service-telemetry")
     testFixturesImplementation(libs.nats.core)
     testFixturesImplementation(libs.kotlin.coroutines.core)
-}
-
-protokt {
-    generate {
-        grpcDescriptors = false
-        grpcKotlinStubs = false
-    }
-}
-
-sourceSets {
-    main {
-        proto {
-            srcDir("../../../proto")
-        }
-    }
 }

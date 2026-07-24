@@ -8,8 +8,8 @@ mordant = "3.0.2"
 opentelemetry = "1.64.0"
 opentelemetry-semconv = "1.43.0"
 
-protokt = "1.0.0-beta.13"
-protobuf-java = "4.35.1"
+skir = "latest.release"
+
 nats = "0.9.1"
 surrealdb = "2.1.2"
 
@@ -50,7 +50,8 @@ kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref =
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
-protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf-java" }
+skir-client = { module = "build.skir:skir-client", version.ref = "skir"}
+
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
 nats-jetstream = { module = "io.github.n-hass:natskt-jetstream", version.ref = "nats" }
 surrealdb = { module = "com.surrealdb:surrealdb", version.ref = "surrealdb" }
@@ -74,7 +75,6 @@ opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semco
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay" }
-protokt = { id = "com.toasttab.protokt.v1", version.ref = "protokt" }
 
 kotlin-serialize = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 

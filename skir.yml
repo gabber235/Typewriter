@@ -1,7 +1,10 @@
 generators:
   - mod: skir-dart-gen
-    outDir: ./panel/lib/infrastructure/protocols/skir/skir-out
+    outDir: ./panel/lib/infrastructure/protocols/skir/skirout
     config: {}
   - mod: skir-rust-gen
     outDir: ./backend/wasmcloud-utils/src/skirout
+    config: {}
+  - mod: skir-kotlin-gen
+    outDir: ./services/libs/service-communicator/src/main/kotlin/skirout
     config: {}
