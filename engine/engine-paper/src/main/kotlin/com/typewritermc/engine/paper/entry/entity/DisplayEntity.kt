@@ -32,7 +32,14 @@ class DisplayEntity(
 
     init {
         entity.spawn(activityManager.position)
-        applyProperties()
+        try {
+            applyProperties()
+        } catch (throwable: Throwable) {
+            // The entity is already spawned for the viewer but nothing will hold a reference to it,
+            // leaving a copy behind that can never be despawned again.
+            entity.dispose()
+            throw throwable
+        }
     }
 
     fun tick() {
