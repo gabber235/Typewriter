@@ -13,6 +13,7 @@ import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.core.utils.point.Coordinate
+import com.typewritermc.core.utils.point.World
 import com.typewritermc.core.utils.point.distanceSquared
 import com.typewritermc.engine.paper.content.ContentContext
 import com.typewritermc.engine.paper.content.ContentMode
@@ -111,6 +112,7 @@ class EntityCinematicAction(
         get() = entry.segments
 
     private var entity: FakeEntity? = null
+    private var spawnedWorld: World? = null
     private var collectors: List<PropertyCollector<EntityProperty>> = emptyList()
     private var recordings: Map<String, Tape<EntityFrame>> = emptyMap()
 
@@ -165,20 +167,31 @@ class EntityCinematicAction(
         val startLocation = streamer?.currentFrame()?.location ?: return
         val collectedProperties = collectors.mapNotNull { it.collect(player) }
 
-        this.entity?.spawn(startLocation.toProperty(player.world.toWorld()))
+        val world = player.world.toWorld()
+        this.entity?.spawn(startLocation.toProperty(world))
         this.entity?.consumeProperties(collectedProperties)
+        this.spawnedWorld = world
     }
 
     private fun despawn() {
         lastSoundLocation = null
         this.entity?.dispose()
         this.entity = null
+        this.spawnedWorld = null
     }
 
     override suspend fun tickSegment(segment: EntityRecordedSegment, frame: Int) {
         super.tickSegment(segment, frame)
         val relativeFrame = frame - segment.startFrame
         streamer?.frame(relativeFrame)
+
+        // Joining another world makes the client forget every entity it was shown.
+        if (spawnedWorld != null && spawnedWorld != player.world.toWorld()) {
+            despawn()
+            spawn()
+            lastRelativeFrame = relativeFrame
+            return
+        }
 
         if (abs(relativeFrame - lastRelativeFrame) > 5) {
             despawn()
