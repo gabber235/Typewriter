@@ -1,5 +1,6 @@
 package com.typewritermc.entity.entries.activity
 
+import com.google.common.collect.Sets
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.emptyRef
@@ -20,6 +21,7 @@ import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.roadnetwork.RoadNetwork
 import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
+import com.typewritermc.roadnetwork.RoadNodeId
 import com.typewritermc.roadnetwork.gps.PointToPointGPS
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -27,6 +29,8 @@ import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.KoinComponent
 import org.koin.java.KoinJavaComponent
 import kotlin.time.Duration.Companion.seconds
+
+private const val MIN_MOVED_DISTANCE_SQUARED = 1.0
 
 @Entry("random_patrol_activity", "Randomly patrol nodes in the network", Colors.BLUE, "fa6-solid:shuffle")
 /**
@@ -62,6 +66,16 @@ class RandomPatrolActivity(
     private var activity: EntityActivity<in ActivityContext> = IdleActivity(startLocation)
     private val searchMutex = Mutex()
     private var searchJob: Job? = null
+
+    @Volatile
+    private var destination: RoadNodeId? = null
+
+    // The network only says its nodes are connected. Whether the entity can walk there is decided per
+    // edge against the terrain it stands on, so a node it cannot reach from this spot is passed over
+    // until it has moved, after which a route from there may well get to it.
+    private val triedDestinations: MutableSet<RoadNodeId> = Sets.newConcurrentHashSet()
+
+    private var lastAttemptPosition: Position? = null
 
     fun refreshActivity(context: ActivityContext, network: RoadNetwork): TickResult {
         if (searchMutex.isLocked) return TickResult.CONSUMED
@@ -121,10 +135,24 @@ class RandomPatrolActivity(
 
         val result = activity.tick(context)
         if (result == TickResult.IGNORED) {
+            rememberAttempt()
             return refreshActivity(context, network!!)
         }
 
         return TickResult.CONSUMED
+    }
+
+    private fun rememberAttempt() {
+        val destination = destination ?: return
+        val position = currentPosition.toPosition()
+        if (hasMovedSinceLastAttempt(position)) triedDestinations.clear()
+        lastAttemptPosition = position
+        triedDestinations += destination
+    }
+
+    private fun hasMovedSinceLastAttempt(position: Position): Boolean {
+        val distance = lastAttemptPosition?.distanceSquared(position) ?: return true
+        return distance > MIN_MOVED_DISTANCE_SQUARED
     }
 
     override fun dispose(context: ActivityContext) {
@@ -145,9 +173,16 @@ class RandomPatrolActivity(
         network: RoadNetwork,
         currentPos: Position
     ): PointToPointGPS? {
-        val candidateNodes = network.nodes
+        destination = null
+
+        val nodesInRange = network.nodes
             .filter { (it.position.distanceSquared(currentPos) ?: Double.MAX_VALUE) <= radiusSquared }
-            .toMutableList()
+
+        // Everything in range has been tried from here, so the notes only hold the entity back now.
+        val untriedNodes = nodesInRange.filterNot { it.id in triedDestinations }
+        if (untriedNodes.isEmpty()) triedDestinations.clear()
+
+        val candidateNodes = untriedNodes.ifEmpty { nodesInRange }.toMutableList()
 
         var attemptCount = 0
 
@@ -167,6 +202,7 @@ class RandomPatrolActivity(
             try {
                 val pathResult = gps.findPath()
                 if (pathResult.isSuccess) {
+                    destination = nextNode.id
                     return gps
                 }
             } catch (_: Exception) {
