@@ -38,9 +38,15 @@ import com.typewritermc.entity.entries.data.minecraft.living.DamagedProperty
 import com.typewritermc.entity.entries.data.minecraft.living.EquipmentProperty
 import com.typewritermc.entity.entries.data.minecraft.living.UseItemProperty
 import io.papermc.paper.event.player.PlayerArmSwingEvent
+import org.bukkit.Location
 import org.bukkit.SoundCategory
+import org.bukkit.entity.Boat
+import org.bukkit.entity.Entity
+import org.bukkit.entity.Minecart
 import org.bukkit.entity.Player
 import org.bukkit.entity.Pose
+import org.bukkit.entity.boat.BambooChestRaft
+import org.bukkit.entity.boat.BambooRaft
 import org.bukkit.event.EventHandler
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.inventory.EquipmentSlot
@@ -324,6 +330,28 @@ data class EntityFrame(
     }
 }
 
+/** How far under the point it sits them on a player rides, `Avatar.DEFAULT_VEHICLE_ATTACHMENT`. */
+private const val VEHICLE_ATTACHMENT = 0.6
+
+/**
+ * How far above itself a vehicle sits its rider, as vanilla declares it.
+ *
+ * Nothing in the api exposes this, and it is only worth asking for when it cannot be measured, see
+ * [EntityCinematicRecording.sittingLocation]. A type that declares nothing sits its rider on top of
+ * its box, `EntityAttachment.PASSENGER` falling back to `AT_HEIGHT`, which is what a marker armor
+ * stand used as a chair relies on. The ones that do declare something and can be sat on are boats,
+ * a third of their box, rafts, eight ninths of it, and minecarts, all from `net.minecraft` on
+ * 1.21.11. A mob is left on the fallback: its own declaration is a little under the top of its box
+ * and it animates while walking, which is not worth a table that has to be kept up to date.
+ */
+private val Entity.rideHeight: Double
+    get() = when (this) {
+        is BambooRaft, is BambooChestRaft -> height * 8 / 9
+        is Boat -> height / 3
+        is Minecart -> 0.1875
+        else -> height
+    }
+
 class EntityCinematicRecording(
     context: ContentContext,
     player: Player,
@@ -385,12 +413,44 @@ class EntityCinematicRecording(
         this.swing = swing
     }
 
+    private var riding: Entity? = null
+    private var rideHeight = 0.0
+
+    /**
+     * The point the vehicle sits the player on, which is neither where the player is nor where the
+     * vehicle is.
+     *
+     * Riding something is the only way to record a sitting frame at all, and on playback the entity
+     * is put on the recorded point itself. Craftbukkit snaps a riding player onto the vehicle's own
+     * position every time the client reports where it moved the vehicle, so the player is no use to
+     * ask, and the point they are sat on is above the vehicle, 0.1875 for an oak boat. Only until
+     * the client's first report arrives does the player stand where the server put them,
+     * [VEHICLE_ATTACHMENT] under the point that is wanted, so the height is taken from that gap
+     * whenever it shows and kept for the rest of the ride. Someone who was already riding when the
+     * recording started never shows it, and falls back on what vanilla declares for the vehicle.
+     *
+     * An oak boat at 47.0 sits its rider on 47.1875 and the server stands them at 46.5875, which is
+     * what shows until `ServerGamePacketListenerImpl.handleMoveVehicle` snaps `player.location` to
+     * the boat's own 47.0 and every later tick keeps it there.
+     */
+    private fun sittingLocation(vehicle: Entity): Location {
+        if (vehicle != riding) {
+            riding = vehicle
+            rideHeight = vehicle.rideHeight
+        }
+        val location = player.location
+        val drop = vehicle.location.y - location.y
+        if (drop != 0.0) rideHeight = VEHICLE_ATTACHMENT - drop
+        location.y = vehicle.location.y + rideHeight
+        return location
+    }
+
     override fun captureFrame(): EntityFrame {
         val inv = player.inventory
-        val pose = if (player.isInsideVehicle) Pose.SITTING else player.pose
+        val vehicle = player.vehicle
         val data = EntityFrame(
-            location = player.location.toCoordinate(),
-            pose = pose.toEntityPose(),
+            location = (vehicle?.let(::sittingLocation) ?: player.location).toCoordinate(),
+            pose = (if (vehicle != null) Pose.SITTING else player.pose).toEntityPose(),
             swing = swing,
             damaged = damaged,
             useItem = useItem,
