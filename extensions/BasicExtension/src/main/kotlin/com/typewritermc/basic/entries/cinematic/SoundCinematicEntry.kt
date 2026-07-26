@@ -9,7 +9,7 @@ import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.utils.Sound
 import com.typewritermc.engine.paper.utils.playSound
-import com.typewritermc.engine.paper.utils.stopSound
+import net.kyori.adventure.sound.SoundStop
 import org.bukkit.entity.Player
 
 @Entry("sound_cinematic", "Play a sound during a cinematic", Colors.YELLOW, "fa6-solid:music")
@@ -46,16 +46,21 @@ class SoundCinematicAction(
     entry: SoundCinematicEntry,
 ) : SimpleCinematicAction<SoundSegment>() {
     override val segments: List<SoundSegment> = entry.segments
-    private var previousSound: Sound? = null
+
+    // Resolved while the sound starts, because a sound id backed by an entry cannot be looked up
+    // anymore once the segment is stopped as part of unloading Typewriter.
+    private var playingSound: SoundStop? = null
 
     override suspend fun startSegment(segment: SoundSegment) {
         super.startSegment(segment)
-        previousSound = segment.sound.get(player)
-        player.playSound(previousSound!!, player.interactionContext)
+        val sound = segment.sound.get(player)
+        playingSound = sound.soundStop
+        player.playSound(sound, player.interactionContext)
     }
 
     override suspend fun stopSegment(segment: SoundSegment) {
         super.stopSegment(segment)
-        previousSound?.let { player.stopSound(it) }
+        playingSound?.let { player.stopSound(it) }
+        playingSound = null
     }
 }
