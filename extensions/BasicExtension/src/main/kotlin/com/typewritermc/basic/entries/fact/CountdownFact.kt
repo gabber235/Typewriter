@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
+private const val NEVER = "never"
+
 @Entry(
     "countdown_fact",
     "A fact that counts down from the set value",
@@ -24,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
     "ph:clock-countdown-fill"
 )
 /**
- * The `Cooldown Fact` is a fact reflects the time since the last set value.
+ * The `Countdown Fact` is a fact that reflects the time left since the last set value.
  *
  * When the value is set, it will count every second down from the set value.
  *
@@ -32,6 +34,9 @@ import kotlin.time.Duration.Companion.seconds
  * Then after 3 seconds, the value will be 7.
  *
  * The countdown will continue regardless if the player is online/offline or if the server is online/offline.
+ *
+ * A negative value never counts down and never expires, so setting the fact to `-1` marks a countdown
+ * that was cancelled rather than one that ran out on its own.
  *
  * ## How could this be used?
  * This can be used to create a cooldown on a specific action.
@@ -52,7 +57,10 @@ class CountdownFact(
         return calculateValue(data) == 0
     }
 
+    // A negative value is a marker rather than a duration. Counting it down would clamp it to zero,
+    // which is the very state it is there to be told apart from.
     private fun calculateValue(data: FactData): Int {
+        if (data.value < 0) return data.value
         val timeDifference = Duration.between(data.lastUpdate, LocalDateTime.now())
         return max(0, (data.value - timeDifference.seconds).toInt())
     }
@@ -64,18 +72,18 @@ class CountdownFact(
             literal("expires") {
                 literal("relative") {
                     supplyPlayer { player ->
-                        val data = readForPlayersGroup(player)
-                        val duration = data.value.seconds
+                        val value = readForPlayersGroup(player).value
+                        if (value < 0) return@supplyPlayer NEVER
 
-                        duration.formatCompact()
+                        value.seconds.formatCompact()
                     }
                 }
 
                 supplyPlayer { player ->
-                    val data = readForPlayersGroup(player)
-                    val now = LocalDateTime.now()
-                    val expireTime = now.plusSeconds(data.value.toLong())
+                    val value = readForPlayersGroup(player).value
+                    if (value < 0) return@supplyPlayer NEVER
 
+                    val expireTime = LocalDateTime.now().plusSeconds(value.toLong())
                     expireTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 }
             }
