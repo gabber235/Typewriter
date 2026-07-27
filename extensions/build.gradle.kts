@@ -67,6 +67,26 @@ subprojects {
     apply(plugin = "com.typewritermc.module-plugin")
     apply<MavenPublishPlugin>()
 
+    dependencies {
+        // The server and the engine are compileOnly, as an extension is handed both once it runs. A test
+        // has nothing handing them over, so it asks for them itself. These versions follow the ones the
+        // engine builds against.
+        testImplementation("com.typewritermc:engine-paper:$typewriterEngineVersion")
+        testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+        testImplementation("com.github.retrooper:packetevents-spigot:2.13.0")
+        testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+
+        val kotestVersion = "6.1.11"
+        testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+        testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+        testImplementation("io.mockk:mockk:1.14.9")
+        testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0")
+    }
+
+    tasks.test {
+        useJUnitPlatform()
+    }
+
     tasks.withType<ShadowJar> {
         exclude("kotlin/**")
         exclude("org/intellij/**")
