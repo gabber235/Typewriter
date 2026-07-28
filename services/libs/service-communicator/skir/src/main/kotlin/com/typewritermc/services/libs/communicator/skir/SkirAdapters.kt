@@ -6,8 +6,10 @@ import build.skir.service.Method
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -35,6 +37,30 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
     method.requestSerializer.asPayloadCodec(),
     method.responseSerializer.asPayloadCodec(),
     responsePolicy,
+    timeout,
+    failureSlug,
+)
+
+/** Creates a watch contract from an initial request method and separate update serializer. */
+fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContract(
+    method: Method<Request, Initial>,
+    updateSerializer: Serializer<Update>,
+    name: OperationName,
+    requestAddress: AddressTemplate<Address>,
+    updateAddress: AddressTemplate<Address>,
+    initialPolicy: ResponsePolicy<Initial>,
+    updateClassifier: ResponseClassifier<Update>,
+    failureSlug: ErrorSlug,
+    timeout: Duration = 10.seconds,
+): WatchContract<Address, Request, Initial, Update> = WatchContract(
+    name,
+    requestAddress,
+    updateAddress,
+    method.requestSerializer.asPayloadCodec(),
+    method.responseSerializer.asPayloadCodec(),
+    updateSerializer.asPayloadCodec(),
+    initialPolicy,
+    updateClassifier,
     timeout,
     failureSlug,
 )

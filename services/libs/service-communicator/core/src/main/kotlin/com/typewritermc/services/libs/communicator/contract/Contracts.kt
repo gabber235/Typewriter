@@ -37,11 +37,16 @@ enum class ResponseOutcome {
 /** Semantic response outcome and stable variant. */
 data class ResponseClassification(val outcome: ResponseOutcome, val variant: ResponseVariant)
 
+/** Classifies a typed response into its semantic outcome and stable variant. */
+fun interface ResponseClassifier<Response : Any> {
+    fun classify(response: Response): ResponseClassification
+}
+
 /** Classification and internal-failure response policy for replying operations. */
 class ResponsePolicy<Response : Any>(
     val internalFailureResponse: Response,
-    val classify: (Response) -> ResponseClassification,
-) {
+    private val classifier: ResponseClassifier<Response>,
+) : ResponseClassifier<Response> by classifier {
     init {
         require(classify(internalFailureResponse).outcome == ResponseOutcome.INTERNAL_ERROR) {
             "ResponsePolicy.internalFailureResponse must classify as INTERNAL_ERROR"
@@ -78,13 +83,26 @@ class EventContract<Address : Any, Event : Any>(
     val failureSlug: ErrorSlug,
 )
 
-/** Typed request and streamed-update operation contract. */
-class WatchContract<Address : Any, Request : Any, Update : Any>(
+/** Typed request, initial response, and streamed-update operation contract. */
+class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val name: OperationName,
     val requestAddress: AddressTemplate<Address>,
     val updateAddress: AddressTemplate<Address>,
     val requestCodec: PayloadCodec<Request>,
+    val initialCodec: PayloadCodec<Initial>,
     val updateCodec: PayloadCodec<Update>,
-    val responsePolicy: ResponsePolicy<Update>,
+    val initialPolicy: ResponsePolicy<Initial>,
+    val updateClassifier: ResponseClassifier<Update>,
+    val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
-)
+) {
+    init {
+        require(timeout.isPositive() && timeout.isFinite()) { "Watch timeout must be positive and finite" }
+    }
+}
+
+/** A watch's single initial response or subsequent update. */
+sealed interface WatchMessage<out Initial : Any, out Update : Any> {
+    data class Initial<Value : Any>(val value: Value) : WatchMessage<Value, Nothing>
+    data class Update<Value : Any>(val value: Value) : WatchMessage<Nothing, Value>
+}

@@ -42,9 +42,9 @@ fun interface EventHandler<Address : Any, Event : Any> {
 }
 
 /** Handles a typed watch call. */
-fun interface WatchHandler<Address : Any, Request : Any, Update : Any> {
+fun interface WatchHandler<Address : Any, Request : Any, Initial : Any, Update : Any> {
     context(main: MainSpanScope)
-    suspend fun handle(call: IncomingWatchCall<Address, Request, Update>): Update
+    suspend fun handle(call: IncomingWatchCall<Address, Request, Initial, Update>): Initial
 }
 
 /** Immutable input to a unary handler. */
@@ -68,12 +68,12 @@ data class IncomingEventCall<Address : Any, Event : Any>(
 )
 
 /** Immutable input to a watch handler. */
-data class IncomingWatchCall<Address : Any, Request : Any, Update : Any>(
+data class IncomingWatchCall<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val address: Address,
     val request: Request,
     val headers: MessageHeaders,
     val concreteAddress: MessageAddress,
-    val contract: WatchContract<Address, Request, Update>,
+    val contract: WatchContract<Address, Request, Initial, Update>,
     val communicator: Communicator,
 )
 
@@ -138,11 +138,11 @@ class CommunicatorRoutesBuilder internal constructor() {
     }
 
     /** Registers a watch route. */
-    fun <A : Any, Q : Any, U : Any> watch(
-        contract: WatchContract<A, Q, U>,
+    fun <A : Any, Q : Any, I : Any, U : Any> watch(
+        contract: WatchContract<A, Q, I, U>,
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
-        handler: WatchHandler<A, Q, U>,
+        handler: WatchHandler<A, Q, I, U>,
     ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup) { router, message ->
         router.watch(contract, handler, message)
     }
@@ -414,9 +414,9 @@ class CommunicatorRouter(
         }
     }
 
-    internal suspend fun <A : Any, Q : Any, U : Any> watch(
-        contract: WatchContract<A, Q, U>,
-        handler: WatchHandler<A, Q, U>,
+    internal suspend fun <A : Any, Q : Any, I : Any, U : Any> watch(
+        contract: WatchContract<A, Q, I, U>,
+        handler: WatchHandler<A, Q, I, U>,
         message: InboundMessage,
     ) = replying(contract, message) { main, address, request ->
         context(main) {
@@ -448,16 +448,16 @@ class CommunicatorRouter(
     )
 
     private suspend fun <A : Any, Q : Any, R : Any> replying(
-        contract: WatchContract<A, Q, R>,
+        contract: WatchContract<A, Q, R, *>,
         message: InboundMessage,
         handler: suspend (MainSpanScope, A, Q) -> R,
     ) = replying(
         contract.name,
         contract.requestAddress,
-        contract.updateAddress.template,
+        contract.requestAddress.template,
         contract.requestCodec,
-        contract.updateCodec,
-        contract.responsePolicy,
+        contract.initialCodec,
+        contract.initialPolicy,
         contract.failureSlug,
         message,
         handler,

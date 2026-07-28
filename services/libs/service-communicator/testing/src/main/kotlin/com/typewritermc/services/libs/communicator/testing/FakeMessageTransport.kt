@@ -10,6 +10,7 @@ import kotlin.time.Duration
 /** Deterministic in-memory transport for communicator and downstream tests. */
 class FakeMessageTransport(
     override val system: MessagingSystem = MessagingSystem.of("fake"),
+    private val deliveryBufferCapacity: Int = Channel.UNLIMITED,
 ) : MessageTransport, AutoCloseable {
     private val lock = Any()
     private val recorded = mutableListOf<Action>()
@@ -127,7 +128,7 @@ class FakeMessageTransport(
         val pattern: AddressPattern,
         private val closeBehavior: (suspend () -> Unit)?,
     ) : TransportSubscription {
-        private val channel = Channel<TransportDelivery>(Channel.UNLIMITED)
+        private val channel = Channel<TransportDelivery>(deliveryBufferCapacity)
         private var closed = false
         override val deliveries: Flow<TransportDelivery> = channel.receiveAsFlow()
 

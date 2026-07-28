@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.communicator
 
+import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
@@ -15,6 +16,7 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator
 import io.opentelemetry.api.common.AttributeKey
@@ -24,8 +26,13 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapPropagator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runCurrent
@@ -69,7 +76,10 @@ private val watch = WatchContract(
     updateAddress,
     strings,
     strings,
+    strings,
     successPolicy,
+    successPolicy,
+    2.seconds,
     ErrorSlug.of("book-watch-failed")
 )
 private val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
@@ -263,7 +273,10 @@ val CommunicatorTest by testSuite {
                     updateAddress,
                     strings,
                     strings,
+                    strings,
+                    successPolicy,
                     policy,
+                    watch.timeout,
                     watch.failureSlug
                 )
                 val thrown = shouldThrow<Throwable> { client.publishUpdate(contract, Target("a"), "update") }
@@ -295,16 +308,16 @@ val CommunicatorTest by testSuite {
         }
     }
 
-    test("watch is cold, subscribes exact address first, and uses concrete replyTo") {
+    test("watch is cold and subscribes exact update address before requesting") {
         runTest {
             fixture().use { (client, fake, harness) ->
+                fake.respondWith { message, _ -> TransportResult.Success(InboundMessage(message.address, "ok".encodeToByteArray())) }
                 val flow = client.watch(watch, Target("a"), "start")
                 fake.actions shouldBe emptyList()
                 val collected = async { flow.take(1).toList() }
                 runCurrent()
-                fake.actions.take(2).map { it::class.simpleName } shouldBe listOf("Subscribe", "Publish")
+                fake.actions.take(2).map { it::class.simpleName } shouldBe listOf("Subscribe", "Request")
                 (fake.actions[0] as FakeMessageTransport.Action.Subscribe).pattern.value shouldBe "service.a.updates"
-                (fake.actions[1] as FakeMessageTransport.Action.Publish).message.replyTo?.value shouldBe "service.a.updates"
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
@@ -321,9 +334,85 @@ val CommunicatorTest by testSuite {
                         )
                     )
                 )
-                collected.await() shouldBe listOf(CommunicationResult.Success("ok"))
+                collected.await() shouldBe listOf(CommunicationResult.Success(WatchMessage.Initial("ok")))
                 fake.actions.count { it is FakeMessageTransport.Action.SubscriptionClose } shouldBe 1
                 harness.assertNoActiveSpans()
+            }
+        }
+    }
+
+    test("watch buffers a zero-replay delivery until after the initial response") {
+        runTest {
+            fixture(deliveryBufferCapacity = 0).use { (client, fake, _) ->
+                fake.respondWith { message, _ ->
+                    fake.deliver(
+                        TransportDelivery.Message(
+                            InboundMessage(MessageAddress.of("service.a.updates"), "early".encodeToByteArray())
+                        )
+                    )
+                    TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
+                }
+
+                client.watch(watch, Target("a"), "start").take(2).toList() shouldBe listOf(
+                    CommunicationResult.Success(WatchMessage.Initial("initial")),
+                    CommunicationResult.Success(WatchMessage.Update("early")),
+                )
+                fake.activeSubscriptionCount shouldBe 0
+            }
+        }
+    }
+
+    test("watch delivery flow failure escapes after the initial response") {
+        runTest {
+            val deliveryFailure = IllegalStateException("deliveries")
+            throwingWatchFixture(flow { throw deliveryFailure }).use { (client, subscription, _) ->
+                val thrown = shouldThrow<IllegalStateException> {
+                    client.watch(watch, Target("a"), "start").toList()
+                }
+
+                thrown shouldBeSameInstanceAs deliveryFailure
+                subscription.closed shouldBe true
+            }
+        }
+    }
+
+    test("watch close failure escapes when there is no primary failure") {
+        runTest {
+            val closeFailure = IllegalStateException("close")
+            throwingWatchFixture(flowOf(TransportDelivery.Completed), closeFailure).use { (client, _, _) ->
+                val thrown = shouldThrow<IllegalStateException> {
+                    client.watch(watch, Target("a"), "start").toList()
+                }
+
+                thrown shouldBeSameInstanceAs closeFailure
+            }
+        }
+    }
+
+    test("watch preserves delivery failure and suppresses close failure once") {
+        runTest {
+            val deliveryFailure = IllegalStateException("deliveries")
+            val closeFailure = IllegalArgumentException("close")
+            throwingWatchFixture(flow { throw deliveryFailure }, closeFailure).use { (client, _, _) ->
+                val thrown = shouldThrow<IllegalStateException> {
+                    client.watch(watch, Target("a"), "start").toList()
+                }
+
+                thrown shouldBeSameInstanceAs deliveryFailure
+                thrown.suppressed.toList() shouldBe listOf(closeFailure)
+            }
+        }
+    }
+
+    test("watch caller cancellation remains cancellation and closes subscription") {
+        runTest {
+            throwingWatchFixture(flow { awaitCancellation() }).use { (client, subscription, _) ->
+                val collection = async { client.watch(watch, Target("a"), "start").toList() }
+                runCurrent()
+
+                collection.cancel()
+                shouldThrow<CancellationException> { collection.await() }
+                subscription.closed shouldBe true
             }
         }
     }
@@ -331,6 +420,7 @@ val CommunicatorTest by testSuite {
     test("watch recovers after decode failure and terminal failure completes with error span") {
         runTest {
             fixture().use { (client, fake, harness) ->
+                fake.respondWith { message, _ -> TransportResult.Success(InboundMessage(message.address, "ok".encodeToByteArray())) }
                 val values = async { client.watch(watch, Target("a"), "start").toList() }
                 runCurrent()
                 val incoming =
@@ -355,6 +445,7 @@ val CommunicatorTest by testSuite {
                 fake.deliver(TransportDelivery.Failure(TransportError.Unavailable()))
                 val results = values.await()
                 results.map { it::class } shouldBe listOf(
+                    CommunicationResult.Success::class,
                     CommunicationResult.Failure::class,
                     CommunicationResult.Success::class,
                     CommunicationResult.Failure::class
@@ -380,10 +471,55 @@ private data class Fixture(
     }
 }
 
-private fun fixture(configuredPropagators: ContextPropagators = propagators): Fixture {
-    val fake = FakeMessageTransport()
+private fun fixture(
+    configuredPropagators: ContextPropagators = propagators,
+    deliveryBufferCapacity: Int = kotlinx.coroutines.channels.Channel.UNLIMITED,
+): Fixture {
+    val fake = FakeMessageTransport(deliveryBufferCapacity = deliveryBufferCapacity)
     val harness = TelemetryTestHarness.create()
     return Fixture(Communicator(fake, harness.telemetry, configuredPropagators), fake, harness)
+}
+
+private data class ThrowingWatchFixture(
+    val client: Communicator,
+    val subscription: TestSubscription,
+    val harness: TelemetryTestHarness,
+) : AutoCloseable {
+    override fun close() = harness.close()
+}
+
+private class TestSubscription(
+    override val deliveries: Flow<TransportDelivery>,
+    private val closeFailure: Throwable?,
+) : TransportSubscription {
+    var closed = false
+        private set
+
+    override suspend fun close() {
+        closed = true
+        closeFailure?.let { throw it }
+    }
+}
+
+private fun throwingWatchFixture(
+    deliveries: Flow<TransportDelivery>,
+    closeFailure: Throwable? = null,
+): ThrowingWatchFixture {
+    val subscription = TestSubscription(deliveries, closeFailure)
+    val transport = object : MessageTransport {
+        override val system = MessagingSystem.of("test")
+
+        override suspend fun publish(message: OutboundMessage): TransportResult<Unit> =
+            error("Unexpected publish")
+
+        override suspend fun request(message: OutboundMessage, timeout: kotlin.time.Duration) =
+            TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
+
+        override suspend fun subscribe(pattern: AddressPattern, options: SubscriptionOptions) =
+            TransportResult.Success(subscription)
+    }
+    val harness = TelemetryTestHarness.create()
+    return ThrowingWatchFixture(Communicator(transport, harness.telemetry, propagators), subscription, harness)
 }
 
 private fun throwingCodec(encode: Boolean) = object : PayloadCodec<String> {

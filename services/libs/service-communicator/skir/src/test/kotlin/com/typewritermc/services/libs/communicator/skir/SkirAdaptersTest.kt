@@ -22,7 +22,7 @@ private val statusAddress = addressTemplate(
 
 private val statusPolicy = ResponsePolicy<GetServiceStatusResponse>(
     internalFailureResponse = GetServiceStatusResponse.createInternalError(),
-    classify = { response ->
+    classifier = { response ->
         when (response.kind) {
             GetServiceStatusResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification(
                 ResponseOutcome.INTERNAL_ERROR,
