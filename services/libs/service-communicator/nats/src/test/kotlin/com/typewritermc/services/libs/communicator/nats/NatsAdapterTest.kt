@@ -21,6 +21,35 @@ import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 val NatsAdapterTest by testSuite {
+    test("authentication never prints secrets and retains value equality") {
+        val authentication = NatsAuthentication(
+            authToken = "auth-secret",
+            username = "user-secret",
+            password = "password-secret",
+            jwt = "jwt-secret",
+            signature = "signature-secret",
+            nkey = "nkey-secret",
+        )
+
+        authentication shouldBe NatsAuthentication(
+            "auth-secret",
+            "user-secret",
+            "password-secret",
+            "jwt-secret",
+            "signature-secret",
+            "nkey-secret",
+        )
+        authentication.hashCode() shouldBe NatsAuthentication(
+            "auth-secret",
+            "user-secret",
+            "password-secret",
+            "jwt-secret",
+            "signature-secret",
+            "nkey-secret",
+        ).hashCode()
+        authentication.toString() shouldBe "NatsAuthentication([REDACTED])"
+    }
+
     test("configuration validates public settings") {
         shouldThrow<IllegalArgumentException> { NatsConnectionConfiguration(" ") }
         shouldThrow<IllegalArgumentException> { NatsConnectionConfiguration("http://localhost") }

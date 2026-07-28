@@ -1,7 +1,7 @@
 package com.typewritermc.services.libs.communicator.nats
 
 /** Authentication values supported by a NATS CONNECT operation. */
-data class NatsAuthentication(
+class NatsAuthentication(
     val authToken: String? = null,
     val username: String? = null,
     val password: String? = null,
@@ -14,6 +14,21 @@ data class NatsAuthentication(
             "NATS authentication values must not be blank"
         }
     }
+
+    override fun equals(other: Any?): Boolean = other is NatsAuthentication &&
+        authToken == other.authToken && username == other.username && password == other.password &&
+        jwt == other.jwt && signature == other.signature && nkey == other.nkey
+
+    override fun hashCode(): Int {
+        var result = authToken.hashCode()
+        result = 31 * result + username.hashCode()
+        result = 31 * result + password.hashCode()
+        result = 31 * result + jwt.hashCode()
+        result = 31 * result + signature.hashCode()
+        return 31 * result + nkey.hashCode()
+    }
+
+    override fun toString(): String = "NatsAuthentication([REDACTED])"
 }
 
 /** Safe access to the current server nonce challenge. */
