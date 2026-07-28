@@ -6,6 +6,7 @@ import com.typewritermc.core.extension.annotations.ContentEditor
 import com.typewritermc.core.utils.failure
 import com.typewritermc.core.utils.ok
 import com.typewritermc.processors.annotationClassValue
+import com.typewritermc.processors.binaryNameOrNull
 import com.typewritermc.processors.entry.DataBlueprint
 import com.typewritermc.processors.entry.DataModifier
 import com.typewritermc.processors.entry.DataModifierComputer
@@ -18,7 +19,7 @@ object ContentEditorModifierComputer : DataModifierComputer<ContentEditor> {
     context(logger: KSPLogger, resolver: Resolver)
     override fun compute(blueprint: DataBlueprint, annotation: ContentEditor): Result<DataModifier> {
         val contentMode = annotation.annotationClassValue { capturer }
-        val className = contentMode.declaration.qualifiedName?.asString()
+        val className = contentMode.declaration.binaryNameOrNull
             ?: return failure("ContentEditor ${contentMode.fullName} does not have a qualified name! It must be a non-local non-anonymous class.")
 
         return ok(DataModifier.Modifier("contentMode", className))

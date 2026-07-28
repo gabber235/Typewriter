@@ -51,12 +51,12 @@ class EntryListenerProcessor(
 
         val blueprint = EntryListenerBlueprint(
             entryBlueprintId = entryAnnotation.name,
-            entryClassName = entry.fullName,
+            entryClassName = entry.binaryName,
             className = parent.className,
             methodName = function.simpleName.asString(),
             priority = listener.priority,
             ignoreCancelled = listener.ignoreCancelled,
-            arguments = function.parameters.map { it.type.resolve().fullName },
+            arguments = function.parameters.map { it.type.resolve().binaryName },
         )
 
         return blueprintJson.encodeToJsonElement(blueprint)

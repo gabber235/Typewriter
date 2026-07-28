@@ -49,7 +49,7 @@ class EntryProcessor(
                 description = annotation.description,
                 color = annotation.color,
                 icon = annotation.icon,
-                className = clazz.qualifiedName?.asString()
+                className = clazz.binaryNameOrNull
                     ?: throw IllegalClassTypeException(clazz.simpleName.asString()),
                 extension = configuration.name,
                 tags = clazz.tags,
@@ -149,7 +149,7 @@ class EntryProcessor(
                     val type = annotation.annotationClassValue { type }
                     ContextKey(
                         it.serializedName,
-                        declaration.fullName,
+                        declaration.binaryName,
                         DataBlueprint.blueprint(type) ?: throw FailedToGenerateBlueprintException(
                             this@contextKeys,
                             CouldNotBuildBlueprintException(type.fullName)
