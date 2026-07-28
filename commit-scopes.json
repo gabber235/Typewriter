@@ -34,6 +34,7 @@
     "services",
     "services/build-logic",
     "services/libs/service-communicator",
+    "services/libs/service-http",
     "services/libs/service-registrar",
     "services/libs/service-telemetry",
     "services/libs/service-utils",
