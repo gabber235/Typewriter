@@ -51,7 +51,7 @@ class DependencyInjectionProcessor(
     private fun generateBlueprint(clazz: KSClassDeclaration, type: SerializableType): JsonElement {
         logger.info("Generating $type blueprint for ${clazz.simpleName.asString()}")
 
-        val className = clazz.qualifiedName?.asString() ?: throw IllegalClassTypeException(clazz.simpleName.asString())
+        val className = clazz.binaryNameOrNull ?: throw IllegalClassTypeException(clazz.simpleName.asString())
         val name = clazz.getAnnotationsByType(Named::class).firstOrNull()?.value
 
         val blueprint = DependencyInjectionClassInfo(

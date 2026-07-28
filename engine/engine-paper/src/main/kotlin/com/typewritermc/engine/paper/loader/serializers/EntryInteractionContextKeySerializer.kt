@@ -53,7 +53,7 @@ class EntryInteractionContextKeySerializer : DataSerializer<EntryInteractionCont
         val obj = JsonObject()
         obj.add("ref", context.serialize(src.ref))
         obj.add("key", context.serialize(src.key))
-        obj.addProperty("keyClass", src.key::class.qualifiedName)
+        obj.addProperty("keyClass", src.key::class.java.name)
         return obj
     }
 }

@@ -19,6 +19,25 @@ val KSType.fullName: String
 val KSDeclaration.fullName: String
     get() = qualifiedName?.asString() ?: simpleName.asString()
 
+/**
+ * The name the JVM knows this declaration by, separating nested classes with `$` instead of a dot.
+ * Every name that gets loaded reflectively at runtime has to use this rather than [fullName].
+ *
+ * Null for local and anonymous declarations, which cannot be loaded by name at all.
+ */
+val KSDeclaration.binaryNameOrNull: String?
+    get() {
+        val qualified = qualifiedName?.asString() ?: return null
+        val outer = parentDeclaration as? KSClassDeclaration ?: return qualified
+        return outer.binaryNameOrNull?.let { "$it$${simpleName.asString()}" }
+    }
+
+val KSDeclaration.binaryName: String
+    get() = binaryNameOrNull ?: simpleName.asString()
+
+val KSType.binaryName: String
+    get() = declaration.binaryName
+
 val Location.format: String
     get() {
         return when (this) {

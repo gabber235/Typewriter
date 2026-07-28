@@ -48,7 +48,7 @@ class GlobalContextKeysProcessor(
         val annotation = clazz.getAnnotationsByType(GlobalKey::class).first()
         val name = clazz.simpleName.asString()
         val targetClass = annotation.annotationClassValue { klass }
-        val klassName = clazz.fullName
+        val klassName = clazz.binaryName
 
         val blueprint = GlobalKeyBlueprint(
             name = name,
