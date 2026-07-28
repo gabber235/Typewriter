@@ -59,7 +59,9 @@ val router = CommunicatorRouter(transport, routes, communicator, telemetry, prop
 router.start()
 ```
 
-Events use `EventContract` with `publish`; watches use `WatchContract` with `watch`. A watch is cold: every collector creates and owns an independent subscription. Canceling a caller cancels the operation rather than converting cancellation into a typed failure. Expected encode, decode, timeout, unavailable, no-responder, and transport failures are returned as `CommunicationResult.Failure`; fatal JVM errors and unexpected programming failures escape.
+Events use `EventContract` with `publish`. A `WatchContract<Address, Request, Initial, Update>` has separate initial and update codecs and classifiers. Collection subscribes to the update address first, then performs an ordinary timed request/reply on the request address with a collector-specific inbox. It emits exactly one `WatchMessage.Initial`, followed by `WatchMessage.Update` values. `publishUpdate` uses only the update codec and classifier.
+
+A watch is cold: every collector creates and owns an independent subscription and request inbox. Canceling a caller cancels the operation rather than converting cancellation into a typed failure, and closes its subscription in non-cancellable cleanup. Expected encode, decode, timeout, unavailable, no-responder, and transport failures are returned as `CommunicationResult.Failure`; fatal JVM errors and unexpected programming failures escape.
 
 Telemetry is mandatory and application-owned. Communicator creates messaging spans and propagates the application's OpenTelemetry context but never installs globals, creates no-op telemetry, or shuts down an SDK/provider.
 
@@ -69,12 +71,12 @@ Routers bound accepted work globally (`maxInFlight`, default 16) and per route (
 
 The adapter uses core NATS with at-most-once delivery. Publish and request operations are not retried, and it does not use JetStream, persistence, acknowledgements, or replay.
 
-NATS.kt 0.9.1 retains local `Subscription` objects during its reconnect loop but creates a new protocol engine without reissuing their `SUB` operations. A subscription can therefore appear active while receiving nothing after reconnect. Running routers and watches are not reconnect-safe. Fix and integration coverage belong upstream; communicator intentionally contains no parallel workaround.
+NATS.kt 0.9.1 retains local `Subscription` objects during its reconnect loop but creates a new protocol engine without reissuing their `SUB` operations. A subscription can therefore appear active while receiving nothing after reconnect. Running routers and watches are not reconnect-safe. Fix and integration coverage belong upstream; communicator intentionally contains no parallel workaround. See [NATS_KT_FOLLOW_UP.md](NATS_KT_FOLLOW_UP.md) for confirmed defects and acceptance criteria.
 
 ## Registrar and Realm migration ledger
 
-The legacy communicator monolith and compatibility APIs were removed. Registrar now owns HTTP concerns and must own NATS configuration/authentication, Sentinel credentials, JWT/token contracts, registration protocol clients, and any temporary reconnect contract. Its remaining Protokt-based protocol clients must be migrated separately to typed Skir contracts; communicator will not add Protokt or parse JWT payloads to bridge them.
+The legacy communicator monolith and compatibility APIs were removed. Generic HTTP now lives in the independent `service-http` build. Registrar owns Typewriter identity issuance, Authentik and Sentinel bootstrap, NATS service authentication/configuration, typed registration contracts, binding supervision, heartbeat, and shutdown. It uses canonical Skir contracts without Protokt or JWT payload parsing in communicator.
 
-Registrar compilation is currently informative, not a communicator build gate. Dependency resolution succeeds; remaining failures are source-level legacy usage: removed communicator APIs (`NatsCommunicator`, `CommunicatorQualifier`, `MessageBus`, `RegistrationClient`, `Reconnector`, and `JwtProvider`), removed telemetry span helpers, and Protokt-generated registration models. Replace these with registrar-owned contracts and typed communicator calls without changing payload protocols.
+Registrar is a separate build gate with core, runtime, storage-file, console, Koin, and testing artifacts. Its detailed state and Ready session replace the removed deferred message-bus/client/reconnector architecture.
 
 Realm migration remains outstanding and Realm is intentionally unchanged. It must move legacy route construction and communicator qualifiers to application-owned `CommunicatorRoutes`, `CommunicatorRouter`, lifecycle scope, and explicit NATS providers before it can consume the split artifacts.
