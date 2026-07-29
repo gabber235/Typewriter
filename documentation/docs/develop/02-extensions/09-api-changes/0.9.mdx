@@ -374,6 +374,15 @@ instead.
 
 Parsing without an audience still works and still falls back to the configured key.
 
+### `SkipConfirmationKey` Is Gone
+
+The cinematic skip had a two value enum of its own, which is now the same `ConfirmationKey` as
+everything else. Pages do not need editing: `SNEAK` and `SWAP_HANDS` are names in both, so a skip
+entry keeps the key it was saved with, and the other three become available to it.
+
+`CinematicSkippableEvent.confirmationKey` is a `ConfirmationKey` with it, and carries the key the
+player was actually offered rather than the one the entry asked for.
+
 ## Questing Extension Changes
 The Questing extension has undergone several changes in its API and structure. Below are the key updates:
 

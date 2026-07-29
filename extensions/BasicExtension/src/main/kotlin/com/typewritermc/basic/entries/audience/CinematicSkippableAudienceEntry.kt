@@ -1,7 +1,7 @@
 package com.typewritermc.basic.entries.audience
 
 import com.typewritermc.basic.entries.cinematic.CinematicSkippableEvent
-import com.typewritermc.basic.entries.cinematic.SkipConfirmationKey
+import com.typewritermc.engine.paper.interaction.ConfirmationKey
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
@@ -44,11 +44,11 @@ class CinematicSkippableAudienceEntry(
 
     override fun parser(): PlaceholderParser = placeholderParser {
         supply { player ->
-            val default = SkipConfirmationKey.SNEAK
+            val default = ConfirmationKey.SNEAK
 
-            if (player == null) return@supply default.bedrockKeybind
-            val display = ref().findDisplay() as? CinematicSkippableAudienceDisplay ?: return@supply default.keybind(player)
-            display.confirmationKey(player)?.keybind(player) ?: default.keybind(player)
+            if (player == null) return@supply default.keybind
+            val display = ref().findDisplay() as? CinematicSkippableAudienceDisplay ?: return@supply default.label(player)
+            display.confirmationKey(player)?.label(player) ?: default.label(player)
         }
     }
 }
@@ -58,7 +58,7 @@ class CinematicSkippableAudienceDisplay(
 ) : AudienceFilter(ref) {
     override fun filter(player: Player): Boolean = false
 
-    private val confirmationKeys = ConcurrentHashMap<UUID, SkipConfirmationKey>()
+    private val confirmationKeys = ConcurrentHashMap<UUID, ConfirmationKey>()
 
     @EventHandler
     fun onCinematicSkippable(event: CinematicSkippableEvent) {
@@ -78,6 +78,6 @@ class CinematicSkippableAudienceDisplay(
         confirmationKeys.remove(event.player.uniqueId)
     }
 
-    fun confirmationKey(player: Player): SkipConfirmationKey? = confirmationKeys[player.uniqueId]
+    fun confirmationKey(player: Player): ConfirmationKey? = confirmationKeys[player.uniqueId]
 }
 
