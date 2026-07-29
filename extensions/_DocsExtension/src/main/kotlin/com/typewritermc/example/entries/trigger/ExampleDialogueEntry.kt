@@ -12,6 +12,8 @@ import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.entry.entries.SpeakerEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.utils.asMini
 import org.bukkit.entity.Player
 
@@ -88,17 +90,17 @@ class ExampleConfirmationDialogueMessenger(
 ) : DialogueMessenger<ExampleConfirmationDialogueEntry>(player, context, entry) {
 
     // highlight-next-line
-    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+    private var confirmation: Confirmation? = null
 
     override fun init() {
         super.init()
         player.sendMessage(
             "${entry.speakerDisplayName}: ${entry.text} <gray><confirmation_key>".parsePlaceholders(
                 player
-            ).asMini()
+            ).asMini(player)
         )
         // highlight-start
-        confirmationKeyHandler = confirmationKey.handler(player) {
+        confirmation = player.awaitConfirmation {
             state = MessengerState.FINISHED
         }
         // highlight-end
@@ -107,8 +109,8 @@ class ExampleConfirmationDialogueMessenger(
     override fun dispose() {
         super.dispose()
         // highlight-start
-        confirmationKeyHandler?.dispose()
-        confirmationKeyHandler = null
+        confirmation?.dispose()
+        confirmation = null
         // highlight-end
     }
 }

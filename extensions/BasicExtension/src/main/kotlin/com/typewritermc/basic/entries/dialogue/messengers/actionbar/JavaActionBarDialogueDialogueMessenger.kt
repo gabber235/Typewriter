@@ -4,7 +4,9 @@ import com.typewritermc.basic.entries.dialogue.ActionBarDialogueEntry
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.interaction.Confirmation
 import com.typewritermc.engine.paper.interaction.acceptActionBarMessage
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
@@ -25,7 +27,7 @@ class JavaActionBarDialogueDialogueMessenger(
 ) :
     DialogueMessenger<ActionBarDialogueEntry>(player, context, entry) {
 
-    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+    private var confirmation: Confirmation? = null
 
     private var speakerDisplayName = ""
     private var text = ""
@@ -45,7 +47,7 @@ class JavaActionBarDialogueDialogueMessenger(
         text = entry.text.get(player).parsePlaceholders(player)
         typingDuration = typingDurationType.totalDuration(text.stripped(), entry.duration.get(player))
 
-        confirmationKeyHandler = confirmationKey.handler(player) {
+        confirmation = player.awaitConfirmation {
             completeOrFinish()
         }
 
@@ -65,7 +67,7 @@ class JavaActionBarDialogueDialogueMessenger(
             return
         }
 
-        val message = text.asMini()
+        val message = text.asMini(player)
             .splitPercentage(percentage)
 
         // Find out how much padding is needed to fill the rest of the action bar.
@@ -75,6 +77,7 @@ class JavaActionBarDialogueDialogueMessenger(
         val padding = " ".repeat(paddingSize)
 
         val component = actionBarFormat.asMiniWithResolvers(
+            player,
             Placeholder.parsed("speaker", speakerDisplayName),
             Placeholder.component("message", message),
             Placeholder.unparsed("padding", padding),
@@ -93,7 +96,7 @@ class JavaActionBarDialogueDialogueMessenger(
         val component = Component.empty()
         player.acceptActionBarMessage(component)
         player.sendActionBar(component)
-        confirmationKeyHandler?.dispose()
-        confirmationKeyHandler = null
+        confirmation?.dispose()
+        confirmation = null
     }
 }

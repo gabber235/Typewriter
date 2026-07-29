@@ -25,10 +25,11 @@ The `state` of the messenger determines what happens to the messenger.
 The state object can be changed inside the `tick` method or from outside. It can even be changed from the plugin itself. For example when the user runs a command the dialogue will be cancelled.
 
 ### Confirmation Key
-Some dialogue messengers may wait for the player to press a key before continuing. This key is configured globally in the plugin's `config.yml` under `confirmationKey`.
-Available values are `JUMP`, `SWAP_HANDS`, and `SNEAK`. Use the `<confirmation_key>` tag in your messages to display the correct keybind to the player.
+Some dialogue messengers may wait for the player to press a key before continuing. Ask for one with `player.awaitConfirmation`, and dispose the confirmation it hands back when the wait is over.
 
-Here is a minimal example of a dialogue that waits for the configured confirmation key before moving on.
+Which key that turns out to be is decided for you. The server sets a default in its `config.yml` under `confirmationKey`, out of `JUMP`, `SNEAK`, `SWAP_HANDS`, `LEFT_CLICK` and `RIGHT_CLICK`, and whatever is holding the player's input at the time can narrow it down further: while their camera is taken over, only jump and sneak still reach the server. Use the `<confirmation_key>` tag in your messages and parse them for that player, with `asMini(player)` or `asMiniWithResolvers(player, ...)`, so the tag names the key they can actually press. Pass the player on to every message you build another one out of, or the inner one falls back to the configured key.
+
+Here is a minimal example of a dialogue that waits for a confirmation before moving on.
 <CodeSnippet tag="dialogue_confirmation_messenger" json={require("../../../snippets.json")} />
 
 There are some additional lifecycle methods that can be overridden.

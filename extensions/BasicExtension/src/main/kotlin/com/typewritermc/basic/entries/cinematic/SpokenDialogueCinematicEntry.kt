@@ -72,9 +72,11 @@ private fun displaySpokenDialogue(player: Player, speakerName: String, text: Str
         padding = spokenPadding,
         minLines = spokenMinLines,
         maxLineLength = spokenMaxLineLength,
+        audience = player,
     )
 
     val component = spokenFormat.asMiniWithResolvers(
+        player,
         Placeholder.parsed("speaker", speakerName),
         Placeholder.component("message", message),
         Placeholder.parsed("padding", spokenPadding),
