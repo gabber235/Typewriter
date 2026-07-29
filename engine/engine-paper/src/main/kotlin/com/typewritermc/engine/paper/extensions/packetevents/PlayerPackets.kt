@@ -8,6 +8,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerCa
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_MAIN_ARM
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_OFF_HAND
+import com.typewritermc.engine.paper.logger
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
 import me.tofaa.entitylib.meta.EntityMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -73,12 +74,17 @@ class Metas(val meta: EntityMeta) {
     }
 }
 
+/**
+ * Applies the editor that fits the meta this entity has, and reports it when none of them does.
+ *
+ * Data is put together in the panel, where nothing ties a value to the entity types it fits: a pose can be
+ * one the type never strikes, an equipment slot one it has nowhere to wear. That is the user's to hear about
+ * rather than the entity's to break on, so the entity goes without this and keeps everything else.
+ */
 fun WrapperEntity.metas(editor: Metas.() -> Unit) {
-    val meta = entityMeta
-    val metas = Metas(meta).apply(editor)
-    if (!metas.hasBeenHandled) {
-        throw IllegalStateException(metas.error ?: "No meta was handled")
-    }
+    val metas = Metas(entityMeta).apply(editor)
+    if (metas.hasBeenHandled) return
+    logger.warning(metas.error ?: "A $entityType entity cannot take this data, so it is left out.")
 }
 
 fun Location.toPacketLocation() = com.github.retrooper.packetevents.protocol.world.Location(x, y, z, yaw, pitch)
