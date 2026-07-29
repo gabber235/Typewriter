@@ -65,7 +65,8 @@ class NpcEntity(
     private val skin: Var<SkinProperty>,
     definition: Ref<out EntityDefinitionEntry>,
 ) : FakeEntity(player) {
-    private val namePlate = NamedEntity(player, displayName, PlayerEntity(player, displayName), definition)
+    private val namePlate =
+        NamedEntity(player, displayName, PlayerEntity(player, displayName, definition.id), definition)
 
     init {
         consumeProperties(skin.get(player))

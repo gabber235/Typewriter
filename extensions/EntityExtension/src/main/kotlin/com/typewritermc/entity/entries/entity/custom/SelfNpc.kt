@@ -34,13 +34,14 @@ class SelfNpcDefinition(
     override val displayName: Var<String>
         get() = overrideName.orElseGet { ConstVar("%player_name%") }
 
-    override fun create(player: Player): FakeEntity = SelfNpc(player)
+    override fun create(player: Player): FakeEntity = SelfNpc(player, id)
 }
 
 class SelfNpc(
     player: Player,
+    stableId: String? = null,
 ) : FakeEntity(player) {
-    private val playerEntity = PlayerEntity(player, ConstVar(player.name))
+    private val playerEntity = PlayerEntity(player, ConstVar(player.name), stableId)
 
     override val state: EntityState
         get() = playerEntity.state
