@@ -18,7 +18,6 @@ import com.typewritermc.entity.entries.data.minecraft.living.tameable.SittingPro
 import com.typewritermc.entity.entries.data.minecraft.other.MarkerProperty
 import com.typewritermc.entity.entries.data.minecraft.other.SmallProperty
 import me.tofaa.entitylib.meta.mobs.water.PufferFishMeta
-import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.safeCast
 
@@ -26,6 +25,14 @@ fun <T : EntityProperty> Map<KClass<*>, EntityProperty>.property(type: KClass<T>
     return type.safeCast(this[type])
 }
 
+/**
+ * Which entities a row of the table below applies to. A field that is left out stands for any value, so
+ * `EntityDataMatcher(EntityTypes.CAT)` covers every cat and `EntityDataMatcher(EntityTypes.CAT, isBaby = true)`
+ * only the kittens.
+ *
+ * The entity being looked up is described the same way, with every field filled in. Which of the two an
+ * instance is decides the side of [matches] it goes on.
+ */
 private class EntityDataMatcher(
     val type: EntityType,
     val isBaby: Boolean? = null,
@@ -35,24 +42,29 @@ private class EntityDataMatcher(
     val marker: Boolean? = null,
     val puffState: PufferFishMeta.State? = null,
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    /**
+     * How many fields a row pins down, which is how closely it fits the entities it applies to.
+     *
+     * Several rows can apply to one entity at once: a warden roaring is a warden as much as it is a warden
+     * roaring. The one that pins down the most is the one meant for it.
+     */
+    val precision: Int = listOfNotNull(isBaby, pose, size, small, marker, puffState).size
 
-        other as EntityDataMatcher
-
-        if (type != other.type) return false
-        if (other.isBaby != null && isBaby != other.isBaby) return false
-        if (other.pose != null && pose != other.pose) return false
-        if (other.size != null && size != null && size > other.size) return false
-        if (other.small != null && small != other.small) return false
-        if (other.marker != null && marker != other.marker) return false
-        if (other.puffState != null && puffState != other.puffState) return false
+    /** Whether this entity is one [row] applies to. */
+    fun matches(row: EntityDataMatcher): Boolean {
+        if (type != row.type) return false
+        if (row.isBaby != null && isBaby != row.isBaby) return false
+        if (row.pose != null && pose != row.pose) return false
+        if (row.size != null && size != null && size > row.size) return false
+        if (row.small != null && small != row.small) return false
+        if (row.marker != null && marker != row.marker) return false
+        if (row.puffState != null && puffState != row.puffState) return false
 
         return true
     }
 
-    override fun hashCode(): Int = Objects.hash(type, isBaby, pose, size, small, marker, puffState)
+    fun standing(): EntityDataMatcher =
+        EntityDataMatcher(type, isBaby, EntityPose.STANDING, size, small, marker, puffState)
 
     override fun toString(): String {
         return "EntityDataMatcher(type=${type.name}, isBaby=$isBaby, pose=$pose, size=$size, small=$small, marker=$marker, puffState=$puffState)"
@@ -65,7 +77,7 @@ private data class EntityData(
     val eyeHeight: Double = height * 0.85
 )
 
-private val generatedEntityDataMap = mapOf(
+private val generatedEntityData = listOf(
 //<editor-fold desc="Entity Data Map Entries">
     EntityDataMatcher(EntityTypes.ALLAY) to EntityData(width = 0.35, height = 0.6, eyeHeight = 0.36),
     EntityDataMatcher(EntityTypes.AREA_EFFECT_CLOUD) to EntityData(width = 6.0, height = 0.5),
@@ -475,7 +487,7 @@ private val generatedEntityDataMap = mapOf(
 //</editor-fold>
 )
 
-private val manualEntityDataMap = mapOf(
+private val manualEntityData = listOf(
     EntityDataMatcher(EntityTypes.PLAYER, pose = EntityPose.SITTING) to EntityData(
         width = 0.6,
         height = 1.3,
@@ -550,7 +562,14 @@ private val manualEntityDataMap = mapOf(
     EntityDataMatcher(EntityTypes.CAT, isBaby = false) to EntityData(width = 0.6, height = 0.7, eyeHeight = 0.48),
 )
 
-private val entityDataMap = manualEntityDataMap + generatedEntityDataMap
+/**
+ * The table, grouped so that looking an entity up only walks the rows of its own type.
+ *
+ * The manual rows come first, so that they win the ties they exist to win: a manual row and a generated row
+ * that pin down the same fields fit equally closely, and the manual one is the correction.
+ */
+private val entityDataByType: Map<EntityType, List<Pair<EntityDataMatcher, EntityData>>> =
+    (manualEntityData + generatedEntityData).groupBy { (row, _) -> row.type }
 
 private fun pose(properties: Map<KClass<*>, EntityProperty>): EntityPose {
     val isSitting = properties.property(SittingProperty::class)?.sitting
@@ -574,8 +593,35 @@ private fun EntityType.matcher(properties: Map<KClass<*>, EntityProperty>): Enti
     return EntityDataMatcher(this, isBaby, pose(properties), size, small, marker, puffState)
 }
 
+/**
+ * The dimensions of the row that fits this entity closest.
+ *
+ * Closest, rather than first, because the table is written in no particular order and a row that pins down
+ * nothing but the type sits ahead of the pose rows for several of them. Taking the first would have every
+ * warden be the height of one climbing out of the ground.
+ *
+ * Size is a threshold rather than a value, so a row for size four also applies to everything smaller, and the
+ * tightest of the ones that fit is the one meant for it. Rows that fit equally closely are settled by
+ * position, which is what keeps a manual row ahead of the generated one it is there to correct.
+ */
+private fun EntityDataMatcher.findEntityData(): EntityData? =
+    entityDataByType[type]
+        ?.filter { (row, _) -> matches(row) }
+        ?.minWithOrNull(compareByDescending<Pair<EntityDataMatcher, EntityData>> { (row, _) -> row.precision }
+            .thenBy { (row, _) -> row.size ?: Int.MAX_VALUE })
+        ?.second
+
+/**
+ * Dimensions are only recorded for the poses a type strikes in vanilla, while a pose can be put on any
+ * entity. One the type has no dimensions for falls back on its standing ones, which is also what the
+ * client draws when a model has nothing for the pose it is given.
+ */
 private val EntityDataMatcher.entityData: EntityData?
-    get() = entityDataMap.entries.find { (key, _) -> this == key }?.value
+    get() {
+        findEntityData()?.let { return it }
+        if (pose == EntityPose.STANDING) return null
+        return standing().findEntityData()
+    }
 
 private val EntityDataMatcher.width: Double
     get() = entityData?.width
