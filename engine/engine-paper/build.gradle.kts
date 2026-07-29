@@ -38,7 +38,7 @@ dependencies {
 
     compileOnlyApi("com.corundumstudio.socketio:netty-socketio:1.7.19") // Keep this on a lower version as the newer version breaks the ping
 
-    api("me.tofaa2:spigot:3.3.4-SNAPSHOT")
+    api("me.tofaa2:spigot:3.3.6-SNAPSHOT")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     compileOnlyApi("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
 
