@@ -33,7 +33,7 @@ val typewriterJavaVersion = providers.gradleProperty("typewriter.java")
     .getOrElse(configuredTypewriterJavaVersion)
 
 group = "com.typewritermc.module-plugin"
-version = "2.1.0"
+version = "2.2.0"
 
 val engineVersion = typewriterVersion.substringBefore("-beta")
 

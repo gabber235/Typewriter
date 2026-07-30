@@ -47,11 +47,9 @@ class EntryListeners : KoinComponent, Reloadable {
     override suspend fun load() {
         val entryListeners = extensionLoader.loadedExtensions.flatMap { it.entryListeners }
 
-        val activeEventEntries = Query.find<EventEntry>().map { it::class }.distinct()
+        val activeEventEntries = Query.find<EventEntry>().mapTo(mutableSetOf()) { it::class.java.name }
 
-        val activeEntryListeners = entryListeners.filter {
-            activeEventEntries.any { activeEventEntry -> it.entryClassName == activeEventEntry.qualifiedName }
-        }
+        val activeEntryListeners = entryListeners.filter { it.entryClassName in activeEventEntries }
         activeEntryListeners.forEach {
             val method = it.method
             val eventClass =
