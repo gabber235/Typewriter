@@ -30,6 +30,7 @@ import com.typewritermc.engine.paper.extensions.packetevents.ArmSwing
 import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.interceptPackets
+import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.engine.paper.utils.toCoordinate
 import com.typewritermc.engine.paper.utils.toWorld
@@ -230,9 +231,11 @@ class EntityCinematicAction(
     }
 
     private fun playStepSound() {
-        val location = entity?.property<PositionProperty>() ?: return
-        val sound = location.toBukkitLocation().block.blockData.soundGroup.stepSound
-        player.playSound(location.toBukkitLocation(), sound, SoundCategory.NEUTRAL, 0.4f, 1.0f)
+        player.server.scheduler.runTask(plugin) { task ->
+            val location = entity?.property<PositionProperty>() ?: return@runTask
+            val sound = location.toBukkitLocation().block.blockData.soundGroup.stepSound
+            player.playSound(location.toBukkitLocation(), sound, SoundCategory.NEUTRAL, 0.4f, 1.0f)
+        }
     }
 
 
