@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.protocol.entity.pose.EntityPose
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.github.retrooper.packetevents.protocol.player.TextureProperty
 import com.github.retrooper.packetevents.protocol.player.UserProfile
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoRemove
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Ref
@@ -33,6 +34,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.entity.Player
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 @Entry("player_definition", "A player entity", Colors.ORANGE, "material-symbols:account-box")
 @Tags("player_definition")
@@ -51,7 +53,7 @@ class PlayerDefinition(
     @OnlyTags("generic_entity_data", "living_entity_data", "player_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
-    override fun create(player: Player): FakeEntity = PlayerEntity(player, displayName)
+    override fun create(player: Player): FakeEntity = PlayerEntity(player, displayName, id)
 }
 
 @Entry("player_instance", "An instance of a player entity", Colors.YELLOW, "material-symbols:account-box")
@@ -68,9 +70,18 @@ class PlayerInstance(
     override val activity: Ref<out SharedEntityActivityEntry> = emptyRef(),
 ) : SimpleEntityInstance
 
+/**
+ * A fake player shown to [player].
+ *
+ * [stableId] is whatever names the npc across respawns, so that it is shown under the profile it had before. A
+ * client keeps every profile it has been told about in its social interactions panel, also after that profile is
+ * removed again, so an npc without one leaves an entry there every time the viewer walks back into range. Leave
+ * it out for a fake player that is only ever shown once.
+ */
 class PlayerEntity(
     player: Player,
     displayName: Var<String>,
+    stableId: String? = null,
 ) : FakeEntity(player) {
     private val rideableSitting = RideableSittingSupport(
         player,
@@ -87,7 +98,7 @@ class PlayerEntity(
         get() = entity.entityType.state(properties)
 
     init {
-        val uuid = UUID.randomUUID()
+        val uuid = stableId?.let { claimProfile(player.uniqueId, it) } ?: UUID.randomUUID()
         var entityId: Int
         do {
             entityId = EntityLib.getPlatform().entityIdProvider.provide(uuid, EntityTypes.PLAYER)
@@ -190,5 +201,27 @@ class PlayerEntity(
         rideableSitting.dispose()
         entity.despawn()
         entity.remove()
+        // EntityLib adds the profile to the client's player list on spawn and never takes it back out.
+        WrapperPlayServerPlayerInfoRemove(entity.uuid) sendPacketTo player
+        claimedProfiles -= entity.uuid
+    }
+
+    companion object {
+        private val claimedProfiles = ConcurrentHashMap.newKeySet<UUID>()
+
+        /**
+         * The profile [viewer] is shown an npc named [stableId] under, held until that npc is disposed.
+         *
+         * A fake player exists per viewer, so a profile belongs to the viewer it is shown to as much as to the
+         * npc itself. Two npcs sharing a [stableId] are handed a profile each, so that copies standing next to
+         * each other are not shown as one player.
+         */
+        private fun claimProfile(viewer: UUID, stableId: String): UUID {
+            var index = 0
+            while (true) {
+                val profile = UUID.nameUUIDFromBytes("typewriter:npc:$viewer:$stableId:${index++}".toByteArray())
+                if (claimedProfiles.add(profile)) return profile
+            }
+        }
     }
 }
