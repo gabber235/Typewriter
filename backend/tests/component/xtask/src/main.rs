@@ -190,6 +190,12 @@ fn metadata(roots: &Roots) -> Result<Metadata> {
         .context("metadata phase: cargo metadata for backend/Cargo.toml failed")
 }
 
+fn cargo_command() -> Command {
+    let mut command = Command::new("cargo");
+    command.env_remove("CARGO_MANIFEST_DIR");
+    command
+}
+
 fn select_fixtures<'a>(
     args: &Args,
     roots: &Roots,
@@ -415,7 +421,7 @@ fn build_component(
         "--message-format=json-render-diagnostics",
     ];
     let command_text = format!("cargo {}", args.join(" "));
-    let mut child = Command::new("cargo")
+    let mut child = cargo_command()
         .args(args)
         .current_dir(&roots.backend)
         .stdout(Stdio::piped())
@@ -587,7 +593,7 @@ fn run_tests(
         .map(|test| test.libtest_name())
         .collect::<BTreeSet<_>>();
     let manifest_path = roots.tests.join("Cargo.toml");
-    let mut command = Command::new("cargo");
+    let mut command = cargo_command();
     command
         .args(["test", "--manifest-path"])
         .arg(&manifest_path)
@@ -616,7 +622,7 @@ fn verify_libtest_catalog(
     manifest: &Path,
     jobs: Option<usize>,
 ) -> Result<()> {
-    let mut command = Command::new("cargo");
+    let mut command = cargo_command();
     command
         .args(["test", "--manifest-path"])
         .arg(roots.tests.join("Cargo.toml"))
