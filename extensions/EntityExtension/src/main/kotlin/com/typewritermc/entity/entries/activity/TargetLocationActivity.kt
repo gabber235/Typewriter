@@ -58,21 +58,20 @@ class TargetLocationActivity(
 
 
     private interface State {
-        val isValid: Boolean
+        fun isValid(position: PositionProperty): Boolean
         fun nextState(): State
         fun createActivity(
             context: ActivityContext,
-            currentPosition: PositionProperty
+            position: PositionProperty
         ): EntityActivity<ActivityContext>
     }
 
     private inner class IdleState : State {
-        override val isValid: Boolean
-            get() {
-                if (once) return true
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
-                return distance <= locationActivityRange * locationActivityRange
-            }
+        override fun isValid(position: PositionProperty): Boolean {
+            if (once) return true
+            val distance = position.distanceSquared(targetPosition) ?: return true
+            return distance <= locationActivityRange * locationActivityRange
+        }
 
         private var cachedActivity: EntityActivity<ActivityContext>? = null
 
@@ -80,41 +79,40 @@ class TargetLocationActivity(
 
         override fun createActivity(
             context: ActivityContext,
-            currentPosition: PositionProperty
+            position: PositionProperty
         ): EntityActivity<ActivityContext> {
             if (cachedActivity != null) return cachedActivity!!
-            cachedActivity = (idleActivity.get() ?: IdleActivity).create(context, currentPosition)
+            cachedActivity = (idleActivity.get() ?: IdleActivity).create(context, position)
             return cachedActivity!!
         }
     }
 
     private inner class NavigatingState : State {
-        override val isValid: Boolean
-            get() {
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
-                return distance > locationActivityRange * locationActivityRange
-            }
+        override fun isValid(position: PositionProperty): Boolean {
+            val distance = position.distanceSquared(targetPosition) ?: return true
+            return distance > locationActivityRange * locationActivityRange
+        }
 
         override fun nextState(): State = states[1]
 
         override fun createActivity(
             context: ActivityContext,
-            currentPosition: PositionProperty
+            position: PositionProperty
         ): EntityActivity<ActivityContext> {
             return NavigationActivity(
                 PointToPointGPS(
                     network,
                     {
-                        val position = currentPosition.toPosition()
-                        position.firstWalkableLocationBelow() ?: position
+                        val start = position.toPosition()
+                        start.firstWalkableLocationBelow() ?: start
                     },
                     { targetPosition }
-                ), currentPosition)
+                ), position)
         }
     }
 
     override fun initialize(context: ActivityContext, position: PositionProperty) {
-        if (!state.isValid) {
+        if (!state.isValid(position)) {
             state = state.nextState()
         }
 
@@ -124,11 +122,13 @@ class TargetLocationActivity(
     }
 
     override fun tick(context: ActivityContext): TickResult {
-        if (!state.isValid) {
+        val position = currentPosition
+        if (!state.isValid(position)) {
             currentActivity.dispose(context)
             state = state.nextState()
-            currentActivity = state.createActivity(context, currentPosition)
-            currentActivity.initialize(context, currentPosition)
+            currentActivity = state.createActivity(context, position).also {
+                it.initialize(context, position)
+            }
         }
 
         return currentActivity.tick(context)

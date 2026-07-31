@@ -42,7 +42,9 @@ interface IndividualEntityActivity : EntityActivity<IndividualActivityContext>
 interface GenericEntityActivity : EntityActivity<ActivityContext>
 
 class IdleActivity(override var currentPosition: PositionProperty) : GenericEntityActivity {
-    override fun initialize(context: ActivityContext, position: PositionProperty) {}
+    override fun initialize(context: ActivityContext, position: PositionProperty) {
+        currentPosition = position
+    }
 
     override fun tick(context: ActivityContext): TickResult = TickResult.IGNORED
 
