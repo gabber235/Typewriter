@@ -9,6 +9,9 @@ members = [
   "organization/user-organization",
   "service/service-identity",
   "service/service-registration",
+  "testing/component-test-echo",
+  "testing/component-test-messaging",
+  "testing/component-test-responder",
   "wasmcloud-utils",
   "wasmcloud-utils-macros"
 ]

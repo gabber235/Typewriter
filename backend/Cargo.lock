@@ -231,6 +231,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "component-test-echo"
+version = "0.1.0"
+dependencies = [
+ "wit-bindgen 0.58.0",
+]
+
+[[package]]
+name = "component-test-messaging"
+version = "0.1.0"
+dependencies = [
+ "otel-wasi",
+ "wasmcloud-utils",
+ "wit-bindgen 0.58.0",
+]
+
+[[package]]
+name = "component-test-responder"
+version = "0.1.0"
+dependencies = [
+ "otel-wasi",
+ "wasmcloud-utils",
+ "wit-bindgen 0.58.0",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

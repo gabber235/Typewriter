@@ -1,0 +1,82 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/component-test-model",
+    "crates/component-test-core",
+    "crates/component-test-macros",
+    "crates/component-test",
+    "crates/typewriter-component-test",
+    "suite",
+    "xtask",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.95.0"
+publish = false
+repository = "https://github.com/gabber235/Typewriter"
+
+[workspace.dependencies]
+anyhow = "1"
+async-trait = "0.1"
+bytes = "1"
+cargo_metadata = "0.23"
+clap = { version = "4", features = ["derive"] }
+futures-util = "0.3"
+http = "1"
+http-body-util = "0.1"
+hyper = "1"
+inventory = "0.3"
+proc-macro2 = "1"
+quote = "1"
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+semver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+json-matcher = "0.1"
+skir-client = "0.1"
+surrealdb = { version = "3.2.3", features = ["kv-mem"] }
+sha2 = "0.10"
+syn = { version = "2", features = ["full", "extra-traits"] }
+thiserror = "2"
+tokio = { version = "1", features = [
+    "macros",
+    "rt-multi-thread",
+    "net",
+    "sync",
+    "time",
+] }
+uuid = { version = "1", features = ["v4"] }
+
+component-test-model = { path = "crates/component-test-model" }
+component-test-core = { path = "crates/component-test-core" }
+component-test-macros = { path = "crates/component-test-macros" }
+component-test = { path = "crates/component-test" }
+typewriter-component-test = { path = "crates/typewriter-component-test" }
+wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", rev = "7535c0255b2b84f6ae4de6034649ba2eeda84173", default-features = false, features = [
+    "p2",
+    "p3",
+] }
+wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", rev = "7535c0255b2b84f6ae4de6034649ba2eeda84173", default-features = false, features = [
+    "p2",
+    "p3",
+] }
+
+wasmcloud-utils = { path = "../../wasmcloud-utils" }
+
+wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "ac0677a26bb7ff2099b04b5dbc958cfbfa6f29c7", default-features = false, features = [
+    "wasi-config",
+    "wasi-logging",
+    "wasi-otel",
+    "wasm_component_model_implements",
+] }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "673c1a1fa1cc5d4e7d365e98783769be9c34170a" }
+
+[patch."https://github.com/bytecodealliance/wasmtime"]
+wasmtime = { git = "https://github.com/ricochet/wasmtime", rev = "50519312393a7de2fecbb1dca5c87a96e5b09fc0" }
+wasmtime-wasi = { git = "https://github.com/ricochet/wasmtime", rev = "50519312393a7de2fecbb1dca5c87a96e5b09fc0" }
+wasmtime-wasi-io = { git = "https://github.com/ricochet/wasmtime", rev = "50519312393a7de2fecbb1dca5c87a96e5b09fc0" }
+wasmtime-wasi-http = { git = "https://github.com/ricochet/wasmtime", rev = "50519312393a7de2fecbb1dca5c87a96e5b09fc0" }
+
+[profile.dev]
+debug = 0

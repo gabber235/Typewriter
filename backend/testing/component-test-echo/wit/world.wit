@@ -1,0 +1,6 @@
+package typewriter:component-test-echo@0.1.0;
+
+world component {
+  import wasi:http/types@0.3.0;
+  export wasi:http/handler@0.3.0;
+}

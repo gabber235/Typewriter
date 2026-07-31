@@ -1,0 +1,47 @@
+name: Backend tests
+
+on:
+  pull_request:
+    paths: [".cargo/**", ".dagger/backend.go", "backend/**", ".github/workflows/ci-backend-tests.yml"]
+  push:
+    branches: [main]
+    paths: [".cargo/**", ".dagger/backend.go", "backend/**", ".github/workflows/ci-backend-tests.yml"]
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  affected:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Run affected backend tests through Dagger
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: 0.21.8
+          args: >-
+            backend-test-affected
+            --repository https://github.com/${{ github.repository }}.git
+            --base ${{ github.event.pull_request.base.sha }}
+            stdout
+
+  full:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix: { shard: [0, 1, 2] }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run backend test shard through Dagger
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: 0.21.8
+          args: backend-test-shard --index ${{ matrix.shard }} --count 3 stdout

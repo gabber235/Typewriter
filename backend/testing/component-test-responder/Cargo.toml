@@ -1,0 +1,15 @@
+[package]
+name = "component-test-responder"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+otel-wasi.workspace = true
+wasmcloud-utils.workspace = true
+wit-bindgen.workspace = true

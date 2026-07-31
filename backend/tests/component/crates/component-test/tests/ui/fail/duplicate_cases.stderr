@@ -1,0 +1,13 @@
+error: duplicate component test case name
+  --> tests/ui/fail/duplicate_cases.rs:11:9
+   |
+11 | #[case::same(1)]
+   |         ^^^^
+
+warning: unused import: `TestContext`
+ --> tests/ui/fail/duplicate_cases.rs:1:22
+  |
+1 | use component_test::{TestContext, component_fixture, component_test};
+  |                      ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default

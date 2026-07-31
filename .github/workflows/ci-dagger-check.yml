@@ -37,5 +37,5 @@ jobs:
       - name: Run Dagger checks
         uses: dagger/dagger-for-github@v7
         with:
-          version: 0.21.7
+          version: 0.21.8
           args: check

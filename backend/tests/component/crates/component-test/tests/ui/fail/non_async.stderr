@@ -1,0 +1,13 @@
+error: component tests must be async
+  --> tests/ui/fail/non_async.rs:10:1
+   |
+10 | fn synchronous(_context: &mut TestContext<Example>) {}
+   | ^^
+
+warning: unused import: `TestContext`
+ --> tests/ui/fail/non_async.rs:1:22
+  |
+1 | use component_test::{TestContext, component_fixture, component_test};
+  |                      ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default

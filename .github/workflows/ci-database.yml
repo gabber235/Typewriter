@@ -49,5 +49,5 @@ jobs:
       - name: Build database artifact image through Dagger
         uses: dagger/dagger-for-github@v7
         with:
-          version: 0.21.7
+          version: 0.21.8
           args: call database-image sync

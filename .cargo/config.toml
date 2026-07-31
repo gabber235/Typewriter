@@ -1,0 +1,2 @@
+[alias]
+xtask = "run --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask --"
