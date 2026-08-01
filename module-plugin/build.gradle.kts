@@ -125,16 +125,11 @@ gradlePlugin {
     }
 }
 
-tasks.register("generateResources") {
-    val propFile = layout.buildDirectory.file("generated/typewriter-module-plugin.properties").get().asFile
-    outputs.file(propFile)
-
-    doLast {
-        propFile.parentFile.mkdirs()
-        propFile.writeText("version=$version")
-    }
+val generateResources by tasks.registering(WriteProperties::class) {
+    destinationFile = layout.buildDirectory.file("generated/typewriter-module-plugin.properties")
+    property("version", providers.provider { project.version.toString() })
 }
 
 tasks.named<ProcessResources>("processResources") {
-    from(tasks["generateResources"])
+    from(generateResources)
 }

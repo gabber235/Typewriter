@@ -44,6 +44,7 @@ allprojects {
         maven {
             name = "JitPack"
             url = uri("https://jitpack.io")
+            content { includeGroupAndSubgroups("com.github") }
         }
     }
 
@@ -95,6 +96,9 @@ subprojects {
     }
 
     if (!project.name.startsWith("_")) {
+        // Read outside the rename closure: that closure runs at execution time.
+        val extensionJarName = "${project.name}.jar"
+
         tasks.register<Copy>("buildAndMove") {
             dependsOn(tasks.named("shadowJar"))
             from(tasks.named<ShadowJar>("shadowJar").flatMap { it.archiveFile })
@@ -103,7 +107,7 @@ subprojects {
             outputs.upToDateWhen { false }
 
             into(file("../../server/plugins/Typewriter/extensions"))
-            rename { "${project.name}.jar" }
+            rename { extensionJarName }
         }
 
         tasks.register<Copy>("buildRelease") {
@@ -113,7 +117,7 @@ subprojects {
             description = "Builds the jar and renames it"
 
             into(file("../../jars/extensions"))
-            rename { "${project.name}.jar" }
+            rename { extensionJarName }
         }
 
         tasks.register("releaseSourcesJar", Jar::class) {

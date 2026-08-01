@@ -10,21 +10,40 @@ plugins {
 repositories {
     mavenCentral()
     // Floodgate & Geyser
-    maven("https://repo.opencollab.dev/main/")
+    maven("https://repo.opencollab.dev/main/") {
+        content {
+            includeGroupAndSubgroups("org.geysermc")
+            // Geyser's own transitives live here too.
+            includeGroupAndSubgroups("org.cloudburstmc")
+            includeGroupAndSubgroups("com.nukkitx")
+        }
+    }
     // PacketEvents
-    maven("https://repo.codemc.io/repository/maven-releases/")
-    maven("https://repo.codemc.io/repository/maven-snapshots/")
+    maven("https://repo.codemc.io/repository/maven-releases/") {
+        content { includeGroupAndSubgroups("com.github.retrooper") }
+    }
+    maven("https://repo.codemc.io/repository/maven-snapshots/") {
+        content { includeGroupAndSubgroups("com.github.retrooper") }
+    }
     // PlaceholderAPI
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {
+        content { includeGroup("me.clip") }
+    }
     // PaperMC
     maven {
         name = "papermc"
         url = uri("https://repo.papermc.io/repository/maven-public/")
+        content {
+            includeGroupAndSubgroups("io.papermc")
+            includeGroup("com.mojang")
+            includeGroup("net.md-5")
+        }
     }
     // EntityLib
     maven {
         name = "TypewriterMC"
         url = uri("https://maven.typewritermc.com/external")
+        content { includeGroupAndSubgroups("me.tofaa2") }
     }
 }
 

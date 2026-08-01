@@ -36,12 +36,7 @@ runs:
         shell: bash
         working-directory: ./app
 
-      - name: Test Paper Engine
+      - name: Test and Build Paper Engine
         working-directory: ./engine
-        run: ./gradlew engine-paper:test ${{ inputs.gradle-arguments }} --stacktrace --warning-mode all
-        shell: bash
-
-      - name: Build Plugin
-        working-directory: ./engine
-        run: ./gradlew engine-paper:buildRelease ${{ inputs.gradle-arguments }} --stacktrace --warning-mode all
+        run: ./gradlew engine-paper:test engine-paper:buildRelease ${{ inputs.gradle-arguments }} --stacktrace --warning-mode all
         shell: bash

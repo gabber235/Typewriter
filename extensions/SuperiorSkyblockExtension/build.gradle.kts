@@ -1,7 +1,9 @@
 import com.typewritermc.loader.ExtensionFlag
 
 repositories {
-    maven("https://repo.bg-software.com/repository/api/")
+    maven("https://repo.bg-software.com/repository/api/") {
+        content { includeGroupAndSubgroups("com.bgsoftware") }
+    }
 }
 
 dependencies {

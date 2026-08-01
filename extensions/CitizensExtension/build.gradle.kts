@@ -1,7 +1,9 @@
 import com.typewritermc.loader.ExtensionFlag
 
 repositories {
-    maven("https://repo.citizensnpcs.co/")
+    maven("https://repo.citizensnpcs.co/") {
+        content { includeGroupAndSubgroups("net.citizensnpcs") }
+    }
 }
 
 dependencies {
