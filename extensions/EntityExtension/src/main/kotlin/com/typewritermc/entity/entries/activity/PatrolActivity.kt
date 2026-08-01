@@ -74,6 +74,7 @@ class PatrolActivity(
     }
 
     override fun activate(context: ActivityContext, position: PositionProperty) {
+        activity.dispose()
         activity = IdleActivity(position)
         setup(context)
     }
@@ -103,9 +104,7 @@ class PatrolActivity(
     }
 
     override fun deactivate(context: ActivityContext) {
-        val oldPosition = currentPosition
         activity.deactivate(context)
-        activity = IdleActivity(oldPosition)
     }
 
     override fun dispose() {

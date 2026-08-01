@@ -113,6 +113,9 @@ class RandomPatrolActivity(
     }
 
     override fun activate(context: ActivityContext, position: PositionProperty) {
+        searchJob?.cancel()
+        searchJob = null
+        activity.dispose()
         activity = IdleActivity(position)
         setup(context)
     }
@@ -158,9 +161,7 @@ class RandomPatrolActivity(
     override fun deactivate(context: ActivityContext) {
         searchJob?.cancel()
         searchJob = null
-        val oldPosition = currentPosition
         activity.deactivate(context)
-        activity = IdleActivity(oldPosition)
     }
 
     override fun dispose() {
