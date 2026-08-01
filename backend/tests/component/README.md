@@ -4,37 +4,38 @@ This workspace executes compiled `wasm32-wasip2` components through the producti
 
 ## Commands
 
-Run from repository root:
+Run the suite through Dagger from the repository root. This is the supported development and CI interface:
 
 ```console
-cargo xtask component-test --list
-cargo xtask component-test service-identity
-cargo xtask component-test service-identity issue_identity__engine_role
-cargo xtask component-test --affected origin/main
-cargo xtask component-test --all
-cargo xtask component-test --all --jobs 4
+dagger call backend-test stdout
+dagger call backend-test-fixture --fixture service-identity stdout
+dagger call backend-test-case --fixture synthetic-http --filter case_000 stdout
+dagger call backend-test-shard --index 0 --count 2 stdout
+dagger call backend-test-affected \
+  --repository https://github.com/Seamlezz/Typewriter.git \
+  --base <commit> stdout
 ```
 
-The xtask always asks Cargo to build selected components, reads exact artifacts from Cargo JSON messages, hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
+Dagger provides the pinned Rust environment, Wasm target, dependency caches, artifact caches, and concurrency settings. Do not invoke `cargo xtask component-test` directly for normal development or CI.
 
-`--live` streams redacted fixture diagnostics. Passing tests otherwise remain quiet.
+The internal xtask asks Cargo to build selected components, reads exact artifacts from Cargo JSON messages, hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
 
 ## Dagger and CI
 
-CI invokes dedicated Dagger functions rather than running Cargo directly. These functions are intentionally not annotated with `+check`, so the component suite is not part of the general `dagger check` command:
-
-```console
-dagger call component-test stdout
-dagger call component-test-fixture --fixture service-identity stdout
-dagger call component-test-case --fixture synthetic-http --filter case_000 stdout
-dagger call component-test-shard --index 0 --count 2 stdout
-dagger call component-test-affected \
-  --repository https://github.com/Seamlezz/Typewriter.git \
-  --base <commit> stdout
-dagger call component-test-performance stdout
-```
+The dedicated Dagger functions are intentionally not annotated with `+check`, so the component suite is not part of the general `dagger check` command.
 
 The GitHub workflow only selects the appropriate Dagger function. Other CI systems can invoke the same functions without reproducing Rust setup, caching, artifact selection, or test commands.
+
+## Internal runner diagnostics
+
+The xtask is an implementation detail used by the Dagger functions. Framework maintainers may invoke it directly when diagnosing catalog discovery or runner behavior:
+
+```console
+cargo xtask component-test --list
+cargo xtask component-test service-identity engine_identity_persists_credentials_and_roles --jobs 1 --live
+```
+
+`--live` streams redacted fixture diagnostics. Passing tests otherwise remain quiet. Return to the equivalent Dagger command when verifying a repository change.
 
 ## Writing a fixture
 
@@ -133,6 +134,8 @@ Tests inject through `context.messaging()?`. Component-originated publish/reques
 - `SchemaPreset` and `TypewriterFixtureBuilderExt`.
 - Unique in-memory SurrealDB per case.
 - Bound Rust seed queries and typed/JSON assertions.
+- `skir_record_id` for string keyed Skir record identifiers.
+- `database_record_key` for extracting record keys from JSON query results.
 - `SkirHttpExt` and `SkirMessagingExt` using explicit generated serializers.
 - Typed Skir messaging expectation bodies and replies.
 
@@ -146,7 +149,7 @@ Sensitive environment values and authorization/cookie headers are redacted befor
 
 ## Parallelism
 
-The framework admits a conservative number of isolated fixtures based on available CPUs, capped at two by default. Override with `--jobs` or `COMPONENT_TEST_JOBS`.
+The framework admits a conservative number of isolated fixtures based on available CPUs. Dagger caps normal suite and fixture execution at two jobs and exact case execution at one job.
 
 The supported runner is ordinary Cargo libtest. Nextest runs each test in a separate process and therefore cannot share the engine or admission controller; it is not optimized or supported initially.
 
@@ -154,11 +157,11 @@ The supported runner is ordinary Cargo libtest. Nextest runs each test in a sepa
 
 ### Missing run manifest
 
-Use the exact xtask command printed by the error. Direct Cargo or IDE execution is not a freshness-safe path.
+Run the matching Dagger fixture or case command. Direct Cargo or IDE execution is not a freshness-safe path.
 
 ### Artifact hash mismatch
 
-Rerun xtask. Never edit files under `backend/target/wasm32-wasip2` manually.
+Rerun the matching Dagger command. Never edit files under `backend/target/wasm32-wasip2` manually.
 
 ### Workload did not reach Running
 
@@ -170,7 +173,7 @@ Register the authority with `outgoing_http::<Marker>` or add an explicit allowed
 
 ### Test appears stuck
 
-Run one exact case with `--jobs 1 --live`. Lifecycle phases have bounded timeouts and the report identifies drain or stop failures.
+Run one exact case with `dagger call backend-test-case`. Lifecycle phases have bounded timeouts and the report identifies drain or stop failures.
 
 ## Architecture
 

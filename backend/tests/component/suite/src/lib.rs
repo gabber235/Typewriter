@@ -1,8 +1,10 @@
 //! Central Typewriter component test catalog and suite.
 
 #![forbid(unsafe_code)]
+#![cfg_attr(not(test), allow(dead_code))]
 
-mod service_identity;
-mod service_registration;
-mod synthetic_http;
-mod synthetic_messaging;
+mod access;
+mod framework;
+mod organization;
+mod service;
+mod workflows;

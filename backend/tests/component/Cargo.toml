@@ -19,6 +19,7 @@ repository = "https://github.com/gabber235/Typewriter"
 [workspace.dependencies]
 anyhow = "1"
 async-trait = "0.1"
+base64 = "0.22"
 bytes = "1"
 cargo_metadata = "0.23"
 clap = { version = "4", features = ["derive"] }
@@ -27,6 +28,9 @@ http = "1"
 http-body-util = "0.1"
 hyper = "1"
 inventory = "0.3"
+jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
+nats-jwt-rs = "0.1"
+nkeys = "0.4"
 proc-macro2 = "1"
 quote = "1"
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }

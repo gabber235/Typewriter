@@ -179,6 +179,12 @@ impl SeedQuery {
     pub async fn execute(self) -> Result<IndexedResults> {
         self.database.response(&self.sql, self.bindings).await
     }
+
+    pub async fn query_json(self) -> Result<serde_json::Value> {
+        let mut response = self.database.response(&self.sql, self.bindings).await?;
+        let value: surrealdb::types::Value = response.take(0)?;
+        Ok(value.into_json_value())
+    }
 }
 
 pub struct TypewriterDatabase {
