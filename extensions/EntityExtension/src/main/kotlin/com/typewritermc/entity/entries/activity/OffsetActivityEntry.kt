@@ -49,7 +49,7 @@ class OffsetActivity(
 ) : EntityActivity<ActivityContext> {
     private var lastOffset: Vector = Vector.ZERO
     override fun activate(context: ActivityContext, position: PositionProperty) {
-        childActivity.activate(context, position)
+        childActivity.activate(context, position.add(-lastOffset.x, -lastOffset.y, -lastOffset.z))
         lastOffset = offset.get(context.randomViewer) ?: Vector.ZERO
     }
 
