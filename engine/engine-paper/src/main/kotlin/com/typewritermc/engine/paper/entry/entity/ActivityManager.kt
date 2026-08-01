@@ -6,6 +6,7 @@ import org.bukkit.entity.Player
 
 class ActivityManager<Context : ActivityContext>(
     private val activity: EntityActivity<in Context>,
+    private val reportViolation: (String) -> Unit = { logger.severe(it) },
 ) {
     private enum class State { CREATED, ACTIVE, DISPOSED }
 
@@ -28,7 +29,7 @@ class ActivityManager<Context : ActivityContext>(
         if (state != State.ACTIVE) {
             if (reportedTickViolation) return
             reportedTickViolation = true
-            logger.severe("Ticked an activity manager that is $state. This is a Typewriter bug, please report it.")
+            reportViolation("Ticked an activity manager that is $state. This is a Typewriter bug, please report it.")
             return
         }
         activity.tick(context)
