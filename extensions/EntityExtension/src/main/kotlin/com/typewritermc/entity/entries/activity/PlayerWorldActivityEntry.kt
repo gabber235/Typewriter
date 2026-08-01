@@ -47,7 +47,7 @@ class PlayerWorldActivity(
 
     override fun activate(context: IndividualActivityContext, position: PositionProperty) {
         world = context.viewer.position.world
-        children.switchTo(child, context, position)
+        children.activate(child, context, position.withWorld(world))
     }
 
     override fun tick(context: IndividualActivityContext): TickResult {

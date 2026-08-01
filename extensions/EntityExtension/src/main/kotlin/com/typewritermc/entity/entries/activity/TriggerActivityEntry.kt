@@ -51,7 +51,7 @@ private class TriggerActivity(
     private val children = entryActivityHolder<ActivityContext>(startPosition)
 
     override fun activate(context: ActivityContext, position: PositionProperty) {
-        children.switchTo(ref, context, position)
+        children.activate(ref, context, position)
         context.viewers.forEach {
             onStart.triggerFor(it, context())
         }
