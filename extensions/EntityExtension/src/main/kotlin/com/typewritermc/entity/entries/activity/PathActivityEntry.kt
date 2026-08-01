@@ -103,7 +103,7 @@ private class PathActivity(
             currentLocationIndex = (currentLocationIndex + 1)
             refreshActivity(context, network!!)
             // If we refreshed to nothing, we are done.
-            if (nodes.size <= currentLocationIndex && !idleActivity.isSet) {
+            if (activity is IdleActivity) {
                 return TickResult.IGNORED
             }
         }
