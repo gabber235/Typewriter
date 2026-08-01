@@ -15,8 +15,10 @@ interface EntityActivity<Context : ActivityContext> {
     /**
      * Start running at [position].
      *
-     * Called for the first activation and for every resume after a [deactivate]. The activity must
-     * adopt [position]; it may differ from wherever the activity left off.
+     * Called for the first activation, for every resume after a [deactivate], and again while the
+     * activity is already running when whatever owns it is itself activated. The activity must
+     * adopt [position] every time and restart its work from there; it may differ from wherever the
+     * activity left off.
      */
     fun activate(context: Context, position: PositionProperty)
 

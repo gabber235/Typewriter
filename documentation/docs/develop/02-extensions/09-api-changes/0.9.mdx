@@ -235,11 +235,14 @@ interface EntityActivity<Context : ActivityContext> {
     fun dispose() {}
 
     val currentPosition: PositionProperty
+    val currentProperties: List<EntityProperty> get() = listOf(currentPosition)
 }
 ```
 
-- `activate` starts the activity, at `position`. It runs for the first activation **and** for every
-  resume, and the activity must adopt `position`, which may differ from wherever it left off.
+- `activate` starts the activity, at `position`. It runs for the first activation, for every
+  resume, and again while the activity is already running when whatever owns it is itself
+  activated. The activity must adopt `position` every time and restart its work from there, since
+  it may differ from wherever the activity left off.
 - `deactivate` pauses the activity. Cancel jobs, release listeners, drop temporary resources, keep
   progress. The activity may be activated again afterwards.
 - `dispose` is final teardown. It takes no context, because `deactivate` always runs first, so
@@ -250,7 +253,8 @@ Typewriter guarantees:
 1. `activate` always runs before any `tick`.
 2. `deactivate` only ever follows an `activate`, and never twice in a row.
 3. `dispose` runs at most once, after `deactivate`, and nothing follows it.
-4. `activate` may run many times, each with a possibly different position.
+4. `activate` may run many times, each with a possibly different position, including twice with no
+   `deactivate` between them. Make it safe to call on an activity that is already running.
 
 ### Migrating
 
@@ -269,6 +273,7 @@ override fun dispose(context: ActivityContext) {
 // highlight-green-start
 override fun activate(context: ActivityContext, position: PositionProperty) {
     currentPosition = position
+    searchJob?.cancel()
     searchJob = startSearching()
 }
 
@@ -280,6 +285,10 @@ override fun deactivate(context: ActivityContext) {
 
 In almost every case `initialize` becomes `activate` and the body of the old `dispose` becomes
 `deactivate`. Leave `dispose` empty unless the activity holds child activities of its own.
+
+Note the extra `cancel` in `activate`. Because `activate` can run on an activity that is already
+running, anything it starts has to replace what the previous activation started rather than run
+alongside it.
 
 ### Holding child activities
 
@@ -296,7 +305,7 @@ class MyActivity(
     private val children = entryActivityHolder<ActivityContext>(startPosition)
 
     override fun activate(context: ActivityContext, position: PositionProperty) {
-        children.switchTo(child, context, position)
+        children.activate(child, context, position)
     }
 
     override fun tick(context: ActivityContext): TickResult = children.tick(context)
