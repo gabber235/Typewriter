@@ -58,7 +58,8 @@ class TargetLocationActivity(
 
 
     private interface State {
-        val isValid: Boolean
+        /** Whether this state still applies to an entity standing at [position]. */
+        fun isValid(position: PositionProperty): Boolean
         fun nextState(): State
         fun createActivity(
             context: ActivityContext,
@@ -67,12 +68,11 @@ class TargetLocationActivity(
     }
 
     private inner class IdleState : State {
-        override val isValid: Boolean
-            get() {
-                if (once) return true
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
-                return distance <= locationActivityRange * locationActivityRange
-            }
+        override fun isValid(position: PositionProperty): Boolean {
+            if (once) return true
+            val distance = position.distanceSquared(targetPosition) ?: return true
+            return distance <= locationActivityRange * locationActivityRange
+        }
 
         private var cachedActivity: EntityActivity<ActivityContext>? = null
 
@@ -89,11 +89,10 @@ class TargetLocationActivity(
     }
 
     private inner class NavigatingState : State {
-        override val isValid: Boolean
-            get() {
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
-                return distance > locationActivityRange * locationActivityRange
-            }
+        override fun isValid(position: PositionProperty): Boolean {
+            val distance = position.distanceSquared(targetPosition) ?: return true
+            return distance > locationActivityRange * locationActivityRange
+        }
 
         override fun nextState(): State = states[1]
 
@@ -114,24 +113,33 @@ class TargetLocationActivity(
     }
 
     override fun initialize(context: ActivityContext, position: PositionProperty) {
-        if (!state.isValid) {
+        activateState(context, position)
+    }
+
+    override fun tick(context: ActivityContext): TickResult {
+        val position = currentPosition
+        if (!state.isValid(position)) {
+            currentActivity.dispose(context)
+            activateState(context, position)
+        }
+
+        return currentActivity.tick(context)
+    }
+
+    /**
+     * Advances to the next state when the current one no longer applies at [position], and starts its activity there.
+     *
+     * The activity of a state can be reused across activations, so [position] has to be threaded through explicitly:
+     * a reused activity still reports the position it was left at, which is not where the entity stands now.
+     */
+    private fun activateState(context: ActivityContext, position: PositionProperty) {
+        if (!state.isValid(position)) {
             state = state.nextState()
         }
 
         currentActivity = state.createActivity(context, position).also {
             it.initialize(context, position)
         }
-    }
-
-    override fun tick(context: ActivityContext): TickResult {
-        if (!state.isValid) {
-            currentActivity.dispose(context)
-            state = state.nextState()
-            currentActivity = state.createActivity(context, currentPosition)
-            currentActivity.initialize(context, currentPosition)
-        }
-
-        return currentActivity.tick(context)
     }
 
     override fun dispose(context: ActivityContext) {

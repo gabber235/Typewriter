@@ -49,9 +49,11 @@ private class PathActivity(
 
     fun refreshActivity(context: ActivityContext, network: RoadNetwork) {
         if (nodes.size <= currentLocationIndex) {
+            val position = currentPosition
             activity.dispose(context)
-            activity = idleActivity.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-            activity.initialize(context, currentPosition)
+            activity = (idleActivity.get()?.create(context, position) ?: IdleActivity(position)).also {
+                it.initialize(context, position)
+            }
             return
         }
 
