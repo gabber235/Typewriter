@@ -7,7 +7,7 @@ use std::process::{Command, ExitCode, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, anyhow, bail, ensure};
-use cargo_metadata::{Artifact, Message, Metadata, MetadataCommand, PackageId};
+use cargo_metadata::{Artifact, CrateType, Message, Metadata, MetadataCommand, PackageId};
 use clap::{ArgAction, Parser};
 use component_test::{FixtureDescriptor, TestDescriptor};
 use component_test_model::{
@@ -80,6 +80,8 @@ fn run() -> Result<i32> {
         component_test::registered_fixtures().context("catalog phase: invalid fixture catalog")?;
     let tests =
         component_test::registered_tests().context("catalog phase: invalid test catalog")?;
+    let metadata = metadata(&roots)?;
+    validate_production_fixture_catalog(&roots, &metadata, &fixtures)?;
 
     if args.list {
         for fixture in &fixtures {
@@ -96,7 +98,6 @@ fn run() -> Result<i32> {
         return Ok(0);
     }
 
-    let metadata = metadata(&roots)?;
     let selected_fixtures = select_fixtures(&args, &roots, &metadata, &fixtures)?;
     let selected_tests = select_tests(&args, &selected_fixtures, &tests)?;
     ensure!(
@@ -188,6 +189,46 @@ fn metadata(roots: &Roots) -> Result<Metadata> {
         .manifest_path(roots.backend.join("Cargo.toml"))
         .exec()
         .context("metadata phase: cargo metadata for backend/Cargo.toml failed")
+}
+
+fn validate_production_fixture_catalog(
+    roots: &Roots,
+    metadata: &Metadata,
+    fixtures: &[&FixtureDescriptor],
+) -> Result<()> {
+    let deployable = metadata
+        .packages
+        .iter()
+        .filter_map(|package| {
+            let directory = package.manifest_path.parent()?.as_std_path();
+            if !directory.starts_with(&roots.backend) || !directory.join("deploy").is_dir() {
+                return None;
+            }
+            package
+                .targets
+                .iter()
+                .any(|target| target.crate_types.contains(&CrateType::CDyLib))
+                .then(|| package.name.to_string())
+        })
+        .collect::<BTreeSet<_>>();
+    let registered = fixtures
+        .iter()
+        .map(|fixture| fixture.primary.package.to_string())
+        .collect::<BTreeSet<_>>();
+    let missing = missing_fixture_packages(&deployable, &registered);
+    ensure!(
+        missing.is_empty(),
+        "catalog phase: deployable components without fixtures: {}",
+        missing.join(", ")
+    );
+    Ok(())
+}
+
+fn missing_fixture_packages(
+    deployable: &BTreeSet<String>,
+    registered: &BTreeSet<String>,
+) -> Vec<String> {
+    deployable.difference(registered).cloned().collect()
 }
 
 fn cargo_command() -> Command {
@@ -751,5 +792,32 @@ mod tests {
         let path =
             Path::new("backend/target/component-tests/runs").join(format!("{}-{}.json", 1, 2));
         assert!(path.ends_with("runs/1-2.json"));
+    }
+
+    #[test]
+    fn production_catalog_reports_every_missing_fixture() {
+        let deployable = ["auth-callout", "service-identity", "service-registration"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        let registered = ["service-identity"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+
+        assert_eq!(
+            missing_fixture_packages(&deployable, &registered),
+            ["auth-callout", "service-registration"]
+        );
+    }
+
+    #[test]
+    fn production_catalog_accepts_complete_fixture_set() {
+        let deployable = ["auth-sentinel", "user-organization"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+
+        assert!(missing_fixture_packages(&deployable, &deployable).is_empty());
     }
 }
