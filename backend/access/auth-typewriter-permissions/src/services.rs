@@ -46,7 +46,7 @@ pub async fn handle_service(
     let mut tags = vec![format!("service:{service_id}")];
 
     allow_subscribe.push(format!("_INBOX.{service_id}.>"));
-    allow_publish.push(format!("_INBOX.>"));
+    allow_publish.push("_INBOX.>".to_string());
 
     allow_publish.push(format!("cloud.to.service.{service_id}.status"));
     allow_publish.push(format!("cloud.to.service.{service_id}.heartbeat"));
@@ -148,7 +148,7 @@ fn handle_bound_binding(
         "auth.permissions.category.realm" = true,
     );
 
-    tags.push(format!("org:{org_id}"));
+    tags.push(format!("organization:{org_id}"));
 
     // TODO: Don't make this broad, make it narrow.
     allow_publish.push(format!(

@@ -41,11 +41,12 @@ pub async fn handle_panel_user(
 
     let mut allow_publish = vec![];
     let mut allow_subscribe = vec![];
+    let mut tags = vec![format!("user:{user_id}")];
 
     // ########### PERMISSIONS ###########
     {
         allow_subscribe.push(format!("_INBOX.{user_id}.>"));
-        allow_publish.push(format!("_INBOX.>"));
+        allow_publish.push("_INBOX.>".to_string());
 
         add_user_organizations_permissions(&user_id, &mut allow_publish, &mut allow_subscribe);
         main_attribute!("auth.permissions.category.organizations" = true);
@@ -53,6 +54,7 @@ pub async fn handle_panel_user(
         if let Some(ref org_id) = organization_id {
             let is_member = is_member_of_organization(&user_id, org_id).await?;
             if is_member {
+                tags.push(org_id.to_string());
                 main_attribute!("auth.permissions.organization_access" = "allowed");
                 let org_id = &org_id.key.to_string();
                 add_organization_roles_permissions(
@@ -98,12 +100,6 @@ pub async fn handle_panel_user(
         "auth.permissions.subscribe.allow.count" = permissions.subscribe.allow.len() as i64,
     );
 
-    let mut tags = vec![];
-    if let Some(ref organization_id) = organization_id {
-        tags.push(format!("org:{organization_id}"));
-    }
-    tags.push(format!("user:{user_id}"));
-
     Ok((permissions, tags))
 }
 
@@ -144,10 +140,10 @@ async fn upsert_user(
                 last_login = time::now();
             ",
     )
-    .bind("uid", &user_id)
-    .bind("name", &name)
-    .bind("email", &email)
-    .bind("avatar_url", &avatar_url)
+    .bind("uid", user_id)
+    .bind("name", name)
+    .bind("email", email)
+    .bind("avatar_url", avatar_url)
     .execute()
     .await
     .error_with_slug("user-db-upsert-failed")?
@@ -170,7 +166,7 @@ async fn is_member_of_organization(
         ) > 0
         ",
     )
-    .bind("user_id", &user_id)
+    .bind("user_id", user_id)
     .bind("org_id", surrealdb_component_sdk::RecordId::from(org_id))
     .execute()
     .await
@@ -226,6 +222,9 @@ fn add_organization_members_permissions(
         "cloud.to.user.{user_id}.organization.{org_id}.members.watch"
     ));
     allow_subscribe.push(format!("cloud.from.organization.{org_id}.members.watch"));
+    allow_publish.push(format!(
+        "cloud.to.user.{user_id}.organization.{org_id}.members.update"
+    ));
     allow_publish.push(format!(
         "cloud.to.user.{user_id}.organization.{org_id}.members.remove"
     ));
