@@ -55,9 +55,8 @@ async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi
             other
         )),
     }
-    .map_err(|e| {
+    .inspect_err(|_| {
         main_attribute!("auth.outcome" = "failed");
-        e
     })?;
 
     let response = GetEntityPermissionResponse {
