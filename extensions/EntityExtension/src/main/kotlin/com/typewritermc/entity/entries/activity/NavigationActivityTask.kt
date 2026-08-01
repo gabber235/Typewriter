@@ -36,6 +36,7 @@ class NavigationActivity(
         get() = state.position()
 
     override fun activate(context: ActivityContext, position: PositionProperty) {
+        state.dispose()
         path = null
         state = NavigationActivityTaskState.Searching(gps, position)
     }
@@ -80,6 +81,10 @@ class NavigationActivity(
     }
 
     override fun deactivate(context: ActivityContext) {
+        state.dispose()
+    }
+
+    override fun dispose() {
         state.dispose()
     }
 }
