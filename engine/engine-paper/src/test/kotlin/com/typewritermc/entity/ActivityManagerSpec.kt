@@ -89,8 +89,7 @@ class ActivityManagerSpec : FunSpec({
 
     test("ticking before initialize never reaches the activity") {
         val activity = CountingActivity(spawn)
-        val reported = mutableListOf<String>()
-        val manager = ActivityManager(activity) { reported += it }
+        val manager = ActivityManager(activity) { }
 
         manager.tick(ManagerContext())
 
@@ -99,8 +98,7 @@ class ActivityManagerSpec : FunSpec({
 
     test("ticking after dispose never reaches the activity") {
         val activity = CountingActivity(spawn)
-        val reported = mutableListOf<String>()
-        val manager = ActivityManager(activity) { reported += it }
+        val manager = ActivityManager(activity) { }
         manager.initialize(ManagerContext())
 
         manager.tick(ManagerContext())

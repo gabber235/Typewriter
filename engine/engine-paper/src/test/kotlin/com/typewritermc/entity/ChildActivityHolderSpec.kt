@@ -142,6 +142,7 @@ class ChildActivityHolderSpec : FunSpec({
 
         holder.switchTo(refTo("idle", idle), context, spawn)
         holder.switchTo(refTo("walking", walking), context, target)
+        holder.deactivate(context)
         holder.dispose()
 
         idle.disposals shouldBe 1
@@ -158,6 +159,25 @@ class ChildActivityHolderSpec : FunSpec({
         holder.switchTo(refTo("walking", walking), context, spawn)
         holder.switchTo(idleRef, context, target)
 
+        holder.currentPosition shouldBe target
+    }
+
+    test("a child that could not be built yet is tried again on the next activation") {
+        val context = HolderContext()
+        val walking = RecordingActivity(spawn)
+        var resolves = false
+        val holder = ChildActivityHolder<Mode, ActivityContext>(spawn) { _, _, _ ->
+            if (resolves) walking else null
+        }
+
+        holder.activate(Mode.NAVIGATING, context, spawn)
+        walking.activations shouldBe 0
+        holder.currentPosition shouldBe spawn
+
+        resolves = true
+        holder.activate(Mode.NAVIGATING, context, target)
+
+        walking.activations shouldBe 1
         holder.currentPosition shouldBe target
     }
 
