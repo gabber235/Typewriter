@@ -38,15 +38,24 @@ abstract class WrapperFakeEntity(
     override val state: EntityState
         get() = type.state(properties)
 
+    /**
+     * Notifications are held back for the length of the batch, so the whole of it travels as one packet.
+     *
+     * They are turned back on even when a property throws. Leaving them off outlives the batch, and the
+     * entity then sends no metadata at all for the rest of its life.
+     */
     override fun applyProperties(properties: List<EntityProperty>) {
         entity.entityMeta.setNotifyAboutChanges(false)
-        properties.forEach { property ->
-            when (property) {
-                is PositionProperty -> applyPosition(property)
-                else -> applyProperty(property)
+        try {
+            properties.forEach { property ->
+                when (property) {
+                    is PositionProperty -> applyPosition(property)
+                    else -> applyProperty(property)
+                }
             }
+        } finally {
+            entity.entityMeta.setNotifyAboutChanges(true)
         }
-        entity.entityMeta.setNotifyAboutChanges(true)
     }
 
     protected open fun applyPosition(property: PositionProperty) {

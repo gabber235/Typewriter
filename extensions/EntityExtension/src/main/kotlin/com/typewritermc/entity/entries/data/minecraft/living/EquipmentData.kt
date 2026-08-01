@@ -7,7 +7,9 @@ import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.packetevents.toPacketItem
+import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.utils.item.Item
+import me.tofaa.entitylib.wrapper.WrapperEntityEquipment
 import me.tofaa.entitylib.wrapper.WrapperLivingEntity
 import org.bukkit.entity.Player
 import java.util.*
@@ -99,8 +101,19 @@ private class EquipmentCollector(
     }
 }
 
+/**
+ * Dresses the entity, reporting the slots this server version has no place for.
+ *
+ * A slot travels as its ordinal, so one that arrived after the version the server runs leaves the client
+ * reading an id it cannot map back. EntityLib keeps those out of the packet, which is the right thing to
+ * send but a silent one to watch, and a slot chosen in the panel says nothing about the version it lands on.
+ */
 fun applyEquipmentData(entity: WrapperLivingEntity, property: EquipmentProperty) {
     property.data.forEach { (slot, item) ->
+        if (!WrapperEntityEquipment.isSlotSupported(slot)) {
+            logger.warning("The $slot equipment slot does not exist on this server version, so it is left empty.")
+            return@forEach
+        }
         if (item.isEmpty) entity.equipment.setItem(slot, null)
         else entity.equipment.setItem(slot, item)
     }
