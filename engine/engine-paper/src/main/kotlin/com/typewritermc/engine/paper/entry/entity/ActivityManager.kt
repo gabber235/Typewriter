@@ -1,11 +1,17 @@
 package com.typewritermc.engine.paper.entry.entity
 
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
+import com.typewritermc.engine.paper.logger
 import org.bukkit.entity.Player
 
 class ActivityManager<Context : ActivityContext>(
     private val activity: EntityActivity<in Context>,
 ) {
+    private enum class State { CREATED, ACTIVE, DISPOSED }
+
+    private var state = State.CREATED
+    private var reportedTickViolation = false
+
     val position: PositionProperty
         get() = activity.currentPosition
 
@@ -13,10 +19,18 @@ class ActivityManager<Context : ActivityContext>(
         get() = activity.currentProperties
 
     fun initialize(context: Context) {
-        activity.initialize(context, position)
+        check(state == State.CREATED) { "An activity manager can only be initialized once, this one is $state" }
+        activity.activate(context, position)
+        state = State.ACTIVE
     }
 
     fun tick(context: Context) {
+        if (state != State.ACTIVE) {
+            if (reportedTickViolation) return
+            reportedTickViolation = true
+            logger.severe("Ticked an activity manager that is $state. This is a Typewriter bug, please report it.")
+            return
+        }
         activity.tick(context)
     }
 
@@ -33,6 +47,9 @@ class ActivityManager<Context : ActivityContext>(
     }
 
     fun dispose(context: Context) {
-        activity.dispose(context)
+        if (state == State.DISPOSED) return
+        if (state == State.ACTIVE) activity.deactivate(context)
+        activity.dispose()
+        state = State.DISPOSED
     }
 }

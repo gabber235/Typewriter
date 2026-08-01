@@ -24,7 +24,7 @@ private class StubContext : ActivityContext {
 private class TeleportingActivity(private val destination: PositionProperty) : GenericEntityActivity {
     override var currentPosition: PositionProperty = destination
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         currentPosition = position
     }
 
@@ -32,8 +32,6 @@ private class TeleportingActivity(private val destination: PositionProperty) : G
         currentPosition = destination
         return TickResult.CONSUMED
     }
-
-    override fun dispose(context: ActivityContext) {}
 }
 
 private class TeleportingActivityEntry(
@@ -60,10 +58,10 @@ class ReusedActivityPositionSpec : FunSpec({
     val spawn = positionAt(0.0, 64.0, 0.0)
     val destination = positionAt(20.0, 64.0, 20.0)
 
-    test("an idle activity moves to the position it is initialized with") {
+    test("an idle activity moves to the position it is activated with") {
         val activity = IdleActivity(spawn)
 
-        activity.initialize(StubContext(), destination)
+        activity.activate(StubContext(), destination)
 
         activity.currentPosition shouldBe destination
     }
@@ -78,7 +76,7 @@ class ReusedActivityPositionSpec : FunSpec({
         )
 
         val activity = TogglingActivity(spawn, idleRef)
-        activity.initialize(context, spawn)
+        activity.activate(context, spawn)
         activity.currentPosition shouldBe spawn
 
         activity.switchTo(travelRef)
