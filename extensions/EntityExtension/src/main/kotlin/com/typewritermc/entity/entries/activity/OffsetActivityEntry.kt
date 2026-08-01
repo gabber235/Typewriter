@@ -48,8 +48,8 @@ class OffsetActivity(
     private val childActivity: EntityActivity<ActivityContext>
 ) : EntityActivity<ActivityContext> {
     private var lastOffset: Vector = Vector.ZERO
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
-        childActivity.initialize(context, position)
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        childActivity.activate(context, position)
         lastOffset = offset.get(context.randomViewer) ?: Vector.ZERO
     }
 
@@ -60,8 +60,12 @@ class OffsetActivity(
         return childActivity.tick(context)
     }
 
-    override fun dispose(context: ActivityContext) {
-        childActivity.dispose(context)
+    override fun deactivate(context: ActivityContext) {
+        childActivity.deactivate(context)
+    }
+
+    override fun dispose() {
+        childActivity.dispose()
     }
 
     override val currentPosition: PositionProperty

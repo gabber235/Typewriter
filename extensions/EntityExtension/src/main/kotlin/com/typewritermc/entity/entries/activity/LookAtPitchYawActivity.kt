@@ -45,9 +45,9 @@ class LookAtPitchYawActivity(
     private val pitchVelocity = Velocity(0f)
     private var currentDirection: LookDirection = LookDirection(startLocation.yaw, startLocation.pitch)
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         currentDirection = LookDirection(position.yaw, position.pitch)
-        childActivity.initialize(context, position)
+        childActivity.activate(context, position)
     }
 
     override fun tick(context: ActivityContext): TickResult {
@@ -64,11 +64,15 @@ class LookAtPitchYawActivity(
         return childActivity.tick(context)
     }
 
-    override fun dispose(context: ActivityContext) {
+    override fun deactivate(context: ActivityContext) {
         yawVelocity.value = 0f
         pitchVelocity.value = 0f
 
-        childActivity.dispose(context)
+        childActivity.deactivate(context)
+    }
+
+    override fun dispose() {
+        childActivity.dispose()
     }
 
     override val currentPosition: PositionProperty

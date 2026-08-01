@@ -47,7 +47,7 @@ class LookCloseActivity(
 
     override var currentPosition: PositionProperty = startPosition
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         currentPosition = position
         yawVelocity.value = 0f
         pitchVelocity.value = 0f
@@ -125,7 +125,7 @@ class LookCloseActivity(
         return TickResult.CONSUMED
     }
 
-    override fun dispose(context: ActivityContext) {
+    override fun deactivate(context: ActivityContext) {
         target = null
         yawVelocity.value = 0f
         pitchVelocity.value = 0f

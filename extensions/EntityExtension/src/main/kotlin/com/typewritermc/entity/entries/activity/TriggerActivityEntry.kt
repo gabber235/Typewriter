@@ -48,32 +48,29 @@ private class TriggerActivity(
     private val onStart: Ref<TriggerableEntry>,
     private val onStop: Ref<TriggerableEntry>,
 ) : GenericEntityActivity {
-    private var activity: EntityActivity<in ActivityContext> = IdleActivity(startPosition)
+    private val children = entryActivityHolder<ActivityContext>(startPosition)
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
-        if (activity is IdleActivity) {
-            activity = ref.get()?.create(context, position) ?: IdleActivity(position)
-        }
-        activity.initialize(context, position)
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        children.switchTo(ref, context, position)
         context.viewers.forEach {
             onStart.triggerFor(it, context())
         }
     }
 
-    override fun tick(context: ActivityContext): TickResult {
-        return activity.tick(context)
-    }
+    override fun tick(context: ActivityContext): TickResult = children.tick(context)
 
-    override fun dispose(context: ActivityContext) {
+    override fun deactivate(context: ActivityContext) {
         context.viewers.forEach {
             onStop.triggerFor(it, context())
         }
-        activity.dispose(context)
+        children.deactivate(context)
     }
 
+    override fun dispose() = children.dispose()
+
     override val currentPosition: PositionProperty
-        get() = activity.currentPosition
+        get() = children.currentPosition
 
     override val currentProperties: List<EntityProperty>
-        get() = activity.currentProperties
+        get() = children.currentProperties
 }

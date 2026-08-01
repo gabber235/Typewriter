@@ -35,7 +35,8 @@ class NavigationActivity(
     override val currentPosition: PositionProperty
         get() = state.position()
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        path = null
         state = NavigationActivityTaskState.Searching(gps, position)
     }
 
@@ -43,14 +44,12 @@ class NavigationActivity(
         val speed = context.entityState.speed
         state.tick(context)
         if (state.isComplete()) {
-            if (path?.isEmpty() == true) {
-                return TickResult.IGNORED
-            }
-            path = path?.subList(1, path?.size ?: 0) ?: (state as NavigationActivityTaskState.Searching).let {
-                it.path ?: return TickResult.CONSUMED
-            }
+            val remaining = path?.drop(1)
+                ?: (state as? NavigationActivityTaskState.Searching)?.path
+                ?: return TickResult.CONSUMED
+            path = remaining
 
-            val currentEdge = path?.firstOrNull() ?: return TickResult.IGNORED
+            val currentEdge = remaining.firstOrNull() ?: return TickResult.IGNORED
 
             state = when {
                 currentEdge.isFastTravel -> NavigationActivityTaskState.FastTravel(currentEdge)
@@ -80,7 +79,7 @@ class NavigationActivity(
         return TickResult.CONSUMED
     }
 
-    override fun dispose(context: ActivityContext) {
+    override fun deactivate(context: ActivityContext) {
         state.dispose()
     }
 }

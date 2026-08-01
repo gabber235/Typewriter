@@ -48,7 +48,7 @@ class RandomLookActivity(
     private var nextChangeTime = Instant.now()
 
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         currentPosition = position
         pitchVelocity.value = 0f
         yawVelocity.value = 0f
@@ -78,8 +78,6 @@ class RandomLookActivity(
 
         return TickResult.CONSUMED
     }
-
-    override fun dispose(context: ActivityContext) {}
 }
 
 fun ClosedRange<Float>.random(): Float {

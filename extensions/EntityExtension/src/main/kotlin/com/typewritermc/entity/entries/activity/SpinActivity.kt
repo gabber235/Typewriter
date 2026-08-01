@@ -51,9 +51,9 @@ class SpinActivity(
     private val direction = if (clockwise) -1 else 1
     private var currentRotation = 0f
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         startTime = Instant.now()
-        childActivity.initialize(context, position)
+        childActivity.activate(context, position)
         startRotation = when (axis) {
             SpinAxis.YAW -> childActivity.currentPosition.yaw
             SpinAxis.PITCH -> childActivity.currentPosition.pitch
@@ -83,8 +83,12 @@ class SpinActivity(
         return childActivity.tick(context)
     }
 
-    override fun dispose(context: ActivityContext) {
-        childActivity.dispose(context)
+    override fun deactivate(context: ActivityContext) {
+        childActivity.deactivate(context)
+    }
+
+    override fun dispose() {
+        childActivity.dispose()
     }
 
     override val currentPosition: PositionProperty

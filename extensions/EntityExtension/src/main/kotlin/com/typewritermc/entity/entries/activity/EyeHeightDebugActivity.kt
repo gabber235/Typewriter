@@ -52,7 +52,7 @@ class EyeHeightDebugActivity(
     val showHitbox: Boolean,
 ) : GenericEntityActivity {
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         currentPosition = position
     }
 
@@ -93,8 +93,6 @@ class EyeHeightDebugActivity(
 
         return TickResult.CONSUMED
     }
-
-    override fun dispose(context: ActivityContext) {}
 }
 
 private fun sendDustParticle(viewers: List<Player>, position: Vector3d, color: Color) {

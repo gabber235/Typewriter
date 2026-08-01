@@ -42,35 +42,33 @@ class PlayerWorldActivity(
     private val child: Ref<out EntityActivityEntry>,
     startPosition: PositionProperty,
 ) : IndividualEntityActivity {
-    private var childActivity: EntityActivity<in IndividualActivityContext> = IdleActivity(startPosition)
+    private val children = entryActivityHolder<IndividualActivityContext>(startPosition)
     private var world: World = startPosition.world
 
-    override fun initialize(context: IndividualActivityContext, position: PositionProperty) {
+    override fun activate(context: IndividualActivityContext, position: PositionProperty) {
         world = context.viewer.position.world
-        if (childActivity is IdleActivity) {
-            childActivity = child.get()?.create(context, position) ?: IdleActivity(position)
-        }
-        childActivity.initialize(context, position)
+        children.switchTo(child, context, position)
     }
 
     override fun tick(context: IndividualActivityContext): TickResult {
         val playerWorld = context.viewer.position.world
         if (playerWorld != world) {
-            childActivity.dispose(context)
+            val position = currentPosition
+            children.deactivate(context)
             world = playerWorld
-            childActivity.initialize(context, currentPosition)
+            children.switchTo(child, context, position.withWorld(playerWorld))
         }
 
-        return childActivity.tick(context)
+        return children.tick(context)
     }
 
-    override fun dispose(context: IndividualActivityContext) {
-        childActivity.dispose(context)
-    }
+    override fun deactivate(context: IndividualActivityContext) = children.deactivate(context)
+
+    override fun dispose() = children.dispose()
 
     override val currentPosition: PositionProperty
-        get() = childActivity.currentPosition.withWorld(world)
+        get() = children.currentPosition.withWorld(world)
 
     override val currentProperties: List<EntityProperty>
-        get() = childActivity.currentProperties.filter { it !is PositionProperty } + currentPosition
+        get() = children.currentProperties.filter { it !is PositionProperty } + currentPosition
 }
