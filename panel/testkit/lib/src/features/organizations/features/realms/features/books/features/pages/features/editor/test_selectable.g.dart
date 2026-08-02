@@ -49,7 +49,7 @@ abstract class _$TestSelectableData
   Map<String, DynamicData> build();
   @$mustCallSuper
   @override
-  void Function(void Function() cb)? runBuild() {
+  void runBuild() {
     final ref =
         this.ref as $Ref<Map<String, DynamicData>, Map<String, DynamicData>>;
     final element =
@@ -61,7 +61,6 @@ abstract class _$TestSelectableData
               Object?
             >;
     element.handleCreate(ref, build);
-    return null;
   }
 }
 
