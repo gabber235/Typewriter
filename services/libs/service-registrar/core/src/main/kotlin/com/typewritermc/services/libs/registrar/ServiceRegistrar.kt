@@ -5,6 +5,7 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.findExceptionalThrowable
 import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.context.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -128,11 +129,7 @@ class ServiceRegistrar(
 
     private suspend fun coordinate() {
         try {
-            telemetry.mainSpan(
-                "registrar.attempt",
-                ErrorSlug.of("registrar-attempt-failed"),
-                attributes = Attributes.builder().put("registrar.attempt", attempt).build(),
-            ) { runAttempt() }
+            runAttempt()
             if (mutableStates.value.state is RegistrarState.Failed) {
                 withContext(NonCancellable) { cleanupCurrentAttempt() }
             }
@@ -176,7 +173,23 @@ class ServiceRegistrar(
     }
 
     private suspend fun runAttempt() {
-        val acquired = acquireCredentials() ?: return
+        val ready = telemetry.mainSpan(
+            "registrar.attempt",
+            ErrorSlug.of("registrar-attempt-failed"),
+            parent = Context.root(),
+            attributes = Attributes.builder().put("registrar.attempt", attempt).build(),
+        ) { main ->
+            val result = establishReady()
+            main.annotate {
+                domainOutcome(if (result == null) mutableStates.value.state.attemptOutcome() else "ready")
+            }
+            result
+        } ?: return
+        superviseReady(ready)
+    }
+
+    private suspend fun establishReady(): ReadySupervision? {
+        val acquired = acquireCredentials() ?: return null
         activeCredentials = acquired
         var setupStage = RegistrarStage.CONNECTING
         val created = retryPhase({ failure -> failure.runtimeCreateStage(setupStage) }) {
@@ -184,22 +197,39 @@ class ServiceRegistrar(
                 setupProgress(it)
                 setupStage = it.stage
             }).asRuntimeResult()
-        } ?: return
+        } ?: return null
         runtime = created
-        if (retryPhase(RegistrarStage.CONNECTING) { created.connect() } == null) return
+        if (retryPhase(RegistrarStage.CONNECTING) { created.connect() } == null) return null
         awaitConnected(created)
         while (true) {
-            val binding = superviseBinding(created, acquired.identity) ?: return
+            val binding = superviseBinding(created, acquired.identity) ?: return null
             transition(RegistrarState.Reauthorizing(binding))
-            if (retryPhase(RegistrarStage.REAUTHORIZING) { created.reconnectForBoundPermissions() } == null) return
-            when (val confirmed = retryPhase(RegistrarStage.BINDING) { created.queryBinding() } ?: return) {
+            val reauthorized = retryPhase(RegistrarStage.REAUTHORIZING) {
+                created.reconnectForBoundPermissions()
+            }
+            if (reauthorized == null) return null
+            when (val confirmed = retryPhase(RegistrarStage.BINDING) { created.queryBinding() } ?: return null) {
                 is BindingStatus.Bound -> {
-                    superviseReady(created, acquired.identity, confirmed.binding)
-                    return
+                    return beginReadySupervision(created, acquired.identity, confirmed.binding)
                 }
                 is BindingStatus.Unbound -> transition(RegistrarState.AwaitingBinding(acquired.identity, confirmed.token))
             }
         }
+    }
+
+    private suspend fun beginReadySupervision(
+        active: RegistrarRuntime,
+        identity: ServiceIdentity,
+        binding: OrganizationBinding,
+    ): ReadySupervision? {
+        val session = ReadySession(identity, binding, active.communicator)
+        val generation = when (restoreHeartbeat(active, session)) {
+            HeartbeatResult.TERMINAL -> return null
+            HeartbeatResult.RECONNECTED -> 2L
+            HeartbeatResult.HEALTHY -> 1L
+        }
+        transition(RegistrarState.Ready(session, generation))
+        return ReadySupervision(active, session, generation)
     }
 
     private fun setupProgress(progress: RuntimeSetupProgress) {
@@ -303,28 +333,71 @@ class ServiceRegistrar(
         }
     }
 
-    private suspend fun superviseReady(active: RegistrarRuntime, identity: ServiceIdentity, binding: OrganizationBinding) {
-        val session = ReadySession(identity, binding, active.communicator)
-        var generation = 1L
+    private suspend fun superviseReady(supervision: ReadySupervision) {
+        val active = supervision.runtime
+        val session = supervision.session
+        var generation = supervision.connectionGeneration
         while (true) {
-            when (restoreHeartbeat(active, session)) {
-                HeartbeatResult.TERMINAL -> return
-                HeartbeatResult.RECONNECTED -> generation++
-                HeartbeatResult.HEALTHY -> Unit
-            }
-            transition(RegistrarState.Ready(session, generation))
             val degraded = withTimeoutOrNull(configuration.heartbeatInterval) {
                 active.connectivity.first { it != RuntimeConnectivity.CONNECTED }
             }
-            if (degraded == null) continue
-            awaitConnected(active, session)
-            when (restoreHeartbeat(active, session)) {
-                HeartbeatResult.TERMINAL -> return
-                HeartbeatResult.RECONNECTED -> generation++
-                HeartbeatResult.HEALTHY -> Unit
+            if (degraded == null) {
+                generation = heartbeat(active, session, generation) ?: return
+                transition(RegistrarState.Ready(session, generation))
+                continue
             }
-            generation++
+            generation = recoverReady(active, session, generation) ?: return
+            transition(RegistrarState.Ready(session, generation))
         }
+    }
+
+    private suspend fun heartbeat(
+        active: RegistrarRuntime,
+        session: ReadySession,
+        generation: Long,
+    ): Long? = telemetry.mainSpan(
+        "registrar.heartbeat",
+        ErrorSlug.of("registrar-heartbeat-failed"),
+        parent = Context.root(),
+        attributes = readyAttributes(session, generation),
+    ) { main ->
+        when (restoreHeartbeat(active, session)) {
+            HeartbeatResult.TERMINAL -> {
+                main.annotate { domainOutcome("terminal") }
+                null
+            }
+            HeartbeatResult.RECONNECTED -> {
+                main.annotate { domainOutcome("reconnected") }
+                saturatingIncrement(generation)
+            }
+            HeartbeatResult.HEALTHY -> {
+                main.annotate { domainOutcome("healthy") }
+                generation
+            }
+        }
+    }
+
+    private suspend fun recoverReady(
+        active: RegistrarRuntime,
+        session: ReadySession,
+        generation: Long,
+    ): Long? = telemetry.mainSpan(
+        "registrar.recovery",
+        ErrorSlug.of("registrar-recovery-failed"),
+        parent = Context.root(),
+        attributes = readyAttributes(session, generation),
+    ) { main ->
+        awaitConnected(active, session)
+        val heartbeatGeneration = when (restoreHeartbeat(active, session)) {
+            HeartbeatResult.TERMINAL -> {
+                main.annotate { domainOutcome("terminal") }
+                return@mainSpan null
+            }
+            HeartbeatResult.RECONNECTED -> saturatingIncrement(generation)
+            HeartbeatResult.HEALTHY -> generation
+        }
+        main.annotate { domainOutcome("recovered") }
+        saturatingIncrement(heartbeatGeneration)
     }
 
     private suspend fun restoreHeartbeat(active: RegistrarRuntime, session: ReadySession): HeartbeatResult {
@@ -442,6 +515,24 @@ class ServiceRegistrar(
 }
 
 private enum class LifecycleState { IDLE, ACTIVE, RETRY_RESERVED, STOPPED }
+
+private data class ReadySupervision(
+    val runtime: RegistrarRuntime,
+    val session: ReadySession,
+    val connectionGeneration: Long,
+)
+
+private fun RegistrarState.attemptOutcome(): String = when (this) {
+    is RegistrarState.Failed -> "failed"
+    is RegistrarState.Stopped -> "stopped"
+    else -> "incomplete"
+}
+
+private fun readyAttributes(session: ReadySession, generation: Long): Attributes = Attributes.builder()
+    .put("service.id", session.identity.serviceId)
+    .put("user.org.id", session.binding.organizationId)
+    .put("registrar.connection.generation", generation)
+    .build()
 
 private fun saturatingIncrement(value: Long): Long = if (value == Long.MAX_VALUE) value else value + 1
 

@@ -10,6 +10,7 @@ import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -113,6 +114,16 @@ val ServiceRegistrarLifecycleTest by testSuite {
             f.ledger.actions.count { it == RegistrarAction.Heartbeat } shouldBe 1
         }
     } }
+    test("attempt span ends when ready supervision begins") { runTest {
+        fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+            f.readyScript(); f.registrar.start(); runCurrent()
+
+            val attempt = f.harness.finishedSpans().single { it.name == "registrar.attempt" }
+            attempt.parentSpanId shouldBe SpanId.getInvalid()
+            f.harness.activeSpanCount() shouldBe 0
+            f.registrar.states.value.state.shouldBeInstanceOf<RegistrarState.Ready>()
+        }
+    } }
     test("initial unbound null token is defensively published") { runTest {
         fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
             f.runtime.enqueueWatch(RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(null))))
@@ -147,6 +158,17 @@ val ServiceRegistrarLifecycleTest by testSuite {
             f.bindingCallCount shouldBe bindingCalls
         }
     } }
+    test("periodic heartbeat is a bounded root span") { runTest {
+        fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+            f.readyScript(); f.registrar.start(); runCurrent(); f.harness.clear()
+
+            advanceTimeBy(101); runCurrent()
+
+            val heartbeat = f.harness.finishedSpans().single { it.name == "registrar.heartbeat" }
+            heartbeat.parentSpanId shouldBe SpanId.getInvalid()
+            f.harness.activeSpanCount() shouldBe 0
+        }
+    } }
     test("heartbeat failure degrades with the same session") { runTest {
         fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
             f.runtime.enqueueHeartbeat(RuntimeResult.Failure(RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT)))
@@ -161,6 +183,18 @@ val ServiceRegistrarLifecycleTest by testSuite {
             f.readyScript(); f.registrar.start(); runCurrent(); f.runtime.setConnectivity(RuntimeConnectivity.DISCONNECTED); runCurrent()
             f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED); runCurrent()
             (f.registrar.states.value.state as RegistrarState.Ready).connectionGeneration shouldBe 2
+        }
+    } }
+    test("connectivity recovery is a bounded root span") { runTest {
+        fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+            f.readyScript(); f.registrar.start(); runCurrent(); f.harness.clear()
+
+            f.runtime.setConnectivity(RuntimeConnectivity.DISCONNECTED); runCurrent()
+            f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED); runCurrent()
+
+            val recovery = f.harness.finishedSpans().single { it.name == "registrar.recovery" }
+            recovery.parentSpanId shouldBe SpanId.getInvalid()
+            f.harness.activeSpanCount() shouldBe 0
         }
     } }
     test("multiple awaiters share session and cancelling one does not cancel supervisor") { runTest {
