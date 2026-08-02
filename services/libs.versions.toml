@@ -12,7 +12,8 @@ skir = "1.0.16"
 okio = "3.6.0"
 
 nats = "0.9.1"
-surrealdb = "2.1.2"
+surrealdb-server = "3.2.3"
+surrealdb-java-sdk = "2.1.2"
 
 kotlin-serialize = "1.11.0"
 kotlin-coroutines = "1.11.0"
@@ -55,7 +56,7 @@ skir-client = { module = "build.skir:skir-client", version.ref = "skir"}
 okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }
 
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
-surrealdb = { module = "com.surrealdb:surrealdb", version.ref = "surrealdb" }
+surrealdb-java-sdk = { module = "com.surrealdb:surrealdb", version.ref = "surrealdb-java-sdk" }
 
 kotlin-serialize-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlin-serialize" }
 kotlin-serialize-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor", version.ref = "kotlin-serialize" }

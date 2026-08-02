@@ -51,9 +51,9 @@ fun main() {
         single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeRealmOpenTelemetry) }
         single { applicationScope } onClose { it?.cancel() }
 
-        single(named(DB_URL)) { getProperty("REALM_DB_URL", "") }
-        single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "") }
-        single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "") }
+        single(named(DB_URL)) { getProperty("REALM_DB_URL", "ws://localhost:8235") }
+        single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "root") }
+        single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "root") }
         single(named(DB_NAMESPACE)) { getProperty("REALM_DB_NAMESPACE", "typewriter") }
         single(named(DB_DATABASE)) { getProperty("REALM_DB_DATABASE", "realm") }
         single {
@@ -63,10 +63,9 @@ fun main() {
                 password = get(named(DB_PASSWORD)),
                 namespace = get(named(DB_NAMESPACE)),
                 database = get(named(DB_DATABASE)),
-                tracer = get(),
             )
         }
-        single { Realm(get(named(DATABASE)), get(), get()) } onClose { it?.shutdown() }
+        single { Realm(get(named(DATABASE)), get(), get()) }
         single {
             Cbor {
                 ignoreUnknownKeys = true

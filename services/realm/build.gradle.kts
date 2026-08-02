@@ -31,8 +31,8 @@ dependencies {
 
     implementation(libs.jline)
     implementation(libs.clikt)
-    implementation(libs.surrealdb)
-    
+    implementation(libs.surrealdb.java.sdk)
+
     testImplementation("com.typewritermc:service-communicator-testing")
     testImplementation("com.typewritermc:service-telemetry-testing")
     testImplementation(libs.mockk)
@@ -46,46 +46,55 @@ buildConfig {
         internalVisibility = false
     }
     buildConfigField<String>("REALM_VERSION", provider { "${project.version}" })
+    buildConfigField<String>("SURREALDB_SERVER_VERSION", libs.versions.surrealdb.server)
 }
 
-val generatePatchIndex by tasks.registering {
-    group = "build"
-    description = "Generates _index.txt listing all patch files in order"
+val verifyPatchIndex = tasks.register("verifyPatchIndex") {
+    group = "verification"
+    description = "Verifies that the patch index matches the packaged patch files"
 
-    val patchesDir = file("src/main/resources/schema/patches")
-    val outputDir = layout.buildDirectory.dir("generated/resources/main/schema/patches")
-    val outputFile = outputDir.map { it.file("_index.txt") }
-
-    inputs.dir(patchesDir).optional()
-    outputs.file(outputFile)
+    val patchesDirectory = file("src/main/resources/schema/patches")
+    val indexFile = patchesDirectory.resolve("_index.txt")
+    inputs.dir(patchesDirectory)
 
     doLast {
-        val patches = patchesDir.takeIf { it.exists() }
-            ?.listFiles { file ->
-                file.isFile && file.extension == "surql" && !file.name.startsWith("_")
-            }
-            ?.sortedBy { it.name }
-            ?: emptyList()
+        val indexedPatches = indexFile.readLines().map(String::trim).filter(String::isNotEmpty)
+        val packagedPatches = patchesDirectory.listFiles()
+            .orEmpty()
+            .filter { it.isFile && it.extension == "surql" }
+            .map { it.name }
+            .sorted()
 
-        val indexContent = patches.joinToString("\n") { it.name }
-
-        outputFile.get().asFile.apply {
-            parentFile.mkdirs()
-            writeText(indexContent)
+        check(indexedPatches == packagedPatches) {
+            "Patch index must list every packaged patch once and in ascending order"
         }
-
-        logger.lifecycle("Generated patch index with ${patches.size} patches")
     }
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDir(layout.buildDirectory.dir("generated/resources/main"))
+val verifyRealmSchemaIndex = tasks.register("verifyRealmSchemaIndex") {
+    group = "verification"
+    description = "Verifies that the Realm schema index lists every packaged schema resource"
+
+    val schemaDirectory = file("src/main/resources/schema/realm")
+    val indexFile = schemaDirectory.resolve("_index.txt")
+    inputs.dir(schemaDirectory)
+
+    doLast {
+        val indexedResources = indexFile.readLines().map(String::trim).filter(String::isNotEmpty)
+        val packagedResources = schemaDirectory.walkTopDown()
+            .filter { it.isFile && it.extension == "surql" }
+            .map { it.relativeTo(schemaDirectory).invariantSeparatorsPath }
+            .toSet()
+
+        check(indexedResources.size == indexedResources.distinct().size) {
+            "Realm schema index must not contain duplicate resources"
+        }
+        check(indexedResources.toSet() == packagedResources) {
+            "Realm schema index must list every packaged schema resource exactly once"
         }
     }
 }
 
 tasks.processResources {
-    dependsOn(generatePatchIndex)
+    dependsOn(verifyPatchIndex, verifyRealmSchemaIndex)
 }

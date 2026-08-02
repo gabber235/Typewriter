@@ -1,41 +1,33 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
-import com.typewritermc.services.libs.telemetry.withSpan
-import io.opentelemetry.api.trace.Tracer
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.MainSpanScope
+import com.typewritermc.services.libs.telemetry.childSpanBlocking
+import com.typewritermc.services.libs.telemetry.withErrorSlug
 
-class SchemaMigrator(
+private val SCHEMA_MIGRATION_FAILURE = ErrorSlug.of("realm-schema-migration-failed")
+
+internal class SchemaMigrator(
     private val db: Surreal,
-    private val tracer: Tracer,
+    private val resources: MigrationResources = MigrationResources(),
 ) {
 
-    private val patchRunner = PatchRunner(db, tracer)
-
-    fun migrate() = tracer.withSpan("realm.migrate") { s ->
-        s.addEvent("Starting schema migration")
-
-        applySchema(s)
-        patchRunner.runPendingPatches(s)
-
-        s.addEvent("Schema migration complete")
-    }
-
-    private fun applySchema(s: io.opentelemetry.api.trace.Span) {
-        val schema = loadResource("schema/realm.surql")
-        if (schema.isBlank()) {
-            s.addEvent("Empty schema file, skipping schema application")
-            return
+    context(_: MainSpanScope)
+    fun migrate() = childSpanBlocking("realm.schema.migrate") {
+        withErrorSlug(SCHEMA_MIGRATION_FAILURE) {
+            applySchema(resources.loadMigrationSchema(), "migration.surql")
+            PatchRunner(db).run(resources.loadPatches())
+            resources.loadRealmSchema().forEach { resource ->
+                applySchema(resource.script, resource.path)
+            }
         }
-
-        s.addEvent("Applying schema")
-        db.query(schema)
-        s.addEvent("Schema applied successfully")
     }
 
-    private fun loadResource(path: String): String {
-        return this::class.java.classLoader
-            .getResourceAsStream(path)
-            ?.use { it.bufferedReader().readText() }
-            ?: throw IllegalStateException("Resource not found: $path")
-    }
+    context(_: MainSpanScope)
+    private fun applySchema(schema: String, schemaName: String) =
+        childSpanBlocking("realm.schema.apply") { child ->
+            child.annotate { attribute("schema.name", schemaName) }
+            db.execute(schema)
+        }
 }

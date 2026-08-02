@@ -1,83 +1,62 @@
 package com.typewritermc.realm.schema
 
-import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
-import io.kotest.core.spec.style.FunSpec
+import com.typewritermc.realm.SURREALDB_SERVER_VERSION
+import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import java.net.InetSocketAddress
-import java.net.Socket
 
-class DatabaseProviderTest : FunSpec({
-
-    val tracer = MockTelemetry.createMockTracer()
-    val span = MockTelemetry.createMockSpan()
-
-    fun isExternalDbRunning(): Boolean {
-        return try {
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress("localhost", 8235), 500)
-                true
-            }
-        } catch (_: Exception) {
-            false
-        }
-    }
-
+val DatabaseProviderTest by testSuite {
     fun provider(
-        url: String = "",
-        username: String = "",
-        password: String = "",
+        url: String = "ws://localhost:8235",
+        username: String = "root",
+        password: String = "root",
         namespace: String = "typewriter",
         database: String = "realm",
-    ) = DatabaseProvider(url, username, password, namespace, database, tracer)
+    ) = DatabaseProvider(
+        url = url,
+        username = username,
+        password = password,
+        namespace = namespace,
+        database = database,
+    )
 
-    context("resolveConnectionMode") {
-
-        test("explicit URL forces external mode") {
-            val p = provider(url = "ws://somehost:8000")
-            with(span) {
-                p.resolveConnectionMode() shouldBe ConnectionMode.EXTERNAL
-            }
+    testSuite("configuration") {
+        test("blank URL is rejected") {
+            shouldThrow<IllegalArgumentException> { provider(url = " ") }
         }
 
-        test("blank URL falls back to auto-detect") {
-            val p = provider()
-            val expected = if (isExternalDbRunning()) ConnectionMode.EXTERNAL else ConnectionMode.EMBEDDED
-            with(span) {
-                p.resolveConnectionMode() shouldBe expected
-            }
-        }
-    }
-
-    context("connect") {
-
-        test("creates usable database") {
-            val p = provider()
-            val db = p.connect()
-
-            val result = db.query("RETURN 1 + 1")
-            result.take(0).long shouldBe 2
-
-            db.close()
+        test("partial credentials are rejected") {
+            shouldThrow<IllegalArgumentException> { provider(password = "") }
+            shouldThrow<IllegalArgumentException> { provider(username = "") }
         }
 
-        test("database has schema applied") {
-            val p = provider()
-            val db = p.connect()
-
-            val result = db.query("INFO FOR TABLE tag")
-            result.take(0).isObject shouldBe true
-
-            db.close()
+        test("blank credentials are allowed for an unauthenticated server") {
+            provider(username = "", password = "")
         }
 
-        test("uses custom namespace and database") {
-            val p = provider(namespace = "test_ns", database = "test_db")
-            val db = p.connect()
+        test("blank namespace is rejected") {
+            shouldThrow<IllegalArgumentException> { provider(namespace = " ") }
+        }
 
-            val result = db.query("RETURN 1 + 1")
-            result.take(0).long shouldBe 2
-
-            db.close()
+        test("blank database name is rejected") {
+            shouldThrow<IllegalArgumentException> { provider(database = " ") }
         }
     }
-})
+
+    testSuite("server version") {
+        test("exact configured server version is accepted") {
+            requireSupportedDatabaseVersion(SURREALDB_SERVER_VERSION)
+            requireSupportedDatabaseVersion("surrealdb-$SURREALDB_SERVER_VERSION")
+            requireSupportedDatabaseVersion("$SURREALDB_SERVER_VERSION+20260721.40522d1")
+        }
+
+        test("different server version is rejected") {
+            val error = shouldThrow<UnsupportedDatabaseVersionException> {
+                requireSupportedDatabaseVersion("3.1.5")
+            }
+
+            error.message shouldBe
+                "Realm requires SurrealDB $SURREALDB_SERVER_VERSION but connected to 3.1.5"
+        }
+    }
+}

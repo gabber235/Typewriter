@@ -1,21 +1,14 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
-import com.surrealdb.signin.Root
-import com.typewritermc.services.libs.telemetry.withSpan
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.Tracer
-import java.net.InetSocketAddress
-import java.net.Socket
+import com.surrealdb.signin.RootCredential
+import com.typewritermc.realm.SURREALDB_SERVER_VERSION
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.MainSpanScope
+import com.typewritermc.services.libs.telemetry.childSpanBlocking
+import com.typewritermc.services.libs.telemetry.withErrorSlug
 
-private const val AUTO_DETECT_HOST = "localhost"
-private const val AUTO_DETECT_PORT = 8235
-private const val CONNECTION_TIMEOUT_MS = 500
-
-enum class ConnectionMode {
-    EMBEDDED,
-    EXTERNAL,
-}
+private val DATABASE_CONNECT_FAILURE = ErrorSlug.of("realm-database-connect-failed")
 
 class DatabaseProvider(
     private val url: String,
@@ -23,67 +16,56 @@ class DatabaseProvider(
     private val password: String,
     private val namespace: String,
     private val database: String,
-    private val tracer: Tracer,
 ) {
 
-    fun connect(): Surreal = tracer.withSpan("realm.database.connect") { s ->
-        val mode = with(s) { resolveConnectionMode() }
-        s.setAttribute("db.mode", mode.name)
-
-        val db = Surreal()
-
-        when (mode) {
-            ConnectionMode.EMBEDDED -> {
-                db.connect("surrealkv+versioned://database")
-                s.addEvent("Connected to embedded SurrealKV")
-            }
-
-            ConnectionMode.EXTERNAL -> {
-                val effectiveUrl = url.ifBlank { "ws://$AUTO_DETECT_HOST:$AUTO_DETECT_PORT" }
-                val effectiveUsername = username.ifBlank { "root" }
-                val effectivePassword = password.ifBlank { "root" }
-                db.connect(effectiveUrl)
-                db.signin(Root(effectiveUsername, effectivePassword))
-                s.setAttribute("db.url", effectiveUrl)
-                s.addEvent("Connected to external SurrealDB")
-            }
+    init {
+        require(url.isNotBlank()) { "Database URL must not be blank" }
+        require(username.isBlank() == password.isBlank()) {
+            "Database username and password must either both be set or both be blank"
         }
-
-        s.setAttribute("db.namespace", namespace)
-        s.setAttribute("db.database", database)
-        db.useNs(namespace).useDb(database)
-        SchemaMigrator(db, tracer).migrate()
-
-        db
+        require(namespace.isNotBlank()) { "Database namespace must not be blank" }
+        require(database.isNotBlank()) { "Database name must not be blank" }
     }
 
-    context(span: Span)
-    internal fun resolveConnectionMode(): ConnectionMode {
-        if (url.isNotBlank()) {
-            span.setAttribute("db.url", url)
-            span.addEvent("Explicit URL provided, using external mode")
-            return ConnectionMode.EXTERNAL
-        }
-
-        val probeTarget = "$AUTO_DETECT_HOST:$AUTO_DETECT_PORT"
-        span.setAttribute("db.auto_detect.target", probeTarget)
-        if (isPortOpen(AUTO_DETECT_HOST, AUTO_DETECT_PORT)) {
-            span.addEvent("SurrealDB detected, using external mode")
-            return ConnectionMode.EXTERNAL
-        }
-
-        span.addEvent("No SurrealDB detected, using embedded mode")
-        return ConnectionMode.EMBEDDED
-    }
-
-    private fun isPortOpen(host: String, port: Int): Boolean {
-        return try {
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(host, port), CONNECTION_TIMEOUT_MS)
-                true
+    context(_: MainSpanScope)
+    fun connect(): Surreal = childSpanBlocking("realm.database.connect") { child ->
+        withErrorSlug(DATABASE_CONNECT_FAILURE) {
+            child.annotate {
+                attribute("db.url", url)
+                attribute("db.namespace", namespace)
+                attribute("db.database", database)
             }
-        } catch (_: Exception) {
-            false
+            val db = Surreal()
+
+            try {
+                db.connect(url)
+                val serverVersion = db.version()
+                requireSupportedDatabaseVersion(serverVersion)
+                child.annotate { attribute("db.version", serverVersion) }
+                if (username.isNotBlank()) {
+                    db.signin(RootCredential(username, password))
+                }
+
+                db.useNs(namespace).useDb(database)
+                SchemaMigrator(db).migrate()
+                db
+            } catch (failure: Throwable) {
+                runCatching(db::close).exceptionOrNull()?.let(failure::addSuppressed)
+                throw failure
+            }
         }
     }
 }
+
+internal fun requireSupportedDatabaseVersion(version: String) {
+    val normalizedVersion = version.removePrefix("surrealdb-").substringBefore('+')
+    if (normalizedVersion != SURREALDB_SERVER_VERSION) {
+        throw UnsupportedDatabaseVersionException(
+            expected = SURREALDB_SERVER_VERSION,
+            actual = normalizedVersion,
+        )
+    }
+}
+
+internal class UnsupportedDatabaseVersionException(expected: String, actual: String) :
+    IllegalStateException("Realm requires SurrealDB $expected but connected to $actual")

@@ -1,61 +1,133 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
-import com.typewritermc.services.libs.telemetry.testing.MockTelemetry
-import io.kotest.core.spec.style.FunSpec
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.mainSpanBlocking
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.matchers.shouldBe
 
-class SchemaMigratorTest : FunSpec({
+private const val TEST_MIGRATION_SCHEMA = """
+    DEFINE TABLE OVERWRITE _patch SCHEMAFULL TYPE NORMAL;
+    DEFINE FIELD OVERWRITE checksum ON _patch TYPE string;
+    DEFINE FIELD OVERWRITE applied_at ON _patch TYPE datetime DEFAULT time::now();
+"""
 
-    lateinit var db: Surreal
-    val tracer = MockTelemetry.createMockTracer()
+private const val TEST_REALM_SCHEMA = "DEFINE TABLE OVERWRITE realm_probe SCHEMAFULL TYPE NORMAL;"
 
-    beforeEach {
-        db = Surreal()
-        db.connect("memory")
-        db.useNs("test").useDb("test")
-    }
+val SchemaMigratorTest by testSuite {
+    test("migration applies every patch once and records its checksum") {
+        SchemaFixture().use { fixture ->
+            val resources = fixture.resources(
+                "0001_create_probe" to "CREATE patch_probe CONTENT { value: true };",
+            )
 
-    afterEach {
-        db.close()
-    }
+            fixture.migrate(resources)
+            fixture.migrate(resources)
 
-    context("Schema Application") {
-
-        test("schema can be applied without errors") {
-            val migrator = SchemaMigrator(db, tracer)
-
-            migrator.migrate()
-
-            val response = db.query("INFO FOR DB")
-            val info = response.take(0)
-            info.toString().contains("_patch") shouldBe true
-        }
-
-        test("schema application is idempotent") {
-            val migrator = SchemaMigrator(db, tracer)
-
-            migrator.migrate()
-            migrator.migrate()
-            migrator.migrate()
-
-            val response = db.query("INFO FOR DB")
-            val info = response.take(0)
-            info.toString().contains("_patch") shouldBe true
+            fixture.database.query("SELECT * FROM patch_probe").take(0).getArray().len() shouldBe 1
+            val history = fixture.database.query("SELECT checksum FROM _patch").take(0).getArray()
+            history.len() shouldBe 1
+            history.get(0).getObject().get("checksum").getString().length shouldBe 64
         }
     }
 
-    context("Patch Execution") {
+    test("migration rejects a modified patch before running it again") {
+        SchemaFixture().use { fixture ->
+            fixture.migrate(fixture.resources("0001_create_probe" to "CREATE patch_probe CONTENT { value: true };"))
 
-        test("patches run only once") {
-            val migrator = SchemaMigrator(db, tracer)
+            shouldThrowAny {
+                fixture.migrate(
+                    fixture.resources("0001_create_probe" to "CREATE patch_probe CONTENT { value: false };"),
+                )
+            }
 
-            migrator.migrate()
-            migrator.migrate()
-
-            val response = db.query("SELECT count() as cnt FROM _patch GROUP ALL")
-            val result = response.take(0)
-            result.toString().contains("cnt") shouldBe true
+            fixture.database.query("SELECT * FROM patch_probe").take(0).getArray().len() shouldBe 1
         }
     }
-})
+
+    test("failed patch rolls back its changes and history record") {
+        SchemaFixture().use { fixture ->
+            shouldThrowAny {
+                fixture.migrate(
+                    fixture.resources("0001_invalid" to "CREATE rollback_probe:test; THROW \"rollback\";"),
+                )
+            }
+
+            fixture.database.query("SELECT * FROM _patch").take(0).getArray().len() shouldBe 0
+            shouldThrowAny { fixture.database.query("SELECT * FROM rollback_probe").take(0) }
+        }
+    }
+
+    test("empty forward patch catalog applies the native realm schema") {
+        SchemaFixture().use { fixture ->
+            fixture.migrate(fixture.resources())
+
+            fixture.database.query("INFO FOR TABLE realm_probe").take(0).isObject shouldBe true
+            fixture.database.query("SELECT * FROM _patch").take(0).getArray().len() shouldBe 0
+        }
+    }
+
+    test("migration uses the caller main span and creates only scoped children") {
+        SchemaFixture().use { fixture ->
+            fixture.migrate(
+                fixture.resources("0001_create_probe" to "CREATE patch_probe CONTENT { value: true };"),
+            )
+
+            fixture.telemetry.spans {
+                count(6)
+                roots(1)
+                main("test.realm.start") {
+                    child("realm.schema.migrate") {
+                        childCount(3)
+                        child("realm.patch.run") {
+                            attribute("patch.total_count", 1L)
+                            attribute("patch.pending_count", 1L)
+                            child("realm.patch.apply") {
+                                attribute("patch.id", "0001_create_probe")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private class SchemaFixture : AutoCloseable {
+    val database = Surreal().apply {
+        connect("memory")
+        useNs("test").useDb("test")
+    }
+    val telemetry = TelemetryTestHarness.create()
+
+    fun resources(vararg patches: Pair<String, String>): MigrationResources {
+        val patchFiles = patches.map { (id, _) -> "$id.surql" }
+        val content = buildMap {
+            put("schema/migration.surql", TEST_MIGRATION_SCHEMA)
+            put("schema/realm/_index.txt", "realm_probe.surql")
+            put("schema/realm/realm_probe.surql", TEST_REALM_SCHEMA)
+            put("schema/patches/_index.txt", patchFiles.joinToString("\n"))
+            patches.forEach { (id, script) -> put("schema/patches/$id.surql", script) }
+        }
+        return MigrationResources(content::get)
+    }
+
+    fun migrate(resources: MigrationResources) {
+        telemetry.telemetry.mainSpanBlocking(
+            name = "test.realm.start",
+            unhandledFailureSlug = ErrorSlug.of("test-realm-start-failed"),
+        ) {
+            SchemaMigrator(database, resources).migrate()
+        }
+    }
+
+    override fun close() {
+        try {
+            database.close()
+        } finally {
+            telemetry.close()
+        }
+    }
+}
