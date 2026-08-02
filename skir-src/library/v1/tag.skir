@@ -1,0 +1,156 @@
+import { Color } from "kernel/v1/color.skir";
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct Placement {
+  x: int32;
+  y: int32;
+  width: int32;
+  height: int32;
+}
+
+struct Tag {
+  tag_id: RecordId;
+  name: string;
+  color: Color;
+  parent_ids: [RecordId];
+  placement: Placement;
+}
+
+enum TagValidationError {
+  name_required;
+  position_required;
+  size_required;
+  width_invalid;
+  height_invalid;
+}
+
+method WatchTags(
+  struct {}
+): enum {
+  internal_error: InternalError;
+
+  list: [Tag];
+  add: Tag;
+  update: Tag;
+  remove: RecordId;
+} = 822515;
+
+method WatchTag(
+  struct {
+    tag_id: RecordId;
+  }
+): enum {
+  internal_error: InternalError;
+
+  initial: Tag;
+  update: Tag;
+  remove: RecordId;
+
+  tag_not_found_error: struct {
+    tag_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 929317;
+
+method CreateTag(
+  struct {
+    name: string;
+    color: Color?;
+    parent_ids: [RecordId];
+    placement: Placement?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Tag;
+
+  parents_not_found_error: struct {
+    parent_ids: [RecordId];
+  };
+  validation_error: TagValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 279574;
+
+method UpdateTag(
+  struct {
+    tag_id: RecordId;
+    name: string?;
+    color: Color?;
+    parent_ids: [RecordId]?;
+    placement: Placement?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Tag;
+
+  tag_not_found_error: struct {
+    tag_id: RecordId;
+  };
+  parents_not_found_error: struct {
+    parent_ids: [RecordId];
+  };
+  validation_error: TagValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 970365;
+
+method DeleteTag(
+  struct {
+    tag_id: RecordId;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: struct {};
+
+  tag_not_found_error: struct {
+    tag_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 852297;
+
+method MoveTag(
+  struct {
+    tag_id: RecordId;
+    x: int32?;
+    y: int32?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Tag;
+
+  tag_not_found_error: struct {
+    tag_id: RecordId;
+  };
+  validation_error: TagValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 428020;
+
+method ResizeTag(
+  struct {
+    tag_id: RecordId;
+    width: int32?;
+    height: int32?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Tag;
+
+  tag_not_found_error: struct {
+    tag_id: RecordId;
+  };
+  validation_error: TagValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 356809;

@@ -1,0 +1,139 @@
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+enum PageType {
+  sequence;
+  static;
+  scene;
+  manifest;
+}
+
+struct Page {
+  page_id: RecordId;
+  book_id: RecordId;
+  name: string;
+  type: PageType;
+  chapter: string;
+  priority: int32;
+}
+
+enum PageValidationError {
+  name_required;
+  page_type_unknown;
+}
+
+method SearchPages(
+  struct {
+    book_id: RecordId;
+    search: string?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: [Page];
+
+  book_not_found_error: struct {
+    book_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 767938;
+
+method WatchPage(
+  struct {
+    page_id: RecordId;
+  }
+): enum {
+  internal_error: InternalError;
+
+  initial: Page;
+  update: Page;
+  remove: RecordId;
+
+  page_not_found_error: struct {
+    page_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 610282;
+
+method CreatePage(
+  struct {
+    book_id: RecordId;
+    name: string;
+    type: PageType;
+    chapter: string?;
+    priority: int32?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Page;
+
+  book_not_found_error: struct {
+    book_id: RecordId;
+  };
+  validation_error: PageValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 616486;
+
+method UpdatePage(
+  struct {
+    page_id: RecordId;
+    name: string?;
+    type: PageType?;
+    chapter: string?;
+    priority: int32?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Page;
+
+  page_not_found_error: struct {
+    page_id: RecordId;
+  };
+  validation_error: PageValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 247482;
+
+method DeletePage(
+  struct {
+    page_id: RecordId;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: struct {};
+
+  page_not_found_error: struct {
+    page_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 984691;
+
+method ChangePagesChapters(
+  struct {
+    book_id: RecordId;
+    old_chapter: string;
+    new_chapter: string;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: struct {
+    updated_count: int32;
+  };
+
+  book_not_found_error: struct {
+    book_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 777756;

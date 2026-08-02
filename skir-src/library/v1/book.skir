@@ -1,0 +1,92 @@
+import { Color } from "kernel/v1/color.skir";
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct Book {
+  book_id: RecordId;
+  title: string;
+  icon: string;
+  color: Color;
+  tag_ids: [RecordId];
+}
+
+enum BookValidationError {
+  title_required;
+  icon_required;
+}
+
+method WatchBooks(
+  struct {}
+): enum {
+  internal_error: InternalError;
+
+  list: [Book];
+  add: Book;
+  update: Book;
+  remove: RecordId;
+} = 216867;
+
+method WatchBook(
+  struct {
+    book_id: RecordId;
+  }
+): enum {
+  internal_error: InternalError;
+
+  initial: Book;
+  update: Book;
+  remove: RecordId;
+
+  book_not_found_error: struct {
+    book_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 452891;
+
+method CreateBook(
+  struct {
+    title: string;
+    icon: string?;
+    color: Color?;
+    tag_ids: [RecordId];
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Book;
+
+  validation_error: BookValidationError;
+  tags_not_found_error: struct {
+    tag_ids: [RecordId];
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 721728;
+
+method UpdateBook(
+  struct {
+    book_id: RecordId;
+    title: string?;
+    icon: string?;
+    color: Color?;
+    tag_ids: [RecordId]?;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Book;
+
+  book_not_found_error: struct {
+    book_id: RecordId;
+  };
+  tags_not_found_error: struct {
+    tag_ids: [RecordId];
+  };
+  validation_error: BookValidationError;
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 979951;

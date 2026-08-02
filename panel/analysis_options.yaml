@@ -86,7 +86,7 @@ analyzer:
     - "**/*.pb.dart"
     - "**/*.pbenum.dart"
     - "**/*.pbjson.dart"
-    - "**/skir-out/**/*.dart"
+    - "**/skirout/**/*.dart"
     - build/**
     - android/**
     - ios/**
