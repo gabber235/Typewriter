@@ -37,7 +37,6 @@ dependencies:
   oidc_default_store: ^1.1.0
   okcolor: ^1.1.0
   petitparser: ^7.0.2
-  protobuf: ^6.0.0
   pub_semver: ^2.2.0
   responsive_framework: ^1.5.1
   rive: ^0.14.0
@@ -59,7 +58,6 @@ dev_dependencies:
   freezed:
   icons_launcher:
   json_serializable:
-  protoc_plugin:
   riverpod_generator:
   riverpod_lint:
   test_screenshot:
