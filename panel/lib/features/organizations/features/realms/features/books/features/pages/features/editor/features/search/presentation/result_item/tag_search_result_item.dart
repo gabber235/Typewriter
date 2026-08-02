@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagSearchResultItem extends StatelessWidget {
@@ -26,7 +25,7 @@ class TagSearchResultItem extends StatelessWidget {
   }) {
     return TagSearchResultItem(
       name: tag.name,
-      color: tag.color.toFlutterColor(),
+      color: tag.color,
       selected: selected,
       focused: focused,
       loading: loading,

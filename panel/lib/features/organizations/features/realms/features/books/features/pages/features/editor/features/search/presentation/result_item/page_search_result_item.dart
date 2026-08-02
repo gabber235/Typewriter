@@ -1,5 +1,4 @@
 import "package:flutter/material.dart" hide Page;
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class PageSearchResultItem extends StatelessWidget {

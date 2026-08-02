@@ -4,7 +4,6 @@ import "dart:convert";
 import "package:dart_nats/dart_nats.dart";
 import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
-import "package:protobuf/protobuf.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:skir_client/skir_client.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
@@ -125,25 +124,6 @@ class NatsStatus extends _$NatsStatus {
   }
 }
 
-/// Extension on Client to add protobuf request/response methods
-extension ClientProtoExtension on Client {
-  /// Send a protobuf request and receive a protobuf response
-  @Deprecated("migrate to skir")
-  Future<TResponse> requestProto<
-    TRequest extends GeneratedMessage,
-    TResponse extends GeneratedMessage
-  >(
-    String subject,
-    TRequest request,
-    TResponse Function() responseBuilder,
-  ) async {
-    final requestBytes = request.writeToBuffer();
-    final response = await this.request(subject, requestBytes);
-
-    return responseBuilder()..mergeFromBuffer(response.data);
-  }
-}
-
 /// Extension on Ref to allow for listening to Nats topics while sending an initial request
 extension RefNatsExtension on Ref {
   Future<TResponse> requestSkir<TResponse>(
@@ -201,33 +181,6 @@ extension RefNatsExtension on Ref {
       final response = transformer(lastData, serializer.fromBytes(msg.data));
       yield response;
       lastData = response;
-    }
-  }
-
-  /// Send a protobuf request and receive a protobuf response while listening to a topic
-  @Deprecated("migrate to skir")
-  Stream<TResponse> requestProtoThenListen<
-    TRequest extends GeneratedMessage,
-    TResponse extends GeneratedMessage
-  >({
-    required String subject,
-    required String listenSubject,
-    required TRequest request,
-    required TResponse Function() responseBuilder,
-  }) async* {
-    final status = watch(natsStatusProvider);
-    if (status != Status.connected) {
-      throw Exception("NATS is not connected");
-    }
-    final client = watch(natsProvider);
-    final sub = client.sub(listenSubject);
-    onDispose(() => client.unSub(sub));
-
-    await client.pub(subject, request.writeToBuffer(), replyTo: listenSubject);
-
-    await for (final msg in sub.stream) {
-      final response = responseBuilder()..mergeFromBuffer(msg.data);
-      yield response;
     }
   }
 }

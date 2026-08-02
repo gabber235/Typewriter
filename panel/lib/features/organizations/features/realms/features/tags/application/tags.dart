@@ -1,11 +1,65 @@
 import "package:collection/collection.dart";
+import "package:flutter/material.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/api/tag.pb.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "tags.freezed.dart";
 part "tags.g.dart";
+
+@freezed
+abstract class Placement with _$Placement {
+  const factory Placement({
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+  }) = _Placement;
+
+  const Placement._();
+
+  factory Placement.fromSkir(skir.Placement placement) => Placement(
+    x: placement.x,
+    y: placement.y,
+    width: placement.width,
+    height: placement.height,
+  );
+
+  skir.Placement toSkir() =>
+      skir.Placement(x: x, y: y, width: width, height: height);
+}
+
+@freezed
+abstract class Tag with _$Tag {
+  @Assert("name != \"\"", "Name must not be empty.")
+  const factory Tag({
+    required skir.RecordId tagId,
+    required String name,
+    required Color color,
+    required List<skir.RecordId> parentIds,
+    required Placement placement,
+  }) = _Tag;
+
+  const Tag._();
+
+  factory Tag.fromSkir(skir.Tag tag) => Tag(
+    tagId: tag.tagId,
+    name: tag.name,
+    color: tag.color.toFlutterColor(),
+    parentIds: tag.parentIds.toList(),
+    placement: Placement.fromSkir(tag.placement),
+  );
+
+  skir.Tag toSkir() => skir.Tag(
+    tagId: tagId,
+    name: name,
+    color: color.toSkirColor(),
+    parentIds: parentIds,
+    placement: placement.toSkir(),
+  );
+}
 
 @riverpod
 class Tags extends _$Tags {
@@ -18,27 +72,43 @@ class Tags extends _$Tags {
       return;
     }
 
-    final request = ListTagsRequest();
-    final stream = ref.requestProtoThenListen(
-      subject: "realm.to.$realmId.organization.$organizationId.tag.list",
+    final request = skir.WatchTagsRequest();
+    yield* ref.watchRequest(
+      subject:
+          "realm.to.${realmId.id}.organization.${organizationId.id}.tag.watch",
       listenSubject:
-          "realm.from.$realmId.organization.$organizationId.tag.list",
-      request: request,
-      responseBuilder: ListTagsResponse.new,
+          "realm.from.${realmId.id}.organization.${organizationId.id}.tag.watch",
+      requestBytes: skir.WatchTagsRequest.serializer.toBytes(request),
+      serializer: skir.WatchTagsResponse.serializer,
+      transformer: (previous, response) {
+        switch (response) {
+          case skir.WatchTagsResponse_unknown():
+            throw ApiException.unknownResponseMessage();
+          case skir.WatchTagsResponse_internalErrorWrapper():
+            throw ApiException.internalServerError();
+          case skir.WatchTagsResponse_listWrapper(:final value):
+            return value.map(Tag.fromSkir).toList();
+          case skir.WatchTagsResponse_addWrapper(:final value):
+            return previous.upsertByKey(
+              (tag) => tag.tagId,
+              Tag.fromSkir(value),
+            );
+          case skir.WatchTagsResponse_updateWrapper(:final value):
+            return previous.upsertByKey(
+              (tag) => tag.tagId,
+              Tag.fromSkir(value),
+            );
+          case skir.WatchTagsResponse_removeWrapper(:final value):
+            return previous?.where((tag) => tag.tagId != value).toList() ?? [];
+        }
+      },
     );
-
-    await for (final response in stream) {
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-      yield response.tags.tags.toList();
-    }
   }
 
   Future<Tag> createTag({
     required String name,
     Color? color,
-    List<String> parentIds = const [],
+    List<skir.RecordId> parentIds = const [],
     int x = 0,
     int y = 0,
     int width = 4,
@@ -48,44 +118,42 @@ class Tags extends _$Tags {
     final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    assert(realmId != null, "realmId must not be null when creating a tag");
-    assert(
-      organizationId != null,
-      "organizationId must not be null when creating a tag",
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    if (organizationId == null) throw ApiException.noOrganization();
+
+    final request = skir.CreateTagRequest(
+      name: name,
+      color: color?.toSkirColor(),
+      parentIds: parentIds,
+      placement: skir.Placement(x: x, y: y, width: width, height: height),
     );
 
-    final placement = Placement()
-      ..x = x
-      ..y = y
-      ..width = width
-      ..height = height;
-
-    final request = CreateTagRequest()
-      ..name = name
-      ..parentIds.addAll(parentIds)
-      ..placement = placement;
-
-    if (color != null) {
-      request.color = color;
-    }
-
     try {
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "realm.to.$realmId.organization.$organizationId.tag.create",
-            request,
-            CreateTagResponse.new,
+      final response = await ref.requestSkir(
+        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.create",
+        skir.CreateTagRequest.serializer.toBytes(request),
+        skir.CreateTagResponse.serializer,
+      );
+
+      switch (response) {
+        case skir.CreateTagResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.CreateTagResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.CreateTagResponse_parentsNotFoundErrorWrapper():
+          throw ApiException.notFound("Parent tags");
+        case skir.CreateTagResponse_validationErrorWrapper(:final value):
+          throw _tagValidationException(value);
+        case skir.CreateTagResponse_invalidRecordIdErrorWrapper(:final value):
+          throw ApiException.invalidRecordId(value);
+        case skir.CreateTagResponse_successWrapper(:final value):
+          final tag = Tag.fromSkir(value);
+          state = AsyncData(
+            state.requireValue.upsertByKey((tag) => tag.tagId, tag),
           );
-
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
+          return tag;
       }
-
-      final current = state.value ?? [];
-      state = AsyncData([...current, response.tag]);
-      return response.tag;
-    } catch (e) {
+    } catch (_) {
       state = previousState;
       rethrow;
     }
@@ -96,163 +164,194 @@ class Tags extends _$Tags {
     final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    assert(realmId != null, "realmId must not be null when updating a tag");
-    assert(
-      organizationId != null,
-      "organizationId must not be null when updating a tag",
-    );
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    if (organizationId == null) throw ApiException.noOrganization();
 
-    final current = state.requireValue;
     state = AsyncData(
-      current.map((t) => t.tagId == tag.tagId ? tag : t).toList(),
+      state.requireValue.upsertByKey((value) => value.tagId, tag),
     );
 
-    final request = UpdateTagRequest()..tag = tag;
+    final request = skir.UpdateTagRequest(
+      tagId: tag.tagId,
+      name: tag.name,
+      color: tag.color.toSkirColor(),
+      parentIds: tag.parentIds,
+      placement: tag.placement.toSkir(),
+    );
 
     try {
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "realm.to.$realmId.organization.$organizationId.tag.update",
-            request,
-            UpdateTagResponse.new,
-          );
-
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
-      }
-
-      final updated = state.requireValue;
-      state = AsyncData(
-        updated
-            .map((t) => t.tagId == response.tag.tagId ? response.tag : t)
-            .toList(),
+      final response = await ref.requestSkir(
+        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.update",
+        skir.UpdateTagRequest.serializer.toBytes(request),
+        skir.UpdateTagResponse.serializer,
       );
-    } catch (e) {
-      state = previousState;
-      rethrow;
-    }
-  }
 
-  Future<void> deleteTag(String tagId) async {
-    state.ensureReady();
-    final previousState = state;
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    assert(realmId != null, "realmId must not be null when deleting a tag");
-    assert(
-      organizationId != null,
-      "organizationId must not be null when deleting a tag",
-    );
-
-    final current = state.value ?? [];
-    state = AsyncData(current.where((t) => t.tagId != tagId).toList());
-
-    final request = DeleteTagRequest()..tagId = tagId;
-
-    try {
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "realm.to.$realmId.organization.$organizationId.tag.delete",
-            request,
-            DeleteTagResponse.new,
+      switch (response) {
+        case skir.UpdateTagResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.UpdateTagResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.UpdateTagResponse_tagNotFoundErrorWrapper():
+          throw ApiException.notFound("Tag");
+        case skir.UpdateTagResponse_parentsNotFoundErrorWrapper():
+          throw ApiException.notFound("Parent tags");
+        case skir.UpdateTagResponse_validationErrorWrapper(:final value):
+          throw _tagValidationException(value);
+        case skir.UpdateTagResponse_invalidRecordIdErrorWrapper(:final value):
+          throw ApiException.invalidRecordId(value);
+        case skir.UpdateTagResponse_successWrapper(:final value):
+          final updatedTag = Tag.fromSkir(value);
+          state = AsyncData(
+            state.requireValue.upsertByKey((tag) => tag.tagId, updatedTag),
           );
-
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
       }
-    } catch (e) {
+    } catch (_) {
       state = previousState;
       rethrow;
     }
   }
 
-  Future<void> moveTag(String tagId, int x, int y) async {
+  Future<void> deleteTag(skir.RecordId tagId) async {
     state.ensureReady();
     final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    assert(realmId != null, "realmId must not be null when moving a tag");
-    assert(
-      organizationId != null,
-      "organizationId must not be null when moving a tag",
-    );
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    if (organizationId == null) throw ApiException.noOrganization();
 
-    final current = state.value ?? [];
     state = AsyncData(
-      current.map((t) {
-        if (t.tagId != tagId) return t;
-        return t.deepCopy()
-          ..placement = (t.placement.deepCopy()
-            ..x = x
-            ..y = y);
-      }).toList(),
+      state.requireValue.where((tag) => tag.tagId != tagId).toList(),
     );
-
-    final request = MoveTagRequest()
-      ..tagId = tagId
-      ..x = x
-      ..y = y;
+    final request = skir.DeleteTagRequest(tagId: tagId);
 
     try {
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "realm.to.$realmId.organization.$organizationId.tag.move",
-            request,
-            MoveTagResponse.new,
-          );
+      final response = await ref.requestSkir(
+        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.delete",
+        skir.DeleteTagRequest.serializer.toBytes(request),
+        skir.DeleteTagResponse.serializer,
+      );
 
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.DeleteTagResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.DeleteTagResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.DeleteTagResponse_tagNotFoundErrorWrapper():
+          throw ApiException.notFound("Tag");
+        case skir.DeleteTagResponse_invalidRecordIdErrorWrapper(:final value):
+          throw ApiException.invalidRecordId(value);
+        case skir.DeleteTagResponse_successWrapper():
       }
-    } catch (e) {
+    } catch (_) {
       state = previousState;
       rethrow;
     }
   }
 
-  Future<void> resizeTag(String tagId, int width, int height) async {
+  Future<void> moveTag(skir.RecordId tagId, int x, int y) async {
     state.ensureReady();
     final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
-    assert(realmId != null, "realmId must not be null when resizing a tag");
-    assert(
-      organizationId != null,
-      "organizationId must not be null when resizing a tag",
-    );
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    if (organizationId == null) throw ApiException.noOrganization();
 
-    final current = state.value ?? [];
     state = AsyncData(
-      current.map((t) {
-        if (t.tagId != tagId) return t;
-        return t.deepCopy()
-          ..placement = (t.placement.deepCopy()
-            ..width = width
-            ..height = height);
-      }).toList(),
+      state.requireValue
+          .map(
+            (tag) => tag.tagId == tagId
+                ? tag.copyWith(
+                    placement: tag.placement.copyWith(x: x, y: y),
+                  )
+                : tag,
+          )
+          .toList(),
     );
-
-    final request = ResizeTagRequest()
-      ..tagId = tagId
-      ..width = width
-      ..height = height;
+    final request = skir.MoveTagRequest(tagId: tagId, x: x, y: y);
 
     try {
-      final response = await ref
-          .read(natsProvider)
-          .requestProto(
-            "realm.to.$realmId.organization.$organizationId.tag.resize",
-            request,
-            ResizeTagResponse.new,
-          );
+      final response = await ref.requestSkir(
+        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.move",
+        skir.MoveTagRequest.serializer.toBytes(request),
+        skir.MoveTagResponse.serializer,
+      );
 
-      if (response.hasError()) {
-        throw ApiException.fromProto(response.error);
+      switch (response) {
+        case skir.MoveTagResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.MoveTagResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.MoveTagResponse_tagNotFoundErrorWrapper():
+          throw ApiException.notFound("Tag");
+        case skir.MoveTagResponse_validationErrorWrapper(:final value):
+          throw _tagValidationException(value);
+        case skir.MoveTagResponse_invalidRecordIdErrorWrapper(:final value):
+          throw ApiException.invalidRecordId(value);
+        case skir.MoveTagResponse_successWrapper(:final value):
+          final movedTag = Tag.fromSkir(value);
+          state = AsyncData(
+            state.requireValue.upsertByKey((tag) => tag.tagId, movedTag),
+          );
       }
-    } catch (e) {
+    } catch (_) {
+      state = previousState;
+      rethrow;
+    }
+  }
+
+  Future<void> resizeTag(skir.RecordId tagId, int width, int height) async {
+    state.ensureReady();
+    final previousState = state;
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    if (organizationId == null) throw ApiException.noOrganization();
+
+    state = AsyncData(
+      state.requireValue
+          .map(
+            (tag) => tag.tagId == tagId
+                ? tag.copyWith(
+                    placement: tag.placement.copyWith(
+                      width: width,
+                      height: height,
+                    ),
+                  )
+                : tag,
+          )
+          .toList(),
+    );
+    final request = skir.ResizeTagRequest(
+      tagId: tagId,
+      width: width,
+      height: height,
+    );
+
+    try {
+      final response = await ref.requestSkir(
+        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.resize",
+        skir.ResizeTagRequest.serializer.toBytes(request),
+        skir.ResizeTagResponse.serializer,
+      );
+
+      switch (response) {
+        case skir.ResizeTagResponse_unknown():
+          throw ApiException.unknownResponseMessage();
+        case skir.ResizeTagResponse_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.ResizeTagResponse_tagNotFoundErrorWrapper():
+          throw ApiException.notFound("Tag");
+        case skir.ResizeTagResponse_validationErrorWrapper(:final value):
+          throw _tagValidationException(value);
+        case skir.ResizeTagResponse_invalidRecordIdErrorWrapper(:final value):
+          throw ApiException.invalidRecordId(value);
+        case skir.ResizeTagResponse_successWrapper(:final value):
+          final resizedTag = Tag.fromSkir(value);
+          state = AsyncData(
+            state.requireValue.upsertByKey((tag) => tag.tagId, resizedTag),
+          );
+      }
+    } catch (_) {
       state = previousState;
       rethrow;
     }
@@ -260,7 +359,28 @@ class Tags extends _$Tags {
 }
 
 @riverpod
-Future<Tag?> tag(Ref ref, String tagId) async {
+Future<Tag?> tag(Ref ref, skir.RecordId tagId) async {
   final tags = await ref.watch(tagsProvider.future);
-  return tags.firstWhereOrNull((t) => t.tagId == tagId);
+  return tags.firstWhereOrNull((tag) => tag.tagId == tagId);
+}
+
+ApiException _tagValidationException(skir.TagValidationError error) {
+  return switch (error.kind) {
+    skir.TagValidationError_kind.unknown =>
+      ApiException.unknownResponseMessage(),
+    skir.TagValidationError_kind.nameRequiredConst => ApiException.badRequest(
+      "Tag name is required",
+    ),
+    skir.TagValidationError_kind.positionRequiredConst =>
+      ApiException.badRequest("Tag position is required"),
+    skir.TagValidationError_kind.sizeRequiredConst => ApiException.badRequest(
+      "Tag size is required",
+    ),
+    skir.TagValidationError_kind.widthInvalidConst => ApiException.badRequest(
+      "Tag width is invalid",
+    ),
+    skir.TagValidationError_kind.heightInvalidConst => ApiException.badRequest(
+      "Tag height is invalid",
+    ),
+  };
 }

@@ -3,10 +3,8 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart"
-    as proto;
-import "package:typewriter_panel/typewriter_panel.dart" as proto;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -21,28 +19,43 @@ class _MockBooks extends Books {
   }
 }
 
+Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
+  return Book(
+    bookId: recordId("book:$id"),
+    title: title,
+    icon: "book",
+    color: Colors.blue,
+    tagIds: tagIds,
+  );
+}
+
+Tag _tag(String id) {
+  return Tag(
+    tagId: recordId("tag:$id"),
+    name: id,
+    color: Colors.blue,
+    parentIds: const [],
+    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+  );
+}
+
 void main() {
   group("filteredBooks", () {
     final testBooks = [
-      Book()
-        ..bookId = "book-1"
-        ..title = "Quest for Glory"
-        ..tagIds.add("adventure"),
-      Book()
-        ..bookId = "book-2"
-        ..title = "Mystery Manor"
-        ..tagIds.addAll(["mystery", "horror"]),
-      Book()
-        ..bookId = "book-3"
-        ..title = "Space Explorers"
-        ..tagIds.add("scifi"),
+      _book("book1", "Quest for Glory", tagIds: [recordId("tag:adventure")]),
+      _book(
+        "book2",
+        "Mystery Manor",
+        tagIds: [recordId("tag:mystery"), recordId("tag:horror")],
+      ),
+      _book("book3", "Space Explorers", tagIds: [recordId("tag:scifi")]),
     ];
 
     final testTags = [
-      Tag(tagId: "adventure", name: "adventure"),
-      Tag(tagId: "mystery", name: "mystery"),
-      Tag(tagId: "horror", name: "horror"),
-      Tag(tagId: "scifi", name: "scifi"),
+      _tag("adventure"),
+      _tag("mystery"),
+      _tag("horror"),
+      _tag("scifi"),
     ];
 
     Future<List<Book>> getFilteredBooks(
@@ -92,7 +105,7 @@ void main() {
       final result = await getFilteredBooks(container, "QUEST");
 
       expect(result.length, 1);
-      expect(result.first.bookId, "book-1");
+      expect(result.first.bookId, recordId("book:book1"));
     });
 
     test("matches book title with partial query", () async {
@@ -120,7 +133,7 @@ void main() {
       final result = await getFilteredBooks(container, "ADVENTURE");
 
       expect(result.length, 1);
-      expect(result.first.bookId, "book-1");
+      expect(result.first.bookId, recordId("book:book1"));
     });
 
     test("matches any of multiple tags", () async {
@@ -137,7 +150,7 @@ void main() {
       final result = await getFilteredBooks(container, "horror");
 
       expect(result.length, 1);
-      expect(result.first.bookId, "book-2");
+      expect(result.first.bookId, recordId("book:book2"));
     });
 
     test("returns empty list when no matches", () async {
@@ -151,11 +164,7 @@ void main() {
     });
 
     test("handles books with no tags", () async {
-      final booksWithNoTags = [
-        Book()
-          ..bookId = "book-no-tags"
-          ..title = "Tagless Adventure",
-      ];
+      final booksWithNoTags = [_book("book_no_tags", "Tagless Adventure")];
 
       final container = ProviderContainer.test(
         overrides: [
@@ -185,54 +194,54 @@ void main() {
     });
   });
 
-  group("BookExtension.withColor", () {
+  group("Book.copyWith", () {
     test("creates copy with new color preserving other fields", () {
-      final original = Book()
-        ..bookId = "book-123"
-        ..title = "Original Title"
-        ..color = (proto.Color()..value = 0xFF646464);
+      final original = _book(
+        "book123",
+        "Original Title",
+      ).copyWith(color: const Color(0xFF646464));
 
-      final updated = original.withColor(Colors.red);
+      final updated = original.copyWith(color: Colors.red);
 
-      expect(updated.bookId, "book-123");
+      expect(updated.bookId, recordId("book:book123"));
       expect(updated.title, "Original Title");
-      expect(updated.color.value, Colors.red.toARGB32());
+      expect(updated.color, Colors.red);
     });
 
     test("does not modify original book", () {
-      final original = Book()
-        ..bookId = "book-123"
-        ..title = "Test"
-        ..color = (proto.Color()..value = 0xFF323232);
+      final original = _book(
+        "book123",
+        "Test",
+      ).copyWith(color: const Color(0xFF323232));
 
-      // ignore: cascade_invocations
-      original.withColor(Colors.blue);
+      final updated = original.copyWith(color: Colors.blue);
 
-      expect(original.color.value, 0xFF323232);
+      expect(original.color, const Color(0xFF323232));
+      expect(updated.color, Colors.blue);
     });
   });
 
   group("BookIdentifier", () {
     test("equality works correctly", () {
-      final id1 = BookIdentifier("book-abc");
-      final id2 = BookIdentifier("book-abc");
-      final id3 = BookIdentifier("book-xyz");
+      final id1 = BookIdentifier(recordId("book:abc"));
+      final id2 = BookIdentifier(recordId("book:abc"));
+      final id3 = BookIdentifier(recordId("book:xyz"));
 
       expect(id1, equals(id2));
       expect(id1, isNot(equals(id3)));
     });
 
     test("hashCode is consistent with equality", () {
-      final id1 = BookIdentifier("book-abc");
-      final id2 = BookIdentifier("book-abc");
+      final id1 = BookIdentifier(recordId("book:abc"));
+      final id2 = BookIdentifier(recordId("book:abc"));
 
       expect(id1.hashCode, equals(id2.hashCode));
     });
 
     test("can be used as map key", () {
       final map = <BookIdentifier, String>{};
-      final id1 = BookIdentifier("book-1");
-      final id2 = BookIdentifier("book-1");
+      final id1 = BookIdentifier(recordId("book:one"));
+      final id2 = BookIdentifier(recordId("book:one"));
 
       map[id1] = "value1";
       map[id2] = "value2";
@@ -242,9 +251,9 @@ void main() {
     });
 
     test("toString returns descriptive string", () {
-      final id = BookIdentifier("book-123");
+      final id = BookIdentifier(recordId("book:book123"));
 
-      expect(id.toString(), contains("book-123"));
+      expect(id.toString(), contains("book123"));
     });
   });
 }

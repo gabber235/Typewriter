@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -51,12 +50,12 @@ Widget _buildPagePageUseCase(
 
 @widgetbook.UseCase(name: "Sequence", type: PagePage)
 Widget pagePageSequenceUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_SEQUENCE);
+  return _buildPagePageUseCase(context, PageType.sequence);
 }
 
 @widgetbook.UseCase(name: "Static", type: PagePage)
 Widget pagePageStaticUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_STATIC);
+  return _buildPagePageUseCase(context, PageType.static);
 }
 
 @widgetbook.UseCase(name: "Scene", type: PagePage)
@@ -229,12 +228,12 @@ Widget pagePageSceneUseCase(BuildContext context) {
 
   return _buildPagePageUseCase(
     context,
-    PageType.PAGE_TYPE_SCENE,
+    PageType.scene,
     ovewriteElements: demoScene,
   );
 }
 
 @widgetbook.UseCase(name: "Manifest", type: PagePage)
 Widget pagePageManifestUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.PAGE_TYPE_MANIFEST);
+  return _buildPagePageUseCase(context, PageType.manifest);
 }

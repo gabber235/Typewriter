@@ -23,7 +23,7 @@ class TimelineDsl {
   }
 }
 
-abstract class TimelineElementDsl {
+sealed class TimelineElementDsl {
   const TimelineElementDsl._();
 
   factory TimelineElementDsl.keyframe(String id, int frame) =

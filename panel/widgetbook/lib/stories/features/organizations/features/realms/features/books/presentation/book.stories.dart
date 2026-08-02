@@ -1,7 +1,6 @@
 import "package:faker/faker.dart";
 import "package:flutter/material.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -13,11 +12,13 @@ Book generateRandomBook() {
       .words(random.integer(4, min: 1))
       .join(" ")
       .snakeCase();
-  return Book()
-    ..bookId = title
-    ..title = title
-    ..icon = icon ?? "book"
-    ..color = safeColors.randomElement().toProtoColor();
+  return Book(
+    bookId: recordId("book:$title"),
+    title: title,
+    icon: icon ?? "book",
+    color: safeColors.randomElement(),
+    tagIds: const [],
+  );
 }
 
 @widgetbook.UseCase(name: "Default", type: BookWidget)
@@ -37,7 +38,7 @@ Widget bookUseCase(BuildContext context) {
       id: book.bookId,
       title: book.title,
       icon: Icones(book.icon),
-      color: book.flutterColor,
+      color: book.color,
       tags: tags,
     ),
   );

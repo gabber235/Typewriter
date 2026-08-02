@@ -3,7 +3,8 @@ import "package:faker/faker.dart";
 import "package:flutter_animate/flutter_animate.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/entries.dart";
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/testing/graph_layout.dart";
@@ -26,12 +27,14 @@ Page generateRandomPage([PageType? pageType]) {
     "main.epilogue",
   ];
 
-  return Page()
-    ..pageId = faker.guid.guid()
-    ..name = pageName
-    ..type = type
-    ..chapter = chapters.randomOrNull() ?? ""
-    ..priority = faker.randomGenerator.integer(100, min: -10);
+  return Page(
+    pageId: recordId("page:${faker.guid.guid()}"),
+    bookId: recordId("book:${faker.guid.guid()}"),
+    name: pageName,
+    type: type,
+    chapter: chapters.randomOrNull() ?? "",
+    priority: faker.randomGenerator.integer(100, min: -10),
+  );
 }
 
 class BookPagesMock extends BookPages {
@@ -40,7 +43,7 @@ class BookPagesMock extends BookPages {
   final DisplayState displayState;
 
   @override
-  Future<List<Page>> build(String bookId, String search) async {
+  Future<List<Page>> build(skir.RecordId bookId, String search) async {
     await ref.debounce(300.ms);
     await Future<void>.delayed(100.ms);
     final pages = await displayState.generate(generateRandomPage);
@@ -64,25 +67,23 @@ class PagesMock extends Pages {
   final PageType? pageType;
 
   @override
-  Future<Page> build(String pageId) async {
+  Stream<Page> build(skir.RecordId pageId) async* {
     await Future<void>.delayed(50.ms);
-    if (page != null) return page!;
+    if (page != null) {
+      yield page!;
+      return;
+    }
     final randomPage = generateRandomPage(pageType);
-    return randomPage.deepCopy()..pageId = pageId;
+    yield randomPage.copyWith(pageId: pageId);
   }
 
   @override
-  Future<void> changeChapter(String chapter) async {
-    await Future<void>.delayed(200.ms);
-  }
-
-  @override
-  Future<void> renamePage(String name) async {
-    await Future<void>.delayed(200.ms);
-  }
-
-  @override
-  Future<void> changePriority(int priority) async {
+  Future<void> updatePage({
+    String? name,
+    PageType? type,
+    String? chapter,
+    int? priority,
+  }) async {
     await Future<void>.delayed(200.ms);
   }
 }
@@ -104,7 +105,7 @@ class PageElementsMock extends PageElements {
   Future<List<PageElement>> build(String pageId) async {
     await Future<void>.delayed(100.ms);
     if (overwriteElements != null) return overwriteElements!;
-    if (pageType == PageType.PAGE_TYPE_SCENE) {
+    if (pageType == PageType.scene) {
       return displayState.generateBatch(generateRandomScenePageElements);
     }
 

@@ -1,7 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
@@ -12,7 +11,7 @@ class PagePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final page = ref.watch(pagesProvider(pageId));
+    final page = ref.watch(pagesProvider(recordId("page:$pageId")));
     return Inspector(
       margin: EdgeInsets.only(
         top: context.spacing.space2,
@@ -33,14 +32,13 @@ class PagePage extends HookConsumerWidget {
             name: "page",
             builder: (page) {
               return switch (page.type) {
-                PageType.PAGE_TYPE_STATIC ||
-                PageType.PAGE_TYPE_SEQUENCE ||
-                PageType.PAGE_TYPE_MANIFEST => EntryGraph(
+                PageType.static ||
+                PageType.sequence ||
+                PageType.manifest => EntryGraph(
                   pageId: pageId,
                   graphDirection: page.type.direction!,
                 ),
-                PageType.PAGE_TYPE_SCENE => EntryScene(pageId: pageId),
-                _ => Text("Unknown page type"),
+                PageType.scene => EntryScene(pageId: pageId),
               };
             },
           ),

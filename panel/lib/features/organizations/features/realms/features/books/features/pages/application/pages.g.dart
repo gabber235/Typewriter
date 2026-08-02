@@ -16,7 +16,7 @@ final class BookPagesProvider
     extends $AsyncNotifierProvider<BookPages, List<Page>> {
   BookPagesProvider._({
     required BookPagesFamily super.from,
-    required (String, String) super.argument,
+    required (skir.RecordId, String) super.argument,
   }) : super(
          retry: null,
          name: r'bookPagesProvider',
@@ -50,7 +50,7 @@ final class BookPagesProvider
   }
 }
 
-String _$bookPagesHash() => r'1e5cc8f25cad646efc907f7cbcc40826c92cac3e';
+String _$bookPagesHash() => r'352687bac2e3e87abdcf57cf90bdeb0d9c41ad29';
 
 final class BookPagesFamily extends $Family
     with
@@ -59,7 +59,7 @@ final class BookPagesFamily extends $Family
           AsyncValue<List<Page>>,
           List<Page>,
           FutureOr<List<Page>>,
-          (String, String)
+          (skir.RecordId, String)
         > {
   BookPagesFamily._()
     : super(
@@ -70,7 +70,7 @@ final class BookPagesFamily extends $Family
         isAutoDispose: true,
       );
 
-  BookPagesProvider call(String bookId, String search) =>
+  BookPagesProvider call(skir.RecordId bookId, String search) =>
       BookPagesProvider._(argument: (bookId, search), from: this);
 
   @override
@@ -78,11 +78,11 @@ final class BookPagesFamily extends $Family
 }
 
 abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
-  late final _$args = ref.$arg as (String, String);
-  String get bookId => _$args.$1;
+  late final _$args = ref.$arg as (skir.RecordId, String);
+  skir.RecordId get bookId => _$args.$1;
   String get search => _$args.$2;
 
-  FutureOr<List<Page>> build(String bookId, String search);
+  FutureOr<List<Page>> build(skir.RecordId bookId, String search);
   @$mustCallSuper
   @override
   void runBuild() {
@@ -102,10 +102,10 @@ abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
 @ProviderFor(Pages)
 final pagesProvider = PagesFamily._();
 
-final class PagesProvider extends $AsyncNotifierProvider<Pages, Page> {
+final class PagesProvider extends $StreamNotifierProvider<Pages, Page> {
   PagesProvider._({
     required PagesFamily super.from,
-    required String super.argument,
+    required skir.RecordId super.argument,
   }) : super(
          retry: null,
          name: r'pagesProvider',
@@ -139,7 +139,7 @@ final class PagesProvider extends $AsyncNotifierProvider<Pages, Page> {
   }
 }
 
-String _$pagesHash() => r'6d44d65a5bb8b4305c69139fb7cd1f08b800a0c0';
+String _$pagesHash() => r'98b51043aee9c9bdf6b6ed20fa19e78406786b0f';
 
 final class PagesFamily extends $Family
     with
@@ -147,8 +147,8 @@ final class PagesFamily extends $Family
           Pages,
           AsyncValue<Page>,
           Page,
-          FutureOr<Page>,
-          String
+          Stream<Page>,
+          skir.RecordId
         > {
   PagesFamily._()
     : super(
@@ -159,18 +159,18 @@ final class PagesFamily extends $Family
         isAutoDispose: true,
       );
 
-  PagesProvider call(String pageId) =>
+  PagesProvider call(skir.RecordId pageId) =>
       PagesProvider._(argument: pageId, from: this);
 
   @override
   String toString() => r'pagesProvider';
 }
 
-abstract class _$Pages extends $AsyncNotifier<Page> {
-  late final _$args = ref.$arg as String;
-  String get pageId => _$args;
+abstract class _$Pages extends $StreamNotifier<Page> {
+  late final _$args = ref.$arg as skir.RecordId;
+  skir.RecordId get pageId => _$args;
 
-  FutureOr<Page> build(String pageId);
+  Stream<Page> build(skir.RecordId pageId);
   @$mustCallSuper
   @override
   void runBuild() {

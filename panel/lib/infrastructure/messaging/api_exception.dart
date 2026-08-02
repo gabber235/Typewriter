@@ -1,21 +1,10 @@
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart"
-    as proto;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" as proto;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Exception thrown when an API call returns an error response.
-///
-/// This exception wraps the proto Error message and provides
-/// convenient access to error details.
 class ApiException implements Exception {
   const ApiException({required this.code, required this.message});
-
-  /// Creates an ApiException from a proto Error message.
-  factory ApiException.fromProto(proto.Error error) {
-    return ApiException(code: error.code, message: error.message);
-  }
 
   factory ApiException.internalServerError() {
     return ApiException(code: 500, message: funnyErrorTitles.randomElement());

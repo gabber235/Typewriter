@@ -1,20 +1,23 @@
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagIdentifier extends SelectableIdentifier implements GraphDragData {
-  const TagIdentifier(this.id);
+  const TagIdentifier(this.tagId);
+
+  final skir.RecordId tagId;
 
   @override
-  final String id;
+  String get id => tagId.id;
 
   @override
   GraphIdentifier get graphId => GraphIdentifier(id);
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final tagAsync = ref.watch(tagProvider(id));
+    final tagAsync = ref.watch(tagProvider(tagId));
     return tagAsync.whenData((value) {
       if (value == null) {
         throw SelectableNotFoundException(this);
@@ -24,21 +27,21 @@ class TagIdentifier extends SelectableIdentifier implements GraphDragData {
   }
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => tagId.hashCode;
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is TagIdentifier && other.id == id;
+    return other is TagIdentifier && other.tagId == tagId;
   }
 
   @override
-  String toString() => "TagIdentifier(id: $id)";
+  String toString() => "TagIdentifier(tagId: $tagId)";
 }
 
 class TagSelectable extends Selectable<TagIdentifier> {
   TagSelectable({required this.ref, required this.id, required this.tag})
-    : _data = DynamicData(stringMap(tag.toProto3Json()));
+    : _data = DynamicData({"name": tag.name});
 
   @override
   final TagIdentifier id;
@@ -79,7 +82,7 @@ class TagSelectable extends Selectable<TagIdentifier> {
   @override
   void setFieldValue(String path, dynamic value) {
     final newData = _data.copyWith(path, value);
-    final newTag = Tag()..mergeFromProto3Json(newData.toJson());
+    final newTag = tag.copyWith(name: newData.get("name") as String);
     ref.read(tagsProvider.notifier).updateTag(newTag);
   }
 

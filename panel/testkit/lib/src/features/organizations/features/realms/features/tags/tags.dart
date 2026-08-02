@@ -1,10 +1,11 @@
 import "dart:math" as math;
 
 import "package:faker/faker.dart" hide Color;
+import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/common.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
@@ -39,7 +40,7 @@ List<Tag> _generateRawTags(int count) {
   final tags = <Tag>[];
 
   for (int i = 0; i < count; i++) {
-    final parentIds = <String>[];
+    final parentIds = <skir.RecordId>[];
 
     if (i > 0 && tags.isNotEmpty) {
       final prob = random.decimal();
@@ -61,13 +62,14 @@ List<Tag> _generateRawTags(int count) {
 
     tags.add(
       Tag(
-        tagId: faker.guid.guid(),
+        tagId: recordId("tag:${faker.guid.guid()}"),
         name: faker.lorem
             .words(random.integer(3, min: 1))
             .join(" ")
             .snakeCase(),
-        color: safeColors.randomElement().toProtoColor(),
+        color: safeColors.randomElement(),
         parentIds: parentIds,
+        placement: const Placement(x: 0, y: 0, width: 0, height: 0),
       ),
     );
   }
@@ -75,11 +77,11 @@ List<Tag> _generateRawTags(int count) {
   return tags;
 }
 
-Map<String, int> _calculateLayers(List<Tag> tags) {
+Map<skir.RecordId, int> _calculateLayers(List<Tag> tags) {
   final tagById = {for (final t in tags) t.tagId: t};
-  final depthCache = <String, int>{};
+  final depthCache = <skir.RecordId, int>{};
 
-  int calculateDepth(String tagId, [Set<String>? visiting]) {
+  int calculateDepth(skir.RecordId tagId, [Set<skir.RecordId>? visiting]) {
     visiting ??= {};
 
     if (visiting.contains(tagId)) return 0;
@@ -119,7 +121,7 @@ Map<String, int> _calculateLayers(List<Tag> tags) {
 List<List<Tag>> _orderLayersForMinimalCrossing(List<List<Tag>> layers) {
   if (layers.isEmpty) return layers;
 
-  final positionInLayer = <String, int>{};
+  final positionInLayer = <skir.RecordId, int>{};
 
   for (int i = 0; i < layers.first.length; i++) {
     positionInLayer[layers.first[i].tagId] = i;
@@ -146,7 +148,7 @@ List<List<Tag>> _orderLayersForMinimalCrossing(List<List<Tag>> layers) {
   return result;
 }
 
-double _calculateBarycenter(Tag tag, Map<String, int> positionInLayer) {
+double _calculateBarycenter(Tag tag, Map<skir.RecordId, int> positionInLayer) {
   if (tag.parentIds.isEmpty) return 0;
 
   var sum = 0;
@@ -173,13 +175,14 @@ List<Tag> _assignCoordinates(List<List<Tag>> orderedLayers) {
       final x = posIdx * (_tagWidth + _horizontalSpacing);
 
       result.add(
-        tag.deepCopy()
-          ..placement = Placement(
+        tag.copyWith(
+          placement: Placement(
             x: x,
             y: y,
             width: _tagWidth,
             height: _tagHeight,
           ),
+        ),
       );
     }
   }
@@ -190,9 +193,10 @@ List<Tag> _assignCoordinates(List<List<Tag>> orderedLayers) {
 /// Generates a random standalone tag with no parent relationships.
 Tag generateRandomTag() {
   return Tag(
-    tagId: faker.guid.guid(),
+    tagId: recordId("tag:${faker.guid.guid()}"),
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
-    color: safeColors.randomElement().toProtoColor(),
+    color: safeColors.randomElement(),
+    parentIds: const [],
     placement: Placement(
       x: random.integer(20),
       y: random.integer(10),
@@ -223,7 +227,7 @@ class TagsMock extends Tags {
   Future<Tag> createTag({
     required String name,
     Color? color,
-    List<String> parentIds = const [],
+    List<skir.RecordId> parentIds = const [],
     int x = 0,
     int y = 0,
     int width = 4,
@@ -233,9 +237,9 @@ class TagsMock extends Tags {
     final tags = await future;
 
     final newTag = Tag(
-      tagId: faker.guid.guid(),
+      tagId: recordId("tag:${faker.guid.guid()}"),
       name: name,
-      color: color ?? safeColors.randomElement().toProtoColor(),
+      color: color ?? safeColors.randomElement(),
       parentIds: parentIds,
       placement: Placement(x: x, y: y, width: width, height: height),
     );
@@ -252,43 +256,44 @@ class TagsMock extends Tags {
   }
 
   @override
-  Future<void> deleteTag(String tagId) async {
+  Future<void> deleteTag(skir.RecordId tagId) async {
     await Future.delayed(500.ms);
     final tags = await future;
     state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
   }
 
   @override
-  Future<void> moveTag(String tagId, int x, int y) async {
+  Future<void> moveTag(skir.RecordId tagId, int x, int y) async {
     final tags = await future;
     state = AsyncData(
-      tags.map((t) {
-        if (t.tagId != tagId) return t;
-        return t.deepCopy()
-          ..placement = Placement(
-            x: x,
-            y: y,
-            width: t.placement.width,
-            height: t.placement.height,
-          );
-      }).toList(),
+      tags
+          .map(
+            (tag) => tag.tagId == tagId
+                ? tag.copyWith(
+                    placement: tag.placement.copyWith(x: x, y: y),
+                  )
+                : tag,
+          )
+          .toList(),
     );
   }
 
   @override
-  Future<void> resizeTag(String tagId, int width, int height) async {
+  Future<void> resizeTag(skir.RecordId tagId, int width, int height) async {
     final tags = await future;
     state = AsyncData(
-      tags.map((t) {
-        if (t.tagId != tagId) return t;
-        return t.deepCopy()
-          ..placement = Placement(
-            x: t.placement.x,
-            y: t.placement.y,
-            width: width,
-            height: height,
-          );
-      }).toList(),
+      tags
+          .map(
+            (tag) => tag.tagId == tagId
+                ? tag.copyWith(
+                    placement: tag.placement.copyWith(
+                      width: width,
+                      height: height,
+                    ),
+                  )
+                : tag,
+          )
+          .toList(),
     );
   }
 }

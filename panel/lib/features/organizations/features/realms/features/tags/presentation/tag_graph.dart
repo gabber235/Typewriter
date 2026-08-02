@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const tagGraphCellSize = 50.0;
@@ -10,7 +9,7 @@ class TagGraph extends HookConsumerWidget {
 
   GraphElement _elementFromTag(Tag tag) {
     return GraphElement(
-      id: GraphIdentifier(tag.tagId),
+      id: GraphIdentifier(tag.tagId.id),
       x: tag.placement.x,
       y: tag.placement.y,
       width: tag.placement.width,
@@ -30,11 +29,11 @@ class TagGraph extends HookConsumerWidget {
 
         edges.add(
           GraphEdge(
-            id: "$parentId-${tag.tagId}",
-            source: GraphIdentifier(parentId),
-            target: GraphIdentifier(tag.tagId),
-            color: parentTag.color.value != 0
-                ? Color(parentTag.color.value)
+            id: "${parentId.id}:${tag.tagId.id}",
+            source: GraphIdentifier(parentId.id),
+            target: GraphIdentifier(tag.tagId.id),
+            color: parentTag.color.toARGB32() != 0
+                ? parentTag.color
                 : context.colors.contentDisabled,
             sourceSide: EdgeSide.bottom,
             targetSide: EdgeSide.top,
@@ -71,18 +70,22 @@ class TagGraph extends HookConsumerWidget {
           );
         }
 
+        final tagIds = {for (final tag in tagList) tag.tagId.id: tag.tagId};
+
         return Graph(
           data: _graphFromTags(context, tagList),
           onElementsDragged: (changes) {
             for (final (element, x, y) in changes) {
-              ref.read(tagsProvider.notifier).moveTag(element.id, x, y);
+              final tagId = tagIds[element.id];
+              if (tagId == null) continue;
+              ref.read(tagsProvider.notifier).moveTag(tagId, x, y);
             }
           },
           onElementsResize: (changes) {
             for (final (element, width, height) in changes) {
-              ref
-                  .read(tagsProvider.notifier)
-                  .resizeTag(element.id, width, height);
+              final tagId = tagIds[element.id];
+              if (tagId == null) continue;
+              ref.read(tagsProvider.notifier).resizeTag(tagId, width, height);
             }
           },
         );

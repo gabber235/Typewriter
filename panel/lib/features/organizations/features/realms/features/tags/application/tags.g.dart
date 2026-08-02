@@ -32,7 +32,7 @@ final class TagsProvider extends $StreamNotifierProvider<Tags, List<Tag>> {
   Tags create() => Tags();
 }
 
-String _$tagsHash() => r'0454523d69a7dbd158a20f5820a636d1f7fe35ea';
+String _$tagsHash() => r'f0a4bdbc99cde4fa4ec0ed20e7cdbf62394054c5';
 
 abstract class _$Tags extends $StreamNotifier<List<Tag>> {
   Stream<List<Tag>> build();
@@ -58,14 +58,16 @@ final tagProvider = TagFamily._();
 final class TagProvider
     extends $FunctionalProvider<AsyncValue<Tag?>, Tag?, FutureOr<Tag?>>
     with $FutureModifier<Tag?>, $FutureProvider<Tag?> {
-  TagProvider._({required TagFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'tagProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  TagProvider._({
+    required TagFamily super.from,
+    required skir.RecordId super.argument,
+  }) : super(
+         retry: null,
+         name: r'tagProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$tagHash();
@@ -84,7 +86,7 @@ final class TagProvider
 
   @override
   FutureOr<Tag?> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as skir.RecordId;
     return tag(ref, argument);
   }
 
@@ -99,10 +101,10 @@ final class TagProvider
   }
 }
 
-String _$tagHash() => r'ee3ea41098b35219090fc57dc2280616cabeb701';
+String _$tagHash() => r'14cb70239609850b43ada400d29089491e2a0e5e';
 
 final class TagFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Tag?>, String> {
+    with $FunctionalFamilyOverride<FutureOr<Tag?>, skir.RecordId> {
   TagFamily._()
     : super(
         retry: null,
@@ -112,7 +114,8 @@ final class TagFamily extends $Family
         isAutoDispose: true,
       );
 
-  TagProvider call(String tagId) => TagProvider._(argument: tagId, from: this);
+  TagProvider call(skir.RecordId tagId) =>
+      TagProvider._(argument: tagId, from: this);
 
   @override
   String toString() => r'tagProvider';

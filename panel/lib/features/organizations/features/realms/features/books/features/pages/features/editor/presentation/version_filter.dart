@@ -118,8 +118,8 @@ class VersionFilter {
   }
 }
 
-// ignore: avoid_classes_with_only_static_members
 /// Parser to convert user text patterns into [VersionFilter].
+// ignore: avoid_classes_with_only_static_members
 class VersionFilterParser {
   static VersionFilter parse({required String query, required bool hasEpoch}) {
     final q = query.trim();

@@ -6,7 +6,6 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/ic.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/books.dart";
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/entries.dart";
@@ -333,7 +332,7 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
   switch (payload) {
     case MockBookRecord():
       yield "book";
-      yield payload.book.bookId;
+      yield payload.book.bookId.id;
       yield payload.book.title;
       yield payload.book.icon;
       yield* payload.tags;
@@ -341,13 +340,13 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       final page = payload.page;
       final book = payload.book;
       yield "page";
-      yield page.pageId;
+      yield page.pageId.id;
       yield page.name;
       yield page.chapter;
       yield _pageTypeLabel(page.type);
-      yield book.bookId;
+      yield book.bookId.id;
       yield book.title;
-      yield* book.tagIds;
+      yield* book.tagIds.map((tagId) => tagId.id);
     case MockEntryRecord():
       final entry = payload.entry;
       final page = payload.page.page;
@@ -356,17 +355,17 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield "entry";
       yield entry.id;
       yield entry.name;
-      yield page.pageId;
+      yield page.pageId.id;
       yield page.name;
       yield page.chapter;
-      yield book.bookId;
+      yield book.bookId.id;
       yield book.title;
       yield blueprint.id;
       yield blueprint.name;
       yield blueprint.extension;
       yield blueprint.description;
       yield* blueprint.tags;
-      yield* book.tagIds;
+      yield* book.tagIds.map((tagId) => tagId.id);
     case ElementBlueprint():
       yield "blueprint";
       yield payload.id;
@@ -377,9 +376,9 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield* payload.tags;
     case Tag():
       yield "tag";
-      yield payload.tagId;
+      yield payload.tagId.id;
       yield payload.name;
-      yield* payload.parentIds;
+      yield* payload.parentIds.map((parentId) => parentId.id);
     default:
       yield payload.toString();
   }
@@ -400,10 +399,10 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
       switch (selectorId) {
         case "tag":
           yield _pageTypeLabel(page.type);
-          yield* book.tagIds;
+          yield* book.tagIds.map((tagId) => tagId.id);
         case "book":
           yield book.title;
-          yield book.bookId;
+          yield book.bookId.id;
         case "chapter":
           yield page.chapter;
         case "pageType":
@@ -419,15 +418,15 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
       switch (selectorId) {
         case "tag":
           yield* blueprint.tags;
-          yield* book.tagIds;
+          yield* book.tagIds.map((tagId) => tagId.id);
         case "book":
           yield book.title;
-          yield book.bookId;
+          yield book.bookId.id;
         case "chapter":
           yield page.chapter;
         case "page":
           yield page.name;
-          yield page.pageId;
+          yield page.pageId.id;
         case "entryType":
           yield blueprint.name;
         case "extension":
@@ -450,8 +449,8 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
       switch (selectorId) {
         case "tag":
           yield payload.name;
-          yield payload.tagId;
-          yield* payload.parentIds;
+          yield payload.tagId.id;
+          yield* payload.parentIds.map((parentId) => parentId.id);
         case "type":
           yield "tag";
       }
@@ -461,18 +460,18 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
 Map<String, String> _previewFieldsForPayload(Object payload) {
   return switch (payload) {
     MockBookRecord() => {
-      "id": payload.book.bookId,
-      "bookId": payload.book.bookId,
+      "id": payload.book.bookId.id,
+      "bookId": payload.book.bookId.id,
       "name": payload.book.title,
       "title": payload.book.title,
     },
     MockPageRecord() => {
-      "id": payload.page.pageId,
-      "pageId": payload.page.pageId,
+      "id": payload.page.pageId.id,
+      "pageId": payload.page.pageId.id,
       "name": payload.page.name,
       "title": payload.page.name,
       "book": payload.book.title,
-      "bookId": payload.book.bookId,
+      "bookId": payload.book.bookId.id,
       "chapter": payload.page.chapter,
       "pageType": _pageTypeLabel(payload.page.type),
     },
@@ -481,9 +480,9 @@ Map<String, String> _previewFieldsForPayload(Object payload) {
       "name": payload.entry.name,
       "title": payload.entry.name,
       "book": payload.page.book.title,
-      "bookId": payload.page.book.bookId,
+      "bookId": payload.page.book.bookId.id,
       "page": payload.page.page.name,
-      "pageId": payload.page.page.pageId,
+      "pageId": payload.page.page.pageId.id,
       "chapter": payload.page.page.chapter,
       "entryType": payload.entry.blueprint.name,
       "extension": payload.entry.blueprint.extension,
@@ -496,7 +495,11 @@ Map<String, String> _previewFieldsForPayload(Object payload) {
       "extension": payload.extension,
       "description": payload.description,
     },
-    Tag() => {"id": payload.tagId, "name": payload.name, "title": payload.name},
+    Tag() => {
+      "id": payload.tagId.id,
+      "name": payload.name,
+      "title": payload.name,
+    },
     _ => const {},
   };
 }
@@ -678,7 +681,7 @@ final class MockSearchIndex {
   final List<ElementBlueprint> blueprints;
 
   Map<String, String> get tagNameById => {
-    for (final tag in tags) tag.tagId: tag.name,
+    for (final tag in tags) tag.tagId.id: tag.name,
   };
 }
 
@@ -872,9 +875,9 @@ List<SearchNode> mockMixedGlobalSearchNodes([MockSearchIndex? index]) {
 }
 
 SearchNode _bookSearchNode(Book book, MockSearchIndex index) {
-  final tags = _tagNames(book.tagIds, index);
+  final tags = _tagNames(book.tagIds.map((tagId) => tagId.id), index);
   return mockSearchResultNode(
-    id: "book.${book.bookId}",
+    id: "book.${book.bookId.id}",
     type: mockBookSearchResultType,
     title: book.title.formatted,
     subtitle: "Book / ${tags.join(", ")}",
@@ -891,9 +894,9 @@ SearchNode _pageSearchNode(MockPageRecord record, MockSearchIndex index) {
   final page = record.page;
   final book = record.book;
   final pageType = _pageTypeLabel(page.type);
-  final tags = _tagNames(book.tagIds, index);
+  final tags = _tagNames(book.tagIds.map((tagId) => tagId.id), index);
   return mockSearchResultNode(
-    id: "page.${page.pageId}",
+    id: "page.${page.pageId.id}",
     type: mockPageSearchResultType,
     title: page.name.formatted,
     subtitle:
@@ -912,7 +915,7 @@ SearchNode _entrySearchNode(MockEntryRecord record, MockSearchIndex index) {
   final page = record.page.page;
   final book = record.page.book;
   final blueprint = entry.blueprint;
-  final tags = _tagNames(book.tagIds, index);
+  final tags = _tagNames(book.tagIds.map((tagId) => tagId.id), index);
   return mockSearchResultNode(
     id: "entry.${entry.id}",
     type: mockEntrySearchResultType,

@@ -6,7 +6,8 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
 import "package:okcolor/models/extensions.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const bookWidth = 175.0;
@@ -24,7 +25,7 @@ class BookWidget extends HookConsumerWidget {
     super.key,
   });
 
-  final String id;
+  final skir.RecordId id;
   final String title;
   final Widget icon;
   final Color color;
@@ -386,7 +387,7 @@ class _TagsList extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           itemBuilder: (context, index) {
             final tag = tags[index];
-            return _TagChip(tag: tag, key: Key(tag.tagId));
+            return _TagChip(tag: tag, key: Key(tag.tagId.id));
           },
           separatorBuilder: (context, index) => const SizedBox(height: 5),
         ),
@@ -402,10 +403,8 @@ class _TagChip extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tagColor = tag.color.toFlutterColor();
-
     return Container(
-      decoration: ShapeDecoration(color: tagColor, shape: StadiumBorder()),
+      decoration: ShapeDecoration(color: tag.color, shape: StadiumBorder()),
       height: 8,
     );
   }

@@ -3,13 +3,14 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class TagNode extends HookConsumerWidget {
   const TagNode({required this.tagId, super.key});
 
-  final String tagId;
+  final skir.RecordId tagId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,8 +38,8 @@ class _TagNode extends HookWidget {
   Widget build(BuildContext context) {
     final focusNode = useFocusNode();
 
-    final tagColor = tag.color.value != 0
-        ? tag.color.value.toFlutterColor()
+    final tagColor = tag.color.toARGB32() != 0
+        ? tag.color
         : context.colors.contentDisabled;
 
     final graphDrag = GraphDrag.maybeOf(context);
@@ -84,7 +85,7 @@ class _TagNode extends HookWidget {
               child: DragTarget<TagIdentifier>(
                 onWillAcceptWithDetails: (details) {
                   // TODO: Must check that this will not create a cycle
-                  return details.data.id != tag.tagId;
+                  return details.data.tagId != tag.tagId;
                 },
                 onAcceptWithDetails: (details) {
                   // TODO: Implement tag linking/grouping when dropped on another tag

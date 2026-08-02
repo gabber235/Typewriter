@@ -1,7 +1,6 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "element_blueprint.freezed.dart";

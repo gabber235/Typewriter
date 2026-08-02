@@ -32,7 +32,7 @@ final class BooksProvider extends $StreamNotifierProvider<Books, List<Book>> {
   Books create() => Books();
 }
 
-String _$booksHash() => r'f4b17254dc98b86401a9c9fcbf18dbbabdbce84a';
+String _$booksHash() => r'cadc0366d73cf811093a6bf9b07c8dfda3ab1bac';
 
 abstract class _$Books extends $StreamNotifier<List<Book>> {
   Stream<List<Book>> build();
@@ -175,7 +175,7 @@ final class BookProvider
     with $FutureModifier<Book?>, $FutureProvider<Book?> {
   BookProvider._({
     required BookFamily super.from,
-    required String super.argument,
+    required skir.RecordId super.argument,
   }) : super(
          retry: null,
          name: r'bookProvider',
@@ -201,7 +201,7 @@ final class BookProvider
 
   @override
   FutureOr<Book?> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as skir.RecordId;
     return book(ref, argument);
   }
 
@@ -216,10 +216,10 @@ final class BookProvider
   }
 }
 
-String _$bookHash() => r'e2f0b487e94df7c1a25de9490706f22331985450';
+String _$bookHash() => r'20bfbeffa6ce209e3be685d1e40434c922472683';
 
 final class BookFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Book?>, String> {
+    with $FunctionalFamilyOverride<FutureOr<Book?>, skir.RecordId> {
   BookFamily._()
     : super(
         retry: null,
@@ -229,7 +229,8 @@ final class BookFamily extends $Family
         isAutoDispose: true,
       );
 
-  BookProvider call(String id) => BookProvider._(argument: id, from: this);
+  BookProvider call(skir.RecordId bookId) =>
+      BookProvider._(argument: bookId, from: this);
 
   @override
   String toString() => r'bookProvider';

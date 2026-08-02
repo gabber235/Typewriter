@@ -15,7 +15,8 @@ import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:iconify_flutter_plus/icons/mingcute.dart";
 import "package:iconify_flutter_plus/icons/ph.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "route.g.dart";
@@ -136,7 +137,7 @@ Future<List<Page>> _viewingPages(Ref ref) async {
 
   await ref.debounce(300.ms);
 
-  return await ref.watch(bookPagesProvider(bookId.id, search).future);
+  return await ref.watch(bookPagesProvider(bookId, search).future);
 }
 
 class BookSidebarContent extends HookConsumerWidget {
@@ -318,7 +319,7 @@ class _TreeCategory extends HookConsumerWidget {
     }
     await ref
         .read(booksProvider.notifier)
-        .changePagesChapters(bookId.id, chapter, newChapter);
+        .changePagesChapters(bookId, chapter, newChapter);
   }
 
   @override
@@ -412,7 +413,7 @@ class _TreeCategory extends HookConsumerWidget {
                     final pageId = details.data.pageId;
                     ref
                         .read(pagesProvider(pageId).notifier)
-                        .changeChapter(node.path);
+                        .updatePage(chapter: node.path);
                   },
                   builder: (context, pageCandidates, pageRejected) {
                     final isAccepting =
@@ -536,7 +537,7 @@ class _PageTile extends HookConsumerWidget {
   const _PageTile({required this.page});
   final Page page;
 
-  String get pageId => page.pageId;
+  skir.RecordId get pageId => page.pageId;
   String get name => page.name;
   String get chapter => page.chapter;
 
@@ -560,7 +561,7 @@ class _PageTile extends HookConsumerWidget {
           onChapterChanged: (newChapter) async {
             await ref
                 .read(pagesProvider(pageId).notifier)
-                .changeChapter(newChapter);
+                .updatePage(chapter: newChapter);
           },
         ),
       ),
@@ -612,7 +613,7 @@ class _PageTile extends HookConsumerWidget {
           onChapterChanged: (newChapter) async {
             await ref
                 .read(pagesProvider(pageId).notifier)
-                .changeChapter(newChapter);
+                .updatePage(chapter: newChapter);
           },
         ),
       ),
@@ -680,14 +681,16 @@ class _PageTile extends HookConsumerWidget {
       },
       onAcceptWithDetails: (details) {
         final entryId = details.data.id;
-        ref.read(entryProvider(entryId).notifier).moveToPage(pageId);
+        ref.read(entryProvider(entryId).notifier).moveToPage(pageId.id);
       },
       builder: (context, entryCandidateData, entryRejectedData) {
         return DragTarget<PageDrag>(
           onWillAcceptWithDetails: (details) => true,
           onAcceptWithDetails: (details) {
             final pageId = details.data.pageId;
-            ref.read(pagesProvider(pageId).notifier).changeChapter(chapter);
+            ref
+                .read(pagesProvider(pageId).notifier)
+                .updatePage(chapter: chapter);
           },
           builder: (context, pageCandidateData, rejectedData) {
             final isAccepting =
@@ -730,7 +733,7 @@ class _PageTile extends HookConsumerWidget {
                           if (isSelected) return;
                           ref
                               .read(appRouterProvider)
-                              .push(RouteRoute(pageId: pageId));
+                              .push(RouteRoute(pageId: pageId.id));
                         },
                         borderRadius: context.shapes.mediumBorderRadius,
                         child: child,
@@ -752,7 +755,7 @@ class _SmallPageTile extends HookConsumerWidget {
 
   final Page page;
 
-  String get pageId => page.pageId;
+  skir.RecordId get pageId => page.pageId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1028,11 +1031,11 @@ class AddPageDialogue extends HookConsumerWidget {
     }
     final pageId = await ref
         .read(booksProvider.notifier)
-        .createPage(bookId.id, name, type, chapter, priority);
+        .createPage(bookId, name, type.toSkir(), chapter, priority);
 
-    if (!autoNavigate) return pageId;
-    unawaited(router.push(RouteRoute(pageId: pageId)));
-    return pageId;
+    if (!autoNavigate) return pageId.id;
+    unawaited(router.push(RouteRoute(pageId: pageId.id)));
+    return pageId.id;
   }
 
   /// Validates the proposed name for a page.
@@ -1048,7 +1051,7 @@ class AddPageDialogue extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = useState("");
     final isNameValid = useState(false);
-    final type = useState(fixedType ?? PageType.PAGE_TYPE_SEQUENCE);
+    final type = useState(fixedType ?? PageType.sequence);
     final chapter = useState(this.chapter);
     final priority = useState(0);
 
@@ -1187,14 +1190,14 @@ class RenamePageDialogue extends HookConsumerWidget {
     super.key,
   });
 
-  final String pageId;
+  final skir.RecordId pageId;
   final String oldName;
 
   Future<void> _renamePage(WidgetRef ref, String newName) async {
     final router = ref.read(appRouterProvider);
-    await ref.read(pagesProvider(pageId).notifier).renamePage(newName);
+    await ref.read(pagesProvider(pageId).notifier).updatePage(name: newName);
     if (ref.read(pageIdProvider) == pageId) return;
-    unawaited(router.push(RouteRoute(pageId: pageId)));
+    unawaited(router.push(RouteRoute(pageId: pageId.id)));
   }
 
   /// Validates the proposed name for a page.
@@ -1354,7 +1357,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
     super.key,
   });
 
-  final String pageId;
+  final skir.RecordId pageId;
   final String pageName;
   final int priority;
 
@@ -1367,7 +1370,9 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
     changed.value = true;
 
     final navigator = Navigator.of(ref.context);
-    await ref.read(pagesProvider(pageId).notifier).changePriority(newPriority);
+    await ref
+        .read(pagesProvider(pageId).notifier)
+        .updatePage(priority: newPriority);
     navigator.pop(true);
   }
 
@@ -1417,7 +1422,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
 
 Future<bool> showPageDeletionDialogue(
   WidgetRef ref,
-  String pageId,
+  skir.RecordId pageId,
   String pageName,
 ) {
   return showConfirmationDialogue(
@@ -1456,7 +1461,7 @@ Future<bool> showPageDeletionDialogue(
 class PageDrag {
   const PageDrag({required this.pageId});
 
-  final String pageId;
+  final skir.RecordId pageId;
 }
 
 class ChapterDrag {

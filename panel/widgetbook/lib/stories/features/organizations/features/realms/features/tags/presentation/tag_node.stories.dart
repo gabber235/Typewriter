@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -35,9 +34,11 @@ Widget tagNodeColorsUseCase(BuildContext context) {
 
   final tags = colors.asMap().entries.map((entry) {
     return Tag(
-      tagId: "tag-${entry.key}",
+      tagId: recordId("tag:tag_${entry.key}"),
       name: "tag_${entry.key}",
-      color: entry.value.toProtoColor(),
+      color: entry.value,
+      parentIds: const [],
+      placement: const Placement(x: 0, y: 0, width: 2, height: 1),
     );
   }).toList();
 

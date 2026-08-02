@@ -1,7 +1,5 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/infrastructure/protocols/protobuf/generated/models/book.pb.dart"
-    hide Book;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -136,7 +134,7 @@ Widget _mockPageResultRow(SearchResultRowContext context) {
   return PageSearchResultItem.fromPage(
     page: payload.page,
     bookName: payload.book.title,
-    color: payload.book.color.toFlutterColor(),
+    color: payload.book.color,
     icon: payload.book.icon,
     selected: context.selected,
     focused: context.focused,
@@ -189,7 +187,7 @@ Widget _mockBookResultRow(SearchResultRowContext context) {
 
   return BookSearchResultItem(
     name: payload.book.title,
-    color: payload.book.color.toFlutterColor(),
+    color: payload.book.color,
     icon: payload.book.icon,
     tags: payload.tags,
     selected: context.selected,
