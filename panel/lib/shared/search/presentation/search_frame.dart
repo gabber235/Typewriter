@@ -340,7 +340,7 @@ class _InlinePreviewSlot extends StatelessWidget {
           child: SizeTransition(
             sizeFactor: elastic,
             axis: Axis.horizontal,
-            axisAlignment: -1,
+            alignment: AlignmentDirectional.topStart,
             child: child,
           ),
         );
