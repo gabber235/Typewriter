@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -643,7 +645,7 @@ void main() {
     );
     await tester.pump();
 
-    navigator.currentState!.push(route("incoming"));
+    unawaited(navigator.currentState!.push(route("incoming")));
     await tester.pump(Duration.zero, EnginePhase.build);
     Actions.invoke(
       context.currentContext!,
