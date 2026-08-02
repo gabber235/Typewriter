@@ -1,148 +1,169 @@
 package com.typewritermc.realm.registrar
 
-import com.typewritermc.services.libs.registrar.Credential
+import com.typewritermc.services.libs.registrar.CredentialLoadResult
+import com.typewritermc.services.libs.registrar.CredentialStorageError
+import com.typewritermc.services.libs.registrar.CredentialStoreResult
+import com.typewritermc.services.libs.registrar.IdentityCredentials
+import com.typewritermc.services.libs.registrar.RedactedSecret
+import com.typewritermc.services.libs.registrar.ServiceIdentity
+import com.typewritermc.services.libs.registrar.ServiceRole
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.core.test.TestCase
-import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import java.io.File
 import java.nio.file.Files
 
+private fun credentials(id: String = "service-id") = IdentityCredentials(
+    ServiceIdentity(
+        id,
+        "Realm Service",
+        "realm-user",
+        listOf(
+            ServiceRole.Engine("1.2.3"),
+            ServiceRole.Realm("4.5.6"),
+            ServiceRole.Custom("custom_role", "7.8.9"),
+        ),
+    ),
+    RedactedSecret.AppPassword("private-password"),
+)
+
+@Serializable
+private data class TestStoredCredential(
+    val version: Int,
+    val serviceId: String,
+    val displayName: String,
+    val username: String,
+    val token: String,
+)
+
 @OptIn(ExperimentalSerializationApi::class)
 class RealmCredentialStorageTest : FunSpec({
-
-    lateinit var tempDir: File
+    lateinit var temporaryDirectory: File
     lateinit var credentialFile: File
     val cbor = Cbor { }
 
     beforeTest {
-        tempDir = Files.createTempDirectory("realm-credential-test").toFile()
-        credentialFile = File(tempDir, "credentials.cbor")
+        temporaryDirectory = Files.createTempDirectory("realm-credential-test").toFile()
+        credentialFile = File(temporaryDirectory, "credentials.cbor")
     }
 
-    afterTest { (_, _) ->
-        tempDir.deleteRecursively()
+    afterTest { (_, _) -> temporaryDirectory.deleteRecursively() }
+
+    test("missing file returns Missing") {
+        runTest {
+            storage(cbor, credentialFile).load() shouldBe CredentialLoadResult.Missing
+        }
     }
 
-    context("Happy Path Scenarios") {
+    test("round trips stored identity fields and supplies the runtime role") {
+        runTest {
+            val runtimeRole = ServiceRole.Realm("9.8.7")
+            val storage = storage(cbor, credentialFile, runtimeRole)
+            storage.store(credentials()) shouldBe CredentialStoreResult.Success
 
-        test("credential returns stored credential when file exists") {
-            val originalCredential = Credential(id = "svc-123", name = "service-user", token = "secret")
-            val bytes = cbor.encodeToByteArray(originalCredential)
-            credentialFile.writeBytes(bytes)
-
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-            val result = storage.credential()
-
-            result shouldBe originalCredential
-        }
-
-        test("storeCredential persists credential to file") {
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-            val credential = Credential(id = "new-svc", name = "new-user", token = "new-token")
-
-            storage.storeCredential(credential)
-
-            credentialFile.exists() shouldBe true
-            val readCredential = cbor.decodeFromByteArray<Credential>(credentialFile.readBytes())
-            readCredential shouldBe credential
-        }
-
-        test("storeCredential overwrites existing credential") {
-            val oldCredential = Credential(id = "old", name = "old", token = "old")
-            val newCredential = Credential(id = "new", name = "new", token = "new")
-            credentialFile.writeBytes(cbor.encodeToByteArray(oldCredential))
-
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-            storage.storeCredential(newCredential)
-
-            val result = storage.credential()
-            result shouldBe newCredential
-        }
-
-        test("stored credential can be read back correctly") {
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-            val credential = Credential(
-                id = "round-trip-svc",
-                name = "round-trip-user",
-                token = "round-trip-token"
+            val loaded = storage.load() as CredentialLoadResult.Loaded
+            loaded.credentials.identity.serviceId shouldBe "service-id"
+            loaded.credentials.identity.displayName shouldBe "Realm Service"
+            loaded.credentials.identity.username shouldBe "realm-user"
+            loaded.credentials.identity.roles.shouldContainExactly(
+                runtimeRole,
             )
-
-            storage.storeCredential(credential)
-            val result = storage.credential()
-
-            result shouldBe credential
+            loaded.credentials.revealAppPassword() shouldBe "private-password"
         }
     }
 
-    context("Error and Failure Scenarios") {
+    test("stored record excludes roles") {
+        runTest {
+            storage(cbor, credentialFile).store(credentials()) shouldBe CredentialStoreResult.Success
 
-        test("credential returns null when file does not exist") {
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-
-            val result = storage.credential()
-
-            result.shouldBeNull()
-        }
-
-        test("credential returns null for empty file") {
-            credentialFile.createNewFile()
-
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-
-            runCatching { storage.credential() }.isFailure shouldBe true
-        }
-
-        test("credential throws on corrupted file") {
-            credentialFile.writeBytes(byteArrayOf(0x00, 0xFF.toByte(), 0x01, 0x02))
-
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-
-            runCatching { storage.credential() }.isFailure shouldBe true
-        }
-    }
-
-    context("Edge Cases") {
-
-        test("credential handles unicode characters in values") {
-            val credential = Credential(
-                id = "svc-日本語",
-                name = "user@domain.com",
-                token = "tök€n™"
+            val record = cbor.decodeFromByteArray<TestStoredCredential>(credentialFile.readBytes())
+            record shouldBe TestStoredCredential(
+                version = 1,
+                serviceId = "service-id",
+                displayName = "Realm Service",
+                username = "realm-user",
+                token = "private-password",
             )
-            credentialFile.writeBytes(cbor.encodeToByteArray(credential))
-
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-            val result = storage.credential()
-
-            result shouldBe credential
         }
+    }
 
-        test("storeCredential creates parent directory if missing") {
-            val nestedFile = File(tempDir, "nested/deep/credentials.cbor")
-            nestedFile.parentFile.mkdirs()
+    test("store replaces an existing identity") {
+        runTest {
+            val storage = storage(cbor, credentialFile)
+            storage.store(credentials("first")) shouldBe CredentialStoreResult.Success
+            storage.store(credentials("second")) shouldBe CredentialStoreResult.Success
 
-            val storage = RealmCredentialStorage(cbor, nestedFile)
-            val credential = Credential(id = "svc", name = "user", token = "token")
+            val loaded = storage.load() as CredentialLoadResult.Loaded
+            loaded.credentials.identity.serviceId shouldBe "second"
+            Files.list(temporaryDirectory.toPath()).use { it.count() } shouldBe 1L
+        }
+    }
 
-            storage.storeCredential(credential)
+    test("malformed file returns corrupt failure") {
+        credentialFile.writeBytes(byteArrayOf(0x00, 0xFF.toByte(), 0x01, 0x02))
 
+        runTest {
+            val result = storage(cbor, credentialFile).load() as CredentialLoadResult.Failure
+            (result.error is CredentialStorageError.Corrupt) shouldBe true
+        }
+    }
+
+    test("unknown version returns explicit failure") {
+        val record = TestStoredCredential(
+            version = 2,
+            serviceId = "service-id",
+            displayName = "Realm Service",
+            username = "realm-user",
+            token = "private-password",
+        )
+        credentialFile.writeBytes(cbor.encodeToByteArray(record))
+
+        runTest {
+            val result = storage(cbor, credentialFile).load() as CredentialLoadResult.Failure
+            result.error shouldBe CredentialStorageError.UnsupportedVersion(2)
+        }
+    }
+
+    test("oversized file returns corrupt failure without reading it") {
+        credentialFile.writeBytes(ByteArray(33) { 1 })
+
+        runTest {
+            val result = storage(cbor, credentialFile, maximumBytes = 32).load() as CredentialLoadResult.Failure
+            (result.error is CredentialStorageError.Corrupt) shouldBe true
+        }
+    }
+
+    test("store creates missing parent directories") {
+        val nestedFile = File(temporaryDirectory, "nested/deep/credentials.cbor")
+
+        runTest {
+            storage(cbor, nestedFile).store(credentials()) shouldBe CredentialStoreResult.Success
             nestedFile.exists() shouldBe true
         }
+    }
 
-        test("credential handles very long token values") {
-            val longToken = "T".repeat(10000)
-            val credential = Credential(id = "svc", name = "user", token = longToken)
-            credentialFile.writeBytes(cbor.encodeToByteArray(credential))
-
-            val storage = RealmCredentialStorage(cbor, credentialFile)
-            val result = storage.credential()
-
-            result?.token shouldBe longToken
-        }
+    test("credential diagnostics remain redacted") {
+        credentials().toString().contains("private-password") shouldBe false
     }
 })
+
+private fun TestScope.storage(
+    cbor: Cbor,
+    file: File,
+    role: ServiceRole = ServiceRole.Realm("1.0.0"),
+    maximumBytes: Long = 64 * 1024,
+): RealmCredentialStorage = RealmCredentialStorage(
+    cbor,
+    file,
+    role,
+    maximumBytes,
+    StandardTestDispatcher(testScheduler),
+)

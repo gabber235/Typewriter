@@ -6,17 +6,19 @@ import ch.qos.logback.core.ConsoleAppender
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.parse
 import com.typewritermc.realm.shell.commands.RealmRootCommand
-import io.github.oshai.kotlinlogging.KotlinLogging
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.MainSpanScope
+import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.terminal.TerminalBuilder
 import org.slf4j.LoggerFactory
 
-private val logger = KotlinLogging.logger {}
-
 class RealmShell(
     private val context: RealmShellContext,
+    private val telemetry: ServiceTelemetry,
 ) {
     private val rootCommand = RealmRootCommand(context)
 
@@ -34,43 +36,63 @@ class RealmShell(
 
         val appender = setupLogbackAppender(reader)
 
-        logger.info { "Realm shell started. Type 'help' for available commands." }
-
-        try {
-            runLoop(reader)
-        } finally {
-            removeLogbackAppender(appender)
-            terminal.close()
+        telemetry.mainSpanBlocking(
+            name = "realm.shell",
+            unhandledFailureSlug = ErrorSlug.of("realm-shell-failed"),
+        ) { main ->
+            reader.printAbove("Realm shell started. Type 'help' for available commands.")
+            try {
+                runLoop(reader, main)
+            } finally {
+                removeLogbackAppender(appender)
+                terminal.close()
+            }
         }
     }
 
-    private fun runLoop(reader: org.jline.reader.LineReader) {
+    private fun runLoop(
+        reader: org.jline.reader.LineReader,
+        main: MainSpanScope,
+    ) {
         while (!context.isStopRequested()) {
             val line = try {
                 reader.readLine("realm> ")
             } catch (_: UserInterruptException) {
-                logger.info { "Interrupted by user (Ctrl+C)" }
+                main.annotate { operationOutcome("interrupted") }
+                reader.printAbove("Interrupted by user (Ctrl+C)")
                 break
             } catch (_: EndOfFileException) {
-                logger.info { "End of input (Ctrl+D)" }
+                main.annotate { operationOutcome("end_of_input") }
+                reader.printAbove("End of input (Ctrl+D)")
                 break
             }
 
             if (line.isBlank()) continue
 
-            executeCommand(line)
+            executeCommand(line, reader)
         }
     }
 
-    private fun executeCommand(line: String) {
+    private fun executeCommand(line: String, reader: org.jline.reader.LineReader) {
         val argv = line.trim().split(Regex("\\s+"))
 
         try {
-            rootCommand.parse(argv)
-        } catch (e: CliktError) {
-            rootCommand.echoFormattedHelp(e)
-        } catch (e: Exception) {
-            logger.error(e) { "Command execution failed" }
+            telemetry.mainSpanBlocking(
+                name = "realm.shell.command",
+                unhandledFailureSlug = ErrorSlug.of("realm-shell-command-failed"),
+            ) { main ->
+                main.annotate { attribute("realm.shell.command.name", argv.first()) }
+                try {
+                    rootCommand.parse(argv)
+                    main.annotate { operationOutcome("completed") }
+                } catch (failure: CliktError) {
+                    main.annotate { operationOutcome("invalid") }
+                    rootCommand.echoFormattedHelp(failure)
+                }
+            }
+        } catch (failure: Exception) {
+            val message = failure.cause?.message ?: failure.message ?: failure.javaClass.simpleName
+            reader.printAbove("Command execution failed: $message")
         }
     }
 
