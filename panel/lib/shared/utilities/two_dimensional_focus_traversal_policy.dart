@@ -255,11 +255,9 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     TraversalDirection direction,
     FocusNode node,
   ) {
-    final history = _historyByScope.putIfAbsent(
-      scope,
-      () => <_DirectionHistoryEntry>[],
-    );
-    history.add(_DirectionHistoryEntry(direction: direction, node: node));
+    _historyByScope
+        .putIfAbsent(scope, () => <_DirectionHistoryEntry>[])
+        .add(_DirectionHistoryEntry(direction: direction, node: node));
   }
 
   bool _requestDirectionalFocus(FocusNode node, TraversalDirection direction) {
