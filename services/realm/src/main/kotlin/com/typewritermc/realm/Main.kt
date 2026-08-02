@@ -14,6 +14,9 @@ import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServiceRole
+import com.typewritermc.services.libs.registrar.console.BindingTokenOutput
+import com.typewritermc.services.libs.registrar.console.MordantBindingTokenOutput
+import com.typewritermc.services.libs.registrar.console.RegistrarConsoleObserver
 import com.typewritermc.services.libs.registrar.koin.registrarModule
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -88,7 +91,9 @@ fun main() {
             DeferredProvider<Surreal>()
         } onClose { it?.getOrNull()?.close() }
 
-        single { RealmShellContext(registrationStateProvider = get()) }
+        single<BindingTokenOutput> { MordantBindingTokenOutput() }
+        single { RegistrarConsoleObserver(get()) }
+        single { RealmShellContext(registrarStates = get<ServiceRegistrar>().states) }
         single { RealmShell(get(), get()) }
     }
 
@@ -102,17 +107,25 @@ fun main() {
         )
     }
     val registrar = application.koin.get<ServiceRegistrar>()
+    val telemetry = application.koin.get<ServiceTelemetry>()
+    val consoleObserver = application.koin.get<RegistrarConsoleObserver>()
+    val consoleObserverJob = applicationScope.launch(start = CoroutineStart.UNDISPATCHED) {
+        consoleObserver.observe(registrar.states)
+    }
     val closed = AtomicBoolean()
     fun shutdown() {
         if (!closed.compareAndSet(false, true)) return
-        runBlocking { registrar.stop() }
+        runBlocking {
+            consoleObserverJob.cancelAndJoin()
+            registrar.stop()
+        }
         application.close()
     }
     val shutdownHook = Thread { shutdown() }
     Runtime.getRuntime().addShutdownHook(shutdownHook)
 
     try {
-        runBlocking { startRealm(application.koin.get(), registrar, application.koin.get()) }
+        runBlocking { startRealm(telemetry, registrar, application.koin.get()) }
         application.koin.get<RealmShell>().run()
     } finally {
         runCatching { Runtime.getRuntime().removeShutdownHook(shutdownHook) }

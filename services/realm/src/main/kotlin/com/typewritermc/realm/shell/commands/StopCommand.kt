@@ -7,9 +7,9 @@ import com.typewritermc.realm.shell.RealmShellContext
 class StopCommand(
     private val context: RealmShellContext,
 ) : CliktCommand(name = "stop") {
-    override fun help(context: Context) = "Stop the Realm service and exit"
+    override fun help(context: Context) = "Exit the Realm shell"
     override fun run() {
-        echo("Stopping Realm...")
+        echo("Exiting Realm shell")
         context.requestStop()
     }
 }

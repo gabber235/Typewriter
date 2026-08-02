@@ -21,6 +21,7 @@ dependencies {
     implementation("com.typewritermc:service-utils")
     implementation("com.typewritermc:service-telemetry-koin")
     implementation("com.typewritermc:service-registrar-koin")
+    implementation("com.typewritermc:service-registrar-console")
     implementation("com.typewritermc:service-communicator-skir")
     implementation(platform(libs.opentelemetry.bom))
     implementation(libs.opentelemetry.sdk)

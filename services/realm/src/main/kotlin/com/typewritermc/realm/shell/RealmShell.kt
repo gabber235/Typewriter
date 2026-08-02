@@ -5,11 +5,17 @@ import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.core.ConsoleAppender
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.parse
+import com.github.ajalt.clikt.parsers.CommandLineParser
+import com.github.ajalt.mordant.rendering.AnsiLevel
+import com.github.ajalt.mordant.terminal.PrintRequest
+import com.github.ajalt.mordant.terminal.Terminal
+import com.github.ajalt.mordant.terminal.TerminalInfo
+import com.github.ajalt.mordant.terminal.TerminalInterface
 import com.typewritermc.realm.shell.commands.RealmRootCommand
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpanBlocking
+import io.opentelemetry.context.Context
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
@@ -20,14 +26,12 @@ class RealmShell(
     private val context: RealmShellContext,
     private val telemetry: ServiceTelemetry,
 ) {
-    private val rootCommand = RealmRootCommand(context)
-
     fun run() {
         val terminal = TerminalBuilder.builder()
             .system(true)
             .build()
 
-        val completer = RealmShellCompleter(rootCommand)
+        val completer = RealmShellCompleter(RealmRootCommand(context))
 
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)
@@ -36,64 +40,78 @@ class RealmShell(
 
         val appender = setupLogbackAppender(reader)
 
-        telemetry.mainSpanBlocking(
-            name = "realm.shell",
-            unhandledFailureSlug = ErrorSlug.of("realm-shell-failed"),
-        ) { main ->
+        try {
             reader.printAbove("Realm shell started. Type 'help' for available commands.")
-            try {
-                runLoop(reader, main)
-            } finally {
-                removeLogbackAppender(appender)
-                terminal.close()
-            }
+            recordShellExit(runLoop(reader))
+        } catch (failure: Throwable) {
+            recordShellFailure(failure)
+        } finally {
+            removeLogbackAppender(appender)
+            terminal.close()
         }
     }
 
-    private fun runLoop(
-        reader: org.jline.reader.LineReader,
-        main: MainSpanScope,
-    ) {
+    internal fun runLoop(reader: org.jline.reader.LineReader): ShellExitReason {
         while (!context.isStopRequested()) {
             val line = try {
                 reader.readLine("realm> ")
             } catch (_: UserInterruptException) {
-                main.annotate { operationOutcome("interrupted") }
                 reader.printAbove("Interrupted by user (Ctrl+C)")
-                break
+                return ShellExitReason.INTERRUPTED
             } catch (_: EndOfFileException) {
-                main.annotate { operationOutcome("end_of_input") }
                 reader.printAbove("End of input (Ctrl+D)")
-                break
+                return ShellExitReason.END_OF_INPUT
             }
 
             if (line.isBlank()) continue
 
             executeCommand(line, reader)
         }
+        return ShellExitReason.STOP_REQUESTED
     }
 
-    private fun executeCommand(line: String, reader: org.jline.reader.LineReader) {
-        val argv = line.trim().split(Regex("\\s+"))
-
+    internal fun executeCommand(line: String, reader: org.jline.reader.LineReader) {
         try {
             telemetry.mainSpanBlocking(
                 name = "realm.shell.command",
                 unhandledFailureSlug = ErrorSlug.of("realm-shell-command-failed"),
+                parent = Context.root(),
             ) { main ->
-                main.annotate { attribute("realm.shell.command.name", argv.first()) }
+                val rootCommand = RealmRootCommand(context, reader.asCliktTerminal())
                 try {
+                    val argv = tokenizeRealmCommand(line)
+                    main.annotate { attribute("realm.shell.command.name", argv.firstOrNull() ?: "empty") }
                     rootCommand.parse(argv)
                     main.annotate { operationOutcome("completed") }
                 } catch (failure: CliktError) {
-                    main.annotate { operationOutcome("invalid") }
-                    rootCommand.echoFormattedHelp(failure)
+                    val outcome = if (failure.statusCode == 0) "completed" else "invalid"
+                    main.annotate { operationOutcome(outcome) }
+                    rootCommand.getFormattedHelp(failure)?.let(reader::printAbove)
                 }
             }
         } catch (failure: Exception) {
             val message = failure.cause?.message ?: failure.message ?: failure.javaClass.simpleName
             reader.printAbove("Command execution failed: $message")
         }
+    }
+
+    internal fun recordShellExit(reason: ShellExitReason) {
+        telemetry.mainSpanBlocking(
+            name = "realm.shell.exit",
+            unhandledFailureSlug = ErrorSlug.of("realm-shell-exit-failed"),
+            parent = Context.root(),
+        ) { main ->
+            main.annotate { operationOutcome(reason.attributeValue) }
+        }
+    }
+
+    private fun recordShellFailure(failure: Throwable): Nothing = telemetry.mainSpanBlocking(
+        name = "realm.shell.exit",
+        unhandledFailureSlug = ErrorSlug.of("realm-shell-failed"),
+        parent = Context.root(),
+    ) { main ->
+        main.annotate { operationOutcome("failed") }
+        throw failure
     }
 
     private fun setupLogbackAppender(reader: org.jline.reader.LineReader): RealmShellLogbackAppender {
@@ -125,3 +143,34 @@ class RealmShell(
         rootLogger.detachAppender(appender)
     }
 }
+
+internal enum class ShellExitReason(val attributeValue: String) {
+    STOP_REQUESTED("stop_requested"),
+    INTERRUPTED("interrupted"),
+    END_OF_INPUT("end_of_input"),
+}
+
+internal fun tokenizeRealmCommand(line: String): List<String> = CommandLineParser.tokenize(line.trim())
+
+private fun org.jline.reader.LineReader.asCliktTerminal(): Terminal = Terminal(
+    terminalInterface = object : TerminalInterface {
+        override fun info(
+            ansiLevel: AnsiLevel?,
+            hyperlinks: Boolean?,
+            outputInteractive: Boolean?,
+            inputInteractive: Boolean?,
+        ) = TerminalInfo(
+            ansiLevel = ansiLevel ?: AnsiLevel.NONE,
+            ansiHyperLinks = hyperlinks ?: false,
+            outputInteractive = outputInteractive ?: true,
+            inputInteractive = inputInteractive ?: true,
+            supportsAnsiCursor = false,
+        )
+
+        override fun completePrintRequest(request: PrintRequest) {
+            printAbove(request.text)
+        }
+
+        override fun readLineOrNull(hideInput: Boolean): String? = null
+    },
+)
