@@ -1,8 +1,8 @@
 package com.typewritermc.services.libs.http.jdk
 
 import com.typewritermc.services.libs.http.core.*
+import com.typewritermc.services.libs.utils.await
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.ConnectException
@@ -19,8 +19,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Flow
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -75,10 +73,6 @@ class JdkHttpTransport(private val configuration: JdkHttpTransportConfiguration 
     }
 }
 
-private suspend fun <T> java.util.concurrent.CompletableFuture<T>.await(): T = suspendCancellableCoroutine { continuation ->
-    whenComplete { value, failure -> if (failure == null) continuation.resume(value) else continuation.resumeWithException(failure) }
-    continuation.invokeOnCancellation { cancel(true) }
-}
 private tailrec fun unwrap(failure: Throwable): Throwable = if (failure.cause != null && failure is java.util.concurrent.CompletionException) unwrap(failure.cause!!) else failure
 private fun rethrowExceptional(failure: Throwable) {
     var current: Throwable? = failure
