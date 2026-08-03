@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
       - name: Run affected backend tests through Dagger
-        uses: dagger/dagger-for-github@v7
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: 0.21.8
-          args: >-
+          call: >-
             backend-test-affected
             --repository https://github.com/${{ github.repository }}.git
             --base ${{ github.event.pull_request.base.sha }}
@@ -39,9 +39,9 @@ jobs:
       fail-fast: false
       matrix: { shard: [0, 1, 2] }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run backend test shard through Dagger
-        uses: dagger/dagger-for-github@v7
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: 0.21.8
-          args: backend-test-shard --index ${{ matrix.shard }} --count 3 stdout
+          call: backend-test-shard --index ${{ matrix.shard }} --count 3 stdout

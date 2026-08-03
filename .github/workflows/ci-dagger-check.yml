@@ -35,7 +35,8 @@ jobs:
           fetch-depth: 0
 
       - name: Run Dagger checks
-        uses: dagger/dagger-for-github@v7
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: 0.21.8
-          args: check
+          verb: check
+          args: --no-generate

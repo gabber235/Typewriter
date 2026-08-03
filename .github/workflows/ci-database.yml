@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -47,7 +47,7 @@ jobs:
       # rather than only testing against an empty in-memory SurrealDB.
 
       - name: Build database artifact image through Dagger
-        uses: dagger/dagger-for-github@v7
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: 0.21.8
-          args: call database-image sync
+          call: database-image sync
