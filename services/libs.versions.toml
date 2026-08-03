@@ -1,5 +1,7 @@
 [versions]
 kotlin = "2.4.10"
+ktlint = "1.8.0"
+ktlint-gradle = "14.2.0"
 foojay = "1.0.0"
 koin-bom = "4.2.2"
 kotlin-logging = "8.0.4"
@@ -30,6 +32,7 @@ mockk = "1.14.11"
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint-gradle" }
 
 jline = { module = "org.jline:jline", version.ref = "jline" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }

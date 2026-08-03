@@ -1,12 +1,22 @@
 plugins {
     kotlin("jvm")
     id("de.infix.testBalloon")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 group = "com.typewritermc"
 
 repositories {
     mavenCentral()
+}
+
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
+ktlint {
+    version.set(libs.findVersion("ktlint").get().requiredVersion)
+    filter {
+        exclude("**/skirout/**")
+    }
 }
 
 kotlin {
@@ -17,7 +27,6 @@ kotlin {
     }
 }
 
-val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 dependencies {
     testImplementation(libs.findBundle("basic-test").get())
 }
