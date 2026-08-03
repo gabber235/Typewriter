@@ -32,6 +32,15 @@ val CoreFoundationsTest by testSuite {
         template.match(MessageAddress.of("other.engine.organization.org-1")) shouldBe null
     }
 
+    test("bound subscriptions retain stable templates and use one concrete address") {
+        val value = ExampleAddress("engine", "org-1")
+        val bound = template.subscribedAt(value)
+
+        bound.template shouldBe template.template
+        bound.subscriptionPattern.value shouldBe "realm.engine.organization.org-1"
+        bound.render(value) shouldBe template.render(value)
+    }
+
     test("patterns reject malformed literals and placeholders") {
         listOf(
             "",

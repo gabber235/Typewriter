@@ -52,6 +52,7 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
     updateClassifier: ResponseClassifier<Update>,
     failureSlug: ErrorSlug,
     timeout: Duration = 10.seconds,
+    updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
 ): WatchContract<Address, Request, Initial, Update> = WatchContract(
     name,
     requestAddress,
@@ -63,4 +64,5 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
     updateClassifier,
     timeout,
     failureSlug,
+    updateFilter,
 )

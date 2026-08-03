@@ -57,6 +57,7 @@ class AddressTemplate<Address : Any> internal constructor(
     template: String,
     private val renderValues: (Address) -> AddressValues,
     private val parseValues: (AddressValues) -> Address,
+    boundSubscription: AddressPattern? = null,
 ) {
     private val segments = parseTemplate(template)
     private val placeholders = segments.mapNotNull { it.placeholder }.toSet()
@@ -65,7 +66,7 @@ class AddressTemplate<Address : Any> internal constructor(
     val template: String = segments.joinToString(".") { it.source }
 
     /** Validated wildcard pattern used by transports for subscriptions. */
-    val subscriptionPattern: AddressPattern = AddressPattern.of(
+    val subscriptionPattern: AddressPattern = boundSubscription ?: AddressPattern.of(
         segments.joinToString(".") { if (it.placeholder == null) it.source else "*" },
     )
 
@@ -89,6 +90,14 @@ class AddressTemplate<Address : Any> internal constructor(
         }
         return parseValues(AddressValues.of(*values.map { it.key to it.value }.toTypedArray()))
     }
+
+    /** Restricts transport subscriptions to one address while retaining the stable template. */
+    fun subscribedAt(address: Address): AddressTemplate<Address> = AddressTemplate(
+        template,
+        renderValues,
+        parseValues,
+        AddressPattern.of(render(address).value),
+    )
 
     /** Appends a validated literal segment. */
     operator fun div(literal: String): AddressTemplate<Address> {

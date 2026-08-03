@@ -4,6 +4,9 @@ import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.contract.*
 import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
+import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
+import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
+import com.typewritermc.services.libs.communicator.router.RouterOptions
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersSetter
 import com.typewritermc.services.libs.communicator.transport.*
@@ -14,6 +17,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -31,6 +35,21 @@ class Communicator(
     private val telemetry: ServiceTelemetry,
     private val propagators: ContextPropagators,
 ) {
+    /** Creates a router that shares this communicator's transport and telemetry infrastructure. */
+    fun createRouter(
+        routes: CommunicatorRoutes,
+        parentScope: CoroutineScope,
+        options: RouterOptions = RouterOptions(),
+    ): CommunicatorRouter = CommunicatorRouter(
+        transport = transport,
+        routes = routes,
+        communicator = this,
+        telemetry = telemetry,
+        propagators = propagators,
+        parentScope = parentScope,
+        options = options,
+    )
+
     /** Performs a typed unary request. */
     suspend fun <Address : Any, Request : Any, Response : Any> request(
         contract: UnaryContract<Address, Request, Response>,
@@ -244,7 +263,14 @@ class Communicator(
                                 break
                             }
 
-                            is TransportDelivery.Message -> emit(decodeUpdate(contract, delivery.message))
+                            is TransportDelivery.Message -> {
+                                val decoded = decodeUpdate(contract, delivery.message)
+                                val update = (decoded as? CommunicationResult.Success)?.value
+                                if (update is WatchMessage.Update && !contract.updateFilter(request, update.value)) {
+                                    continue
+                                }
+                                emit(decoded)
+                            }
                         }
                     }
                 } catch (failure: Throwable) {

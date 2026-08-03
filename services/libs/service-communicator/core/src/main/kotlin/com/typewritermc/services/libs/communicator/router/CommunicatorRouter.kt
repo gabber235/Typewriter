@@ -172,7 +172,7 @@ internal data class Route(
 )
 
 /** Hosts typed message handlers with bounded concurrency and structured lifecycle ownership. */
-class CommunicatorRouter(
+class CommunicatorRouter internal constructor(
     private val transport: MessageTransport,
     routes: CommunicatorRoutes,
     private val communicator: Communicator,

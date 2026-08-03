@@ -8,6 +8,8 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.*
 import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
+import com.typewritermc.services.libs.communicator.router.RouterResult
+import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.*
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -86,6 +88,18 @@ private val propagators = ContextPropagators.create(W3CTraceContextPropagator.ge
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val CommunicatorTest by testSuite {
+    test("communicator creates a router with its private infrastructure") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                val router = client.createRouter(communicatorRoutes { event(event) { } }, this)
+
+                router.start() shouldBe RouterResult.Success
+                fake.activeSubscriptionCount shouldBe 1
+                router.stop() shouldBe RouterResult.Success
+            }
+        }
+    }
+
     test("response policy rejects an internal response not classified as internal error") {
         shouldThrow<IllegalArgumentException> {
             ResponsePolicy("fixed") {
@@ -358,6 +372,47 @@ val CommunicatorTest by testSuite {
                     CommunicationResult.Success(WatchMessage.Update("early")),
                 )
                 fake.activeSubscriptionCount shouldBe 0
+            }
+        }
+    }
+
+    test("watch update filter isolates resource updates") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                fake.respondWith { message, _ ->
+                    TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
+                }
+                val isolated = WatchContract(
+                    watch.name,
+                    watch.requestAddress,
+                    watch.updateAddress,
+                    watch.requestCodec,
+                    watch.initialCodec,
+                    watch.updateCodec,
+                    watch.initialPolicy,
+                    watch.updateClassifier,
+                    watch.timeout,
+                    watch.failureSlug,
+                    updateFilter = { request, update -> request == update },
+                )
+                val values = async { client.watch(isolated, Target("a"), "wanted").take(2).toList() }
+                runCurrent()
+
+                fake.deliver(
+                    TransportDelivery.Message(
+                        InboundMessage(MessageAddress.of("service.a.updates"), "other".encodeToByteArray()),
+                    ),
+                )
+                fake.deliver(
+                    TransportDelivery.Message(
+                        InboundMessage(MessageAddress.of("service.a.updates"), "wanted".encodeToByteArray()),
+                    ),
+                )
+
+                values.await() shouldBe listOf(
+                    CommunicationResult.Success(WatchMessage.Initial("initial")),
+                    CommunicationResult.Success(WatchMessage.Update("wanted")),
+                )
             }
         }
     }

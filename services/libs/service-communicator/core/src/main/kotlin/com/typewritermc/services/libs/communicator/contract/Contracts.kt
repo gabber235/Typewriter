@@ -95,6 +95,7 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val updateClassifier: ResponseClassifier<Update>,
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
+    val updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
 ) {
     init {
         require(timeout.isPositive() && timeout.isFinite()) { "Watch timeout must be positive and finite" }
