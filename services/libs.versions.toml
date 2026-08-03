@@ -47,7 +47,6 @@ test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBallo
 test-balllon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
 test-balloon-data-test = { module = "at.asitplus.testballoon:datatest", version.ref = "test-balloon-addons"}
 test-balloon-property-test = { module = "at.asitplus.testballoon:property", version.ref = "test-balloon-addons"}
-kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
@@ -86,4 +85,4 @@ test-balloon-plugin = { id = "de.infix.testBalloon", version.ref = "test-balloon
 
 
 [bundles]
-basic-test = ["test-balloon", "test-balllon-kotest-assertions", "kotest-runner", "kotest-assertions"]
+basic-test = ["test-balloon", "test-balllon-kotest-assertions", "kotest-assertions"]
